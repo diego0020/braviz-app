@@ -701,9 +701,13 @@ balloon2.On()
 
 iact2.Initialize()
 #iact.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,picking,10)
-iact.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-iact2.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
 
+custom_iact_style=config.get_interaction_style()
+iact_style=getattr(vtk,custom_iact_style)()
+iact.SetInteractorStyle(iact_style)
+
+iact2_style=getattr(vtk,custom_iact_style)()
+iact2.SetInteractorStyle(iact2_style)
 #===========Initial view==============
 
 cam1 = ren1.GetActiveCamera()

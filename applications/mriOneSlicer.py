@@ -286,6 +286,10 @@ top.protocol("WM_DELETE_WINDOW", clean_exit)
 render_widget.pack(fill='both', expand='true')                                            
 display_frame.pack(side="top", anchor="n", fill="both", expand="true")
 iact = render_widget.GetRenderWindow().GetInteractor()
+
+custom_iact_style=config.get_interaction_style()
+iact_style=getattr(vtk,custom_iact_style)()
+iact.SetInteractorStyle(iact_style)
 iact.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
 iact.SetPicker(picker)
 

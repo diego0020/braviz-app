@@ -375,8 +375,10 @@ render_widget.pack(fill='both', expand='true')
 display_frame.pack(side="top", anchor="n", fill="both", expand="true")
 
 iact = render_widget.GetRenderWindow().GetInteractor()
-iact.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+custom_iact_style=config.get_interaction_style()
+iact_style=getattr(vtk,custom_iact_style)()
 planeWidget.SetInteractor(iact)
+iact.SetInteractorStyle(iact_style)
 #planeWidget.SetPickingManaged(True)
 planeWidget.On()
 

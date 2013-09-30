@@ -5,14 +5,14 @@ import nibabel as nib
 from numpy.linalg import inv
 
 import braviz
-
+subject='144'
 
 v=braviz.visualization.simpleVtkViewer()
 
 #os.chdir(r'C:\Users\da.angulo39\Documents\Kanguro\093\camino')
 reader=braviz.readAndFilter.kmc40AutoReader()
 data_root=reader.getDataRoot()
-os.chdir(os.path.join(data_root,'911','camino'))
+os.chdir(os.path.join(data_root,subject,'camino'))
 
 img=nib.load('FA_mri_masked.nii.gz')
 img2=nib.load('FA.nii.gz')
@@ -24,10 +24,10 @@ img2_vtk=braviz.readAndFilter.nibNii2vtk(img2)
 img2_w=braviz.readAndFilter.applyTransform(img2_vtk,inv(img2.get_affine()))
 
 reader=braviz.readAndFilter.kmc40AutoReader()
-img3_w=reader.get('MRI','911',format='vtk')
-models=reader.get('MODEL','911',index='')
+img3_w=reader.get('MRI',subject,format='vtk')
+models=reader.get('MODEL',subject,index='')
 cc=[m for m in models if 'CC' in m]
-vtkModels=[reader.get('MODEL','911',name=m) for m in cc]
+vtkModels=[reader.get('MODEL',subject,name=m) for m in cc]
 for m in vtkModels:
     v.addPolyData(m)
 

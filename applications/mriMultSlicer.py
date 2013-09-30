@@ -378,7 +378,9 @@ render_widget.Render()
 
 iact.Initialize()
 iact.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,picking,10)
-iact.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+custom_iact_style=config.get_interaction_style()
+iact_style=getattr(vtk,custom_iact_style)()
+iact.SetInteractorStyle(iact_style)
 
 refresh_display()
 iact.Start()
