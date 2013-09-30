@@ -1,0 +1,5 @@
+[braint_V_1_0]
+menuFile = File
+menuFileLoadRDF = Load RDF-Turtle
+menuFileConnect = Connect to Repository
+menuFileClose = Close
