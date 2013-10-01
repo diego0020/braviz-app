@@ -6,6 +6,9 @@ from braviz.interaction import compute_volume_and_area,get_fiber_bundle_descript
 
 class simpleVtkViewer():
     def __init__(self):
+        """
+        A simple vtk viewer, includes a renderer and mapper. It also has options to add polydata and image structures.
+        """
         self.ren=vtk.vtkRenderer()
         self.renWin=vtk.vtkRenderWindow()
         self.iren=vtk.vtkRenderWindowInteractor()
@@ -81,6 +84,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.MiddleButton=False
         self.Labels_set=False
         self.labels_dict=None
+        self.slice_change_event=vtk.vtkCommand.UserEvent+1
     def SetInputData(self,img):
         "Changes the input data por the plane widget"
         if self.Initialized:
@@ -121,6 +125,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
             z1=z0+dz*z
             if self.MiddleButton:
                 message='Slice: %d'%self.GetSliceIndex()
+                self.InvokeEvent(self.slice_change_event)
             else:
                 message='(%d, %d, %d)' % (x1,y1,z1)
                 if self.Labels_set:

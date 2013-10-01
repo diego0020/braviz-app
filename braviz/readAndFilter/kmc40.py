@@ -10,7 +10,6 @@ from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
 import braviz.readAndFilter.color_fibers
 
-#inv = lambda x:x
 import os
 import re
 import vtk
