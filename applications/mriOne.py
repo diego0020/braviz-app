@@ -6,6 +6,7 @@ import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
+
 import braviz
 
 
@@ -141,6 +142,10 @@ def setSubj(event=None):
         planeWidget.GetColorMap().SetLookupTable(None)
         #planeWidget.UserControlledLookupTableOff()
         planeWidget.SetResliceInterpolateToCubic()
+
+    aparc_img=reader.get('aparc',subj,format='VTK',space=space_var.get())
+    planeWidget.addLabels(aparc_img)
+    planeWidget.setLabelsLut(aparc_lut)
     outline.SetInputData(img)
     previous_img=image_var.get()
     paint_fibers()
