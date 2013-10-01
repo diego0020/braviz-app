@@ -1,13 +1,10 @@
 from __future__ import division
-import os
-import itertools
-
-import vtk
-import nibabel as nib
-import numpy as np
-
 import braviz
-
+import vtk
+import os
+import nibabel as nib
+import itertools
+import numpy as np
 
 kmc_40_reader=braviz.readAndFilter.kmc40AutoReader()
 root_path=kmc_40_reader.getDataRoot()

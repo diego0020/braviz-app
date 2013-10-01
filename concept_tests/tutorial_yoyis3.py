@@ -1,10 +1,8 @@
 #Para correr desde la consola de windows
 # C:\Python27_32\python.exe tutorial_yoyis.py [subject] [espacio] 
 
-import sys
-
 import braviz
-
+import sys
 
 subject='093'
 #print sys.argv

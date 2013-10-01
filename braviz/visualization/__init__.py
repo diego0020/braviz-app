@@ -5,10 +5,11 @@ from braviz.interaction import compute_volume_and_area,get_fiber_bundle_descript
 
 
 class simpleVtkViewer():
+    """A very simple windows with vtk renderers and interactors.
+    Use addPolyData to add polydata objects and addImg to add a vtkImagePlaneWidget
+    Finally, use start() to start the interaction
+    """
     def __init__(self):
-        """
-        A simple vtk viewer, includes a renderer and mapper. It also has options to add polydata and image structures.
-        """
         self.ren=vtk.vtkRenderer()
         self.renWin=vtk.vtkRenderWindow()
         self.iren=vtk.vtkRenderWindowInteractor()
@@ -27,6 +28,8 @@ class simpleVtkViewer():
         cam1.SetViewUp(0, 0, 1)
         print "call addPolyData or addImg to add data to the viewer\n call start to interact"
     def addPolyData(self,polyData, LUT=None):
+        """Adds a poly data to the viewer, a LUT can be set. 
+        It returns the actor that is created, which you can use to change its properties"""
         mapper=vtk.vtkPolyDataMapper()
         mapper.SetInputData(polyData)
         if LUT:
@@ -42,12 +45,14 @@ class simpleVtkViewer():
         self.ren.Render()
         return actor
     def start(self):
+        "Call this method to start the interaction, interaction can stop by pressing 'q' on the main window"
         print "press 'Q' on viewer window to stop"
         self.ren.ResetCameraClippingRange()
         self.ren.ResetCamera()
         self.ren.Render()
         self.iren.Start()
     def addImg(self,img):
+        "Use this method to show an image inside an image plane widget. The newly created imagePlaneWidget is returned"
         planeWidget=persistentImagePlane()
         planeWidget.SetInputData(img)
         planeWidget.SetPlaneOrientationToXAxes()
@@ -85,6 +90,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.Labels_set=False
         self.labels_dict=None
         self.slice_change_event=vtk.vtkCommand.UserEvent+1
+        self.alternative_text1=False
     def SetInputData(self,img):
         "Changes the input data por the plane widget"
         if self.Initialized:
@@ -131,10 +137,18 @@ class persistentImagePlane(vtkImagePlaneWidget):
                 if self.Labels_set:
                     label=self.get_label(x1,y1,z1)
                     message=message+': %s'%label
+                if self.alternative_text1:
+                    ix,iy,iz=map(int,(x,y,z))
+                    value=self.alternative_img.GetScalarComponentAsDouble(ix,iy,iz,0)
+                    message2='( %d, %d, %d ) : %f'%(x,y,z,value)
+                    self.text1.SetInput(message2)
+                    self.text1.SetVisibility(1)
                 
             text2.SetInput(message)
         def endInteract(obj,event):
             text2.SetVisibility(0)
+            if self.alternative_text1:
+                self.text1.SetVisibility(0)
         def detectMiddleButton(obj,event):
             if event=='MiddleButtonPressEvent':
                 self.MiddleButton=True
@@ -154,12 +168,15 @@ class persistentImagePlane(vtkImagePlaneWidget):
         ren=self.GetCurrentRenderer()
         ren.AddActor(self.text2)
     def setLabelsLut(self,lut):
+        "A lookup table can be used to translate numeric lables into text labels"
         self.labels_dict={}
         self.aparc_lut=lut
     def addLabels(self,label_img):
+        "A second image can be used to get labels for image coordinates (ex. aparc)"
         self.label_img=label_img
         self.Labels_set=True
     def get_label(self,x,y,z):
+        "Auxiliary function to get the label in a given coordinate (in mm)"
         img2=self.label_img
         x0,y0,z0=img2.GetOrigin()
         dx,dy,dz=img2.GetSpacing()
@@ -180,9 +197,36 @@ class persistentImagePlane(vtkImagePlaneWidget):
             label=self.aparc_lut.GetAnnotation(idx)
             self.labels_dict[l]=label
         return self.labels_dict[l]
-
-    
+    def text1_value_from_img(self,img2):
+        "Text 1 value can be read from a different image than the one been shown, useful for composed images"
+        self.SetDisplayText(0)
+        text1=vtk.vtkTextActor()
+        cor=text1.GetPositionCoordinate()
+        cor.SetCoordinateSystemToNormalizedViewport()
+        text1.SetPosition([0.01,0.01])
+        text1.SetInput('probando')
+        tprop=text1.GetTextProperty()
+        tprop.SetJustificationToLeft()
+        tprop.SetFontSize(18)
+        text1.SetVisibility(0)
+        self.alternative_text1=True
+        self.alternative_img=img2
+        self.text1=text1
+        ren=self.GetCurrentRenderer()
+        ren.AddActor(self.text1)
+    def text1_to_std(self):
+        "Turn text1 behaviour back to standard, reverts the effects of text1_value_from_img"
+        if not self.alternative_text1:
+            return
+        ren=self.GetCurrentRenderer()
+        ren.RemoveActor(self.text1)
+        self.SetDisplayText(1)
+        self.alternative_text1=False
+        self.alternative_img=None
+        self.text1=None
+        
 def add_solid_balloon(balloon_widget,solid_actor,name=None):
+    "Adds a standard balloon for models"
     mapper=solid_actor.GetMapper()
     poly_data=mapper.GetInput()
     (volume,area)=compute_volume_and_area(poly_data)
@@ -192,6 +236,7 @@ def add_solid_balloon(balloon_widget,solid_actor,name=None):
     balloon_widget.AddBalloon(solid_actor,message)
     return
 def fibers_balloon_message(fib_actor,name=None):
+    "Gets a standard message for fiber balloons"
     mapper=fib_actor.GetMapper()
     try:
         fib=mapper.GetInput()
@@ -210,6 +255,7 @@ Mean Length (mm) : %.2f
         message='Fiber Bundle\n'+message
     return message
 def add_fibers_balloon(balloon_widget,fib_actor,name=None):
+    "Adds a standard balloon for models"
     message=fibers_balloon_message(fib_actor, name)
     balloon_widget.AddBalloon(fib_actor,message)
     

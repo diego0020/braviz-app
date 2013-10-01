@@ -9,6 +9,7 @@ from braviz.readAndFilter import numpy2vtkMatrix
 
 
 def dartel2GridTransform(y_file,assume_bad_matrix=False):
+    """reads a dartel nifti file from disk and returns a vtkTransform, this function is very slow"""
     print "importing dartel warp field... this will take a while"
     img=nib.load(y_file)
     data=img.get_data()
@@ -74,6 +75,7 @@ def check_matrix(m):
                     return False
     return True
 def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
+    "Cached version of dartel2GridTransform"
     if y_file[-2:]=='gz':
         base_name=y_file[:-7] #remove .nii.gz
     else:

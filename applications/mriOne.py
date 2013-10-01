@@ -61,12 +61,12 @@ fmri_color_int.ClampingOn()
 fmri_color_int.SetColorSpaceToRGB()
 fmri_color_int.SetRange(-7,7)
 fmri_color_int.Build()
-#                            x , r ,g  , b  , midpoint , sharpness
-fmri_color_int.AddRGBPoint(-7.0, 0.0,1.0,1.0)
-fmri_color_int.AddRGBPoint(-3.0, 0.0,0.0,0.0) 
-fmri_color_int.AddRGBPoint(0.0, 0.0,0.0,0.0) 
-fmri_color_int.AddRGBPoint(3.0, 0.0,0.0,0.0) 
-fmri_color_int.AddRGBPoint(7.0, 1.0,0.27,0.0)
+#                           x   ,r   ,g   , b  
+fmri_color_int.AddRGBPoint(-7.0 ,0.0 ,1.0 ,1.0)
+fmri_color_int.AddRGBPoint(-3.0 ,0.0 ,0.0 ,0.0) 
+fmri_color_int.AddRGBPoint( 0.0 ,0.0 ,0.0 ,0.0) 
+fmri_color_int.AddRGBPoint( 3.0 ,0.0 ,0.0 ,0.0) 
+fmri_color_int.AddRGBPoint( 7.0 ,1.0 ,0.27,0.0)
 
 fmri_lut=vtk.vtkLookupTable()
 fmri_lut.SetTableRange(-7.0,7.0)
@@ -107,7 +107,8 @@ def setSubj(event=None):
 
         if fa_img != None:
             blend.AddInputConnection(color_mapper2.GetOutputPort())
-        
+            planeWidget.text1_value_from_img(fa_img)
+            
         color_mapper1=vtk.vtkImageMapToWindowLevelColors()
         color_mapper1.SetInputData(mri_img)
         color_mapper1.SetLookupTable(mri_lut)
@@ -125,6 +126,7 @@ def setSubj(event=None):
         #print img
     else:
         img=reader.get(image_var.get(),subj,format='VTK',space=space_var.get())
+        planeWidget.text1_to_std()
 
     planeWidget.SetInputData(img)  
     if image_var.get()=='MRI':

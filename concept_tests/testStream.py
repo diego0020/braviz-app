@@ -1,10 +1,7 @@
-import os
-
+import braviz
 import nibabel as nib
 import vtk
-
-import braviz
-
+import os
 
 kmc_40_reader=braviz.readAndFilter.kmc40AutoReader()
 root_path=kmc_40_reader.getDataRoot()
@@ -20,6 +17,7 @@ fa_img=nib.load('FA.nii')
 fa_vtk=braviz.readAndFilter.nibNii2vtk(fa_img)
 fa=braviz.readAndFilter.applyTransform(fa_vtk,fa_img.get_affine())
 viz.addImg(fa)
+reader=vtk.vtkPolyDataReader()
 
 reader=vtk.vtkPolyDataReader()
 reader.SetFileName('streams.vtk')

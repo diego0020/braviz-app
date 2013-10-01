@@ -3,10 +3,8 @@ Created on 27/08/2013
 
 @author: da.angulo39
 '''
-import vtk
-
 import braviz
-
+import vtk
 
 r=braviz.readAndFilter.kmc40AutoReader()
 struct=r.get('Model','093',name='Left-Caudate')

@@ -16,14 +16,12 @@
 # c) right clicking on x,y,z buttons pops up a menu to set
 #    the associated widget's reslice interpolation mode
 
-import Tkinter
-
 import vtk
+import Tkinter
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz.readAndFilter
-
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
 reader=braviz.readAndFilter.kmc40AutoReader()
 niiImg=reader.get('MRI','093')
@@ -118,15 +116,15 @@ def AlignCamera():
     if iaxis == 0:
         vz = -1
         nx = ox + xMax*sx
-        cx = ox + slice_number.get()*sx
+        cx = ox + slice_number*sx
     elif iaxis == 1:
         vz = -1
         ny = oy+yMax*sy
-        cy = oy+slice_number.get()*sy
+        cy = oy+slice_number*sy
     else:
         vy = 1
         nz = oz+zMax*sz
-        cz = oz+slice_number.get()*sz
+        cz = oz+slice_number*sz
  
     px = cx+nx*2
     py = cy+ny*2

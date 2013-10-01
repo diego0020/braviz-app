@@ -115,6 +115,7 @@ def readFlirtMatrix(file_name, src_img_file, ref_img_file,path='' ):
     T=M3*M2*Ms*M1i
     return T
 def numpy2vtkMatrix(M):
+    "Transform a numpy array into vtk4x4 matrix"
     vtk_matrix=vtk.vtkMatrix4x4()
     for i in range(0,4):
         for j in range(0,4):
@@ -146,6 +147,9 @@ def transformGeneralData(data,transform):
     output=transFilter.GetOutput()
     return output
 def filterPolylinesWithModel(fibers,model,progress=None,do_remove=True):
+    """filters a polyline, keeps only the lines that cross a model
+    the progress variable is pudated (via its set method) to indicate progress in the filtering operation
+    if do_remove is true, the filtered polydata object is returned, otherwise a list of the fibers that do cross the model is returned"""
     selector=vtk.vtkSelectEnclosedPoints()
     selector.Initialize(model)
     model_bb=model.GetBounds()
@@ -205,6 +209,7 @@ def boundingBoxIntesection(box1,box2):
     return True
 
 def readFreeSurferTransform(filename):
+    "Reads a freeSurfer transform file and returns a numpy array"
     try:
         f=open(filename)
         lines=f.readlines()
@@ -259,6 +264,6 @@ def cache_function(max_cache_size):
     return decorator
 
 
-
+#Easy access to kmc readers
 from kmc40 import kmc40Reader
 from kmc40 import autoReader as kmc40AutoReader

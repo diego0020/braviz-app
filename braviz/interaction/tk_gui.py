@@ -118,6 +118,7 @@ class structureList(LabelFrame):
         self.itemconfigure=model_list.itemconfigure
         self.itemconfig=model_list.itemconfig
     def __update(self,*args):
+        "Internally handles changes in subject selection and calls 'command' if necessary"
         model_idx=set(self.model_list.curselection())
         chosen_models=self.chosen_models
         #find if a model was added

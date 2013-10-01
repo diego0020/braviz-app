@@ -1,8 +1,6 @@
 from Tkinter import *
-from tkFileDialog import askopenfile
-
 import BraintProperties
-
+from tkFileDialog import askopenfile
 
 class MainFrame:
     

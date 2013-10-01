@@ -1,8 +1,5 @@
-import os
-
 import braviz
-import braviz.readAndFilter.surfer_input
-
+import os
 kmc_40_reader=braviz.readAndFilter.kmc40AutoReader()
 root_path=kmc_40_reader.getDataRoot()
 os.chdir(os.path.join(root_path,'232','Surf'))

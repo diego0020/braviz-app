@@ -16,6 +16,7 @@ def _fread3_many(fobj, n):
 
 #==================================================================
 def read_surface(filepath):
+    "reads a freesurfer wireframe structure"
 #based on pysurfer.io.read_geometry  '
     with open(filepath,'rb') as fobj:
         magic = _fread3(fobj)
@@ -149,6 +150,7 @@ def read_annot(filepath, orig_ids=False):
 
 
 def apply_offset(coords,offset):
+    "applies an offset to all the coordinates in coords"
     f_offset=map(float,offset)
     def add_offset(a):
         return [f_offset[i]+a[i] for i in [0,1,2]]
@@ -156,6 +158,7 @@ def apply_offset(coords,offset):
     return b
     
 def create_polydata(coords,faces):
+    "Creates a polydata using the coords and faces array (must contain only triangles)"
     poly=vtk.vtkPolyData()
     points=vtk.vtkPoints()
     points.SetDataTypeToFloat()
@@ -172,6 +175,7 @@ def create_polydata(coords,faces):
     return poly
     
 def surface2vtkPolyData(surf_file):
+    "cached function to read a freesurfer structure file"
     #check cache
     vtkFile=None
     try:
@@ -235,6 +239,11 @@ def surfLUT2VTK(ctab,names=None):
         out_lut.SetTableValue(i,(ctab[i,0:4]/255) )
     return out_lut
 def getColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
+    """Creates a vtkLookUpTable from color0 to color1 or from color0 to color2 passing by color1
+    The range of the LUT will be (start,end)
+    midpoint and sharpness can be used to change the characteristics of the function between colors
+    (see vtkPiecewiseFunction)
+    if three colors are used, the resulting function will be symmetric, this means the actual midpoint for the second half will be 1-midpoint"""
     lut=vtk.vtkColorTransferFunction()
     lut.SetColorSpaceToRGB()
     if( color2 ):

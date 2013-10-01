@@ -1,7 +1,5 @@
-import vtk
-
 import braviz
-
+import vtk
 
 r=braviz.readAndFilter.kmc40AutoReader()
 

@@ -1,14 +1,11 @@
 from __future__ import division
-import itertools
-import random
-import os
-
 import vtk
 import nibabel as nib
+import itertools
 import numpy as np
-
 import braviz
-
+import random
+import os
 
 #==========test data===============
 
@@ -214,7 +211,7 @@ out_act.SetMapper(out_map)
 ren = vtk.vtkRenderer()
 ren.AddActor(act)
 ren.AddActor(out_act)
-ren.ResetCamera()
+ren.ResetCamera();
 
 cam = ren.GetActiveCamera()
 cam.Azimuth(-20)

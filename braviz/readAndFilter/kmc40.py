@@ -38,6 +38,10 @@ The path containing this structure must be set."""
                  Additionally use space='native' to ignore the nifti transform.
     
             FA:  Same options as MRI, but space also accepts 'diffusion'
+            
+            APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
+            
+            FMRI: requires name=<Paradigm>
     
             MODEL:Use name=<model> to get the vtkPolyData. Use index='T' to get a list of the available models for a subject.
                   Use color='t' to get the standard color associated to the structure 
@@ -52,6 +56,7 @@ The path containing this structure must be set."""
     
             FIBERS: The default space is world, use space='diff' to get fibers in diffusion space. 
                     Use waypoint=<model-name> to restrict to fibers passing through a given MODEL as indicated above
+                    Can accept color=<orient|fa|curv|y|rand> to get different color scalars
     
             TENSORS: Get an unstructured grid containing tensors at the points where they are available
                      and scalars representing the orientation of the main eigenvector
@@ -93,6 +98,7 @@ The path containing this structure must be set."""
             print "Data type not available"
             raise(Exception("Data type not available"))
     def __getImg(self,data,subj,**kw):
+            "Auxiliary function to read nifti images"
             #path=self.__root+'/'+str(subj)+'/MRI'
             if data=='MRI':
                 path=os.path.join(self.__root,str(subj),'MRI')
@@ -132,6 +138,7 @@ The path containing this structure must be set."""
                 return self.__move_img_from_world(subj, img2, interpolate, kw.get('space','world'))
             return img
     def __move_img_from_world(self,subj,img2,interpolate=False,space='world'):     
+        "moves an image from the world coordinate space to talairach or dartel spaces"
         space=space.lower()
         if space=='world':
             return img2
@@ -150,12 +157,14 @@ The path containing this structure must be set."""
             raise Exception('Unknown space %s'%space)
         
     def __getIds(self):
+        "Auxiliary function to get the available ids"
         contents=os.listdir(self.__root)
         numbers=re.compile('[0-9]+$')
         ids=[c for c in contents if numbers.match(c)!=None]
         ids.sort(key=int)
         return ids
     def __loadFreeSurferModel(self,subject,**kw):
+        "Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"
         #path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
         #path=self.__root+'/'+str(subject)+'/Models2'
         path=os.path.join(self.__root,str(subject),'Models')
@@ -190,8 +199,9 @@ The path containing this structure must be set."""
         else:
             print 'Either "index" or "name" is required.'
             raise(Exception('Either "index" or "name" is required.'))
-
+        return None
     def __createColorDictionary(self):
+        "Creates an inernal representation of the freesurfer color LUT"
         color_file_name=os.path.join(self.__root,'FreeSurferColorLUT.txt')
         try:
             color_file=open(color_file_name)
@@ -205,6 +215,8 @@ The path containing this structure must be set."""
         color_dict=dict(color_tuples)
         return color_dict
     def __loadFreeSurferSurf(self,subj,**kw):
+        """Auxiliary function to read the corresponding surface file for hemi and name.
+        Scalars can be added to the output surface"""
         if kw.has_key('name') and kw.has_key('hemi'):
             #Check required arguments
             name=kw['hemi']+'h.'+kw['name']
@@ -226,6 +238,7 @@ The path containing this structure must be set."""
         else:
             return self.__movePointsToSpace(output, kw['space'], subj)
     def __loadFreeSurferScalar(self,subj,**kw):
+        "Auxiliary function to read free surfer scalars"
         morph=set(('area','curv','avg_curv','thickness','volume','sulc'))
         path=os.path.join(self.__root,str(subj),'Surf')
         contents=os.listdir(path)
@@ -260,6 +273,7 @@ The path containing this structure must be set."""
                 return surfLUT2VTK(ctab, names)
             return  labels
     def __cached_color_fibers(self,subj,color):
+        "function that reads colored fibers from cache, if not available creates the structure and attempts to save the cache"
         color=color.lower()
         cache_name=os.path.join(self.getDataRoot(),subj,'camino','streams_%s.vtk'%color)
         cached=False
@@ -318,7 +332,7 @@ The path containing this structure must be set."""
                 print 'cache write failed'
             return fibers
     def __cached_filter_fibers(self,subj,waypoint):
-        "Only one waypoint, return a set"
+        "Only one waypoint, returns a set"
         #print "filtering for model "+waypoint
         pickles_dir=os.path.join(self.getDataRoot(),'pickles')
         pickle_name='fibers_%s_%s.pickle'%(subj,waypoint)
@@ -350,7 +364,12 @@ The path containing this structure must be set."""
         
         
     def __readFibers(self,subj,**kw):
-            
+        """Auxiliary function for reading fibers, uses all the cache available.
+        First reades the correct color file,
+        afterwards the lists for the corresponding waypoints from which an intersection is calculated,
+        the list is then used to remove unwanted polylines,
+        and finally the fibers are translated to the wanted space
+        """   
         if kw.has_key('progress'):
             kw['progress'].set(5)
         if kw.has_key('waypoint') and kw.get('space','').lower()=='world':
@@ -411,6 +430,7 @@ The path containing this structure must be set."""
             return streams_trans
         return streams_mri
     def __readTensors(self,subj,**kw):
+        "Internal function to read a tensor file"
         path=os.path.join(self.__root,str(subj),'camino')
         tensor_file=os.path.join(path,'camino_dt.nii.gz')
         if kw.get('space')=='world':
@@ -446,6 +466,7 @@ The path containing this structure must be set."""
             raise Exception('Unknown Space %s'%space)
 
     def __create_surfer_lut(self):
+        "returns a vtkLookUpTable based on the freeSurferColorLUT file"
         color_file_name=os.path.join(self.getDataRoot(),'FreeSurferColorLUT.txt')
         try:
             color_file=open(color_file_name)
@@ -472,6 +493,7 @@ The path containing this structure must be set."""
 
         return out_lut
     def __read_func(self,subject,**kw):
+        "Internal function to read functional images, deals with the SPM transforms"
         if not kw.has_key('name'):
             raise Exception('Paradigm name is required')
         name=kw['name']
@@ -516,8 +538,11 @@ The path containing this structure must be set."""
     
         
     def getDataRoot(self):
+        "Returns the data_root of this reader"
         return self.__root
     def transformPointsToSpace(self,point_set,space,subj,inverse=False):
+        """Access to the internal coordinate transform function. Moves from world to space. 
+        If inverse is true moves from space to world"""
         return self.__movePointsToSpace(point_set, space, subj, inverse)
         
 #===============================================================================================

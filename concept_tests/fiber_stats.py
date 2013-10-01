@@ -3,10 +3,9 @@ Created on 27/08/2013
 
 @author: da.angulo39
 '''
+import braviz
 import vtk
 import numpy as np
-
-import braviz
 
 
 r=braviz.readAndFilter.kmc40AutoReader()

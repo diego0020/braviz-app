@@ -3,12 +3,9 @@ Created on 13/09/2013
 
 @author: da.angulo39
 '''
-import os
-
-import vtk
-
 import braviz
-
+import vtk
+import os
 
 os.chdir(r'C:\Users\da.angulo39\Documents')
 

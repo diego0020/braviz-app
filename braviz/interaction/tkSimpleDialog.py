@@ -1,5 +1,6 @@
 '''
 From http://effbot.org/tkinterbook/tkinter-dialog-windows.htm
+class for generating tk dialog windows
 '''
 from Tkinter import *
 

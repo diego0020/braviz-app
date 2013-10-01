@@ -1,4 +1,4 @@
-print 'braviz v0.05'
+print 'braviz v0.04'
 
 import vtk
 vtk_mayor=int(vtk.VTK_VERSION.split('.')[0])

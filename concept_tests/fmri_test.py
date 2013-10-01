@@ -3,15 +3,12 @@ Created on 11/09/2013
 
 @author: da.angulo39
 '''
-import os
-import itertools
-
+import braviz
 import nibabel as nib
+import os
 import numpy as np
 import vtk
-
-import braviz
-
+import itertools
 
 os.chdir(r'C:\Users\da.angulo39\Documents\Kanguro\330\spm\POWERGRIP')
 n_bT1=nib.load('T1.nii.gz')
@@ -189,6 +186,7 @@ r_concatenated.Concatenate(r_vtkTrans)
 r_concatenated.Update()
 
 #========
+import braviz
 r=braviz.readAndFilter.kmc40AutoReader()
 func=r.get('fMRI','330',name='POWERGRIP',space='world',format='vtk')
 v=braviz.visualization.simpleVtkViewer()

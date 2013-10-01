@@ -4,12 +4,9 @@ Created on 4/09/2013
 @author: da.angulo39
 '''
 from __future__ import division
-import os
-
-import vtk
-
 import braviz
-
+import vtk
+import os
 
 reader=braviz.readAndFilter.kmc40AutoReader()
 aparc_img=reader.get('aparc','144',format='vtk',space='dartel')

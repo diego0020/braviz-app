@@ -1,10 +1,8 @@
+
 from __future__ import division
-from os.path import join as path_join
-
 import vtk
-
 import braviz
-
+from os.path import join as path_join 
 reader=braviz.readAndFilter.kmc40AutoReader()
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small2.csv')

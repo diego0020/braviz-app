@@ -6,6 +6,7 @@ import numpy as np
 
 
 def color_by_z(pt):
+        "calculates color based on the z coordinate"
         z=pt[2]
         z_norm=(z+60)/(60+75)
         z_col=int(255*z_norm)
@@ -14,6 +15,7 @@ def color_by_z(pt):
         return color
 
 def color_by_fa(pt,fa_img):
+    "calculates colores based on the fa value, taken from fa_img"
     org=fa_img.GetOrigin()
     delta=fa_img.GetSpacing()
     v_pt=np.subtract(pt, org)
@@ -30,6 +32,7 @@ def color_by_fa(pt,fa_img):
     return color
 
 def color_fibers_pts(fibers,color_function,*args,**kw):
+    "color fiber bundles based on a function from each point"
     n_pts=fibers.GetNumberOfPoints()
     pts=fibers.GetPoints()
     scalars=fibers.GetPointData().GetScalars()
@@ -39,6 +42,7 @@ def color_fibers_pts(fibers,color_function,*args,**kw):
         scalars.SetTupleValue(i,color)
 
 def color_fibers_lines(fibers,polyline_color_function,*args,**kw):
+    "color fiber bundles based on a function that requires access to the whole line"
     nlines=fibers.GetNumberOfLines()
     ncells=fibers.GetNumberOfCells()
     if nlines != ncells:
@@ -52,6 +56,7 @@ def color_fibers_lines(fibers,polyline_color_function,*args,**kw):
         
     
 def random_line(line):
+    "Creates a random color for the whole polyline"
     color=[random.randint(0,255) for i in ('r','g','b')]
     pts=line.GetPointIds()
     color_dict={}
@@ -60,6 +65,7 @@ def random_line(line):
     return color_dict
 
 def line_curvature(line):
+    "Calculates a color based on a curvature function"
     #simple formula from http://en.wikipedia.org/wiki/Curvature
     ids=line.GetPointIds()
     pts=line.GetPoints()

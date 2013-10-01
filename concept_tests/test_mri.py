@@ -1,12 +1,9 @@
-import Tkinter as tk
-
+import braviz.readAndFilter
 import vtk
+import Tkinter as tk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 from numpy.linalg import inv
-
-import braviz.readAndFilter
-
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
 reader=braviz.readAndFilter.kmc40AutoReader()
 niiImg=reader.get('MRI','093')
