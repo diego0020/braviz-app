@@ -264,6 +264,6 @@ render_widget.Render()
 iact.Initialize()
 renWin.Render()
 iact.Start()
-
+setSubj()
 # Start Tkinter event loop
 root.mainloop()
