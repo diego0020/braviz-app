@@ -61,6 +61,7 @@ The path containing this structure must be set."""
             TENSORS: Get an unstructured grid containing tensors at the points where they are available
                      and scalars representing the orientation of the main eigenvector
                      Use space=world to get output in world coordinates [experimental]
+
             TABLE: Read variables from the csv file
             """
             #All cache moved to decorator @cache_function
