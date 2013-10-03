@@ -39,7 +39,7 @@ outline.SetInputData(img)
 
 outlineMapper = vtk.vtkPolyDataMapper()
 outlineMapper.SetInputConnection(outline.GetOutputPort())
-
+fmri
 outlineActor = vtk.vtkActor()
 outlineActor.SetMapper(outlineMapper)
 ren.AddActor(outlineActor)

@@ -77,7 +77,11 @@ class simpleVtkViewer():
         return planeWidget
 class persistentImagePlane(vtkImagePlaneWidget):
     """A vtkImagePlaneWidget which can keep its state between calls to SetInputData.
-    It also adds a second text message showing the world coordinates of the cursors"""
+    It adds a second text message showing the world coordinates of the cursors
+    This message can be further enhanced by using a label image and a label dictionary
+    Additionally the values displayed in the first message can be replaced by values taken from another image, this
+    is useful when the displayed image contains colors or other contexts that are not the main value (ex, fmri)
+    Finally, this class generates custom events when moving the cursor and when changing the slice."""
     def __init__(self,orientation=0):
         "Orientation is x:0 , y:1, z:2"
         #vtkImagePlaneWidget.__init__()
@@ -90,6 +94,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.Labels_set=False
         self.labels_dict=None
         self.slice_change_event=vtk.vtkCommand.UserEvent+1
+        self.cursor_change_event=vtk.vtkCommand.UserEvent+2
         self.alternative_text1=False
     def SetInputData(self,img):
         "Changes the input data por the plane widget"
@@ -120,7 +125,12 @@ class persistentImagePlane(vtkImagePlaneWidget):
         tprop.SetFontSize(18)
         text2.SetVisibility(0)
         def interactTest(obj,event):
-            #print event
+            if self.GetDisplayText()==False:
+                if self.MiddleButton:
+                    self.InvokeEvent(self.slice_change_event)
+                else:
+                    self.InvokeEvent(self.cursor_change_event)
+                return
             text2.SetVisibility(1)
             x,y,z=self.GetCurrentCursorPosition()
             img2=self.GetInput()
@@ -131,9 +141,11 @@ class persistentImagePlane(vtkImagePlaneWidget):
             z1=z0+dz*z
             if self.MiddleButton:
                 message='Slice: %d'%self.GetSliceIndex()
+                #create event, an observer can listen to this
                 self.InvokeEvent(self.slice_change_event)
             else:
                 message='(%d, %d, %d)' % (x1,y1,z1)
+                self.InvokeEvent(self.cursor_change_event)
                 if self.Labels_set:
                     label=self.get_label(x1,y1,z1)
                     message=message+': %s'%label
@@ -224,7 +236,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.alternative_text1=False
         self.alternative_img=None
         self.text1=None
-        
+
 def add_solid_balloon(balloon_widget,solid_actor,name=None):
     "Adds a standard balloon for models"
     mapper=solid_actor.GetMapper()
