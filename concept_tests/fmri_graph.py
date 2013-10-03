@@ -28,7 +28,10 @@ current_mode='space' #time or space
 
 #====================BOLD IMAGE==================
 
-os.chdir(r'C:\Users\Diego\Documents\kmc40-db\KAB-db\%s\spm\POWERGRIP'%subject)
+root_dir=reader.getDataRoot()
+test_dir=os.path.join(root_dir,'%s\spm\POWERGRIP'%subject)
+#os.chdir(r'C:\Users\Diego\Documents\kmc40-db\KAB-db\%s\spm\POWERGRIP'%subject)
+os.chdir(test_dir)
 img_4d=nib.load('smoothed.nii.gz')
 data_d4=img_4d.get_data()
 
