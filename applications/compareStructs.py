@@ -55,6 +55,7 @@ renWin.AddRenderer(ren1)
 renWin2.AddRenderer(ren2)
 ren1.SetBackground(0.15, 0.1, 0.15)
 
+#config=braviz.interaction.get_config(__file__)
 config=braviz.interaction.get_config()
 background= config.get_background()
 ren2.SetBackground(background)

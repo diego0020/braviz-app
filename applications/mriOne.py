@@ -13,7 +13,7 @@ import braviz
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=10)
 img=reader.get('MRI','093',format='VTK')
 
-config=braviz.interaction.get_config()
+config=braviz.interaction.get_config(__file__)
 background= config.get_background()
 
 picker = vtk.vtkCellPicker()
@@ -39,7 +39,7 @@ outline.SetInputData(img)
 
 outlineMapper = vtk.vtkPolyDataMapper()
 outlineMapper.SetInputConnection(outline.GetOutputPort())
-fmri
+
 outlineActor = vtk.vtkActor()
 outlineActor.SetMapper(outlineMapper)
 ren.AddActor(outlineActor)
