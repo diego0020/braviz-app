@@ -8,12 +8,17 @@
       <sourceFolder url="file://$MODULE_DIR$/braviz" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/concept_tests" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/applications" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/braint" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/kernel" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="" />
+  </component>
   <component name="PyDocumentationSettings">
-    <option name="myDocStringFormat" value="Epytext" />
+    <option name="myDocStringFormat" value="Plain" />
   </component>
   <component name="ReSTService">
     <option name="workdir" value="$MODULE_DIR$" />

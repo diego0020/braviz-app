@@ -1,16 +1,19 @@
 from __future__ import division
-from braviz.readAndFilter import nibNii2vtk,applyTransform
+import os
+
 from numpy.linalg import inv
+import vtk
+import numpy as np
+import nibabel as nib
+
+from braviz.readAndFilter import nibNii2vtk,applyTransform
+import braviz
+import braviz.visualization.vtk_charts
+from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
 
 __author__ = 'Diego'
 
-import braviz
-from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
-import vtk
-import math
-import os
-import numpy as np
-import nibabel as nib
+
 
 reader=braviz.readAndFilter.kmc40AutoReader()
 viewer=braviz.visualization.simpleVtkViewer()
@@ -67,48 +70,11 @@ image_property.SetColorLevel(1000)
 
 #============CURSORS=====================
 
-actor_delta=1.0 #Space within the cursor and the image, notice there are cursors on both sides
+cursors=braviz.visualization.cursors()
+cursors.set_spacing(-2,2,2)
+set_cursor= cursors.set_cursor
 
-cursor_x=vtk.vtkLineSource()
-cursor_x_mapper=vtk.vtkPolyDataMapper()
-cursor_x_mapper.SetInputConnection(cursor_x.GetOutputPort())
-cursor_x_actor=vtk.vtkActor()
-cursor_x_actor2=vtk.vtkActor()
-cursor_x_actor.SetMapper(cursor_x_mapper)
-cursor_x_actor2.SetMapper(cursor_x_mapper)
-
-viewer.ren.AddActor(cursor_x_actor)
-viewer.ren.AddActor(cursor_x_actor2)
-
-cursor_y=vtk.vtkLineSource()
-cursor_y_mapper=vtk.vtkPolyDataMapper()
-cursor_y_mapper.SetInputConnection(cursor_y.GetOutputPort())
-cursor_y_actor=vtk.vtkActor()
-cursor_y_actor2=vtk.vtkActor()
-cursor_y_actor.SetMapper(cursor_y_mapper)
-cursor_y_actor2.SetMapper(cursor_y_mapper)
-viewer.ren.AddActor(cursor_y_actor)
-viewer.ren.AddActor(cursor_y_actor2)
-
-cursor_x_actor.GetProperty().SetColor(1.0 , 0 , 0)
-cursor_x_actor2.GetProperty().SetColor(1.0 , 0 , 0)
-cursor_y_actor.GetProperty().SetColor(1.0 , 0 , 0)
-cursor_y_actor2.GetProperty().SetColor(1.0 , 0 , 0)
-
-cursor_x_actor.SetPosition(-1*actor_delta,0,0)
-cursor_x_actor2.SetPosition(actor_delta,0,0)
-
-cursor_y_actor.SetPosition(-1*actor_delta,0,0)
-cursor_y_actor2.SetPosition(actor_delta,0,0)
-
-def set_cursor(z,x,y):
-    #current_slice=slice_mapper.GetSliceNumber()
-    dz,dx,dy=t_stat_img.GetSpacing()
-    cursor_x.SetPoint1((dz*z,dx*x,dy*0))
-    cursor_x.SetPoint2((dz*z,dx*x,dy*68))
-    cursor_y.SetPoint1((dz*z,dx*0,dy*y))
-    cursor_y.SetPoint2((dz*z,dx*95,dy*y))
-
+viewer.ren.AddActor(cursors)
 #===============T-IMAGE=================
 plane_widget=braviz.visualization.persistentImagePlane()
 #plane_widget.EnabledOff()
@@ -190,16 +156,13 @@ mri_lut.SetLevel(647)
 blend.AddInputConnection(color_mapper2.GetOutputPort())
 blend.AddInputConnection(color_mapper1.GetOutputPort())
 
-#blend.SetBlendModeToCompound ()
 blend.SetOpacity(0,0.5)
 blend.SetOpacity(1,0.5)
 blend.Update()
 
 plane_widget.SetInputConnection(blend.GetOutputPort())
-#plane_widget.SetInputData(mri_img)
 plane_widget.SetInteractor(viewer.iren)
 plane_widget.On()
-#plane_widget.text1_value_from_img(t_stat_img)
 plane_widget.GetColorMap().SetLookupTable(None)
 plane_widget.DisplayTextOff()
 
@@ -219,37 +182,21 @@ viewer.ren.AddActor(outlineActor)
 def copy_cursor(caller,event,event_name='std'):
     global current_x_coord,current_y_coord,spatial_slice
     if event_name=='slice_change':
-        #print "slice change"
-        cursor_x_actor.SetVisibility(1)
-        cursor_y_actor.SetVisibility(1)
         spatial_slice=caller.GetSliceIndex()
         get_time_vol(spatial_slice)
         calculate_bold_signal(spatial_slice,current_x_coord,current_y_coord)
         set_cursor(spatial_slice,current_x_coord,current_y_coord)
-        add_t_chart()
+        refresh_t_chart()
     else:
-        #print "cursor_change"
         cursor_pos=caller.GetCurrentCursorPosition()
-        if event=='StartInteractionEvent':
-            #turn off our cursor
-            cursor_x_actor.SetVisibility(0)
-            cursor_y_actor.SetVisibility(0)
-        elif event=='EndInteractionEvent':
-            cursor_x_actor.SetVisibility(1)
-            cursor_y_actor.SetVisibility(1)
-
-
         calculate_bold_signal(*cursor_pos)
-        #t_score=get_t_score(*cursor_pos)
         spatial_slice=caller.GetSliceIndex()
         current_x_coord=cursor_pos[1]
         current_y_coord=cursor_pos[2]
         set_cursor(spatial_slice,current_x_coord,current_y_coord)
-        add_t_chart()
+        refresh_t_chart()
 
 plane_widget.SetSliceIndex(spatial_slice)
-#plane_widget.AddObserver('StartInteractionEvent',copy_cursor)
-#plane_widget.AddObserver('EndInteractionEvent',copy_cursor)
 custom_id=plane_widget.AddObserver(plane_widget.cursor_change_event,lambda x,y: copy_cursor(x,y,'cursor_change'))
 custom_id2=plane_widget.AddObserver(plane_widget.slice_change_event,lambda x,y: copy_cursor(x,y,'slice_change'))
 
@@ -267,7 +214,7 @@ def picking_observer(caller=None,event=None):
     current_y_coord=y
     calculate_bold_signal(spatial_slice,x,y)
     t_score=get_t_score(spatial_slice,x,y)
-    add_t_chart()
+    refresh_t_chart()
     #print "t-score=%f"%t_score
 slice_actor.AddObserver(vtk.vtkCommand.PickEvent,picking_observer)
 
@@ -279,64 +226,22 @@ slice_actor.AddObserver(vtk.vtkCommand.PickEvent,picking_observer)
 def get_t_score(z,x,y):
     return t_stat_img.GetScalarComponentAsDouble(int(z),int(x),int(y),0)
 
-t_ctxt=vtk.vtkContextActor()
-t_chart=vtk.vtkChartXY()
-t_scene=vtk.vtkContextScene()
+t_ctxt = braviz.visualization.vtk_charts.BarPlot()
 
-t_chart.SetAutoSize(False)
-t_chart.SetSize(vtk.vtkRectf(200,200,400,400))
-t_scene.AddItem(t_chart)
-t_ctxt.SetScene(t_scene)
+win_width = viewer.renWin.GetSize()[0]
+win_height = viewer.renWin.GetSize()[1]
+t_ctxt.set_position(win_width - 110, win_height - 110, 100, 100)
+
+t_ctxt.set_x_axis(title="%(value)f",visible=False)
+t_ctxt.set_y_axis(title="SPM-T Score",limits=(-7,7),ticks=(-5,0,5))
 
 viewer.ren.AddActor(t_ctxt)
-t_scene.SetRenderer(viewer.ren)
-t_table=vtk.vtkTable()
-arr_t=vtk.vtkFloatArray()
-arr_t.SetName("T-score")
+t_ctxt.set_renderer(viewer.ren)
 
-arri_t=vtk.vtkFloatArray()
-arri_t.SetName("index")
-
-t_table.AddColumn(arri_t)
-t_table.AddColumn(arr_t)
-t_table.SetNumberOfRows(1)
-
-pos=vtk.vtkDoubleArray()
-pos.SetNumberOfTuples(3)
-pos.SetTupleValue(0,(-5,))
-pos.SetTupleValue(1,(0,))
-pos.SetTupleValue(2,(5,))
-
-
-def add_t_chart():
-
-    t_table.SetValue(0,0,1)
-    t_score=get_t_score(spatial_slice,current_x_coord,current_y_coord)
-    t_table.SetValue(0,1,t_score)
-    color=fmri_color_int.GetColor(t_score)
-    t_chart.ClearPlots()
-    t_bar=t_chart.AddPlot(vtk.vtkChart.BAR)
-    t_bar.SetInputData(t_table,0,1)
-    rgb_color=np.concatenate((np.dot(color,255),(255,)))
-    rgb_color=rgb_color.astype(int)
-    t_bar.SetColor(*rgb_color)
-    t_bar.SetWidth(4.0)
-    t_ay=t_chart.GetAxis(0)
-    t_ay.SetMinimum(-7)
-    t_ay.SetMaximum(7)
-    t_ay.SetBehavior(1)
-    t_ay.SetTitle("SPM-T score")
-    t_ay.SetCustomTickPositions(pos)
-
-    t_ax=t_chart.GetAxis(1)
-
-    t_ax.SetGridVisible(0)
-    t_ax.SetTicksVisible(0)
-    t_ax.SetLabelsVisible(0)
-    t_ax.SetBehavior(1)
-    t_ax.SetMinimum(0.9)
-    t_ax.SetMaximum(1.1)
-    t_ax.SetTitle('%f'%t_score)
+def refresh_t_chart():
+    t_score = get_t_score(spatial_slice, current_x_coord, current_y_coord)
+    t_color = fmri_color_int.GetColor(t_score)
+    t_ctxt.set_value(t_score, t_color)
 
 #====================CHART================================
 #plane_widget=viewer.addImg(img)
@@ -467,8 +372,7 @@ def click_event_handler(caller=None,event=None):
     p1=chart.GetPoint1()
     p2=chart.GetPoint2()
 
-    t_p1=t_chart.GetPoint1()
-    t_p2=t_chart.GetPoint2()
+    t_x,t_y,t_w,t_h=t_ctxt.get_position()
     if p1[0] < position[0] < p2[0] and p1[1] < position[1] < p2[1]:
         #print 'Click detected'
         if current_mode=='space':
@@ -483,7 +387,7 @@ def click_event_handler(caller=None,event=None):
         slice_actor.SetPosition(-1*TR*slice_idx-2*spatial_slice,0,0)#To keep it still
         command=caller.GetCommand(click_obs_id)
         command.SetAbortFlag(1)
-    elif t_p1[0] < position[0] < t_p2[0] and t_p1[1] < position[1] < t_p2[1]:
+    elif t_x < position[0] < (t_x+t_w) and t_y < position[1] < (t_y+t_h):
         if current_mode=='time':
             change_to_space_mode()
 
@@ -546,12 +450,10 @@ viewer.iren.AddObserver('LeftButtonReleaseEvent',click_to_pick,9)
 
 
 def resize_event_handler(obj=None,event=None):
-    #print 'Resize detected'
     new_width=viewer.renWin.GetSize()[0]
     new_height=viewer.renWin.GetSize()[1]
     chart.SetSize(vtk.vtkRectf(0,0,new_width,new_height//3))
-    t_chart.SetSize(vtk.vtkRectf(new_width-110,new_height-110,
-                                 100,100))
+    t_ctxt.set_position(new_width-110,new_height-110,100,100)
 
 scene.AddObserver('ModifiedEvent',resize_event_handler)
 
@@ -562,7 +464,6 @@ cam1.Azimuth(120)
 
 set_cursor(spatial_slice,current_x_coord,current_y_coord)
 calculate_bold_signal(spatial_slice,current_x_coord,current_y_coord)
-add_t_chart()
-#slicing_event()
+refresh_t_chart()
 viewer.renWin.SetMultiSamples(10)
 viewer.start()

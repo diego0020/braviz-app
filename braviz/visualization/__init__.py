@@ -270,4 +270,50 @@ def add_fibers_balloon(balloon_widget,fib_actor,name=None):
     "Adds a standard balloon for models"
     message=fibers_balloon_message(fib_actor, name)
     balloon_widget.AddBalloon(fib_actor,message)
-    
+
+
+class cursors(vtk.vtkPropAssembly):
+    def __init__(self):
+        actor_delta=1.0 #Space within the cursor and the image, notice there are cursors on both sides
+        cursor_x=vtk.vtkLineSource()
+        cursor_x_mapper=vtk.vtkPolyDataMapper()
+        cursor_x_mapper.SetInputConnection(cursor_x.GetOutputPort())
+        cursor_x_actor=vtk.vtkActor()
+        cursor_x_actor2=vtk.vtkActor()
+        cursor_x_actor.SetMapper(cursor_x_mapper)
+        cursor_x_actor2.SetMapper(cursor_x_mapper)
+
+        cursor_y=vtk.vtkLineSource()
+        cursor_y_mapper=vtk.vtkPolyDataMapper()
+        cursor_y_mapper.SetInputConnection(cursor_y.GetOutputPort())
+        cursor_y_actor=vtk.vtkActor()
+        cursor_y_actor2=vtk.vtkActor()
+        cursor_y_actor.SetMapper(cursor_y_mapper)
+        cursor_y_actor2.SetMapper(cursor_y_mapper)
+
+        cursor_x_actor.SetPosition(-1*actor_delta,0,0)
+        cursor_x_actor2.SetPosition(actor_delta,0,0)
+
+        cursor_y_actor.SetPosition(-1*actor_delta,0,0)
+        cursor_y_actor2.SetPosition(actor_delta,0,0)
+
+        for act in [cursor_x_actor,cursor_x_actor2,cursor_y_actor,cursor_y_actor2]:
+            act.GetProperty().SetColor(1.0 , 0 , 0)
+            self.AddPart(act)
+        self.delta=actor_delta
+        self.cursor_x=cursor_x
+        self.cursor_y=cursor_y
+        self.soacing=(1,1,1)
+
+    def set_spacing(self,dx,dy,dz):
+        self.spacing=(dx,dy,dz)
+
+    def set_cursor(self,z,x,y):
+        #current_slice=slice_mapper.GetSliceNumber()
+        dz,dx,dy=self.spacing
+        self.cursor_x.SetPoint1((dz*z,dx*x,dy*0))
+        self.cursor_x.SetPoint2((dz*z,dx*x,dy*68))
+        self.cursor_y.SetPoint1((dz*z,dx*0,dy*y))
+        self.cursor_y.SetPoint2((dz*z,dx*95,dy*y))
+
+

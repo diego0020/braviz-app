@@ -122,7 +122,8 @@ class TestVis:
         return n
     def loadQueryListResults(self):
         myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53') ##Crear objeto del tipo RDFDBmanager
-        listResults=myManager.loadQuery('C:\Users\jc.forero47\Documents\JohanaForero\Repositorios\\braviz\\braint\java\\braint_v_1.0\File\\rdfqueries\EvaluationTestSubTestSubSubTestNames.txt')
+        #listResults=myManager.loadQuery('C:\Users\jc.forero47\Documents\JohanaForero\Repositorios\\braviz\\braint\java\\braint_v_1.0\File\\rdfqueries\EvaluationTestSubTestSubSubTestNames.txt')
+        listResults=myManager.loadQuery(r'C:\Users\Diego\Programas\braviz\braint\java\braint_v_1.0\File\rdfqueries\EvaluationTestSubTestSubSubTestNames.txt')
         subsubtestlist = list()
         for miItem in listResults:
             print miItem
