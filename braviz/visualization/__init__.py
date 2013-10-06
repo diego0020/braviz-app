@@ -161,6 +161,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
             text2.SetVisibility(0)
             if self.alternative_text1:
                 self.text1.SetVisibility(0)
+            self.MiddleButton = False
         def detectMiddleButton(obj,event):
             if event=='MiddleButtonPressEvent':
                 self.MiddleButton=True

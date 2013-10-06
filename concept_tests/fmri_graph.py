@@ -1,5 +1,6 @@
 from __future__ import division
 import os
+from math import floor,ceil
 
 from numpy.linalg import inv
 import vtk
@@ -12,8 +13,6 @@ import braviz.visualization.vtk_charts
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
 
 __author__ = 'Diego'
-
-
 
 reader=braviz.readAndFilter.kmc40AutoReader()
 viewer=braviz.visualization.simpleVtkViewer()
@@ -139,9 +138,6 @@ color_mapper2=vtk.vtkImageMapToColors()
 color_mapper2.SetInputData(t_stat_img)
 color_mapper2.SetLookupTable(fmri_color_int)
 
-
-
-
 color_mapper1=vtk.vtkImageMapToWindowLevelColors()
 color_mapper1.SetInputData(mri_img)
 mri_lut=vtk.vtkWindowLevelLookupTable()
@@ -150,8 +146,6 @@ color_mapper1.SetLookupTable(mri_lut)
 
 mri_lut.SetWindow(2000)
 mri_lut.SetLevel(647)
-
-
 
 blend.AddInputConnection(color_mapper2.GetOutputPort())
 blend.AddInputConnection(color_mapper1.GetOutputPort())
@@ -179,7 +173,7 @@ viewer.ren.AddActor(outlineActor)
 
 #=========================EXTRA INTERACTION IN SPACE MODE======================================================
 
-def copy_cursor(caller,event,event_name='std'):
+def image_interaction(caller,event,event_name='std'):
     global current_x_coord,current_y_coord,spatial_slice
     if event_name=='slice_change':
         spatial_slice=caller.GetSliceIndex()
@@ -197,8 +191,8 @@ def copy_cursor(caller,event,event_name='std'):
         refresh_t_chart()
 
 plane_widget.SetSliceIndex(spatial_slice)
-custom_id=plane_widget.AddObserver(plane_widget.cursor_change_event,lambda x,y: copy_cursor(x,y,'cursor_change'))
-custom_id2=plane_widget.AddObserver(plane_widget.slice_change_event,lambda x,y: copy_cursor(x,y,'slice_change'))
+custom_id=plane_widget.AddObserver(plane_widget.cursor_change_event,lambda x,y: image_interaction(x,y,'cursor_change'))
+custom_id2=plane_widget.AddObserver(plane_widget.slice_change_event,lambda x,y: image_interaction(x,y,'slice_change'))
 
 #=====================IMAGE PICKING=======================
 p=vtk.vtkCellPicker()
@@ -218,171 +212,98 @@ def picking_observer(caller=None,event=None):
     #print "t-score=%f"%t_score
 slice_actor.AddObserver(vtk.vtkCommand.PickEvent,picking_observer)
 
-
-
 #========================T-SCORE=============================
-
 
 def get_t_score(z,x,y):
     return t_stat_img.GetScalarComponentAsDouble(int(z),int(x),int(y),0)
 
-t_ctxt = braviz.visualization.vtk_charts.BarPlot()
+bar_plot = braviz.visualization.vtk_charts.BarPlot()
 
 win_width = viewer.renWin.GetSize()[0]
 win_height = viewer.renWin.GetSize()[1]
-t_ctxt.set_position(win_width - 110, win_height - 110, 100, 100)
+bar_plot.set_position(win_width - 110, win_height - 110, 100, 100)
 
-t_ctxt.set_x_axis(title="%(value)f",visible=False)
-t_ctxt.set_y_axis(title="SPM-T Score",limits=(-7,7),ticks=(-5,0,5))
+bar_plot.set_x_axis(title="%(value)f",visible=False)
+bar_plot.set_y_axis(title="SPM-T Score",limits=(-7,7),ticks=(-5,0,5))
 
-viewer.ren.AddActor(t_ctxt)
-t_ctxt.set_renderer(viewer.ren)
+viewer.ren.AddActor(bar_plot)
+bar_plot.set_renderer(viewer.ren)
 
 def refresh_t_chart():
     t_score = get_t_score(spatial_slice, current_x_coord, current_y_coord)
     t_color = fmri_color_int.GetColor(t_score)
-    t_ctxt.set_value(t_score, t_color)
+    bar_plot.set_value(t_score, t_color)
 
 #====================CHART================================
-#plane_widget=viewer.addImg(img)
-#plane_widget.SetResliceInterpolateToNearestNeighbour()
-ctxt=vtk.vtkContextActor()
-chart=vtk.vtkChartXY()
-scene=vtk.vtkContextScene()
 
-chart.SetAutoSize(False)
-chart.SetSize(vtk.vtkRectf(0,0,300,200))
-scene.AddItem(chart)
-ctxt.SetScene(scene)
-
-viewer.ren.AddActor(ctxt)
-scene.SetRenderer(viewer.ren)
-
-table=vtk.vtkTable()
-arrX=vtk.vtkFloatArray()
-arrX.SetName("Time")
-
-arrC=vtk.vtkFloatArray()
-arrC.SetName("Bold")
-
-arrS=vtk.vtkFloatArray()
-arrS.SetName("Design")
-
-
-table.AddColumn(arrC)
-table.AddColumn(arrS)
-table.AddColumn(arrX)
-
-
-
-table.SetNumberOfRows(nslices-1) #ignoring first volume as it contains significantive larger signal
-for i in xrange(nslices-1):
-    table.SetValue(i,0,(i+1)*TR)
-
+line_plot = braviz.visualization.vtk_charts.LinePlot()
+viewer.ren.AddActor(line_plot)
+line_plot.set_renderer(viewer.ren)
     #table.SetValue(i,2,math.sin(i*inc*omega))
-
+line_plot.set_x_axis("Time (s.)",(0,TR*nslices))
 
 #=====================BOLD SIGNAL=========================
+min_bar_y=-1
+max_bar_y=1
 def calculate_bold_signal(z,x,y):
-    bold_signal=vol0[:,x,y]
-    for i in xrange(nslices-1):
-        table.SetValue(i,1,float(bold_signal[i+1]))
-    chart.ClearPlots()
-    points=chart.AddPlot(vtk.vtkChart.LINE)
-    points.SetInputData(table,0,1)
-    points.SetColor(0,0,0,255)
-    points.SetWidth(1.0)
-    points.SetMarkerStyle(vtk.vtkPlotPoints.CROSS)
-    ay=chart.GetAxis(0)
-    ay.SetBehavior(0)
-    chart.Update()
-    viewer.renWin.Render()
+    global min_bar_y,max_bar_y
+    #ignore first volume
+    bold_signal=vol0[1:,x,y]
+    time_signal=[t*TR for t in xrange(1,nslices)]
+    min_y=floor(min(bold_signal))
+    max_y=ceil(max(bold_signal))
+    scale=max_y-min_y
+    center=(max_y+min_y)/2
+    min_bar_y=float(min_y-scale*0.1)
+    max_bar_y=float(max_y+scale*0.1)
+    line_plot.set_y_axis("Bold Signal", (min_bar_y, max_bar_y))
+
+    experiment=add_experiment_design(scale*1.1,center)
+
+    colors=((0, 0, 0, 255),(0,0,255,255))
+    widths=(None,1.0)
+    markers=(vtk.vtkPlotPoints.CIRCLE,vtk.vtkPlotPoints.NONE)
+
+    line_plot.set_values((time_signal,bold_signal,experiment),colors,widths,markers)
+
     if current_mode=='time':
         add_line_to_graph(current_volume*TR)
-    add_experiment_design()
+
+
     viewer.renWin.Render()
 #=========================================================
 
 
 #================Experiment design========================
-base_design=([0]*10+[1]*10)*4
-assert len(base_design)==80
+base_design=([-0.5]*10+[0.5]*10)*4
+assert len(base_design) == 80
 base_design=np.array( base_design )
-def add_experiment_design():
-    ay=chart.GetAxis(0)
-    min_y=ay.GetMinimum()
-    max_y=ay.GetMaximum()
-    scale=max_y-min_y
-    ay.SetBehavior(1)
-    design=np.dot(base_design,scale*0.8)+(min_y+0.1*scale)
-    for i in xrange(nslices-1):
-        table.SetValue(i,2,float(design[i+1]))
-    points=chart.AddPlot(vtk.vtkChart.LINE)
-    points.SetInputData(table,0,2)
-    points.SetColor(0,0,255,255)
-    points.SetWidth(1.0)
-    points.SetMarkerStyle(vtk.vtkPlotPoints.NONE)
-
-ax=chart.GetAxis(1)
-ax.SetMaximum(nslices*TR)
-ax.SetMaximumLimit(nslices*TR)
-ax.SetTitle('Time (s.)')
-
-ay=chart.GetAxis(0)
-ay.SetTitle('Bold Signal')
-viewer.ren.SetBackground(0.8,0.8,0.8)
-viewer.renWin.SetMultiSamples(4)
+def add_experiment_design(scale,center):
+    design=np.dot(base_design,scale)+(center)
+    return design
 
 #=======================================LINE IN TIME PLOT===============================
-line_plot_id=None
 def add_line_to_graph(coord=None):
-    global line_plot_id
-    if coord==None:
-        coord=current_volume*TR
-    global line_plot_id
-    if line_plot_id:
-        chart.RemovePlot(line_plot_id)
-    line_plot_id=chart.GetNumberOfPlots()
-    line=chart.AddPlot(vtk.vtkChart.LINE)
-    line.SetColor(255,0,0,255)
-    line_table=vtk.vtkTable()
-    arrlX=vtk.vtkFloatArray()
-    arrlX.SetName('X line')
-    arrlY=vtk.vtkFloatArray()
-    arrlY.SetName('Y line')
-    line_table.AddColumn(arrlX)
-    line_table.AddColumn(arrlY)
-    line_table.SetNumberOfRows(2)
-    ay=chart.GetAxis(0)
-    min_y=ay.GetMinimum()
-    max_y=ay.GetMaximum()
-    ay.SetBehavior(1)
-    line_table.SetValue(0,0,coord) #x
-    line_table.SetValue(1,0,coord) #x
-    line_table.SetValue(0,1,min_y) #y
-    line_table.SetValue(1,1,max_y) #y
-    line.SetInputData(line_table,0,1)
-
+    line_plot.add_vertical_line(coord)
 
 #=======================GLOBAL EVENT HANDLERS======================
 
 def click_event_handler(caller=None,event=None):
     global current_volume
     position=caller.GetEventPosition()
-    p1=chart.GetPoint1()
-    p2=chart.GetPoint2()
 
-    t_x,t_y,t_w,t_h=t_ctxt.get_position()
-    if p1[0] < position[0] < p2[0] and p1[1] < position[1] < p2[1]:
+    b_x, b_y, b_w, b_h = line_plot.get_position()
+    t_x,t_y,t_w,t_h=bar_plot.get_position()
+    if b_x < position[0] < (b_x+b_w) and b_y < position[1] < (b_y+b_h):
         #print 'Click detected'
         if current_mode=='space':
             change_to_time_mode()
-        ax=chart.GetAxis(1)
+        ax=line_plot.x_axis
         t=(position[0]-ax.GetPoint1()[0])/(ax.GetPoint2()[0]-ax.GetPoint1()[0])
         coord=ax.GetMinimum()+(ax.GetMaximum()-ax.GetMinimum())*t
         slice_idx=int(round(coord/TR))
+        current_volume = slice_idx
         add_line_to_graph(slice_idx*TR)
-        current_volume=slice_idx
         slice_mapper.SetSliceNumber(slice_idx)
         slice_actor.SetPosition(-1*TR*slice_idx-2*spatial_slice,0,0)#To keep it still
         command=caller.GetCommand(click_obs_id)
@@ -398,9 +319,7 @@ def change_to_space_mode():
     #print "changing to space mode"
     current_mode='space'
     #remove line from time plot
-    if line_plot_id:
-        chart.RemovePlot(line_plot_id)
-        line_plot_id=None
+    line_plot.add_vertical_line(None)
     #hide bold image
     slice_actor.SetVisibility(0)
     plane_widget.EnabledOn()
@@ -422,7 +341,7 @@ def click_to_pick(caller=None,event=None):
     global picking_time_slice,orig_cam_position
     ex,ey=viewer.iren.GetEventPosition()
     #print event
-    if event=='StartInteractionEvent':
+    if event=='LeftButtonPressEvent':
         picked=p.Pick(ex,ey,0,viewer.ren)
         if picked:
             picking_time_slice=True
@@ -436,14 +355,12 @@ def click_to_pick(caller=None,event=None):
         cam1.SetPosition(orig_cam_position)
     if event=='EndInteractionEvent':
         picking_time_slice=False
-        #print "done"
-        #viewer.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        #print "============================="
+
 
 picking_time_slice=False
 
 click_obs_id=viewer.iren.AddObserver('LeftButtonPressEvent',click_event_handler,10)
-viewer.iren.AddObserver('StartInteractionEvent',click_to_pick,9)
+viewer.iren.AddObserver('LeftButtonPressEvent',click_to_pick,9)
 viewer.iren.AddObserver('ModifiedEvent',click_to_pick,100)
 viewer.iren.AddObserver('EndInteractionEvent',click_to_pick,9)
 viewer.iren.AddObserver('LeftButtonReleaseEvent',click_to_pick,9)
@@ -452,10 +369,10 @@ viewer.iren.AddObserver('LeftButtonReleaseEvent',click_to_pick,9)
 def resize_event_handler(obj=None,event=None):
     new_width=viewer.renWin.GetSize()[0]
     new_height=viewer.renWin.GetSize()[1]
-    chart.SetSize(vtk.vtkRectf(0,0,new_width,new_height//3))
-    t_ctxt.set_position(new_width-110,new_height-110,100,100)
+    line_plot.set_position(0,0,new_width,new_height//3)
+    bar_plot.set_position(new_width-110,new_height-110,100,100)
 
-scene.AddObserver('ModifiedEvent',resize_event_handler)
+line_plot.scene.AddObserver('ModifiedEvent',resize_event_handler)
 
 viewer.iren.Initialize()
 viewer.renWin.Render()
@@ -465,5 +382,8 @@ cam1.Azimuth(120)
 set_cursor(spatial_slice,current_x_coord,current_y_coord)
 calculate_bold_signal(spatial_slice,current_x_coord,current_y_coord)
 refresh_t_chart()
+
+viewer.ren.SetBackground(0.8,0.8,0.8)
+viewer.renWin.SetMultiSamples(4)
 viewer.renWin.SetMultiSamples(10)
 viewer.start()
