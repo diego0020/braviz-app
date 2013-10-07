@@ -157,8 +157,10 @@ def transformGeneralData(data, transform):
         raise Exception("Method not implemented for %s transform" % type(transform))
     if isinstance(data, vtk.vtkPolyData):
         transFilter = vtk.vtkTransformPolyDataFilter()
-    else:
+    elif isinstance(data,vtk.vtkDataSet):
         transFilter = vtk.vtkTransformFilter()
+    else:
+        return vtkTrans.TransformPoint(data)
     transFilter.SetTransform(vtkTrans)
     transFilter.SetInputData(data)
     transFilter.Update()

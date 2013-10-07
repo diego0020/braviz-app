@@ -82,7 +82,7 @@ def get_fmri_lut(threshold=0,alpha=False,n_pts=200):
 
     return fmri_lut
 
-class slice_viewer(vtk.vtkImageSlice):
+class time_slice_viewer(vtk.vtkImageSlice):
     def __init__(self):
         slice_mapper = vtk.vtkImageSliceMapper()
         slice_mapper.SetOrientationToX()

@@ -37,7 +37,7 @@ os.chdir(test_dir)
 img_4d=nib.load('smoothed.nii.gz')
 data_d4=img_4d.get_data()
 
-slice_actor=braviz.visualization.fmri_view.slice_viewer()
+slice_actor=braviz.visualization.fmri_view.time_slice_viewer()
 
 
 viewer.ren.AddActor(slice_actor)
