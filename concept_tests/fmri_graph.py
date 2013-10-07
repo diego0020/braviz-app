@@ -10,6 +10,7 @@ import nibabel as nib
 from braviz.readAndFilter import nibNii2vtk,applyTransform
 import braviz
 import braviz.visualization.vtk_charts
+import braviz.visualization.fmri_view
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
 
 __author__ = 'Diego'
@@ -32,12 +33,21 @@ current_mode='space' #time or space
 
 root_dir=reader.getDataRoot()
 test_dir=os.path.join(root_dir,'%s\spm\POWERGRIP'%subject)
-#os.chdir(r'C:\Users\Diego\Documents\kmc40-db\KAB-db\%s\spm\POWERGRIP'%subject)
 os.chdir(test_dir)
 img_4d=nib.load('smoothed.nii.gz')
 data_d4=img_4d.get_data()
 
-slice_mapper=vtk.vtkImageSliceMapper()
+slice_actor=braviz.visualization.fmri_view.slice_viewer()
+
+
+viewer.ren.AddActor(slice_actor)
+slice_actor.set_time_point(current_volume)
+slice_actor.set_window_level(2000,1000)
+
+#start in spatial mode
+slice_actor.SetVisibility(0)
+
+
 
 
 def get_time_vol(spatial_slice):
@@ -47,26 +57,9 @@ def get_time_vol(spatial_slice):
     nslices=vol0.shape[0]
     vtk0=braviz.readAndFilter.numpy2vtk_img(vol0)
     vtk0.SetSpacing(TR,2,2)
-    slice_mapper.SetInputData(vtk0)
-#img=reader.get('fMRI',subject,name='powergrip',format='vtk')
+    slice_actor.set_input(vtk0,spatial_slice)
+
 get_time_vol(spatial_slice)
-
-slice_mapper.SetOrientationToX()
-slice_actor=vtk.vtkImageSlice()
-slice_actor.SetMapper(slice_mapper)
-viewer.ren.AddActor(slice_actor)
-slice_mapper.SetSliceNumber(current_volume)
-slice_actor.SetPosition(-1*TR*slice_mapper.GetSliceNumber()-2*spatial_slice,0,0)
-
-slice_actor.SetVisibility(0)
-
-image_property=vtk.vtkImageProperty()
-slice_actor.SetProperty(image_property)
-
-image_property.SetColorWindow(2000)
-image_property.SetColorLevel(1000)
-
-
 #============CURSORS=====================
 
 cursors=braviz.visualization.cursors()
@@ -76,40 +69,7 @@ set_cursor= cursors.set_cursor
 viewer.ren.AddActor(cursors)
 #===============T-IMAGE=================
 plane_widget=braviz.visualization.persistentImagePlane()
-#plane_widget.EnabledOff()
 
-fa_lut=vtk.vtkLookupTable()
-fa_lut.SetRampToLinear ()
-fa_lut.SetTableRange(0.0,1.0)
-fa_lut.SetHueRange(0.0, 0.0)
-fa_lut.SetSaturationRange(1.0, 1.0)
-fa_lut.SetValueRange(0.0, 1.0)
-fa_lut.Build()
-
-fmri_color_int=vtk.vtkColorTransferFunction()
-fmri_color_int.ClampingOn()
-fmri_color_int.SetColorSpaceToRGB()
-fmri_color_int.SetRange(-7,7)
-fmri_color_int.Build()
-#                           x   ,r   ,g   , b
-fmri_color_int.AddRGBPoint(-7.0 ,0.0 ,1.0 ,1.0)
-#fmri_color_int.AddRGBPoint(-3.0 ,0.0 ,0.0 ,0.0)
-fmri_color_int.AddRGBPoint( 0.0 ,0.0 ,0.0 ,0.0)
-#fmri_color_int.AddRGBPoint( 3.0 ,0.0 ,0.0 ,0.0)
-fmri_color_int.AddRGBPoint( 7.0 ,1.0 ,0.27,0.0)
-
-fmri_lut=vtk.vtkLookupTable()
-fmri_lut.SetTableRange(-7.0,7.0)
-fmri_lut.SetNumberOfColors(101)
-fmri_lut.Build()
-for i in range(101):
-    s=-7+14*i/100
-    if False and (s<-3 or s>3):
-        color=list(fmri_color_int.GetColor(s))+[0.0]
-    else:
-        color=list(fmri_color_int.GetColor(s))+[1.0]
-    #print color
-    fmri_lut.SetTableValue(i,color)
 
 t_stat_img=reader.get('fMRI',subject,name='powergrip',space='native',format='vtk')
 t_stat_img.SetSpacing([-2,2,2])
@@ -117,10 +77,6 @@ t_stat_img.SetSpacing([-2,2,2])
 origin2=(78,-112,-50)
 dimension2=(79,95,68)
 spacing2=(-2,2,2)
-
-print origin2
-print dimension2
-print spacing2
 
 t1_img=nib.load('T1.nii.gz')
 t1_img_vtk=nibNii2vtk(t1_img)
@@ -132,44 +88,21 @@ mri_img.SetSpacing((-2,2,2))
 
 #blend
 
-blend=vtk.vtkImageBlend()
-
-color_mapper2=vtk.vtkImageMapToColors()
-color_mapper2.SetInputData(t_stat_img)
-color_mapper2.SetLookupTable(fmri_color_int)
-
-color_mapper1=vtk.vtkImageMapToWindowLevelColors()
-color_mapper1.SetInputData(mri_img)
-mri_lut=vtk.vtkWindowLevelLookupTable()
-mri_lut.Build()
-color_mapper1.SetLookupTable(mri_lut)
-
-mri_lut.SetWindow(2000)
-mri_lut.SetLevel(647)
-
-blend.AddInputConnection(color_mapper2.GetOutputPort())
-blend.AddInputConnection(color_mapper1.GetOutputPort())
-
-blend.SetOpacity(0,0.5)
-blend.SetOpacity(1,0.5)
-blend.Update()
+blend=braviz.visualization.fmri_view.blend_fmri_and_mri(t_stat_img,mri_img,threshold=1.0,alfa=True)
+fmri_lut=braviz.visualization.fmri_view.get_fmri_lut(1)
 
 plane_widget.SetInputConnection(blend.GetOutputPort())
+#plane_widget.SetInputConnection(color_mapper2.GetOutputPort())
 plane_widget.SetInteractor(viewer.iren)
 plane_widget.On()
 plane_widget.GetColorMap().SetLookupTable(None)
 plane_widget.DisplayTextOff()
 
 # An outline is shown for context.
-outline = vtk.vtkOutlineFilter()
-outline.SetInputData(t_stat_img)
+outline = braviz.visualization.outline_actor()
+outline.set_input_data(t_stat_img)
 
-outlineMapper = vtk.vtkPolyDataMapper()
-outlineMapper.SetInputConnection(outline.GetOutputPort())
-
-outlineActor = vtk.vtkActor()
-outlineActor.SetMapper(outlineMapper)
-viewer.ren.AddActor(outlineActor)
+viewer.ren.AddActor(outline)
 
 #=========================EXTRA INTERACTION IN SPACE MODE======================================================
 
@@ -194,7 +127,7 @@ plane_widget.SetSliceIndex(spatial_slice)
 custom_id=plane_widget.AddObserver(plane_widget.cursor_change_event,lambda x,y: image_interaction(x,y,'cursor_change'))
 custom_id2=plane_widget.AddObserver(plane_widget.slice_change_event,lambda x,y: image_interaction(x,y,'slice_change'))
 
-#=====================IMAGE PICKING=======================
+#=====================Time IMAGE PICKING=======================
 p=vtk.vtkCellPicker()
 p.SetTolerance(0.001)
 viewer.iren.SetPicker(p)
@@ -207,8 +140,8 @@ def picking_observer(caller=None,event=None):
     current_x_coord=x
     current_y_coord=y
     calculate_bold_signal(spatial_slice,x,y)
-    t_score=get_t_score(spatial_slice,x,y)
     refresh_t_chart()
+    #t_score = get_t_score(spatial_slice, x, y)
     #print "t-score=%f"%t_score
 slice_actor.AddObserver(vtk.vtkCommand.PickEvent,picking_observer)
 
@@ -231,15 +164,14 @@ bar_plot.set_renderer(viewer.ren)
 
 def refresh_t_chart():
     t_score = get_t_score(spatial_slice, current_x_coord, current_y_coord)
-    t_color = fmri_color_int.GetColor(t_score)
+    t_color = fmri_lut.GetColor(t_score)
     bar_plot.set_value(t_score, t_color)
 
-#====================CHART================================
+#====================Line Chart================================
 
 line_plot = braviz.visualization.vtk_charts.LinePlot()
 viewer.ren.AddActor(line_plot)
 line_plot.set_renderer(viewer.ren)
-    #table.SetValue(i,2,math.sin(i*inc*omega))
 line_plot.set_x_axis("Time (s.)",(0,TR*nslices))
 
 #=====================BOLD SIGNAL=========================
@@ -300,12 +232,12 @@ def click_event_handler(caller=None,event=None):
             change_to_time_mode()
         ax=line_plot.x_axis
         t=(position[0]-ax.GetPoint1()[0])/(ax.GetPoint2()[0]-ax.GetPoint1()[0])
-        coord=ax.GetMinimum()+(ax.GetMaximum()-ax.GetMinimum())*t
-        slice_idx=int(round(coord/TR))
+        coord=nslices*t
+        slice_idx=int(round(coord))
         current_volume = slice_idx
         add_line_to_graph(slice_idx*TR)
-        slice_mapper.SetSliceNumber(slice_idx)
-        slice_actor.SetPosition(-1*TR*slice_idx-2*spatial_slice,0,0)#To keep it still
+        slice_actor.set_time_point(slice_idx)
+        #slice_actor.SetPosition(-1*TR*slice_idx-2*spatial_slice,0,0)#To keep it still
         command=caller.GetCommand(click_obs_id)
         command.SetAbortFlag(1)
     elif t_x < position[0] < (t_x+t_w) and t_y < position[1] < (t_y+t_h):

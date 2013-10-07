@@ -317,4 +317,14 @@ class cursors(vtk.vtkPropAssembly):
         self.cursor_y.SetPoint1((dz*z,dx*0,dy*y))
         self.cursor_y.SetPoint2((dz*z,dx*95,dy*y))
 
+class outline_actor(vtk.vtkActor):
+    def __init__(self):
+        outline = vtk.vtkOutlineFilter()
 
+        outlineMapper = vtk.vtkPolyDataMapper()
+        outlineMapper.SetInputConnection(outline.GetOutputPort())
+
+        self.SetMapper(outlineMapper)
+        self.outline=outline
+    def set_input_data(self,input_data):
+        self.outline.SetInputData(input_data)
