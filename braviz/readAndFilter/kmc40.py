@@ -4,7 +4,7 @@ import nibabel as nib
 import numpy as np
 from numpy.linalg import inv
 
-from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, readFreeSurferTransform, cache_function
+from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, readFreeSurferTransform, cache_function,numpy2vtkMatrix
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData,read_annot,read_morph_data,addScalars,getMorphLUT,surfLUT2VTK
 from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
@@ -158,7 +158,10 @@ The path containing this structure must be set."""
             #functional space
             paradigm=space[5:]
             print paradigm
-            pass
+            transform = self.__read_func_transform(subj,paradigm,True)
+            img3 = applyTransform(img2, transform, origin2=(78,-112,-50), dimension2=(79,95,68), spacing2=(-2,2,2),
+                                  interpolate=interpolate)
+            return img3
         else:
             raise Exception('Unknown space %s'%space)
         
@@ -470,14 +473,8 @@ The path containing this structure must be set."""
         elif space[:4] == 'func':
             #functional space
             paradigm = space[5:]
-            if inverse is False:
-                #forward
-
-                pass
-            else:
-                #backward
-                pass
-
+            trans=self.__read_func_transform(subj,paradigm,inverse)
+            return transformPolyData(point_set, trans)
         else:
             print 'Unknown Space %s'%space
             raise Exception('Unknown Space %s'%space)
@@ -509,6 +506,51 @@ The path containing this structure must be set."""
             out_lut.SetTableValue(idx,color_dict[i][0] )
 
         return out_lut
+    def __read_func_transform(self,subject,paradigm,inverse=False):
+        "reads the transform from world to functional space"
+        name=paradigm
+        path = os.path.join(self.getDataRoot(), subject, 'spm')
+        if inverse is False:
+            dartel_warp=os.path.join(path,name,'y_seg_forw.nii.gz')
+            T1_func=os.path.join(path,name,'T1.nii.gz')
+            T1_world=os.path.join(path,'T1','T1.nii.gz')
+            dartel_trans=dartel2GridTransform(dartel_warp, True)
+            T1_func_img=nib.load(T1_func)
+            T1_world_img=nib.load(T1_world)
+            Tf=T1_func_img.get_affine()
+            Tw=T1_world_img.get_affine()
+            T_dif=np.dot(Tf,inv(Tw))
+            aff_vtk = numpy2vtkMatrix(T_dif)
+
+            vtkTrans = vtk.vtkMatrixToLinearTransform()
+            vtkTrans.SetInput(aff_vtk)
+
+            concatenated_trans=vtk.vtkGeneralTransform()
+            concatenated_trans.Identity()
+            concatenated_trans.Concatenate(vtkTrans)
+            concatenated_trans.Concatenate(dartel_trans)
+            return concatenated_trans
+        else:
+            dartel_warp = os.path.join(path, name, 'y_seg_back.nii.gz')
+            T1_func = os.path.join(path, name, 'T1.nii.gz')
+            T1_world = os.path.join(path, 'T1', 'T1.nii.gz')
+            dartel_trans = dartel2GridTransform(dartel_warp, True)
+            T1_func_img = nib.load(T1_func)
+            T1_world_img = nib.load(T1_world)
+            Tf = T1_func_img.get_affine()
+            Tw = T1_world_img.get_affine()
+            T_dif = np.dot(Tf, inv(Tw))
+            aff_vtk = numpy2vtkMatrix(inv(T_dif))
+
+            vtkTrans = vtk.vtkMatrixToLinearTransform()
+            vtkTrans.SetInput(aff_vtk)
+
+            concatenated_trans = vtk.vtkGeneralTransform()
+            concatenated_trans.Identity()
+            concatenated_trans.Concatenate(dartel_trans)
+            concatenated_trans.Concatenate(vtkTrans)
+
+            return concatenated_trans
     def __read_func(self,subject,**kw):
         "Internal function to read functional images, deals with the SPM transforms"
         if not kw.has_key('name'):
@@ -522,9 +564,6 @@ The path containing this structure must be set."""
             return None
         path=os.path.join( self.getDataRoot(),subject,'spm')
         z_map=os.path.join(path,name,'spmT_0001.hdr')
-        dartel_warp=os.path.join(path,name,'y_seg_forw.nii.gz')
-        T1_func=os.path.join(path,name,'T1.nii.gz')
-        T1_world=os.path.join(path,'T1','T1.nii.gz')
         nii_z_map=nib.load(z_map)
         if kw.get('format','nifti').lower()=='nifti':
             return nii_z_map
@@ -534,25 +573,21 @@ The path containing this structure must be set."""
         vtk_z_map=applyTransform(vtk_z_map, inv(nii_z_map.get_affine()))
         if space[:4]=='func':
             return vtk_z_map
-        dartel_trans=dartel2GridTransform(dartel_warp, True)
-        T1_func_img=nib.load(T1_func)
-        T1_func_vtk=nibNii2vtk(T1_func_img)
-        T1_func_vtk=applyTransform(T1_func_vtk, inv(T1_func_img.get_affine()))
-        origin2=T1_func_vtk.GetOrigin()
-        dimension2=T1_func_vtk.GetDimensions()
-        spacing2=T1_func_vtk.GetSpacing()
-        vtk_z_map=applyTransform(vtk_z_map, dartel_trans, origin2, dimension2, spacing2)
-        #Correct for the difference between the functional T1 and the real world T1
-        T1_world_img=nib.load(T1_world)
-        Tf=T1_func_img.get_affine()
-        Tw=T1_world_img.get_affine()
-        T_dif=np.dot(Tf,inv(Tw))
-        world_z_map=applyTransform(vtk_z_map, T_dif)
+
+
+        T1_world = self.get('mri',subject,format='vtk',space='world')
+        origin2=T1_world.GetOrigin()
+        dimension2=T1_world.GetDimensions()
+        spacing2=T1_world.GetSpacing()
+        fmri_trans=self.__read_func_transform(subject,name)
+        world_z_map = applyTransform(vtk_z_map, fmri_trans, origin2, dimension2, spacing2)
+
         return self.__move_img_from_world(subject, world_z_map,True, kw.get('space','world'))
 
         
     
-    
+    def read_func_transform(self,subject,paradigm,inverse):
+        return self.__read_func_transform(subject,paradigm,inverse)
         
     def getDataRoot(self):
         "Returns the data_root of this reader"
