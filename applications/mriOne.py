@@ -1,7 +1,7 @@
 from __future__ import division
 import Tkinter as tk
 import ttk
-
+import numpy as np
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
@@ -151,6 +151,7 @@ def setSubj(event=None):
     outline.SetInputData(img)
     previous_img=image_var.get()
     paint_fibers()
+    show_transform_grid()
     #renWin.Render() called by paint fibers
 
 
@@ -171,6 +172,61 @@ def paint_fibers(event=None):
         fib_actor.SetVisibility(0)
     renWin.Render()
 
+grid_mapper=vtk.vtkPolyDataMapper()
+grid_actor=vtk.vtkActor()
+grid_actor.SetMapper(grid_mapper)
+ren.AddActor(grid_actor)
+grid_actor.SetVisibility(0)
+
+
+def show_transform_grid(event=None):
+    print select_show_warp_grid_status.get()
+    if select_show_warp_grid_status.get() == False:
+        grid_actor.SetVisibility(0)
+        planeWidget.GetTexturePlaneProperty().SetOpacity(1.0)
+        renWin.Render()
+        return
+    subj = select_subj_frame.get()
+    #get original slice index
+    p1 = planeWidget.GetPoint1()
+    p2 = planeWidget.GetPoint2()
+    center=(np.array(p1)+np.array(p2))/2
+    orig_images={
+        'MRI':      {'space':'world'},
+        'FA':       {'space':'world'},
+        'APARC' :   {'space':'world'},
+        'Precision':{'space':'func_Precision'} ,
+        'Power' :   {'space':'func_Power'},
+    }
+
+    #get orig_img
+    orig_img_desc=orig_images[image_var.get()]
+    if image_var.get() in ('Precision','Power'):
+        orig_img = reader.get('fmri', subj, format='vtk', name=image_var.get(), **orig_img_desc)
+    else:
+        orig_img=reader.get(image_var.get(),subj,format='vtk',**orig_img_desc )
+    #target_space -> world
+    orig_center = reader.transformPointsToSpace(center, space_var.get(), subj, True)
+    #world-> orig_space
+    orig_center=reader.transformPointsToSpace(orig_center, orig_img_desc['space'], subj, False)
+    #to image coordinates
+    orig_img_center=(np.array(orig_center)-orig_img.GetOrigin())/orig_img.GetSpacing()
+    orig_slice=round(orig_img_center[0])
+    print orig_slice
+    #get grid
+    grid=braviz.visualization.build_grid(orig_img,orig_slice,5)
+    #transform to current space
+    #orig_space -> world
+    grid = reader.transformPointsToSpace(grid, orig_img_desc['space'], subj, True)
+    #world -> current space
+    grid = reader.transformPointsToSpace(grid, space_var.get(), subj, False)
+    #paint grid
+    grid_mapper.SetInputData(grid)
+    grid_actor.SetVisibility(1)
+    planeWidget.GetTexturePlaneProperty().SetOpacity(0.8)
+    renWin.Render()
+
+
 #===============================================Inteface=================================
 
 root = tk.Tk()
@@ -188,11 +244,16 @@ coordinates_label=tk.Label(control_frame,text='Coordinates:',pady=10)
 coordinates_label.pack(side='top')
 space_var=tk.StringVar()
 space_sel=ttk.Combobox(control_frame,textvariable=space_var)
-space_sel['values']=('Native','World','Talairach','Dartel')
+space_sel['values']=('World','Talairach','Dartel')
 space_sel['state']='readonly'
 space_sel.set('World')
 space_sel.pack(side='top')
 space_sel.bind('<<ComboboxSelected>>',setSubj)
+
+select_show_warp_grid_status=tk.BooleanVar()
+select_show_warp_grid_status.set(False)
+select_show_warp_grid=tk.Checkbutton(control_frame,text="Show tranform grid",variable=select_show_warp_grid_status,command=show_transform_grid)
+select_show_warp_grid.pack(side='top')
 
 image_label=tk.Label(control_frame,text='Image:',pady=10)
 image_label.pack(side='top')
@@ -223,6 +284,7 @@ tract_sel['state']='readonly'
 tract_sel.set('orient')
 tract_sel.pack(side='top')
 tract_sel.bind('<<ComboboxSelected>>',paint_fibers)
+
 
 #=====================================================================
 display_frame = tk.Frame(top)

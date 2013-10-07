@@ -154,6 +154,11 @@ The path containing this structure must be set."""
             transform=readFreeSurferTransform(talairach_file)
             img3=applyTransform(img2, inv(transform),(-100,-120,-110),(190,230,230),(1,1,1),interpolate=interpolate)
             return img3
+        elif space[:4]=='func':
+            #functional space
+            paradigm=space[5:]
+            print paradigm
+            pass
         else:
             raise Exception('Unknown space %s'%space)
         
@@ -462,6 +467,17 @@ The path containing this structure must be set."""
                 dartel_yfile=os.path.join(self.__root,'Dartel',"y_%s-back.nii.gz"%subj)
             dartel_warp=dartel2GridTransform(dartel_yfile)
             return transformPolyData(point_set,dartel_warp)
+        elif space[:4] == 'func':
+            #functional space
+            paradigm = space[5:]
+            if inverse is False:
+                #forward
+
+                pass
+            else:
+                #backward
+                pass
+
         else:
             print 'Unknown Space %s'%space
             raise Exception('Unknown Space %s'%space)
@@ -516,7 +532,7 @@ The path containing this structure must be set."""
         if space=='native':
             return vtk_z_map
         vtk_z_map=applyTransform(vtk_z_map, inv(nii_z_map.get_affine()))
-        if space=='func':
+        if space[:4]=='func':
             return vtk_z_map
         dartel_trans=dartel2GridTransform(dartel_warp, True)
         T1_func_img=nib.load(T1_func)

@@ -13,7 +13,7 @@ orig_img=reader.get('MRI',subject,space='world',format='vtk')
 target_space='dartel'
 #target_space='talairach'
 
-def build_grid(img,slice,sample=5):
+def build_grid(img,slice,sampling_rate=5):
     dimensions=orig_img.GetDimensions()
     spacing = orig_img.GetSpacing()
     origin = orig_img.GetOrigin()
@@ -34,13 +34,13 @@ def build_grid(img,slice,sample=5):
     lines=vtk.vtkCellArray()
     #vertical:
     for j in xrange(dimensions[1]):
-        if j%sample==0:
+        if j%sampling_rate==0:
             lines.InsertNextCell(dimensions[2])
             for k in xrange(dimensions[2]):
                 lines.InsertCellPoint(flat_index(j, k))
     #horizontal
     for k in xrange(dimensions[2]):
-        if k % sample == 0:
+        if k % sampling_rate == 0:
             lines.InsertNextCell(dimensions[1])
             for j in xrange(dimensions[1]):
                 lines.InsertCellPoint(flat_index(j, k))

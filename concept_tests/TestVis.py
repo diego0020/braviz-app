@@ -1,4 +1,4 @@
-
+#Este prograa permite ver los subtest y subsubrtest en un scatterplot atraves de un query del rdf
 from __future__ import division
 import vtk
 import braviz
@@ -10,6 +10,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 from os.path import join as path_join 
 import cPickle
 from kernel.RDFDBManagerClass import *
+import os
 
 #kbDatabaseRoot = 'K:\\JohanaForero\\KAB-db'
 
@@ -121,9 +122,8 @@ class TestVis:
         print '%s : %f'%(code,n)
         return n
     def loadQueryListResults(self):
-        myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53') ##Crear objeto del tipo RDFDBmanager
-        #listResults=myManager.loadQuery('C:\Users\jc.forero47\Documents\JohanaForero\Repositorios\\braviz\\braint\java\\braint_v_1.0\File\\rdfqueries\EvaluationTestSubTestSubSubTestNames.txt')
-        listResults=myManager.loadQuery(r'C:\Users\Diego\Programas\braviz\braint\java\braint_v_1.0\File\rdfqueries\EvaluationTestSubTestSubSubTestNames.txt')
+        self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://gambita.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
+        listResults=self.myManager.loadQuery('File\\rdfqueries\EvaluationTestSubTestSubSubTestNames.txt')
         subsubtestlist = list()
         for miItem in listResults:
             print miItem
@@ -143,7 +143,7 @@ class TestVis:
                 subsubTestName=' '
                 if 'SubSubTestName' in miItem:
                     subsubTestName = miItem['SubSubTestName']['value']
-                subsubtestitem = wAft + '-' + subTestName 
+                subsubtestitem = wAft + '-' + subsubTestName 
                 if subsubtestitem not in subsubtestlist:
                     subsubtestlist.append(subsubtestitem)
             print subsubtestitem
@@ -201,10 +201,13 @@ class TestVis:
         else:
             yaxis.SetTitle('unknown')
 
+    def getRDFDBManager(self):
+        return self.myManager
      
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
 data_root=reader.getDataRoot()
-myVis=TestVis(path_join(data_root,'testPacientes.csv')) ##Crear objeto del tipo TestVis 
+os.chdir(r'C:\Users\Diego\Documents\repo_imagine\braviz\pyTanic\braint')
+myVis=TestVis('File\\baseFinal.csv') ##Crear objeto del tipo TestVis 
 #print myVis.get_headers()
 #print myVis.get_column('GENDE', numeric=True)
 #print myVis.column_to_vtk_array('CODE', 'unknown')
@@ -244,8 +247,8 @@ points.SetIndexedLabels(myVis.column_to_vtk_array(codes,'CODE'))
 points.SetTooltipLabelFormat('code=%i')
 
 myVis.table.AddColumn(myVis.column_to_vtk_array(codes,'CODE'))
-
-myVis.refresh_table(tab_column, tab_var_name, struct_metrics_col, struct_name, metric)
+if tab_column!=None:
+    myVis.refresh_table(tab_column, tab_var_name, struct_metrics_col, struct_name, metric)
 
 root = tk.Tk()
 root.withdraw()
@@ -293,6 +296,7 @@ for h in headers:
 
 tab_list.select_set(0,0) #Selecciona en la interfaz el primero de la lista siempre
 
+
 def change_tabular(event=None):
     global tab_column,tab_var_name
     for w in widgets:
@@ -310,7 +314,26 @@ def change_tabular(event=None):
             "Warning",
             "The %s does not have data" % tab_var_name
         )
-        
+    
+    manager = myVis.getRDFDBManager()
+    
+    children = manager.loadQueryParentChildren('File\\rdfqueries\\ChildrenSearch', tab_var_name, 'isRelatedWith')
+    
+    tab_list_size = tab_list.size()
+    intList = list()
+    for child in children:
+        for i in range(0, tab_list_size):
+            item = tab_list.get(i)
+            regexIndex=item.find('-');
+            item=item[0:regexIndex]
+            if i not in intList:
+                if item == child:
+                    tab_list.itemconfig(i, bg='red', fg='black')
+                    intList.append(i)
+                else:
+                    tab_list.itemconfig(i, bg='white', fg='black')
+            print item
+
     refresh_display()
 
 

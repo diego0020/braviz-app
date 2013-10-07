@@ -2,7 +2,7 @@ from __future__ import division
 import vtk
 from vtk import vtkImagePlaneWidget
 from braviz.interaction import compute_volume_and_area,get_fiber_bundle_descriptors
-
+import numpy as np
 
 class simpleVtkViewer():
     """A very simple windows with vtk renderers and interactors.
@@ -328,3 +328,46 @@ class outline_actor(vtk.vtkActor):
         self.outline=outline
     def set_input_data(self,input_data):
         self.outline.SetInputData(input_data)
+
+
+def build_grid(orig_img, slice, sampling_rate=5):
+    dimensions = orig_img.GetDimensions()
+    spacing = orig_img.GetSpacing()
+    origin = orig_img.GetOrigin()
+    n_points = int(dimensions[1] * dimensions[2])
+
+    def img2world(i, j, k):
+        return np.array((i, j, k)) * spacing + origin
+
+    def flat_index(j, k):
+        return j * dimensions[2] + k
+
+    points = vtk.vtkPoints()
+    points.SetNumberOfPoints(n_points)
+    for j in xrange(dimensions[1]):
+        for k in xrange(dimensions[2]):
+            idx = flat_index(j, k)
+            coords = img2world(slice, j, k)
+            points.SetPoint(idx, coords)
+    grid = vtk.vtkPolyData()
+    grid.SetPoints(points)
+    lines = vtk.vtkCellArray()
+    #vertical:
+    for j in xrange(dimensions[1]):
+        if j % sampling_rate == 0:
+            lines.InsertNextCell(dimensions[2])
+            for k in xrange(dimensions[2]):
+                lines.InsertCellPoint(flat_index(j, k))
+                #horizontal
+    for k in xrange(dimensions[2]):
+        if k % sampling_rate == 0:
+            lines.InsertNextCell(dimensions[1])
+            for j in xrange(dimensions[1]):
+                lines.InsertCellPoint(flat_index(j, k))
+
+    grid.SetLines(lines)
+    cleaner = vtk.vtkCleanPolyData()
+    cleaner.SetInputData(grid)
+    cleaner.Update()
+    clean_grid = cleaner.GetOutput()
+    return clean_grid
