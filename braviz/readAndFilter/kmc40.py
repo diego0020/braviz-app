@@ -42,6 +42,8 @@ The path containing this structure must be set."""
             APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
             
             FMRI: requires name=<Paradigm>
+
+            BOLD: requires name=<Paradigm>, only nifti format is available
     
             MODEL:Use name=<model> to get the vtkPolyData. Use index='T' to get a list of the available models for a subject.
                   Use color='t' to get the standard color associated to the structure 
@@ -95,6 +97,8 @@ The path containing this structure must be set."""
             return self.__getImg(data,subj,**kw)
         elif data=="FMRI":
             return self.__read_func(subj, **kw)
+        elif data=='BOLD':
+            return self.__read_bold(subj,kw['name'])
         else:
             print "Data type not available"
             raise(Exception("Data type not available"))
@@ -154,10 +158,10 @@ The path containing this structure must be set."""
             transform=readFreeSurferTransform(talairach_file)
             img3=applyTransform(img2, inv(transform),(-100,-120,-110),(190,230,230),(1,1,1),interpolate=interpolate)
             return img3
-        elif space[:4]=='func':
+        elif space[:4]in ('func','fmri'):
             #functional space
             paradigm=space[5:]
-            print paradigm
+            #print paradigm
             transform = self.__read_func_transform(subj,paradigm,True)
             img3 = applyTransform(img2, transform, origin2=(78,-112,-50), dimension2=(79,95,68), spacing2=(-2,2,2),
                                   interpolate=interpolate)
@@ -470,7 +474,7 @@ The path containing this structure must be set."""
                 dartel_yfile=os.path.join(self.__root,'Dartel',"y_%s-back.nii.gz"%subj)
             dartel_warp=dartel2GridTransform(dartel_yfile)
             return transformPolyData(point_set,dartel_warp)
-        elif space[:4] == 'func':
+        elif space[:4] in ('func','fmri'):
             #functional space
             paradigm = space[5:]
             trans=self.__read_func_transform(subj,paradigm,inverse)
@@ -508,7 +512,7 @@ The path containing this structure must be set."""
         return out_lut
     def __read_func_transform(self,subject,paradigm,inverse=False):
         "reads the transform from world to functional space"
-        name=paradigm
+        name=paradigm.upper()
         path = os.path.join(self.getDataRoot(), subject, 'spm')
         if inverse is False:
             dartel_warp=os.path.join(path,name,'y_seg_forw.nii.gz')
@@ -584,10 +588,14 @@ The path containing this structure must be set."""
 
         return self.__move_img_from_world(subject, world_z_map,True, kw.get('space','world'))
 
-        
+    def __read_bold(self,subj,paradigm):
+        paradigm=paradigm.upper()
+        route=os.path.join(self.getDataRoot(),subj,'spm',paradigm,'smoothed.nii.gz')
+        img_4d = nib.load(route)
+        return img_4d
     
-    def read_func_transform(self,subject,paradigm,inverse):
-        return self.__read_func_transform(subject,paradigm,inverse)
+    #def read_func_transform(self,subject,paradigm,inverse):
+    #    return self.__read_func_transform(subject,paradigm,inverse)
         
     def getDataRoot(self):
         "Returns the data_root of this reader"

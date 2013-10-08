@@ -304,18 +304,27 @@ class cursors(vtk.vtkPropAssembly):
         self.delta=actor_delta
         self.cursor_x=cursor_x
         self.cursor_y=cursor_y
-        self.soacing=(1,1,1)
+        self.spacing=(1,1,1)
+        self.dimensions=(10,95,68)
+        self.origin = (0,0,0)
 
     def set_spacing(self,dx,dy,dz):
         self.spacing=(dx,dy,dz)
+    def set_dimensions(self,nx,ny,nz):
+        self.dimensions=(nx,ny,nz)
+    def set_origin(self,x,y,z):
+        self.origin=(x,y,z)
 
     def set_cursor(self,z,x,y):
         #current_slice=slice_mapper.GetSliceNumber()
+        #Attention to change in variables, now XY define the plane
         dz,dx,dy=self.spacing
-        self.cursor_x.SetPoint1((dz*z,dx*x,dy*0))
-        self.cursor_x.SetPoint2((dz*z,dx*x,dy*68))
-        self.cursor_y.SetPoint1((dz*z,dx*0,dy*y))
-        self.cursor_y.SetPoint2((dz*z,dx*95,dy*y))
+        oz,ox,oy=self.origin
+        nz,nx,ny=self.dimensions
+        self.cursor_x.SetPoint1((oz+dz*z,ox+dx*x,oy+dy*0))
+        self.cursor_x.SetPoint2((oz+dz*z,ox+dx*x,oy+dy*ny))
+        self.cursor_y.SetPoint1((oz+dz*z,ox+dx*0,oy+dy*y))
+        self.cursor_y.SetPoint2((oz+dz*z,ox+dx*nx,oy+dy*y))
 
 class outline_actor(vtk.vtkActor):
     def __init__(self):

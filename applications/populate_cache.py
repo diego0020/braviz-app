@@ -128,6 +128,7 @@ def populate_cache(subj):
     #fMRI
     paradigms=('POWERGRIP','PRECISION')
     for p in paradigms:
+        print p
         reader2.get('fMRI',subj,format='vtk',name=p,space='world')
         reader2.get('MRI',subj,format='vtk',name=p,space='fmri_%s'%p)
 
