@@ -250,8 +250,7 @@ def click_to_pick(caller=None,event=None):
     #print event
     if event=='LeftButtonPressEvent':
         picked=picker.Pick(ex,ey,0,ren)
-        if picked:
-            picking_time_slice=True
+        if picking_time_slice:
             command = caller.GetCommand(mouse_press_event_id)
             command.SetAbortFlag(1)
             return
@@ -299,7 +298,8 @@ def click_event_handler(caller=None,event=None):
 
 def picking_observer(caller=None,event=None):
     #print "pica pica"
-    global current_x_coord,current_y_coord
+    global current_x_coord,current_y_coord,picking_time_slice
+    picking_time_slice = True
     x,y= picker.GetPointIJK()[1:]
     set_cursor(spatial_slice,x,y)
     current_x_coord=x
