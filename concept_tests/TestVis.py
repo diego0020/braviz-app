@@ -206,7 +206,9 @@ class TestVis:
      
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
 data_root=reader.getDataRoot()
-os.chdir(r'C:\Users\Diego\Documents\repo_imagine\braviz\pyTanic\braint')
+working_director=os.path.dirname(__file__)
+working_director=os.path.join(working_director,'../braint')
+os.chdir(working_director)
 myVis=TestVis('File\\baseFinal.csv') ##Crear objeto del tipo TestVis 
 #print myVis.get_headers()
 #print myVis.get_column('GENDE', numeric=True)
