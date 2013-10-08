@@ -22,21 +22,22 @@ current_volume=34
 current_x_coord=25
 current_y_coord=10
 spatial_slice=62
-
+current_coords=[spatial_slice,current_x_coord,current_y_coord]
+current_axis=0
 current_mode='space' #time or space
 #===============================================
 
 
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=10)
-t_stat_img=reader.get('fMRI',subject,format='VTK',space='func',name='powergrip')
+t_stat_img=reader.get('fMRI',subject,format='VTK',space='func',name='precision')
 origin=t_stat_img.GetOrigin()
 spacing=t_stat_img.GetSpacing()
 dimensions=t_stat_img.GetDimensions()
 
-bold_img=reader.get('BOLD',subject,name='powergrip')
+bold_img=reader.get('BOLD',subject,name='precision')
 bold_data=bold_img.get_data()
 
-mri_img=reader.get('MRI',subject,format='VTK',space='fmri_powergrip')
+mri_img=reader.get('MRI',subject,format='VTK',space='fmri_precision')
 
 
 picker = vtk.vtkCellPicker()
@@ -212,6 +213,17 @@ def setThreshold(Event=None):
     blend.change_threshold(threshold_slider.get())
     renWin.Render()
 
+
+def change_orientation(Event=None):
+    global current_axis
+    orientations_dict={'Axial' : 2, 'Sagital': 0, 'Coronal' : 1}
+    axis=orientations_dict[slice_view_var.get()]
+    planeWidget.set_orientation(axis)
+    planeWidget.SetSliceIndex(current_coords[axis])
+    cursors.change_axis(axis)
+    current_axis=axis
+    set_cursor(*current_coords)
+    renWin.Render()
 def resize_event_handler(obj=None, event=None):
     new_width = renWin.GetSize()[0]
     new_height = renWin.GetSize()[1]
@@ -221,12 +233,13 @@ def resize_event_handler(obj=None, event=None):
 line_plot.scene.AddObserver('ModifiedEvent', resize_event_handler)
 
 def image_interaction(caller,event,event_name='std'):
-    global current_x_coord,current_y_coord,spatial_slice
+    global current_x_coord,current_y_coord,spatial_slice,current_coords
     if event_name=='slice_change':
         spatial_slice=caller.GetSliceIndex()
+        current_coords[current_axis]=spatial_slice
         get_time_vol(spatial_slice)
         calculate_bold_signal(spatial_slice,current_x_coord,current_y_coord)
-        set_cursor(spatial_slice,current_x_coord,current_y_coord)
+        set_cursor(*current_coords)
         refresh_t_chart()
     else:
         cursor_pos=caller.GetCurrentCursorPosition()
@@ -234,7 +247,8 @@ def image_interaction(caller,event,event_name='std'):
         spatial_slice=caller.GetSliceIndex()
         current_x_coord=cursor_pos[1]
         current_y_coord=cursor_pos[2]
-        set_cursor(spatial_slice,current_x_coord,current_y_coord)
+        current_coords=list(cursor_pos)
+        set_cursor(*cursor_pos)
         refresh_t_chart()
 
 planeWidget.SetSliceIndex(spatial_slice)
@@ -365,7 +379,7 @@ select_paradigm=ttk.Combobox(paradigm_panel,textvariable=paradigm_var,width=10)
 select_paradigm.grid(row=0,column=1)
 select_paradigm['values']=('Precision','Powergrip')
 select_paradigm['state']='readonly'
-select_paradigm.set('Powergrip')
+select_paradigm.set('Precision')
 select_paradigm.bind('<<ComboboxSelected>>',setSubj)
 
 paradigm_label=tk.Label(paradigm_panel,text="Paradigm: ")
@@ -387,7 +401,19 @@ threshold_slider.grid(row=1,sticky='EW',padx=10,column=0)
 threshold_frame.columnconfigure(0,weight=1)
 threshold_frame.grid(row=4,pady=20,sticky='WE',column=0)
 
+#---------------------------------
 
+slice_frame=tk.Frame(control_frame)
+slice_label=tk.Label(slice_frame,text='Slice: ')
+slice_view_var=tk.StringVar()
+select_slice=ttk.Combobox(slice_frame,textvariable=slice_view_var,width=10)
+select_slice['values']=('Axial','Coronal','Sagital')
+select_slice['state']='readonly'
+select_slice.set('Sagital')
+select_slice.bind('<<ComboboxSelected>>',change_orientation)
+select_slice.grid(row=0,column=1)
+slice_label.grid(row=0,column=0)
+slice_frame.grid(row=5,pady=20)
 #=====================================================================
 display_frame = tk.Frame(top)
 control_frame.pack(side="left", anchor="n", fill="y", expand="false")

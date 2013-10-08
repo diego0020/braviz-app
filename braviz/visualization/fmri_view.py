@@ -68,11 +68,11 @@ def get_fmri_lut(threshold=0,alpha=False,n_pts=200):
     color_interpolator.SetRange(-7, 7)
     color_interpolator.Build()
     #                                x   ,r   ,g   , b
-    color_interpolator.AddRGBPoint(-7.0, 0.0, 1.0, 0.0)
-    color_interpolator.AddRGBPoint(-3.5, 0.0, 1.0, 1.0)
+    color_interpolator.AddRGBPoint(-9.0, 0.0, 1.0, 0.0)
+    color_interpolator.AddRGBPoint(-4.5, 0.0, 1.0, 1.0)
     color_interpolator.AddRGBPoint(0.0, 0.2, 0.2, 0.2)
-    color_interpolator.AddRGBPoint(3.5, 1.0, 0.0, 0.0)
-    color_interpolator.AddRGBPoint(7.0, 1.0, 0.27, 0.0)
+    color_interpolator.AddRGBPoint(4.5, 1.0, 0.0, 0.0)
+    color_interpolator.AddRGBPoint(9.0, 1.0, 1.0, 0.0)
 
     if alpha is False:
         return color_interpolator

@@ -237,6 +237,12 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.alternative_text1=False
         self.alternative_img=None
         self.text1=None
+    def set_orientation(self,orientation):
+        "Orientation is x:0 , y:1, z:2"
+        self.Orientation=orientation
+        self.SetPlaneOrientation(self.Orientation)
+        mid_slice = self.GetInput().GetDimensions()[self.Orientation] // 2
+        self.SetSliceIndex(mid_slice)
 
 def add_solid_balloon(balloon_widget,solid_actor,name=None):
     "Adds a standard balloon for models"
@@ -274,7 +280,7 @@ def add_fibers_balloon(balloon_widget,fib_actor,name=None):
 
 
 class cursors(vtk.vtkPropAssembly):
-    def __init__(self):
+    def __init__(self,axis=0):
         actor_delta=1.0 #Space within the cursor and the image, notice there are cursors on both sides
         cursor_x=vtk.vtkLineSource()
         cursor_x_mapper=vtk.vtkPolyDataMapper()
@@ -292,11 +298,17 @@ class cursors(vtk.vtkPropAssembly):
         cursor_y_actor.SetMapper(cursor_y_mapper)
         cursor_y_actor2.SetMapper(cursor_y_mapper)
 
-        cursor_x_actor.SetPosition(-1*actor_delta,0,0)
-        cursor_x_actor2.SetPosition(actor_delta,0,0)
+        actors_spacing1 = [0, 0, 0]
+        actors_spacing2 = [0, 0, 0]
 
-        cursor_y_actor.SetPosition(-1*actor_delta,0,0)
-        cursor_y_actor2.SetPosition(actor_delta,0,0)
+        actors_spacing1[axis] = -1 * actor_delta
+        actors_spacing2[axis] = 1 * actor_delta
+
+        cursor_x_actor.SetPosition(actors_spacing1)
+        cursor_x_actor2.SetPosition(actors_spacing2)
+
+        cursor_y_actor.SetPosition(actors_spacing1)
+        cursor_y_actor2.SetPosition(actors_spacing2)
 
         for act in [cursor_x_actor,cursor_x_actor2,cursor_y_actor,cursor_y_actor2]:
             act.GetProperty().SetColor(1.0 , 0 , 0)
@@ -307,6 +319,11 @@ class cursors(vtk.vtkPropAssembly):
         self.spacing=(1,1,1)
         self.dimensions=(10,95,68)
         self.origin = (0,0,0)
+        self.axis=axis
+        self.actor_x1=cursor_x_actor
+        self.actor_x2 = cursor_x_actor2
+        self.actor_y1 = cursor_y_actor
+        self.actor_y2 = cursor_y_actor2
 
     def set_spacing(self,dx,dy,dz):
         self.spacing=(dx,dy,dz)
@@ -315,16 +332,39 @@ class cursors(vtk.vtkPropAssembly):
     def set_origin(self,x,y,z):
         self.origin=(x,y,z)
 
-    def set_cursor(self,z,x,y):
+    def set_cursor(self,x,y,z):
         #current_slice=slice_mapper.GetSliceNumber()
         #Attention to change in variables, now XY define the plane
-        dz,dx,dy=self.spacing
-        oz,ox,oy=self.origin
-        nz,nx,ny=self.dimensions
-        self.cursor_x.SetPoint1((oz+dz*z,ox+dx*x,oy+dy*0))
-        self.cursor_x.SetPoint2((oz+dz*z,ox+dx*x,oy+dy*ny))
-        self.cursor_y.SetPoint1((oz+dz*z,ox+dx*0,oy+dy*y))
-        self.cursor_y.SetPoint2((oz+dz*z,ox+dx*nx,oy+dy*y))
+        dx, dy, dz = self.spacing
+        ox, oy, oz = self.origin
+        nx, ny, nz = self.dimensions
+        if self.axis==0:
+            self.cursor_x.SetPoint1((ox+dx*x,oy+dy*y,oz+dz*0))
+            self.cursor_x.SetPoint2((ox+dx*x,oy+dy*y,oz+dz*nz))
+            self.cursor_y.SetPoint1((ox+dx*x,oy+dy*0,oz+dz*z))
+            self.cursor_y.SetPoint2((ox+dx*x,oy+dy*ny,oz+dz*z))
+        elif self.axis==1:
+            self.cursor_x.SetPoint1((ox+dx*x,oy+dy*y,oz+dz*0))
+            self.cursor_x.SetPoint2((ox+dx*x,oy+dy*y,oz+dz*nz))
+            self.cursor_y.SetPoint1((ox+dx*0,oy+dy*y,oz+dz*z))
+            self.cursor_y.SetPoint2((ox+dx*nx,oy+dy*y,oz+dz*z))
+        else:
+            self.cursor_x.SetPoint1((ox+dx*0,oy+dy*y,oz+dz*z))
+            self.cursor_x.SetPoint2((ox+dx*nx,oy+dy*y,oz+dz*z))
+            self.cursor_y.SetPoint1((ox+dx*x,oy+dy*0,oz+dz*z))
+            self.cursor_y.SetPoint2((ox+dx*x,oy+dy*ny,oz+dz*z))
+
+    def change_axis(self, axis):
+        self.axis = axis
+        actors_spacing1 = [0, 0, 0]
+        actors_spacing2 = [0, 0, 0]
+        actors_spacing1[axis] = -1 * self.delta
+        actors_spacing2[axis] = 1 * self.delta
+        self.actor_x1.SetPosition(actors_spacing1)
+        self.actor_y1.SetPosition(actors_spacing1)
+        self.actor_x2.SetPosition(actors_spacing2)
+        self.actor_y2.SetPosition(actors_spacing2)
+
 
 class outline_actor(vtk.vtkActor):
     def __init__(self):
