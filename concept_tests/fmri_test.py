@@ -10,7 +10,7 @@ import numpy as np
 import vtk
 import itertools
 
-os.chdir(r'C:\Users\da.angulo39\Documents\Kanguro\330\spm\POWERGRIP')
+os.chdir(r'K:\JohanaForero\KAB-db\144\spm\POWERGRIP')
 n_bT1=nib.load('T1.nii.gz')
 bT1=braviz.readAndFilter.nibNii2vtk(n_bT1)
 T=n_bT1.get_affine()
@@ -188,7 +188,7 @@ r_concatenated.Update()
 #========
 import braviz
 r=braviz.readAndFilter.kmc40AutoReader()
-func=r.get('fMRI','330',name='POWERGRIP',space='world',format='vtk')
+func=r.get('fMRI','144',name='POWERGRIP',space='world',format='vtk')
 v=braviz.visualization.simpleVtkViewer()
 v.addImg(func)
 v.start()

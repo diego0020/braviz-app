@@ -3,9 +3,12 @@ from __future__ import division
 import vtk
 import braviz
 from os.path import join as path_join 
+
 reader=braviz.readAndFilter.kmc40AutoReader()
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small2.csv')
+
+#file_name = 'File\\testPacientes.csv'
 
 def get_column(name,numeric=False):
     csv_file=open(file_name)
@@ -53,8 +56,9 @@ def get_struct_volume(struct_name,code):
 table=vtk.vtkTable()
 wmi=get_column('WMIIQ', True)
 table.AddColumn(column_to_vtk_array(wmi,'wmi'))
-codes=get_column('code', False)
+codes=get_column('CODE', False)
 volumes=map(lambda code: get_struct_volume('CC_Anterior',code) ,codes)
+
 table.AddColumn(column_to_vtk_array(volumes,'volume'))
 table.AddColumn(column_to_vtk_array(codes,'code'))
 
@@ -67,6 +71,7 @@ view.GetScene().AddItem(chart)
 chart.SetShowLegend(False)
 
 points=chart.AddPlot(vtk.vtkChart.POINTS)
+
 points.SetInputData(table,0,1)
 points.SetColor(0,0,0,255)
 points.SetWidth(1.0)
