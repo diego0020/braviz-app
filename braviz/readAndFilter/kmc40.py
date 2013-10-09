@@ -57,7 +57,10 @@ The path containing this structure must be set."""
                          Use lut='T' to get the associated lookUpTable for Annotations and a standard LUT for morphology
     
             FIBERS: The default space is world, use space='diff' to get fibers in diffusion space. 
-                    Use waypoint=<model-name> to restrict to fibers passing through a given MODEL as indicated above
+                    Use waypoint=<model-name> to restrict to fibers passing through a given MODEL as indicated above.
+                    waypoint may also be a list of models. In this case you will by default get tracts that pass through all
+                    the models if the list. This can be changed by setting operation='or', to get tracts which pass through
+                    any of the models.
                     Can accept color=<orient|fa|curv|y|rand> to get different color scalars
     
             TENSORS: Get an unstructured grid containing tensors at the points where they are available
