@@ -399,7 +399,10 @@ The path containing this structure must be set."""
                 if valid_ids==None:
                     valid_ids=new_ids
                 else:
-                    valid_ids.intersection_update(new_ids)
+                    if kw.get('operation','and')=='and':
+                        valid_ids.intersection_update(new_ids)
+                    else:
+                        valid_ids.update(new_ids)
                 if kw.has_key('progress'):
                     kw['progress'].set(nm/len(models)*100)
             if valid_ids==None:

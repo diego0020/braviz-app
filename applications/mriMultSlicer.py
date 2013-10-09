@@ -58,7 +58,12 @@ outlineActor = vtk.vtkActor()
 outlineActor.SetMapper(outlineMapper)
 ren.AddActor(outlineActor)
 
-
+# Tracts
+tracts_actor=vtk.vtkActor()
+tracts_mapper=vtk.vtkPolyDataMapper()
+tracts_actor.SetMapper(tracts_mapper)
+tracts_actor.SetVisibility(0)
+ren.AddActor(tracts_actor)
 
 def setSubj(event=None):
     global img, currSubj,availableModels,previous_selection
@@ -72,6 +77,8 @@ def setSubj(event=None):
     outline.SetInputData(img)
     #update model
     select_model_frame.changeSubj(subj)
+    if show_tracts_var.get() == True:
+        add_tracts()
     refresh_display()
     
 #=========================================Load freeSurfer Model=========================
@@ -117,6 +124,14 @@ def removeModel(model_name):
     del actor
     del mapper
     del model
+
+def add_tracts():
+    models=select_model_frame.get()
+    tracts=reader.get('fibers',currSubj,space=space_var.get(),waypoint=models,operation='or')
+    tracts_mapper.SetInputData(tracts)
+    tracts_actor.SetVisibility(1)
+    refresh_display()
+    #print models
 
 
 def process_model(action,model):
@@ -326,7 +341,17 @@ def change_img_type(event=None):
     renWin.Render()
 image_type.bind('<<ComboboxSelected>>',change_img_type)         
 
-
+#------------------------------------------------------------
+show_tracts_var=tk.BooleanVar()
+show_tracts_var.set(0)
+def toggle_show_tracts(event=None):
+    if show_tracts_var.get() == True:
+        add_tracts()
+    else:
+        tracts_actor.SetVisibility(0)
+    refresh_display()
+show_tracts_toggle=tk.Checkbutton(control_frame,text='Show tracts',variable=show_tracts_var,command=toggle_show_tracts)
+show_tracts_toggle.pack(side='top')
 #===========================models list=======================
 select_model_frame=braviz.interaction.structureList(reader,currSubj,process_model, control_frame,text='Model',padx=10,pady=5)
 select_model_frame.pack(side='top',fill='both',expand=1)
