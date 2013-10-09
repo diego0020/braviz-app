@@ -44,7 +44,7 @@ Mean Length: %.2f
 Max: %.2f
 Min: %.2f
 Std: %.2f"""%(len(d),np.mean(d),np.max(d),np.min(d),np.std(d))
-    if name != None:
+    if name is not None:
         message=name+message
     else:
         message='Fiber Bundle\n'+message

@@ -171,7 +171,7 @@ def update_context():
     for m in context_dict.iterkeys():
         c_model,c_map,c_actor=context_dict[m]
         c_model=c_model=reader.get('model',currSubj,space=currSpace,name=m)
-        if c_model != None:
+        if c_model is not None:
             c_map.SetInputData(c_model)
             c_actor.SetVisibility(1)
             add_solid_balloon(balloon_widget, c_actor,m )

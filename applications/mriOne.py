@@ -105,7 +105,7 @@ def setSubj(event=None):
         color_mapper2.SetLookupTable(fmri_color_int)
 
 
-        if fa_img != None:
+        if fa_img is not None:
             blend.AddInputConnection(color_mapper2.GetOutputPort())
             planeWidget.text1_value_from_img(fa_img)
             

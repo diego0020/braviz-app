@@ -93,7 +93,7 @@ class structureList(LabelFrame):
         availableModels=reader.get('model',initial_subj,index='t')
         self.tk_listvariable.set(tuple(sorted(availableModels)))
         
-        if initial_models != None:
+        if initial_models is not None:
             self.chosen_models=set(initial_models)
         else:
             self.chosen_models=set([ 'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior',])
@@ -104,7 +104,7 @@ class structureList(LabelFrame):
                 pass
             else:
                 model_list.selection_set(index)
-                if command != None:
+                if command is not None:
                     command('add',m)
         
         self.previous_selection=set(model_list.curselection())
@@ -128,7 +128,7 @@ class structureList(LabelFrame):
                 print "WARNING: this shouldn't happen, model_idx changed by more than one"
             new_name=self.model_list.get(new_set.pop())
             chosen_models.add(new_name)
-            if self.command != None: 
+            if self.command is not None:
                 self.command('add',new_name)
             #print "%s added"%(new_name)
         #find if a model was removed
@@ -138,7 +138,7 @@ class structureList(LabelFrame):
                 print "WARNING: this shouldn't happen, model_idx changed by more than one"
             remove_name=self.model_list.get(removed_set.pop())
             chosen_models.remove(remove_name)
-            if self.command != None:
+            if self.command is not None:
                 self.command('remove',remove_name)
             #print "%s removed"%(remove_name)
         self.previous_selection=set(self.model_list.curselection())
@@ -147,7 +147,7 @@ class structureList(LabelFrame):
         new_models=set(self.reader.get('model',newSubj,index='t'))
         unavailable_models=self.chosen_models-new_models
         available_models=self.chosen_models.intersection(new_models)
-        if self.command != None:
+        if self.command is not None:
             for m in unavailable_models:
                 self.command('remove',m)
             for m in available_models:

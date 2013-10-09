@@ -120,9 +120,9 @@ def decode_chars(long_int):
     "transform a long int into a tuple of three chars"
     x=int(long_int)
     b=x%256
-    x=x//256
+    x //= 256
     g=x%256
-    x=x//256
+    x //= 256
     r=x%256
     return (r,g,b)
 

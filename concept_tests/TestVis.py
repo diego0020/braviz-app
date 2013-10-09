@@ -104,7 +104,7 @@ class TestVis:
         except:
             n=float('nan')
         else:
-            if fibers == None:
+            if fibers is None:
                 print "Problem loading fibers for subject %s"%code
                 n=float('nan')
             elif metric=='number':
@@ -249,7 +249,7 @@ points.SetIndexedLabels(myVis.column_to_vtk_array(codes,'CODE'))
 points.SetTooltipLabelFormat('code=%i')
 
 myVis.table.AddColumn(myVis.column_to_vtk_array(codes,'CODE'))
-if tab_column!=None:
+if tab_column is not None:
     myVis.refresh_table(tab_column, tab_var_name, struct_metrics_col, struct_name, metric)
 
 root = tk.Tk()
@@ -308,7 +308,7 @@ def change_tabular(event=None):
     regexIndex=tab_var_name.find('-');
     tab_var_name=tab_var_name[0:regexIndex]
     tab_column=myVis.get_column(tab_var_name, True)
-    if tab_column!=None:
+    if tab_column is not None:
         #print tab_column
         myVis.refresh_table(tab_column, tab_var_name, struct_metrics_col, struct_name, metric)
     else:

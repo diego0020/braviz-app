@@ -90,9 +90,7 @@ l_locator.LazyEvaluationOn()
 
 
 
-props={}
-props[id(l_surf_actor)]="Left Hemisphere"
-props[id(r_surf_actor)]="Right Hemisphere"
+props= {id(l_surf_actor): "Left Hemisphere", id(r_surf_actor): "Right Hemisphere"}
 
 
 #Cone for exploring

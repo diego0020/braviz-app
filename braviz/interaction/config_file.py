@@ -29,7 +29,7 @@ def get_config(custom_dir=None):
     config_file_name='braviz.cfg'
     default_config_name=os.path.join(config_dir,config_file_name)
     config_files=[default_config_name]
-    if custom_dir!=None:
+    if custom_dir is not None:
         custom_dir=os.path.realpath(custom_dir)
         full_config_name=os.path.join(custom_dir,config_file_name)
         config_files.append(full_config_name)

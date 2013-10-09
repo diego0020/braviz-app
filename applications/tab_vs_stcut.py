@@ -95,7 +95,7 @@ def get_fibers_metric(struct_name,code,metric='number'):
     except:
         n=float('nan')
     else:
-        if fibers == None:
+        if fibers is None:
             print "Problem loading fibers for subject %s"%code
             n=float('nan')
         elif metric=='number':

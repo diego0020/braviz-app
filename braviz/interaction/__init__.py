@@ -43,7 +43,7 @@ def get_fiber_bundle_descriptors(fib):
 
 def aggregate_fiber_scalar(fib,component=0,norm_factor=1/255):
     scalars=fib.GetPointData().GetScalars()
-    if scalars==None or scalars.GetNumberOfTuples()==0:
+    if scalars is None or scalars.GetNumberOfTuples()==0:
         d=[float('nan')]
     else:
         d=[]

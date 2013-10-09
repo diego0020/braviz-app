@@ -126,7 +126,7 @@ def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
         reader.Update()
         g=reader.GetOutput()
         matrix_array=g.GetFieldData().GetArray('matrix')
-        if matrix_array != None:
+        if matrix_array is not None:
             #"we are dealing with a composed transform"
             readed_matrix=vtk.vtkMatrix4x4()
             for i in range(16):

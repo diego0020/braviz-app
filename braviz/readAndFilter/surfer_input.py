@@ -183,7 +183,7 @@ def surface2vtkPolyData(surf_file):
         vtkFile.close()
     except IOError:
         pass
-    if vtkFile != None:
+    if vtkFile is not None:
         #print 'reading from vtk-file'
         vtkreader=vtk.vtkPolyDataReader()
         vtkreader.SetFileName(surf_file+'.vtk')

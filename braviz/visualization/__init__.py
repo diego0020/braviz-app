@@ -125,7 +125,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         tprop.SetFontSize(18)
         text2.SetVisibility(0)
         def interactTest(obj,event):
-            if self.GetDisplayText()==False:
+            if not self.GetDisplayText():
                 if self.MiddleButton:
                     self.InvokeEvent(self.slice_change_event)
                 else:
@@ -148,7 +148,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
                 self.InvokeEvent(self.cursor_change_event)
                 if self.Labels_set:
                     label=self.get_label(x1,y1,z1)
-                    message=message+': %s'%label
+                    message += ': %s' % label
                 if self.alternative_text1:
                     ix,iy,iz=map(int,(x,y,z))
                     value=self.alternative_img.GetScalarComponentAsDouble(ix,iy,iz,0)
@@ -202,7 +202,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         z1=int(round(z1))
         
         l=int(img2.GetScalarComponentAsDouble(x1,y1,z1,0))
-        if self.labels_dict==None:
+        if self.labels_dict is None:
             return l
         
         if not self.labels_dict.has_key(l):
@@ -250,7 +250,7 @@ def add_solid_balloon(balloon_widget,solid_actor,name=None):
     poly_data=mapper.GetInput()
     (volume,area)=compute_volume_and_area(poly_data)
     message="Volume = %.2f mm3 \nSurface Area = %.2f mm2 "%(volume,area)
-    if name!=None:
+    if name is not None:
         message="%s \n"%name+message
     balloon_widget.AddBalloon(solid_actor,message)
     return
@@ -268,7 +268,7 @@ Mean Length (mm) : %.2f
     Max: %.2f
     Min: %.2f
     Std: %.2f"""%d
-    if name != None:
+    if name is not None:
         message=name+'\n'+message
     else:
         message='Fiber Bundle\n'+message

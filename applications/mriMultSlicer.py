@@ -244,7 +244,7 @@ def set_context(subject_idx):
 def clear_context():
     global ctxt_subject_idx
     #print ctxt_subject_idx
-    if ctxt_subject_idx!=None:
+    if ctxt_subject_idx is not None:
         select_subj_frame.subjects_list.itemconfigure(ctxt_subject_idx,bg='')
     ctxt_subject_idx=None
     for _,_,ac in context_models.itervalues():
@@ -252,7 +252,7 @@ def clear_context():
     refresh_display()
     
 def refresh_context():    
-    if ctxt_subject_idx!=None:
+    if ctxt_subject_idx is not None:
         context_index=ctxt_subject_idx
         clear_context()
         set_context(context_index)

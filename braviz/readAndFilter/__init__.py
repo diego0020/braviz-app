@@ -64,12 +64,12 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
         transform_i = transform.NewInstance()
         transform_i.DeepCopy(transform)
         transform_i.Invert()
-        if origin2 == None:
+        if origin2 is None:
             #TODO: Use a better strategy to find the new origin; this doesn't work with large rotations or reflections
             origin = img.GetOrigin()
             origin = list(origin) + [1]
             origin2 = transform_i.MultiplyDoublePoint(origin)[:-1]
-        if spacing2 == None:
+        if spacing2 is None:
             def get_spacing(i):
                 line = [transform_i.GetElement(i, 0), transform_i.GetElement(i, 1), transform_i.GetElement(i, 2)]
                 return max(line, key=abs)
@@ -95,7 +95,7 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
     outData.SetDimensions(dimension2)
     outData.SetSpacing(spacing2)
     reslicer.SetInformationInput(outData)
-    if interpolate == False:
+    if interpolate is False:
         reslicer.SetInterpolationModeToNearestNeighbor()
     reslicer.Update()
     outImg = reslicer.GetOutput()
@@ -225,8 +225,8 @@ def boundingBoxIntesection(box1, box2):
     #Test intersection in three axis
     for i in range(3):
         #      2----[1]------2------1                                   1-----[2]-----1------2
-        if (box1[2 * i] >= box2[2 * i] and box1[2 * i] <= box2[2 * i + 1]) or (
-                    box2[2 * i] >= box1[2 * i] and box2[2 * i] <= box1[2 * i + 1]):
+        if (box2[2 * i] <= box1[2 * i] <= box2[2 * i + 1]) or (
+                    box1[2 * i] <= box2[2 * i] <= box1[2 * i + 1]):
         #      2----[1]-----1-------2                                   1-----[2]-----2-------1 
             pass
         else:
@@ -271,7 +271,7 @@ def cache_function(max_cache_size):
             key = key.upper()
             if key not in cache:
                 output = f(*args, **kw_args)
-                if output != None:
+                if output is not None:
                     if len(cache) >= max_cache:
                         oldest = min(cache.items(), key=lambda x: x[1][1])[0]
                         cache.pop(oldest)

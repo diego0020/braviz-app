@@ -176,7 +176,7 @@ The path containing this structure must be set."""
         "Auxiliary function to get the available ids"
         contents=os.listdir(self.__root)
         numbers=re.compile('[0-9]+$')
-        ids=[c for c in contents if numbers.match(c)!=None]
+        ids=[c for c in contents if numbers.match(c) is not None]
         ids.sort(key=int)
         return ids
     def __loadFreeSurferModel(self,subject,**kw):
@@ -187,7 +187,7 @@ The path containing this structure must be set."""
         if kw.has_key('index'):
             contents=os.listdir(path)
             pattern=re.compile(r'.*\.vtk$')
-            models=[m[0:-4] for m in contents if pattern.match(m)!=None]
+            models=[m[0:-4] for m in contents if pattern.match(m) is not None]
             return models
         if kw.has_key('name'):
             name=kw['name']
@@ -267,7 +267,7 @@ The path containing this structure must be set."""
         if kw.get('index'):
             contents=os.listdir(path)
             pattern=re.compile(hs+r'.*\.annot$')
-            annots=[m[3:-6] for m in contents if pattern.match(m)!=None]    
+            annots=[m[3:-6] for m in contents if pattern.match(m) is not None]
             morfs=[m for m in morph if hs+'.'+m in contents]
             return morfs+annots
         if kw.has_key('scalars'):
@@ -399,7 +399,7 @@ The path containing this structure must be set."""
                 #if model:
                 #    filterPolylinesWithModel(fibers,model,progress=kw.get('progress'))
                 new_ids=self.__cached_filter_fibers(subj, model_name)
-                if valid_ids==None:
+                if valid_ids is None:
                     valid_ids=new_ids
                 else:
                     if kw.get('operation','and')=='and':
@@ -408,7 +408,7 @@ The path containing this structure must be set."""
                         valid_ids.update(new_ids)
                 if kw.has_key('progress'):
                     kw['progress'].set(nm/len(models)*100)
-            if valid_ids==None:
+            if valid_ids is None:
                 valid_ids=set()
             
             #print valid_ids

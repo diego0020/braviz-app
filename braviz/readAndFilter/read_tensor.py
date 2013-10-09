@@ -45,9 +45,9 @@ def decode_chars(long_int):
     "transform a long int into a tuple of three chars"
     x=int(long_int)
     b=x%256
-    x=x//256
+    x //= 256
     g=x%256
-    x=x//256
+    x //= 256
     r=x%256
     return (r,g,b)
 
@@ -120,15 +120,15 @@ def cached_readTensorImage(tensor_file,fa_file=None, min_fa=0.3):
         #============CACHE READ==================
     cache_file=tensor_file[0:-7]
     if fa_file:
-        cache_file=cache_file+'_%f'%min_fa
-    cache_file=cache_file+'.vtk'
+        cache_file += '_%f' % min_fa
+    cache_file += '.vtk'
     vtkFile=None
     try:
         vtkFile=open(cache_file)
         vtkFile.close()
     except IOError:
         pass
-    if vtkFile != None:
+    if vtkFile is not None:
         print 'reading from vtk-file'
         vtkreader=vtk.vtkUnstructuredGridReader()
         vtkreader.SetFileName(cache_file)
