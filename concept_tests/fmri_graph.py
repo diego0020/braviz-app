@@ -175,10 +175,10 @@ line_plot.set_renderer(viewer.ren)
 line_plot.set_x_axis("Time (s.)",(0,TR*nslices))
 
 #=====================BOLD SIGNAL=========================
-min_bar_y=-1
-max_bar_y=1
+min_bold=-1
+max_bold=1
 def calculate_bold_signal(z,x,y):
-    global min_bar_y,max_bar_y
+    global min_bold,max_bold
     #ignore first volume
     bold_signal=vol0[1:,x,y]
     time_signal=[t*TR for t in xrange(1,nslices)]

@@ -94,9 +94,9 @@ def get_fmri_lut(threshold=0,alpha=False,n_pts=200):
     return fmri_lut
 
 class time_slice_viewer(vtk.vtkImageSlice):
-    def __init__(self):
+    def __init__(self,orientation=0):
         slice_mapper = vtk.vtkImageSliceMapper()
-        slice_mapper.SetOrientationToX()
+        slice_mapper.SetOrientation(orientation)
         self.SetMapper(slice_mapper)
 
 
@@ -111,35 +111,32 @@ class time_slice_viewer(vtk.vtkImageSlice):
         self.slice_mapper=slice_mapper
         self.TR=1
         self.spatial_slice=0
-        #self.cursor=None
-        self.current_x_coord=0
-        self.current_y_coord=0
         self.origin=0
         self.spacing=-2
+        self.orientation=orientation
 
     def set_time_point(self,time):
         TR=self.TR
         space_slice=self.spatial_slice
-        self.SetPosition(-1 * TR * time + self.spacing * space_slice, 0, 0)
+        position=[0,0,0]
+        position[self.orientation]= -1 * TR * time + self.spacing * space_slice
+        self.SetPosition(position)
         self.slice_mapper.SetSliceNumber(time)
-    #def add_cursor(self,cursor):
-    #    self.cursor=cursor
 
-    def get_cursor_position(self):
-        return self.spatial_slice,self.current_x_coord,self.current_y_coord
-
-    def set_interactor(self):
-        pass
-    def set_input(self,input_data,spatial_pos=0,time=0):
+    def set_input(self,input_data,spatial_pos=0,time=0,orientation=0):
         self.slice_mapper.SetInputData(input_data)
         spacing=input_data.GetSpacing()
-        self.TR=spacing[0]
+        self.TR=spacing[orientation]
         self.spatial_slice=spatial_pos
+        self.orientation=orientation
+        self.slice_mapper.SetOrientation(orientation)
         self.set_time_point(time)
+
 
     def set_window_level(self,window,level):
         image_property = self.GetProperty()
         image_property.SetColorWindow(window)
         image_property.SetColorLevel(level)
     def set_z_spacing(self,spacing):
+        "spacing of z axis in space volume"
         self.spacing=spacing

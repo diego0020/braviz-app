@@ -19,10 +19,8 @@ __author__ = 'Diego'
 subject='093'
 TR=3
 current_volume=34
-current_x_coord=25
-current_y_coord=10
 spatial_slice=62
-current_coords=[spatial_slice,current_x_coord,current_y_coord]
+current_coords=[spatial_slice,25,10]
 current_axis=0
 current_mode='space' #time or space
 #===============================================
@@ -113,7 +111,7 @@ ren.AddActor(bar_plot)
 bar_plot.set_renderer(ren)
 
 def refresh_t_chart():
-    t_score = get_t_score(spatial_slice, current_x_coord, current_y_coord)
+    t_score = get_t_score(*current_coords)
     t_color = fmri_lut.GetColor(t_score)
     bar_plot.set_value(t_score, t_color)
 
@@ -125,20 +123,27 @@ line_plot.set_renderer(ren)
 
 
 #=====================BOLD SIGNAL=========================
-min_bar_y=-1
-max_bar_y=1
-def calculate_bold_signal(z,x,y):
-    global min_bar_y,max_bar_y
+min_bold=-1
+max_bold=1
+def calculate_bold_signal(x,y,z):
+    global min_bold,max_bold
     #ignore first volume
-    bold_signal=vol0[1:,x,y]
-    time_signal=[t*TR for t in xrange(1,nslices)]
+    bold_signal=vol0.view()
+    #hold time dimension temporally
+    bold_signal.shape=list(bold_signal.shape)+[1]
+    bold_signal=bold_signal.swapaxes(current_axis,3)
+    position=[x,y,z]
+    position[current_axis]=0
+    bold_signal=bold_signal[position[0],position[1],position[2],1:]
+
+    time_signal=[t*TR for t in xrange(1,n_time_slices)]
     min_y=floor(min(bold_signal))
     max_y=ceil(max(bold_signal))
     scale=max_y-min_y
     center=(max_y+min_y)/2
-    min_bar_y=float(min_y-scale*0.1)
-    max_bar_y=float(max_y+scale*0.1)
-    line_plot.set_y_axis("Bold Signal", (min_bar_y, max_bar_y))
+    min_bold=float(min_y-scale*0.1)
+    max_bold=float(max_y+scale*0.1)
+    line_plot.set_y_axis("Bold Signal", (min_bold, max_bold))
 
     experiment=add_experiment_design(scale*1.1,center)
 
@@ -169,17 +174,25 @@ def add_line_to_graph(coord=None):
     line_plot.add_vertical_line(coord)
 
 #===============================Observers====================
-nslices=0
-def get_time_vol(spatial_slice):
-    global vol0,vtk0,nslices
-    vol0=bold_data[spatial_slice,:,:,:]
-    vol0=np.rollaxis(vol0,2)
-    nslices=vol0.shape[0]
+n_time_slices=0
+def get_time_vol(spatial_slice,axis=0):
+    global vol0,vtk0,n_time_slices
+    #vol0=bold_data[spatial_slice,:,:,:]
+    #vol0=np.rollaxis(vol0,2)
+    #swap the current axis with time axis
+    vol0=np.swapaxes(bold_data,axis,3)
+    # axis 3 is now the fixed in space axis
+    vol0 = vol0[:,:,:,spatial_slice]
+    #time axis
+    n_time_slices=vol0.shape[axis]
     vtk0=braviz.readAndFilter.numpy2vtk_img(vol0)
-    time_spacing=(TR,spacing[1],spacing[2])
+    time_spacing=list(spacing)
+    time_spacing[axis]=TR
     vtk0.SetSpacing(time_spacing)
     vtk0.SetOrigin(origin)
-    slice_actor.set_input(vtk0,spatial_slice)
+
+    slice_actor.set_input(vtk0,spatial_slice,current_volume,axis)
+    slice_actor.set_z_spacing(spacing[axis])
 
 
 
@@ -200,9 +213,9 @@ def setSubj(Event=None):
     spatial_slice=planeWidget.GetSliceIndex()
     #planeWidget.SetInputConnection(blend.GetOutputPort())
 
-    get_time_vol(spatial_slice)
-    calculate_bold_signal(spatial_slice, current_x_coord, current_y_coord)
-    set_cursor(spatial_slice, current_x_coord, current_y_coord)
+    get_time_vol(spatial_slice,current_axis)
+    calculate_bold_signal(*current_coords)
+    set_cursor(*current_coords)
     refresh_t_chart()
     if current_mode=='time':
         add_line_to_graph(current_volume*TR)
@@ -215,14 +228,16 @@ def setThreshold(Event=None):
 
 
 def change_orientation(Event=None):
-    global current_axis
+    global current_axis,spatial_slice
     orientations_dict={'Axial' : 2, 'Sagital': 0, 'Coronal' : 1}
     axis=orientations_dict[slice_view_var.get()]
+    spatial_slice = int(current_coords[axis])
     planeWidget.set_orientation(axis)
-    planeWidget.SetSliceIndex(current_coords[axis])
+    planeWidget.SetSliceIndex(spatial_slice)
     cursors.change_axis(axis)
     current_axis=axis
     set_cursor(*current_coords)
+    get_time_vol(spatial_slice,axis)
     renWin.Render()
 def resize_event_handler(obj=None, event=None):
     new_width = renWin.GetSize()[0]
@@ -237,8 +252,8 @@ def image_interaction(caller,event,event_name='std'):
     if event_name=='slice_change':
         spatial_slice=caller.GetSliceIndex()
         current_coords[current_axis]=spatial_slice
-        get_time_vol(spatial_slice)
-        calculate_bold_signal(spatial_slice,current_x_coord,current_y_coord)
+        get_time_vol(spatial_slice,current_axis)
+        calculate_bold_signal(*current_coords)
         set_cursor(*current_coords)
         refresh_t_chart()
     else:
@@ -292,7 +307,7 @@ def click_event_handler(caller=None,event=None):
             change_to_time_mode()
         ax=line_plot.x_axis
         t=(position[0]-ax.GetPoint1()[0])/(ax.GetPoint2()[0]-ax.GetPoint1()[0])
-        coord=nslices*t
+        coord=n_time_slices*t
         slice_idx=int(round(coord))
         current_volume = slice_idx
         add_line_to_graph(slice_idx*TR)
@@ -312,13 +327,12 @@ def click_event_handler(caller=None,event=None):
 
 def picking_observer(caller=None,event=None):
     #print "pica pica"
-    global current_x_coord,current_y_coord,picking_time_slice
+    global current_x_coord,current_y_coord,picking_time_slice,current_coords
     picking_time_slice = True
-    x,y= picker.GetPointIJK()[1:]
-    set_cursor(spatial_slice,x,y)
-    current_x_coord=x
-    current_y_coord=y
-    calculate_bold_signal(spatial_slice,x,y)
+    current_coords = list(picker.GetPointIJK())
+    current_coords[current_axis]=spatial_slice
+    set_cursor(*current_coords)
+    calculate_bold_signal(*current_coords)
     refresh_t_chart()
     #t_score = get_t_score(spatial_slice, x, y)
     #print "t-score=%f"%t_score
@@ -444,11 +458,11 @@ planeWidget.SetInteractor(iact)
 planeWidget.On()
 
 #-----------------Initialization----------------
-get_time_vol(spatial_slice)
-set_cursor(spatial_slice,current_x_coord,current_y_coord)
+get_time_vol(spatial_slice,current_axis)
+set_cursor(*current_coords)
 refresh_t_chart()
-line_plot.set_x_axis("Time (s.)",(0,TR*nslices))
-calculate_bold_signal(spatial_slice,current_x_coord,current_y_coord)
+line_plot.set_x_axis("Time (s.)",(0,TR*n_time_slices))
+calculate_bold_signal(*current_coords)
 picker.PickFromListOff()
 
 

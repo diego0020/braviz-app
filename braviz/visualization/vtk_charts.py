@@ -60,7 +60,7 @@ class LinePlot(vtk.vtkContextActor):
         table.SetNumberOfRows(len(values[0]))
         try:
             for c,column in enumerate(values):
-                for i in xrange(len(column)):
+                for i in xrange(len(values[0])):
                     table.SetValue(i,c,float(column[i]) )
         except IndexError:
             print "All arrays in values must have the same length"
