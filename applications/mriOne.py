@@ -180,7 +180,6 @@ grid_actor.SetVisibility(0)
 
 
 def show_transform_grid(event=None):
-    print select_show_warp_grid_status.get()
     if select_show_warp_grid_status.get() == False:
         grid_actor.SetVisibility(0)
         planeWidget.GetTexturePlaneProperty().SetOpacity(1.0)

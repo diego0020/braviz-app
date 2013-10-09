@@ -93,6 +93,26 @@ ren.SetBackground(background)
 renWin.SetSize(600, 600)
 ren.AddActor(outline)
 
+#context cortex
+
+left_cortex=reader.get('surf',subject,hemi='l',name='pial',space='fmri_precision')
+right_cortex=reader.get('surf',subject,hemi='r',name='pial',space='fmri_precision')
+
+cortex_append=vtk.vtkAppendPolyData()
+cortex_append.AddInputData(left_cortex)
+cortex_append.AddInputData(right_cortex)
+cortex_mapper=vtk.vtkPolyDataMapper()
+cortex_mapper.SetInputConnection(cortex_append.GetOutputPort())
+cortex_actor=vtk.vtkActor()
+cortex_actor.SetMapper(cortex_mapper)
+ren.AddActor(cortex_actor)
+cortex_prop=cortex_actor.GetProperty()
+cortex_prop.SetColor((0.6,0.6,0.6))
+cortex_actor.SetVisibility(0)
+
+
+
+
 #========================T-SCORE=============================
 
 def get_t_score(z,x,y):
@@ -247,8 +267,9 @@ def resize_event_handler(obj=None, event=None):
 
 line_plot.scene.AddObserver('ModifiedEvent', resize_event_handler)
 
+moving_cursor=False
 def image_interaction(caller,event,event_name='std'):
-    global current_x_coord,current_y_coord,spatial_slice,current_coords
+    global spatial_slice,current_coords,moving_cursor
     if event_name=='slice_change':
         spatial_slice=caller.GetSliceIndex()
         current_coords[current_axis]=spatial_slice
@@ -256,19 +277,24 @@ def image_interaction(caller,event,event_name='std'):
         calculate_bold_signal(*current_coords)
         set_cursor(*current_coords)
         refresh_t_chart()
-    else:
+    elif event_name=='cursor_change':
+        if moving_cursor==False:
+            cortex_prop.SetOpacity(0.1)
+            moving_cursor=True
         cursor_pos=caller.GetCurrentCursorPosition()
         calculate_bold_signal(*cursor_pos)
         spatial_slice=caller.GetSliceIndex()
-        current_x_coord=cursor_pos[1]
-        current_y_coord=cursor_pos[2]
         current_coords=list(cursor_pos)
         set_cursor(*cursor_pos)
         refresh_t_chart()
+    else:
+        moving_cursor=False
+        cortex_prop.SetOpacity(1.0)
 
 planeWidget.SetSliceIndex(spatial_slice)
 custom_id=planeWidget.AddObserver(planeWidget.cursor_change_event,lambda x,y: image_interaction(x,y,'cursor_change'))
 custom_id2=planeWidget.AddObserver(planeWidget.slice_change_event,lambda x,y: image_interaction(x,y,'slice_change'))
+custom_id2=planeWidget.AddObserver('EndInteractionEvent',lambda x,y: image_interaction(x,y,'EndInteractionEvent'))
 
 click_to_pick_obs_id1=None
 
@@ -290,6 +316,8 @@ def click_to_pick(caller=None,event=None):
             command.SetAbortFlag(1)
     if event=='EndInteractionEvent' or event=='LeftButtonReleaseEvent':
         picking_time_slice=False
+        cortex_prop.SetOpacity(1)
+        renWin.Render()
 
 
 picking_time_slice=False
@@ -327,8 +355,10 @@ def click_event_handler(caller=None,event=None):
 
 def picking_observer(caller=None,event=None):
     #print "pica pica"
-    global current_x_coord,current_y_coord,picking_time_slice,current_coords
-    picking_time_slice = True
+    global picking_time_slice,current_coords
+    if picking_time_slice is False:
+        cortex_prop.SetOpacity(0.1)
+        picking_time_slice = True
     current_coords = list(picker.GetPointIJK())
     current_coords[current_axis]=spatial_slice
     set_cursor(*current_coords)
@@ -367,14 +397,19 @@ def switch_mode(Evento=None):
     else:
         change_to_space_mode()
 
-
+def toggle_cortex(Event=None):
+    if show_cortex_var.get()==True:
+        cortex_actor.SetVisibility(1)
+    else:
+        cortex_actor.SetVisibility(0)
+    renWin.Render()
 
 #===============================================Inteface=================================
 
 root = tk.Tk()
 root.withdraw()
 top = tk.Toplevel(root)
-top.title('BraViz-Mri')
+top.title('BraViz-fMRI-Explore')
 
 control_frame = tk.Frame(top,width=100)
 
@@ -428,6 +463,14 @@ select_slice.bind('<<ComboboxSelected>>',change_orientation)
 select_slice.grid(row=0,column=1)
 slice_label.grid(row=0,column=0)
 slice_frame.grid(row=5,pady=20)
+
+#--------------------------
+show_cortex_var=tk.BooleanVar()
+
+toggle_show_cortex=tk.Checkbutton(control_frame,text='Show Cortex',command=toggle_cortex,variable=show_cortex_var)
+toggle_show_cortex.grid()
+show_cortex_var.set(False)
+
 #=====================================================================
 display_frame = tk.Frame(top)
 control_frame.pack(side="left", anchor="n", fill="y", expand="false")
@@ -463,7 +506,9 @@ set_cursor(*current_coords)
 refresh_t_chart()
 line_plot.set_x_axis("Time (s.)",(0,TR*n_time_slices))
 calculate_bold_signal(*current_coords)
-picker.PickFromListOff()
+picker.AddPickList(slice_actor)
+planeWidget.SetPicker(picker)
+
 
 
 
