@@ -225,7 +225,7 @@ fibers_progress_bar=ttk.Progressbar(fibers_frame,orient='horizontal',length='100
 
 #=========================Show Planes========================
 def imagePlanesStatus():
-    if active_planes.get()==True:
+    if active_planes.get():
         planeWidget.On()
     else:
         planeWidget.Off()

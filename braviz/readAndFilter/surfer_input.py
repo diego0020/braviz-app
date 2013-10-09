@@ -207,7 +207,7 @@ def surface2vtkPolyData(surf_file):
 def addScalars(surf_polydata,scalars):
     "Scalaras are expected as a numpy array"
     surf=surf_polydata
-    if(not len(scalars)==surf.GetNumberOfPoints()):
+    if not len(scalars)==surf.GetNumberOfPoints():
         print "scalars don't match with input polydata"
         raise(Exception("scalars don't match with input polydata"))
     if scalars.dtype.kind=='f':
@@ -246,7 +246,7 @@ def getColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
     if three colors are used, the resulting function will be symmetric, this means the actual midpoint for the second half will be 1-midpoint"""
     lut=vtk.vtkColorTransferFunction()
     lut.SetColorSpaceToRGB()
-    if( color2 ):
+    if color2:
         mid=(start+end)/2
     else:
         mid=end

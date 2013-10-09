@@ -49,7 +49,7 @@ def decode_chars(long_int):
     g=x%256
     x //= 256
     r=x%256
-    return (r,g,b)
+    return r,g,b
 
 def readTensorImage(tensor_file,fa_file=None, min_fa=0.3):
     """Read data from a nifti tensor image and return a vtk unstructured grid. 

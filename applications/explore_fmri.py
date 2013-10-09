@@ -278,7 +278,7 @@ def image_interaction(caller,event,event_name='std'):
         set_cursor(*current_coords)
         refresh_t_chart()
     elif event_name=='cursor_change':
-        if moving_cursor==False:
+        if not moving_cursor:
             cortex_prop.SetOpacity(0.1)
             moving_cursor=True
         cursor_pos=caller.GetCurrentCursorPosition()
@@ -398,7 +398,7 @@ def switch_mode(Evento=None):
         change_to_space_mode()
 
 def toggle_cortex(Event=None):
-    if show_cortex_var.get()==True:
+    if show_cortex_var.get():
         cortex_actor.SetVisibility(1)
     else:
         cortex_actor.SetVisibility(0)

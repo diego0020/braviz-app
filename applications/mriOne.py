@@ -180,7 +180,7 @@ grid_actor.SetVisibility(0)
 
 
 def show_transform_grid(event=None):
-    if select_show_warp_grid_status.get() == False:
+    if not select_show_warp_grid_status.get():
         grid_actor.SetVisibility(0)
         planeWidget.GetTexturePlaneProperty().SetOpacity(1.0)
         renWin.Render()

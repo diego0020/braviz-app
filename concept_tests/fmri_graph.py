@@ -211,7 +211,7 @@ base_design=([-0.5]*10+[0.5]*10)*4
 assert len(base_design) == 80
 base_design=np.array( base_design )
 def add_experiment_design(scale,center):
-    design=np.dot(base_design,scale)+(center)
+    design=np.dot(base_design,scale)+ center
     return design
 
 #=======================================LINE IN TIME PLOT===============================

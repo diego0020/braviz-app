@@ -10,7 +10,7 @@ import braviz.readAndFilter
 from braviz.visualization import add_solid_balloon
 
 currSubj='093'
-chosen_models=set([ 'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior',])
+chosen_models= {'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'}
 currSpace='world'
 
 reader=braviz.readAndFilter.kmc40AutoReader()
@@ -77,7 +77,7 @@ def setSubj(event=None):
     outline.SetInputData(img)
     #update model
     select_model_frame.changeSubj(subj)
-    if show_tracts_var.get() == True:
+    if show_tracts_var.get():
         add_tracts()
     refresh_display()
     
@@ -295,7 +295,7 @@ space_sel.bind('<<ComboboxSelected>>',spaceChange)
 #=========================Show Planes========================
 planes_frame=tk.Frame(control_frame)
 def imagePlanesStatus():
-    if active_planes.get()==True:
+    if active_planes.get():
         planeWidget.On()
     else:
         planeWidget.Off()
@@ -345,7 +345,7 @@ image_type.bind('<<ComboboxSelected>>',change_img_type)
 show_tracts_var=tk.BooleanVar()
 show_tracts_var.set(0)
 def toggle_show_tracts(event=None):
-    if show_tracts_var.get() == True:
+    if show_tracts_var.get():
         add_tracts()
     else:
         tracts_actor.SetVisibility(0)

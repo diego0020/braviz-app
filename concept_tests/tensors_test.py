@@ -124,7 +124,7 @@ def decode_chars(long_int):
     g=x%256
     x //= 256
     r=x%256
-    return (r,g,b)
+    return r,g,b
 
 colors=vtk.vtkUnsignedIntArray()
 colors.SetNumberOfComponents(1)
@@ -211,7 +211,7 @@ out_act.SetMapper(out_map)
 ren = vtk.vtkRenderer()
 ren.AddActor(act)
 ren.AddActor(out_act)
-ren.ResetCamera();
+ren.ResetCamera()
 
 cam = ren.GetActiveCamera()
 cam.Azimuth(-20)

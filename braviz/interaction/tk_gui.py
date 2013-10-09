@@ -96,7 +96,7 @@ class structureList(LabelFrame):
         if initial_models is not None:
             self.chosen_models=set(initial_models)
         else:
-            self.chosen_models=set([ 'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior',])
+            self.chosen_models= {'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'}
         for m in self.chosen_models:
             try:
                 index=self.listVariable().index(m)

@@ -199,7 +199,7 @@ def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
         random.shuffle(pts_list)
         for j in pts_list:
             p = pts.GetPoint(j)
-            if (selector.IsInsideSurface(p)):
+            if selector.IsInsideSurface(p):
                 #inside=True
                 return True
             #if not inside:

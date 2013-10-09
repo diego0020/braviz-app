@@ -255,7 +255,7 @@ The path containing this structure must be set."""
             return self.__movePointsToSpace(output, kw['space'], subj)
     def __loadFreeSurferScalar(self,subj,**kw):
         "Auxiliary function to read free surfer scalars"
-        morph=set(('area','curv','avg_curv','thickness','volume','sulc'))
+        morph= {'area', 'curv', 'avg_curv', 'thickness', 'volume', 'sulc'}
         path=os.path.join(self.__root,str(subj),'Surf')
         contents=os.listdir(path)
         if kw.has_key('hemi'):
@@ -440,7 +440,7 @@ The path containing this structure must be set."""
                 return filtered_fibers
         path=os.path.join(self.__root,str(subj),'camino')
         streams=self.__cached_color_fibers(subj, kw.get('color','orient'))
-        if kw.has_key('space') and kw.get('space').lower() in set(['diff','native']):
+        if kw.has_key('space') and kw.get('space').lower() in {'diff', 'native'}:
             return streams
         matrix=readFlirtMatrix('diff2surf.mat','FA.nii.gz','orig.nii.gz',path)
         streams_mri=transformPolyData(streams,matrix)

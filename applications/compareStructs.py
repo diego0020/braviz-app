@@ -287,7 +287,7 @@ active_planes=tk.BooleanVar()
 active_planes.set(True)
 def imagePlanesStatus():
     #print "change in image planes, status=%s"%active_planes.get()
-    if active_planes.get()==True:
+    if active_planes.get():
         planeWidget.On()
         planeWidget2.On()
     else:

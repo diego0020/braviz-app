@@ -13,7 +13,7 @@ def compute_volume_and_area(struct):
     massProperty.Update()
     surface=massProperty.GetSurfaceArea()
     volume=massProperty.GetVolume()
-    return (volume,surface)
+    return volume,surface
 def compute_fiber_lengths(fib):
     if not fib.GetNumberOfLines()==fib.GetNumberOfCells():
         print "Error, fib must contain only lines"
@@ -39,7 +39,7 @@ def get_fiber_bundle_descriptors(fib):
     d=compute_fiber_lengths(fib).values()
     if len(d)==0:
         d=[0]
-    return ((len(d),np.mean(d),np.max(d),np.min(d),np.std(d)))      
+    return len(d),np.mean(d),np.max(d),np.min(d),np.std(d)
 
 def aggregate_fiber_scalar(fib,component=0,norm_factor=1/255):
     scalars=fib.GetPointData().GetScalars()
@@ -50,4 +50,4 @@ def aggregate_fiber_scalar(fib,component=0,norm_factor=1/255):
         for i in xrange(scalars.GetNumberOfTuples()):
             d.append(scalars.GetTuple(i)[component])
         d=np.dot(d,norm_factor)
-    return (    len(d),np.mean(d),np.max(d),np.min(d),np.std(d)    )
+    return len(d),np.mean(d),np.max(d),np.min(d),np.std(d)

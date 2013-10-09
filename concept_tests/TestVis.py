@@ -227,7 +227,7 @@ testIds = myVis.loadQueryListResults()
 
 tab_var_name=testIds[0]
 #para recortar el nombre hasta que encuentre el primer guion
-regexIndex=tab_var_name.find('-');
+regexIndex=tab_var_name.find('-')
 tab_var_name=tab_var_name[0:regexIndex]
 tab_column=myVis.get_column(tab_var_name, True)
 
@@ -305,7 +305,7 @@ def change_tabular(event=None):
         w['state']='disabled'
     var_idx=tab_list.curselection()
     tab_var_name=tab_list.get(var_idx)
-    regexIndex=tab_var_name.find('-');
+    regexIndex=tab_var_name.find('-')
     tab_var_name=tab_var_name[0:regexIndex]
     tab_column=myVis.get_column(tab_var_name, True)
     if tab_column is not None:
@@ -326,7 +326,7 @@ def change_tabular(event=None):
     for child in children:
         for i in range(0, tab_list_size):
             item = tab_list.get(i)
-            regexIndex=item.find('-');
+            regexIndex=item.find('-')
             item=item[0:regexIndex]
             if i not in intList:
                 if item == child:

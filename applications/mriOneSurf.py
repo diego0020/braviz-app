@@ -149,7 +149,7 @@ def update(event=None):
     global processing,lut, la_internal, ra_internal
     progress.set(0)
     processing_lock.acquire()
-    if processing==True:
+    if processing:
         #ignore event, this shouldn't happen
         processing_lock.release()
         return
@@ -223,7 +223,7 @@ def refresh(event=None):
     progress_lock.release()
     
     processing_lock.acquire()
-    if processing==True:
+    if processing:
         #Not finished yet
         progress_bar.after(20,refresh)
         #progress_bar.step()
