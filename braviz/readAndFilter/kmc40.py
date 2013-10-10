@@ -388,66 +388,69 @@ The path containing this structure must be set."""
         """   
         if kw.has_key('progress'):
             kw['progress'].set(5)
-        if kw.has_key('waypoint') and kw.get('space','').lower()=='world':
-            #Do filtering in world coordinates
-            models=kw.pop('waypoint')
-            if isinstance(models,str):
-                models=(models,)
-            valid_ids=None
-            for nm,model_name in enumerate(models):
-                #model=self.get('model', subj,name=model_name,space='world')
-                #if model:
-                #    filterPolylinesWithModel(fibers,model,progress=kw.get('progress'))
-                new_ids=self.__cached_filter_fibers(subj, model_name)
-                if valid_ids is None:
-                    valid_ids=new_ids
-                else:
-                    if kw.get('operation','and')=='and':
-                        valid_ids.intersection_update(new_ids)
-                    else:
-                        valid_ids.update(new_ids)
-                if kw.has_key('progress'):
-                    kw['progress'].set(nm/len(models)*100)
-            if valid_ids is None:
-                valid_ids=set()
-            
-            #print valid_ids
-            #Take advantage of buffer
-            fibers=self.get('fibers', subj,space='world',color=kw.get('color','orient'))
-            #print fibers
-            for i in xrange(fibers.GetNumberOfCells()):
-                if i not in valid_ids:
-                    #print "marking %d for deletion"%i
-                    fibers.GetCell(i)
-                    fibers.DeleteCell(i)
-            #print "removing cells"
-            fibers.RemoveDeletedCells()
-            cleaner=vtk.vtkCleanPolyData()
-            cleaner.SetInputData(fibers)
-            cleaner.Update()
-            fibers2=cleaner.GetOutput()
-            return fibers2
-        if kw.has_key('waypoint'):
-            #Always filter in world coordinates
-            if kw.has_key('progress'):
-                filtered_fibers=self.get('fibers', subj,space='world',waypoint=kw['waypoint'],color=kw.get('color','orient'),progress=kw['progress'])
-            else:
-                filtered_fibers=self.get('fibers', subj,space='world',waypoint=kw['waypoint'],color=kw.get('color','orient'))
-            if kw.has_key('space'):
-                streams_trans=self.__movePointsToSpace(filtered_fibers, kw['space'],subj)
+        if not kw.has_key('waypoint'):
+            path=os.path.join(self.__root,str(subj),'camino')
+            streams=self.__cached_color_fibers(subj, kw.get('color','orient'))
+            if kw.get('space','world').lower() in {'diff', 'native'}:
+                return streams
+            matrix=readFlirtMatrix('diff2surf.mat','FA.nii.gz','orig.nii.gz',path)
+            streams_mri=transformPolyData(streams,matrix)
+            if kw.get('space','world').lower()!='world':
+                streams_trans=self.__movePointsToSpace(streams_mri, kw['space'],subj)
                 return streams_trans
+            return streams_mri
+        else:
+            #dealing with waypoints
+            if  kw.get('space','world').lower()=='world':
+                #Do filtering in world coordinates
+                models=kw.pop('waypoint')
+                if isinstance(models,str):
+                    models=(models,)
+                valid_ids=None
+                for nm,model_name in enumerate(models):
+                    #model=self.get('model', subj,name=model_name,space='world')
+                    #if model:
+                    #    filterPolylinesWithModel(fibers,model,progress=kw.get('progress'))
+                    new_ids=self.__cached_filter_fibers(subj, model_name)
+                    if valid_ids is None:
+                        valid_ids=new_ids
+                    else:
+                        if kw.get('operation','and')=='and':
+                            valid_ids.intersection_update(new_ids)
+                        else:
+                            valid_ids.update(new_ids)
+                    if kw.has_key('progress'):
+                        kw['progress'].set(nm/len(models)*100)
+                    #print model_name
+                    #print len(valid_ids)
+                if valid_ids is None:
+                    valid_ids=set()
+
+
+                #Take advantage of buffer
+                fibers=self.get('fibers', subj,space='world',color=kw.get('color','orient'))
+                #print fibers
+                for i in xrange(fibers.GetNumberOfCells()):
+                    if i not in valid_ids:
+                        #print "marking %d for deletion"%i
+                        fibers.GetCell(i)
+                        fibers.DeleteCell(i)
+                #print "removing cells"
+                fibers.RemoveDeletedCells()
+                cleaner=vtk.vtkCleanPolyData()
+                cleaner.SetInputData(fibers)
+                cleaner.Update()
+                fibers2=cleaner.GetOutput()
+                return fibers2
             else:
-                return filtered_fibers
-        path=os.path.join(self.__root,str(subj),'camino')
-        streams=self.__cached_color_fibers(subj, kw.get('color','orient'))
-        if kw.has_key('space') and kw.get('space').lower() in {'diff', 'native'}:
-            return streams
-        matrix=readFlirtMatrix('diff2surf.mat','FA.nii.gz','orig.nii.gz',path)
-        streams_mri=transformPolyData(streams,matrix)
-        if kw.has_key('space') and kw.get('space').lower()!='world':
-            streams_trans=self.__movePointsToSpace(streams_mri, kw['space'],subj)
-            return streams_trans
-        return streams_mri
+                #space is not world
+                #Always filter in world coordinates
+                target_space=kw['space']
+                kw['space']='world'
+                filtered_fibers=self.get('fibers', subj,**kw)
+                streams_trans=self.__movePointsToSpace(filtered_fibers, target_space,subj)
+                return streams_trans
+
     def __readTensors(self,subj,**kw):
         "Internal function to read a tensor file"
         path=os.path.join(self.__root,str(subj),'camino')

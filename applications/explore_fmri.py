@@ -99,8 +99,9 @@ left_cortex=reader.get('surf',subject,hemi='l',name='pial',space='fmri_precision
 right_cortex=reader.get('surf',subject,hemi='r',name='pial',space='fmri_precision')
 
 cortex_append=vtk.vtkAppendPolyData()
-cortex_append.AddInputData(left_cortex)
-cortex_append.AddInputData(right_cortex)
+cortex_append.UserManagedInputsOn ()
+cortex_append.SetInputDataByNumber(0,left_cortex)
+cortex_append.SetInputDataByNumber(1,right_cortex)
 cortex_mapper=vtk.vtkPolyDataMapper()
 cortex_mapper.SetInputConnection(cortex_append.GetOutputPort())
 cortex_actor=vtk.vtkActor()
@@ -239,6 +240,14 @@ def setSubj(Event=None):
     refresh_t_chart()
     if current_mode=='time':
         add_line_to_graph(current_volume*TR)
+
+    if show_cortex_var.get():
+        left_cortex = reader.get('surf', subject, hemi='l', name='pial', space='fmri_precision')
+        right_cortex = reader.get('surf', subject, hemi='r', name='pial', space='fmri_precision')
+
+        cortex_append.SetInputDataByNumber(0,left_cortex)
+        cortex_append.SetInputDataByNumber(1,right_cortex)
+
     renWin.Render()
 
 
@@ -399,6 +408,11 @@ def switch_mode(Evento=None):
 
 def toggle_cortex(Event=None):
     if show_cortex_var.get():
+        left_cortex = reader.get('surf', subject, hemi='l', name='pial', space='fmri_precision')
+        right_cortex = reader.get('surf', subject, hemi='r', name='pial', space='fmri_precision')
+
+        cortex_append.SetInputDataByNumber(0, left_cortex)
+        cortex_append.SetInputDataByNumber(1, right_cortex)
         cortex_actor.SetVisibility(1)
     else:
         cortex_actor.SetVisibility(0)

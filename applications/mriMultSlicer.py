@@ -78,7 +78,7 @@ def setSubj(event=None):
     #update model
     select_model_frame.changeSubj(subj)
     if show_tracts_var.get():
-        add_tracts()
+        enque_calculate_fibers()
     refresh_display()
     
 #=========================================Load freeSurfer Model=========================
@@ -125,9 +125,13 @@ def removeModel(model_name):
     del mapper
     del model
 
+
 def add_tracts():
+    print "adding fibers"
     models=select_model_frame.get()
     tracts=reader.get('fibers',currSubj,space=space_var.get(),waypoint=models,operation='or')
+    #print currSubj, space_var.get(), models
+    #print tracts
     tracts_mapper.SetInputData(tracts)
     tracts_actor.SetVisibility(1)
     refresh_display()
@@ -142,6 +146,8 @@ def process_model(action,model):
     else:
         print "unknown action %s"%action
     refresh_context()
+    if show_tracts_var.get():
+        enque_calculate_fibers()
     refresh_display()
 
 queued_refresh=False
@@ -155,6 +161,18 @@ def do_refresh():
     global queued_refresh
     renWin.Render()
     queued_refresh=False
+
+queued_calculate_fibers=False
+def enque_calculate_fibers(*args):
+    global queued_calculate_fibers
+    if not queued_calculate_fibers:
+        top.after_idle(do_calculate_fibers)
+        queued_calculate_fibers=True
+
+def do_calculate_fibers():
+    global queued_calculate_fibers
+    add_tracts()
+    queued_calculate_fibers=False
 
 #=============================================Picking====================================
 text2=vtk.vtkTextActor()
