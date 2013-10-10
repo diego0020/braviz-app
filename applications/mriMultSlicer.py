@@ -111,7 +111,8 @@ def addModel(model_name):
             models[model_name]=(model,model_mapper,model_actor)
             actor2model[id(model_actor)]=model_name
     actor=models[model_name][2]
-    add_solid_balloon(balloon_widget, actor, model_name)
+    model_volume=reader.get('model',currSubj,name=model_name,volume=1)
+    add_solid_balloon(balloon_widget, actor, model_name,model_volume)
 
 def removeModel(model_name):
     #check that it actually exists

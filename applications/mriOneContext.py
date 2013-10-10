@@ -96,7 +96,8 @@ model_properties=model_actor.GetProperty()
 model_properties.SetColor(list(model_color[0:3]))
 model_mapper.SetInputData(model)
 model_actor.SetMapper(model_mapper)
-add_solid_balloon(balloon_widget, model_actor,availableModels[0] )
+volume_model=reader.get('model',currSubj,name=availableModels[0],volume=1)
+add_solid_balloon(balloon_widget, model_actor,availableModels[0],volume_model )
 ren.AddActor(model_actor)
 
 
@@ -109,7 +110,8 @@ def setModel(event=None):
     model_mapper.Update()
     model_color=reader.get('MODEL',None,name=model_name,color='T')
     model_properties.SetColor(list(model_color[0:3]))
-    add_solid_balloon(balloon_widget, model_actor,model_name )
+    volume_model = reader.get('model', currSubj, name=model_name, volume=1)
+    add_solid_balloon(balloon_widget, model_actor,model_name,volume_model )
     show_fibers()
     
     
@@ -201,7 +203,8 @@ def change_context():
         c_properties.SetColor(c_color)
         c_properties.SetOpacity(0.5)
         ren.AddActor(c_actor)
-        add_solid_balloon(balloon_widget, c_actor,m )
+        volume_model=reader.get('model',currSubj,name=m,volume=1)
+        add_solid_balloon(balloon_widget, c_actor,m,volume_model )
         context_dict[m]=(c_model,c_mapper,c_actor)
 
     

@@ -159,11 +159,15 @@ def addModel(model_name,addToRef=True):
             if not active_waypoints.get():
                 model_actor.SetVisibility(0)
     if addToRef:
-        braviz.visualization.add_solid_balloon(balloon, models_dict[model_name][2], model_name)
+        model_volume=reader.get('model',ref_subj,name=model_name,volume='1')
+        braviz.visualization.add_solid_balloon(balloon, models_dict[model_name][2], model_name,model_volume)
     else:
         #"show personalized message"
-        vol_r,area_r=braviz.interaction.compute_volume_and_area(ref_models[model_name][0])
-        vol_o,area_o=braviz.interaction.compute_volume_and_area(other_models[model_name][0])
+        volume_other=reader.get('model',curr_subj,name=model_name,volume='1')
+        _,area_r=braviz.interaction.compute_volume_and_area(ref_models[model_name][0])
+        _,area_o=braviz.interaction.compute_volume_and_area(other_models[model_name][0])
+        vol_o=reader.get('model',curr_subj,name=model_name,volume='1')
+        vol_r=reader.get('model',ref_subj,name=model_name,volume='1')
         vol_d=vol_o-vol_r
         area_d=area_o-area_r
         message="%s\nVolume = %.2f mm3 ( %+.2f )\nSurface Area = %.2f mm2 ( %+.2f )"%(model_name,vol_o,vol_d,area_o,area_d)
