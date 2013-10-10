@@ -52,33 +52,3 @@ pw.SetResliceInterpolateToNearestNeighbour()
 pw.SetLookupTable(out_lut)
 viewer.start()
 
-# 
-# reader=braviz.readAndFilter.kmc40AutoReader()
-# aparc_img=reader.get('aparc','144',format='vtk',space='native')
-# aparc_img
-# print aparc_img
-# aparc_img.GetScalarComponentAsDouble(120,120,120)
-# aparc_img.GetScalarComponentAsDouble(120,120,120,0)
-# aparc_img.GetScalarComponentAsDouble(120,120,120,1)
-# aparc_img.GetScalarComponentAsDouble(120,120,120)
-# aparc_img.GetScalarComponentAsDouble(120,120,120,0)
-# aparc_img=reader.get('aparc','144',format='nii')
-# aparc_img
-# d=aparc_img.get_data()
-# d
-# max(d)
-# import numpy as np
-# np.max(d)
-# np.argmax(d)
-# np.unravel_index(np.argmax(d),d.shape)
-# d[128,128,128]
-# aparc_img=reader.get('aparc','144',format='vtk',space='native')
-# aparc_img.GetDimensions()
-# aparc_img.GetScalarComponentAsDouble(86,128,115)
-# aparc_img.GetScalarComponentAsDouble(86,128,115,0)
-# aparc_img.GetScalarComponentAsDouble(86,128,115,1)
-# aparc_img=reader.get('aparc','144',format='nii')
-# vtk_img=braviz.readAndFilter.nibNii2vtk(aparc_img)
-# vtk_img.GetScalarComponentAsDouble(86,128,115,0)
-# vtk_img.GetScalarComponentAsDouble(128,128,128,0)
-# a=[vtk_img.GetScalarComponentAsDouble(i,128,128,0) for i in range(256)]

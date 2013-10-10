@@ -73,10 +73,10 @@ def get_struct_metric(struct_name,code,metric='volume'):
     except:
         print "%s not found for subject %s"%(struct_name,code)
         return float('nan')
-    area,volume=braviz.interaction.compute_volume_and_area(model)
     if metric=='volume':
-        return volume
-    elif metric=='area':
+        return reader.get('model',code,name=struct_name,volume=1)
+    area,volume=braviz.interaction.compute_volume_and_area(model)
+    if metric=='area':
         return area
     elif metric=='nfibers':
         return get_fibers_metric(struct_name,code,'number')
@@ -167,7 +167,8 @@ table.AddColumn(column_to_vtk_array(codes,'Code'))
 def refresh_table():
     table.RemoveColumn(2)
     table.RemoveColumn(1)
-    
+
+    print struct_metrics_col
     table.AddColumn(column_to_vtk_array(tab_column,tab_var_name))
     table.AddColumn(column_to_vtk_array(struct_metrics_col,'%s - %s'%(struct_name,metric) ))
     

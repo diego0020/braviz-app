@@ -8,6 +8,7 @@ from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, tr
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData,read_annot,read_morph_data,addScalars,getMorphLUT,surfLUT2VTK
 from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
+from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 
 import os
@@ -46,7 +47,8 @@ The path containing this structure must be set."""
             BOLD: requires name=<Paradigm>, only nifti format is available
     
             MODEL:Use name=<model> to get the vtkPolyData. Use index='T' to get a list of the available models for a subject.
-                  Use color='t' to get the standard color associated to the structure 
+                  Use color=True to get the standard color associated to the structure
+                  Use volume=True to get the volume of the structure
     
             SURF: Use name=<surface> and hemi=<r|h> to get the vtkPolyData of a free surfer surface reconstruction, 
                   use scalars to add scalars to the data
@@ -198,6 +200,8 @@ The path containing this structure must be set."""
                     colors=self.__createColorDictionary()
                     self.free_surfer_LUT=colors
                 return colors[name]
+            elif kw.has_key('volume'):
+                return self.__get_volume(subject,name)
             else:
                 available=self.__loadFreeSurferModel(subject,index='T')                
                 if not name in available:
@@ -216,6 +220,26 @@ The path containing this structure must be set."""
             print 'Either "index" or "name" is required.'
             raise(Exception('Either "index" or "name" is required.'))
         return None
+
+    def __get_volume(self,subject, model_name):
+        data_root = self.getDataRoot()
+        data_dir = os.path.join(data_root, subject, 'Models', 'stats')
+        if model_name[:3] == 'ctx':
+            #we are dealing with a cortex structure
+            hemisphere = model_name[4]
+            name = model_name[7:]
+            file_name = '%sh.aparc.stats' % hemisphere
+            complete_file_name = os.path.join(data_dir, file_name)
+            vol = read_free_surfer_csv_file(complete_file_name, name, 'StructName', 'GrayVol')
+        else:
+            #we are dealing with a normal structure
+            name = model_name
+            file_name = 'aseg.stats'
+            complete_file_name = os.path.join(data_dir, file_name)
+            vol = read_free_surfer_csv_file(complete_file_name, name, 'StructName', 'Volume_mm3')
+        if vol is None:
+            vol = 0
+        return float(vol)
     def __createColorDictionary(self):
         "Creates an inernal representation of the freesurfer color LUT"
         color_file_name=os.path.join(self.__root,'FreeSurferColorLUT.txt')
