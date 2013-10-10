@@ -6,9 +6,8 @@ from numpy.linalg import inv
 import vtk
 import numpy as np
 import nibabel as nib
-
-from braviz.readAndFilter import nibNii2vtk,applyTransform
 import braviz
+from braviz.readAndFilter import nibNii2vtk,applyTransform
 import braviz.visualization.vtk_charts
 import braviz.visualization.fmri_view
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform

@@ -2,9 +2,9 @@ import braviz
 
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(reader'K:\JohanaForero\KAB-db')
 #r=braviz.readAndFilter.kmc40.kmc40Reader(r'K:\JohanaForero\KAB-db')
-reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\imagine\Documents\juanibarral\yoyis\KAB-db')
-#reader=reader=braviz.readAndFilter.kmc40AutoReader()
-#r=r=braviz.readAndFilter.kmc40AutoReader()
+#reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\imagine\Documents\juanibarral\yoyis\KAB-db')
+reader=reader=braviz.readAndFilter.kmc40AutoReader()
+r=r=braviz.readAndFilter.kmc40AutoReader()
 #reader=braviz.readAndFilter.kmc40AutoReader()
 #r=braviz.readAndFilter.kmc40AutoReader()
 

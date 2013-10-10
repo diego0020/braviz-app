@@ -127,7 +127,6 @@ def removeModel(model_name):
 
 
 def add_tracts():
-    print "adding fibers"
     models=select_model_frame.get()
     tracts=reader.get('fibers',currSubj,space=space_var.get(),waypoint=models,operation='or')
     #print currSubj, space_var.get(), models
