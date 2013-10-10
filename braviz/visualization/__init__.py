@@ -249,9 +249,11 @@ def add_solid_balloon(balloon_widget,solid_actor,name=None,my_volume=None):
     mapper=solid_actor.GetMapper()
     poly_data=mapper.GetInput()
     (volume,area)=compute_volume_and_area(poly_data)
+    message = "Volume = %.2f mm3 \nSurface Area = %.2f mm2 " % (volume, area)
     if my_volume is not None:
         volume=my_volume
-    message="Volume = %.2f mm3 \nSurface Area = %.2f mm2 "%(volume,area)
+        message = "Volume* = %.2f mm3 \nSurface Area = %.2f mm2 " % (volume, area)
+
     if name is not None:
         message="%s \n"%name+message
     balloon_widget.AddBalloon(solid_actor,message)

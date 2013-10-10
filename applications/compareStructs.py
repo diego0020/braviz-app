@@ -146,7 +146,7 @@ def addModel(model_name,addToRef=True):
         vol_r=reader.get('model',ref_subj,name=model_name,volume='1')
         vol_d=vol_o-vol_r
         area_d=area_o-area_r
-        message="%s\nVolume = %.2f mm3 ( %+.2f )\nSurface Area = %.2f mm2 ( %+.2f )"%(model_name,vol_o,vol_d,area_o,area_d)
+        message="%s\nVolume* = %.2f mm3 ( %+.2f )\nSurface Area = %.2f mm2 ( %+.2f )"%(model_name,vol_o,vol_d,area_o,area_d)
         if dual_disp:
             balloon2.AddBalloon(other_models[model_name][2], message)
         else:
