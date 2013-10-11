@@ -258,6 +258,12 @@ def add_solid_balloon(balloon_widget,solid_actor,name=None,my_volume=None):
         message="%s \n"%name+message
     balloon_widget.AddBalloon(solid_actor,message)
     return
+
+def add_simple_solid_balloon(balloon_widget,solid_actor,message):
+    "YOYIS Adds a standard balloon with a custom message"
+    balloon_widget.AddBalloon(solid_actor,message)
+    return
+
 def fibers_balloon_message(fib_actor,name=None):
     "Gets a standard message for fiber balloons"
     mapper=fib_actor.GetMapper()

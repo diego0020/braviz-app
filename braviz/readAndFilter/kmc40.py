@@ -185,7 +185,7 @@ The path containing this structure must be set."""
         "Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"
         #path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
         #path=self.__root+'/'+str(subject)+'/Models2'
-        path=os.path.join(self.__root,str(subject),'Models')
+        path=os.path.join(self.__root,str(subject),'Models3')
         if kw.has_key('index'):
             contents=os.listdir(path)
             pattern=re.compile(r'.*\.vtk$')
@@ -224,7 +224,12 @@ The path containing this structure must be set."""
     def __get_volume(self,subject, model_name):
         data_root = self.getDataRoot()
         data_dir = os.path.join(data_root, subject, 'Models', 'stats')
-        if model_name[:3] == 'ctx':
+        if model_name[:2] == 'wm':
+            #we are dealing with white matter
+            file_name='wmparc.stats'
+            complete_file_name = os.path.join(data_dir, file_name)
+            vol = read_free_surfer_csv_file(complete_file_name, model_name, 'StructName', 'Volume_mm3')
+        elif model_name[:3] == 'ctx':
             #we are dealing with a cortex structure
             hemisphere = model_name[4]
             name = model_name[7:]

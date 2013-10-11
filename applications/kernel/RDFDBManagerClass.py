@@ -7,6 +7,10 @@ import urllib
 import httplib2
 import json
 
+
+import os
+os.chdir(  os.path.join (os.path.dirname(__file__),'../..','braint'))
+
 class RDFDBManager:
     def __init__(self,repositoryName, graphName, RepositoryEndPoint): ##Constructor donde inicializo mis atributos de repositorio y grafo
        self.repository=repositoryName

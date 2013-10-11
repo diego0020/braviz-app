@@ -154,5 +154,5 @@ myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontolo
 #myManager.loadQuery('C:\Users\jc.forero47\Documents\JohanaForero\Repositorios\\braviz\\braint\java\\braint_v_1.0\File\\rdfqueries\EvaluationIdTestIdSubtestIdSubSubTest') #Lanza una query que entra como parametro en el archi ve entrada
 #myManager.loadQueryParentChildren('File\\rdfqueries\\ChildrenSearch','CLINI', 'hasSubTest' )
 #myManager.loadQueryParentChildren('File\\rdfqueries\\ChildrenSearch','FSIQ', 'isRelatedWith' )
-myManager.loadFreeSurferNames('File\\rdfqueries\\StructureNames','G_frontal_inf-Orbital_part')
-myManager.loadPre_FreeNames('File\\rdfqueries\\PreferredFreeCodeNames')
+#myManager.loadFreeSurferNames('File\\rdfqueries\\StructureNames','G_frontal_inf-Orbital_part')
+#myManager.loadPre_FreeNames('File\\rdfqueries\\PreferredFreeCodeNames')
