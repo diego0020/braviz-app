@@ -304,3 +304,221 @@ class BarPlot(vtk.vtkContextActor):
         self.y_visible = visible
 
 
+class multi_bar_plot(vtk.vtkContextView):
+    "This class is designed to use inside a single widget"
+    def __init__(self):
+        #easy access to renderer
+        self.ren=self.GetRenderer()
+
+        chart = vtk.vtkChartXY()
+        self.GetScene().AddItem(chart)
+        chart.SetShowLegend(False)
+        chart.SetHiddenAxisBorder(0)
+        chart.SetInteractive(False)
+        #chart.SetForceAxesToBounds(True)
+        self.GetInteractor().Initialize()
+
+        self.width=5
+        self.start=100
+        self.max_elements=20
+        self.color_fun=None
+        self.chart=chart
+        self.data=[]
+        self.data_tip=None
+        self.lines=[]
+        self.y_min=None
+        self.y_max=None
+        self.y_title=""
+        self.x_title = ""
+        self.enphasis=None
+    def set_enphasis(self,index):
+        self.enphasis=index
+
+    def get_bar_graph_width(self):
+        n_elements=self.max_elements
+        col_width=self.width
+        return n_elements * (col_width + 1) - 1
+
+    def get_minimum_start(self):
+        #2*s > w*n
+        n_elements=self.max_elements
+        col_width=self.width
+        return n_elements * col_width / 2
+
+    def get_maximum_width(self):
+        start=self.start
+        n_elements=self.max_elements
+        return 2 * start / n_elements
+    def set_bar_width(self,width):
+        if width<self.get_maximum_width():
+            self.width=width
+            return True
+        else:
+            print "width must be smaller than %f"%self.get_maximum_width()
+            return False
+    def set_start(self,graph_start):
+        if graph_start<self.get_minimum_start():
+            self.start=graph_start
+            return True
+        else:
+            print "start must be larger than %f"%self.get_minimum_start()
+            return False
+    def set_n_elements(self,n_elements):
+        n_elements_low_limit=2*self.start/self.width
+        if n_elements>n_elements_low_limit:
+            self.max_elements=n_elements
+            return True
+        else:
+            print "the number of elements must be larger than %f"%n_elements_low_limit
+            return False
+    def set_all(self,n_elements,width,start):
+        s=start
+        n=n_elements
+        w=width
+        if 2*s>w*n:
+            self.start=s
+            self.width=w
+            self.max_elements=n
+            return True
+        else:
+            print "2*s > w*n must hold!"
+            return False
+    def __add_bar2(self,position,value,code,color_fun=None,enphasize=False):
+        vtk_table = vtk.vtkTable()
+        arr_x = vtk.vtkFloatArray()
+        arr_x.SetName("x")
+
+        arri_y = vtk.vtkFloatArray()
+        arri_y.SetName("y")
+
+        arri_c = vtk.vtkStringArray()
+        arri_c.SetName("c")
+        arri_c.InsertNextValue(code)
+
+        vtk_table.AddColumn(arri_y)
+        vtk_table.AddColumn(arr_x)
+        vtk_table.SetNumberOfRows(2)
+
+        bars = self.chart.AddPlot(vtk.vtkChart.BAR)
+        bars.SetInputData(vtk_table, 0, 1)
+
+        vtk_table.SetValue(0, 0, position)
+        vtk_table.SetValue(0, 0, position)
+        vtk_table.SetValue(0, 1, value)
+        vtk_table.SetValue(1, 1, 0)
+        if color_fun is not None:
+            rgb_color = color_fun(value)
+            bars.SetColor(*rgb_color)
+        if code is not None:
+            bars.SetIndexedLabels(arri_c)
+            bars.SetTooltipLabelFormat('%i:%y')
+        if enphasize is True:
+            pen=bars.GetPen()
+            pen.SetColor(255,255,20)
+            pen.SetWidth(3)
+
+        return bars
+    def set_color_fun(self,color_function):
+        "color_function must take an scalar value and rerturn a (r,g,b,a) tuple"
+        self.color_fun=color_function
+    def __add_line2(self,y_pos,dashed,limits):
+        line = self.chart.AddPlot(vtk.vtkChart.LINE)
+        vtk_table = vtk.vtkTable()
+        arr_x = vtk.vtkFloatArray()
+        arr_x.SetName("x")
+
+        arri_y = vtk.vtkFloatArray()
+        arri_y.SetName("y")
+
+        vtk_table.AddColumn(arri_y)
+        vtk_table.AddColumn(arr_x)
+        vtk_table.SetNumberOfRows(2)
+
+        vtk_table.SetValue(0, 0, limits[0])
+        vtk_table.SetValue(0, 1, y_pos)
+        vtk_table.SetValue(1, 0, limits[1])
+        vtk_table.SetValue(1, 1, y_pos)
+        line.SetInputData(vtk_table, 0, 1)
+        line.SetColor(0, 0, 0, 255)
+        if dashed is True:
+            pen = line.GetPen()
+            pen.SetLineType(vtk.vtkPen.DASH_LINE)
+
+
+
+    def set_data(self,data,data_tips=None):
+        self.data=data
+        self.data_tip=data_tips
+
+    def set_lines(self,line_pos,dashed=None):
+        "Dashed must be a true or false array of the same length as line_pos"
+        if dashed and len(dashed)==len(line_pos):
+            lines=zip(line_pos,dashed)
+        else:
+            lines=zip(line_pos,[False]*len(line_pos))
+        self.lines=lines
+        return True
+    def set_y_limis(self,y_min,y_max):
+        self.y_min=y_min
+        self.y_max=y_max
+    def set_y_title(self,y_title):
+        self.y_title=y_title
+
+    def set_x_title(self, x_title):
+        self.x_title = x_title
+    def paint_bar_chart(self):
+        w = self.width
+        s = self.start
+        data=self.data
+        n = self.max_elements
+
+        self.chart.ClearPlots()
+        if len(data)>0:
+            if not (2 * s > w * n):
+                raise Exception("2*s > w*n must hold!, use get mimimum start to calculate a proper start position")
+            b = 2 / (2 * s / (w * n) + 1)
+            x_2 = s + w * n / 2
+            if self.data_tip is None:
+                codes = [None] * len(data)
+            else:
+                codes=self.data_tip
+            enph_vect=[False]*len(data)
+            if self.enphasis is not None:
+                enph_vect[self.enphasis]=True
+            positions = [x_2 + x for x in range(len(data))]
+            all_values = zip(positions, data, codes,enph_vect)
+            for pos,d,code,enph  in all_values:
+                self.chart.SetBarWidthFraction(b)
+                bar_n = self.__add_bar2(pos,d,code, color_fun=self.color_fun,enphasize=enph)
+
+        chart_width = self.get_bar_graph_width()
+        min_x = self.start - chart_width * 0.05
+        max_x = self.start + chart_width * 1.05
+
+        ax = self.chart.GetAxis(vtk.vtkAxis.BOTTOM)
+        ax.SetBehavior(1)
+        ax.SetMinimum(min_x)
+        ax.SetMaximum(max_x)
+        ax.SetTitle("")
+        ax.SetGridVisible(0)
+        ax.SetTicksVisible(0)
+        ax.SetLabelsVisible(0)
+
+        ay = self.chart.GetAxis(vtk.vtkAxis.LEFT)
+        if self.y_min is not None and self.y_max is not None:
+            ay.SetBehavior(1)
+            ay.SetMinimum(self.y_min)
+            ay.SetMaximum(self.y_max)
+        ay.SetTitle(self.y_title)
+        if len(self.y_title)==0:
+            ay.SetGridVisible(1)
+            ay.SetTicksVisible(1)
+            ay.SetLabelsVisible(0)
+            ay.SetVisible(False)
+
+
+        for ln in self.lines:
+            self.__add_line2(ln[0],ln[1],(min_x,max_x))
+            #print ln
+
+
