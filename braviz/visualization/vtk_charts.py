@@ -491,9 +491,13 @@ class multi_bar_plot(vtk.vtkContextView):
                 self.chart.SetBarWidthFraction(b)
                 bar_n = self.__add_bar2(pos,d,code, color_fun=self.color_fun,enphasize=enph)
 
+
         chart_width = self.get_bar_graph_width()
         min_x = self.start - chart_width * 0.05
         max_x = self.start + chart_width * 1.05
+
+        for ln in self.lines:
+            self.__add_line2(ln[0],ln[1],(min_x,max_x))
 
         ax = self.chart.GetAxis(vtk.vtkAxis.BOTTOM)
         ax.SetBehavior(1)
@@ -509,6 +513,7 @@ class multi_bar_plot(vtk.vtkContextView):
             ay.SetBehavior(1)
             ay.SetMinimum(self.y_min)
             ay.SetMaximum(self.y_max)
+            #print self.y_min
         ay.SetTitle(self.y_title)
         if len(self.y_title)==0:
             ay.SetGridVisible(1)
@@ -517,8 +522,7 @@ class multi_bar_plot(vtk.vtkContextView):
             ay.SetVisible(False)
 
 
-        for ln in self.lines:
-            self.__add_line2(ln[0],ln[1],(min_x,max_x))
+
             #print ln
 
 

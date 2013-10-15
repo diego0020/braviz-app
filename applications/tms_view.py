@@ -15,6 +15,8 @@ import braviz
 __author__ = 'Diego'
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=100)
 
+#TODO: Interaction with bars
+
 #=======global variables=======
 current_subject='207'
 tms_column='ICId'
@@ -25,6 +27,7 @@ codes2=[]
 tms_data2=[]
 context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
 context_dashes = [True, False, True]
+data_code='ICI'
 #====================
 
 fibers=reader.get('fibers',current_subject,space='talairach')
@@ -55,7 +58,7 @@ bars_view_2=multi_bar_plot()
 
 #===============read data=====================
 def setData(Event=None):
-    global codes2,tms_data2,term_mean,term_std_dev,tms_column,context_lines
+    global codes2,tms_data2,term_mean,term_std_dev,tms_column,context_lines,data_code,disp2axis
     data_code=data_codes_dict[data_type_var.get()]
     invert_data=invet_data_dict[data_code]
     tms_column=data_code+side_var.get()
@@ -113,12 +116,15 @@ def setData(Event=None):
         select_subj_frame.subjects_list.select_set(idx,idx)
 
     setSubj()
+    disp2axis=get_mapper_function()
 
 previous_value=0
 def setSubj(Event=None):
     global fibers,current_subject,previous_value
+    #print "setting subjects"
     if len(codes2)==0:
         bars_view_2.set_data([], [])
+        bars_view_2.set_y_limis(*limits_dict[data_code])
         bars_view_2.paint_bar_chart()
         fibers_actor.SetVisibility(0)
         renWin.Render()
@@ -141,16 +147,19 @@ def setSubj(Event=None):
     renWin.Render()
     bars_view_1.set_enphasis(idx)
     bars_view_1.paint_bar_chart()
-
     new_value=tms_data2[idx]
-    #TODO: Animate
     time_steps=7
-    slope=(new_value-previous_value)/time_steps
+    if time_steps>0:
+        slope=(new_value-previous_value)/time_steps
+    else:
+        previous_value=new_value
+        slope=0
     animated_draw_bar(time_steps,slope,previous_value,codes2[idx])
     previous_value=new_value
 
 def animated_draw_bar(time,slope,value,code):
     bars_view_2.set_data([value],[code] )
+    #bars_view_2.set_y_limis(-100,100)
     bars_view_2.paint_bar_chart()
     if(time>0):
         root.after(50,animated_draw_bar,time-1,slope,value+slope,code)
@@ -180,7 +189,7 @@ def get_color(value):
 root = tk.Tk()
 root.withdraw()
 top = tk.Toplevel(root)
-top.title('BraViz-Mri')
+top.title('BraViz-TMS_View')
 
 control_frame = tk.Frame(top,width=100)
 
@@ -316,14 +325,82 @@ cam1.SetFocalPoint(-1.44063, -11.8824, 6.28172)
 ren.ResetCameraClippingRange()
 render_widget.Render()
 
-setData()
-setSubj()
+
+def get_mapper_function():
+    a1 = bars_view_1.chart.GetAxis(1)
+    x0 = a1.GetPoint1()[0]
+    xf = a1.GetPoint2()[0]
+    xf_x0=xf-x0
+    print "%f ----- %f"%(x0,xf)
+    ax0=a1.GetMinimum()
+    axf=a1.GetMaximum()
+
+    def disp2axis(x):
+        t=(x-x0)/(xf-x0)
+        x=(t*(axf-ax0)+ax0)
+        return x
+    return disp2axis
+disp2axis=lambda x:x
+
+
+def get_subj_index(x):
+    if bars_view_1.start < x < bars_view_1.get_bar_graph_width() + bars_view_1.start:
+        index = int((x - bars_view_1.start) // (bars_view_1.width + 1))
+        return index
+    return None
 
 
 iact.Initialize()
 renWin.Render()
 iact.Start()
+setData()
+setSubj()
+bars_view_1.Render()
+disp2axis=get_mapper_function()
+def print_event(caller=None,event=None):
+    print event
 
 
+
+def draw_tooltip(caller=None,event=None):
+
+
+    tool_tip=bars_view_1.chart.GetTooltip()
+    event_position = caller.GetEventPosition()
+    event_coordinates=disp2axis(event_position[0])
+    if get_subj_index(event_coordinates) is not None:
+        tool_tip.SetVisible(1)
+        tool_tip.SetPosition(event_position)
+        index=int((event_coordinates-bars_view_1.start)//(bars_view_1.width+1))
+        code=codes2[index]
+        datum=tms_data2[index]
+        message="%s : %.2f"%(code,datum)
+        tool_tip.SetText(message)
+    else:
+        tool_tip.SetVisible(0)
+    bars_view_1.Render()
+
+def click_in_bar(caller=None,event=None):
+    event_position = caller.GetEventPosition()
+    event_coordinates=disp2axis(event_position[0])
+    index=get_subj_index(event_coordinates)
+    if index is not None:
+        select_subj_frame.subjects_list.selection_clear(0, tk.END)
+        select_subj_frame.subjects_list.select_set(index,index)
+        setSubj()
+
+
+#interaction_event_id=bars_view_1.chart.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
+#interaction_event_id=bars_view_1.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
+#interaction_event_id=bars_view_1.GetScene().AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
+#bar1=bars_view_1.chart.GetPlot(0)
+#interaction_event_id=bar1.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
+
+iact2=bars_view_1.GetInteractor()
+#print iact2
+#interaction_event_id=iact2.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
+interaction_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip,100)
+interaction_event_id=iact2.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,click_in_bar,100)
+#MouseMoveEvent_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,abort_interaction_event,100)
 # Start Tkinter event loop
 root.mainloop()

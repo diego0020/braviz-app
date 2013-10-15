@@ -177,3 +177,5 @@ for seq in range(1,len(tms_data2)):
     add_line2(term_mean,False,(min_x,max_x))
 
     view.GetInteractor().Start()
+
+chart.SetInteractive(0)
