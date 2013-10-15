@@ -24,9 +24,11 @@ term_mean=0
 term_std_dev=0
 codes2=[]
 tms_data2=[]
+tms_data_dict={}
 context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
 context_dashes = [True, False, True]
 data_code='ICI'
+selected_codes=[]
 #====================
 
 fibers=reader.get('fibers',current_subject,space='talairach')
@@ -72,20 +74,23 @@ def setData(Event=None):
     if male_selected_var.get(): valid_genres.append('2')
     if female_selected_var.get(): valid_genres.append('1')
     table=zip(codes,genres,grupo,TMS_metric)
+    for row in table:
+        tms_data_dict[row[0]]=row[3]
     table_genre=filter(lambda y: y[1] in valid_genres ,table)
     term=filter(lambda x:x[2]=='3',table_genre)
     if len(term)>0:
         term_data=zip(*term)[3]
         term_mean=np.mean(term_data)
         term_std_dev=np.std(term_data)
+    else:
+        term_mean=0
+        term_std_dev=0
+    if len(table_genre)>0:
         codes2, _, _, tms_data2 = zip(*table_genre)
-        bars_view_1.set_all(len(codes2), 5, 500)
     else:
         codes2=[]
         tms_data2=[]
-        term_mean=0
-        term_std_dev=0
-
+    bars_view_1.set_all(len(selected_codes), 5, 500)
     #only keep codes and tms_data columns from filtered table
 
     context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
@@ -95,7 +100,8 @@ def setData(Event=None):
 
 
     bars_view_1.set_lines(context_lines, context_dashes)
-    bars_view_1.set_data(tms_data2, codes2)
+    selected_values=[tms_data_dict[s] for s in selected_codes]
+    bars_view_1.set_data(selected_values, selected_codes)
     bars_view_1.set_y_title(tms_column)
 
     bars_view_2.set_y_title(tms_column)
@@ -116,6 +122,20 @@ def setData(Event=None):
 
     setSubj()
     disp2axis=get_mapper_function()
+
+def draw_bars_1():
+    global disp2axis
+    bars_view_1.set_all(len(selected_codes), 5, 500)
+    selected_values = [tms_data_dict[s] for s in selected_codes]
+    bars_view_1.set_data(selected_values, selected_codes)
+    try:
+        idx = selected_codes.index(current_subject)
+    except ValueError:
+        bars_view_1.set_enphasis(None)
+    else:
+        bars_view_1.set_enphasis(idx)
+    bars_view_1.paint_bar_chart()
+    disp2axis = get_mapper_function()
 
 previous_value=0
 def setSubj(Event=None):
@@ -142,18 +162,23 @@ def setSubj(Event=None):
         fibers_actor.SetVisibility(1)
 
 
-    idx=codes2.index(current_subject)
-    renWin.Render()
-    bars_view_1.set_enphasis(idx)
+    try:
+        idx = selected_codes.index(current_subject)
+    except ValueError:
+        bars_view_1.set_enphasis(None)
+    else:
+        bars_view_1.set_enphasis(idx)
+
     bars_view_1.paint_bar_chart()
-    new_value=tms_data2[idx]
+    new_value=tms_data_dict[current_subject]
     time_steps=7
+    renWin.Render()
     if time_steps>0:
         slope=(new_value-previous_value)/time_steps
     else:
         previous_value=new_value
         slope=0
-    animated_draw_bar(time_steps,slope,previous_value,codes2[idx])
+    animated_draw_bar(time_steps,slope,previous_value,current_subject)
     previous_value=new_value
 
 def animated_draw_bar(time,slope,value,code):
@@ -265,6 +290,15 @@ def print_camera(Event=None):
 #print_camera_button=tk.Button(control_frame,text='print_cammera',command=print_camera)
 #print_camera_button.grid()
 
+def add_to_history(Event=None):
+    if current_subject in selected_codes:
+        selected_codes.remove(current_subject)
+    selected_codes.append(current_subject)
+    #print selected_codes
+    draw_bars_1()
+add_to_hist_button=tk.Button(control_frame,text='Add to history <----',command=add_to_history)
+add_to_hist_button.grid(sticky='ew')
+
 #=====================================================================
 display_frame = tk.Frame(top)
 renderer_frame = tk.Frame(display_frame)
@@ -330,7 +364,7 @@ def get_mapper_function():
     x0 = a1.GetPoint1()[0]
     xf = a1.GetPoint2()[0]
     xf_x0=xf-x0
-    print "%f ----- %f"%(x0,xf)
+    #print "%f ----- %f"%(x0,xf)
     ax0=a1.GetMinimum()
     axf=a1.GetMaximum()
 
@@ -345,6 +379,8 @@ disp2axis=lambda x:x
 def get_subj_index(x):
     if bars_view_1.start < x < bars_view_1.get_bar_graph_width() + bars_view_1.start:
         index = int((x - bars_view_1.start) // (bars_view_1.width + 1))
+        code=selected_codes[index]
+        index=codes2.index(code)
         return index
     return None
 
@@ -371,7 +407,7 @@ def draw_tooltip(caller=None,event=None):
         tool_tip.SetVisible(1)
         tool_tip.SetPosition(event_position)
         index=int((event_coordinates-bars_view_1.start)//(bars_view_1.width+1))
-        code=codes2[index]
+        code=selected_codes[index]
         datum=tms_data2[index]
         message="%s : %.2f"%(code,datum)
         tool_tip.SetText(message)
