@@ -55,6 +55,7 @@ bars_view_1=multi_bar_plot()
 #create chart2
 bars_view_2=multi_bar_plot()
 
+
 #===============read data=====================
 def setData(Event=None):
     global codes2,tms_data2,term_mean,term_std_dev,tms_column,context_lines,data_code,disp2axis
@@ -96,9 +97,9 @@ def setData(Event=None):
 
     bars_view_1.set_lines(context_lines, context_dashes)
     bars_view_1.set_data(tms_data2, codes2)
-    bars_view_1.set_y_title(tms_column)
+    bars_view_1.set_y_title(labels_dict[data_code])
 
-    bars_view_2.set_y_title(tms_column)
+    bars_view_2.set_y_title(labels_dict[data_code])
     bars_view_2.set_y_limis(*limits_dict[data_code])
     bars_view_2.set_all(1, 5, 100)
     bars_view_2.set_color_fun(get_color)
@@ -168,15 +169,15 @@ def get_color(value):
     z_score=abs(value-term_mean)/term_std_dev
 
     if  z_score <= 0.5:
-        return (49, 163, 84,255)
+        return (26, 150, 65,255)
     elif z_score <=1:
-        return (161, 217, 155,255)
+        return (166, 217, 106,255)
     elif z_score <= 1.5:
-        return (254, 224, 210,255)
+        return (255, 225, 191,255)
     elif z_score <=2:
-        return (252, 146, 114,255)
+        return (253, 174, 97,255)
     else:
-        return (222, 45, 38,255)
+        return (215, 25, 28,255)
 
 
 
@@ -224,6 +225,18 @@ limits_dict={
     'ICI':(-10,120),
     'IHIlat':(-2,35 )
 }
+
+labels_dict={
+    'IHIfreq' : 'Frequency (%)',
+    'RMT' : 'Power (%)',
+    'IHIdur': 'Duration (ms.)',
+    'MEPlat': 'Latency (ms.)',
+    'ICF': 'Facilitation (%)',
+    'ICI': 'Inverted Inhibition (%)',
+    'IHIlat' : 'Latency (ms.)'
+}
+
+
 
 data_type_var=tk.StringVar()
 data_selection=ttk.Combobox(select_data_frame,textvariable=data_type_var)
@@ -283,21 +296,22 @@ bars_widget1= vtkTkRenderWindowInteractor(graphs_frame,
 bars_view_1.SetRenderWindow(bars_widget1.GetRenderWindow())
 bars_view_1.SetInteractor(bars_widget1.GetRenderWindow().GetInteractor())
 
-bars_widget1.grid(column=0,row=0,sticky='ew')
+bars_widget1.grid(column=0,row=0,sticky='nsew')
 
 bars_widget2 = vtkTkRenderWindowInteractor(graphs_frame,
                                            width=100,
                                            height=200)
 bars_view_2.SetRenderWindow(bars_widget2.GetRenderWindow())
 bars_view_2.SetInteractor(bars_widget2.GetRenderWindow().GetInteractor())
-bars_widget2.grid(column=1,row=0,sticky='ew')
+bars_widget2.grid(column=1,row=0,sticky='nsew')
 
-graphs_frame.grid(padx=3, pady=3,row=1,column=0,sticky='ew')
-graphs_frame.columnconfigure(0,weight=1)
+graphs_frame.grid(padx=3, pady=3,row=1,column=0,sticky='nsew')
+graphs_frame.columnconfigure(0,weight=3)
 graphs_frame.columnconfigure(1,weight=1)
+graphs_frame.rowconfigure(0,weight=1)
 
-
-
+display_frame.rowconfigure(0,weight=3)
+display_frame.rowconfigure(1,weight=2)
 control_frame.pack(side="left", anchor="n", fill="y", expand="false")
 display_frame.pack(side="left", anchor="n", fill="both", expand="true")
 def clean_exit():
@@ -329,8 +343,8 @@ def get_mapper_function():
     a1 = bars_view_1.chart.GetAxis(1)
     x0 = a1.GetPoint1()[0]
     xf = a1.GetPoint2()[0]
-    xf_x0=xf-x0
-    print "%f ----- %f"%(x0,xf)
+    #xf_x0=xf-x0
+    #print "%f ----- %f"%(x0,xf)
     ax0=a1.GetMinimum()
     axf=a1.GetMaximum()
 
@@ -359,7 +373,12 @@ disp2axis=get_mapper_function()
 def print_event(caller=None,event=None):
     print event
 
-
+def resize_handler(caller=None,event=None):
+    top.after(1000,do_resize)
+def do_resize():
+    global disp2axis
+    bars_view_2.ren.Render()
+    disp2axis = get_mapper_function()
 
 def draw_tooltip(caller=None,event=None):
 
@@ -378,6 +397,22 @@ def draw_tooltip(caller=None,event=None):
     else:
         tool_tip.SetVisible(0)
     bars_view_1.Render()
+def draw_tooltip2(caller=None, event=None):
+    tool_tip2=bars_view_2.chart.GetTooltip()
+    event_position = caller.GetEventPosition()
+    event_x=event_position[0]
+    x0=bars_view_2.chart.GetAxis(1).GetPoint1()[0]
+    xf=bars_view_2.chart.GetAxis(1).GetPoint2()[0]
+    if x0 < event_x < xf:
+        tool_tip2.SetVisible(1)
+        tool_tip2.SetPosition(event_position)
+        idx=codes2.index(current_subject)
+        datum = tms_data2[idx]
+        message = "%s : %.2f" % (current_subject, datum)
+        tool_tip2.SetText(message)
+    else:
+        tool_tip2.SetVisible(0)
+    bars_view_2.Render()
 
 def click_in_bar(caller=None,event=None):
     event_position = caller.GetEventPosition()
@@ -396,10 +431,16 @@ def click_in_bar(caller=None,event=None):
 #interaction_event_id=bar1.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
 
 iact2=bars_view_1.GetInteractor()
+iact3=bars_view_2.GetInteractor()
 #print iact2
 #interaction_event_id=iact2.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
 interaction_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip,100)
-interaction_event_id=iact2.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,click_in_bar,100)
+interaction_event_id=iact3.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip2,100)
+iact2.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,click_in_bar,100)
+
+#bars_view_1.ren.AddObserver('ModifiedEvent',resize_handler)
+top.bind('<Configure>',resize_handler)
+root.bind('<Configure>',resize_handler)
 #MouseMoveEvent_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,abort_interaction_event,100)
 # Start Tkinter event loop
 root.mainloop()

@@ -1,10 +1,7 @@
 from __future__ import division
-import braviz
-from braviz.visualization.create_lut import get_colorbrewer_lut
 import vtk
 import random
 import math
-from os.path import join as path_join
 import numpy as np
 
 __author__ = 'Diego'
@@ -18,12 +15,8 @@ class grid_view(vtk.vtkRenderWindow):
         #self.Initialize()
         self.picker = vtk.vtkCellPicker()
         self.picker.SetTolerance(0.005)
-        if self.GetInteractor() is None:
-            self.iren=vtk.vtkRenderWindowInteractor()
-        else:
-            self.iren=self.GetInteractor()
-        self.iren.SetRenderWindow(self)
-        self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballActor())
+
+
         self.set_background((0.2,0.2,0.2),(0.5,0.5,0.5))
         # subj->actor
         self.__actors_dict={}
@@ -35,8 +28,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.balloon_w=vtk.vtkBalloonWidget()
         self.balloon_repr=vtk.vtkBalloonRepresentation()
         self.balloon_w.SetRepresentation(self.balloon_repr)
-        self.balloon_w.SetInteractor(self.iren)
-        self.balloon_w.On()
+
         self.max_space=0
         self.n_rows=0
         self.n_cols=0
@@ -46,13 +38,27 @@ class grid_view(vtk.vtkRenderWindow):
         self.__panning_start_cam_focal=None
         self.__panning_start_cam_pos=None
         self.color_function = None
+        self.actor_observer_fun = None
         #observers
+    def set_interactor(self,iren=None):
+        if iren is None:
+            self.iren = vtk.vtkRenderWindowInteractor()
+        else:
+            self.iren = iren
+            self.SetInteractor(iren)
+            self.iren.SetRenderWindow(self)
+            self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballActor())
+            self.balloon_w.SetInteractor(self.iren)
+            self.balloon_w.On()
+
         def register_change(caller=None, envent=None):
             self.panning = False
             if self.__modified_actor is not None:
                 return
             self.__modified_actor = caller
-
+            #print 'auch %s'%self.__picking_dict[caller]
+        def unregister_object(caller=None,event=None):
+            self.__modified_actor=None
 
         def after_intareaction(caller=None, event=None):
             if self.__modified_actor is not None:
@@ -106,6 +112,11 @@ class grid_view(vtk.vtkRenderWindow):
         self.iren.AddObserver(vtk.vtkCommand.MouseMoveEvent, pan)
         self.iren.AddObserver(vtk.vtkCommand.MiddleButtonReleaseEvent, pan, 100)
         self.actor_observer_fun=register_change
+        for actor in self.__picking_dict:
+            actor.AddObserver(vtk.vtkCommand.PickEvent, self.actor_observer_fun)
+        def print_event(caller=None,event=None):
+            print event
+        self.balloon_w.AddObserver('AnyEvent',unregister_object)
 
     def set_background(self,color1,color2=None):
         if color2 is not None:
@@ -114,6 +125,9 @@ class grid_view(vtk.vtkRenderWindow):
         self.ren.SetBackground(color1)
     def set_data(self,data_dict):
         "data_dict must be a dictionary with ids as keys and polydata as values"
+        #hide all actors
+        for act in self.__picking_dict:
+            act.SetVisibility(0)
         for id,polydata in data_dict.iteritems():
             #center polydata
             center=polydata.GetCenter()
@@ -127,17 +141,24 @@ class grid_view(vtk.vtkRenderWindow):
             trans.Update()
             polydata2 = trans.GetOutput()
             self.__poly_data_dict[id] = polydata2
-            mapper=vtk.vtkPolyDataMapper()
+            if not self.__mapper_dict.has_key(id):
+                mapper=vtk.vtkPolyDataMapper()
+                self.__mapper_dict[id] = mapper
+            mapper=self.__mapper_dict[id]
             mapper.SetInputData(polydata2)
-            self.__mapper_dict[id]=mapper
-            actor=vtk.vtkActor()
+            if not self.__actors_dict.has_key(id):
+                actor=vtk.vtkActor()
+                self.__actors_dict[id] = actor
+                self.ren.AddActor(actor)
+                self.__picking_dict[actor] = id
+                if self.actor_observer_fun is not None:
+                    actor.AddObserver(vtk.vtkCommand.PickEvent, self.actor_observer_fun)
+            actor=self.__actors_dict[id]
             actor.SetMapper(mapper)
-            self.__actors_dict[id]=actor
-            self.ren.AddActor(actor)
-            self.__picking_dict[actor]=id
+            actor.SetVisibility(1)
             if self.color_function is not None:
                 actor.GetProperty().SetColor(self.color_function(id))
-            actor.AddObserver(vtk.vtkCommand.PickEvent, self.actor_observer_fun)
+
 
     def set_balloon_messages(self,messages_dict):
         for key,message in messages_dict.iteritems():
@@ -174,7 +195,7 @@ class grid_view(vtk.vtkRenderWindow):
     def set_color_function(self,color_function):
         self.color_function=color_function
         for subj,ac in self.__actors_dict.iteritems():
-            ac.GetProperty().SetColor(color_function(id))
+            ac.GetProperty().SetColor(color_function(subj))
 
     def reset_camera(self):
         n_col=self.n_cols
@@ -189,11 +210,15 @@ class grid_view(vtk.vtkRenderWindow):
         cam_distance = cam1.GetDistance()
         cam1.SetPosition(n_col * max_space / 2 - max_space / 2, n_row * max_space / 2 - max_space / 2,
                          -1 * cam_distance)
+        self.ren.ResetCameraClippingRange()
 
     def start_interaction(self):
         self.iren.Initialize()
         self.Start()
         self.iren.Start()
+    def set_orientation(self,orientation):
+        for actor in self.__picking_dict:
+            actor.SetOrientation(orientation)
 
 
 if __name__=='__main__':

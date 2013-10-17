@@ -432,3 +432,5 @@ def build_grid(orig_img, slice, sampling_rate=5):
     cleaner.Update()
     clean_grid = cleaner.GetOutput()
     return clean_grid
+
+from grid_viewer import grid_view

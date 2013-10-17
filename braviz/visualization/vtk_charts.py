@@ -25,6 +25,7 @@ class LinePlot(vtk.vtkContextActor):
         self.x_visible = True
         self.y_visible = True
         self.vertical_line_id=None
+        self.position=None
     def set_position(self, x, y, width, height):
         self.chart.SetAutoSize(False)
         self.chart.SetSize(vtk.vtkRectf(x, y, width, height))

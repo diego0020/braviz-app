@@ -5,7 +5,7 @@ import numpy as np
 __author__ = 'Diego'
 
 
-def get_column(file_name, name, numeric=False):
+def get_column(file_name, name, numeric=False,nan_value=float('nan')):
     try:
         csv_file = open(file_name)
     except IOError:
@@ -33,7 +33,7 @@ def get_column(file_name, name, numeric=False):
                     item = item.replace(',', '.')
                     num = float(item)
                 except:
-                    num = float('nan')
+                    num =nan_value
             item = num
         column.append(item)
     csv_file.close()

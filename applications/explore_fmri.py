@@ -273,8 +273,11 @@ def resize_event_handler(obj=None, event=None):
     new_height = renWin.GetSize()[1]
     line_plot.set_position(0, 0, new_width, new_height // 3)
     bar_plot.set_position(new_width - 110, new_height - 110, 100, 100)
+    renWin.Render()
+    top.after(20,renWin.Render)
 
-line_plot.scene.AddObserver('ModifiedEvent', resize_event_handler)
+
+
 
 moving_cursor=False
 def image_interaction(caller,event,event_name='std'):
@@ -532,7 +535,7 @@ mouse_move_event_id=iact.AddObserver('MouseMoveEvent',click_to_pick,100)
 iact.AddObserver('EndInteractionEvent',click_to_pick,9)
 iact.AddObserver('LeftButtonReleaseEvent',click_to_pick,9)
 
-
+line_plot.scene.AddObserver('ModifiedEvent', resize_event_handler)
 
 
 cam1 = ren.GetActiveCamera()
@@ -545,6 +548,6 @@ render_widget.Render()
 iact.Initialize()
 renWin.Render()
 iact.Start()
-
+resize_event_handler()
 # Start Tkinter event loop
 root.mainloop()

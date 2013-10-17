@@ -11,8 +11,11 @@ def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(
     scalar_lookup_table = vtk.vtkColorTransferFunction()
     scalar_lookup_table.ClampingOn()
     scalar_lookup_table.SetColorSpaceToLab()
+    width=maximum-minimum
+    minimum-=0.01*width
+    maximum+=0.01*width
     scalar_lookup_table.SetRange(minimum, maximum)
-    scalar_lookup_table.Build()
+    #scalar_lookup_table.Build()
     assert steps>1
     sharpness=1
     if continuous is True:
@@ -35,5 +38,5 @@ def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(
         c = cb_list[i]
         #                                   x            ,r   ,g   , b, midpoint, sharpness
         scalar_lookup_table.AddRGBPoint(minimum+delta*i,c[0],c[1],c[2], 0.5,  sharpness)
-    scalar_lookup_table.SetNanColor(1.0, 0, 0)
+    scalar_lookup_table.SetNanColor(nan_color)
     return scalar_lookup_table
