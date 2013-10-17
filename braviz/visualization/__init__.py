@@ -75,6 +75,8 @@ class simpleVtkViewer():
         #self.ren.ResetCamera()
         self.ren.Render()
         return planeWidget
+
+
 class persistentImagePlane(vtkImagePlaneWidget):
     """A vtkImagePlaneWidget which can keep its state between calls to SetInputData.
     It adds a second text message showing the world coordinates of the cursors

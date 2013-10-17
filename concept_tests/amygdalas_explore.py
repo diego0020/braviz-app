@@ -97,7 +97,7 @@ n_col=math.ceil(len(subj_ids)/n_row)
 
 sorted_subj=sorted(subj_ids,key=lambda x:csv_data_dict.get(x,float('+inf')))
 print sorted_subj
-positions_dict={}
+#positions_dict={}
 for i,subj in enumerate(sorted_subj):
     actor=subj_dir[subj]
     column=i%n_col
@@ -105,18 +105,22 @@ for i,subj in enumerate(sorted_subj):
     x=column*max_space
     y=row*max_space
     actor.SetPosition(x ,y , 0)
-    positions_dict[actor]=(x,y,0)
+#    positions_dict[actor]=(x,y,0)
 
 
-
-
+viewer.ren.GradientBackgroundOn()
+viewer.ren.SetBackground2(0.5,0.5,0.5)
+viewer.ren.SetBackground(0.2,0.2,0.2)
 
 #camera
+viewer.renWin.Render()
 cam1=viewer.ren.GetActiveCamera()
 cam1.ParallelProjectionOn()
-cam1.SetFocalPoint(n_col*max_space/2,n_row*max_space/2,0)
-cam1.SetPosition(n_col*max_space/2,n_row*max_space/2,-200)
+cam1.SetFocalPoint(n_col*max_space/2-max_space/2,n_row*max_space/2-max_space/2,0)
 cam1.SetViewUp(0,-1,0)
+cam1.SetParallelScale(0.55*n_row*max_space)
+cam_distance=cam1.GetDistance()
+cam1.SetPosition(n_col*max_space/2-max_space/2,n_row*max_space/2-max_space/2,-1*cam_distance)
 
 #interaction
 #viewer.iren.SetInteractorStyle(vtk.vtkInteractorStyleImage())
@@ -142,10 +146,10 @@ def after_intareaction(caller=None,event=None):
 
 def mimic_actor(caller=None,event=None):
     global first_time
-    orig_pos=np.array(positions_dict[caller])
+    #orig_pos=np.array(positions_dict[caller])
     for ac in actors_dict:
         if ac is not caller:
-            delta_pos=caller.GetPosition()-orig_pos
+            #delta_pos=caller.GetPosition()-orig_pos
             #ac.SetPosition(positions_dict[ac]+delta_pos)
             ac.SetOrientation(caller.GetOrientation())
             ac.SetScale(caller.GetScale())
@@ -199,4 +203,4 @@ def print_event(caller=None,event=None):
 
 
 
-viewer.start()
+viewer.iren.Start()
