@@ -2,6 +2,7 @@ from __future__ import division
 import Tkinter as tk
 import ttk
 import numpy as np
+import math
 from braviz.readAndFilter.read_csv import get_column
 from braviz.visualization.vtk_charts import multi_bar_plot
 import os
@@ -80,6 +81,7 @@ def setData(Event=None):
     term=filter(lambda x:x[2]=='3',table_genre)
     if len(term)>0:
         term_data=zip(*term)[3]
+        term_data=filter(lambda  x: not math.isnan(x),term_data)
         term_mean=np.mean(term_data)
         term_std_dev=np.std(term_data)
     else:

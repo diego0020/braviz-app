@@ -87,8 +87,9 @@ def read_free_surfer_csv_file(file_name, row, search_col=None, col=None):
             if l[:12] == '# ColHeaders':
                 #found it
                 l2 = l[13:]
-                col_headers = l2.split(' ')
-                col_headers = filter(lambda x: len(x) > 0, col_headers)
+                col_headers = l2.split()
+                #col_headers = l2.split(' ')
+                #col_headers = filter(lambda x: len(x) > 0, col_headers)
                 if row == 'headers':
                     fs_file.close()
                     return col_headers

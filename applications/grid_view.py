@@ -5,6 +5,8 @@ from os.path import join as path_join
 from braviz.readAndFilter.read_csv import get_headers,get_column
 from braviz.visualization.create_lut import get_colorbrewer_lut
 import vtk
+import threading
+import thread
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
@@ -26,11 +28,37 @@ color_data_dict={}
 sort_data_dict={}
 sort_column=None
 
-#-------------------------
+widgets=[]
+models_dict={}
+async_processing_models=False
 def load_models(event=None):
-    models_dict={}
-    for subj in id_list:
-        #load models
+    global async_processing_models
+    #disable buttons
+    for w in widgets:
+        w.config(state='disabled')
+    async_processing_models=True
+    progress.set(0)
+    #async_load_models()
+    thread.start_new_thread(async_load_models,tuple())
+    top.after(20,finish_load_models)
+    #finish_load_models()
+
+def finish_load_models():
+    global models_dict,async_processing_models
+    if async_processing_models==False:
+        grid_view.set_data(models_dict)
+        grid_view.Render()
+        for w in widgets:
+            w.config(state='normal')
+        add_fibers_operation['state']='readonly'
+    else:
+        top.after(20,finish_load_models)
+    progress.set(len(models_dict)/len(id_list)*100)
+#-------------------------
+def async_load_models():
+    global models_dict,async_processing_models
+    models_dict.clear()
+    for i,subj in enumerate(id_list):
         models=[]
         for model_name in models_set:
             try:
@@ -54,8 +82,8 @@ def load_models(event=None):
             append_filter.AddInputData(mod)
         append_filter.Update()
         models_dict[subj]=append_filter.GetOutput()
-    grid_view.set_data(models_dict)
-    grid_view.Render()
+    async_processing_models=False
+
 
 def get_data_dict(col_name,nan_value=float('nan')):
     codes=get_column(file_name,'code')
@@ -186,8 +214,15 @@ add_fibers_operation.grid(row=0,column=1,sticky='e')
 
 fibers_frame.grid(sticky='ew')
 
-select_model_button=tk.Button(struct_frame,text='Apply selection',command=load_models)
-select_model_button.grid(sticky='ew')
+apply_model_selection_button=tk.Button(struct_frame,text='Apply selection',command=load_models)
+apply_model_selection_button.grid(sticky='ew')
+
+
+progress=tk.IntVar()
+progress.set(0)
+
+progress_bar=ttk.Progressbar(struct_frame,orient='horizontal',length='100',mode='determinate',variable=progress)
+progress_bar.grid(sticky='ew',pady=5,padx=5)
 
 #=====================================================================
 renderer_frame = tk.Frame(top)
@@ -208,7 +243,7 @@ render_widget.grid(row=0,column=0,sticky='ewsn')
 
 iact=render_widget.GetRenderWindow().GetInteractor()
 grid_view.set_interactor(iact)
-
+widgets=[apply_model_selection_button,sort_button,color_button,add_fibers_check,add_fibers_operation,select_model_frame,tab_list]
 
 def clean_exit():
     global grid_view
@@ -221,7 +256,8 @@ top.protocol("WM_DELETE_WINDOW", clean_exit)
 
 #===============================================
 #create interesting initial view
-load_models()
+async_load_models()
+finish_load_models()
 sort_models()
 color_models()
 grid_view.set_orientation((-11.357671297580744, -94.18586865794096, 97.555764310434))
