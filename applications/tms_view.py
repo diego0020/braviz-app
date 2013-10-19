@@ -9,7 +9,7 @@ import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
-
+import math
 import braviz
 
 __author__ = 'Diego'
@@ -199,18 +199,29 @@ control_frame = tk.Frame(top,width=100)
 
 select_data_frame=tk.Frame(control_frame)
 #select data
+#data_codes_dict={
+#    'IntraCortical Inhibition' :'ICI',
+#    'IntraCortical Facilitation':'ICF',
+#    'IHI Latency' :'IHIlat',
+#    'IHI Duration':'IHIdur',
+#    'MotorThreshold' :'RMT',
+#    'MEP Latency' : 'MEPlat',
+#    'IHI Frequency' :'IHIfreq'
+#}
+
 data_codes_dict={
     'IntraCortical Inhibition' :'ICI',
     'IntraCortical Facilitation':'ICF',
     'IHI Latency' :'IHIlat',
     'IHI Duration':'IHIdur',
     'MotorThreshold' :'RMT',
-    'MEP Latency' : 'MEPlat',
+    'Corticospinal efficiency ' : 'MEPlat',
     'IHI Frequency' :'IHIfreq'
 }
+
 invet_data_dict={
     'IHIfreq' : False,
-    'RMT' : False,
+    'RMT' : True,
     'IHIdur': False,
     'MEPlat': False,
     'ICF': False,

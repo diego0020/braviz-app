@@ -226,13 +226,13 @@ data_codes_dict={
     'IntraCortical Facilitation':'ICF',
     'IHI Latency' :'IHIlat',
     'IHI Duration':'IHIdur',
-    'MotorThreshold' :'RMT',
+    'Excitability of motor brain' :'RMT',
     'MEP Latency' : 'MEPlat',
     'IHI Frequency' :'IHIfreq'
 }
 invet_data_dict={
     'IHIfreq' : False,
-    'RMT' : False,
+    'RMT' : True,
     'IHIdur': False,
     'MEPlat': False,
     'ICF': False,
@@ -241,7 +241,7 @@ invet_data_dict={
 }
 limits_dict={
     'IHIfreq': (-20,120),
-    'RMT': (-10,120),
+    'RMT': (0,100),
     'IHIdur': (-2,35),
     'MEPlat': (-2,20),
     'ICF':(-10,400),
@@ -250,7 +250,7 @@ limits_dict={
 }
 labels_dict={
     'IHIfreq' : 'Frequency (%)',
-    'RMT' : 'Power (%)',
+    'RMT' : 'Level of excitability (%)',
     'IHIdur': 'Duration (ms.)',
     'MEPlat': 'Latency (ms.)',
     'ICF': 'Facilitation (%)',
@@ -269,9 +269,9 @@ data_selection.grid(row=0,column=0,columnspan=2,sticky='ew')
 #select side
 side_var=tk.StringVar()
 side_var.set('d')
-dominant_radio=tk.Radiobutton(select_data_frame,text='Dominant',variable=side_var,value='d',command=setData)
-non_dominant_radio=tk.Radiobutton(select_data_frame,text='Nondominant',variable=side_var,value='nd',command=setData)
-dominant_radio.grid(row=1,column=0)
+dominant_radio=tk.Radiobutton(select_data_frame,text='Dominant\nHemisphere',variable=side_var,value='d',command=setData)
+non_dominant_radio=tk.Radiobutton(select_data_frame,text='Nondominant\nHemisphere',variable=side_var,value='nd',command=setData)
+dominant_radio.grid(row=1,column=0,sticky='w')
 non_dominant_radio.grid(row=1,column=1)
 #select gender
 male_selected_var=tk.BooleanVar()
