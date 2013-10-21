@@ -101,6 +101,8 @@ def sort_models():
     grid_view.sort(sorted_subjects)
     grid_view.reset_camera()
     update_balloons()
+    grid_view.set_sort_message_visibility(True)
+    grid_view.update_sort_message(sort_column)
     grid_view.Render()
     #print sort_data_dict['1258']
     #print sorted_subjects
@@ -253,6 +255,7 @@ render_widget.grid(row=0,column=0,sticky='ewsn')
 
 iact=render_widget.GetRenderWindow().GetInteractor()
 grid_view.set_interactor(iact)
+iact.SetInteractorStyle(vtk.vtkInteractorStyleTrackballActor())
 widgets=[apply_model_selection_button,sort_button,color_button,add_fibers_check,add_fibers_operation,select_model_frame,tab_list,hide_waypoints_check]
 
 def clean_exit():

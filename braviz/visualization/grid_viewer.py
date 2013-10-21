@@ -3,6 +3,7 @@ import vtk
 import random
 import math
 import numpy as np
+from braviz.visualization import get_arrow
 
 __author__ = 'Diego'
 
@@ -25,6 +26,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.__poly_data_dict={}
         self.__mapper_dict={}
         self.__messages_dict={}
+        self.__positions_dict={}
         self.balloon_w=vtk.vtkBalloonWidget()
         self.balloon_repr=vtk.vtkBalloonRepresentation()
         self.balloon_w.SetRepresentation(self.balloon_repr)
@@ -41,20 +43,26 @@ class grid_view(vtk.vtkRenderWindow):
         self.actor_observer_fun = None
         self.color_bar_visibility=False
         self.scalar_bar_actor=None
+        self.arrow_actor=None
+        self.sort_message_actor=None
+        self.sort_message_visibility=False
+        self.__sort_modified=False
+
+
         #observers
     def set_interactor(self,iren=None):
         if iren is None:
-            self.iren = vtk.vtkRenderWindowInteractor()
-        else:
-            self.iren = iren
-            self.SetInteractor(iren)
-            self.iren.SetRenderWindow(self)
-            self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballActor())
-            self.balloon_w.SetInteractor(self.iren)
-            self.balloon_w.On()
+            iren = vtk.vtkRenderWindowInteractor()
+        self.iren = iren
+        self.SetInteractor(iren)
+        self.iren.SetRenderWindow(self)
+        self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballActor())
+        self.balloon_w.SetInteractor(self.iren)
+        self.balloon_w.On()
+        self.iren.SetPicker(self.picker)
 
         def register_change(caller=None, envent=None):
-            self.panning = False
+            self.__panning = False
             if self.__modified_actor is not None:
                 return
             self.__modified_actor = caller
@@ -63,8 +71,16 @@ class grid_view(vtk.vtkRenderWindow):
             self.__modified_actor=None
 
         def after_intareaction(caller=None, event=None):
-            if self.__modified_actor is not None:
-                mimic_actor(self.__modified_actor)
+            #print "finito"
+            if self.__modified_actor is None:
+                return
+            if len(self.__positions_dict)>0:
+                sorted_position=np.array(self.__positions_dict[self.__modified_actor])
+                if self.__sort_modified is False and np.linalg.norm(sorted_position-self.__modified_actor.GetPosition())>self.max_space:
+                    if self.sort_message_actor is not None:
+                        self.sort_message_actor.SetInput(self.sort_message_actor.GetInput()+' (modified)')
+                    self.__sort_modified=True
+            mimic_actor(self.__modified_actor)
             self.__modified_actor = None
 
         def mimic_actor(caller=None, event=None):
@@ -85,7 +101,7 @@ class grid_view(vtk.vtkRenderWindow):
         def pan(caller=None, event=None):
             if event == 'MiddleButtonPressEvent':
                 event_pos_x, event_pos_y = caller.GetEventPosition()
-                if (self.ren.PickProp(event_pos_x, event_pos_y) is not None):
+                if self.__modified_actor is not None or (self.ren.PickProp(event_pos_x, event_pos_y) is not None):
                     self.__panning = False
                     return
                 self.__panning = True
@@ -111,7 +127,14 @@ class grid_view(vtk.vtkRenderWindow):
                 if width > 60:
                     new_pos = 1 - 60 / width
                     self.scalar_bar_actor.SetPosition(new_pos, 0.1)
-
+        def follow_arrow(caller=None,event=None):
+            if self.sort_message_visibility is True:
+                width, height = self.GetSize()
+                if height > 30:
+                    new_pos = height-30
+                    orig_pos=self.sort_message_actor.GetPosition()
+                    self.sort_message_actor.SetPosition(orig_pos[0],new_pos)
+                    self.arrow_actor.SetPosition(orig_pos[0],new_pos)
         #register observers
 
         self.iren.AddObserver(vtk.vtkCommand.EndInteractionEvent, after_intareaction)
@@ -121,6 +144,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.iren.AddObserver(vtk.vtkCommand.MouseMoveEvent, pan)
         self.iren.AddObserver(vtk.vtkCommand.MiddleButtonReleaseEvent, pan, 100)
         self.AddObserver(vtk.vtkCommand.ModifiedEvent,follow_bar)
+        self.AddObserver(vtk.vtkCommand.ModifiedEvent,follow_arrow)
         self.actor_observer_fun=register_change
         for actor in self.__picking_dict:
             actor.AddObserver(vtk.vtkCommand.PickEvent, self.actor_observer_fun)
@@ -173,7 +197,7 @@ class grid_view(vtk.vtkRenderWindow):
     def set_balloon_messages(self,messages_dict):
         for key,message in messages_dict.iteritems():
             self.balloon_w.AddBalloon(self.__actors_dict[key],message)
-    def sort(self,sorted_ids):
+    def sort(self,sorted_ids,title=None):
         "actors will be displayed in the grid according to the sorted_ids list, actors not in list will become invisible"
         for ac in self.__picking_dict:
             ac.SetVisibility(0)
@@ -201,10 +225,11 @@ class grid_view(vtk.vtkRenderWindow):
             x = column * self.max_space
             y = row * self.max_space
             actor.SetPosition(x, y, 0)
+            self.__positions_dict[actor]=(x,y,0)
             actor.SetVisibility(1)
         self.n_rows=n_row
         self.n_cols=n_col
-
+        self.__sort_modified=False
         pass
     def set_color_function(self,color_function,scalar_colors=False):
         self.color_function=color_function
@@ -257,6 +282,44 @@ class grid_view(vtk.vtkRenderWindow):
         if width>60:
             new_pos=1-60/width
             self.scalar_bar_actor.SetPosition(new_pos,0.1)
+    def __add_sort_indication(self):
+        width, height = self.GetSize()
+        arrow=get_arrow((width*0.5,0,0),(0,0,0))
+        arrow_mapper=vtk.vtkPolyDataMapper2D()
+        arrow_mapper.SetInputData(arrow)
+        arrow_actor=vtk.vtkActor2D()
+        arrow_actor.SetMapper(arrow_mapper)
+        arrow_actor.SetPosition(30,height-30)
+        self.ren.AddActor2D(arrow_actor)
+        message=vtk.vtkTextActor()
+        message.SetTextScaleModeToProp()
+        message.SetPosition(30,height-30)
+        message.SetWidth(width*0.4)
+        message.SetHeight(25)
+        self.ren.AddActor2D(message)
+        self.sort_message_actor=message
+        self.arrow_actor=arrow_actor
+        self.sort_message_actor.SetVisibility(0)
+        self.arrow_actor.SetVisibility(0)
+    def set_sort_message_visibility(self,visibility):
+        self.sort_message_visibility=visibility
+        if self.sort_message_actor is not None:
+            self.sort_message_actor.SetVisibility(visibility)
+        if self.arrow_actor is not None:
+            self.arrow_actor.SetVisibility(visibility)
+    def update_sort_message(self,title):
+        if self.arrow_actor is None:
+            self.__add_sort_indication()
+        message_text = 'Sorted by: %s' % title
+        if self.__sort_modified is True:
+            message_text+= ' (modified)'
+        self.sort_message_actor.SetInput(message_text)
+        self.set_sort_message_visibility(self.sort_message_visibility)
+        self.Render()
+
+
+
+
 
 
 
@@ -270,24 +333,29 @@ if __name__=='__main__':
         sp.Update()
         test_data[i]=sp.GetOutput()
     test.set_data(test_data)
-    test.sort(range(2,10))
-    test.reset_camera()
-    import random
-    def rand_color(id):
-        return [random.random() for i in range(3)]
-    messages={}
-    for i in range(10):
-        if i%2==0:
-            messages[i]="%d : even"%i
-        else:
-            messages[i] = "%d : odd" % i
-    test.set_balloon_messages(messages)
-    test.set_color_function(rand_color)
+    #test.sort(range(2,10))
+    #test.reset_camera()
+    #import random
+    #def rand_color(id):
+    #    return [random.random() for i in range(3)]
+    #messages={}
+    #for i in range(10):
+    #    if i%2==0:
+    #        messages[i]="%d : even"%i
+    #    else:
+    #        messages[i] = "%d : odd" % i
+    #test.set_balloon_messages(messages)
+    #test.set_color_function(rand_color)
     test.Render()
+    iren=vtk.vtkRenderWindowInteractor()
+    iren.SetRenderWindow(test)
+    test.set_interactor(iren)
     test.start_interaction()
     ids=range(10)
     random.shuffle(ids)
     test.sort(ids)
     test.reset_camera()
+    test.set_sort_message_visibility(True)
+    test.update_sort_message('hola')
     test.Render()
     test.start_interaction()

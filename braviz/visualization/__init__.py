@@ -433,4 +433,91 @@ def build_grid(orig_img, slice, sampling_rate=5):
     clean_grid = cleaner.GetOutput()
     return clean_grid
 
+def get_arrow(head,tail):
+    #generic arrow
+    arrow_pd = vtk.vtkPolyData()
+    points_array = vtk.vtkPoints()
+    triangle_array = vtk.vtkCellArray()
+    line_array = vtk.vtkCellArray()
+    arrow_points = [(-0.1, 0, 0), (-0.1, -0.5, 0), (0, 0, 0), (-0.1, 0.5, 0), (-1, 0, 0)]
+    for i, p in enumerate(arrow_points):
+        points_array.InsertPoint(i, p)
+
+    triangle_array.InsertNextCell(4)
+    for p in (0, 1, 2, 3):
+        triangle_array.InsertCellPoint(p)
+    line_array.InsertNextCell(2)
+    line_array.InsertCellPoint(0)
+    line_array.InsertCellPoint(4)
+    arrow_pd.SetPoints(points_array)
+    arrow_pd.SetLines(line_array)
+    arrow_pd.SetPolys(triangle_array)
+
+    #---adjust to tail and head
+
+    t = vtk.vtkTransform()
+    t.Identity()
+    t.PostMultiply()
+    head=np.array(head)
+    tail=np.array(tail)
+    length=np.linalg.norm(head-tail)
+    if length>0:
+        t.Scale(length,length/20,1)
+        rot_axis=np.cross(head-tail,(1,0,0))
+        rot_angle=np.arcsin(np.linalg.norm(rot_axis)/length)
+        if np.isnan(rot_angle): #handles legendary rounding errors
+            print "please check output closely"
+            if np.norm((head-tail)/length - (1,0,0))<length/1000:
+                rot_angle=0
+            else:
+                rot_angle=np.pi
+        deg_angle=180/np.pi*rot_angle
+        if np.dot(head-tail,(1,0,0))<0:
+            deg_angle = 180 - deg_angle
+        t.RotateWXYZ(-1*deg_angle, rot_axis[0], rot_axis[1], rot_axis[2])
+
+
+    t.Translate(*head)
+    transfor_filter=vtk.vtkTransformPolyDataFilter()
+    transfor_filter.SetInputData(arrow_pd)
+    transfor_filter.SetTransform(t)
+    transfor_filter.Update()
+    return transfor_filter.GetOutput()
+
+def test_arrow(head,tail):
+    renWin = vtk.vtkRenderWindow()
+    ren = vtk.vtkRenderer()
+    ren.SetRenderWindow(renWin)
+    renWin.AddRenderer(ren)
+    renWin.SetInteractor(vtk.vtkRenderWindowInteractor())
+    renWin.GetInteractor().Initialize()
+    iren = renWin.GetInteractor()
+    iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+    head_sphere=vtk.vtkSphereSource()
+    head_sphere.SetRadius(1)
+    head_sphere.SetCenter(*head)
+    tail_sphere = vtk.vtkSphereSource()
+    tail_sphere.SetRadius(1)
+    tail_sphere.SetCenter(*tail)
+    head_mapper=vtk.vtkPolyDataMapper()
+    head_mapper.SetInputConnection(head_sphere.GetOutputPort())
+    tail_mapper=vtk.vtkPolyDataMapper()
+    tail_mapper.SetInputConnection(tail_sphere.GetOutputPort())
+    head_actor=vtk.vtkActor()
+    tail_actor=vtk.vtkActor()
+    head_actor.SetMapper(head_mapper)
+    tail_actor.SetMapper(tail_mapper)
+    head_actor.GetProperty().SetColor(0.0,1.0,0.0)
+    tail_actor.GetProperty().SetColor(1.0,0.0,0.0)
+    ren.AddActor(head_actor)
+    ren.AddActor(tail_actor)
+
+    arrow=get_arrow(head,tail)
+    arrow_mapper=vtk.vtkPolyDataMapper()
+    arrow_mapper.SetInputData(arrow)
+    arrow_actor=vtk.vtkActor()
+    arrow_actor.SetMapper(arrow_mapper)
+    ren.AddViewProp(arrow_actor)
+    iren.Start()
+
 from grid_viewer import grid_view
