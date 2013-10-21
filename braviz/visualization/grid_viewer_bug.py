@@ -1,6 +1,5 @@
 from __future__ import division
 import vtk
-import random
 import math
 import numpy as np
 from braviz.visualization import get_arrow
@@ -14,8 +13,6 @@ class grid_view(vtk.vtkRenderWindow):
         self.SetSize(600,400)
         self.ren.Render()
         #self.Initialize()
-        self.picker = vtk.vtkCellPicker()
-        self.picker.SetTolerance(0.005)
 
 
         self.set_background((0.2,0.2,0.2),(0.5,0.5,0.5))
@@ -59,98 +56,10 @@ class grid_view(vtk.vtkRenderWindow):
         self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballActor())
         self.balloon_w.SetInteractor(self.iren)
         self.balloon_w.On()
-        self.iren.SetPicker(self.picker)
 
-        def register_change(caller=None, envent=None):
-            self.__panning = False
-            if self.__modified_actor is not None:
-                return
-            self.__modified_actor = caller
-            #print 'auch %s'%self.__picking_dict[caller]
-        def unregister_object(caller=None,event=None):
-            self.__modified_actor=None
 
-        def after_intareaction(caller=None, event=None):
-            #print "finito"
-            if self.__modified_actor is None:
-                return
-            if len(self.__positions_dict)>0:
-                sorted_position=np.array(self.__positions_dict[self.__modified_actor])
-                if self.__sort_modified is False and np.linalg.norm(sorted_position-self.__modified_actor.GetPosition())>self.max_space:
-                    if self.sort_message_actor is not None:
-                        self.sort_message_actor.SetInput(self.sort_message_actor.GetInput()+' (modified)')
-                    self.__sort_modified=True
-            mimic_actor(self.__modified_actor)
-            self.__modified_actor = None
 
-        def mimic_actor(caller=None, event=None):
-            for ac in self.__picking_dict:
-                if ac is not caller:
-                    ac.SetOrientation(caller.GetOrientation())
-                    ac.SetScale(caller.GetScale())
 
-        def wheel_zoom(caller=None, event=None):
-            factor = 0.5
-            cam1=self.ren.GetActiveCamera()
-            if event == 'MouseWheelForwardEvent':
-                cam1.SetParallelScale(cam1.GetParallelScale() * factor)
-            else:
-                cam1.SetParallelScale(cam1.GetParallelScale() / factor)
-            self.iren.Render()
-
-        def pan(caller=None, event=None):
-            if event == 'MiddleButtonPressEvent':
-                event_pos_x, event_pos_y = caller.GetEventPosition()
-                if self.__modified_actor is not None or (self.ren.PickProp(event_pos_x, event_pos_y) is not None):
-                    self.__panning = False
-                    return
-                self.__panning = True
-                cam1 = self.ren.GetActiveCamera()
-                self.__panning_start_pos = np.array(caller.GetEventPosition())
-                self.__panning_start_cam_pos = np.array(cam1.GetPosition())
-                self.__panning_start_cam_focal = np.array(cam1.GetFocalPoint())
-            else:
-                if self.__panning == False:
-                    return
-                if event == 'MiddleButtonReleaseEvent':
-                    self.__panning = False
-            cam1 = self.ren.GetActiveCamera()
-            delta = caller.GetEventPosition() - self.__panning_start_pos
-            delta = (delta[0], -delta[1], 0)
-            delta=np.dot(delta,0.01*cam1.GetParallelScale())
-            cam1.SetPosition(self.__panning_start_cam_pos - delta)
-            cam1.SetFocalPoint(self.__panning_start_cam_focal - delta)
-            caller.Render()
-        def follow_bar(caller=None,event=None):
-            if self.color_bar_visibility is True:
-                width, height = self.GetSize()
-                if width > 60:
-                    new_pos = 1 - 60 / width
-                    self.scalar_bar_actor.SetPosition(new_pos, 0.1)
-        def follow_arrow(caller=None,event=None):
-            if self.sort_message_visibility is True:
-                width, height = self.GetSize()
-                if height > 30:
-                    new_pos = height-30
-                    orig_pos=self.sort_message_actor.GetPosition()
-                    self.sort_message_actor.SetPosition(orig_pos[0],new_pos)
-                    self.arrow_actor.SetPosition(orig_pos[0],new_pos)
-        #register observers
-
-        self.iren.AddObserver(vtk.vtkCommand.EndInteractionEvent, after_intareaction)
-        self.iren.AddObserver(vtk.vtkCommand.MouseWheelForwardEvent, wheel_zoom)
-        self.iren.AddObserver(vtk.vtkCommand.MouseWheelBackwardEvent, wheel_zoom)
-        self.iren.AddObserver(vtk.vtkCommand.MiddleButtonPressEvent, pan)
-        self.iren.AddObserver(vtk.vtkCommand.MouseMoveEvent, pan)
-        self.iren.AddObserver(vtk.vtkCommand.MiddleButtonReleaseEvent, pan, 100)
-        self.AddObserver(vtk.vtkCommand.ModifiedEvent,follow_bar)
-        self.AddObserver(vtk.vtkCommand.ModifiedEvent,follow_arrow)
-        self.actor_observer_fun=register_change
-        for actor in self.__picking_dict:
-            actor.AddObserver(vtk.vtkCommand.PickEvent, self.actor_observer_fun)
-        def print_event(caller=None,event=None):
-            print event
-        self.balloon_w.AddObserver('AnyEvent',unregister_object)
 
     def set_background(self,color1,color2=None):
         if color2 is not None:
@@ -190,8 +99,7 @@ class grid_view(vtk.vtkRenderWindow):
             actor=self.__actors_dict[id]
             actor.SetMapper(mapper)
             actor.SetVisibility(1)
-            if self.color_function is not None:
-                actor.GetProperty().SetColor(self.color_function(id))
+
 
 
     def set_balloon_messages(self,messages_dict):
@@ -327,35 +235,16 @@ class grid_view(vtk.vtkRenderWindow):
 if __name__=='__main__':
     test=grid_view()
     test_data={}
-    for i in range(10):
+    for i in range(1):
         sp=vtk.vtkSphereSource()
         sp.SetRadius(1)
         sp.Update()
         test_data[i]=sp.GetOutput()
+
     test.set_data(test_data)
-    test.sort(range(2,10))
-    test.reset_camera()
-    import random
-    def rand_color(id):
-        return [random.random() for i in range(3)]
-    messages={}
-    for i in range(10):
-        if i%2==0:
-            messages[i]="%d : even"%i
-        else:
-            messages[i] = "%d : odd" % i
-    test.set_balloon_messages(messages)
-    test.set_color_function(rand_color)
+
     test.Render()
     iren=vtk.vtkRenderWindowInteractor()
     iren.SetRenderWindow(test)
     test.set_interactor(iren)
-    test.start_interaction()
-    ids=range(10)
-    random.shuffle(ids)
-    test.sort(ids)
-    test.reset_camera()
-    test.set_sort_message_visibility(True)
-    test.update_sort_message('hola')
-    test.Render()
     test.start_interaction()
