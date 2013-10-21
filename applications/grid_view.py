@@ -5,7 +5,6 @@ from os.path import join as path_join
 from braviz.readAndFilter.read_csv import get_headers,get_column
 from braviz.visualization.create_lut import get_colorbrewer_lut
 import vtk
-import threading
 import thread
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
@@ -51,6 +50,7 @@ def finish_load_models():
         for w in widgets:
             w.config(state='normal')
         add_fibers_operation['state']='readonly'
+        set_hide_waypoints_state()
     else:
         top.after(20,finish_load_models)
     progress.set(len(models_dict)/len(id_list)*100)
@@ -60,11 +60,12 @@ def async_load_models():
     models_dict.clear()
     for i,subj in enumerate(id_list):
         models=[]
-        for model_name in models_set:
-            try:
-                models.append(reader.get('model',subj,name=model_name))
-            except:
-                pass
+        if not (fibers_var.get() and hide_waypoints_var.get()):
+            for model_name in models_set:
+                try:
+                    models.append(reader.get('model',subj,name=model_name))
+                except:
+                    pass
         #load fibers
         if fibers_var.get() is True:
             if fibers_op_var.get()=='through any':
@@ -101,8 +102,8 @@ def sort_models():
     grid_view.reset_camera()
     update_balloons()
     grid_view.Render()
-    print sort_data_dict['1258']
-    print sorted_subjects
+    #print sort_data_dict['1258']
+    #print sorted_subjects
 
 def color_models():
     global color_data_dict,color_column
@@ -111,12 +112,13 @@ def color_models():
     color_data_dict=get_data_dict(color_column)
     min_value=min(color_data_dict.values())
     max_value=max(color_data_dict.values())
-    print color_data_dict
     color_table=get_colorbrewer_lut(min_value,max_value,'RdBu',9,nan_color=(0.95,0.47,0.85))
     def color_fun(s):
         x=color_data_dict.get(s,float('nan'))
         return color_table.GetColor(x)
     grid_view.set_color_function(color_fun)
+    grid_view.set_color_bar_visibility(True)
+    grid_view.update_color_bar(color_table,color_column)
     update_balloons()
     grid_view.Render()
 
@@ -204,14 +206,22 @@ def change_models(action,model_name):
 select_model_frame=braviz.interaction.structureList(reader,'144',change_models,struct_frame)
 select_model_frame.grid(row=1,column=0,sticky='snew',pady=5)
 
+def set_hide_waypoints_state(event=None):
+    if fibers_var.get() is True:
+        hide_waypoints_check.config(state='normal')
+    else:
+        hide_waypoints_check.config(state='disabled')
 fibers_frame=tk.Frame(struct_frame)
-add_fibers_check=tk.Checkbutton(fibers_frame,text='add fibers',variable=fibers_var)
+add_fibers_check=tk.Checkbutton(fibers_frame,text='add fibers',variable=fibers_var,command=set_hide_waypoints_state)
 add_fibers_check.grid(row=0,column=0,sticky='w')
 fibers_op_var.set('through any')
 add_fibers_operation=ttk.Combobox(fibers_frame,textvariable=fibers_op_var,state='readonly',width=10)
 add_fibers_operation['values']=('through all','through any')
 add_fibers_operation.grid(row=0,column=1,sticky='e')
-
+hide_waypoints_var=tk.BooleanVar()
+hide_waypoints_var.set(0)
+hide_waypoints_check=tk.Checkbutton(fibers_frame,variable=hide_waypoints_var,text='hide waypoints',state='disabled')
+hide_waypoints_check.grid(row=1,column=0,columnspan=2,sticky='w')
 fibers_frame.grid(sticky='ew')
 
 apply_model_selection_button=tk.Button(struct_frame,text='Apply selection',command=load_models)
@@ -243,7 +253,7 @@ render_widget.grid(row=0,column=0,sticky='ewsn')
 
 iact=render_widget.GetRenderWindow().GetInteractor()
 grid_view.set_interactor(iact)
-widgets=[apply_model_selection_button,sort_button,color_button,add_fibers_check,add_fibers_operation,select_model_frame,tab_list]
+widgets=[apply_model_selection_button,sort_button,color_button,add_fibers_check,add_fibers_operation,select_model_frame,tab_list,hide_waypoints_check]
 
 def clean_exit():
     global grid_view
@@ -258,9 +268,9 @@ top.protocol("WM_DELETE_WINDOW", clean_exit)
 #create interesting initial view
 async_load_models()
 finish_load_models()
-sort_models()
 color_models()
+sort_models()
 grid_view.set_orientation((-11.357671297580744, -94.18586865794096, 97.555764310434))
-
+root.after(20,sort_models)
 # Start Tkinter event loop
 root.mainloop()

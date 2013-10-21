@@ -39,6 +39,8 @@ class grid_view(vtk.vtkRenderWindow):
         self.__panning_start_cam_pos=None
         self.color_function = None
         self.actor_observer_fun = None
+        self.color_bar_visibility=False
+        self.scalar_bar_actor=None
         #observers
     def set_interactor(self,iren=None):
         if iren is None:
@@ -103,6 +105,13 @@ class grid_view(vtk.vtkRenderWindow):
             cam1.SetPosition(self.__panning_start_cam_pos - delta)
             cam1.SetFocalPoint(self.__panning_start_cam_focal - delta)
             caller.Render()
+        def follow_bar(caller=None,event=None):
+            if self.color_bar_visibility is True:
+                width, height = self.GetSize()
+                if width > 60:
+                    new_pos = 1 - 60 / width
+                    self.scalar_bar_actor.SetPosition(new_pos, 0.1)
+
         #register observers
 
         self.iren.AddObserver(vtk.vtkCommand.EndInteractionEvent, after_intareaction)
@@ -111,6 +120,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.iren.AddObserver(vtk.vtkCommand.MiddleButtonPressEvent, pan)
         self.iren.AddObserver(vtk.vtkCommand.MouseMoveEvent, pan)
         self.iren.AddObserver(vtk.vtkCommand.MiddleButtonReleaseEvent, pan, 100)
+        self.AddObserver(vtk.vtkCommand.ModifiedEvent,follow_bar)
         self.actor_observer_fun=register_change
         for actor in self.__picking_dict:
             actor.AddObserver(vtk.vtkCommand.PickEvent, self.actor_observer_fun)
@@ -175,6 +185,10 @@ class grid_view(vtk.vtkRenderWindow):
         self.max_space *= 0.95
         #calculate renWin proportions
         width, height = self.GetSize()
+        if self.color_bar_visibility is True:
+            #reserve room for color bar
+            if width>60:
+                width-=60
         row_proportion = width / height
         n_row = math.ceil(math.sqrt(len(sorted_ids) / row_proportion))
         n_col = math.ceil(len(sorted_ids) / n_row)
@@ -192,11 +206,20 @@ class grid_view(vtk.vtkRenderWindow):
         self.n_cols=n_col
 
         pass
-    def set_color_function(self,color_function):
+    def set_color_function(self,color_function,scalar_colors=False):
         self.color_function=color_function
         for subj,ac in self.__actors_dict.iteritems():
             ac.GetProperty().SetColor(color_function(subj))
-
+        if scalar_colors is True:
+            for mapper in self.__mapper_dict.itervalues():
+                mapper.ScalarVisibilityOn()
+        else:
+            for mapper in self.__mapper_dict.itervalues():
+                mapper.ScalarVisibilityOff()
+    def set_color_bar_visibility(self,color_bar_visibility):
+        self.color_bar_visibility=color_bar_visibility
+        if self.scalar_bar_actor is not None and color_bar_visibility is False:
+            self.color_bar_visibility.SetVisibility(0)
     def reset_camera(self):
         n_col=self.n_cols
         max_space=self.max_space
@@ -204,11 +227,14 @@ class grid_view(vtk.vtkRenderWindow):
         self.Render()
         cam1 = self.ren.GetActiveCamera()
         cam1.ParallelProjectionOn()
-        cam1.SetFocalPoint(n_col * max_space / 2 - max_space / 2, n_row * max_space / 2 - max_space / 2, 0)
+        offset=0
+        if self.color_bar_visibility is True:
+            offset=60
+        cam1.SetFocalPoint(n_col * max_space / 2 - max_space / 2+offset/2, n_row * max_space / 2 - max_space / 2, 0)
         cam1.SetViewUp(0, -1, 0)
-        cam1.SetParallelScale(0.55 * n_row * max_space)
+        cam1.SetParallelScale(0.54 * n_row * max_space)
         cam_distance = cam1.GetDistance()
-        cam1.SetPosition(n_col * max_space / 2 - max_space / 2, n_row * max_space / 2 - max_space / 2,
+        cam1.SetPosition(n_col * max_space / 2 - max_space / 2 + offset/2, n_row * max_space / 2 - max_space / 2,
                          -1 * cam_distance)
         self.ren.ResetCameraClippingRange()
 
@@ -219,6 +245,20 @@ class grid_view(vtk.vtkRenderWindow):
     def set_orientation(self,orientation):
         for actor in self.__picking_dict:
             actor.SetOrientation(orientation)
+    def update_color_bar(self,lut,title):
+        if self.scalar_bar_actor is None:
+            self.scalar_bar_actor=vtk.vtkScalarBarActor()
+            self.ren.AddActor(self.scalar_bar_actor)
+        self.scalar_bar_actor.SetLookupTable(lut)
+        self.scalar_bar_actor.SetTitle(title)
+        self.scalar_bar_actor.SetNumberOfLabels(4)
+        self.scalar_bar_actor.SetMaximumWidthInPixels(60)
+        width, height = self.GetSize()
+        if width>60:
+            new_pos=1-60/width
+            self.scalar_bar_actor.SetPosition(new_pos,0.1)
+
+
 
 
 if __name__=='__main__':
