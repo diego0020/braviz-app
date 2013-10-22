@@ -4,7 +4,7 @@ import random
 import math
 import numpy as np
 from braviz.visualization import get_arrow
-
+from braviz.visualization.vtk_charts import mini_scatter_plot
 __author__ = 'Diego'
 
 class grid_view(vtk.vtkRenderWindow):
@@ -39,16 +39,16 @@ class grid_view(vtk.vtkRenderWindow):
         self.__panning_start_pos=None
         self.__panning_start_cam_focal=None
         self.__panning_start_cam_pos=None
-        self.color_function = None
-        self.actor_observer_fun = None
-        self.color_bar_visibility=False
-        self.scalar_bar_actor=None
-        self.arrow_actor=None
-        self.sort_message_actor=None
-        self.sort_message_visibility=False
+        self.__color_function = None
+        self.__actor_observer_fun = None
+        self.__color_bar_visibility=False
+        self.__scalar_bar_actor=None
+        self.__arrow_actor=None
+        self.__sort_message_actor=None
+        self.__sort_message_visibility=False
         self.__sort_modified=False
-
-
+        self.__mini_scatter=None
+        self.__mini_scatter_visible=False
         #observers
     def set_interactor(self,iren=None):
         if iren is None:
@@ -77,8 +77,8 @@ class grid_view(vtk.vtkRenderWindow):
             if len(self.__positions_dict)>0:
                 sorted_position=np.array(self.__positions_dict[self.__modified_actor])
                 if self.__sort_modified is False and np.linalg.norm(sorted_position-self.__modified_actor.GetPosition())>self.max_space:
-                    if self.sort_message_actor is not None:
-                        self.sort_message_actor.SetInput(self.sort_message_actor.GetInput()+' (modified)')
+                    if self.__sort_message_actor is not None:
+                        self.__sort_message_actor.SetInput(self.__sort_message_actor.GetInput()+' (modified)')
                     self.__sort_modified=True
             mimic_actor(self.__modified_actor)
             self.__modified_actor = None
@@ -122,19 +122,19 @@ class grid_view(vtk.vtkRenderWindow):
             cam1.SetFocalPoint(self.__panning_start_cam_focal - delta)
             caller.Render()
         def follow_bar(caller=None,event=None):
-            if self.color_bar_visibility is True:
+            if self.__color_bar_visibility is True:
                 width, height = self.GetSize()
                 if width > 60:
                     new_pos = 1 - 60 / width
-                    self.scalar_bar_actor.SetPosition(new_pos, 0.1)
+                    self.__scalar_bar_actor.SetPosition(new_pos, 0.1)
         def follow_arrow(caller=None,event=None):
-            if self.sort_message_visibility is True:
+            if self.__sort_message_visibility is True:
                 width, height = self.GetSize()
                 if height > 30:
                     new_pos = height-30
-                    orig_pos=self.sort_message_actor.GetPosition()
-                    self.sort_message_actor.SetPosition(orig_pos[0],new_pos)
-                    self.arrow_actor.SetPosition(orig_pos[0],new_pos)
+                    orig_pos=self.__sort_message_actor.GetPosition()
+                    self.__sort_message_actor.SetPosition(orig_pos[0],new_pos)
+                    self.__arrow_actor.SetPosition(orig_pos[0],new_pos)
         #register observers
 
         self.iren.AddObserver(vtk.vtkCommand.EndInteractionEvent, after_intareaction)
@@ -145,9 +145,9 @@ class grid_view(vtk.vtkRenderWindow):
         self.iren.AddObserver(vtk.vtkCommand.MiddleButtonReleaseEvent, pan, 100)
         self.AddObserver(vtk.vtkCommand.ModifiedEvent,follow_bar)
         self.AddObserver(vtk.vtkCommand.ModifiedEvent,follow_arrow)
-        self.actor_observer_fun=register_change
+        self.__actor_observer_fun=register_change
         for actor in self.__picking_dict:
-            actor.AddObserver(vtk.vtkCommand.PickEvent, self.actor_observer_fun)
+            actor.AddObserver(vtk.vtkCommand.PickEvent, self.__actor_observer_fun)
         def print_event(caller=None,event=None):
             print event
         self.balloon_w.AddObserver('AnyEvent',unregister_object)
@@ -185,13 +185,13 @@ class grid_view(vtk.vtkRenderWindow):
                 self.__actors_dict[id] = actor
                 self.ren.AddActor(actor)
                 self.__picking_dict[actor] = id
-                if self.actor_observer_fun is not None:
-                    actor.AddObserver(vtk.vtkCommand.PickEvent, self.actor_observer_fun)
+                if self.__actor_observer_fun is not None:
+                    actor.AddObserver(vtk.vtkCommand.PickEvent, self.__actor_observer_fun)
             actor=self.__actors_dict[id]
             actor.SetMapper(mapper)
             actor.SetVisibility(1)
-            if self.color_function is not None:
-                actor.GetProperty().SetColor(self.color_function(id))
+            if self.__color_function is not None:
+                actor.GetProperty().SetColor(self.__color_function(id))
 
 
     def set_balloon_messages(self,messages_dict):
@@ -209,7 +209,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.max_space *= 0.95
         #calculate renWin proportions
         width, height = self.GetSize()
-        if self.color_bar_visibility is True:
+        if self.__color_bar_visibility is True:
             #reserve room for color bar
             if width>60:
                 width-=60
@@ -232,7 +232,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.__sort_modified=False
         pass
     def set_color_function(self,color_function,scalar_colors=False):
-        self.color_function=color_function
+        self.__color_function=color_function
         for subj,ac in self.__actors_dict.iteritems():
             ac.GetProperty().SetColor(color_function(subj))
         if scalar_colors is True:
@@ -242,9 +242,9 @@ class grid_view(vtk.vtkRenderWindow):
             for mapper in self.__mapper_dict.itervalues():
                 mapper.ScalarVisibilityOff()
     def set_color_bar_visibility(self,color_bar_visibility):
-        self.color_bar_visibility=color_bar_visibility
-        if self.scalar_bar_actor is not None and color_bar_visibility is False:
-            self.color_bar_visibility.SetVisibility(0)
+        self.__color_bar_visibility=color_bar_visibility
+        if self.__scalar_bar_actor is not None and color_bar_visibility is False:
+            self.__color_bar_visibility.SetVisibility(0)
     def reset_camera(self):
         n_col=self.n_cols
         max_space=self.max_space
@@ -253,7 +253,7 @@ class grid_view(vtk.vtkRenderWindow):
         cam1 = self.ren.GetActiveCamera()
         cam1.ParallelProjectionOn()
         offset=0
-        if self.color_bar_visibility is True:
+        if self.__color_bar_visibility is True:
             offset=60
         cam1.SetFocalPoint(n_col * max_space / 2 - max_space / 2+offset/2, n_row * max_space / 2 - max_space / 2, 0)
         cam1.SetViewUp(0, -1, 0)
@@ -271,17 +271,17 @@ class grid_view(vtk.vtkRenderWindow):
         for actor in self.__picking_dict:
             actor.SetOrientation(orientation)
     def update_color_bar(self,lut,title):
-        if self.scalar_bar_actor is None:
-            self.scalar_bar_actor=vtk.vtkScalarBarActor()
-            self.ren.AddActor(self.scalar_bar_actor)
-        self.scalar_bar_actor.SetLookupTable(lut)
-        self.scalar_bar_actor.SetTitle(title)
-        self.scalar_bar_actor.SetNumberOfLabels(4)
-        self.scalar_bar_actor.SetMaximumWidthInPixels(60)
+        if self.__scalar_bar_actor is None:
+            self.__scalar_bar_actor=vtk.vtkScalarBarActor()
+            self.ren.AddActor(self.__scalar_bar_actor)
+        self.__scalar_bar_actor.SetLookupTable(lut)
+        self.__scalar_bar_actor.SetTitle(title)
+        self.__scalar_bar_actor.SetNumberOfLabels(4)
+        self.__scalar_bar_actor.SetMaximumWidthInPixels(60)
         width, height = self.GetSize()
         if width>60:
             new_pos=1-60/width
-            self.scalar_bar_actor.SetPosition(new_pos,0.1)
+            self.__scalar_bar_actor.SetPosition(new_pos,0.1)
     def __add_sort_indication(self):
         width, height = self.GetSize()
         arrow=get_arrow((width*0.5,0,0),(0,0,0))
@@ -297,25 +297,46 @@ class grid_view(vtk.vtkRenderWindow):
         message.SetWidth(width*0.4)
         message.SetHeight(25)
         self.ren.AddActor2D(message)
-        self.sort_message_actor=message
-        self.arrow_actor=arrow_actor
-        self.sort_message_actor.SetVisibility(0)
-        self.arrow_actor.SetVisibility(0)
+        self.__sort_message_actor=message
+        self.__arrow_actor=arrow_actor
+        self.__sort_message_actor.SetVisibility(0)
+        self.__arrow_actor.SetVisibility(0)
     def set_sort_message_visibility(self,visibility):
-        self.sort_message_visibility=visibility
-        if self.sort_message_actor is not None:
-            self.sort_message_actor.SetVisibility(visibility)
-        if self.arrow_actor is not None:
-            self.arrow_actor.SetVisibility(visibility)
+        self.__sort_message_visibility=visibility
+        if self.__sort_message_actor is not None:
+            self.__sort_message_actor.SetVisibility(visibility)
+        if self.__arrow_actor is not None:
+            self.__arrow_actor.SetVisibility(visibility)
     def update_sort_message(self,title):
-        if self.arrow_actor is None:
+        if self.__arrow_actor is None:
             self.__add_sort_indication()
         message_text = 'Sorted by: %s' % title
         if self.__sort_modified is True:
             message_text+= ' (modified)'
-        self.sort_message_actor.SetInput(message_text)
-        self.set_sort_message_visibility(self.sort_message_visibility)
+        self.__sort_message_actor.SetInput(message_text)
+        self.set_sort_message_visibility(self.__sort_message_visibility)
         self.Render()
+    def __add_mini_scatter_plot(self,title_x=None,title_y=None,color=None):
+        mini_scatter=mini_scatter_plot()
+        mini_scatter.set_renderer(self.ren)
+        self.ren.AddViewProp(mini_scatter)
+        width, height = self.GetSize()
+        mini_scatter.set_position(0,0,width/3,height/3)
+        mini_scatter.set_x_axis(title_x)
+        mini_scatter.set_y_axis(title_y)
+        mini_scatter.set_color((1.0,1.0,1.0))
+        self.__mini_scatter=mini_scatter
+    def update_mini_scatter(self,data,x_title=None,y_title=None):
+        if self.__mini_scatter is None:
+            self.__add_mini_scatter_plot()
+        self.__mini_scatter.set_x_axis(x_title)
+        self.__mini_scatter.set_y_axis(y_title)
+        self.__mini_scatter.set_values(data)
+        self.__mini_scatter.SetVisibility(self.__mini_scatter_visible)
+    def set_mini_scatter_visible(self,visible):
+        self.__mini_scatter_visible=visible
+        if self.__mini_scatter is not None:
+            self.__mini_scatter.SetVisibility(visible)
 
 
 
@@ -357,5 +378,8 @@ if __name__=='__main__':
     test.reset_camera()
     test.set_sort_message_visibility(True)
     test.update_sort_message('hola')
+    data=[(random.random(),random.random()) for i in range(10)]
+    test.update_mini_scatter(data)
+    test.set_mini_scatter_visible(True)
     test.Render()
     test.start_interaction()

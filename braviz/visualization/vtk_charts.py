@@ -213,9 +213,10 @@ class BarPlot(vtk.vtkContextActor):
         self.table.SetValue(0, 1, value)
         bar = self.chart.AddPlot(vtk.vtkChart.BAR)
         bar.SetInputData(self.table, 0, 1)
-        rgb_color = np.concatenate((np.dot(color, 255), (255,)))
-        rgb_color = rgb_color.astype(int)
-        bar.SetColor(*rgb_color)
+        if color is not None:
+            rgb_color = np.concatenate((np.dot(color, 255), (255,)))
+            rgb_color = rgb_color.astype(int)
+            bar.SetColor(*rgb_color)
         bar.SetWidth(4.0)
         axis_y = self.chart.GetAxis(0)
         if self.y_limits is not None:
@@ -527,3 +528,206 @@ class multi_bar_plot(vtk.vtkContextView):
             #print ln
 
 
+class mini_scatter_plot(vtk.vtkContextActor):
+    def __init__(self):
+        chart = vtk.vtkChartXY()
+        scene = vtk.vtkContextScene()
+
+        scene.AddItem(chart)
+        self.SetScene(scene)
+
+        table = vtk.vtkTable()
+        arr_x = vtk.vtkFloatArray()
+        arr_x.SetName("x")
+
+        arri_y = vtk.vtkFloatArray()
+        arri_y.SetName("y")
+
+        table.AddColumn(arri_y)
+        table.AddColumn(arr_x)
+        table.SetNumberOfRows(1)
+
+        self.ren=None
+        self.table = table
+        self.scene = scene
+        self.chart = chart
+        self.x_limits = None
+        self.y_limits = None
+        self.x_ticks = None
+        self.y_ticks = None
+        self.x_axis = None
+        self.y_axis = None
+        self.x_title = None
+        self.y_title = None
+        self.x_visible = True
+        self.y_visible = True
+        self.position = None
+        self.color=(0,0,0)
+        self.reg_line_table=None
+    def set_renderer(self, ren):
+        self.scene.SetRenderer(ren)
+        self.ren=ren
+
+    def set_position(self, x, y, width, height):
+        self.chart.SetAutoSize(False)
+        self.chart.SetSize(vtk.vtkRectf(x, y, width, height))
+        self.position = (x, y, width, height)
+
+    def get_position(self):
+        "Return (x,y,width,height)"
+        if self.position is not None:
+            return self.position
+        x1, y1 = self.chart.GetPoint1()
+        x2, y2 = self.chart.GetPoint2()
+        return x1, y1, x2 - x1, y2 - y1
+
+
+    def set_x_axis(self, title=None, limits=None, ticks=None, visible=True):
+        self.x_limits = limits
+        if ticks is not None:
+            ticks_array = vtk.vtkDoubleArray()
+            ticks_array.SetNumberOfTuples(len(ticks))
+            for i, t in enumerate(ticks):
+                ticks_array.SetTupleValue(i, t)
+            self.x_ticks = ticks_array
+        else:
+            self.x_ticks = None
+        self.x_title = title
+        self.x_visible = visible
+
+    def set_y_axis(self, title=None, limits=None, ticks=None, visible=True):
+        self.y_limits = limits
+        if ticks is not None:
+            ticks_array = vtk.vtkDoubleArray()
+            ticks_array.SetNumberOfTuples(len(ticks))
+            for i, t in enumerate(ticks):
+                ticks_array.SetTupleValue(i, (t,))
+            self.y_ticks = ticks_array
+        else:
+            self.y_ticks = None
+        self.y_title = title
+        self.y_visible = visible
+    def set_color(self,color):
+        if type(color[0]) == float:
+            rgb_color = np.dot(color, 255)
+            color = map(int, rgb_color)
+        self.color=color
+    def add_correlation(self,data):
+        from scipy.stats import linregress
+        x,y=zip(*data)
+        if len(x)<2:
+            return
+        slope, intercept, r_value, p_value, std_err = linregress(x, y)
+        if np.isnan(slope)  or np.isnan(intercept):
+            self.chart.SetTitle("r=NaN" )
+            return
+        self.chart.SetTitle("r=%.2f"%r_value)
+        self.chart.GetTitleProperties().SetColor(np.dot(self.color, 1 / 255))
+        reg_line=self.chart.AddPlot(vtk.vtkChart.LINE)
+        if self.reg_line_table is None:
+            line_table=vtk.vtkTable()
+            arrX = vtk.vtkFloatArray()
+            arrX.SetName("X_axis")
+            line_table.AddColumn(arrX)
+            arrY = vtk.vtkFloatArray()
+            arrY.SetName("Y_axis")
+            line_table.AddColumn(arrY)
+            self.reg_line_table=line_table
+        table=self.reg_line_table
+        min_x=self.x_axis.GetMinimum()
+        max_x=self.x_axis.GetMaximum()
+        min_y=self.y_axis.GetMinimum()
+        max_y=self.y_axis.GetMaximum()
+        self.x_axis.SetBehavior(1)
+        self.y_axis.SetBehavior(1)
+        min_y_intercept=(min_y-intercept)/slope
+        max_y_intercept=(max_y-intercept)/slope
+        min_x_intercept=min_x*slope+intercept
+        max_x_intercept=max_x*slope+intercept
+        interceptions=0
+        table.SetNumberOfRows(2)
+        if min_y <= min_x_intercept < max_y:
+            table.SetValue(interceptions,0,min_x)
+            table.SetValue(interceptions,1,min_x_intercept)
+            interceptions+=1
+        if min_x <= max_y_intercept < max_x:
+            table.SetValue(interceptions, 0, max_y_intercept)
+            table.SetValue(interceptions, 1, max_y)
+            interceptions += 1
+        if min_y < max_x_intercept <= max_y:
+            table.SetValue(interceptions,0,max_x)
+            table.SetValue(interceptions,1,max_x_intercept)
+            interceptions+=1
+        if min_x < min_y_intercept <= max_x:
+            table.SetValue(interceptions,0,min_y_intercept)
+            table.SetValue(interceptions,1,min_y)
+            interceptions+=1
+        assert(interceptions==2 or interceptions==0)
+        if interceptions==2:
+            reg_line.SetInputData(table,0,1)
+        pass
+    def set_values(self, values):
+        self.chart.ClearPlots()
+        #=============================================
+        self.table.SetNumberOfRows(len(values))
+        for i,(x,y) in enumerate(values):
+            self.table.SetValue(i, 0, x) #dummy for x axis
+            self.table.SetValue(i, 1, y)
+            #print '%.2f , %.2f'%(x,y)
+
+
+
+        scatter = self.chart.AddPlot(vtk.vtkChart.POINTS)
+        scatter.SetInputData(self.table, 0, 1)
+        color=self.color
+        scatter.SetColor(color[0],color[1],color[2],255)
+        axis_y = self.chart.GetAxis(0)
+        if self.y_limits is not None:
+            minimum, maximum = self.y_limits
+            axis_y.SetMinimum(minimum)
+            axis_y.SetMaximum(maximum)
+            axis_y.SetBehavior(1)
+        else:
+            axis_y.SetBehavior(0)
+        if self.y_title is not None:
+            axis_y.SetTitle(self.y_title)
+        if self.y_ticks is not None:
+            axis_y.SetCustomTickPositions(self.y_ticks)
+
+        if self.y_title is not None:
+            axis_y.SetTitle(self.y_title)
+        if not self.y_visible:
+            axis_y.SetGridVisible(0)
+            axis_y.SetTicksVisible(0)
+            axis_y.SetLabelsVisible(0)
+            #===========================================
+        axis_x = self.chart.GetAxis(1)
+        if self.x_limits is not None:
+            minimum, maximum = self.x_limits
+            axis_x.SetMinimum(minimum)
+            axis_x.SetMaximum(maximum)
+            axis_x.SetBehavior(1)
+        else:
+            axis_x.SetBehavior(0)
+        if self.x_title is not None:
+            axis_x.SetTitle(self.x_title)
+        if self.x_ticks is not None:
+            axis_x.SetCustomTickPositions(self.x_ticks)
+        if not self.x_visible:
+            axis_x.SetGridVisible(0)
+            axis_x.SetTicksVisible(0)
+            axis_x.SetLabelsVisible(0)
+        axis_x.GetPen().SetColor(color)
+        axis_y.GetPen().SetColor(color)
+        axis_x.GetGridPen().SetColor(color)
+        axis_y.GetGridPen().SetColor(color)
+        axis_x.GetTitleProperties().SetColor(np.dot(color, 1 / 255))
+        axis_y.GetTitleProperties().SetColor(np.dot(color, 1 / 255))
+        axis_x.GetLabelProperties().SetColor(np.dot(color, 1 / 255))
+        axis_y.GetLabelProperties().SetColor(np.dot(color, 1 / 255))
+
+        #================================================
+        self.x_axis = axis_x
+        self.y_axis = axis_y
+        self.ren.Render()
+        self.add_correlation(values)

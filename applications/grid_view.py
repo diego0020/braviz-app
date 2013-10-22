@@ -8,7 +8,7 @@ import vtk
 import thread
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-
+import numpy as np
 import braviz
 
 #globals
@@ -132,7 +132,14 @@ def update_balloons():
                                             sort_column,sort_data_dict.get(subj,float('nan')))
         messages_dict[subj]=message
     grid_view.set_balloon_messages(messages_dict)
-
+    data=[(color_data_dict.get(subj,float('nan')),sort_data_dict.get(subj,float('nan'))) for subj in id_list ]
+    data=filter(lambda x:np.isfinite(x[0]) and np.isfinite(x[1]),data)
+    if len(data)>0:
+        grid_view.set_mini_scatter_visible(True)
+        grid_view.update_mini_scatter(data,color_column,sort_column)
+    else:
+        grid_view.set_mini_scatter_visible(False)
+    grid_view.Render()
 #===========GUI=====================
 
 
@@ -274,6 +281,7 @@ finish_load_models()
 color_models()
 sort_models()
 grid_view.set_orientation((-11.357671297580744, -94.18586865794096, 97.555764310434))
+grid_view.set_mini_scatter_visible(True)
 root.after(20,sort_models)
 # Start Tkinter event loop
 root.mainloop()
