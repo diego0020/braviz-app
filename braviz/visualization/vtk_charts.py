@@ -564,6 +564,8 @@ class mini_scatter_plot(vtk.vtkContextActor):
         self.position = None
         self.color=(0,0,0)
         self.reg_line_table=None
+        self.scatter=None
+        self.locator=None
     def set_renderer(self, ren):
         self.scene.SetRenderer(ren)
         self.ren=ren
@@ -726,8 +728,32 @@ class mini_scatter_plot(vtk.vtkContextActor):
         axis_x.GetLabelProperties().SetColor(np.dot(color, 1 / 255))
         axis_y.GetLabelProperties().SetColor(np.dot(color, 1 / 255))
 
+        #locator=vtk.vtkKdTreePointLocator()
+        locator=vtk.vtkOctreePointLocator()
+        data_set = vtk.vtkPolyData()
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(len(values))
+        for i,(x,y) in enumerate(values):
+            points.SetPoint(i,(x,y,0))
+        data_set.SetPoints(points)
+        locator.SetDataSet(data_set)
+        self.locator=locator
         #================================================
         self.x_axis = axis_x
         self.y_axis = axis_y
+        self.scatter=scatter
         self.ren.Render()
         self.add_correlation(values)
+
+    def select_point(self,point_id):
+        selected_ids=vtk.vtkIdTypeArray()
+        if point_id is not None:
+            selected_ids.InsertNextValue(point_id)
+        self.scatter.SetSelection(selected_ids)
+        self.InvokeEvent(vtk.vtkCommand.InteractionEvent)
+    def find_point(self,coordinates):
+        coordinates3=(coordinates[0],coordinates[1],0)
+        closest_id=self.locator.FindClosestPoint(coordinates3)
+        return closest_id
+    def get_point_by_id(self,point_id):
+        return self.locator.GetDataSet().GetPoint(point_id)

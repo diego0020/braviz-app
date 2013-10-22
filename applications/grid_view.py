@@ -132,11 +132,18 @@ def update_balloons():
                                             sort_column,sort_data_dict.get(subj,float('nan')))
         messages_dict[subj]=message
     grid_view.set_balloon_messages(messages_dict)
-    data=[(color_data_dict.get(subj,float('nan')),sort_data_dict.get(subj,float('nan'))) for subj in id_list ]
-    data=filter(lambda x:np.isfinite(x[0]) and np.isfinite(x[1]),data)
-    if len(data)>0:
+    #data=[(color_data_dict.get(subj,float('nan')),sort_data_dict.get(subj,float('nan'))) for subj in id_list ]
+    #data=filter(lambda x:np.isfinite(x[0]) and np.isfinite(x[1]),data)
+    data_dict={}
+    for s in id_list:
+        color_datum=color_data_dict.get(s,float('nan'))
+        sort_datum=sort_data_dict.get(s,float('nan'))
+        if np.isfinite(color_datum) and np.isfinite(sort_datum):
+            data_dict[s]=(color_datum,sort_datum)
+    #print data_dict
+    if len(data_dict)>0:
         grid_view.set_mini_scatter_visible(True)
-        grid_view.update_mini_scatter(data,color_column,sort_column)
+        grid_view.update_mini_scatter(data_dict,color_column,sort_column)
     else:
         grid_view.set_mini_scatter_visible(False)
     grid_view.Render()
