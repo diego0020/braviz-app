@@ -62,6 +62,9 @@ class grid_view(vtk.vtkRenderWindow):
         self.__mini_scatter = None
         self.__mini_scatter_visible = False
         self.__mini_scatter_dict={}
+
+        self.__captions_dict={}
+        self.__labels_dict={}
         #observers
 
     def set_interactor(self, iren=None):
@@ -103,6 +106,8 @@ class grid_view(vtk.vtkRenderWindow):
             mimic_actor(self.__modified_actor)
             self.select_actor(self.__modified_actor)
             self.__modified_actor = None
+            if len(self.__labels_dict)>0 :
+                self.add_labels()
 
         def mimic_actor(caller=None, event=None):
             for ac in self.__picking_dict:
@@ -117,7 +122,10 @@ class grid_view(vtk.vtkRenderWindow):
                 cam1.SetParallelScale(cam1.GetParallelScale() * factor)
             else:
                 cam1.SetParallelScale(cam1.GetParallelScale() / factor)
+            if len(self.__labels_dict) > 0:
+                self.add_labels()
             self.iren.Render()
+
 
         def pan(caller=None, event=None):
             if event == 'MiddleButtonPressEvent':
@@ -192,8 +200,8 @@ class grid_view(vtk.vtkRenderWindow):
         self.__selected_actor = actor
         if self.__mini_scatter is not None:
             scatter_id = self.__mini_scatter_dict.get(key, None)
-            if scatter_id is not None:
-                self.__mini_scatter.select_point(scatter_id)
+            self.__mini_scatter.select_point(scatter_id)
+
         self.iren.Render()
     def clear_selection(self):
         self.__outline_actor.SetVisibility(0)
@@ -202,6 +210,9 @@ class grid_view(vtk.vtkRenderWindow):
             self.__mini_scatter.select_point(None)
         if self.iren is not None:
             self.iren.Render()
+    def get_selection(self):
+        selected_id=self.__picking_dict.get(self.__selected_actor,None)
+        return selected_id
     def set_background(self, color1, color2=None):
         if color2 is not None:
             self.ren.GradientBackgroundOn()
@@ -436,7 +447,54 @@ class grid_view(vtk.vtkRenderWindow):
         self.__mini_scatter_visible = visible
         if self.__mini_scatter is not None:
             self.__mini_scatter.SetVisibility(visible)
+        self.iren.Render()
+    def add_labels(self,labels_dict=None):
+        if labels_dict is not None:
+            self.remove_labels()
+            self.__labels_dict=labels_dict
+        else:
+            #only remove actors
+            self.remove_labels(True)
+            labels_dict=self.__labels_dict
 
+
+
+        for key,value in labels_dict.iteritems():
+            caption=vtk.vtkTextActor()
+            self.__captions_dict[key]=caption
+            caption=self.__captions_dict[key]
+            caption.SetInput(value)
+            center_point=self.__actors_dict[key].GetPosition()
+            point1 = np.array(center_point)-(self.max_space/2.2,-1*self.max_space*(0.5+1/2.2) ,0)
+            point2 = np.array(center_point) + (self.max_space / 2.2,-1* self.max_space*(-0.5+1/2.2), 0)
+            #caption.SetAttachmentPoint(center_point)
+            coordinate=vtk.vtkCoordinate()
+            coordinate.SetCoordinateSystemToWorld()
+            coordinate.SetValue(point1)
+            pos=coordinate.GetComputedDisplayValue(self.ren)
+            caption.GetPositionCoordinate().SetReferenceCoordinate(None)
+            caption.GetPositionCoordinate().SetCoordinateSystemToWorld ()
+            caption.GetPositionCoordinate().SetValue(point1)
+            coordinate.SetCoordinateSystemToWorld()
+            coordinate.SetValue(point2)
+            pos2 = coordinate.GetComputedDisplayValue(self.ren)
+            caption.GetPosition2Coordinate().SetReferenceCoordinate(None)
+            caption.GetPosition2Coordinate().SetCoordinateSystemToWorld ()
+            caption.GetPosition2Coordinate().SetValue(point2)
+            caption.GetTextProperty().SetVerticalJustificationToCentered ()
+            caption.GetTextProperty().SetJustificationToCentered ()
+            caption.GetTextProperty().ShadowOn()
+            caption.SetTextScaleModeToProp()
+            self.ren.AddViewProp(caption)
+        self.iren.Render()
+
+    def remove_labels(self,partial=False):
+        for caption in self.__captions_dict.itervalues():
+            self.ren.RemoveViewProp(caption)
+        self.__captions_dict.clear()
+        if partial is False:
+            self.__labels_dict={}
+            self.iren.Render()
 
 if __name__ == '__main__':
     test = grid_view()
@@ -477,5 +535,8 @@ if __name__ == '__main__':
     data_dict=dict(zip(range(10),data))
     test.update_mini_scatter(data_dict)
     test.set_mini_scatter_visible(True)
+    labels_dict=dict(zip(range(10),['probando']*10))
+    test.start_interaction()
+    test.add_labels(labels_dict)
     test.Render()
     test.start_interaction()

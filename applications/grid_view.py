@@ -51,6 +51,7 @@ def finish_load_models():
             w.config(state='normal')
         add_fibers_operation['state']='readonly'
         set_hide_waypoints_state()
+        update_balloons()
     else:
         top.after(20,finish_load_models)
     progress.set(len(models_dict)/len(id_list)*100)
@@ -125,6 +126,7 @@ def color_models():
     grid_view.Render()
 
 def update_balloons():
+    global messages_dict
     messages_dict={}
     for subj in id_list:
         message="%s\n%s : %.2f\n%s : %.2f"%(subj,
@@ -141,11 +143,12 @@ def update_balloons():
         if np.isfinite(color_datum) and np.isfinite(sort_datum):
             data_dict[s]=(color_datum,sort_datum)
     #print data_dict
-    if len(data_dict)>0:
+    if len(data_dict)>0 and scatter_sel_var.get():
         grid_view.set_mini_scatter_visible(True)
         grid_view.update_mini_scatter(data_dict,color_column,sort_column)
     else:
         grid_view.set_mini_scatter_visible(False)
+    show_labels()
     grid_view.Render()
 #===========GUI=====================
 
@@ -212,7 +215,7 @@ tab_list_frame.grid(row=2,column=0,sticky='nsew')
 struct_frame.columnconfigure(0, weight=1)
 struct_frame.rowconfigure(1, weight=1)
 struct_label=tk.Label(struct_frame,text='Structures')
-struct_label.grid(row=0,column=0,sticky='ew',pady=10)
+struct_label.grid(row=0,column=0,sticky='ew',pady=5)
 def change_models(action,model_name):
     if action=='add':
         models_set.add(model_name)
@@ -240,7 +243,7 @@ hide_waypoints_check=tk.Checkbutton(fibers_frame,variable=hide_waypoints_var,tex
 hide_waypoints_check.grid(row=1,column=0,columnspan=2,sticky='w')
 fibers_frame.grid(sticky='ew')
 
-apply_model_selection_button=tk.Button(struct_frame,text='Apply selection',command=load_models)
+apply_model_selection_button=tk.Button(struct_frame,text='Apply model selection',command=load_models)
 apply_model_selection_button.grid(sticky='ew')
 
 
@@ -250,6 +253,52 @@ progress.set(0)
 progress_bar=ttk.Progressbar(struct_frame,orient='horizontal',length='100',mode='determinate',variable=progress)
 progress_bar.grid(sticky='ew',pady=5,padx=5)
 
+#---------------------------------------------
+grid_manip_frame=tk.Frame(control_frame)
+
+scatter_sel_var=tk.BooleanVar()
+scatter_sel_var.set(1)
+def show_scatter_plot(event=None):
+    grid_view.set_mini_scatter_visible(scatter_sel_var.get())
+
+scatter_sel_box=tk.Checkbutton(grid_manip_frame,text='Show scatter plot',variable=scatter_sel_var,command=show_scatter_plot)
+scatter_sel_box.grid(sticky='w')
+
+labels_sel_var=tk.BooleanVar()
+labels_sel_var.set(0)
+def show_labels(event=None):
+    if event is not None:
+        update_balloons()
+    else:
+        if labels_sel_var.get():
+            grid_view.add_labels(messages_dict)
+        else:
+            grid_view.remove_labels()
+
+labels_sel_box=tk.Checkbutton(grid_manip_frame,text='Show text labels',variable=labels_sel_var,command=show_labels)
+labels_sel_box.grid(sticky='w')
+def remove_id(event=None):
+    id_to_remove=grid_view.get_selection()
+    if id_to_remove is not None:
+        id_list.remove(id_to_remove)
+        load_models()
+
+
+remove_selection_button=tk.Button(grid_manip_frame,text='Remove selected item',command=remove_id)
+remove_selection_button.grid(sticky='ew')
+
+def restore_list(event=None):
+    global id_list
+    id_list=reader.get('ids')
+    load_models()
+restore_all_items_button=tk.Button(grid_manip_frame,text='Restore all items',command=restore_list)
+restore_all_items_button.grid(sticky='ew')
+
+grid_manip_frame.columnconfigure(0,weight=1)
+grid_manip_frame['border']=1
+#flat, groove, raised, ridge, solid, or sunken
+grid_manip_frame['relief']='groove'
+grid_manip_frame.grid(sticky='ew',pady=5,padx=5,ipadx=2,ipady=2)
 #=====================================================================
 renderer_frame = tk.Frame(top)
 renderer_frame.grid(row=0,column=1,sticky='ewsn')
