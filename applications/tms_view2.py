@@ -9,7 +9,7 @@ import os
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-
+from braviz.interaction.tk_tooltip import ToolTip
 
 import braviz
 
@@ -31,6 +31,7 @@ context_dashes = [True, False, True]
 data_code='ICI'
 selected_codes=[]
 showing_history=True
+data_code=""
 #====================
 
 fibers=reader.get('fibers',current_subject,space='talairach')
@@ -62,7 +63,6 @@ bars_view_2=multi_bar_plot()
 #===============read data=====================
 def setData(Event=None):
     global codes2,tms_data2,term_mean,term_std_dev,tms_column,context_lines,data_code,disp2axis
-    data_code=data_codes_dict[data_type_var.get()]
     invert_data=invet_data_dict[data_code]
     tms_column=data_code+side_var.get()
     codes=get_column(csv_file,'CODE')
@@ -243,15 +243,7 @@ control_frame = tk.Frame(top,width=100)
 
 select_data_frame=tk.Frame(control_frame)
 #select data
-data_codes_dict={
-    'IntraCortical Inhibition' :'ICI',
-    'IntraCortical Facilitation':'ICF',
-    'IHI Latency' :'IHIlat',
-    'IHI Duration':'IHIdur',
-    'Excitability of motor brain' :'RMT',
-    'MEP Latency' : 'MEPlat',
-    'IHI Frequency' :'IHIfreq'
-}
+
 invet_data_dict={
     'IHIfreq' : False,
     'RMT' : True,
@@ -279,32 +271,93 @@ labels_dict={
     'ICI': 'Inverted Inhibition (%)',
     'IHIlat' : 'Latency (ms.)'
 }
-data_type_var=tk.StringVar()
-data_selection=ttk.Combobox(select_data_frame,textvariable=data_type_var)
-#data_selection['values']=('IntraCortical Inhibition','IntraCortical Facilitation','InterHemispheric Inhibition Latency','InterHemispheric Inhibition Duration','MotorThreshold','Motor Evoked Potential Latency,InterHemispheric Inhibition Frequency')
-data_selection['values']=sorted(data_codes_dict.keys())
-data_selection['state']='readonly'
-data_selection.set('IntraCortical Inhibition')
-data_selection.pack(side='top')
-data_selection.bind('<<ComboboxSelected>>',setData)
-data_selection.grid(row=0,column=0,columnspan=2,sticky='ew')
+data_code='ICI'
+#data_selection=tk.Frame(select_data_frame,height=200,width=100,relief='sunken',border=5)
+data_selection_tree=ttk.Treeview(select_data_frame,show='tree',height=8,selectmode='browse')
+data_selection_tree.insert('',           'end','motor_brain',text='Motor Brain',tags='parent')
+data_selection_tree.insert('motor_brain','end','exci',text='Excitability',tags='leaf')
+data_selection_tree.insert('motor_brain','end','sync',text='Synchronization',tags='leaf')
+data_selection_tree.insert('motor_brain','end','balan',text='Balanced Activity',tags='parent')
+data_selection_tree.insert('balan',      'end','inhi',text='Level of Inhibition',tags='leaf')
+data_selection_tree.insert('balan',      'end','faci',text='Level of Facilitation',tags='leaf')
+data_selection_tree.insert('motor_brain','end','coop',text='Cooperation between hemispheres',tags='parent')
+data_selection_tree.insert('coop',       'end','freq',text='Frequency',tags='leaf')
+data_selection_tree.insert('coop',       'end','trans',text='Transfer time',tags='leaf')
+data_selection_tree.insert('coop',       'end','dura',text='Duration',tags='leaf')
+
+data_codes_dict={
+    'inhi' :'ICI',
+    'faci':'ICF',
+    'trans' :'IHIlat',
+    'dura':'IHIdur',
+    'exci' :'RMT',
+    'sync' : 'MEPlat',
+    'freq' :'IHIfreq'
+}
+
+def select_data(Event=None):
+    data_selection_tree.after_idle(select_data2)
+
+def select_data2(Event=None):
+    global data_code
+
+    selected_leaf=data_selection_tree.focus()
+    data_code=data_codes_dict[selected_leaf]
+    setData()
+
+
+data_selection_tree.tag_bind('leaf','<1>',select_data)
+
+
+#--------------tooltips------------
+
+long_messages_dict={
+    'motor_brain': 'Tms tests',
+    'exci': 'Basic level = 100% - motor threshold',
+    'sync': 'Corticospinal efficiency, msec',
+    'balan':'Balance between inhibition and facilitation mechanisms' ,
+    'inhi': 'GABAa synapses = 100% - cond*100/test',
+    'faci': 'Glutamate synapses = cond*100/test - 100%',
+    'coop' : 'Integrity of corpus callosum = test of inhibition from the other hemisphere',
+    'freq': 'Frequency of observation of an inhibition triggered by the other hemisphere',
+    'trans': 'Time for the transfer of the inhibition triggered by the other hemisphere',
+    'dura': 'Duration of the inhibition triggered by the other hemisphere',
+}
+
+def msgFunc(event=None):
+    coord=event.y
+    #print coor
+    element=data_selection_tree.identify_row(coord)
+    if len(element)==0:
+        return ''
+    return long_messages_dict[element]
+
+
+
+t1=ToolTip(data_selection_tree,msgFunc=msgFunc,follow=1,delay=1)
+
+
+#---------------------------------------
+data_selection_tree.grid(row=0,column=0,columnspan=2,sticky='ew')
 #select side
 side_var=tk.StringVar()
 side_var.set('d')
-dominant_radio=tk.Radiobutton(select_data_frame,text='Dominant\nHemisphere',variable=side_var,value='d',command=setData)
-non_dominant_radio=tk.Radiobutton(select_data_frame,text='Nondominant\nHemisphere',variable=side_var,value='nd',command=setData)
-dominant_radio.grid(row=1,column=0,sticky='w')
-non_dominant_radio.grid(row=1,column=1)
+hemisphere_label=tk.Label(select_data_frame,text='Hemisphere:')
+hemisphere_label.grid(row=1,column=0,columnspan=2,sticky='ew')
+dominant_radio=tk.Radiobutton(select_data_frame,text='Dominant',variable=side_var,value='d',command=setData)
+non_dominant_radio=tk.Radiobutton(select_data_frame,text='Nondominant',variable=side_var,value='nd',command=setData)
+dominant_radio.grid(row=2,column=0,sticky='w')
+non_dominant_radio.grid(row=2,column=1)
 #select gender
 male_selected_var=tk.BooleanVar()
 female_selected_var=tk.BooleanVar()
 male_checkbox=tk.Checkbutton(select_data_frame,text='male',command=setData,variable=male_selected_var)
 female_checkbox=tk.Checkbutton(select_data_frame,text='female',command=setData,variable=female_selected_var)
 female_checkbox.select()
-male_checkbox.grid(row=2,column=0)
-female_checkbox.grid(row=2,column=1)
+male_checkbox.grid(row=3,column=0)
+female_checkbox.grid(row=3,column=1)
 
-select_data_frame.grid(row=0,pady=20)
+select_data_frame.grid(row=0,pady=5)
 
 select_subj_frame=braviz.interaction.subjects_list(reader,setSubj,control_frame,text='Subject',padx=10,pady=5,height='100')
 select_subj_frame.grid(column=0,row=1,sticky='news')
@@ -456,7 +509,7 @@ def do_resize():
     disp2axis = get_mapper_function()
 
 
-def draw_tooltip(caller=None,event=None):
+def draw_bar1_tooltip(caller=None,event=None):
 
 
     tool_tip=bars_view_1.chart.GetTooltip()
@@ -478,7 +531,7 @@ def draw_tooltip(caller=None,event=None):
 
     bars_view_1.Render()
 
-def draw_tooltip2(caller=None, event=None):
+def draw_bar2_tooltip(caller=None, event=None):
     tool_tip2=bars_view_2.chart.GetTooltip()
     event_position = caller.GetEventPosition()
     event_x=event_position[0]
@@ -515,10 +568,11 @@ iact2=bars_view_1.GetInteractor()
 iact3=bars_view_2.GetInteractor()
 #print iact2
 #interaction_event_id=iact2.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
-interaction_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip,100)
-interaction_event_id=iact3.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip2,100)
+interaction_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_bar1_tooltip,100)
+interaction_event_id=iact3.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_bar2_tooltip,100)
 interaction_event_id=iact2.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,click_in_bar,100)
 #MouseMoveEvent_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,abort_interaction_event,100)
 # Start Tkinter event loop
 top.bind('<Configure>',resize_handler)
+top.focus()
 root.mainloop()
