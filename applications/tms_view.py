@@ -13,6 +13,11 @@ import math
 import braviz
 
 __author__ = 'Diego'
+
+
+print "DEPRECATED"
+print "Use tms_view2 with view all"
+
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=100)
 
 

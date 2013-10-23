@@ -30,6 +30,7 @@ context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
 context_dashes = [True, False, True]
 data_code='ICI'
 selected_codes=[]
+showing_history=True
 #====================
 
 fibers=reader.get('fibers',current_subject,space='talairach')
@@ -92,7 +93,10 @@ def setData(Event=None):
     else:
         codes2=[]
         tms_data2=[]
-    bars_view_1.set_all(len(selected_codes), 5, 500)
+    if showing_history is True:
+        bars_view_1.set_all(len(selected_codes), 5, 500)
+    else:
+        bars_view_1.set_all(len(codes2), 5, 500)
     #only keep codes and tms_data columns from filtered table
 
     context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
@@ -102,8 +106,13 @@ def setData(Event=None):
 
 
     bars_view_1.set_lines(context_lines, context_dashes)
-    selected_values=[tms_data_dict[s] for s in selected_codes]
-    bars_view_1.set_data(selected_values, selected_codes)
+    if showing_history is True:
+        selected_values=[tms_data_dict[s] for s in selected_codes]
+        bars_view_1.set_data(selected_values, selected_codes)
+    else:
+        selected_values = [tms_data_dict[s] for s in codes2]
+        bars_view_1.set_data(selected_values, codes2)
+
     bars_view_1.set_y_title(labels_dict[data_code])
 
     bars_view_2.set_y_title(labels_dict[data_code])
@@ -127,15 +136,26 @@ def setData(Event=None):
 
 def draw_bars_1():
     global disp2axis
-    bars_view_1.set_all(len(selected_codes), 5, 500)
-    selected_values = [tms_data_dict[s] for s in selected_codes]
-    bars_view_1.set_data(selected_values, selected_codes)
-    try:
-        idx = selected_codes.index(current_subject)
-    except ValueError:
-        bars_view_1.set_enphasis(None)
+    if showing_history is True:
+        bars_view_1.set_all(len(selected_codes), 5, 500)
+        selected_values = [tms_data_dict[s] for s in selected_codes]
+        bars_view_1.set_data(selected_values, selected_codes)
+        try:
+            idx = selected_codes.index(current_subject)
+        except ValueError:
+            bars_view_1.set_enphasis(None)
+        else:
+            bars_view_1.set_enphasis(idx)
     else:
-        bars_view_1.set_enphasis(idx)
+        bars_view_1.set_all(len(codes2), 5, 500)
+        selected_values = [tms_data_dict[s] for s in codes2]
+        bars_view_1.set_data(selected_values, codes2)
+        try:
+            idx = codes2.index(current_subject)
+        except ValueError:
+            bars_view_1.set_enphasis(None)
+        else:
+            bars_view_1.set_enphasis(idx)
     bars_view_1.paint_bar_chart()
     disp2axis = get_mapper_function()
 
@@ -165,8 +185,10 @@ def setSubj(Event=None):
 
 
     try:
-        print current_subject
-        idx = selected_codes.index(current_subject)
+        if showing_history is True:
+            idx = selected_codes.index(current_subject)
+        else:
+            idx = codes2.index(current_subject)
     except ValueError:
         bars_view_1.set_enphasis(None)
     else:
@@ -296,7 +318,21 @@ def print_camera(Event=None):
     print cam1
 #print_camera_button=tk.Button(control_frame,text='print_cammera',command=print_camera)
 #print_camera_button.grid()
-
+def show_all_or_history(Event=None):
+    global showing_history
+    if showing_history == True:
+        showing_history=False
+        show_all_or_history_button['text']='Show history'
+        add_to_hist_button['state']='disabled'
+        remove_from_hist_button['state']='disabled'
+    else:
+        showing_history=True
+        show_all_or_history_button['text']='Show all'
+        add_to_hist_button['state']='normal'
+        remove_from_hist_button['state']='normal'
+    draw_bars_1()
+show_all_or_history_button=tk.Button(control_frame,text='Show all',command=show_all_or_history)
+show_all_or_history_button.grid(sticky='ew')
 def add_to_history(Event=None):
     if current_subject in selected_codes:
         selected_codes.remove(current_subject)
@@ -305,6 +341,15 @@ def add_to_history(Event=None):
     draw_bars_1()
 add_to_hist_button=tk.Button(control_frame,text='Add to history <----',command=add_to_history)
 add_to_hist_button.grid(sticky='ew')
+
+def remove_from_history(Event=None):
+    if current_subject in selected_codes:
+        selected_codes.remove(current_subject)
+    draw_bars_1()
+remove_from_hist_button=tk.Button(control_frame,text='Remove from history',command=remove_from_history)
+remove_from_hist_button.grid(sticky='ew')
+
+
 
 #=====================================================================
 display_frame = tk.Frame(top)
@@ -385,8 +430,9 @@ disp2axis=lambda x:x
 def get_subj_index(x):
     if bars_view_1.start < x < bars_view_1.get_bar_graph_width() + bars_view_1.start:
         index = int((x - bars_view_1.start) // (bars_view_1.width + 1))
-        code=selected_codes[index]
-        index=codes2.index(code)
+        if showing_history is True:
+            code=selected_codes[index]
+            index = codes2.index(code)
         return index
     return None
 
@@ -420,7 +466,10 @@ def draw_tooltip(caller=None,event=None):
         tool_tip.SetVisible(1)
         tool_tip.SetPosition(event_position)
         index=int((event_coordinates-bars_view_1.start)//(bars_view_1.width+1))
-        code=selected_codes[index]
+        if showing_history is True:
+            code=selected_codes[index]
+        else:
+            code = codes2[index]
         datum=tms_data_dict[code]
         message="%s : %.2f"%(code,datum)
         tool_tip.SetText(message)
