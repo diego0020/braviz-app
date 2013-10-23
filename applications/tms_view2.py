@@ -60,14 +60,20 @@ bars_view_1 = multi_bar_plot()
 #create chart2
 bars_view_2 = multi_bar_plot()
 
+group_colors_dict={
+    '1': 'navajo white', # canguro
+    '2': 'beige',  # incubadora
+    '3': 'SlateGray1',  # gorditos
+}
+
 #===============read data=====================
-def setData(Event=None):
+def setData(event=None):
     global codes2, tms_data2, term_mean, term_std_dev, tms_column, context_lines, data_code, disp2axis
     invert_data = invet_data_dict[data_code]
     tms_column = data_code + side_var.get()
     codes = get_column(csv_file, 'CODE')
     genres = get_column(csv_file, 'GENDE')
-    grupo = get_column(csv_file, 'UBICA') #1=canguro, 2=control, 3=gorditos
+    grupo = get_column(csv_file, 'UBICA')  # 1=canguro, 2=control, 3=gorditos
     TMS_metric = get_column(csv_file, tms_column, True)
     if invert_data is True:
         TMS_metric = map(lambda x: 100 - x, TMS_metric)
@@ -76,8 +82,10 @@ def setData(Event=None):
     if male_selected_var.get(): valid_genres.append('2')
     if female_selected_var.get(): valid_genres.append('1')
     table = zip(codes, genres, grupo, TMS_metric)
+    group_dict={}
     for row in table:
         tms_data_dict[row[0]] = row[3]
+        group_dict[row[0]]=row[2]
     table_genre = filter(lambda y: y[1] in valid_genres, table)
     term = filter(lambda x: x[2] == '3', table_genre)
     if len(term) > 0:
@@ -116,6 +124,12 @@ def setData(Event=None):
     except tk.TclError:
         previous_selection = None
     select_subj_frame.tk_listvariable.set(codes2)
+    if show_groups_var.get() is True:
+        for i,cod in enumerate(codes2):
+            select_subj_frame.itemconfigure(i,background=group_colors_dict[group_dict[cod]])
+    else:
+        for i, cod in enumerate(codes2):
+            select_subj_frame.itemconfigure(i, background='')
     if previous_selection in codes2:
         idx = codes2.index(previous_selection)
         select_subj_frame.subjects_list.selection_clear(0, tk.END)
@@ -153,7 +167,7 @@ def draw_bars_1():
 previous_value = 0
 
 
-def setSubj(Event=None):
+def setSubj(event=None):
     global fibers, current_subject, previous_value
     #print "setting subjects"
     if len(codes2) == 0:
@@ -211,15 +225,15 @@ def get_color(value):
     z_score = abs(value - term_mean) / term_std_dev
 
     if z_score <= 0.5:
-        return (26, 150, 65, 255)
+        return 26, 150, 65, 255
     elif z_score <= 1:
-        return (166, 217, 106, 255)
+        return 166, 217, 106, 255
     elif z_score <= 1.5:
-        return (255, 225, 191, 255)
+        return 255, 225, 191, 255
     elif z_score <= 2:
-        return (253, 174, 97, 255)
+        return 253, 174, 97, 255
     else:
-        return (215, 25, 28, 255)
+        return 215, 25, 28, 255
 
 
 #===============================================Inteface=================================
@@ -344,12 +358,15 @@ non_dominant_radio.grid(row=2, column=1)
 #select gender
 male_selected_var = tk.BooleanVar()
 female_selected_var = tk.BooleanVar()
-male_checkbox = tk.Checkbutton(select_data_frame, text='male', command=setData, variable=male_selected_var)
-female_checkbox = tk.Checkbutton(select_data_frame, text='female', command=setData, variable=female_selected_var)
+male_checkbox = tk.Checkbutton(select_data_frame, text='males', command=setData, variable=male_selected_var)
+female_checkbox = tk.Checkbutton(select_data_frame, text='females', command=setData, variable=female_selected_var)
 female_checkbox.select()
-male_checkbox.grid(row=3, column=0)
-female_checkbox.grid(row=3, column=1)
-
+male_checkbox.grid(row=3, column=0, sticky='w')
+female_checkbox.grid(row=3, column=1, sticky='w')
+show_groups_var=tk.BooleanVar()
+show_groups_var.set(False)
+show_groups_box=tk.Checkbutton(select_data_frame,text='Show groups',variable=show_groups_var,command=setData)
+show_groups_box.grid(row=4,column=0,columnspan=2,sticky='w')
 select_data_frame.grid(row=0, pady=5)
 
 select_subj_frame = braviz.interaction.subjects_list(reader, setSubj, control_frame, text='Subject', padx=10, pady=5,
@@ -358,18 +375,17 @@ select_subj_frame.grid(column=0, row=1, sticky='news')
 control_frame.rowconfigure(1, weight=1)
 
 
-def print_camera(Event=None):
+def print_camera(event=None):
     cam1 = ren.GetActiveCamera()
-    #cam1.Elevation(80)
-    #cam1.SetViewUp(0, 0, 1)
-    #cam1.Azimuth(80)
     print cam1
 
 #print_camera_button=tk.Button(control_frame,text='print_cammera',command=print_camera)
 #print_camera_button.grid()
-def show_all_or_history(Event=None):
+
+
+def show_all_or_history(event=None):
     global showing_history
-    if showing_history == True:
+    if showing_history is True:
         showing_history = False
         show_all_or_history_button['text'] = 'Show history'
         add_to_hist_button['state'] = 'disabled'
@@ -406,7 +422,6 @@ def remove_from_history(Event=None):
 
 remove_from_hist_button = tk.Button(control_frame, text='Remove from history', command=remove_from_history)
 remove_from_hist_button.grid(sticky='ew')
-
 
 
 #=====================================================================
@@ -485,8 +500,6 @@ def get_mapper_function():
         return x
 
     return disp2axis
-
-
 
 
 

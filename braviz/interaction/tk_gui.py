@@ -22,19 +22,19 @@ class subjects_list(LabelFrame):
         list_and_bar.pack(side='top',fill='y',expand=1)
         scrollbar=tk.Scrollbar(list_and_bar,orient=tk.VERTICAL)
         self.tk_listvariable=tk_listvariable=tk.StringVar()
-        subjects_list=tk.Listbox(list_and_bar,selectmode=tk.BROWSE,yscrollcommand=scrollbar.set,exportselection=0,listvariable=tk_listvariable)
-        scrollbar.config(command=subjects_list.yview)
+        subjects_list_box=tk.Listbox(list_and_bar,selectmode=tk.BROWSE,yscrollcommand=scrollbar.set,exportselection=0,listvariable=tk_listvariable)
+        scrollbar.config(command=subjects_list_box.yview)
         scrollbar.pack(side=tk.RIGHT,fill=tk.Y)
-        subjects_list.pack(side="left",fill='y',expand=1)
+        subjects_list_box.pack(side="left",fill='y',expand=1)
         subjects=reader.get('ids')
-        self.subjects_list=subjects_list
+        self.subjects_list=subjects_list_box
         tk_listvariable.set(tuple(subjects))
-        subjects_list.select_set(0,0)
-        subjects_list.bind('<<ListboxSelect>>',function)
-        subjects_list.bind('<Double-Button-1>',function)
+        subjects_list_box.select_set(0,0)
+        subjects_list_box.bind('<<ListboxSelect>>',function)
+        subjects_list_box.bind('<Double-Button-1>',function)
         master.bind('<Return>', function)
-        subjects_list.bind('<Key>',function)
-        self.itemconfigure=subjects_list.itemconfigure
+        subjects_list_box.bind('<Key>',function)
+        self.itemconfigure=subjects_list_box.itemconfigure
     def get(self):
         "Gets the currently selected subject"
         select_idx=self.subjects_list.curselection()
