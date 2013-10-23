@@ -11,7 +11,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 
 import math
 import braviz
-
+from braviz.visualization.mathplotlib_charts import BarPlot
 __author__ = 'Diego'
 
 
@@ -58,7 +58,7 @@ csv_file = os.path.join(reader.getDataRoot(), 'baseFinal_TMS.csv')
 bars_view_1=multi_bar_plot()
 
 #create chart2
-bars_view_2=multi_bar_plot()
+bars_view2=BarPlot()
 
 
 #===============read data=====================
@@ -105,11 +105,12 @@ def setData(Event=None):
     bars_view_1.set_data(tms_data2, codes2)
     bars_view_1.set_y_title(labels_dict[data_code])
 
-    bars_view_2.set_y_title(labels_dict[data_code])
-    bars_view_2.set_y_limis(*limits_dict[data_code])
-    bars_view_2.set_all(1, 5, 100)
-    bars_view_2.set_color_fun(get_color)
-    bars_view_2.set_lines(context_lines, context_dashes)
+    bars_view2.set_y_title(labels_dict[data_code])
+    bars_view2.show()
+    bars_view2.set_y_limits(*limits_dict[data_code])
+    #bars_view_2.set_all(1, 5, 100)
+    #bars_view_2.set_color_fun(get_color)
+    #bars_view_2.set_lines(context_lines, context_dashes)
     bars_view_1.paint_bar_chart()
     try:
         previous_selection=select_subj_frame.get()
@@ -129,9 +130,9 @@ def setSubj(Event=None):
     global fibers,current_subject,previous_value
     #print "setting subjects"
     if len(codes2)==0:
-        bars_view_2.set_data([], [])
-        bars_view_2.set_y_limis(*limits_dict[data_code])
-        bars_view_2.paint_bar_chart()
+        #bars_view_2.set_data([], [])
+        #bars_view_2.set_y_limis(*limits_dict[data_code])
+        #bars_view_2.paint_bar_chart()
         fibers_actor.SetVisibility(0)
         renWin.Render()
         return
@@ -164,9 +165,9 @@ def setSubj(Event=None):
     previous_value=new_value
 
 def animated_draw_bar(time,slope,value,code):
-    bars_view_2.set_data([value],[code] )
+    #bars_view_2.set_data([value],[code] )
     #bars_view_2.set_y_limis(-100,100)
-    bars_view_2.paint_bar_chart()
+    #bars_view_2.paint_bar_chart()
     if(time>0):
         root.after(50,animated_draw_bar,time-1,slope,value+slope,code)
 
@@ -193,8 +194,7 @@ def get_color(value):
 #===============================================Inteface=================================
 
 root = tk.Tk()
-root.withdraw()
-top = tk.Toplevel(root)
+top = root
 top.title('BraViz-TMS_View')
 
 control_frame = tk.Frame(top,width=100)
@@ -315,11 +315,10 @@ bars_view_1.SetInteractor(bars_widget1.GetRenderWindow().GetInteractor())
 
 bars_widget1.grid(column=0,row=0,sticky='nsew')
 
-bars_widget2 = vtkTkRenderWindowInteractor(graphs_frame,
+bars_widget2 = bars_view2.get_widget(graphs_frame,
                                            width=100,
                                            height=200)
-bars_view_2.SetRenderWindow(bars_widget2.GetRenderWindow())
-bars_view_2.SetInteractor(bars_widget2.GetRenderWindow().GetInteractor())
+
 bars_widget2.grid(column=1,row=0,sticky='nsew')
 
 graphs_frame.grid(padx=3, pady=3,row=1,column=0,sticky='nsew')
@@ -336,8 +335,12 @@ def clean_exit():
     print "adios"
     renWin.FastDelete()
     del renWin
-    quit(0)
-
+    bars_widget1.GetRenderWindow().FastDelete()
+    root.withdraw()
+    root.after_idle(root.quit)
+    #root.quit()     # stops mainloop
+    #root.destroy()
+    #quit(0)
 top.protocol("WM_DELETE_WINDOW", clean_exit)
 
 
@@ -394,7 +397,7 @@ def resize_handler(caller=None,event=None):
     top.after(1000,do_resize)
 def do_resize():
     global disp2axis
-    bars_view_2.ren.Render()
+    #bars_view_2.ren.Render()
     disp2axis = get_mapper_function()
 
 def draw_tooltip(caller=None,event=None):
@@ -414,22 +417,22 @@ def draw_tooltip(caller=None,event=None):
     else:
         tool_tip.SetVisible(0)
     bars_view_1.Render()
-def draw_tooltip2(caller=None, event=None):
-    tool_tip2=bars_view_2.chart.GetTooltip()
-    event_position = caller.GetEventPosition()
-    event_x=event_position[0]
-    x0=bars_view_2.chart.GetAxis(1).GetPoint1()[0]
-    xf=bars_view_2.chart.GetAxis(1).GetPoint2()[0]
-    if x0 < event_x < xf:
-        tool_tip2.SetVisible(1)
-        tool_tip2.SetPosition(event_position)
-        idx=codes2.index(current_subject)
-        datum = tms_data2[idx]
-        message = "%s : %.2f" % (current_subject, datum)
-        tool_tip2.SetText(message)
-    else:
-        tool_tip2.SetVisible(0)
-    bars_view_2.Render()
+#def draw_tooltip2(caller=None, event=None):
+#    tool_tip2=bars_view_2.chart.GetTooltip()
+#    event_position = caller.GetEventPosition()
+#    event_x=event_position[0]
+#    x0=bars_view_2.chart.GetAxis(1).GetPoint1()[0]
+#    xf=bars_view_2.chart.GetAxis(1).GetPoint2()[0]
+#    if x0 < event_x < xf:
+#        tool_tip2.SetVisible(1)
+#        tool_tip2.SetPosition(event_position)
+#        idx=codes2.index(current_subject)
+#        datum = tms_data2[idx]
+#        message = "%s : %.2f" % (current_subject, datum)
+#        tool_tip2.SetText(message)
+#    else:
+#        tool_tip2.SetVisible(0)
+#    bars_view_2.Render()
 
 def click_in_bar(caller=None,event=None):
     event_position = caller.GetEventPosition()
@@ -448,11 +451,11 @@ def click_in_bar(caller=None,event=None):
 #interaction_event_id=bar1.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
 
 iact2=bars_view_1.GetInteractor()
-iact3=bars_view_2.GetInteractor()
+#iact3=bars_view_2.GetInteractor()
 #print iact2
 #interaction_event_id=iact2.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
 interaction_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip,100)
-interaction_event_id=iact3.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip2,100)
+#interaction_event_id=iact3.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip2,100)
 iact2.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,click_in_bar,100)
 
 #bars_view_1.ren.AddObserver('ModifiedEvent',resize_handler)
