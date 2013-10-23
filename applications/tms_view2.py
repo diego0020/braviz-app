@@ -31,7 +31,7 @@ context_dashes = [True, False, True]
 data_code = 'ICI'
 selected_codes = []
 showing_history = True
-data_code = ""
+
 #====================
 
 fibers = reader.get('fibers', current_subject, space='talairach')
@@ -261,7 +261,7 @@ labels_dict = {
     'ICI': 'Inverted Inhibition (%)',
     'IHIlat': 'Latency (ms.)'
 }
-data_code = 'ICI'
+
 #data_selection=tk.Frame(select_data_frame,height=200,width=100,relief='sunken',border=5)
 data_selection_tree = ttk.Treeview(select_data_frame, show='tree', height=8, selectmode='browse')
 data_selection_tree.insert('', 'end', 'motor_brain', text='Motor Brain', tags='parent')
@@ -487,7 +487,7 @@ def get_mapper_function():
     return disp2axis
 
 
-disp2axis = lambda x: x
+
 
 
 def get_subj_index(x):
@@ -583,8 +583,8 @@ iact3 = bars_view_2.GetInteractor()
 #print iact2
 #interaction_event_id=iact2.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
 interaction_event_id = iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent, draw_bar1_tooltip, 100)
-interaction_event_id = iact3.AddObserver(vtk.vtkCommand.MouseMoveEvent, draw_bar2_tooltip, 100)
-interaction_event_id = iact2.AddObserver(vtk.vtkCommand.LeftButtonPressEvent, click_in_bar, 100)
+interaction_event_id2 = iact3.AddObserver(vtk.vtkCommand.MouseMoveEvent, draw_bar2_tooltip, 100)
+interaction_event_id3 = iact2.AddObserver(vtk.vtkCommand.LeftButtonPressEvent, click_in_bar, 100)
 #MouseMoveEvent_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,abort_interaction_event,100)
 # Start Tkinter event loop
 top.bind('<Configure>', resize_handler)
