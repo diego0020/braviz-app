@@ -8,7 +8,7 @@ import os
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-
+from braviz.interaction.tk_tooltip import ToolTip
 import math
 import braviz
 from braviz.visualization.mathplotlib_charts import BarPlot
@@ -32,6 +32,7 @@ tms_data2=[]
 context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
 context_dashes = [True, False, True]
 data_code='ICI'
+animation=False
 #====================
 
 fibers=reader.get('fibers',current_subject,space='talairach')
@@ -55,7 +56,7 @@ ren.AddActor(fibers_actor)
 csv_file = os.path.join(reader.getDataRoot(), 'baseFinal_TMS.csv')
 #--------------------------------------------------------
 #create_chart_1
-bars_view_1=multi_bar_plot()
+bars_view1=BarPlot()
 
 #create chart2
 bars_view2=BarPlot()
@@ -86,7 +87,7 @@ def setData(Event=None):
         term_mean=np.mean(term_data)
         term_std_dev=np.std(term_data)
         codes2, _, _, tms_data2 = zip(*table_genre)
-        bars_view_1.set_all(len(codes2), 5, 500)
+
     else:
         codes2=[]
         tms_data2=[]
@@ -97,21 +98,19 @@ def setData(Event=None):
 
     context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
 
-    bars_view_1.set_color_fun(get_color)
-    bars_view_1.set_y_limis(*limits_dict[data_code])
-
-
-    bars_view_1.set_lines(context_lines, context_dashes)
-    bars_view_1.set_data(tms_data2, codes2)
-    bars_view_1.set_y_title(labels_dict[data_code])
+    bars_view1.set_color_fun(get_color2)
+    bars_view1.set_y_limits(*limits_dict[data_code])
+    #
+    bars_view1.set_lines(context_lines, context_dashes)
+    bars_view1.set_data(tms_data2, codes2)
+    bars_view1.set_y_title(labels_dict[data_code])
+    bars_view1.paint_bar_chart()
 
     bars_view2.set_y_title(labels_dict[data_code])
-    bars_view2.show()
-    bars_view2.set_y_limits(*limits_dict[data_code])
-    #bars_view_2.set_all(1, 5, 100)
-    #bars_view_2.set_color_fun(get_color)
-    #bars_view_2.set_lines(context_lines, context_dashes)
-    bars_view_1.paint_bar_chart()
+    bars_view2.set_y_limits(*limits_dict[data_code],right=True)
+    bars_view2.set_color_fun(get_color2)
+    bars_view2.set_lines(context_lines, context_dashes)
+
     try:
         previous_selection=select_subj_frame.get()
     except tk.TclError:
@@ -123,16 +122,17 @@ def setData(Event=None):
         select_subj_frame.subjects_list.select_set(idx,idx)
 
     setSubj()
-    disp2axis=get_mapper_function()
+    #disp2axis=get_mapper_function()
 
 previous_value=0
 def setSubj(Event=None):
     global fibers,current_subject,previous_value
     #print "setting subjects"
+
     if len(codes2)==0:
-        #bars_view_2.set_data([], [])
-        #bars_view_2.set_y_limis(*limits_dict[data_code])
-        #bars_view_2.paint_bar_chart()
+        bars_view2.set_data([], [])
+        bars_view2.set_y_limis(*limits_dict[data_code])
+        bars_view2.paint_bar_chart()
         fibers_actor.SetVisibility(0)
         renWin.Render()
         return
@@ -141,6 +141,11 @@ def setSubj(Event=None):
     except tk.TclError:
         select_subj_frame.subjects_list.select_set(0,0)
         current_subject = select_subj_frame.get()
+
+    idx = codes2.index(current_subject)
+    bars_view1.set_higlight_index(idx)
+    bars_view1.paint_bar_chart()
+
     try:
         fibers = reader.get('fibers', current_subject, space='talairach')
     except:
@@ -150,11 +155,14 @@ def setSubj(Event=None):
         fibers_actor.SetVisibility(1)
 
 
-    idx=codes2.index(current_subject)
+
     renWin.Render()
-    bars_view_1.set_enphasis(idx)
-    bars_view_1.paint_bar_chart()
     new_value=tms_data2[idx]
+    if animation is False:
+        bars_view2.set_data([new_value], [current_subject])
+        bars_view2.paint_bar_chart()
+        previous_value=new_value
+        return
     time_steps=7
     if time_steps>0:
         slope=(new_value-previous_value)/time_steps
@@ -165,11 +173,10 @@ def setSubj(Event=None):
     previous_value=new_value
 
 def animated_draw_bar(time,slope,value,code):
-    #bars_view_2.set_data([value],[code] )
-    #bars_view_2.set_y_limis(-100,100)
-    #bars_view_2.paint_bar_chart()
+    bars_view2.change_bars([value])
+    #bars_view2.paint_bar_chart()
     if(time>0):
-        root.after(50,animated_draw_bar,time-1,slope,value+slope,code)
+        root.after(10,animated_draw_bar,time-1,slope,value+slope,code)
 
 
 def get_color(value):
@@ -187,7 +194,10 @@ def get_color(value):
         return (215, 25, 28,255)
 
 
-
+def get_color2(value):
+    int_color=get_color(value)
+    float_color=map(lambda x:x/255,int_color)
+    return float_color
 
 
 
@@ -307,11 +317,16 @@ display_frame.rowconfigure(0,weight=1)
 display_frame.columnconfigure(0,weight=1)
 
 graphs_frame=tk.Frame(display_frame)
-bars_widget1= vtkTkRenderWindowInteractor(graphs_frame,
-                                           width=500,
-                                          height=200)
-bars_view_1.SetRenderWindow(bars_widget1.GetRenderWindow())
-bars_view_1.SetInteractor(bars_widget1.GetRenderWindow().GetInteractor())
+#bars_widget1= vtkTkRenderWindowInteractor(graphs_frame,
+#                                           width=500,
+#                                          height=200)
+#bars_view_1.SetRenderWindow(bars_widget1.GetRenderWindow())
+#bars_view_1.SetInteractor(bars_widget1.GetRenderWindow().GetInteractor())
+
+#bars_widget1.grid(column=0,row=0,sticky='nsew')
+bars_widget1 = bars_view1.get_widget(graphs_frame,
+                                     width=500,
+                                     height=200)
 
 bars_widget1.grid(column=0,row=0,sticky='nsew')
 
@@ -335,12 +350,16 @@ def clean_exit():
     print "adios"
     renWin.FastDelete()
     del renWin
-    bars_widget1.GetRenderWindow().FastDelete()
     root.withdraw()
-    root.after_idle(root.quit)
+    root.after_idle(quit2)
     #root.quit()     # stops mainloop
     #root.destroy()
     #quit(0)
+
+def quit2():
+    root.quit()
+    root.destroy()
+    quit(0)
 top.protocol("WM_DELETE_WINDOW", clean_exit)
 
 
@@ -359,28 +378,28 @@ ren.ResetCameraClippingRange()
 render_widget.Render()
 
 
-def get_mapper_function():
-    a1 = bars_view_1.chart.GetAxis(1)
-    x0 = a1.GetPoint1()[0]
-    xf = a1.GetPoint2()[0]
-    #xf_x0=xf-x0
-    #print "%f ----- %f"%(x0,xf)
-    ax0=a1.GetMinimum()
-    axf=a1.GetMaximum()
+#def get_mapper_function():
+#    a1 = bars_view_1.chart.GetAxis(1)
+#    x0 = a1.GetPoint1()[0]
+#    xf = a1.GetPoint2()[0]
+#    #xf_x0=xf-x0
+#    #print "%f ----- %f"%(x0,xf)
+#    ax0=a1.GetMinimum()
+#    axf=a1.GetMaximum()
+#
+#    def disp2axis(x):
+#        t=(x-x0)/(xf-x0)
+#        x=(t*(axf-ax0)+ax0)
+#        return x
+#    return disp2axis
+#disp2axis=lambda x:x
 
-    def disp2axis(x):
-        t=(x-x0)/(xf-x0)
-        x=(t*(axf-ax0)+ax0)
-        return x
-    return disp2axis
-disp2axis=lambda x:x
 
-
-def get_subj_index(x):
-    if bars_view_1.start < x < bars_view_1.get_bar_graph_width() + bars_view_1.start:
-        index = int((x - bars_view_1.start) // (bars_view_1.width + 1))
-        return index
-    return None
+#def get_subj_index(x):
+#    if bars_view_1.start < x < bars_view_1.get_bar_graph_width() + bars_view_1.start:
+#        index = int((x - bars_view_1.start) // (bars_view_1.width + 1))
+#        return index
+#    return None
 
 
 iact.Initialize()
@@ -388,79 +407,51 @@ renWin.Render()
 iact.Start()
 setData()
 setSubj()
-bars_view_1.Render()
-disp2axis=get_mapper_function()
+#bars_view_1.Render()
+#disp2axis=get_mapper_function()
 def print_event(caller=None,event=None):
     print event
 
-def resize_handler(caller=None,event=None):
-    top.after(1000,do_resize)
-def do_resize():
-    global disp2axis
-    #bars_view_2.ren.Render()
-    disp2axis = get_mapper_function()
-
-def draw_tooltip(caller=None,event=None):
 
 
-    tool_tip=bars_view_1.chart.GetTooltip()
-    event_position = caller.GetEventPosition()
-    event_coordinates=disp2axis(event_position[0])
-    if get_subj_index(event_coordinates) is not None:
-        tool_tip.SetVisible(1)
-        tool_tip.SetPosition(event_position)
-        index=int((event_coordinates-bars_view_1.start)//(bars_view_1.width+1))
-        code=codes2[index]
-        datum=tms_data2[index]
-        message="%s : %.2f"%(code,datum)
-        tool_tip.SetText(message)
-    else:
-        tool_tip.SetVisible(0)
-    bars_view_1.Render()
-#def draw_tooltip2(caller=None, event=None):
-#    tool_tip2=bars_view_2.chart.GetTooltip()
-#    event_position = caller.GetEventPosition()
-#    event_x=event_position[0]
-#    x0=bars_view_2.chart.GetAxis(1).GetPoint1()[0]
-#    xf=bars_view_2.chart.GetAxis(1).GetPoint2()[0]
-#    if x0 < event_x < xf:
-#        tool_tip2.SetVisible(1)
-#        tool_tip2.SetPosition(event_position)
-#        idx=codes2.index(current_subject)
-#        datum = tms_data2[idx]
-#        message = "%s : %.2f" % (current_subject, datum)
-#        tool_tip2.SetText(message)
-#    else:
-#        tool_tip2.SetVisible(0)
-#    bars_view_2.Render()
-
-def click_in_bar(caller=None,event=None):
-    event_position = caller.GetEventPosition()
-    event_coordinates=disp2axis(event_position[0])
-    index=get_subj_index(event_coordinates)
-    if index is not None:
+def click_in_bar(event=None):
+    clicked_subj=bars_view1.get_current_name()
+    if clicked_subj is not None:
         select_subj_frame.subjects_list.selection_clear(0, tk.END)
+        index=codes2.index(clicked_subj)
         select_subj_frame.subjects_list.select_set(index,index)
         setSubj()
 
+def print_event(event=None):
+    subj=bars_view1.get_current_subj()
+    print subj
+    print '------'
 
-#interaction_event_id=bars_view_1.chart.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
-#interaction_event_id=bars_view_1.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
-#interaction_event_id=bars_view_1.GetScene().AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
-#bar1=bars_view_1.chart.GetPlot(0)
-#interaction_event_id=bar1.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
+def msgFunc(event=None):
+    hover_subj=bars_view1.get_current_name()
+    if hover_subj is None:
+        return ''
+    return "%s : %.2f"%(hover_subj,tms_data2[codes2.index(hover_subj)])
 
-iact2=bars_view_1.GetInteractor()
-#iact3=bars_view_2.GetInteractor()
-#print iact2
-#interaction_event_id=iact2.AddObserver(vtk.vtkCommand.AnyEvent,print_event,100)
-interaction_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip,100)
-#interaction_event_id=iact3.AddObserver(vtk.vtkCommand.MouseMoveEvent,draw_tooltip2,100)
-iact2.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,click_in_bar,100)
+t1=ToolTip(bars_widget1, msgFunc=msgFunc, follow=1, delay=1)
 
-#bars_view_1.ren.AddObserver('ModifiedEvent',resize_handler)
-top.bind('<Configure>',resize_handler)
-root.bind('<Configure>',resize_handler)
+def msgFunc2(event=None):
+    hover_subj=bars_view2.get_current_name()
+    if hover_subj is None:
+        return ''
+    return "%s : %.2f"%(hover_subj,tms_data2[codes2.index(hover_subj)])
+
+t2=ToolTip(bars_widget2, msgFunc=msgFunc2, follow=1, delay=1)
+
+bars_widget1.bind('<<BarSelected>>',click_in_bar)
+
+
+
 #MouseMoveEvent_event_id=iact2.AddObserver(vtk.vtkCommand.MouseMoveEvent,abort_interaction_event,100)
 # Start Tkinter event loop
+def turn_on_animation():
+    global animation
+    animation=True
+
+root.after(1000,turn_on_animation)
 root.mainloop()
