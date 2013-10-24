@@ -17,7 +17,7 @@ class ToolTip( Toplevel ):
         Arguments:
           wdgt: The widget this ToolTip is assigned to
           msg:  A static string message assigned to the ToolTip
-          msgFunc: A function that retrieves a string to use as the ToolTip text
+          data_tree_message_func: A function that retrieves a string to use as the ToolTip text
           delay:   The delay in seconds before the ToolTip appears(may be float)
           follow:  If True, the ToolTip follows motion, otherwise hides
         """

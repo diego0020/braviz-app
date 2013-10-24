@@ -350,11 +350,7 @@ def clean_exit():
     print "adios"
     renWin.FastDelete()
     del renWin
-    root.withdraw()
-    root.after_idle(quit2)
-    #root.quit()     # stops mainloop
-    #root.destroy()
-    #quit(0)
+    top.after_idle(quit2)
 
 def quit2():
     root.quit()
@@ -378,29 +374,6 @@ ren.ResetCameraClippingRange()
 render_widget.Render()
 
 
-#def get_mapper_function():
-#    a1 = bars_view_1.chart.GetAxis(1)
-#    x0 = a1.GetPoint1()[0]
-#    xf = a1.GetPoint2()[0]
-#    #xf_x0=xf-x0
-#    #print "%f ----- %f"%(x0,xf)
-#    ax0=a1.GetMinimum()
-#    axf=a1.GetMaximum()
-#
-#    def disp2axis(x):
-#        t=(x-x0)/(xf-x0)
-#        x=(t*(axf-ax0)+ax0)
-#        return x
-#    return disp2axis
-#disp2axis=lambda x:x
-
-
-#def get_subj_index(x):
-#    if bars_view_1.start < x < bars_view_1.get_bar_graph_width() + bars_view_1.start:
-#        index = int((x - bars_view_1.start) // (bars_view_1.width + 1))
-#        return index
-#    return None
-
 
 iact.Initialize()
 renWin.Render()
@@ -422,10 +395,6 @@ def click_in_bar(event=None):
         select_subj_frame.subjects_list.select_set(index,index)
         setSubj()
 
-def print_event(event=None):
-    subj=bars_view1.get_current_subj()
-    print subj
-    print '------'
 
 def msgFunc(event=None):
     hover_subj=bars_view1.get_current_name()

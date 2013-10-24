@@ -25,6 +25,7 @@ class BarPlot():
         self.axis.set_xticklabels(('nothing',),size='small')
         self.hlines = []
         self.y_limits=(0,100)
+        self.y_title=''
         self.right_y=False
         self.bar_heights=[0]
         self.bar_names=['nothing']
@@ -66,12 +67,13 @@ class BarPlot():
 
 
     def set_y_title(self,title):
-        axis=self.axis
-        axis.set_ylabel(title,size='small')
+        self.y_title=title
+        self.axis.set_ylabel(self.y_title, size='small')
 
     def set_y_limits(self,button,top,right=False):
         self.y_limits=(button,top)
         self.right_y=right
+        self.axis.set_ylim(self.y_limits[0], self.y_limits[1])
     def set_lines(self,lines,dashes):
         self.hlines=[]
         for pos,dash in zip(lines,dashes):
@@ -95,20 +97,29 @@ class BarPlot():
         if self.right_y is True:
             yax = self.axis.get_yaxis()
             yax.tick_right()
+            yax.set_label_position('right')
         for li in self.hlines:
             a.axhline(**li)
         a.axhline(color='k')
+        a.set_ylabel(self.y_title,size='small')
         #x axis
         if len(self.bar_heights)==0:
-            return
-        bar_positions=range(len(self.bar_heights))
-        self.bar_positions=bar_positions
-        a.set_xlim(-0.5,len(bar_positions)-0.5)
+            bar_positions = [0]
+            a.set_xlim(-0.5, 0.5)
+            self.bar_names=['']
+        else:
+            bar_positions = range(len(self.bar_heights))
+            a.set_xlim(-0.5, len(bar_positions) - 0.5)
 
+
+
+        self.bar_positions = bar_positions
         a.set_xticks(bar_positions)
         #a.set_xticklabels(self.bar_names, size='small', rotation='horizontal')
         a.set_xticklabels(self.bar_names, size='small', rotation='horizontal',visible=False)
-
+        if len(self.bar_heights) == 0:
+            self.show()
+            return
         colors = [self.color_function(x) for x in self.bar_heights]
         patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center')
         if self.highlight is not None:
@@ -118,7 +129,8 @@ class BarPlot():
         self.show()
         self.bars=patches
     def change_bars(self,new_heights):
-
+        if self.bars is None:
+            return
         self.bars.remove()
         self.bar_heights=new_heights
         colors = [self.color_function(x) for x in self.bar_heights]
