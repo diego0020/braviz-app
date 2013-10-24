@@ -32,6 +32,9 @@ data_code = 'ICI'
 selected_codes = []
 showing_history = True
 animation=False
+laterality_dict={}
+genders_dict={}
+group_dict={}
 #====================
 
 fibers = reader.get('fibers', current_subject, space='talairach')
@@ -50,6 +53,29 @@ fibers_actor = vtk.vtkActor()
 fibers_actor.SetMapper(fibers_mapper)
 
 ren.AddActor(fibers_actor)
+
+
+#context
+brain_stem=reader.get('model',current_subject,space='talairach',name='Brain-Stem')
+brain_stem_mapper= vtk.vtkPolyDataMapper()
+brain_stem_mapper.SetInputData(brain_stem)
+brain_stem_actor= vtk.vtkActor()
+brain_stem_actor.SetMapper(brain_stem_mapper)
+brain_stem_actor.SetVisibility(0)
+brain_stem_actor.GetProperty().SetOpacity(0.5)
+ren.AddActor(brain_stem_actor)
+
+precentral=reader.get('model',current_subject,space='talairach',name='ctx-lh-precentral')
+precentral_mapper= vtk.vtkPolyDataMapper()
+precentral_mapper.SetInputData(precentral)
+precentral_actor= vtk.vtkActor()
+precentral_actor.SetMapper(precentral_mapper)
+precentral_actor.SetVisibility(0)
+precentral_actor.GetProperty().SetOpacity(0.5)
+ren.AddActor(precentral_actor)
+#TODO img
+
+
 #________TMS_DATA_________________
 
 csv_file = os.path.join(reader.getDataRoot(), 'baseFinal_TMS.csv')
@@ -70,13 +96,76 @@ def turn_on_animation():
     global animation
     animation=True
 #===============read data=====================
+
+previous_img_type=None
+def get_img(subject,img_type,side='r'):
+    global previous_img_type,fibers,brain_stem,precentral
+    if img_type == 'cc':
+        precentral_actor.SetVisibility(0)
+        brain_stem_actor.SetVisibility(0)
+        try:
+            fibers = reader.get('fibers', subject, space='talairach')
+        except:
+            fibers_actor.SetVisibility(0)
+        else:
+            fibers_mapper.SetInputData(fibers)
+            fibers_actor.SetVisibility(1)
+        if img_type != previous_img_type:
+            #reset camera
+            cam = ren.GetActiveCamera()
+            cam.SetPosition(0.358526, 8.24682, 122.243)
+            cam.SetViewUp(1, 0, 0)
+            cam.SetFocalPoint(-0.00880438, -6.19902, 5.5735)
+            ren.ResetCameraClippingRange()
+        render_widget.Render()
+    elif img_type=='motor':
+        try:
+            fibers = reader.get('fibers', subject, space='talairach',waypoint=['ctx-%ch-precentral'%side,'Brain-Stem'])
+            brain_stem = reader.get('model', current_subject, space='talairach',name='Brain-Stem')
+            precentral = reader.get('model', current_subject, space='talairach',name='ctx-%ch-precentral'%side)
+        except:
+            fibers_actor.SetVisibility(0)
+            precentral_actor.SetVisibility(0)
+            brain_stem_actor.SetVisibility(0)
+        else:
+            fibers_mapper.SetInputData(fibers)
+            precentral_mapper.SetInputData(precentral)
+            brain_stem_mapper.SetInputData(brain_stem)
+            fibers_actor.SetVisibility(1)
+            precentral_actor.SetVisibility(1)
+            brain_stem_actor.SetVisibility(1)
+        if img_type != previous_img_type:
+            #reset camera
+            cam = ren.GetActiveCamera()
+            cam.SetPosition(-18.2446, -261.939, 170.821)
+            cam.SetViewUp(0, 0.5, 1)
+            cam.SetFocalPoint(1.8137, -10.6985, -0.800431)
+            ren.ResetCameraClippingRange()
+        render_widget.Render()
+    else:
+        print "not supported yet"
+        fibers_actor.SetVisibility(0)
+    previous_img_type=img_type
+
+
 def set_data(event=None):
-    global codes2, tms_data2, term_mean, term_std_dev, tms_column, context_lines, data_code, animation
+    global codes2, tms_data2, term_mean, term_std_dev, tms_column, context_lines, data_code, animation,tms_data_dict
     invert_data_values = invet_data_dict[data_code]
     tms_column = data_code + side_var.get()
     codes = get_column(csv_file, 'CODE')
-    genres = get_column(csv_file, 'GENDE')
-    grupo = get_column(csv_file, 'UBICA')  # 1=canguro, 2=control, 3=gorditos
+    if len(laterality_dict)==0:
+        later = get_column(csv_file, 'LATER')
+        laterality_dict.update(zip(codes,later))
+
+    if len(genders_dict)==0:
+        genres = get_column(csv_file, 'GENDE')
+        genders_dict.update(zip(codes,genres))
+
+    if len(group_dict)==0:
+        grupo = get_column(csv_file, 'UBICA')  # 1=canguro, 2=control, 3=gorditos
+        group_dict.update(zip(codes,grupo))
+
+
     TMS_metric = get_column(csv_file, tms_column, True)
     if invert_data_values is True:
         TMS_metric = map(lambda x: 100 - x, TMS_metric)
@@ -84,23 +173,22 @@ def set_data(event=None):
     valid_genres = []
     if male_selected_var.get(): valid_genres.append('2')
     if female_selected_var.get(): valid_genres.append('1')
-    table = zip(codes, genres, grupo, TMS_metric)
-    group_dict={}
-    for row in table:
-        tms_data_dict[row[0]] = row[3]
-        group_dict[row[0]]=row[2]
-    table_genre = filter(lambda y: y[1] in valid_genres, table)
-    term = filter(lambda x: x[2] == '3', table_genre)
-    if len(term) > 0:
-        term_data = zip(*term)[3]
+    #table = zip(codes, genres, grupo, TMS_metric)
+    tms_data_dict=dict(zip(codes,TMS_metric))
+
+    genre_codes = filter(lambda x: genders_dict[x] in valid_genres, codes)
+    term_codes = filter(lambda x: group_dict[x]== '3', genre_codes)
+    if len(term_codes) > 0:
+        term_data = [tms_data_dict[x] for x in term_codes]
         term_data = filter(lambda x: not math.isnan(x), term_data)
         term_mean = np.mean(term_data)
         term_std_dev = np.std(term_data)
     else:
         term_mean = 0
         term_std_dev = 0
-    if len(table_genre) > 0:
-        codes2, _, _, tms_data2 = zip(*table_genre)
+    if len(genre_codes) > 0:
+        codes2=genre_codes
+        tms_data2=map(lambda x:tms_data_dict.get(x,float('Nan')),codes2)
     else:
         codes2 = []
         tms_data2 = []
@@ -132,7 +220,7 @@ def set_data(event=None):
         previous_selection = select_subj_frame.get()
     except tk.TclError:
         previous_selection = None
-    select_subj_frame.tk_listvariable.set(codes2)
+    select_subj_frame.tk_listvariable.set(tuple(codes2))
 
     if previous_selection in codes2:
         idx = codes2.index(previous_selection)
@@ -205,14 +293,16 @@ def setSubj(event=None):
 
     bars_view1.paint_bar_chart()
 
-    try:
-        fibers = reader.get('fibers', current_subject, space='talairach')
-    except:
-        fibers_actor.SetVisibility(0)
-    else:
-        fibers_mapper.SetInputData(fibers)
-        fibers_actor.SetVisibility(1)
+    hemisphere='r'
+    if images_dict[data_code]=='motor':
+        if side_var.get()=='d':
+            if laterality_dict.get(current_subject)=='2':
+                hemisphere='l'
+        else:
+            if laterality_dict.get(current_subject) == '1':
+                hemisphere='l'
 
+    get_img(current_subject, images_dict[data_code],hemisphere)
 
     new_value = tms_data_dict[current_subject]
     if animation is False:
@@ -221,7 +311,7 @@ def setSubj(event=None):
         previous_value=new_value
         return
     time_steps = 7
-    renWin.Render()
+
     if time_steps > 0:
         slope = (new_value - previous_value) / time_steps
     else:
@@ -230,6 +320,8 @@ def setSubj(event=None):
     bars_view2.set_data([previous_value],[current_subject])
     animated_draw_bar(time_steps-1, slope, previous_value+slope)
     previous_value = new_value
+
+
 
 
 def animated_draw_bar(time, slope, value):
@@ -293,6 +385,16 @@ styles_dict = {
     'IHIlat': 'markers'
 }
 
+images_dict = {
+    'IHIfreq': 'cc',
+    'RMT': 'motor',
+    'IHIdur': 'cc',
+    'MEPlat': 'motor',
+    'ICF': 'motor',
+    'ICI': 'motor',
+    'IHIlat': 'cc'
+}
+
 more_is_better_dict = {
     'IHIfreq': True,
     'RMT': True,
@@ -338,11 +440,11 @@ data_codes_dict = {
 }
 
 
-def select_data(Event=None):
+def select_data(event=None):
     data_selection_tree.after_idle(select_data2)
 
 
-def select_data2(Event=None):
+def select_data2(event=None):
     global data_code
 
     selected_leaf = data_selection_tree.focus()
@@ -417,8 +519,8 @@ def print_camera(event=None):
     cam1 = ren.GetActiveCamera()
     print cam1
 
-#print_camera_button=tk.Button(control_frame,text='print_cammera',command=print_camera)
-#print_camera_button.grid()
+print_camera_button=tk.Button(control_frame,text='print_cammera',command=print_camera)
+print_camera_button.grid()
 
 
 def show_all_or_history(event=None):
@@ -520,9 +622,9 @@ iact_style = getattr(vtk, custom_iact_style)()
 iact.SetInteractorStyle(iact_style)
 
 cam1 = ren.GetActiveCamera()
-cam1.SetPosition(-1.0733, 2.56344, 122.951)
+cam1.SetPosition(0.358526, 8.24682, 122.243)
 cam1.SetViewUp(1, 0, 0)
-cam1.SetFocalPoint(-1.44063, -11.8824, 6.28172)
+cam1.SetFocalPoint(-0.00880438, -6.19902, 5.5735)
 ren.ResetCameraClippingRange()
 render_widget.Render()
 
