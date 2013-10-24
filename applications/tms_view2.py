@@ -110,7 +110,12 @@ def set_data(event=None):
     context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
 
     bars_view1.change_style(styles_dict[data_code])
-    bars_view1.set_color_fun(get_color)
+
+    color_inversion_factor=1
+    if more_is_better_dict[data_code]:
+        color_inversion_factor=-1
+
+    bars_view1.set_color_fun(lambda  x: get_color(x,color_inversion_factor))
     bars_view1.set_y_limits(*limits_dict[data_code])
 
     bars_view1.set_lines(context_lines, context_dashes)
@@ -120,7 +125,7 @@ def set_data(event=None):
     bars_view2.change_style(styles_dict[data_code])
     bars_view2.set_y_title(labels_dict[data_code])
     bars_view2.set_y_limits(*limits_dict[data_code],right=True)
-    bars_view2.set_color_fun(get_color)
+    bars_view2.set_color_fun(lambda  x: get_color(x,color_inversion_factor))
     bars_view2.set_lines(context_lines, context_dashes)
     draw_bars_1()
     try:
@@ -233,19 +238,19 @@ def animated_draw_bar(time, slope, value):
         root.after(50, animated_draw_bar, time - 1, slope, value + slope)
 
 
-def get_color(value):
-    z_score = abs(value - term_mean) / term_std_dev
+def get_color(value,factor=1):
+    z_score = factor*(value - term_mean) / term_std_dev
 
-    if z_score <= 0.5:
-        return 0.10196078431372549, 0.5882352941176471, 0.2549019607843137, 1.0
-    elif z_score <= 1:
-        return 0.6509803921568628, 0.8509803921568627, 0.41568627450980394, 1.0
-    elif z_score <= 1.5:
-        return 1.0, 0.8823529411764706, 0.7490196078431373, 1.0
-    elif z_score <= 2:
-        return 0.9921568627450981, 0.6823529411764706, 0.3803921568627451, 1.0
+    if z_score >= 2:
+        return '#D7191C'
+    elif z_score >= 1:
+        return '#FDAE61'
+    elif z_score >= -1:
+        return '#FFFFBF'
+    elif z_score >= -2:
+        return'#A6D96A'
     else:
-        return 0.8431372549019608, 0.09803921568627451, 0.10980392156862745, 1.0
+        return '#1A9641'
 
 
 #===============================================Inteface=================================
@@ -287,6 +292,17 @@ styles_dict = {
     'ICI': 'bars',
     'IHIlat': 'markers'
 }
+
+more_is_better_dict = {
+    'IHIfreq': True,
+    'RMT': True,
+    'IHIdur': True,
+    'MEPlat': False,
+    'ICF': True,
+    'ICI': True,
+    'IHIlat': False
+}
+
 
 labels_dict = {
     'IHIfreq': 'Frequency (%)',

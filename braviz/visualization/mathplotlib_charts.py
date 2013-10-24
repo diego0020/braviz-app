@@ -132,18 +132,16 @@ class BarPlot():
             if self.highlight is not None:
                 highlighted_rect = patches[self.highlight]
                 highlighted_rect.set_linewidth(4)
-                highlighted_rect.set_edgecolor('#FAFA3E')
+                highlighted_rect.set_edgecolor('#FF7F00')
         else:
             edge_colors = ['#000000'] * len(self.bar_heights)
             sizes=[40]*len(self.bar_heights)
+            linewidths=[1.0]*len(self.bar_heights)
             if self.highlight is not None:
-                edge_colors[self.highlight]='#FAFA3E'
+                edge_colors[self.highlight]='#FF7F00'
                 sizes[self.highlight]=80
-            patches = a.scatter(bar_positions, self.bar_heights, c=colors, marker='s', s=sizes,edgecolors=edge_colors)
-        if False and self.highlight is not None:
-            highlighted_rect=patches[self.highlight]
-            highlighted_rect.set_linewidth(4)
-            highlighted_rect.set_edgecolor('#FAFA3E')
+                linewidths[self.highlight]=2
+            patches = a.scatter(bar_positions, self.bar_heights, c=colors, marker='s', s=sizes,edgecolors=edge_colors,linewidths=linewidths)
         self.show()
         self.bars=patches
     def change_bars(self,new_heights):
