@@ -34,9 +34,15 @@ class BarPlot():
         self.color_function=lambda x:(1,1,0)
         self.current_xcoord=0
         self.highlight=None
+        self.style='bars'
 
 
-
+    def change_style(self,new_style):
+        """must be 'bars' or 'markers'"""
+        if new_style not in ('bars','markers'):
+            return
+        else:
+            self.style=new_style
 
 
     def get_widget(self,master,**kwargs):
@@ -121,20 +127,39 @@ class BarPlot():
             self.show()
             return
         colors = [self.color_function(x) for x in self.bar_heights]
-        patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center')
-        if self.highlight is not None:
+        if self.style == 'bars':
+            patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center')
+            if self.highlight is not None:
+                highlighted_rect = patches[self.highlight]
+                highlighted_rect.set_linewidth(4)
+                highlighted_rect.set_edgecolor('#FAFA3E')
+        else:
+            edge_colors = ['#000000'] * len(self.bar_heights)
+            sizes=[40]*len(self.bar_heights)
+            if self.highlight is not None:
+                edge_colors[self.highlight]='#FAFA3E'
+                sizes[self.highlight]=80
+            patches = a.scatter(bar_positions, self.bar_heights, c=colors, marker='s', s=sizes,edgecolors=edge_colors)
+        if False and self.highlight is not None:
             highlighted_rect=patches[self.highlight]
             highlighted_rect.set_linewidth(4)
             highlighted_rect.set_edgecolor('#FAFA3E')
         self.show()
         self.bars=patches
     def change_bars(self,new_heights):
+        """doesn't do highlight"""
         if self.bars is None:
             return
         self.bars.remove()
         self.bar_heights=new_heights
         colors = [self.color_function(x) for x in self.bar_heights]
-        self.bars=self.axis.bar(self.bar_positions,self.bar_heights, color=colors, align='center')
+        a=self.axis
+        bar_positions=self.bar_positions
+        if self.style == 'bars':
+            patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center')
+        else:
+            patches=a.scatter(bar_positions,self.bar_heights,c=colors,marker='s',s=40)
+        self.bars=patches
         self.show()
     def get_current_name(self):
         if self.current_xcoord is None:

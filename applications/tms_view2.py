@@ -109,6 +109,7 @@ def set_data(event=None):
 
     context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
 
+    bars_view1.change_style(styles_dict[data_code])
     bars_view1.set_color_fun(get_color)
     bars_view1.set_y_limits(*limits_dict[data_code])
 
@@ -116,6 +117,7 @@ def set_data(event=None):
 
     bars_view1.set_y_title(labels_dict[data_code])
 
+    bars_view2.change_style(styles_dict[data_code])
     bars_view2.set_y_title(labels_dict[data_code])
     bars_view2.set_y_limits(*limits_dict[data_code],right=True)
     bars_view2.set_color_fun(get_color)
@@ -265,6 +267,7 @@ invet_data_dict = {
     'ICI': True,
     'IHIlat': False
 }
+
 limits_dict = {
     'IHIfreq': (-1, 100),
     'RMT': (0, 100),
@@ -274,6 +277,17 @@ limits_dict = {
     'ICI': (-10, 100),
     'IHIlat': (-2, 35 )
 }
+
+styles_dict = {
+    'IHIfreq': 'bars',
+    'RMT': 'bars',
+    'IHIdur': 'markers',
+    'MEPlat': 'markers',
+    'ICF': 'bars',
+    'ICI': 'bars',
+    'IHIlat': 'markers'
+}
+
 labels_dict = {
     'IHIfreq': 'Frequency (%)',
     'RMT': 'Level of excitability (%)',
