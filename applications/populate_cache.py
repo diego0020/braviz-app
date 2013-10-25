@@ -117,8 +117,9 @@ def populate_cache(subj):
     reader2.get('fibers',subj,color='curv')
     reader2.get('fibers',subj,color='y')
     waypoints=( 'Brain-Stem','CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior','CC_Posterior',
-                 'Left-Cerebellum-Cortex', 'Left-Cerebellum-White-Matter', 'Left-Cerebral-White-Matter',
-                  'Right-Cerebellum-Cortex', 'Right-Cerebellum-White-Matter', 'Right-Cerebral-White-Matter','ctx-lh-precentral')
+                'Left-Cerebellum-Cortex', 'Left-Cerebellum-White-Matter', 'Left-Cerebral-White-Matter',
+                'Right-Cerebellum-Cortex', 'Right-Cerebellum-White-Matter', 'Right-Cerebral-White-Matter',
+                'ctx-lh-precentral','ctx-rh-precentral')
     print " %s: Waypoints"%subj
     for w in waypoints:
         print " %s: Waypoints - %s"%(subj,w)
