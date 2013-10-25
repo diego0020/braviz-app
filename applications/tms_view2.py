@@ -515,12 +515,12 @@ select_subj_frame.grid(column=0, row=1, sticky='news')
 control_frame.rowconfigure(1, weight=1)
 
 
-def print_camera(event=None):
-    cam1 = ren.GetActiveCamera()
-    print cam1
-
-print_camera_button=tk.Button(control_frame,text='print_cammera',command=print_camera)
-print_camera_button.grid()
+#def print_camera(event=None):
+#    cam1 = ren.GetActiveCamera()
+#    print cam1
+#
+#print_camera_button=tk.Button(control_frame,text='print_cammera',command=print_camera)
+#print_camera_button.grid()
 
 
 def show_all_or_history(event=None):
