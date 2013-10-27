@@ -23,7 +23,7 @@ def numpy2vtk_img(d):
     data_type = d.dtype
     importer = vtk.vtkImageImport()
     dstring = d.flatten(order='F').tostring()
-    importer.SetDataScalarTypeToShort()#default
+    importer.SetDataScalarTypeToShort() # default
     if data_type.type == np.float64:
         importer.SetDataScalarTypeToDouble()
     elif data_type.type == np.float32:
@@ -61,9 +61,10 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
     if isinstance(transform, vtk.vtkMatrix4x4):
         vtkTrans = vtk.vtkMatrixToHomogeneousTransform()
         vtkTrans.SetInput(transform)
-        transform_i = transform.NewInstance()
-        transform_i.DeepCopy(transform)
-        transform_i.Invert()
+        if origin2 is None or spacing2 is None:
+            transform_i = transform.NewInstance()
+            transform_i.DeepCopy(transform)
+            transform_i.Invert()
         if origin2 is None:
             #TODO: Use a better strategy to find the new origin; this doesn't work with large rotations or reflections
             origin = img.GetOrigin()
@@ -111,9 +112,9 @@ def readFlirtMatrix(file_name, src_img_file, ref_img_file, path=''):
     file_name = os.path.join(path, file_name)
     src_img_file = os.path.join(path, src_img_file)
     ref_img_file = os.path.join(path, ref_img_file)
-    mat_file = open(file_name)
-    lines = mat_file.readlines()
-    mat_file.close()
+    with open(file_name) as mat_file:
+        lines = mat_file.readlines()
+
     lines_s = [l.split() for l in lines]
     lines_f = [[float(n) for n in l3] for l3 in lines_s]
     M2 = np.matrix(lines_f)
@@ -171,13 +172,15 @@ def transformGeneralData(data, transform):
 def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
     """filters a polyline, keeps only the lines that cross a model
     the progress variable is pudated (via its set method) to indicate progress in the filtering operation
-    if do_remove is true, the filtered polydata object is returned, otherwise a list of the fibers that do cross the model is returned"""
+    if do_remove is true, the filtered polydata object is returned,
+     otherwise a list of the fibers that do cross the model is returned"""
     selector = vtk.vtkSelectEnclosedPoints()
     selector.Initialize(model)
     model_bb = model.GetBounds()
     valid_fibers = set()
     invalid_fibers = set()
     if progress:
+        print "use of this progress argument is deprecated"
         progress.set(10)
     n = fibers.GetNumberOfCells()
     l = fibers.GetNumberOfLines()
@@ -238,16 +241,15 @@ def boundingBoxIntesection(box1, box2):
 def readFreeSurferTransform(filename):
     "Reads a freeSurfer transform file and returns a numpy array"
     try:
-        f = open(filename)
-        lines = f.readlines()
-        trans = lines[-3:]
-        trans = [l.split() for l in trans]
-        trans = [l[0:4] for l in trans]
-        trans_f = [map(float, l) for l in trans]
-        trans_f.append([0] * 3 + [1])
-        np.array(trans_f)
-        nar = np.array(trans_f)
-        f.close()
+        with open(filename) as f:
+            lines = f.readlines()
+            trans = lines[-3:]
+            trans = [l.split() for l in trans]
+            trans = [l[0:4] for l in trans]
+            trans_f = [map(float, l) for l in trans]
+            trans_f.append([0] * 3 + [1])
+            np.array(trans_f)
+            nar = np.array(trans_f)
     except IOError:
         print "couldn't open %s" % filename
         raise Exception("couldn't open %s" % filename)
@@ -273,11 +275,12 @@ def cache_function(max_cache_size):
                 output = f(*args, **kw_args)
                 if output is not None:
                     if len(cache) >= max_cache:
-                        oldest = min(cache.items(), key=lambda x: x[1][1])[0]
+                        oldest = min(cache.iteritems(), key=lambda x: x[1][1])[0]
                         cache.pop(oldest)
                     cache[key] = (output, time.time())
             else:
                 output, _ = cache[key]
+                #update access time
                 cache[key] = (output, time.time())
                 #return a copy to keep integrity of objects in cache
             try:
@@ -287,7 +290,7 @@ def cache_function(max_cache_size):
                 #not a vtk object
                 try:
                     output_copy = copy.deepcopy(output)
-                except:
+                except Exception:
                     output_copy = output
             return output_copy
 

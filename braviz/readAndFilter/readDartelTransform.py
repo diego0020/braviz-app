@@ -4,7 +4,7 @@ import itertools
 import vtk
 import nibabel as nib
 import numpy as np
-
+import os
 from braviz.readAndFilter import numpy2vtkMatrix
 
 
@@ -68,8 +68,8 @@ def dartel2GridTransform(y_file,assume_bad_matrix=False):
 def check_matrix(m):
     "check that the affine matrix contains only spacing and translation"
     for i in range(4):
-        for j in range(3): #don't look at last column
-            if i!=j: #don't look at diagonal
+        for j in range(3): # don't look at last column
+            if i!=j: # don't look at diagonal
                 if abs(m[i,j]>0.0001):
                     print "WARNING: Matrix contains rotations or shears, this is not tested"
                     return False
@@ -77,17 +77,11 @@ def check_matrix(m):
 def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
     "Cached version of dartel2GridTransform"
     if y_file[-2:]=='gz':
-        base_name=y_file[:-7] #remove .nii.gz
+        base_name=y_file[:-7] # remove .nii.gz
     else:
-        base_name=y_file[:-4] #remove .nii
+        base_name=y_file[:-4] # remove .nii
     cache_name=base_name+'.vtk'
-    try:
-        f=open(cache_name)
-        f.close()
-    except:
-        cache=False
-    else:
-        cache=True
+    cache=os.path.isfile(cache_name)
     if not cache:
         print "importing dartel warp field... this will take a while"
         trans=dartel2GridTransform(y_file,assume_bad_matrix)
@@ -117,7 +111,9 @@ def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
         writer.SetInputData(g)
         try:
             writer.Update()
-        except:
+            if writer.GetErrorCode()!=0:
+                print 'cache write failed'
+        except Exception:
             print "Cache write failed"
         return trans
     else:

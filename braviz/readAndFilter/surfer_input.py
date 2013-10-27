@@ -3,6 +3,7 @@
 from __future__ import division
 import numpy as np
 import vtk
+import os
 
 def _fread3(fobj):
     """Read a 3-byte int from an open binary file object."""
@@ -177,13 +178,8 @@ def create_polydata(coords,faces):
 def surface2vtkPolyData(surf_file):
     "cached function to read a freesurfer structure file"
     #check cache
-    vtkFile=None
-    try:
-        vtkFile=open(surf_file+'.vtk')
-        vtkFile.close()
-    except IOError:
-        pass
-    if vtkFile is not None:
+    vtkFile=surf_file+'.vtk'
+    if os.path.isfile(vtkFile):
         #print 'reading from vtk-file'
         vtkreader=vtk.vtkPolyDataReader()
         vtkreader.SetFileName(surf_file+'.vtk')
@@ -201,7 +197,9 @@ def surface2vtkPolyData(surf_file):
         vtkWriter.SetFileName(surf_file+'.vtk')
         vtkWriter.SetFileTypeToBinary()
         vtkWriter.Update()
-    except:
+    except Exception:
+        print 'cache write failed'
+    if vtkWriter.GetErrorCode() != 0:
         print 'cache write failed'
     return poly
 def addScalars(surf_polydata,scalars):
@@ -266,8 +264,9 @@ def getMorphLUT(name):
                   'volume' : (0 ,5 , 0.5, 0.0,    (0.5,0.5,0.5), (0,1,0) ),
                   'sulc' : (-2 ,2 , 0.5, 0.0,      (0,1,0)  ,   (0.5,0.5,0.5),   (1,0,0))            
                   }
-    if not parameters_d.has_key(name):
+    try:
+        out_lut=getColorTransferLUT(*parameters_d[name])
+    except KeyError:
         print 'Unkown scalar type'
-        raise(Exception('unknown scalar type'))
-    out_lut=getColorTransferLUT(*parameters_d[name])    
+        raise (Exception('unknown scalar type'))
     return out_lut

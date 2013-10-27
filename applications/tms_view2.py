@@ -170,9 +170,9 @@ def set_data(event=None):
     if invert_data_values is True:
         TMS_metric = map(lambda x: 100 - x, TMS_metric)
 
-    valid_genres = []
-    if male_selected_var.get(): valid_genres.append('2')
-    if female_selected_var.get(): valid_genres.append('1')
+    valid_genres = set()
+    if male_selected_var.get(): valid_genres.add('2')
+    if female_selected_var.get(): valid_genres.add('1')
     #table = izip(codes, genres, grupo, TMS_metric)
     tms_data_dict=dict(izip(codes,TMS_metric))
 
@@ -241,7 +241,6 @@ def set_data(event=None):
 
 
 def draw_bars_1():
-    global disp2axis
     if showing_history is True:
         selected_values = [tms_data_dict[s] for s in selected_codes]
         bars_view1.set_data(selected_values, selected_codes)
@@ -264,7 +263,6 @@ def draw_bars_1():
 
 
 previous_value = 0
-
 animated_draw_bar_id=None
 def setSubj(event=None):
     global fibers, current_subject, previous_value,animated_draw_bar_id
@@ -304,6 +302,8 @@ def setSubj(event=None):
 
     get_img(current_subject, images_dict[data_code],hemisphere)
 
+    #update bar chart 2
+
     new_value = tms_data_dict[current_subject]
     if animation is False:
         bars_view2.set_data([new_value], [current_subject])
@@ -328,7 +328,7 @@ def setSubj(event=None):
 def animated_draw_bar(time, slope, value):
     global animated_draw_bar_id
     bars_view2.change_bars([value])
-    if (time > 0):
+    if time > 0:
         animated_draw_bar_id=root.after(50, animated_draw_bar, time - 1, slope, value + slope)
 
 
@@ -475,7 +475,6 @@ long_messages_dict = {
 
 def data_tree_message_func(event=None):
     coord = event.y
-    #print coor
     element = data_selection_tree.identify_row(coord)
     if len(element) == 0:
         return ''
@@ -544,7 +543,7 @@ show_all_or_history_button = tk.Button(control_frame, text='Show all', command=s
 show_all_or_history_button.grid(sticky='ew')
 
 
-def add_to_history(Event=None):
+def add_to_history(event=None):
     if current_subject in selected_codes:
         selected_codes.remove(current_subject)
     selected_codes.append(current_subject)
@@ -556,7 +555,7 @@ add_to_hist_button = tk.Button(control_frame, text='Add to history <----', comma
 add_to_hist_button.grid(sticky='ew')
 
 
-def remove_from_history(Event=None):
+def remove_from_history(event=None):
     if current_subject in selected_codes:
         selected_codes.remove(current_subject)
     draw_bars_1()
@@ -671,6 +670,6 @@ bars_2_tooltip=ToolTip(bars_widget2, msgFunc=bars_2_msg_func, follow=1, delay=0.
 data_selection_tree.see('inhi')
 data_selection_tree.selection_add('inhi')
 
-root.after(1000,turn_on_animation)
+root.after(8000,turn_on_animation)
 root.focus()
 root.mainloop()

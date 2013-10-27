@@ -4,6 +4,7 @@ import itertools
 import vtk
 import nibabel as nib
 import numpy as np
+import os
 
 from braviz.readAndFilter import numpy2vtkMatrix
 from itertools import izip
@@ -122,13 +123,8 @@ def cached_readTensorImage(tensor_file,fa_file=None, min_fa=0.3):
     if fa_file:
         cache_file += '_%f' % min_fa
     cache_file += '.vtk'
-    vtkFile=None
-    try:
-        vtkFile=open(cache_file)
-        vtkFile.close()
-    except IOError:
-        pass
-    if vtkFile is not None:
+    vtkFile=cache_file
+    if os.path.isfile(vtkFile):
         print 'reading from vtk-file'
         vtkreader=vtk.vtkUnstructuredGridReader()
         vtkreader.SetFileName(cache_file)
@@ -143,7 +139,9 @@ def cached_readTensorImage(tensor_file,fa_file=None, min_fa=0.3):
         vtkWriter.SetFileName(cache_file)
         vtkWriter.SetFileTypeToBinary()
         vtkWriter.Update()
-    except:
+        if vtkWriter.GetErrorCode() != 0:
+            print 'cache write failed'
+    except Exception:
         print 'cache write failed'
     return out
     

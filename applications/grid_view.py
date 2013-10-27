@@ -2,15 +2,17 @@ from __future__ import division
 import Tkinter as tk
 import ttk
 from os.path import join as path_join
+import thread
+from itertools import izip
+
+import vtk
+from vtk.tk.vtkTkRenderWindowInteractor import  vtkTkRenderWindowInteractor
+import numpy as np
+
 from braviz.readAndFilter.read_csv import get_headers,get_column
 from braviz.visualization.create_lut import get_colorbrewer_lut
-import vtk
-import thread
-from vtk.tk.vtkTkRenderWindowInteractor import \
-     vtkTkRenderWindowInteractor
-import numpy as np
 import braviz
-from itertools import izip
+from collections import defaultdict
 #globals
 __author__ = 'Diego'
 root = tk.Tk()
@@ -44,7 +46,7 @@ def load_models(event=None):
 
 def finish_load_models():
     global models_dict,async_processing_models
-    if async_processing_models==False:
+    if async_processing_models is False:
         grid_view.set_data(models_dict)
         grid_view.Render()
         for w in widgets:
@@ -65,7 +67,7 @@ def async_load_models():
             for model_name in models_set:
                 try:
                     models.append(reader.get('model',subj,name=model_name))
-                except:
+                except Exception:
                     pass
         #load fibers
         if fibers_var.get() is True:
@@ -75,7 +77,7 @@ def async_load_models():
                 operation='and'
             try:
                 fibers=reader.get('fibers',subj,waypoint=list(models_set),operation=operation)
-            except:
+            except Exception:
                 pass
             models.append(fibers)
         #append
@@ -105,8 +107,7 @@ def sort_models():
     grid_view.set_sort_message_visibility(True)
     grid_view.update_sort_message(sort_column)
     grid_view.Render()
-    #print sort_data_dict['1258']
-    #print sorted_subjects
+
 
 def color_models():
     global color_data_dict,color_column
@@ -115,7 +116,7 @@ def color_models():
     color_data_dict=get_data_dict(color_column)
     min_value=min(color_data_dict.values())
     max_value=max(color_data_dict.values())
-    color_table=get_colorbrewer_lut(min_value,max_value,'RdBu',9,nan_color=(0.95,0.47,0.85))
+    color_table=get_colorbrewer_lut(min_value,max_value,scheme='RdBu',steps=9,nan_color=(0.95,0.47,0.85))
     def color_fun(s):
         x=color_data_dict.get(s,float('nan'))
         return color_table.GetColor(x)
@@ -134,15 +135,12 @@ def update_balloons():
                                             sort_column,sort_data_dict.get(subj,float('nan')))
         messages_dict[subj]=message
     grid_view.set_balloon_messages(messages_dict)
-    #data=[(color_data_dict.get(subj,float('nan')),sort_data_dict.get(subj,float('nan'))) for subj in id_list ]
-    #data=filter(lambda x:np.isfinite(x[0]) and np.isfinite(x[1]),data)
     data_dict={}
     for s in id_list:
         color_datum=color_data_dict.get(s,float('nan'))
         sort_datum=sort_data_dict.get(s,float('nan'))
         if np.isfinite(color_datum) and np.isfinite(sort_datum):
             data_dict[s]=(color_datum,sort_datum)
-    #print data_dict
     if len(data_dict)>0 and scatter_sel_var.get():
         grid_view.set_mini_scatter_visible(True)
         grid_view.update_mini_scatter(data_dict,color_column,sort_column)
@@ -261,7 +259,8 @@ scatter_sel_var.set(1)
 def show_scatter_plot(event=None):
     grid_view.set_mini_scatter_visible(scatter_sel_var.get())
 
-scatter_sel_box=tk.Checkbutton(grid_manip_frame,text='Show scatter plot',variable=scatter_sel_var,command=show_scatter_plot)
+scatter_sel_box=tk.Checkbutton(grid_manip_frame,text='Show scatter plot',variable=scatter_sel_var,
+                               command=show_scatter_plot)
 scatter_sel_box.grid(sticky='w')
 
 labels_sel_var=tk.BooleanVar()
@@ -319,7 +318,8 @@ render_widget.grid(row=0,column=0,sticky='ewsn')
 iact=render_widget.GetRenderWindow().GetInteractor()
 grid_view.set_interactor(iact)
 iact.SetInteractorStyle(vtk.vtkInteractorStyleTrackballActor())
-widgets=[apply_model_selection_button,sort_button,color_button,add_fibers_check,add_fibers_operation,select_model_frame,tab_list,hide_waypoints_check]
+widgets=[apply_model_selection_button,sort_button,color_button,add_fibers_check,add_fibers_operation,
+         select_model_frame,tab_list,hide_waypoints_check]
 
 def clean_exit():
     global grid_view
