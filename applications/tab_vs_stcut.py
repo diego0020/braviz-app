@@ -9,7 +9,9 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz
-
+from scipy.stats import linregress
+import numpy as np
+from itertools import izip
 
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
 data_root=reader.getDataRoot()
@@ -178,10 +180,13 @@ def refresh_table():
     
     points.SetInputData(table,1,2)
     points.Update()
-    chart.RecalculateBounds()
     xaxis=chart.GetAxis(1)
     xaxis.SetTitle(tab_var_name)
     yaxis=chart.GetAxis(0)
+    xaxis.SetBehavior(0)
+    yaxis.SetBehavior(0)
+    chart.RecalculateBounds()
+
     if metric=='volume':
         yaxis.SetTitle('%s - Volume (mm3)'%struct_name)
     elif metric=='area':
@@ -194,10 +199,81 @@ def refresh_table():
         yaxis.SetTitle('Mean FA of fibers crossing %s '%struct_name)
     else:
         yaxis.SetTitle('unknown')
-refresh_table()
+    add_correlation()
 
 
+
+corr_coefficient=''
+reg_line_table=None
+reg_line=None
+def add_correlation():
+    global corr_coefficient, reg_line_table, reg_line
+    print "adding correlation"
+
+    x, y = zip(*filter(lambda x: np.all(np.isfinite(x)), izip(tab_column, struct_metrics_col)))
+    if len(x) < 2:
+        return
+
+    slope, intercept, r_value, p_value, std_err = linregress(x, y)
+    if np.isnan(slope) or np.isnan(intercept):
+        corr_coefficient="r=NaN"
+        return
+    corr_coefficient="r=%.2f" % r_value
+    if reg_line is not None:
+        chart.RemovePlot(1)
+    reg_line = chart.AddPlot(vtk.vtkChart.LINE)
+    if reg_line_table is None:
+        line_table = vtk.vtkTable()
+        arrX = vtk.vtkFloatArray()
+        arrX.SetName("X_axis")
+        line_table.AddColumn(arrX)
+        arrY = vtk.vtkFloatArray()
+        arrY.SetName("Y_axis")
+        line_table.AddColumn(arrY)
+        reg_line_table = line_table
+    reg_line_table = reg_line_table
+    chart.RecalculateBounds()
+    renWin.Render()
+    x_axis = chart.GetAxis(1)
+    y_axis = chart.GetAxis(0)
+    min_x = x_axis.GetMinimum()
+    max_x = x_axis.GetMaximum()
+    min_y = y_axis.GetMinimum()
+    max_y = y_axis.GetMaximum()
+    x_axis.SetBehavior(1)
+    y_axis.SetBehavior(1)
+    min_y_intercept = (min_y - intercept) / slope
+    max_y_intercept = (max_y - intercept) / slope
+    min_x_intercept = min_x * slope + intercept
+    max_x_intercept = max_x * slope + intercept
+    interceptions = 0
+    reg_line_table.SetNumberOfRows(2)
+    if min_y <= min_x_intercept < max_y:
+        reg_line_table.SetValue(interceptions, 0, min_x)
+        reg_line_table.SetValue(interceptions, 1, min_x_intercept)
+        interceptions += 1
+    if min_x <= max_y_intercept < max_x:
+        reg_line_table.SetValue(interceptions, 0, max_y_intercept)
+        reg_line_table.SetValue(interceptions, 1, max_y)
+        interceptions += 1
+    if min_y < max_x_intercept <= max_y:
+        reg_line_table.SetValue(interceptions, 0, max_x)
+        reg_line_table.SetValue(interceptions, 1, max_x_intercept)
+        interceptions += 1
+    if min_x < min_y_intercept <= max_x:
+        reg_line_table.SetValue(interceptions, 0, min_y_intercept)
+        reg_line_table.SetValue(interceptions, 1, min_y)
+        interceptions += 1
+    assert (interceptions == 2 )
+    reg_line.SetInputData(reg_line_table, 0, 1)
+    reg_line.Update()
+    refresh_display()
+    print reg_line_table.GetValue(0,0)
+    print reg_line_table.GetValue(0,1)
+    print reg_line_table.GetValue(1,0)
+    print reg_line_table.GetValue(1,1)
 #===========GUI=====================
+
 
 root = tk.Tk()
 root.withdraw()
@@ -377,6 +453,6 @@ def listen_and_print(obj,event):
     
     
 #chart.AddObserver(vtk.vtkCommand.SelectionChangedEvent,listen_and_print)
-
+refresh_table()
 # Start Tkinter event loop
 root.mainloop()

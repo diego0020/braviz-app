@@ -667,7 +667,7 @@ class mini_scatter_plot(vtk.vtkContextActor):
         assert(interceptions==2 or interceptions==0)
         if interceptions==2:
             reg_line.SetInputData(table,0,1)
-        pass
+
     def set_values(self, values):
         self.chart.ClearPlots()
         #=============================================
