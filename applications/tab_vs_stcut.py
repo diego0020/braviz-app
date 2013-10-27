@@ -207,6 +207,7 @@ corr_coefficient=''
 reg_line_table=None
 reg_line=None
 def add_correlation():
+    """adapted from mini_scatter_plot"""
     global corr_coefficient, reg_line_table, reg_line
     print "adding correlation"
 
