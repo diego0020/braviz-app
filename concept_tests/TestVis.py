@@ -122,7 +122,8 @@ class TestVis:
         print '%s : %f'%(code,n)
         return n
     def loadQueryListResults(self):
-        self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://gambita.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
+        self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://localhost:8080') ##Crear objeto del tipo RDFDBmanager
+        #self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://gambita.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
         listResults=self.myManager.loadQuery('File\\rdfqueries\EvaluationTestSubTestSubSubTestNames.txt')
         subsubtestlist = list()
         for miItem in listResults:

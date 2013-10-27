@@ -6,7 +6,7 @@ import nibabel as nib
 import numpy as np
 
 from braviz.readAndFilter import numpy2vtkMatrix
-
+from itertools import izip
 def tensorFromImgData(img_data):
     "Returns a function which generates tensors for each coordinate in img_data"
     #print img_data.shape
@@ -68,9 +68,9 @@ def readTensorImage(tensor_file,fa_file=None, min_fa=0.3):
     #print "tensors = %d"%len(tensors)
     #Scale to make them closer to 1
     if fa_file:
-        tensors=[np.dot(t,2e9*fa_data[p]) for t,p in zip(tensors,points)]
+        tensors=[np.dot(t,2e9*fa_data[p]) for t,p in izip(tensors,points)]
     else:
-        tensors=[np.dot(t,2e9) for t,p in zip(tensors,points)]
+        tensors=[np.dot(t,2e9) for t,p in izip(tensors,points)]
     vtk_points=vtk.vtkPoints()
     farray=vtk.vtkFloatArray()
     farray.SetNumberOfComponents(9)
@@ -81,8 +81,8 @@ def readTensorImage(tensor_file,fa_file=None, min_fa=0.3):
             return x>min_fa
     else:
         filtro=lambda x:0
-    for i,(p,t) in enumerate(itertools.ifilter(filtro,zip(points,tensors))):
-    #for i,(p,t) in enumerate(zip(points,tensors)):
+    for i,(p,t) in enumerate(itertools.ifilter(filtro,izip(points,tensors))):
+    #for i,(p,t) in enumerate(izip(points,tensors)):
         vtk_points.InsertPoint(i,p)
         farray.InsertTuple(i,t)
         #if i%1000 ==0:

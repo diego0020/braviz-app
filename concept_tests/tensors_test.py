@@ -6,7 +6,7 @@ import numpy as np
 import braviz
 import random
 import os
-
+from itertools import izip
 #==========test data===============
 
 
@@ -78,7 +78,7 @@ def get_tensor(i,j,k):
             Dxy, Dyy, Dyz,
             Dxz, Dyz, Dzz)
 tensors=[get_tensor(i,j,k) for (i,j,k) in points ]
-tensors=[np.dot(t,2e9*fa_data[p]) for t,p in zip(tensors,points)]
+tensors=[np.dot(t,2e9*fa_data[p]) for t,p in izip(tensors,points)]
 
 vtk_points=vtk.vtkPoints()
 farray=vtk.vtkFloatArray()
@@ -90,7 +90,7 @@ def filtro(pt):
     #x=sum([abs(y) for y in t])
     x=fa_data[p]
     return x>0.6 and random.random()<0.5
-for i,(p,t) in enumerate(itertools.ifilter(filtro,zip(points,tensors))):
+for i,(p,t) in enumerate(itertools.ifilter(filtro,izip(points,tensors))):
     vtk_points.InsertPoint(i,p)
     farray.InsertTuple(i,t)
 

@@ -20,6 +20,7 @@ putamen=reader.get('model','093',name='Left-Putamen')
 
 #crear visualizador
 viewer=braviz.visualization.simpleVtkViewer()
+#viewer=braviz.visualization.vtk.vtkImagePlaneWidget()
 
 #agregar putamen al visualizador
 viewer.addPolyData(putamen)

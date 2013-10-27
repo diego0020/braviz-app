@@ -5,7 +5,7 @@ import math
 import numpy as np
 from braviz.visualization import get_arrow
 from braviz.visualization.vtk_charts import mini_scatter_plot
-
+from itertools import izip
 __author__ = 'Diego'
 
 
@@ -532,10 +532,10 @@ if __name__ == '__main__':
     test.set_sort_message_visibility(True)
     test.update_sort_message('hola')
     data = [(random.random(), random.random()) for i in range(10)]
-    data_dict=dict(zip(range(10),data))
+    data_dict=dict(izip(range(10),data))
     test.update_mini_scatter(data_dict)
     test.set_mini_scatter_visible(True)
-    labels_dict=dict(zip(range(10),['probando']*10))
+    labels_dict=dict(izip(range(10),['probando']*10))
     test.start_interaction()
     test.add_labels(labels_dict)
     test.Render()

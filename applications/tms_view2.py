@@ -12,7 +12,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 from braviz.interaction.tk_tooltip import ToolTip
 
 import braviz
-
+from itertools import izip
 __author__ = 'Diego'
 reader = braviz.readAndFilter.kmc40AutoReader(max_cache=100)
 
@@ -155,15 +155,15 @@ def set_data(event=None):
     codes = get_column(csv_file, 'CODE')
     if len(laterality_dict)==0:
         later = get_column(csv_file, 'LATER')
-        laterality_dict.update(zip(codes,later))
+        laterality_dict.update(izip(codes,later))
 
     if len(genders_dict)==0:
         genres = get_column(csv_file, 'GENDE')
-        genders_dict.update(zip(codes,genres))
+        genders_dict.update(izip(codes,genres))
 
     if len(group_dict)==0:
         grupo = get_column(csv_file, 'UBICA')  # 1=canguro, 2=control, 3=gorditos
-        group_dict.update(zip(codes,grupo))
+        group_dict.update(izip(codes,grupo))
 
 
     TMS_metric = get_column(csv_file, tms_column, True)
@@ -173,8 +173,8 @@ def set_data(event=None):
     valid_genres = []
     if male_selected_var.get(): valid_genres.append('2')
     if female_selected_var.get(): valid_genres.append('1')
-    #table = zip(codes, genres, grupo, TMS_metric)
-    tms_data_dict=dict(zip(codes,TMS_metric))
+    #table = izip(codes, genres, grupo, TMS_metric)
+    tms_data_dict=dict(izip(codes,TMS_metric))
 
     genre_codes = filter(lambda x: genders_dict[x] in valid_genres, codes)
     term_codes = filter(lambda x: group_dict[x]== '3', genre_codes)
@@ -265,9 +265,9 @@ def draw_bars_1():
 
 previous_value = 0
 
-
+animated_draw_bar_id=None
 def setSubj(event=None):
-    global fibers, current_subject, previous_value
+    global fibers, current_subject, previous_value,animated_draw_bar_id
     #print "setting subjects"
     if len(codes2) == 0:
         bars_view2.set_data([], [])
@@ -293,14 +293,14 @@ def setSubj(event=None):
 
     bars_view1.paint_bar_chart()
 
-    hemisphere='r'
+    hemisphere='l'
     if images_dict[data_code]=='motor':
         if side_var.get()=='d':
             if laterality_dict.get(current_subject)=='2':
-                hemisphere='l'
+                hemisphere='r'
         else:
             if laterality_dict.get(current_subject) == '1':
-                hemisphere='l'
+                hemisphere='r'
 
     get_img(current_subject, images_dict[data_code],hemisphere)
 
@@ -318,6 +318,7 @@ def setSubj(event=None):
         previous_value = new_value
         slope = 0
     bars_view2.set_data([previous_value],[current_subject])
+    if animated_draw_bar_id is not None: root.after_cancel(animated_draw_bar_id)
     animated_draw_bar(time_steps-1, slope, previous_value+slope)
     previous_value = new_value
 
@@ -325,9 +326,10 @@ def setSubj(event=None):
 
 
 def animated_draw_bar(time, slope, value):
+    global animated_draw_bar_id
     bars_view2.change_bars([value])
     if (time > 0):
-        root.after(50, animated_draw_bar, time - 1, slope, value + slope)
+        animated_draw_bar_id=root.after(50, animated_draw_bar, time - 1, slope, value + slope)
 
 
 def get_color(value,factor=1):
@@ -368,11 +370,11 @@ invet_data_dict = {
 limits_dict = {
     'IHIfreq': (-1, 100),
     'RMT': (0, 100),
-    'IHIdur': (-2, 35),
-    'MEPlat': (-2, 20),
+    'IHIdur': (0, 35),
+    'MEPlat': (0, 20),
     'ICF': (-10, 400),
     'ICI': (-10, 100),
-    'IHIlat': (-2, 35 )
+    'IHIlat': (0, 35 )
 }
 
 styles_dict = {

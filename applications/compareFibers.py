@@ -11,7 +11,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz
-
+from itertools import izip
 
 initialized=False     
 class locked_IntVar():
@@ -312,7 +312,7 @@ Mean Length: %.2f
     
     deltas=np.subtract(d_o,d_r)
     combined_d=[]
-    for o,d in zip(d_o,deltas):
+    for o,d in izip(d_o,deltas):
         combined_d+=[o,d]
     custom_message="""Bundle
 Number of fibers: %d ( %+d ) 
@@ -854,7 +854,7 @@ sphere_widget_repr.PlaceWidget((0,0,0),(0,0,0))
 initial_sphere_pos=(0,0,0)
 def move_sphere(obj,event):
     new_pos=sphere_widget_repr.GetCenter()
-    displacement=[x-y for x,y in zip(new_pos,initial_sphere_pos)]
+    displacement=[x-y for x,y in izip(new_pos,initial_sphere_pos)]
     for triplet in other_models.values():
         actor=triplet[2]
         actor.SetPosition(displacement)

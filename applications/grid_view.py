@@ -10,7 +10,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 import numpy as np
 import braviz
-
+from itertools import izip
 #globals
 __author__ = 'Diego'
 root = tk.Tk()
@@ -90,7 +90,7 @@ def async_load_models():
 def get_data_dict(col_name,nan_value=float('nan')):
     codes=get_column(file_name,'code')
     data=get_column(file_name,col_name,True,nan_value=nan_value)
-    return dict(zip(codes,data))
+    return dict(izip(codes,data))
 
 def sort_models():
     global sort_data_dict,sort_column

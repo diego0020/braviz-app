@@ -6,6 +6,7 @@ import random
 import math
 from os.path import join as path_join
 import numpy as np
+from itertools import izip
 __author__ = 'Diego'
 
 scalar_column='WMIIQ'
@@ -47,7 +48,7 @@ csv_codes=braviz.readAndFilter.read_csv.get_column(csv_file,'code')
 csv_data=braviz.readAndFilter.read_csv.get_column(csv_file,scalar_column,True)
 #build dict
 csv_data_dict={}
-for code,datum in zip(csv_codes,csv_data):
+for code,datum in izip(csv_codes,csv_data):
     if not math.isnan(datum):
         csv_data_dict[code]=datum
 

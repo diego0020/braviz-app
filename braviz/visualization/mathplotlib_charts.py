@@ -11,6 +11,7 @@ import random
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import Tkinter as Tk
+from itertools import izip
 
 class BarPlot():
     def __init__(self):
@@ -82,7 +83,7 @@ class BarPlot():
         self.axis.set_ylim(self.y_limits[0], self.y_limits[1])
     def set_lines(self,lines,dashes):
         self.hlines=[]
-        for pos,dash in zip(lines,dashes):
+        for pos,dash in izip(lines,dashes):
             ls='-'
             if dash is True:
                 ls=':'

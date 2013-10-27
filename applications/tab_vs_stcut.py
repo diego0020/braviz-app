@@ -173,7 +173,7 @@ def refresh_table():
     table.AddColumn(column_to_vtk_array(struct_metrics_col,'%s - %s'%(struct_name,metric) ))
     
      
-    #for c,t,s in zip(codes,tab_column,struct_metrics_col):
+    #for c,t,s in izip(codes,tab_column,struct_metrics_col):
     #    print "%s: %f , %f"%(c,t,s)
     
     points.SetInputData(table,1,2)

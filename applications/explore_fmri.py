@@ -13,6 +13,8 @@ import braviz.visualization.fmri_view
 import braviz.visualization.vtk_charts
 
 from math import ceil,floor
+from functools import partial
+
 __author__ = 'Diego'
 
 #====================global variables===========
@@ -304,9 +306,9 @@ def image_interaction(caller,event,event_name='std'):
         cortex_prop.SetOpacity(1.0)
 
 planeWidget.SetSliceIndex(spatial_slice)
-custom_id=planeWidget.AddObserver(planeWidget.cursor_change_event,lambda x,y: image_interaction(x,y,'cursor_change'))
-custom_id2=planeWidget.AddObserver(planeWidget.slice_change_event,lambda x,y: image_interaction(x,y,'slice_change'))
-custom_id2=planeWidget.AddObserver('EndInteractionEvent',lambda x,y: image_interaction(x,y,'EndInteractionEvent'))
+planeWidget.AddObserver(planeWidget.cursor_change_event,partial(image_interaction,event_name='cursor_change'))
+planeWidget.AddObserver(planeWidget.slice_change_event,partial(image_interaction,event_name='slice_change'))
+planeWidget.AddObserver('EndInteractionEvent',partial(image_interaction,event_name='EndInteractionEvent'))
 
 click_to_pick_obs_id1=None
 

@@ -125,8 +125,9 @@ def setData(Event=None):
     #disp2axis=get_mapper_function()
 
 previous_value=0
+animated_draw_id=None
 def setSubj(Event=None):
-    global fibers,current_subject,previous_value
+    global fibers,current_subject,previous_value,animated_draw_id
     #print "setting subjects"
 
     if len(codes2)==0:
@@ -169,14 +170,19 @@ def setSubj(Event=None):
     else:
         previous_value=new_value
         slope=0
+    if animated_draw_id is not None: root.after_cancel(animated_draw_id)
     animated_draw_bar(time_steps,slope,previous_value,codes2[idx])
     previous_value=new_value
 
+
 def animated_draw_bar(time,slope,value,code):
+    global animated_draw_id
     bars_view2.change_bars([value])
     #bars_view2.paint_bar_chart()
     if(time>0):
-        root.after(10,animated_draw_bar,time-1,slope,value+slope,code)
+        animated_draw_id=root.after(10,animated_draw_bar,time-1,slope,value+slope,code)
+    else:
+        animated_draw_id=None
 
 
 def get_color(value):

@@ -143,14 +143,16 @@ class RDFDBManager:
             xVal,xSep,xAft = xValue.partition('#')
             yValue = miItem['PreferredNames']['value']
             zValue = miItem['freeSurfer']['value']
-            names.append(xAft  + '\t' + yValue + '\t' + zValue +'\n')
+            names.append(xAft  + '#' + yValue + '#' + zValue +'\n')
         myfile=open('File\\rdfqueries\\FreeNames','w')
         myfile.writelines(names)
 
         
-myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://gambita.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
-#myManager.loadRdf('File\\RDFFiles\\Cascaron.ttl') ##LLamo la funcion a traves de la instancia que se creo arriba para subir al repo un archivo ttl
-#myManager.loadRdf('File\\RDFFiles\\JerarquiasComp.ttl')##LLamo la funcion a traves de la instancia que se creo arriba para subir al repo un archivo ttl
+myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://localhost:8080/') ##Crear objeto del tipo RDFDBmanager
+#myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://gambita.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
+myManager.loadRdf('File\\RDFFiles\\Cascaron.ttl') ##LLamo la funcion a traves de la instancia que se creo arriba para subir al repo un archivo ttl
+myManager.loadRdf('File\\RDFFiles\\JerarquiasComp.ttl')##LLamo la funcion a traves de la instancia que se creo arriba para subir al repo un archivo ttl
+myManager.loadRdf('File\\RDFFiles\\volumesTriplets.ttl')##LLamo la funcion a traves de la instancia que se creo arriba para subir al repo un archivo ttl
 #myManager.loadQuery('C:\Users\jc.forero47\Documents\JohanaForero\Repositorios\\braviz\\braint\java\\braint_v_1.0\File\\rdfqueries\EvaluationIdTestIdSubtestIdSubSubTest') #Lanza una query que entra como parametro en el archi ve entrada
 #myManager.loadQueryParentChildren('File\\rdfqueries\\ChildrenSearch','CLINI', 'hasSubTest' )
 #myManager.loadQueryParentChildren('File\\rdfqueries\\ChildrenSearch','FSIQ', 'isRelatedWith' )
