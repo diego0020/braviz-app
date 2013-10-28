@@ -14,7 +14,8 @@ from braviz.readAndFilter.read_csv import get_headers,get_tuples_dict
 from braviz.visualization.create_lut import get_colorbrewer_lut
 import braviz
 from collections import defaultdict
-#globals
+
+#============globals=======================
 __author__ = 'Diego'
 root = tk.Tk()
 root.withdraw()
@@ -29,10 +30,16 @@ color_column=None
 color_data_dict={}
 sort_data_dict={}
 sort_column=None
+overlay_view=False
 
 widgets=[]
 models_dict={}
 async_processing_models=False
+
+removed_items=0
+
+#============end-globals=====================
+
 def load_models(event=None):
     global async_processing_models
     #disable buttons
@@ -93,7 +100,7 @@ def async_load_models():
 def get_data_dict(col_name,nan_value=float('nan')):
     return get_tuples_dict(file_name,'code',col_name,numeric=True,nan_value=nan_value)
 
-overlay_view=False
+
 def sort_models(overlay=False):
     global overlay_view,sort_data_dict,sort_column
 
@@ -145,7 +152,7 @@ def update_balloons():
     global messages_dict
     messages_dict={}
     for subj in id_list:
-        message="%s\n%s : %.2f\n%s : %.2f"%(subj,
+        message="%s\n%s : %.2f\n%s : %.2f"%(subj if overlay_view is False else sort_data_dict[subj],
                                             color_column,color_data_dict.get(subj,float('nan')),
                                             sort_column,sort_data_dict.get(subj,float('nan')))
         messages_dict[subj]=message
@@ -294,9 +301,15 @@ def show_labels(event=None):
 labels_sel_box=tk.Checkbutton(grid_manip_frame,text='Show text labels',variable=labels_sel_var,command=show_labels)
 labels_sel_box.grid(sticky='w')
 def remove_id(event=None):
+    global removed_items
     id_to_remove=grid_view.get_selection()
     if id_to_remove is not None:
         id_list.remove(id_to_remove)
+        removed_items+=1
+        if removed_items>=1:
+            removed_reminder.SetInput("%d"%removed_items)
+            removed_reminder.SetVisibility(1)
+            removed_reminder_label.SetVisibility(1)
         load_models()
 
 
@@ -304,8 +317,11 @@ remove_selection_button=tk.Button(grid_manip_frame,text='Remove selected item',c
 remove_selection_button.grid(sticky='ew')
 
 def restore_list(event=None):
-    global id_list
+    global id_list,removed_items
     id_list=reader.get('ids')
+    removed_items=0
+    removed_reminder.SetVisibility(0)
+    removed_reminder_label.SetVisibility(0)
     load_models()
 restore_all_items_button=tk.Button(grid_manip_frame,text='Restore all items',command=restore_list)
 restore_all_items_button.grid(sticky='ew')
@@ -323,9 +339,61 @@ top.columnconfigure(1, weight=1)
 
 grid_view=braviz.visualization.grid_view()
 
+removed_reminder=vtk.vtkTextActor()
+grid_view.ren.AddViewProp(removed_reminder)
+removed_reminder.SetInput('10')
+removed_reminder.SetTextScaleModeToProp()
+reminder_coord=removed_reminder.GetPositionCoordinate()
+reminder_coord2=removed_reminder.GetPosition2Coordinate()
+#removed_reminder.SetPosition2(1.0,1.0)
+
+reminder_coord.SetCoordinateSystemToViewport()
+reminder_coord2.SetCoordinateSystemToViewport()
+corner_coord=vtk.vtkCoordinate()
+corner_coord.SetCoordinateSystemToNormalizedViewport()
+corner_coord.SetValue(1.0,0.0)
+reminder_coord2.SetReferenceCoordinate (corner_coord)
+reminder_coord.SetReferenceCoordinate (corner_coord)
+
+
+reminder_coord.SetValue(-80,50)
+reminder_coord2.SetValue(-10,85)
+removed_reminder.UseBorderAlignOn()
+
+tprop=removed_reminder.GetTextProperty()
+tprop.SetFontSize(18)
+tprop.ShadowOn()
+tprop.SetJustificationToCentered()
+
+removed_reminder_label=vtk.vtkTextActor()
+grid_view.ren.AddViewProp(removed_reminder_label)
+removed_reminder_label.SetInput('Removed')
+
+removed_reminder_label.SetTextScaleModeToProp()
+reminder_coord=removed_reminder_label.GetPositionCoordinate()
+reminder_coord2=removed_reminder_label.GetPosition2Coordinate()
+#removed_reminder.SetPosition2(1.0,1.0)
+
+reminder_coord.SetCoordinateSystemToViewport()
+reminder_coord2.SetCoordinateSystemToViewport()
+reminder_coord2.SetReferenceCoordinate (corner_coord)
+reminder_coord.SetReferenceCoordinate (corner_coord)
+
+
+reminder_coord.SetValue(-80,10)
+reminder_coord2.SetValue(-10,50)
+removed_reminder_label.UseBorderAlignOn()
+
+tprop=removed_reminder_label.GetTextProperty()
+tprop.SetFontSize(18)
+tprop.ShadowOn()
+tprop.SetJustificationToCentered()
+tprop.SetVerticalJustificationToTop()
+
+removed_reminder.SetVisibility(0)
+removed_reminder_label.SetVisibility(0)
+
 render_widget = vtkTkRenderWindowInteractor(renderer_frame,rw=grid_view,width=600, height=600)
-
-
 
 renderer_frame.columnconfigure(0, weight=1)
 renderer_frame.rowconfigure(0, weight=1)
