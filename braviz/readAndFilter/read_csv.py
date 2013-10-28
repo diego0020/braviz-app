@@ -1,6 +1,7 @@
 from __future__ import division
 import vtk
 import numpy as np
+from collections import namedtuple
 
 __author__ = 'Diego'
 
@@ -37,6 +38,51 @@ def get_column(file_name, name, numeric=False,nan_value=float('nan')):
         raise
     return column
 
+def get_tuples_dict(file_name,key_col,columns,numeric=False,nan_value=float('nan')):
+    output_dict={}
+    if type(numeric) is bool:
+        numeric=[numeric]*len(columns)
+    try:
+        with open(file_name) as csv_file:
+            headers = csv_file.readline()
+            headers = headers.rstrip('\n')
+            headers = headers.split(';')
+            try:
+                key_index=headers.index(key_col)
+                if type(columns) is str:
+                    col_idx=(headers.index(columns),)
+                    row_tuple=lambda x:x
+                else:
+                    col_idx = [headers.index(name) for name in columns ]
+                    row_tuple = namedtuple('row_tuple', columns)
+            except ValueError as ve:
+                raise Exception("%s , headers of file %s" % (ve.message,file_name))
+
+            for l in iter(csv_file.readline, ''):
+                l2 =  l.rstrip('\n')
+                l2 =  l2.split(';')
+                key = l2[key_index]
+                row_list=[]
+                #go through columns
+                for i,idx in enumerate(col_idx):
+                    item = l2[idx]
+                    if numeric[i]:
+                        try:
+                            num = float(item)
+                        except ValueError:
+                            try:
+                                #some decimals number saved using a comma
+                                item = item.replace(',', '.')
+                                num = float(item)
+                            except Exception:
+                                num =nan_value
+                        item = num
+                    row_list.append(item)
+                output_dict[key]=row_tuple(*row_list)
+    except IOError:
+        print "couldn't open file " + file_name
+        raise
+    return output_dict
 
 def get_headers(file_name):
     try:
@@ -82,8 +128,6 @@ def read_free_surfer_csv_file(file_name, row, search_col=None, col=None):
                         #found it
                         l2 = l[13:]
                         col_headers = l2.split()
-                        #col_headers = l2.split(' ')
-                        #col_headers = filter(lambda x: len(x) > 0, col_headers)
                         if row == 'headers':
                             fs_file.close()
                             return col_headers
