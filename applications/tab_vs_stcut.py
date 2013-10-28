@@ -3,7 +3,7 @@ import Tkinter as tk
 import ttk
 from os.path import join as path_join
 import cPickle
-
+import thread
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
@@ -16,7 +16,7 @@ from itertools import izip
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small.csv')
-
+cancel_calculation_flag=False
 
 def get_headers():
     csv_file=open(file_name)
@@ -25,6 +25,7 @@ def get_headers():
     headers=headers.split(';')
     csv_file.close()    
     return headers
+
 
 def get_column(name,numeric=False):
     csv_file=open(file_name)
@@ -55,6 +56,7 @@ def get_column(name,numeric=False):
     csv_file.close()
     return column
 
+
 def column_to_vtk_array(col,name='unknown'):
     if not isinstance(col[0],str):
         array=vtk.vtkFloatArray()
@@ -72,8 +74,8 @@ def column_to_vtk_array(col,name='unknown'):
 def get_struct_metric(struct_name,code,metric='volume'):
     try:
         model=reader.get('model',code,name=struct_name)
-    except:
-        print "%s not found for subject %s"%(struct_name,code)
+    except Exception:
+        #print "%s not found for subject %s"%(struct_name,code)
         return float('nan')
     if metric=='volume':
         return reader.get('model',code,name=struct_name,volume=1)
@@ -98,7 +100,7 @@ def get_fibers_metric(struct_name,code,metric='number'):
         n=float('nan')
     else:
         if fibers is None:
-            print "Problem loading fibers for subject %s"%code
+            #print "Problem loading fibers for subject %s"%code
             n=float('nan')
         elif metric=='number':
             n=fibers.GetNumberOfLines()
@@ -112,30 +114,78 @@ def get_fibers_metric(struct_name,code,metric='number'):
         else:
             print 'unknowm fiber metric %s'%metric
             return float('nan')
-    print '%s : %f'%(code,n)
+    #print '%s : %f'%(code,n)
     return n
 
+
 def get_struct_metrics_col():
-    key='column_%s_%s'%(struct_name,metric)
+    global struct_metrics_col,temp_struct_metrics_col,processing,cancel_calculation_flag,struct_name,metric
+    metric_temp=long_names_dict[metric_var.get()]
+    struct_idx = model_list.curselection()
+    struct_name_temp = model_list.get(struct_idx)
+    key='column_%s_%s'%(struct_name_temp,metric_temp)
     cache_file_name=path_join(reader.getDataRoot(),'pickles','%s.pickle'%key)
     try:
-        cachef=open(cache_file_name,'rb')
+        with open(cache_file_name,'rb') as cachef:
+            struct_metrics_col=cPickle.Unpickler(cachef).load()
     except IOError:
         pass
     else:
-        column=cPickle.Unpickler(cachef).load()
-        cachef.close()
-        return column
-    print "Calculating %s for structure %s"%(metric,struct_name)
-    col=map(lambda code: get_struct_metric(struct_name,code,metric) ,codes)
-    try:
-        cachef=open(cache_file_name,'wb')
-        cPickle.Pickler(cachef,2).dump(col)
-        cachef.close()
-    except:
-        print "cache write failed"
-        pass
-    return col
+        struct_name=struct_name_temp
+        metric=metric_temp
+        refresh_table()
+        refresh_display()
+        return
+    print "Calculating %s for structure %s"%(metric_temp,struct_name)
+    temp_struct_metrics_col=[]
+    #async_get_struct_metric()
+    calculate_button['text']='Cancel'
+    processing=True
+    cancel_calculation_flag=False
+    thread.start_new_thread(async_get_struct_metric,(metric_temp,))
+    top.after(20,finish_get_struct_metric,cache_file_name)
+
+
+def async_get_struct_metric(metric_temp):
+    global temp_struct_metrics_col
+    for code in codes:
+        if cancel_calculation_flag is True:
+            print "cancel flag received"
+            temp_struct_metrics_col = []
+            break
+        scalar=get_struct_metric(struct_name,code,metric_temp)
+        temp_struct_metrics_col.append(scalar)
+
+
+def finish_get_struct_metric(cache_file_name):
+    global struct_metrics_col,processing,struct_name,metric
+    number_calculated = len(temp_struct_metrics_col)
+    if (cancel_calculation_flag is True) and (number_calculated==0):
+        print "aborting"
+        processing=False
+        calculate_button['text']='Calculate'
+        refresh_table()
+        refresh_display()
+        return
+    if number_calculated==len(codes):
+        try:
+            with open(cache_file_name,'wb') as cachef: cPickle.Pickler(cachef,2).dump(struct_metrics_col)
+        except Exception:
+            print "cache write failed"
+            print "file was %s"%cache_file_name
+            pass
+        struct_metrics_col=temp_struct_metrics_col
+        metric=long_names_dict[metric_var.get()]
+        processing = False
+        calculate_button['text']='Calculate'
+        struct_idx = model_list.curselection()
+        struct_name = model_list.get(struct_idx)
+        refresh_table()
+        refresh_display()
+    else:
+        #print number_calculated/len(codes)
+        progress_bar_var.set(number_calculated/len(codes)*100)
+        top.after(20, finish_get_struct_metric, cache_file_name)
 
 tab_var_name='WMIIQ'
 tab_column=get_column(tab_var_name, True)
@@ -152,6 +202,8 @@ struct_metrics_col=map(lambda code: get_struct_metric(struct_name,code,'volume')
 view=vtk.vtkContextView()
 view.GetRenderer().SetBackground(1.0,1.0,1.0)
 view.GetRenderWindow().SetSize(400,300)
+
+
 
 chart=vtk.vtkChartXY()
 view.GetScene().AddItem(chart)
@@ -170,7 +222,7 @@ def refresh_table():
     table.RemoveColumn(2)
     table.RemoveColumn(1)
 
-    print struct_metrics_col
+    #print struct_metrics_col
     table.AddColumn(column_to_vtk_array(tab_column,tab_var_name))
     table.AddColumn(column_to_vtk_array(struct_metrics_col,'%s - %s'%(struct_name,metric) ))
     
@@ -209,7 +261,7 @@ reg_line=None
 def add_correlation():
     """adapted from mini_scatter_plot"""
     global corr_coefficient, reg_line_table, reg_line
-    print "adding correlation"
+    #print "adding correlation"
 
     x, y = zip(*filter(lambda x: np.all(np.isfinite(x)), izip(tab_column, struct_metrics_col)))
     if len(x) < 2:
@@ -269,10 +321,10 @@ def add_correlation():
     reg_line.SetInputData(reg_line_table, 0, 1)
     reg_line.Update()
     refresh_display()
-    print reg_line_table.GetValue(0,0)
-    print reg_line_table.GetValue(0,1)
-    print reg_line_table.GetValue(1,0)
-    print reg_line_table.GetValue(1,1)
+    #print reg_line_table.GetValue(0,0)
+    #print reg_line_table.GetValue(0,1)
+    #print reg_line_table.GetValue(1,0)
+    #print reg_line_table.GetValue(1,1)
 #===========GUI=====================
 
 
@@ -341,13 +393,33 @@ tab_list_frame.grid(row=1,column=0,sticky='nsew')
 struct_frame.columnconfigure(0, weight=1)
 struct_frame.rowconfigure(1, weight=1)
 struct_label=tk.Label(struct_frame,text='Structure Metric')
-struct_label.grid(row=0,column=0,sticky='ew',pady=10)
+struct_label.grid(row=0,column=0,sticky='ew',pady=3)
+
+metric_buttons=tk.Frame(struct_frame)
+metric_buttons.grid(row=1,column=0,sticky='ew',padx=5)
+
+metric_label=tk.Label(metric_buttons,text='Metric:')
+long_names_dict={
+    'Surface Area' : 'area',
+    'Volume' : 'volume',
+    'Number of fibers crossing' : 'nfibers',
+    'Mean length of fibers crossing': 'lfibers',
+    'Mean FA of fibers crossing' : 'fa_fibers',
+}
+metric_var=tk.StringVar()
+metric_select=ttk.Combobox(metric_buttons,textvariable=metric_var)
+metric_select['values']=sorted(long_names_dict.keys(),reverse=True)
+metric_select['state']='readonly'
+metric_var.set('Volume')
+
+#metric_label.grid(row=0,column=0)
+metric_select.grid(row=0,column=0,sticky='ew')
 
 select_model_frame=tk.LabelFrame(struct_frame,text='Select Model',padx=1,pady=10)
 
 
 model_list_and_bar=tk.Frame(select_model_frame)
-model_list_and_bar.pack(side='top',fill='both',expand=1)
+model_list_and_bar.grid(sticky='nsew')
 model_scrollbar=tk.Scrollbar(model_list_and_bar,orient=tk.VERTICAL)
 model_list=tk.Listbox(model_list_and_bar,selectmode=tk.BROWSE,yscrollcommand=model_scrollbar.set,exportselection=0)
 model_scrollbar.config(command=model_list.yview)
@@ -361,39 +433,41 @@ for m in sorted(models):
 model_list.select_set(3,3)
 
 
-select_model_frame.grid(row=1,column=0,sticky='snew',pady=5)
+select_model_frame.grid(row=2,column=0,sticky='snew',pady=5)
 
-metric_buttons=tk.Frame(struct_frame)
-metric_buttons.grid(row=2,column=0,sticky='ew')
 
-metric_var=tk.StringVar()
-metric_var.set('area')
-
+processing=False
 def change_struct(event=None):
-    global struct_name,metric,struct_metrics_col
+    global struct_name,metric,struct_metrics_col,processing,cancel_calculation_flag
+    if processing is True:
+        cancel_calculation_flag=True
+        print "CANCELLING"
+        calculate_button['text']='Cancelling...'
+        return
     for w in widgets:
         w['state']='disabled'
-    metric= metric_var.get()
-    #print calculating_volume
-    struct_idx=model_list.curselection()
-    struct_name=model_list.get(struct_idx)
-    struct_metrics_col=get_struct_metrics_col()
-    #print struct_metrics_col
-    refresh_table()
-    refresh_display()
 
 
-area_button=tk.Radiobutton(metric_buttons,text='Surface Area',variable=metric_var,value='area',command=change_struct)
-volume_button=tk.Radiobutton(metric_buttons,text='Volume',variable=metric_var,value='volume',command=change_struct)
-nfibers_button=tk.Radiobutton(metric_buttons,text='Number of fibers crossing',variable=metric_var,value='nfibers',command=change_struct)
-lfibers_button=tk.Radiobutton(metric_buttons,text='Mean length of fibers crossing',variable=metric_var,value='lfibers',command=change_struct)
-fafibers_button=tk.Radiobutton(metric_buttons,text='Mean FA of fibers crossing',variable=metric_var,value='fa_fibers',command=change_struct)
-model_list.bind('<<ListboxSelect>>',change_struct)
-area_button.grid(row=0,column=0)
-volume_button.grid(row=0,column=1)
-nfibers_button.grid(row=1,column=0,columnspan=2)
-lfibers_button.grid(row=2,column=0,columnspan=2)
-fafibers_button.grid(row=3,column=0,columnspan=2)
+
+
+    get_struct_metrics_col()
+
+
+
+#model_list.bind('<<ListboxSelect>>',change_struct)
+
+
+
+calculate_frame=tk.Frame(struct_frame)
+calculate_button=tk.Button(calculate_frame,text='calculate',command=change_struct)
+calculate_button.grid(sticky='ew',pady=5)
+progress_bar_var=tk.IntVar()
+
+progress_bar=ttk.Progressbar(calculate_frame,orient='horizontal',length='100',mode='determinate',
+                                                                                    variable=progress_bar_var)
+progress_bar.grid(sticky='ew',pady=5)
+calculate_frame.columnconfigure(0,weight=1)
+calculate_frame.grid(sticky='ew',padx=5)
 #=====================================================================
 renderer_frame = tk.Frame(top)
 renderer_frame.grid(row=0,column=1,sticky='ewsn')
@@ -422,13 +496,15 @@ iact.Initialize()
 view.GetRenderWindow().Render()
 iact.Start()
 
-widgets=[tab_list, model_list, area_button, volume_button, nfibers_button, lfibers_button,fafibers_button]
+widgets=[tab_list, model_list,metric_select]
 
 def refresh_display():
     view.Update()
     view.GetRenderWindow().Render()
     for w in widgets:
         w['state']='normal'
+    metric_select['state']='readonly'
+    progress_bar_var.set(100)
 
 def clean_exit():
     global renWin
@@ -452,8 +528,6 @@ def listen_and_print(obj,event):
     #print obj
     print
     
-    
-#chart.AddObserver(vtk.vtkCommand.SelectionChangedEvent,listen_and_print)
-refresh_table()
+
 # Start Tkinter event loop
 root.mainloop()

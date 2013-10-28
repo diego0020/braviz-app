@@ -4,16 +4,15 @@ import functools
 import ttk
 from os.path import join as path_join
 import thread
-from itertools import izip
+
 
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import  vtkTkRenderWindowInteractor
 import numpy as np
-from itertools import groupby
 from braviz.readAndFilter.read_csv import get_headers,get_tuples_dict
 from braviz.visualization.create_lut import get_colorbrewer_lut
 import braviz
-from collections import defaultdict
+
 
 #============globals=======================
 __author__ = 'Diego'
