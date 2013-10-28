@@ -52,6 +52,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.__panning_start_cam_focal = None
         self.__panning_start_cam_pos = None
         self.__color_function = None
+        self.__opacity = 1.0
         self.__actor_observer_fun = None
         self.__color_bar_visibility = False
         self.__scalar_bar_actor = None
@@ -255,14 +256,17 @@ class grid_view(vtk.vtkRenderWindow):
             actor.SetVisibility(1)
             if self.__color_function is not None:
                 actor.GetProperty().SetColor(self.__color_function(id))
+            actor.GetProperty().SetOpacity(self.__opacity)
 
 
     def set_balloon_messages(self, messages_dict):
         for key, message in messages_dict.iteritems():
             self.balloon_w.AddBalloon(self.__actors_dict[key], message)
 
-    def sort(self, sorted_ids, title=None):
-        "actors will be displayed in the grid according to the sorted_ids list, actors not in list will become invisible"
+    def sort(self, sorted_ids, title=None,overlay=False):
+        """actors will be displayed in the grid according to the sorted_ids list,
+        actors not in list will become invisible, if overlay is true then sorted ids should containg group of ids"""
+
         for ac in self.__picking_dict:
             ac.SetVisibility(0)
 
@@ -279,34 +283,39 @@ class grid_view(vtk.vtkRenderWindow):
             if width > 60:
                 width -= 60
         row_proportion = width / height
-        n_row = math.ceil(math.sqrt(len(sorted_ids) / row_proportion))
-        n_col = math.ceil(len(sorted_ids) / n_row)
+
+        len1=len(sorted_ids)
+        n_row = math.ceil(math.sqrt(len1 / row_proportion))
+        n_col = math.ceil(len1 / n_row)
 
         #positions_dict={}
-        for i, subj in enumerate(sorted_ids):
-            actor = self.__actors_dict[subj]
-            column = i % n_col
-            row = i // n_col
-            x = column * self.max_space
-            y = row * self.max_space
-            actor.SetPosition(x, y, 0)
-            self.__positions_dict[actor] = (x, y, 0)
-            actor.SetVisibility(1)
+        for i, subj_group in enumerate(sorted_ids):
+            if overlay is False:
+                subj_group=(subj_group,)
+            column ,row= i % n_col , i // n_col
+            x , y = column * self.max_space , row * self.max_space
+            for subj_id in subj_group:
+                actor = self.__actors_dict[subj_id]
+                actor.SetPosition(x, y, 0)
+                self.__positions_dict[actor] = (x, y, 0)
+                actor.SetVisibility(1)
         self.n_rows = n_row
         self.n_cols = n_col
         self.__sort_modified = False
         pass
 
-    def set_color_function(self, color_function, scalar_colors=False):
+    def set_color_function(self, color_function, opacity=1.0, scalar_colors=False):
         self.__color_function = color_function
         for subj, ac in self.__actors_dict.iteritems():
             ac.GetProperty().SetColor(color_function(subj))
+            ac.GetProperty().SetOpacity(opacity)
         if scalar_colors is True:
             for mapper in self.__mapper_dict.itervalues():
                 mapper.ScalarVisibilityOn()
         else:
             for mapper in self.__mapper_dict.itervalues():
                 mapper.ScalarVisibilityOff()
+        self.__opacity=opacity
 
     def set_color_bar_visibility(self, color_bar_visibility):
         self.__color_bar_visibility = color_bar_visibility

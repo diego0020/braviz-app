@@ -1,5 +1,6 @@
 from __future__ import division
 import Tkinter as tk
+import functools
 import ttk
 from os.path import join as path_join
 import thread
@@ -8,8 +9,8 @@ from itertools import izip
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import  vtkTkRenderWindowInteractor
 import numpy as np
-
-from braviz.readAndFilter.read_csv import get_headers,get_column
+from itertools import groupby
+from braviz.readAndFilter.read_csv import get_headers,get_tuples_dict
 from braviz.visualization.create_lut import get_colorbrewer_lut
 import braviz
 from collections import defaultdict
@@ -90,18 +91,29 @@ def async_load_models():
 
 
 def get_data_dict(col_name,nan_value=float('nan')):
-    codes=get_column(file_name,'code')
-    data=get_column(file_name,col_name,True,nan_value=nan_value)
-    return dict(izip(codes,data))
+    return get_tuples_dict(file_name,'code',col_name,numeric=True,nan_value=nan_value)
 
-def sort_models():
-    global sort_data_dict,sort_column
-    col_idx=tab_list.curselection()
-    sort_column=tab_list.get(col_idx)
-    sort_data_dict=get_data_dict(sort_column,nan_value=float('+inf'))
-    sorted_subjects=id_list[:]
-    sorted_subjects.sort(key=lambda x:sort_data_dict.get(x,float('+inf')))
-    grid_view.sort(sorted_subjects)
+overlay_view=False
+def sort_models(overlay=False):
+    global overlay_view,sort_data_dict,sort_column
+
+    col_idx = tab_list.curselection()
+    sort_column = tab_list.get(col_idx)
+    sort_data_dict = get_data_dict(sort_column,nan_value=float('+inf'))
+    if overlay is False:
+        sorted_subjects=id_list[:]
+        sorted_subjects.sort(key=lambda x:sort_data_dict.get(x,float('+inf')))
+    else:
+        group_dict={}
+        for id_item in id_list:
+            key=sort_data_dict.get(id_item,'nan')
+            group_dict.setdefault(key,[]).append(id_item)
+        sorted_subjects=group_dict.values()
+    grid_view.sort(sorted_subjects,overlay=overlay)
+    if overlay_view != overlay:
+        overlay_view = overlay
+        color_models()
+    overlay_view = overlay
     grid_view.reset_camera()
     update_balloons()
     grid_view.set_sort_message_visibility(True)
@@ -120,7 +132,10 @@ def color_models():
     def color_fun(s):
         x=color_data_dict.get(s,float('nan'))
         return color_table.GetColor(x)
-    grid_view.set_color_function(color_fun)
+    opacity=1.0
+    if overlay_view is True:
+        opacity=0.1
+    grid_view.set_color_function(color_fun,opacity=opacity)
     grid_view.set_color_bar_visibility(True)
     grid_view.update_color_bar(color_table,color_column)
     update_balloons()
@@ -178,11 +193,13 @@ Tabular_label=tk.Label(tab_frame,text='Tabular Data')
 Tabular_label.grid(row=0,column=0,sticky='ew',pady=10)
 
 tab_operation_frame=tk.Frame(tab_frame)
+group_button=tk.Button(tab_operation_frame,text='Group by',command=functools.partial(sort_models,overlay=True))
 sort_button=tk.Button(tab_operation_frame,text='Sort by',command=sort_models)
 color_button=tk.Button(tab_operation_frame,text='Color by',command=color_models)
 
+group_button.grid(row=0,column=1,sticky='ew')
 sort_button.grid(row=0,column=0,sticky='ew')
-color_button.grid(row=0,column=1,sticky='ew')
+color_button.grid(row=0,column=2,sticky='ew')
 tab_operation_frame.columnconfigure(0,weight=1)
 tab_operation_frame.columnconfigure(1,weight=1)
 tab_operation_frame.grid(row=1,sticky='ew')
@@ -203,7 +220,7 @@ headers=get_headers(file_name)
 for h in headers:
     tab_list.insert(tk.END,h)
 
-tab_list.select_set(1,1)
+tab_list.select_set(10,10)
 
 
 tab_list_frame.grid(row=2,column=0,sticky='nsew')
