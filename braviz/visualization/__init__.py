@@ -26,6 +26,7 @@ class simpleVtkViewer():
         cam1.Elevation(80)
         cam1.Azimuth(80)
         cam1.SetViewUp(0, 0, 1)
+        self.pd_actors=[]
         print "call addPolyData or addImg to add data to the viewer\n call start to interact"
     def addPolyData(self,polyData, LUT=None):
         """Adds a poly data to the viewer, a LUT can be set. 
@@ -42,6 +43,7 @@ class simpleVtkViewer():
         self.ren.AddActor(actor)
         #self.ren.ResetCameraClippingRange()
         #self.ren.ResetCamera()
+        self.pd_actors.append(actor)
         self.ren.Render()
         return actor
     def start(self):
@@ -75,6 +77,10 @@ class simpleVtkViewer():
         #self.ren.ResetCamera()
         self.ren.Render()
         return planeWidget
+    def clear_poly_data(self):
+        for actor in self.pd_actors:
+            self.ren.RemoveViewProp(actor)
+        self.pd_actors=[]
 
 
 class persistentImagePlane(vtkImagePlaneWidget):

@@ -55,8 +55,8 @@ The path containing this structure must be set."""
                   surface must be orig pial white smoothwm inflated sphere
     
             SURF_SCALAR: Use scalar=<name> and hemi=<l|r> to get scalar data associated to a SURF.
-                         Use index='T' to get a list of available scalars, 
-                         Use lut='T' to get the associated lookUpTable for Annotations and a standard LUT for morphology
+                         Use index=True to get a list of available scalars,
+                         Use lut=True to get the associated lookUpTable for Annotations and a standard LUT for morphology
     
             FIBERS: The default space is world, use space='diff' to get fibers in diffusion space. 
                     Use waypoint=<model-name> to restrict to fibers passing through a given MODEL as indicated above.
@@ -64,7 +64,8 @@ The path containing this structure must be set."""
                     the models if the list. This can be changed by setting operation='or', to get tracts which pass through
                     any of the models.
                     Can accept color=<orient|fa|curv|y|rand> to get different color scalars
-    
+                    'Name' can be provided instead of waypoint to get custom tracts, to get a list of currently available
+                    named tracts call index=True
             TENSORS: Get an unstructured grid containing tensors at the points where they are available
                      and scalars representing the orientation of the main eigenvector
                      Use space=world to get output in world coordinates [experimental]
@@ -408,6 +409,23 @@ The path containing this structure must be set."""
         if kw.has_key('progress'):
             print "The progress argument is deprecated"
             kw['progress'].set(5)
+        if kw.get('index',False):
+            import braviz.readAndFilter.named_tracts
+            named_tract_funcs=dir(braviz.readAndFilter.named_tracts)
+            return filter(lambda x:not x.startswith('_'),named_tract_funcs)
+        if kw.has_key('name'):
+            #named tracts, special case
+            import braviz.readAndFilter.named_tracts
+            try:
+                named_tract_func=getattr(braviz.readAndFilter.named_tracts,kw['name'])
+            except AttributeError:
+                raise Exception("unknown tract name %s"%kw['name'])
+            fibers=named_tract_func(self,subj)
+            #this are in world coordinates, check if we need to change them
+            if kw.get('space','world').lower()!='world':
+                transformed_streams=self.__movePointsToSpace(fibers, kw['space'],subj)
+                return transformed_streams
+            return fibers
         if not kw.has_key('waypoint'):
             path=os.path.join(self.__root,str(subj),'camino')
             streams=self.__cached_color_fibers(subj, kw.get('color','orient'))
@@ -422,6 +440,7 @@ The path containing this structure must be set."""
             return streams_mri
         else:
             #dealing with waypoints
+
             if  kw.get('space','world').lower()=='world':
                 #Do filtering in world coordinates
                 models=kw.pop('waypoint')
@@ -444,17 +463,21 @@ The path containing this structure must be set."""
 
                 #Take advantage of buffer
                 fibers=self.get('fibers', subj,space='world',color=kw.get('color','orient'))
-                for i in xrange(fibers.GetNumberOfCells()):
-                    if i not in valid_ids:
-                        #print "marking %d for deletion"%i
-                        fibers.GetCell(i)
-                        fibers.DeleteCell(i)
-                #print "removing cells"
-                fibers.RemoveDeletedCells()
-                cleaner=vtk.vtkCleanPolyData()
-                cleaner.SetInputData(fibers)
-                cleaner.Update()
-                fibers2=cleaner.GetOutput()
+                extract_lines=vtk.vtkExtractSelectedPolyDataIds()
+                id_list=vtk.vtkIdTypeArray()
+                id_list.SetNumberOfTuples(len(valid_ids))
+                for i,cell_id in enumerate(valid_ids):
+                    id_list.SetTuple1(i,cell_id)
+                selection=vtk.vtkSelection()
+                selection_node=vtk.vtkSelectionNode()
+                selection_node.GetProperties().Set(vtk.vtkSelectionNode.CONTENT_TYPE(),vtk.vtkSelectionNode.INDICES)
+                selection_node.GetProperties().Set(vtk.vtkSelectionNode.FIELD_TYPE(),vtk.vtkSelectionNode.CELL)
+                selection.AddNode(selection_node)
+                selection_node.SetSelectionList(id_list)
+                extract_lines.SetInputData(1,selection)
+                extract_lines.SetInputData(0,fibers)
+                extract_lines.Update()
+                fibers2=extract_lines.GetOutput()
                 return fibers2
             else:
                 #space is not world

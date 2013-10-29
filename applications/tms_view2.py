@@ -73,7 +73,36 @@ precentral_actor.SetMapper(precentral_mapper)
 precentral_actor.SetVisibility(0)
 precentral_actor.GetProperty().SetOpacity(0.5)
 ren.AddActor(precentral_actor)
-#TODO img
+
+#number of fibers message
+
+number_of_fibers_message=vtk.vtkTextActor()
+ren.AddViewProp(number_of_fibers_message)
+number_of_fibers_message.SetInput('HOLA')
+text_property=number_of_fibers_message.GetTextProperty()
+text_property.SetFontSize(14)
+text_property.SetJustificationToLeft()
+text_property.SetVerticalJustificationToCentered()
+text_property.ShadowOn()
+text_property.SetColor(0,0,0)
+text_property.ShadowOn()
+number_of_fibers_message.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+number_of_fibers_message.GetPositionCoordinate().SetValue(0.01,0.5)#number of fibers message
+
+#orientation message
+
+orientation_message=vtk.vtkTextActor()
+ren.AddViewProp(orientation_message)
+orientation_message.SetInput('HOLA')
+text_property=orientation_message.GetTextProperty()
+text_property.SetFontSize(14)
+text_property.SetJustificationToRight()
+text_property.SetVerticalJustificationToCentered()
+text_property.ShadowOn()
+text_property.SetColor(0,0,0)
+text_property.ShadowOn()
+orientation_message.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+orientation_message.GetPositionCoordinate().SetValue(0.99,0.5)
 
 
 #________TMS_DATA_________________
@@ -104,12 +133,16 @@ def get_img(subject,img_type,side='r'):
         precentral_actor.SetVisibility(0)
         brain_stem_actor.SetVisibility(0)
         try:
-            fibers = reader.get('fibers', subject, space='talairach')
+            fibers = reader.get('fibers', subject, space='talairach',operation='or',
+                            waypoint=['CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior','CC_Posterior'])
         except:
             fibers_actor.SetVisibility(0)
+            orientation_message.SetVisibility(0)
         else:
             fibers_mapper.SetInputData(fibers)
             fibers_actor.SetVisibility(1)
+            orientation_message.SetVisibility(1)
+            orientation_message.SetInput('Posterior')
         if img_type != previous_img_type:
             #reset camera
             cam = ren.GetActiveCamera()
@@ -117,16 +150,17 @@ def get_img(subject,img_type,side='r'):
             cam.SetViewUp(1, 0, 0)
             cam.SetFocalPoint(-0.00880438, -6.19902, 5.5735)
             ren.ResetCameraClippingRange()
-        render_widget.Render()
     elif img_type=='motor':
         try:
-            fibers = reader.get('fibers', subject, space='talairach',waypoint=['ctx-%ch-precentral'%side,'Brain-Stem'])
+            #fibers = reader.get('fibers', subject, space='talairach',waypoint=['ctx-%ch-precentral'%side,'Brain-Stem'])
+            fibers = reader.get('fibers', subject, space='talairach',name='cortico_spinal_%c'%side)
             brain_stem = reader.get('model', current_subject, space='talairach',name='Brain-Stem')
             precentral = reader.get('model', current_subject, space='talairach',name='ctx-%ch-precentral'%side)
         except:
             fibers_actor.SetVisibility(0)
             precentral_actor.SetVisibility(0)
             brain_stem_actor.SetVisibility(0)
+            orientation_message.SetVisibility(0)
         else:
             fibers_mapper.SetInputData(fibers)
             precentral_mapper.SetInputData(precentral)
@@ -134,6 +168,8 @@ def get_img(subject,img_type,side='r'):
             fibers_actor.SetVisibility(1)
             precentral_actor.SetVisibility(1)
             brain_stem_actor.SetVisibility(1)
+            orientation_message.SetVisibility(1)
+            orientation_message.SetInput('Right')
         if img_type != previous_img_type:
             #reset camera
             cam = ren.GetActiveCamera()
@@ -141,11 +177,16 @@ def get_img(subject,img_type,side='r'):
             cam.SetViewUp(0, 0.5, 1)
             cam.SetFocalPoint(1.8137, -10.6985, -0.800431)
             ren.ResetCameraClippingRange()
-        render_widget.Render()
     else:
         print "not supported yet"
         fibers_actor.SetVisibility(0)
+    if fibers_actor.GetVisibility():
+        number_of_fibers_message.SetVisibility(1)
+        number_of_fibers_message.SetInput('%d\nFibers'%fibers.GetNumberOfLines())
+    else:
+        number_of_fibers_message.SetVisibility(0)
     previous_img_type=img_type
+    render_widget.Render()
 
 
 def set_data(event=None):

@@ -11,7 +11,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 
 import braviz.readAndFilter
 
-
+#TODO Use vtkSelectPolyData to select a sub region
 root = tk.Tk()
 root.withdraw()
 
