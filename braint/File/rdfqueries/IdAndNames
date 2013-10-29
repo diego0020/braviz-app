@@ -1,0 +1,15 @@
+PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX vcard:<http://www.w3.org/2001/vcard-rdf/3.0#>
+PREFIX dcterms:<http://purl.org/dc/terms/>
+PREFIX braint:<http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#>
+SELECT  ?Evaluation ?Test ?TestName ?SubTest ?SubTestName ?SubSubTest ?SubSubTestName
+WHERE { 
+  ?X braint:Evaluation_Name ?Evaluation .
+  OPTIONAL {?X braint:hasTest ?Test}
+  OPTIONAL {?Test braint:Test_Name ?TestName} .   
+  OPTIONAL {?Test braint:hasSubTest ?SubTest} .
+  OPTIONAL {?SubTest braint:SubTest_Name ?SubTestName} .
+  OPTIONAL {?SubTest braint:hasSubSubTest ?SubSubTest. 
+  OPTIONAL {?SubSubTest braint:SubSubtest_Name ?SubSubTestName}} .
+}

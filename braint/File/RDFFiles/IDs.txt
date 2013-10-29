@@ -1,0 +1,149 @@
+CLinical: CLINI
+
+General information:GENER
+clinical information: CLINI
+
+UBIC3: UBICA
+GENERO: GENDE
+PESNACER: BIWEI
+nivm1: EDLEM
+nivp1: EDLEF
+OFTALMO: OPHTA
+cdps12: DPSQT
+cde12: DEXQT
+cdcm12: DOMQT
+cdal12: DALQT
+cdl12: DLOQT
+cde6: DEXQS
+cdcm6: DOMQS
+cdau6:DALQS
+cdps6: DPSQS
+cdl6:DLOQS
+cd6:DEVQS
+cd12:DEVQT
+Hareprobado: SCHFA
+Familiograma: TYPFA
+Pesoactual: ACTWE
+Tallaactual: ACTHE
+lat:LATER
+examensicomotor6meses: PSMOS
+examenneurosicomotor6meses: NEMOS
+examen6mesesneuro: NEURS
+examenneurosicoa1ano: NEMOT
+sensorial: SENSP
+
+funcionalidad: DAYFU :functional daily living skills
+exameneuropediatras: neuropediatric exam: NEUPEda
+vision: VISIO : Vision
+audicion: AUDIT : Audition
+TDHA: TDHA: Hyperactivity
+epilepsia: EPILE Epilepsia
+nutricion: NUTRI: Nutrition
+difhabla: SPEDE difucultad para hablar
+neuroresum: ABRNER :examen neurologico resumido
+educafamilia: Educacion familia
+
+
+Cognition: COGNI
+
+Wechsler Intelligence Scale for Children: WISC
+
+score Verbal Comprehension:VCIIQ
+Perceptual Reasoning:PRIIQ
+score Working Memory:WMIIQ
+Processing Speed:PSIIQ
+composite Full Score:FSIQ .
+
+Neurosensorial:NEURO
+Beery-Buktenica Developmental Test of Visual-Motor Integration:VMITE
+
+Visual_StS Visual perception:VISPE
+Motor_StS Motor coordination:MOTCO
+VMI_StS Visual Motor Integration:VMI
+
+Structure and maturation of the brain:STRMA
+
+Diffusion Tensor Imaging:DTI
+Magnetic Resonance Imaging:MRI
+Transcranial Magnetic Stimulation:TMS
+Functional magnetic resonance imaging:fMRI
+
+
+FA:Fractional Anisotropy
+
+Total Number Fibers:TONUM
+Quality: QUALY
+Length: LENGT
+
+FA Cortico espinales: CESFA
+FA corpus callosum: CORFA
+FA Hippocampus: HIPFA
+FA Intern Capsule: ICAFA 
+FA Viso Motora: VIMFA
+
+Total_Number_CC: CORTN
+Total_Number_Hippo:HIPTN
+Total_Number_Corti_Spina: CESTN
+Total_Number_Inter_Capsu: ICATN
+Total_Number_Visomo: VIMTN
+
+Quality_CC :CORQU
+Quality_Hippo: HIPQU
+Quality_Corti_Spina: CESQU
+Quality_Inter_Capsu: ICAQU				  
+Quality_Visomo: VIMQU
+
+Length_CC: CORLE
+Length_Hippo: HIPLE
+Length_Corti_Spina: CESLE
+Length_Inter_Capsu: ICALE
+Length_Visomo: VIMLE 
+
+Size: SIZE 
+Volume: VOLUM
+Surface: SURFA
+
+Size_Corpus_Callo: CORSI
+Size_Cerebel: CERSI
+Size_Hippocamp: HIPSI
+Size_CCaudate_Nucle: CANSI
+Size_CGrey_Matter: GMASI
+Size_White_Matter: WMASI
+Size_Lateral_Ventric: LVESI 
+Size_Grey_Nucle: GNUSI
+Size_Entor_Cort: ECOSI
+
+Volume_Corpus_Callo: CORVO
+Volume_Cerebel: CERVO
+Volume_Hippocamp: HIPVO
+Volume_CCaudate_Nucle: CANVO 
+Volume_CGrey_Matter: GMAVO 
+Volume_White_Matter: WMAVO
+Volume_Lateral_Ventric:  LVEVO
+Volume_Grey_Nucle: GNUVO
+Volume_Entor_Cort: ECOVO
+
+Surface_Corpus_Callo: CORSU
+Surface_Cerebel: CERSU
+Surface_Hippocamp: HIPSU
+Surface_CCaudate_Nucle: CANSU
+Surface_CGrey_Matter: GMASU 
+Surface_White_Matter: WMASU 
+Surface_Lateral_Ventric: LVESU
+Surface_Grey_Nucle: GNUSU
+Surface_Entor_Cort: ECOSU 
+
+Velocity: VELOC
+Time: TIME
+
+Precision_Grip: PREGR
+Power_Grip: POWGR
+Unilat_Manual_Verb_Rep: UMVRE
+Bilat_Manual_Verb_Rep: BMVRE
+Verb_Foot_Rep: VFORE
+
+Java_Vis_1: JAVI1
+Java_Vis_2: JAVI2
+Java_Vis_3: JAVI3
+Python_Vis_1:PYVI1
+

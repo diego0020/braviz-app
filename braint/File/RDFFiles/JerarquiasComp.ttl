@@ -1,0 +1,546 @@
+@prefix : <http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix braint: <http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#> .
+@prefix radlex: <http://bioontology.org/projects/ontologies/radlex/radlexOwl#> .
+
+:CLINI rdf:type braint:Evaluation ,
+                    owl:NamedIndividual ;
+           braint:Evaluation_Name "Clinical" ;
+           braint:hasTest :GENER ,
+						  :CLINI .
+		   		   
+:GENER rdf:type braint:Test ,
+               owl:NamedIndividual ;      
+      braint:Test_Name "General Information" ;
+      braint:hasSubTest :UBICA,
+						:GENDE,
+						:BIWEI,
+						:EDLEM,
+						:EDLEF,
+						:SCHFA,
+                        :TYPFA,
+						:ACTWE,
+						:LATER,
+						:ACTHE .
+						
+:UBICA rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Localization in 3 different study groups" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :BIWEI ;
+		braint:isMentionedIn :REASONER;
+		braint:SubTest_Description "missing" .
+		
+:GENDE rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Gender" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "missing" .
+
+:BIWEI rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Weight at Birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :UBICA ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .
+		
+:EDLEM rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Level Education of Mother" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "missing" .
+		
+:EDLEF rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Level Education of Father" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "missing" .
+
+:SCHFA rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Scholar Failure" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :FSIQ ;
+		braint:isMentionedIn :REASONER;
+		braint:SubTest_Description "missing" .		
+
+:TYPFA rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Type of Family" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "missing" .	
+
+:LATER rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Laterality" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "missing" .		
+
+:ACTWE rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Actual Weight" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :ACTHE ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .
+
+:ACTHE rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Actual Height" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :ACTWE ;
+		braint:isMentionedIn :REASONER ;		
+		braint:SubTest_Description "missing" .		
+
+:CLINI rdf:type braint:Test ,
+               owl:NamedIndividual ;      
+      braint:Test_Name "General Information" ;
+      braint:hasSubTest :OPHTA,
+						:DPSQT,
+						:DEXQT,
+						:DOMQT,
+						:DALQT,
+                        :DLOQT,
+						:DEXQS,
+						:DOMQS,
+						:DALQS,
+						:DPSQS,
+						:DLOQS,
+						:DEVQS,
+						:DEVQT,
+						:PSMOS,
+						:NEMOS,
+						:NEURS,
+						:NEMOT,
+						:SENSP .
+						
+:OPHTA rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "ophthalmology exam" ;
+		braint:SubTest_DataType "Ordinal" ;
+		owl:sameAs:  radlex:RID13495 ; 
+		braint:SubTest_Description "missing" .
+
+:DPSQT rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Quotient of Development Personal-Social at twelfth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DPSQS ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .
+
+:DEXQT rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Execution Development Quotient at twelfth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DEXQS ;
+		braint:isMentionedIn :REASONER;
+		braint:SubTest_Description "missing" .
+		
+:DOMQT rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Oculo-Manual Coordination Development Quotient at twelfth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DOMQS ;
+		braint:isMentionedIn :REASONER ;		
+		braint:SubTest_Description "missing" .		
+		
+:DALQT rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Audition and Language Development Quotient at twelfth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DALQS ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .
+
+:DLOQT rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Locomotor Development Quotient at twelfth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DLOQS ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .
+		
+:DEXQS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Execution Development Quotient at sixth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DEXQS ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .
+		
+:DOMQS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Oculo-Manual Coordination Development Quotient at sixth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DOMQT ;
+		braint:isMentionedIn :REASONER ;			
+		braint:SubTest_Description "missing" .
+
+:DALQS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Audition and Language Development Quotient at sixth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DALQT ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .
+
+:DPSQS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Quotient of Development Personal-Social at sixth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DPSQT ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .		
+
+:DLOQS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Locomotor Development Quotient at sixth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DLOQT ;
+		braint:isMentionedIn :REASONER ;
+		braint:SubTest_Description "missing" .		
+
+:DEVQS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Development Quotient at sixth month of birth" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :DEVQT ;
+		braint:isMentionedIn :REASONER ;	
+		braint:SubTest_Description "missing" .	
+
+:DEVQT rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Development Quotient at twelfth month of birth" ;
+		braint:SubTest_DataType "Nominal" ;
+		braint:isRelatedWith :DEVQS ;
+		braint:isMentionedIn :REASONER ;					
+		braint:SubTest_Description "missing" .	
+
+:PSMOS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Psychomotor Exam at sixth month of birth" ;
+		braint:SubTest_DataType "Nominal" ;
+		braint:SubTest_Description "missing" .
+
+:NEMOS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Neuro-Psychomotor Exam at sixth month of birth" ;
+		braint:SubTest_DataType "Nominal" ;
+		braint:isRelatedWith :NEMOT ;
+		braint:isMentionedIn :REASONER ;	
+		braint:SubTest_Description "missing" .		
+		
+:NEURS rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Neurological Exam at sixth month of birth" ;
+		braint:SubTest_DataType "Nominal" ;
+		braint:SubTest_Description "missing" .
+		
+:NEMOT rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Neuro-Psychomotor Exam at twelfth month of birth" ;
+		braint:SubTest_DataType "Nominal" ;
+		braint:isRelatedWith :NEMOS ;
+		braint:isMentionedIn :REASONER ;	
+		braint:SubTest_Description "missing" .	
+
+:SENSP rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Sensorial Problems" ;
+		braint:SubTest_DataType "Nominal" ;
+		braint:SubTest_Description "missing" .			
+		
+
+:COGNI rdf:type braint:Evaluation ,
+                    owl:NamedIndividual ;
+           braint:Evaluation_Name "Cognition" ;
+           braint:hasTest :WISC .
+		   		   
+:WISC rdf:type braint:Test ,
+               owl:NamedIndividual ;      
+      braint:Test_Name "Wechsler Intelligence Scale for Children" ;
+      braint:hasSubTest :VCIIQ,
+						:PRIIQ,
+						:WMIIQ,
+						:PSIIQ,
+						:FSIQ .
+								
+:VCIIQ rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "score Verbal Comprehension" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "is an overall measure of verbal concept formation (the child's ability to verbally reason) and is influenced by knowledge learned from the environment (Wikipedia)" .
+
+:PRIIQ rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Perceptual Reasoning" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "...Missing..." .
+		
+:WMIIQ rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "score Working Memory" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "active maintenance and flexible updating of goal/task relevant information (items, goals, strategies, etc.) in a form that resists interference but has limited capacity. These representations may involve flexible binding of representations, may be characterized by the absence of external support for the internally maintained representations, and are frequently temporary due to ongoing interference (Cognitive Atlas)" .
+
+:PSIIQ rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Processing Speed" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "active maintenance and flexible updating of goal/task relevant information (items, goals, strategies, etc.) in a form that resists interference but has limited capacity. These representations may involve flexible binding of representations, may be characterized by the absence of external support for the internally maintained representations, and are frequently temporary due to ongoing interference (Cognitive Atlas)" .
+
+:FSIQ rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Full Score" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "composite Full Score" ;
+		braint:isRelatedWith :ECOSI ;
+		braint:isMentionedIn :SKRA2012;
+		braint:isRelatedWith :SCHFA ;
+		braint:isMentionedIn :REASONER .
+		
+
+:NEURO rdf:type braint:Evaluation ,
+                         owl:NamedIndividual ;
+                braint:Evaluation_Name "Neurosensorial" ;
+                braint:hasTest :VMITE .
+
+:VMITE rdf:type braint:Test ,
+				owl:NamedIndividual ;
+				braint:Test_Name "Beery-Buktenica Developmental Test of Visual-Motor Integration" ;
+				braint:hasSubTest :VISPE,
+								  :MOTCO,
+								  :VMI .
+:MOTCO rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Motor coordination " ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "Ability to interpret information from visible light reaching the eye. (Cognitive Atlas)" .
+								  								
+:VISPE rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Visual perception" ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "The ability to perceive or understand what is being seen; the integration of an image with an idea of what it represents (Children's Health)" .
+
+:VMI rdf:type braint:SubTest ,
+                         owl:NamedIndividual ;
+		braint:SubTest_Name "Visual Motor Integration " ;
+		braint:SubTest_DataType "Ordinal" ;
+		braint:SubTest_Description "Consists of coordinating visual perceptual skills together with gross-motor movement and fine-motor movement. (Vision and Learning)" .
+
+
+:STRMA rdf:type braint:Evaluation ,
+                                   owl:NamedIndividual ;
+                          braint:Evaluation_Name "Structure and maturation of the brain" ;
+                          braint:hasTest :DTI ,
+										 :MRI ,
+										 :TMS ,
+										 :fMRI .		
+
+:DTI rdf:type braint:Test ,
+              owl:NamedIndividual ;
+				braint:Test_Name "Diffusion Tensor Imaging" ;
+				braint:hasSubTest :FA,
+								  :TONUM,
+								  :QUALY,
+								  :LENGT .
+								  
+:FA rdf:type braint:SubTest ,
+             owl:NamedIndividual ;
+			braint:SubTest_Name " Fractional Anisotropy" ;
+			braint:SubTest_DataType "Ordinal" ;
+			braint:SubTest_Description "Is a scalar value between zero and one that describes the degree of anisotropy of a diffusion process. A value of zero means that diffusion is isotropic, i.e. it is unrestricted (or equally restricted) in all directions. A value of one means that diffusion occurs only along one axis and is fully restricted along all other directions. FA is a measure often used in diffusion imaging where it is thought to reflect fiber density, axonal diameter, and myelination in white matter. The FA is an extension of the concept of eccentricity of conic sections in 3 dimensions, normalized to the unit range. (Wikipedia)" ;
+			braint:hasVisualization :JAVI1 ;
+			braint:hasSubSubTest  :CORFA,
+								  :HIPFA,
+								  :CESFA,
+								  :ICAFA,
+								  :VIMFA .
+								  
+:CORFA rdf:type braint:SubSubTest ,
+             owl:NamedIndividual ;
+			braint:SubSubtest_Name " Fractional Anisotropy in Corpus Callosum" ;
+			braint:SubSubTest_DataType "Ordinal" ;
+			braint:SubSubtest_Description "Is a scalar value between zero and one that describes the degree of anisotropy of a diffusion process. A value of zero means that diffusion is isotropic, i.e. it is unrestricted (or equally restricted) in all directions. A value of one means that diffusion occurs only along one axis and is fully restricted along all other directions. FA is a measure often used in diffusion imaging where it is thought to reflect fiber density, axonal diameter, and myelination in white matter. The FA is an extension of the concept of eccentricity of conic sections in 3 dimensions, normalized to the unit range. (Wikipedia)" ;
+			braint:hasVisualization :JAVI1 .
+			
+:TONUM rdf:type braint:SubTest ,
+             owl:NamedIndividual ;
+			braint:SubTest_Name " Total number" ;
+			braint:SubTest_DataType "Ordinal" ;
+			braint:SubTest_Description "Total number of fibers in a specific brain structure. (me)" ;
+			braint:hasVisualization :JAVI1 ;
+			braint:hasVisualization :JAVI2 ;
+			braint:hasSubSubTest  :CORTN,
+								  :HIPTN,
+								  :CESTN,
+								  :ICATN,
+								  :VIMTN .
+
+:QUALY rdf:type braint:SubTest ,
+             owl:NamedIndividual ;
+			braint:SubTest_Name " Fiber Quality" ;
+			braint:SubTest_DataType "Ordinal" ;
+			braint:SubTest_Description "missing" ;
+			braint:hasVisualization :JAVI3 ;
+			braint:hasSubSubTest  :CORQU,
+								  :HIPQU,
+								  :CESQU,
+								  :ICAQU,
+								  :VIMQU .
+								  
+:LENGT rdf:type braint:SubTest ,
+             owl:NamedIndividual ;
+			braint:SubTest_Name " Fiber length" ;
+			braint:SubTest_DataType "Ordinal" ;
+			braint:SubTest_Description "Fiber Length. (me)" ;
+			braint:hasVisualization :JAVI3 ;
+			braint:hasVisualization :PYVI1 ;
+			braint:hasSubSubTest  :CORLE,
+								  :HIPLE,
+								  :CESLE,
+								  :ICALE,
+								  :VIMLE .
+								  
+:MRI rdf:type braint:Test ,
+              owl:NamedIndividual ;
+				braint:Test_Name "Magnetic Resonance Imaging" ;
+				braint:hasSubTest :SIZE ,
+								  :VOLUM ,
+								  :SURFA .
+							  			  
+
+:SIZE rdf:type braint:SubTest ,
+             owl:NamedIndividual ;
+			braint:SubTest_Name "Size" ;
+			braint:SubTest_DataType "Ordinal" ;
+			braint:SubTest_Description "missing" ;
+			braint:hasVisualization :JAVI1 ;
+			braint:hasSubSubTest  :CORSI ,
+								  :CERSI ,
+								  :HIPSI ,
+								  :CANSI ,
+								  :GMASI ,
+								  :WMASI ,
+								  :LVESI ,
+								  :GNUSI ,
+								  :ECOSI .
+								  
+:VOLUM rdf:type braint:SubTest ,
+             owl:NamedIndividual ;
+			braint:SubTest_Name "Volume" ;
+			braint:SubTest_DataType "Ordinal" ;
+			braint:SubTest_Description "missing" ;
+			braint:hasVisualization :JAVI1 ;
+			braint:hasSubSubTest  :CORVO ,
+								  :CERVO ,
+								  :HIPVO ,
+								  :CANVO ,
+								  :GMAVO ,
+								  :WMAVO ,
+								  :LVEVO ,
+								  :GNUVO ,
+								  :ECOVO .
+
+:Surface rdf:type braint:SubTest ,
+             owl:NamedIndividual ;
+			braint:SubTest_Name "Surface" ;
+			braint:SubTest_DataType "Ordinal" ;
+			braint:SubTest_Description "missing" ;
+			braint:hasVisualization :JAVI1 ;
+			braint:hasSubSubTest  :CORSU ,
+								  :CERSU ,
+								  :HIPSU ,
+								  :CANSU ,
+								  :GMASU ,
+								  :WMASU ,
+								  :LVESU ,
+								  :GNUSU ,
+								  :ECOSU .
+								  
+:ECOSI rdf:type braint:SubSubTest ,
+             owl:NamedIndividual ;
+			braint:SubSubtest_Name " Size of Enthorinal Cortex" ;
+			braint:SubSubTest_DataType "Ordinal" ;
+			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:hasVisualization :JAVI1 ;
+			braint:isRelatedWith :FSIQ ;
+			braint:isMentionedIn :SKRA2012 .
+
+	
+:TMS rdf:type braint:Test ,
+              owl:NamedIndividual ;
+				braint:Test_Name " Transcranial Magnetic Stimulation" ;
+				braint:hasSubTest :VELOC ,
+								  :TIME .
+
+:fMRI rdf:type braint:Test ,
+               owl:NamedIndividual ;
+		braint:Test_Name "Functional magnetic resonance imaging" ;
+		braint:hasSubTest :PREGR , 
+						  :POWGR ,
+						  :UMVRE ,
+						  :BMVRE ,
+						  :VFORE .
+						  					 
+:JAVI1 rdf:type braint:Visualization ,
+                     owl:NamedIndividual ;
+            braint:Visualization_Name "Asuviz" ;
+			braint:Visualization_Speciality "Radiology" .
+			
+:JAVI2 rdf:type braint:Visualization ,
+                     owl:NamedIndividual ;
+            braint:Visualization_Name "StarPlot" ;
+			braint:Visualization_Speciality "Psychologist" .			
+
+:JAVI3 rdf:type braint:Visualization ,
+                     owl:NamedIndividual ;
+            braint:Visualization_Name "Parallel Coordinates" .	
+			
+:PYVI1 rdf:type braint:Visualization ,
+                     owl:NamedIndividual ;
+            braint:Visualization_Name "Pytanic" .				
+
+:SKRA2012 rdf:type braint:Publication ,
+                     owl:NamedIndividual ;
+            braint:Publication_Title "Entorhinal cortical thinning affects perceptual and cognitive functions in adolescents born preterm with very low birth weight (VLBW)" ;
+			braint:Publication_Author "Jon Skranes, Gro C.C. Løhaugen, Kari Anne I. Evensen, Marit S. Indredavik, Olav Haraldseth, Anders M. Dale, Ann-Mari Brubakk, Marit Martinussen" ;
+			braint:Publication_KeyWords "VLBW, Preterm birth, Brain, Cortical thickness, Entorhinal cortex, VMI, WISC-III, IQ, Executive function" ;
+			braint:Publication_Year "2012" ;
+			braint:hasAReferenceOf :FSIQ ;
+			braint:hasAReferenceOf :ECOSI .
+
+
+:REASONER rdf:type braint:Publication ,
+                     owl:NamedIndividual ;
+            braint:Publication_Title "Reasoner Inference" ;
+			braint:Publication_Author "braInt" ;
+			braint:Publication_KeyWords "Similar names" ;
+			braint:Publication_Year "2013" ;
+			braint:hasAReferenceOf :BIWEI ,
+								   :UBICA ;
+			braint:hasAReferenceOf :SCHFA ,
+								   :FSIQ ;
+			braint:hasAReferenceOf :ACTWE ,
+                                   :ACTHE ;
+			braint:hasAReferenceOf :DEXQT ,
+                                   :DEXQS ;
+			braint:hasAReferenceOf :DLOQT ,
+                                   :DLOQS ;
+			braint:hasAReferenceOf :DALQT ,
+                                   :DALQS ;
+			braint:hasAReferenceOf :DPSQT ,
+                                   :DPSQS ;
+			braint:hasAReferenceOf :DOMQT ,
+                                   :DOMQS ;
+			braint:hasAReferenceOf :DEVQT ,
+                                   :DEVQS ;
+			braint:hasAReferenceOf :NEMOT ,
+                                   :NEMOS .

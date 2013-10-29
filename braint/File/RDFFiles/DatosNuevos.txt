@@ -1,0 +1,44 @@
+UBIC3: UBICA
+GENERO: GENDE
+PESNACER: BIWEI
+nivm1: EDLEM
+nivp1: EDLEF
+OFTALMO: OPHTA
+cdps12: DPSQT
+cde12: DEXQT
+cdcm12: DOMQT
+cdal12: DALQT
+cdl12: DLOQT
+cde6: DEXQS
+cdcm6: DOMQS
+cdau6:DALQS
+cdps6: DPSQS
+cdl6:DLOQS
+cd6:DEVQS
+cd12:DEVQT
+Hareprobado: SCHFA
+Familiograma: TYPFA
+Pesoactual: ACTWE
+Tallaactual: ACTHE
+examensicomotor6meses: PSMOS
+examenneurosicomotor6meses: NEMOS
+examen6mesesneuro: NEURS
+examenneurosicoa1ano: NEMOT
+sensorial: SENSP
+
+funcionalidad: DAYFU :functional daily living skills
+exameneuropediatras: neuropediatric exam: NEUPEda
+vision: VISIO : Vision
+audicion: AUDIT : Audition
+TDHA: TDHA: Hyperactivity
+epilepsia: EPILE Epilepsia
+nutricion: NUTRI: Nutrition
+difhabla: SPEDE difucultad para hablar
+neuroresum: ABRNER :examen neurologico resumido
+educafamilia: Educacion familia
+
+
+
+
+
+

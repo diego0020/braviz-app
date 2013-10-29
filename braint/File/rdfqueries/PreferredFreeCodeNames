@@ -1,0 +1,8 @@
+PREFIX radlex: <http://bioontology.org/projects/ontologies/radlex/radlexOwl#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+SELECT ?codes ?PreferredNames ?freeSurfer
+WHERE {
+    ?codes radlex:Preferred_name ?PreferredNames.
+    ?codes radlex:Freesurfer ?freeSurfer.
+}
+   

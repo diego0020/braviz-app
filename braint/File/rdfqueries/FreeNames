@@ -1,0 +1,1507 @@
+RID21022#anterior ramus of right third lumbar nerve#Left-Accumbens-area
+RID18111#nerve to right distal radio-ulnar joint#fimbria
+RID17069#white matter of isthmus of right cingulate gyrus#wm-rh-G_cingulate-Isthmus
+RID17069#white matter of isthmus of right cingulate gyrus#wm-rh-isthmuscingulate
+RID17069#white matter of isthmus of right cingulate gyrus#wm-lh-medialorbitofrontal
+RID17050#white matter of right middle occipital gyrus#wm-rh-G_occipital_middle
+RID17050#white matter of right middle occipital gyrus#wm-rh-S_frontal_middle
+RID17050#white matter of right middle occipital gyrus#wm-rh-G_frontal_middle
+RID17163#middle white layer of right superior colliculus#wm-lh-rostralanteriorcingulate
+RID24405#gray matter of inferior temporal gyrus#inferiortemporal
+RID17112#white matter of superior part of left precentral gyrus#wm-lh-S_precentral-Superior-part
+RID17112#white matter of superior part of left precentral gyrus#wm-rh-G_parietal_inferior-Supramarginal_part
+RID17112#white matter of superior part of left precentral gyrus#wm-rh-supramarginal
+RID15698#left amygdala#Left-Amygdala
+RID15698#left amygdala#Left-Amygdala
+RID25409#gray matter of opercular part of right inferior frontal gyrus#ctx-rh-G_frontal_inf-Opercular_part
+RID25409#gray matter of opercular part of right inferior frontal gyrus#ctx-rh-parsopercularis
+RID20308#trunk of posterior branch of lateral femoral cutaneous nerve#ctx-rh-S_temporal_superior
+RID20308#trunk of posterior branch of lateral femoral cutaneous nerve#ctx-rh-superiortemporal
+RID20312#trunk of right femoral nerve#ctx-lh-middletemporal
+RID20312#trunk of right femoral nerve#ctx-lh-G_temporal_middle
+RID25413#gray matter of orbital part of left inferior frontal gyrus#ctx-lh-parsorbitalis
+RID25413#gray matter of orbital part of left inferior frontal gyrus#ctx-lh-G_frontal_inf-Orbital_part
+RID24407#gray matter of left inferior temporal gyrus#ctx-lh-S_temporal_inferior
+RID24407#gray matter of left inferior temporal gyrus#ctx-lh-G_temporal_inferior
+RID24407#gray matter of left inferior temporal gyrus#ctx-lh-inferiortemporal
+RID14083#ventral part of precentral gyrus#BA4a
+RID14083#ventral part of precentral gyrus#BA4a
+RID24442#gray matter of left superior occipital gyrus#ctx-lh-G_occipital_superior
+RID17199#white matter of alar central lobule#wm-lh-caudalmiddlefrontal
+RID21021#anterior ramus of third lumbar nerve#Right-Accumbens-area
+RID16883#right half of corpus callosum#wm-rh-Corpus_callosum
+RID16883#right half of corpus callosum#wm-rh-corpuscallosum
+RID20328#trunk of pectineus branch of right femoral nerve#transversetemporal
+RID22707#medial branch of posterior ramus of twelfth thoracic nerve to longissimus thoracis#ctx-rh-parsorbitalis
+RID22707#medial branch of posterior ramus of twelfth thoracic nerve to longissimus thoracis#ctx-rh-G_frontal_inf-Orbital_part
+RID17124#white matter of right uncus#wm-rh-inferiorparietal
+RID17016#white matter of right supramarginal gyrus#wm-rh-G_parietal_inferior-Supramarginal_part
+RID17016#white matter of right supramarginal gyrus#wm-rh-supramarginal
+RID17085#white matter of right accessory short gyrus#wm-lh-S_temporal_superior
+RID17085#white matter of right accessory short gyrus#wm-lh-superiortemporal
+RID24396#gray matter of parahippocampal gyrus#parahippocampal
+RID17036#white matter of left superior occipital gyrus#wm-lh-G_occipital_superior
+RID20311#trunk of femoral nerve#ctx-rh-G_temporal_middle
+RID20311#trunk of femoral nerve#ctx-rh-middletemporal
+RID24426#gray matter of left postcentral gyrus#ctx-lh-G_postcentral
+RID24426#gray matter of left postcentral gyrus#ctx-lh-S_postcentral
+RID24426#gray matter of left postcentral gyrus#ctx-lh-postcentral
+RID17178#white matter of metencephalon#wm-rh-G_insular_short
+RID17182#white matter of cerebellum#Left-Cerebellum-White-Matter
+RID26828#gray matter of dorsal part of right precentral gyrus#ctx-rh-S_precentral-Superior-part
+RID20275#trunk of communicating branch of right iliohypogastric nerve with subcostal nerve#ctx-lh-G_precentral
+RID20275#trunk of communicating branch of right iliohypogastric nerve with subcostal nerve#ctx-lh-precentral
+RID20365#trunk of anterior branch of obturator nerve#ctx-lh-G_occipital_middle
+RID17013#white matter of right postcentral gyrus#wm-rh-postcentral
+RID17013#white matter of right postcentral gyrus#wm-rh-S_postcentral
+RID17013#white matter of right postcentral gyrus#wm-rh-G_postcentral
+RID17143#white matter of right occipital pole#wm-rh-Pole_occipital
+RID17143#white matter of right occipital pole#wm-rh-G_and_S_occipital_inferior
+RID17071#white matter of paraterminal gyrus#wm-rh-S_orbital_lateral
+RID17071#white matter of paraterminal gyrus#wm-rh-lateralorbitofrontal
+RID17071#white matter of paraterminal gyrus#wm-rh-G_frontomarginal
+RID6518#amygdala#Amygdala
+RID6518#amygdala#Amygdala
+RID24520#left subiculum#Left-subiculum
+RID13923#right lateral orbital gyrus#Right-lOg
+RID13923#right lateral orbital gyrus#Right-lOg
+RID13977#opercular part of right inferior frontal gyrus#Right-Operculum
+RID13977#opercular part of right inferior frontal gyrus#Right-Operculum
+RID13981#orbital part of left inferior frontal gyrus#Left-F3orb
+RID13981#orbital part of left inferior frontal gyrus#Left-F3orb
+RID24428#gray matter of right supramarginal gyrus#ctx-rh-G_parietal_inferior-Supramarginal_part
+RID24428#gray matter of right supramarginal gyrus#ctx-rh-supramarginal
+RID26609#polar part of left superior temporal gyrus#ctx-lh-G_temp_sup-Planum_polare
+RID20330#trunk of sartorius branch of femoral nerve#ctx-lh-transversetemporal
+RID20384#trunk of muscular branch of left obturator nerve#ctx-lh-isthmuscingulate
+RID20384#trunk of muscular branch of left obturator nerve#ctx-lh-G_cingulate-Isthmus
+RID24369#gray matter of right straight gyrus#ctx-rh-G_rectus
+RID17048#white matter of left inferior occipital gyrus#wm-lh-G_and_S_occipital_inferior
+RID17048#white matter of left inferior occipital gyrus#wm-lh-G_frontal_superior
+RID17048#white matter of left inferior occipital gyrus#wm-lh-superiorfrontal
+RID17048#white matter of left inferior occipital gyrus#wm-lh-S_frontal_superior
+RID13496#left thalamus#Left-Thalamus
+RID13496#left thalamus#Left-Thalamus
+RID24373#gray matter of left inferior frontal gyrus#ctx-lh-S_frontal_inferior
+RID20307#trunk of anterior branch of left lateral femoral cutaneous nerve#superiortemporal
+RID17009#white matter of right transverse temporal gyrus#wm-rh-S_temporal_transverse
+RID17009#white matter of right transverse temporal gyrus#wm-rh-transversetemporal
+RID26738#cortex of left cerebral hemisphere#Left-Cerebral-Cortex
+RID17106#white matter of rostral part of left middle frontal gyrus#wm-lh-rostralmiddlefrontal
+RID17106#white matter of rostral part of left middle frontal gyrus#wm-lh-transversetemporal
+RID17106#white matter of rostral part of left middle frontal gyrus#wm-lh-S_temporal_transverse
+RID17067#white matter of left anterior cingulate gyrus#wm-lh-rostralanteriorcingulate
+RID13870#right insula#Right-Insula
+RID13870#right insula#Right-Insula
+RID18017#fimbria of left hippocampus#Left-fimbria
+RID16985#white matter of right parahippocampal gyrus#wm-rh-G_occipit-temp_med-Parahippocampal_part
+RID16985#white matter of right parahippocampal gyrus#wm-rh-parahippocampal
+RID24444#gray matter of right lateral occipital gyrus#ctx-rh-lateraloccipital
+RID16952#white matter of left superior frontal gyrus#wm-lh-G_frontal_superior
+RID16952#white matter of left superior frontal gyrus#wm-lh-superiorfrontal
+RID16952#white matter of left superior frontal gyrus#wm-lh-S_frontal_superior
+RID26829#gray matter of dorsal part of left precentral gyrus#ctx-lh-S_precentral-Superior-part
+RID6486#lateral occipitotemporal gyrus#Ectorhinal
+RID6486#lateral occipitotemporal gyrus#Ectorhinal
+RID22708#medial branch of posterior ramus of right twelfth thoracic nerve to right longissimus thoracis#ctx-lh-parsorbitalis
+RID22708#medial branch of posterior ramus of right twelfth thoracic nerve to right longissimus thoracis#ctx-lh-G_frontal_inf-Orbital_part
+RID20344#trunk of vastus intermedius branch of left femoral nerve#precuneus
+RID17108#white matter of inferior part of right precentral gyrus#wm-rh-S_precentral-Inferior-part
+RID14077#dorsal part of precentral gyrus#BA4p
+RID14077#dorsal part of precentral gyrus#BA4p
+RID26830#gray matter of anterior part of middle frontal gyrus#rostralmiddlefrontal
+RID17138#white matter of left frontal pole#wm-lh-frontalpole
+RID17138#white matter of left frontal pole#wm-lh-G_cuneus
+RID17138#white matter of left frontal pole#wm-lh-cuneus
+RID22702#t12 branch to right multifidus#ctx-lh-parstriangularis
+RID22702#t12 branch to right multifidus#ctx-lh-G_frontal_inf-Triangular_part
+RID20341#trunk of vastus lateralis branch of left femoral nerve#superiorparietal
+RID17105#white matter of rostral part of right middle frontal gyrus#wm-rh-rostralmiddlefrontal
+RID17105#white matter of rostral part of right middle frontal gyrus#wm-rh-S_temporal_transverse
+RID17105#white matter of rostral part of right middle frontal gyrus#wm-rh-transversetemporal
+RID17066#white matter of right anterior cingulate gyrus#wm-rh-rostralanteriorcingulate
+RID24456#gray matter of right middle occipital gyrus#ctx-rh-G_occipital_middle
+RID6915#corpus callosum#Corpus_Callosum
+RID6915#corpus callosum#Corpus_Callosum
+RID20377#trunk of muscular branch of posterior branch of right obturator nerve#ctx-rh-posteriorcingulate
+RID13902#right superior frontal gyrus#Right-F1
+RID13902#right superior frontal gyrus#Right-F1
+RID27792#choroid plexus of right cerebral hemisphere#Right-choroid-plexus
+RID25406#gray matter of triangular part of right inferior frontal gyrus#ctx-rh-parstriangularis
+RID25406#gray matter of triangular part of right inferior frontal gyrus#ctx-rh-G_frontal_inf-Triangular_part
+RID25410#gray matter of opercular part of left inferior frontal gyrus#ctx-lh-parsopercularis
+RID25410#gray matter of opercular part of left inferior frontal gyrus#ctx-lh-G_frontal_inf-Opercular_part
+RID22704#t12 branch to spinalis thoracis#ctx-rh-G_frontal_inf-Opercular_part
+RID22704#t12 branch to spinalis thoracis#ctx-rh-parsopercularis
+RID20356#trunk of infrapatellar branch of right saphenous nerve#ctx-lh-G_cuneus
+RID20356#trunk of infrapatellar branch of right saphenous nerve#ctx-lh-cuneus
+RID20305#trunk of anterior branch of lateral femoral cutaneous nerve#ctx-rh-parahippocampal
+RID24404#gray matter of left middle temporal gyrus#ctx-lh-middletemporal
+RID24404#gray matter of left middle temporal gyrus#ctx-lh-G_temporal_middle
+RID20291#trunk of labium majus branch of genital branch of genitofemoral nerve#lateralorbitofrontal
+RID26841#gray matter of caudal part of left anterior cingulate gyrus#ctx-lh-caudalanteriorcingulate
+RID20269#trunk of cutaneous branch of hypogastric branch of right iliohypogastric nerve#ctx-lh-superiorfrontal
+RID20269#trunk of cutaneous branch of hypogastric branch of right iliohypogastric nerve#ctx-lh-G_frontal_superior
+RID20269#trunk of cutaneous branch of hypogastric branch of right iliohypogastric nerve#ctx-lh-S_frontal_superior
+RID20741#trunk of right third intercostal nerve#Right-Substancia-Nigra
+RID17121#segment of white matter of gyrus of occipital lobe#wm-rh-precuneus
+RID17121#segment of white matter of gyrus of occipital lobe#wm-rh-G_precuneus
+RID17175#white matter of left side of midbrain#wm-rh-G_insular_long
+RID20272#trunk of communicating branch of right iliohypogastric nerve with ilioinguinal nerve#ctx-lh-G_frontal_middle
+RID20272#trunk of communicating branch of right iliohypogastric nerve with ilioinguinal nerve#ctx-lh-S_frontal_middle
+RID26769#gray matter of right temporal pole#ctx-rh-Pole_temporal
+RID26769#gray matter of right temporal pole#ctx-rh-temporalpole
+RID20362#trunk of right obturator nerve#ctx-lh-G_and_S_occipital_inferior
+RID13523#cortex of left insula#ctx-lh-S_central_insula
+RID13523#cortex of left insula#ctx-lh-S_central_insula
+RID24835#left substantia nigra#Left-Substancia-Nigra
+RID17029#white matter of left inferior parietal lobule#wm-lh-inferiorparietal
+RID17010#white matter of left transverse temporal gyrus#wm-lh-transversetemporal
+RID17010#white matter of left transverse temporal gyrus#wm-lh-S_temporal_transverse
+RID26411#left entorhinal area#ctx-lh-entorhinal
+RID17064#white matter of left posterior cingulate gyrus#wm-lh-posteriorcingulate
+RID20268#trunk of cutaneous branch of hypogastric branch of iliohypogastric nerve#ctx-rh-G_frontal_superior
+RID20268#trunk of cutaneous branch of hypogastric branch of iliohypogastric nerve#ctx-rh-S_frontal_superior
+RID20268#trunk of cutaneous branch of hypogastric branch of iliohypogastric nerve#ctx-rh-superiorfrontal
+RID13920#right medial orbital gyrus#Right-mOg
+RID13920#right medial orbital gyrus#Right-mOg
+RID26768#gray matter of temporal pole#temporalpole
+RID17140#white matter of right temporal pole#wm-rh-Pole_temporal
+RID17140#white matter of right temporal pole#wm-rh-temporalpole
+RID17140#white matter of right temporal pole#wm-rh-G_occipit-temp_med-Lingual_part
+RID17140#white matter of right temporal pole#wm-rh-lingual
+RID17159#superficial white layer of superior colliculus#wm-rh-posteriorcingulate
+RID16964#white matter of left inferior frontal gyrus#wm-lh-S_frontal_inferior
+RID17087#white matter of medial frontal lobe#wm-rh-middletemporal
+RID17087#white matter of medial frontal lobe#wm-rh-G_temporal_middle
+RID24435#gray matter of left superior parietal lobule#ctx-lh-G_parietal_superior
+RID24435#gray matter of left superior parietal lobule#ctx-lh-superiorparietal
+RID26541#left fusiform gyrus#ctx-lh-fusiform
+RID21017#anterior ramus of left first lumbar nerve#Right-Pallidum
+RID24366#gray matter of right precentral gyrus#ctx-rh-G_precentral
+RID24366#gray matter of right precentral gyrus#ctx-rh-precentral
+RID24402#gray matter of middle temporal gyrus#middletemporal
+RID20427#trunk of communicating branch to left posterior scrotal nerve#Right-subiculum
+RID24370#gray matter of left straight gyrus#ctx-lh-G_rectus
+RID20304#trunk of branch of lateral femoral cutaneous nerve#parahippocampal
+RID17099#white matter of opercular part of right inferior frontal gyrus#wm-rh-parsopercularis
+RID17099#white matter of opercular part of right inferior frontal gyrus#wm-rh-G_frontal_inf-Opercular_part
+RID17196#white matter of gracile lobule#wm-lh-parsopercularis
+RID17196#white matter of gracile lobule#wm-lh-G_frontal_inf-Opercular_part
+RID20289#trunk of mons pubis branch of genital branch of right genitofemoral nerve#ctx-rh-medialorbitofrontal
+RID17193#white matter of superior semilunar lobule#wm-lh-parsorbitalis
+RID17193#white matter of superior semilunar lobule#wm-lh-G_frontal_inf-Orbital_part
+RID20359#trunk of medial cutaneous nerve of right leg#ctx-lh-lingual
+RID20342#trunk of vastus intermedius branch of femoral nerve#ctx-rh-superiorparietal
+RID20342#trunk of vastus intermedius branch of femoral nerve#ctx-rh-G_parietal_superior
+RID20358#trunk of medial cutaneous nerve of leg#ctx-rh-lingual
+RID17103#white matter of caudal part of left middle frontal gyrus#wm-lh-caudalmiddlefrontal
+RID17031#white matter of right paracentral lobule#wm-rh-S_paracentral
+RID17031#white matter of right paracentral lobule#wm-rh-paracentral
+RID17031#white matter of right paracentral lobule#wm-rh-G_paracentral
+RID26826#gray matter of ventral part of left precentral gyrus#ctx-lh-S_precentral-Inferior-part
+RID17119#white matter of polar part of right superior temporal gyrus#wm-rh-G_temp_sup-Planum_polare
+RID17119#white matter of polar part of right superior temporal gyrus#wm-lh-superiorparietal
+RID17119#white matter of polar part of right superior temporal gyrus#wm-lh-G_parietal_superior
+RID20273#trunk of communicating branch of left iliohypogastric nerve with ilioinguinal nerve#precentral
+RID24441#gray matter of right superior occipital gyrus#ctx-rh-G_occipital_superior
+RID6446#triangular part of inferior frontal gyrus#BA45
+RID6446#triangular part of inferior frontal gyrus#BA45
+RID13980#orbital part of right inferior frontal gyrus#Right-F3orb
+RID13980#orbital part of right inferior frontal gyrus#Right-F3orb
+RID24372#gray matter of right inferior frontal gyrus#ctx-rh-S_frontal_inferior
+RID16982#white matter of left orbital gyrus#wm-lh-G_orbital
+RID27793#choroid plexus of left cerebral hemisphere#Left-choroid-plexus
+RID17102#white matter of caudal part of right middle frontal gyrus#wm-rh-caudalmiddlefrontal
+RID22705#t12 branch to right spinalis thoracis#ctx-lh-parsopercularis
+RID22705#t12 branch to right spinalis thoracis#ctx-lh-G_frontal_inf-Opercular_part
+RID25113#left caudate nucleus#Left-Caudate
+RID16981#white matter of right orbital gyrus#wm-rh-G_orbital
+RID20357#trunk of infrapatellar branch of left saphenous nerve#lingual
+RID24433#gray matter of superior parietal lobule#superiorparietal
+RID16997#white matter of right fusiform gyrus#wm-rh-fusiform
+RID16997#white matter of right fusiform gyrus#wm-rh-G_occipit-temp_lat-Or_fusiform
+RID16997#white matter of right fusiform gyrus#Right-Cerebral-White-Matter
+RID20426#trunk of communicating branch to right posterior scrotal nerve#Left-CADG-head
+RID24469#gray matter of right posterior cingulate gyrus#ctx-rh-posteriorcingulate
+RID24397#gray matter of right parahippocampal gyrus#ctx-rh-parahippocampal
+RID17060#white matter of right dentate gyrus#wm-lh-S_frontal_inferior
+RID17079#white matter of right long insular gyrus#wm-rh-G_insular_long
+RID20315#trunk of anterior cutaneous branch of femoral nerve#ctx-lh-S_temporal_inferior
+RID20315#trunk of anterior cutaneous branch of femoral nerve#ctx-lh-G_temporal_inferior
+RID20315#trunk of anterior cutaneous branch of femoral nerve#ctx-lh-inferiortemporal
+RID22701#t12 branch to multifidus#ctx-rh-parstriangularis
+RID22701#t12 branch to multifidus#ctx-rh-G_frontal_inf-Triangular_part
+RID16922#white matter of left insula#wm-lh-S_central_insula
+RID24401#gray matter of left superior temporal gyrus#ctx-lh-superiortemporal
+RID24401#gray matter of left superior temporal gyrus#ctx-lh-S_temporal_superior
+RID17134#white matter of anterior segment of left paracentral lobule#wm-rh-lateraloccipital
+RID24383#gray matter of lateral orbital gyrus#lateralorbitofrontal
+RID16958#white matter of left precentral gyrus#wm-lh-G_precentral
+RID16958#white matter of left precentral gyrus#wm-lh-precentral
+RID24399#gray matter of superior temporal gyrus#superiortemporal
+RID16980#white matter of orbital gyrus#wm-lh-corpuscallosum
+RID16980#white matter of orbital gyrus#wm-lh-Corpus_callosum
+RID13917#right posterior orbital gyrus#Right-Porg
+RID13917#right posterior orbital gyrus#Right-pOg
+RID13917#right posterior orbital gyrus#Right-Porg
+RID13917#right posterior orbital gyrus#Right-pOg
+RID18676#right anterior amygdaloid area#Right-Amygdala-Anterior
+RID24364#gray matter of left middle frontal gyrus#ctx-lh-G_frontal_middle
+RID24364#gray matter of left middle frontal gyrus#ctx-lh-S_frontal_middle
+RID24400#gray matter of right superior temporal gyrus#ctx-rh-S_temporal_superior
+RID24400#gray matter of right superior temporal gyrus#ctx-rh-superiortemporal
+RID24454#gray matter of left inferior occipital gyrus#ctx-lh-G_and_S_occipital_inferior
+RID20317#trunk of right medial femoral cutaneous nerve#ctx-rh-fusiform
+RID17023#white matter of left superior parietal lobule#wm-lh-superiorparietal
+RID17023#white matter of left superior parietal lobule#wm-lh-G_parietal_superior
+RID17077#white matter of left precentral gyrus of insula#wm-rh-G_orbital
+RID27592#gray matter of right paracentral lobule#ctx-rh-paracentral
+RID27592#gray matter of right paracentral lobule#ctx-rh-G_paracentral
+RID27592#gray matter of right paracentral lobule#ctx-rh-S_paracentral
+RID24429#gray matter of left supramarginal gyrus#ctx-lh-G_parietal_inferior-Supramarginal_part
+RID24429#gray matter of left supramarginal gyrus#ctx-lh-supramarginal
+RID17081#white matter of short insular gyrus#wm-rh-G_occipit-temp_med-Parahippocampal_part
+RID17081#white matter of short insular gyrus#wm-rh-parahippocampal
+RID17205#white matter of ansiform lobule of cerebellum#wm-lh-S_precentral-Inferior-part
+RID17240#funiculus of spinal cord#wm-lh-Pole_occipital
+RID17097#white matter of orbital part of left inferior frontal gyrus#wm-lh-parsorbitalis
+RID17097#white matter of orbital part of left inferior frontal gyrus#wm-lh-G_frontal_inf-Orbital_part
+RID16995#white matter of left inferior temporal gyrus#wm-lh-S_temporal_inferior
+RID16995#white matter of left inferior temporal gyrus#wm-lh-inferiortemporal
+RID16995#white matter of left inferior temporal gyrus#wm-lh-G_temporal_inferior
+RID26838#gray matter of rostral part of left anterior cingulate gyrus#ctx-lh-rostralanteriorcingulate
+RID18445#neuronal component of white matter of C7 segment#Right-Amygdala-Anterior
+RID17025#white matter of right precuneus#wm-rh-precuneus
+RID17025#white matter of right precuneus#wm-rh-G_precuneus
+RID24470#gray matter of left posterior cingulate gyrus#ctx-lh-posteriorcingulate
+RID24489#gray matter of left short insular gyrus#ctx-lh-G_insular_short
+RID20267#trunk of internal oblique branch of hypogastric branch of left iliohypogastric nerve#superiorfrontal
+RID20336#trunk of rectus femoris branch of femoral nerve#ctx-rh-G_parietal_inferior-Supramarginal_part
+RID20336#trunk of rectus femoris branch of femoral nerve#ctx-rh-supramarginal
+RID1544#cerebrospinal fluid#CSF
+RID1544#cerebrospinal fluid#CSF
+RID17224#left lateral pes lemniscus#wm-lh-caudalanteriorcingulate
+RID17080#white matter of left long insular gyrus#wm-lh-G_insular_long
+RID16960#white matter of right straight gyrus#wm-rh-G_rectus
+RID26767#gray matter of left frontal pole#ctx-lh-frontalpole
+RID16976#white matter of left lateral orbital gyrus#wm-lh-G_frontomarginal
+RID16976#white matter of left lateral orbital gyrus#wm-lh-lateralorbitofrontal
+RID16976#white matter of left lateral orbital gyrus#wm-lh-S_orbital_lateral
+RID20394#trunk of gemellus superior branch of right sacral plexus#ctx-lh-G_insular_long
+RID20340#trunk of vastus lateralis branch of right femoral nerve#ctx-lh-G_parietal_inferior-Angular_part
+RID26836#gray matter of rostral part of anterior cingulate gyrus#rostralanteriorcingulate
+RID17113#segment of white matter of gyrus of parietal lobe#wm-lh-G_parietal_inferior-Supramarginal_part
+RID17113#segment of white matter of gyrus of parietal lobe#wm-lh-supramarginal
+RID20352#trunk of right saphenous nerve#ctx-rh-lateraloccipital
+RID17116#white matter of lateral part of right superior temporal gyrus#wm-rh-G_temp_sup-Lateral_aspect
+RID17116#white matter of lateral part of right superior temporal gyrus#wm-lh-G_parietal_inferior-Angular_part
+RID17044#white matter of right lingual gyrus#wm-rh-G_occipit-temp_med-Lingual_part
+RID17044#white matter of right lingual gyrus#wm-rh-lingual
+RID22703#t12 branch to left multifidus#parsopercularis
+RID17041#white matter of right cuneus#wm-rh-cuneus
+RID17041#white matter of right cuneus#wm-rh-G_cuneus
+RID24385#gray matter of left lateral orbital gyrus#ctx-lh-G_frontomarginal
+RID24385#gray matter of left lateral orbital gyrus#ctx-lh-lateralorbitofrontal
+RID26840#gray matter of caudal part of right anterior cingulate gyrus#ctx-rh-caudalanteriorcingulate
+RID17115#white matter of lateral part of superior temporal gyrus#wm-rh-G_parietal_inferior-Angular_part
+RID24502#frontal operculum#BA44
+RID16884#left half of corpus callosum#wm-lh-corpuscallosum
+RID16884#left half of corpus callosum#wm-lh-Corpus_callosum
+RID25110#right globus pallidus#Right-Pallidum
+RID24394#gray matter of left orbital gyrus#ctx-lh-G_orbital
+RID17055#white matter of left cingulate gyrus#wm-lh-G_cingulate-Main_part
+RID14104#CA3 field#CA3
+RID14104#CA3 field#CA3
+RID17150#capsule of diencephalon#wm-rh-G_cingulate-Main_part
+RID17166#deep white layer of right superior colliculus#wm-lh-isthmuscingulate
+RID17166#deep white layer of right superior colliculus#wm-lh-G_cingulate-Isthmus
+RID20742#trunk of left third intercostal nerve#Left-Substancia-Nigra
+RID20351#trunk of saphenous nerve#lateraloccipital
+RID16955#white matter of left middle frontal gyrus#wm-lh-S_frontal_middle
+RID16955#white matter of left middle frontal gyrus#wm-lh-G_frontal_middle
+RID17127#white matter of caudal part of right anterior cingulate gyrus#wm-rh-caudalanteriorcingulate
+RID17127#white matter of caudal part of right anterior cingulate gyrus#wm-rh-S_paracentral
+RID17127#white matter of caudal part of right anterior cingulate gyrus#wm-rh-paracentral
+RID17127#white matter of caudal part of right anterior cingulate gyrus#wm-rh-G_paracentral
+RID13156#cerebral cortex#Cerebral_Cortex
+RID13156#cerebral cortex#Cerebral_Cortex
+RID13970#left paraterminal gyrus#ctx-lh-G_subcallosal
+RID13970#left paraterminal gyrus#ctx-lh-G_subcallosal
+RID24380#gray matter of medial orbital gyrus#medialorbitofrontal
+RID15701#right claustrum#Right-Claustrum
+RID15701#right claustrum#Right-Claustrum
+RID24468#gray matter of posterior cingulate gyrus#posteriorcingulate
+RID20314#trunk of branch of femoral nerve#ctx-rh-S_temporal_inferior
+RID20314#trunk of branch of femoral nerve#ctx-rh-inferiortemporal
+RID20314#trunk of branch of femoral nerve#ctx-rh-G_temporal_inferior
+RID17020#white matter of left angular gyrus#wm-lh-G_parietal_inferior-Angular_part
+RID17039#white matter of left lateral occipital gyrus#wm-lh-lateraloccipital
+RID17088#white matter of right medial frontal lobe#wm-lh-G_temporal_middle
+RID17088#white matter of right medial frontal lobe#wm-lh-middletemporal
+RID17131#white matter of posterior segment of right paracentral lobule#wm-rh-G_occipital_superior
+RID13803#temporal horn of left lateral ventricle#Left-Inf-Lat-Vent
+RID13803#temporal horn of left lateral ventricle#Left-Inf-Lat-Vent
+RID17956#left semioval center#wm-lh-centrum-semiovale
+RID20278#trunk of right genitofemoral nerve#ctx-lh-G_rectus
+RID24519#right subiculum#Right-subiculum
+RID16992#white matter of left middle temporal gyrus#wm-lh-G_temporal_middle
+RID16992#white matter of left middle temporal gyrus#wm-lh-middletemporal
+RID24451#gray matter of left lingual gyrus#ctx-lh-lingual
+RID17202#white matter of simple lobule of cerebellum#wm-lh-rostralmiddlefrontal
+RID24361#gray matter of left superior frontal gyrus#ctx-lh-superiorfrontal
+RID24361#gray matter of left superior frontal gyrus#ctx-lh-G_frontal_superior
+RID24361#gray matter of left superior frontal gyrus#ctx-lh-S_frontal_superior
+RID17022#white matter of right superior parietal lobule#wm-rh-superiorparietal
+RID17022#white matter of right superior parietal lobule#wm-rh-G_parietal_superior
+RID16902#white matter of left cerebral hemisphere#Left-Cerebral-White-Matter
+RID20329#trunk of pectineus branch of left femoral nerve#ctx-rh-transversetemporal
+RID20333#trunk of quadriceps femoris branch of femoral nerve#ctx-rh-S_postcentral
+RID20333#trunk of quadriceps femoris branch of femoral nerve#ctx-rh-G_postcentral
+RID20333#trunk of quadriceps femoris branch of femoral nerve#ctx-rh-postcentral
+RID16973#white matter of left medial orbital gyrus#wm-lh-medialorbitofrontal
+RID26764#gray matter of left occipital pole#ctx-lh-Pole_occipital
+RID17217#white matter of left hemisphere of cerebellum#Left-Cerebellum-White-Matter
+RID17109#white matter of inferior part of left precentral gyrus#wm-lh-S_precentral-Inferior-part
+RID17109#white matter of inferior part of left precentral gyrus#wm-rh-postcentral
+RID17109#white matter of inferior part of left precentral gyrus#wm-rh-S_postcentral
+RID17109#white matter of inferior part of left precentral gyrus#wm-rh-G_postcentral
+RID17110#white matter of superior part of precentral gyrus#wm-lh-S_postcentral
+RID17110#white matter of superior part of precentral gyrus#wm-lh-G_postcentral
+RID17110#white matter of superior part of precentral gyrus#wm-lh-postcentral
+RID16901#white matter of right cerebral hemisphere#Right-Cerebral-White-Matter
+RID26833#gray matter of posterior part of middle frontal gyrus#caudalmiddlefrontal
+RID24382#gray matter of left medial orbital gyrus#ctx-lh-medialorbitofrontal
+RID20280#trunk of branch of genitofemoral nerve#ctx-rh-S_frontal_inferior
+RID17233#left medial lemniscus of medulla#wm-rh-frontalpole
+RID16988#white matter of right superior temporal gyrus#wm-rh-S_temporal_superior
+RID16988#white matter of right superior temporal gyrus#wm-rh-superiortemporal
+RID24447#gray matter of right cuneus#ctx-rh-G_cuneus
+RID24447#gray matter of right cuneus#ctx-rh-cuneus
+RID20354#trunk of branch of saphenous nerve#cuneus
+RID26565#left hippocampus proper#Left-Hippocampus
+RID17018#white matter of angular gyrus#wm-lh-S_central_insula
+RID18114#nerve to left radio-carpal joint#alveus
+RID13788#right lateral ventricle#Right-Lateral-Ventricles
+RID13788#right lateral ventricle#Right-Lateral-Ventricle
+RID13788#right lateral ventricle#Right-Lateral-Ventricles
+RID13788#right lateral ventricle#Right-Lateral-Ventricle
+RID24408#gray matter of fusiform gyrus#fusiform
+RID26737#cortex of right cerebral hemisphere#Right-Cerebral-Cortex
+RID6525#septum pellucidum#5th-Ventricle
+RID6525#septum pellucidum#5th-Ventricle
+RID20364#trunk of branch of obturator nerve#ctx-rh-G_occipital_middle
+RID24518#left hippocampal formation#Left-CADG-head
+RID17179#white matter of pons#wm-lh-G_insular_short
+RID18016#fimbria of right hippocampus#Right-fimbria
+RID26409#entorhinal area#entorhinal_cortex
+RID24517#right hippocampal formation#Right-CADG-head
+RID16986#white matter of left parahippocampal gyrus#wm-lh-G_occipit-temp_med-Parahippocampal_part
+RID16986#white matter of left parahippocampal gyrus#wm-lh-parahippocamp
+RID24445#gray matter of left lateral occipital gyrus#ctx-lh-lateraloccipital
+RID24406#gray matter of right inferior temporal gyrus#ctx-rh-S_temporal_inferior
+RID24406#gray matter of right inferior temporal gyrus#ctx-rh-inferiortemporal
+RID24406#gray matter of right inferior temporal gyrus#ctx-rh-G_temporal_inferior
+RID24393#gray matter of right orbital gyrus#ctx-rh-G_orbital
+RID17144#white matter of left occipital pole#wm-lh-Pole_occipital
+RID17144#white matter of left occipital pole#wm-lh-G_and_S_occipital_inferior
+RID17068#white matter of isthmus of cingulate gyrus#wm-rh-medialorbitofrontal
+RID17072#white matter of right paraterminal gyrus#wm-lh-G_frontomarginal
+RID17072#white matter of right paraterminal gyrus#wm-lh-lateralorbitofrontal
+RID17072#white matter of right paraterminal gyrus#wm-lh-S_orbital_lateral
+RID17195#white matter of left superior semilunar lobule#wm-rh-parsopercularis
+RID17195#white matter of left superior semilunar lobule#wm-rh-G_frontal_inf-Opercular_part
+RID24409#gray matter of right fusiform gyrus#ctx-rh-fusiform
+RID7137#third ventricle#3rd-Ventricle
+RID7137#third ventricle#3rd-Ventricle
+RID17146#white matter of thalamus#wm-rh-G_occipital_middle
+RID13978#opercular part of left inferior frontal gyrus#Left-Operculum
+RID13978#opercular part of left inferior frontal gyrus#Left-Operculum
+RID25412#gray matter of orbital part of right inferior frontal gyrus#ctx-rh-parsorbitalis
+RID25412#gray matter of orbital part of right inferior frontal gyrus#ctx-rh-G_frontal_inf-Orbital_part
+RID17198#white matter of left gracile lobule#wm-rh-caudalmiddlefrontal
+RID17215#white matter of hemisphere of cerebellum#wm-rh-G_temp_sup-Planum_polare
+RID16951#white matter of right superior frontal gyrus#wm-rh-S_frontal_superior
+RID16951#white matter of right superior frontal gyrus#wm-rh-superiorfrontal
+RID16951#white matter of right superior frontal gyrus#wm-rh-G_frontal_superior
+RID26825#gray matter of ventral part of right precentral gyrus#ctx-rh-S_precentral-Inferior-part
+RID6534#dentate gyrus of hippocampus#GC-DG
+RID17035#white matter of right superior occipital gyrus#wm-rh-G_occipital_superior
+RID7093#dura mater#Dura
+RID7093#dura mater#Dura
+RID17032#white matter of left paracentral lobule#wm-lh-S_paracentral
+RID17032#white matter of left paracentral lobule#wm-lh-paracentral
+RID17032#white matter of left paracentral lobule#wm-lh-G_paracentral
+RID17955#right semioval center#wm-rh-centrum-semiovale
+RID20310#trunk of posterior branch of left lateral femoral cutaneous nerve#middletemporal
+RID17070#white matter of isthmus of left cingulate gyrus#wm-lh-isthmuscingulate
+RID17070#white matter of isthmus of left cingulate gyrus#wm-lh-G_cingulate-Isthmus
+RID20274#trunk of communicating branch of iliohypogastric nerve with subcostal nerve#ctx-rh-G_precentral
+RID20274#trunk of communicating branch of iliohypogastric nerve with subcostal nerve#ctx-rh-precentral
+RID24425#gray matter of right postcentral gyrus#ctx-rh-S_postcentral
+RID24425#gray matter of right postcentral gyrus#ctx-rh-G_postcentral
+RID24425#gray matter of right postcentral gyrus#ctx-rh-postcentral
+RID13871#left insula#Left-Insula
+RID13871#left insula#Left-Insula
+RID26608#polar part of right superior temporal gyrus#ctx-rh-G_temp_sup-Planum_polare
+RID17162#middle white layer of superior colliculus#wm-rh-rostralanteriorcingulate
+RID17090#white matter of segment of gyrus#wm-rh-G_temporal_inferior
+RID17090#white matter of segment of gyrus#wm-rh-S_temporal_inferior
+RID17090#white matter of segment of gyrus#wm-rh-inferiortemporal
+RID20397#trunk of ventromedial branch of right sacral plexus to lateral thigh rotator muscle#ctx-lh-G_insular_short
+RID18018#alveus of hippocampus#alveus
+RID25408#gray matter of opercular part of inferior frontal gyrus#parsopercularis
+RID26831#gray matter of anterior part of right middle frontal gyrus#ctx-rh-rostralmiddlefrontal
+RID7128#temporal horn of lateral ventricle#Inf_Lat_Vent
+RID7128#temporal horn of lateral ventricle#Inf_Lat_Vent
+RID18112#nerve to left distal radio-ulnar joint#Right-fimbria
+RID24424#gray matter of postcentral gyrus#postcentral
+RID21019#anterior ramus of right second lumbar nerve#Right-Caudate
+RID17213#white matter of right side of declive of vermis of cerebellum#wm-lh-G_temp_sup-Lateral_aspect
+RID17141#white matter of left temporal pole#wm-lh-Pole_temporal
+RID17141#white matter of left temporal pole#wm-lh-temporalpole
+RID17141#white matter of left temporal pole#wm-lh-lingual
+RID17141#white matter of left temporal pole#wm-lh-G_occipit-temp_med-Lingual_part
+RID16972#white matter of right medial orbital gyrus#wm-rh-medialorbitofrontal
+RID20293#trunk of labium majus branch of genital branch of left genitofemoral nerve#ctx-lh-G_frontomarginal
+RID20293#trunk of labium majus branch of genital branch of left genitofemoral nerve#ctx-lh-lateralorbitofrontal
+RID24446#gray matter of cuneus#cuneus
+RID26832#gray matter of anterior part of left middle frontal gyrus#ctx-lh-rostralmiddlefrontal
+RID17125#white matter of left uncus#wm-lh-inferiorparietal
+RID17053#white matter of cingulate gyrus#wm-rh-G_precentral
+RID17053#white matter of cingulate gyrus#wm-rh-precentral
+RID17212#white matter of declive of vermis of cerebellum#wm-rh-G_temp_sup-Lateral_aspect
+RID17122#segment of white matter of gyrus of limbic lobe#wm-lh-precuneus
+RID17122#segment of white matter of gyrus of limbic lobe#wm-lh-G_precuneus
+RID18677#left anterior amygdaloid area#Left-Amygdala-Anterior
+RID7124#lateral ventricle#lateral_ventricle
+RID7124#lateral ventricle#lateral_ventricle
+RID20292#trunk of labium majus branch of genital branch of right genitofemoral nerve#ctx-rh-lateralorbitofrontal
+RID17160#superficial white layer of right superior colliculus#wm-lh-posteriorcingulate
+RID17176#white matter of right side of midbrain#wm-lh-G_insular_long
+RID20361#trunk of obturator nerve#ctx-rh-G_and_S_occipital_inferior
+RID24443#gray matter of lateral occipital gyrus#lateraloccipital
+RID17137#white matter of right frontal pole#wm-rh-frontalpole
+RID17137#white matter of right frontal pole#wm-rh-cuneus
+RID17137#white matter of right frontal pole#wm-rh-G_cuneus
+RID26410#right entorhinal area#ctx-rh-entorhinal
+RID17014#white matter of left postcentral gyrus#wm-lh-S_postcentral
+RID17014#white matter of left postcentral gyrus#wm-lh-G_postcentral
+RID17014#white matter of left postcentral gyrus#wm-lh-postcentral
+RID13524#cortex of right insula#ctx-rh-S_central_insula
+RID13524#cortex of right insula#ctx-rh-S_central_insula
+RID7361#spinal cord#Spinal-Cord
+RID7361#spinal cord#Spinal-Cord
+RID27590#gray matter of left inferior parietal lobule#ctx-lh-inferiorparietal
+RID20376#trunk of muscular branch of posterior branch of obturator nerve#posteriorcingulate
+RID13924#left lateral orbital gyrus#Left-lOg
+RID13924#left lateral orbital gyrus#Left-lOg
+RID27593#gray matter of left paracentral lobule#ctx-lh-S_paracentral
+RID27593#gray matter of left paracentral lobule#ctx-lh-G_paracentral
+RID27593#gray matter of left paracentral lobule#ctx-lh-paracentral
+RID21018#anterior ramus of second lumbar nerve#Left-Pallidum
+RID24403#gray matter of right middle temporal gyrus#ctx-rh-G_temporal_middle
+RID24403#gray matter of right middle temporal gyrus#ctx-rh-middletemporal
+RID13921#left medial orbital gyrus#Left-mOg
+RID13921#left medial orbital gyrus#Left-mOg
+RID17192#white matter of left inferior semilunar lobule#wm-rh-G_frontal_inf-Orbital_part
+RID17192#white matter of left inferior semilunar lobule#wm-rh-parsorbitalis
+RID20428#trunk of communicating branch to posterior labial nerve#Left-subiculum
+RID17026#white matter of left precuneus#wm-lh-precuneus
+RID17026#white matter of left precuneus#wm-lh-G_precuneus
+RID20301#trunk of lateral femoral cutaneous nerve#ctx-rh-G_orbital
+RID24475#gray matter of isthmus of right cingulate gyrus#ctx-rh-isthmuscingulate
+RID20382#trunk of muscular branch of obturator nerve#isthmuscingulate
+RID24457#gray matter of left middle occipital gyrus#ctx-lh-G_occipital_middle
+RID17208#white matter of biventer lobule#wm-lh-S_precentral-Superior-part
+RID24367#gray matter of left precentral gyrus#ctx-lh-G_precentral
+RID24367#gray matter of left precentral gyrus#ctx-lh-precentral
+RID17120#white matter of polar part of left superior temporal gyrus#wm-lh-G_temp_sup-Planum_polare
+RID20288#trunk of mons pubis branch of genital branch of genitofemoral nerve#medialorbitofrontal
+RID20378#trunk of muscular branch of posterior branch of left obturator nerve#ctx-lh-posteriorcingulate
+RID25411#gray matter of orbital part of inferior frontal gyrus#parsorbitalis
+RID17084#white matter of accessory short gyrus#wm-rh-S_temporal_superior
+RID17084#white matter of accessory short gyrus#wm-rh-superiortemporal
+RID16998#white matter of left fusiform gyrus#wm-lh-G_occipit-temp_lat-Or_fusiform
+RID16998#white matter of left fusiform gyrus#wm-lh-fusiform
+RID16998#white matter of left fusiform gyrus#Left-Cerebral-White-Matter
+RID20343#trunk of vastus intermedius branch of right femoral nerve#ctx-lh-G_parietal_superior
+RID20343#trunk of vastus intermedius branch of right femoral nerve#ctx-lh-superiorparietal
+RID24438#gray matter of left precuneus#ctx-lh-precuneus
+RID24438#gray matter of left precuneus#ctx-lh-G_precuneus
+RID20271#trunk of communicating branch of iliohypogastric nerve with ilioinguinal nerve#ctx-rh-G_frontal_middle
+RID20271#trunk of communicating branch of iliohypogastric nerve with ilioinguinal nerve#ctx-rh-S_frontal_middle
+RID17028#white matter of right inferior parietal lobule#wm-rh-inferiorparietal
+RID24422#gray matter of left transverse temporal gyrus#ctx-lh-transversetemporal
+RID24476#gray matter of isthmus of left cingulate gyrus#ctx-lh-isthmuscingulate
+RID24476#gray matter of isthmus of left cingulate gyrus#ctx-lh-G_cingulate-Isthmus
+RID20339#trunk of vastus lateralis branch of femoral nerve#ctx-rh-G_parietal_inferior-Angular_part
+RID16979#white matter of left frontal lobe proper#wm-rh-Corpus_callosum
+RID16979#white matter of left frontal lobe proper#wm-rh-corpuscallosum
+RID17083#white matter of left short insular gyrus#wm-lh-G_insular_short
+RID17047#white matter of right inferior occipital gyrus#wm-rh-G_and_S_occipital_inferior
+RID17047#white matter of right inferior occipital gyrus#wm-rh-S_frontal_superior
+RID17047#white matter of right inferior occipital gyrus#wm-rh-superiorfrontal
+RID17047#white matter of right inferior occipital gyrus#wm-rh-G_frontal_superior
+RID22706#t12 branch to left spinalis thoracis#parsorbitalis
+RID18015#fimbria of hippocampus#fimbria
+RID17278#c8 segment of right dorsal funiculus of spinal cord#Left-Cerebellum-White-Matter
+RID6641#optic chiasm#Optic-Chiasm
+RID6641#optic chiasm#Optic-Chiasm
+RID24421#gray matter of right transverse temporal gyrus#ctx-rh-transversetemporal
+RID20396#trunk of ventromedial branch of sacral plexus to lateral thigh rotator muscle#ctx-rh-G_insular_short
+RID20345#trunk of vastus medialis branch of femoral nerve#ctx-rh-precuneus
+RID20345#trunk of vastus medialis branch of femoral nerve#ctx-rh-G_precuneus
+RID20290#trunk of mons pubis branch of genital branch of left genitofemoral nerve#ctx-lh-medialorbitofrontal
+RID17051#white matter of left middle occipital gyrus#wm-lh-G_occipital_middle
+RID17051#white matter of left middle occipital gyrus#wm-lh-S_frontal_middle
+RID17051#white matter of left middle occipital gyrus#wm-lh-G_frontal_middle
+RID6530#subiculum#subiculum
+RID6530#subiculum#subiculum
+RID21020#anterior ramus of left second lumbar nerve#Left-Caudate
+RID20306#trunk of anterior branch of right lateral femoral cutaneous nerve#ctx-lh-parahippocampal
+RID17118#white matter of polar part of superior temporal gyrus#wm-rh-superiorparietal
+RID17118#white matter of polar part of superior temporal gyrus#wm-rh-G_parietal_superior
+RID18052#arbor vitae of cerebellum#wm-lh-centrum-semiovale
+RID25407#gray matter of triangular part of left inferior frontal gyrus#ctx-lh-parstriangularis
+RID25407#gray matter of triangular part of left inferior frontal gyrus#ctx-lh-G_frontal_inf-Triangular_part
+RID13903#left superior frontal gyrus#Left-F1
+RID13903#left superior frontal gyrus#Left-F1
+RID24436#gray matter of precuneus#precuneus
+RID6677#brainstem#Brain-Stem
+RID6677#brainstem#Brain-Stem
+RID24449#gray matter of lingual gyrus#lingual
+RID26835#gray matter of posterior part of left middle frontal gyrus#ctx-lh-caudalmiddlefrontal
+RID17059#white matter of dentate gyrus#wm-rh-S_frontal_inferior
+RID24420#gray matter of transverse temporal gyrus#transversetemporal
+RID24384#gray matter of right lateral orbital gyrus#ctx-rh-lateralorbitofrontal
+RID16994#white matter of right inferior temporal gyrus#wm-rh-G_temporal_inferior
+RID16994#white matter of right inferior temporal gyrus#wm-rh-S_temporal_inferior
+RID16994#white matter of right inferior temporal gyrus#wm-rh-inferiortemporal
+RID16961#white matter of left straight gyrus#wm-lh-G_rectus
+RID17117#white matter of lateral part of left superior temporal gyrus#wm-lh-G_temp_sup-Lateral_aspect
+RID24453#gray matter of right inferior occipital gyrus#ctx-rh-G_and_S_occipital_inferior
+RID13918#left posterior orbital gyrus#Left-pOg
+RID13918#left posterior orbital gyrus#Left-Porg
+RID13918#left posterior orbital gyrus#Left-pOg
+RID13918#left posterior orbital gyrus#Left-Porg
+RID14080#middle part of precentral gyrus#BA6
+RID14080#middle part of precentral gyrus#BA6
+RID20410#trunk of medial part of left posterior femoral cutaneous nerve#BA44
+RID20302#trunk of right lateral femoral cutaneous nerve#ctx-lh-G_orbital
+RID13969#right paraterminal gyrus#ctx-rh-G_subcallosal
+RID13969#right paraterminal gyrus#ctx-rh-G_subcallosal
+RID17189#white matter of left posterior quadrangular lobule#wm-rh-G_frontal_inf-Triangular_part
+RID17189#white matter of left posterior quadrangular lobule#wm-rh-parstriangularis
+RID20353#trunk of left saphenous nerve#ctx-lh-lateraloccipital
+RID17078#white matter of long insular gyrus#wm-lh-G_orbital
+RID21015#anterior ramus of first lumbar nerve#Left-Putamen
+RID7147#fourth ventricle#4th-Ventricle
+RID7147#fourth ventricle#4th-Ventricle
+RID16996#white matter of fusiform gyrus#Cerebral_White_Matter
+RID20425#trunk of communicating branch to posterior scrotal nerve#Right-CADG-head
+RID26766#gray matter of right frontal pole#ctx-rh-frontalpole
+RID24474#gray matter of isthmus of cingulate gyrus#isthmuscingulate
+RID16957#white matter of right precentral gyrus#wm-rh-G_precentral
+RID16957#white matter of right precentral gyrus#wm-rh-precentral
+RID20337#trunk of rectus femoris branch of right femoral nerve#ctx-lh-G_parietal_inferior-Supramarginal_part
+RID20337#trunk of rectus femoris branch of right femoral nerve#ctx-lh-supramarginal
+RID13916#left anterior orbital gyrus#Left-Aorg
+RID13916#left anterior orbital gyrus#Left-Aorg
+RID21014#anterior ramus of lumbar nerve#Right-Putamen
+RID17094#white matter of triangular part of left inferior frontal gyrus#wm-lh-parstriangulari
+RID17094#white matter of triangular part of left inferior frontal gyrus#wm-lh-G_frontal_inf-Triangular_part
+RID17094#white matter of triangular part of left inferior frontal gyrus#wm-lh-G_occipit-temp_lat-Or_fusiform
+RID17094#white matter of triangular part of left inferior frontal gyrus#wm-lh-fusiform
+RID17204#white matter of left simple lobule of cerebellum#wm-rh-S_precentral-Inferior-part
+RID24363#gray matter of right middle frontal gyrus#ctx-rh-G_frontal_middle
+RID24363#gray matter of right middle frontal gyrus#ctx-rh-S_frontal_middle
+RID17207#white matter of left ansiform lobule of cerebellum#wm-rh-S_precentral-Superior-part
+RID17045#white matter of left lingual gyrus#wm-lh-lingual
+RID17045#white matter of left lingual gyrus#wm-lh-G_occipit-temp_med-Lingual_part
+RID14105#cA4 field#CA4
+RID14105#cA4 field#CA4
+RID17135#white matter of anterior segment of right paracentral lobule#wm-lh-lateraloccipital
+RID26837#gray matter of rostral part of right anterior cingulate gyrus#ctx-rh-rostralanteriorcingulate
+RID20349#trunk of vascular branch of right femoral nerve#ctx-rh-G_occipital_superior
+RID15671#gray matter of inferior parietal lobule#inferiorparietal
+RID15671#gray matter of inferior parietal lobule#inferiorparietal
+RID16963#white matter of right inferior frontal gyrus#wm-rh-S_frontal_inferior
+RID18051#vertical limb of diagonal band#wm-rh-centrum-semiovale
+RID27591#gray matter of paracentral lobule#paracentral
+RID25115#left nucleus accumbens#Left-Accumbens-area
+RID13789#left lateral ventricle#Left-Lateral-Ventricles
+RID13789#left lateral ventricle#Left-Lateral-Ventricle
+RID13789#left lateral ventricle#Left-Lateral-Ventricles
+RID13789#left lateral ventricle#Left-Lateral-Ventricle
+RID24486#gray matter of left long insular gyrus#ctx-lh-G_insular_long
+RID17057#white matter of right supracallosal gyrus#wm-lh-G_rectus
+RID17190#white matter of inferior semilunar lobule#wm-lh-parstriangulari
+RID17190#white matter of inferior semilunar lobule#wm-lh-G_frontal_inf-Triangular_part
+RID15673#gray matter of right inferior parietal lobule#ctx-rh-inferiorparietal
+RID15673#gray matter of right inferior parietal lobule#ctx-rh-inferiorparietal
+RID17100#white matter of opercular part of left inferior frontal gyrus#wm-lh-parsopercularis
+RID17100#white matter of opercular part of left inferior frontal gyrus#wm-lh-G_frontal_inf-Opercular_part
+RID17082#white matter of right short insular gyrus#wm-rh-G_insular_short
+RID17082#white matter of right short insular gyrus#wm-lh-G_occipit-temp_med-Parahippocampal_part
+RID17082#white matter of right short insular gyrus#wm-lh-parahippocamp
+RID24488#gray matter of right short insular gyrus#ctx-rh-G_insular_short
+RID17239#segment of white matter of spinal cord#wm-rh-Pole_occipital
+RID24437#gray matter of right precuneus#ctx-rh-precuneus
+RID24437#gray matter of right precuneus#ctx-rh-G_precuneus
+RID24365#gray matter of precentral gyrus#precentral
+RID20335#trunk of quadriceps femoris branch of left femoral nerve#supramarginal
+RID20393#trunk of gemellus superior branch of sacral plexus#ctx-rh-G_insular_long
+RID18446#neuronal component of white matter of C8 segment#Left-Amygdala-Anterior
+RID13502#parasubiculum#parasubiculum
+RID13502#parasubiculum#parasubiculum
+RID17223#right lateral pes lemniscus#wm-rh-caudalanteriorcingulate
+RID26770#gray matter of left temporal pole#ctx-lh-temporalpole
+RID26770#gray matter of left temporal pole#ctx-lh-Pole_temporal
+RID20355#trunk of infrapatellar branch of saphenous nerve#ctx-rh-G_cuneus
+RID20355#trunk of infrapatellar branch of saphenous nerve#ctx-rh-cuneus
+RID17063#white matter of right posterior cingulate gyrus#wm-rh-posteriorcingulate
+RID24834#right substantia nigra#Right-Substancia-Nigra
+RID20316#trunk of medial femoral cutaneous nerve#fusiform
+RID13802#temporal horn of right lateral ventricle#Right-Inf-Lat-Vent
+RID13802#temporal horn of right lateral ventricle#Right-Inf-Lat-Vent
+RID13915#right anterior orbital gyrus#Right-Aorg
+RID13915#right anterior orbital gyrus#Right-Aorg
+RID17128#white matter of caudal part of left anterior cingulate gyrus#wm-lh-caudalanteriorcingulate
+RID17128#white matter of caudal part of left anterior cingulate gyrus#wm-lh-S_paracentral
+RID17128#white matter of caudal part of left anterior cingulate gyrus#wm-lh-paracentral
+RID17128#white matter of caudal part of left anterior cingulate gyrus#wm-lh-G_paracentral
+RID17056#white matter of supracallosal gyrus#wm-rh-G_rectus
+RID15574#left cerebellar cortex#Left-Cerebellum-Cortex
+RID15574#left cerebellar cortex#Left-Cerebellum-Cortex
+RID24450#gray matter of right lingual gyrus#ctx-rh-lingual
+RID24381#gray matter of right medial orbital gyrus#ctx-rh-medialorbitofrontal
+RID17017#white matter of left supramarginal gyrus#wm-lh-G_parietal_inferior-Supramarginal_part
+RID17017#white matter of left supramarginal gyrus#wm-lh-supramarginal
+RID17017#white matter of left supramarginal gyrus#wm-rh-S_central_insula
+RID16991#white matter of right middle temporal gyrus#wm-rh-middletemporal
+RID16991#white matter of right middle temporal gyrus#wm-rh-G_temporal_middle
+RID26564#right hippocampus proper#Right-Hippocampus
+RID24448#gray matter of left cuneus#ctx-lh-G_cuneus
+RID24448#gray matter of left cuneus#ctx-lh-cuneus
+RID16989#white matter of left superior temporal gyrus#wm-lh-S_temporal_superior
+RID16989#white matter of left superior temporal gyrus#wm-lh-superiortemporal
+RID17019#white matter of right angular gyrus#wm-rh-G_parietal_inferior-Angular_part
+RID20350#trunk of vascular branch of left femoral nerve#ctx-lh-G_occipital_superior
+RID17147#white matter of hypothalamus#wm-lh-G_occipital_middle
+RID17237#right medial lemniscus of pons#wm-lh-Pole_temporal
+RID17237#right medial lemniscus of pons#wm-lh-temporalpole
+RID17234#right lateral lemniscus#wm-lh-frontalpole
+RID25107#right putamen#Right-Putamen
+RID17111#white matter of superior part of right precentral gyrus#wm-rh-S_precentral-Superior-part
+RID20334#trunk of quadriceps femoris branch of right femoral nerve#ctx-lh-G_postcentral
+RID20334#trunk of quadriceps femoris branch of right femoral nerve#ctx-lh-S_postcentral
+RID20334#trunk of quadriceps femoris branch of right femoral nerve#ctx-lh-postcentral
+RID14103#CA2 field#CA2
+RID14103#CA2 field#CA2
+RID14034#presubiculum#presubiculum
+RID14034#presubiculum#presubiculum
+RID26763#gray matter of right occipital pole#ctx-rh-Pole_occipital
+RID16954#white matter of right middle frontal gyrus#wm-rh-S_frontal_middle
+RID16954#white matter of right middle frontal gyrus#wm-rh-G_frontal_middle
+RID14102#CA1 field#CA1
+RID14102#CA1 field#CA1
+RID26765#gray matter of frontal pole#frontalpole
+RID24360#gray matter of right superior frontal gyrus#ctx-rh-G_frontal_superior
+RID24360#gray matter of right superior frontal gyrus#ctx-rh-S_frontal_superior
+RID24360#gray matter of right superior frontal gyrus#ctx-rh-superiorfrontal
+RID17091#segment of white matter of gyrus of frontal lobe#wm-lh-S_temporal_inferior
+RID17091#segment of white matter of gyrus of frontal lobe#wm-lh-inferiortemporal
+RID17091#segment of white matter of gyrus of frontal lobe#wm-lh-G_temporal_inferior
+RID17313#t10 segment of left dorsal funiculus of spinal cord#Left-Cerebellum-White-Matter
+RID20346#trunk of vastus medialis branch of right femoral nerve#ctx-lh-precuneus
+RID20346#trunk of vastus medialis branch of right femoral nerve#ctx-lh-G_precuneus
+RID17312#t10 segment of right dorsal funiculus of spinal cord#Right-Cerebellum-White-Matter
+RID24359#gray matter of superior frontal gyrus#superiorfrontal
+RID18113#nerve to right radio-carpal joint#Left-fimbria
+RID17038#white matter of right lateral occipital gyrus#wm-rh-lateraloccipital
+RID25108#left putamen#Left-Putamen
+RID17042#white matter of left cuneus#wm-lh-G_cuneus
+RID17042#white matter of left cuneus#wm-lh-cuneus
+RID17132#white matter of posterior segment of left paracentral lobule#wm-lh-G_occipital_superior
+RID24432#gray matter of left angular gyrus#ctx-lh-G_parietal_inferior-Angular_part
+RID17165#deep white layer of superior colliculus#wm-rh-G_cingulate-Isthmus
+RID17165#deep white layer of superior colliculus#wm-rh-isthmuscingulate
+RID17201#white matter of left alar central lobule#wm-rh-rostralmiddlefrontal
+RID17093#white matter of triangular part of right inferior frontal gyrus#wm-rh-G_frontal_inf-Triangular_part
+RID17093#white matter of triangular part of right inferior frontal gyrus#wm-rh-parstriangularis
+RID17093#white matter of triangular part of right inferior frontal gyrus#wm-rh-fusiform
+RID17093#white matter of triangular part of right inferior frontal gyrus#wm-rh-G_occipit-temp_lat-Or_fusiform
+RID20277#trunk of genitofemoral nerve#ctx-rh-G_rectus
+RID20281#trunk of genital branch of genitofemoral nerve#ctx-lh-S_frontal_inferior
+RID26834#gray matter of posterior part of right middle frontal gyrus#ctx-rh-caudalmiddlefrontal
+RID13495#right thalamus#Right-Thalamus
+RID13495#right thalamus#Right-Thalamus
+RID15573#right cerebellar cortex#Right-Cerebellum-Cortex
+RID15573#right cerebellar cortex#Right-Cerebellum-Cortex
+RID25112#right caudate nucleus#Right-Caudate
+RID17096#white matter of orbital part of right inferior frontal gyrus#wm-rh-G_frontal_inf-Orbital_part
+RID17096#white matter of orbital part of right inferior frontal gyrus#wm-rh-parsorbitalis
+RID24434#gray matter of right superior parietal lobule#ctx-rh-superiorparietal
+RID24434#gray matter of right superior parietal lobule#ctx-rh-G_parietal_superior
+RID24431#gray matter of right angular gyrus#ctx-rh-G_parietal_inferior-Angular_part
+RID15699#right amygdala#Right-Amygdala
+RID15699#right amygdala#Right-Amygdala
+RID20332#trunk of sartorius branch of left femoral nerve#postcentral
+RID16900#cerebral white matter#Cerebral_White_Matter
+RID17216#white matter of right hemisphere of cerebellum#Right-Cerebellum-White-Matter
+RID17216#white matter of right hemisphere of cerebellum#wm-lh-G_temp_sup-Planum_polare
+RID24398#gray matter of left parahippocampal gyrus#ctx-lh-parahippocampal
+RID6531#parahippocampal gyrus#Perirhinal
+RID6531#parahippocampal gyrus#Perirhinal
+RID17054#white matter of right cingulate gyrus#wm-rh-G_cingulate-Main_part
+RID17054#white matter of right cingulate gyrus#wm-lh-G_precentral
+RID17054#white matter of right cingulate gyrus#wm-lh-precentral
+RID16975#white matter of right lateral orbital gyrus#wm-rh-S_orbital_lateral
+RID16975#white matter of right lateral orbital gyrus#wm-rh-lateralorbitofrontal
+RID16975#white matter of right lateral orbital gyrus#wm-rh-G_frontomarginal
+RID25114#right nucleus accumbens#Right-Accumbens-area
+RID24427#gray matter of supramarginal gyrus#supramarginal
+RID25111#left globus pallidus#Left-Pallidum
+RID16921#white matter of right insula#wm-rh-S_central_insula
+RID24485#gray matter of right long insular gyrus#ctx-rh-G_insular_long
+RID17236#medial lemniscus of pons#wm-rh-Pole_temporal
+RID17236#medial lemniscus of pons#wm-rh-temporalpole
+RID15700#left claustrum#Left-Claustrum
+RID15700#left claustrum#Left-Claustrum
+RID20383#trunk of muscular branch of right obturator nerve#ctx-rh-isthmuscingulate
+RID17151#capsule of medial geniculate body#wm-lh-G_cingulate-Main_part
+RID20309#trunk of posterior branch of right lateral femoral cutaneous nerve#ctx-lh-superiortemporal
+RID20309#trunk of posterior branch of right lateral femoral cutaneous nerve#ctx-lh-S_temporal_superior
+RID20313#trunk of left femoral nerve#inferiortemporal
+RID17138#white matter of left cuneus#wm-lh-frontalpole
+RID17138#white matter of left cuneus#wm-lh-G_cuneus
+RID17138#white matter of left cuneus#wm-lh-cuneus
+RID17212#white matter of lateral part of right superior temporal gyrus#wm-rh-G_temp_sup-Lateral_aspect
+RID24502#t10 branch to left spinalis thoracis#BA44
+RID6677#brainstem#Brain-Stem
+RID6677#brainstem#Brain-Stem
+RID25113#descending branch of meningeal branch of right third thoracic nerve#Left-Caudate
+RID21022#left nucleus accumbens#Left-Accumbens-area
+RID22702#gray matter of triangular part of left inferior frontal gyrus#ctx-lh-parstriangularis
+RID22702#gray matter of triangular part of left inferior frontal gyrus#ctx-lh-G_frontal_inf-Triangular_part
+RID17122#white matter of left precuneus#wm-lh-precuneus
+RID17122#white matter of left precuneus#wm-lh-G_precuneus
+RID16884#medulla of right tonsil of cerebellum#wm-lh-corpuscallosum
+RID16884#medulla of right tonsil of cerebellum#wm-lh-Corpus_callosum
+RID25110#descending branch of meningeal branch of right second thoracic nerve#Right-Pallidum
+RID24449#t6 branch to right semispinalis capitis#lingual
+RID24394#t3 branch to semispinalis thoracis#ctx-lh-G_orbital
+RID20341#gray matter of superior parietal lobule#superiorparietal
+RID18111#fimbria of hippocampus#fimbria
+RID13802#temporal horn of right lateral ventricle#Right-Inf-Lat-Vent
+RID13802#temporal horn of right lateral ventricle#Right-Inf-Lat-Vent
+RID16981#anterior forceps of right half of corpus callosum#wm-rh-G_orbital
+RID17069#white matter of left medial orbital gyrus#wm-rh-G_cingulate-Isthmus
+RID17069#white matter of left medial orbital gyrus#wm-rh-isthmuscingulate
+RID17069#white matter of left medial orbital gyrus#wm-lh-medialorbitofrontal
+RID17105#white matter of right transverse temporal gyrus#wm-rh-rostralmiddlefrontal
+RID17105#white matter of right transverse temporal gyrus#wm-rh-S_temporal_transverse
+RID17105#white matter of right transverse temporal gyrus#wm-rh-transversetemporal
+RID20357#gray matter of lingual gyrus#lingual
+RID17050#white matter of right middle frontal gyrus#wm-rh-G_occipital_middle
+RID17050#white matter of right middle frontal gyrus#wm-rh-S_frontal_middle
+RID17050#white matter of right middle frontal gyrus#wm-rh-G_frontal_middle
+RID17066#white matter of left posterior orbital gyrus#wm-rh-rostralanteriorcingulate
+RID24433#t5 branch to right semispinalis capitis#superiorparietal
+RID13915#right anterior orbital gyrus#Right-Aorg
+RID13915#right anterior orbital gyrus#Right-Aorg
+RID17163#white matter of left anterior cingulate gyrus#wm-lh-rostralanteriorcingulate
+RID24456#t6 branch to left spinalis capitis#ctx-rh-G_occipital_middle
+RID18677#anterior root of third lumbar nerve#Left-Amygdala-Anterior
+RID24405#t4 branch to right multifidus#inferiortemporal
+RID6525#septum pellucidum#5th-Ventricle
+RID6525#septum pellucidum#5th-Ventricle
+RID20364#gray matter of right middle occipital gyrus#ctx-rh-G_occipital_middle
+RID17112#white matter of right supramarginal gyrus#wm-lh-S_precentral-Superior-part
+RID17112#white matter of right supramarginal gyrus#wm-rh-G_parietal_inferior-Supramarginal_part
+RID17112#white matter of right supramarginal gyrus#wm-rh-supramarginal
+RID15698#left amygdala#Left-Amygdala
+RID15698#left amygdala#Left-Amygdala
+RID17128#white matter of left paracentral lobule#wm-lh-caudalanteriorcingulate
+RID17128#white matter of left paracentral lobule#wm-lh-S_paracentral
+RID17128#white matter of left paracentral lobule#wm-lh-paracentral
+RID17128#white matter of left paracentral lobule#wm-lh-G_paracentral
+RID7124#lateral ventricle#lateral_ventricle
+RID7124#lateral ventricle#lateral_ventricle
+RID24518#t12 branch to right multifidus#Left-CADG-head
+RID17059#white matter of right inferior frontal gyrus#wm-rh-S_frontal_inferior
+RID20292#gray matter of right lateral orbital gyrus#ctx-rh-lateralorbitofrontal
+RID17056#white matter of right straight gyrus#wm-rh-G_rectus
+RID24420#t4 branch to right spinalis capitis#transversetemporal
+RID24384#t2 branch to spinalis capitis#ctx-rh-lateralorbitofrontal
+RID25409#nerve to third posterior cervical intertransversarius#ctx-rh-G_frontal_inf-Opercular_part
+RID25409#nerve to third posterior cervical intertransversarius#ctx-rh-parsopercularis
+RID17055#white matter of straight gyrus#wm-lh-G_cingulate-Main_part
+RID14104#CA3 field#CA3
+RID14104#CA3 field#CA3
+RID15574#left cerebellar cortex#Left-Cerebellum-Cortex
+RID15574#left cerebellar cortex#Left-Cerebellum-Cortex
+RID6915#corpus callosum#Corpus_Callosum
+RID6915#corpus callosum#Corpus_Callosum
+RID16997#white matter of right cerebral hemisphere#wm-rh-fusiform
+RID16997#white matter of right cerebral hemisphere#wm-rh-G_occipit-temp_lat-Or_fusiform
+RID16997#white matter of right cerebral hemisphere#Right-Cerebral-White-Matter
+RID16994#anterior part of anterior commissure#wm-rh-G_temporal_inferior
+RID16994#anterior part of anterior commissure#wm-rh-S_temporal_inferior
+RID16994#anterior part of anterior commissure#wm-rh-inferiortemporal
+RID20426#left hippocampal formation#Left-CADG-head
+RID20377#gray matter of right posterior cingulate gyrus#ctx-rh-posteriorcingulate
+RID16961#branch of saphenous nerve#wm-lh-G_rectus
+RID17117#white matter of superior parietal lobule#wm-lh-G_temp_sup-Lateral_aspect
+RID17160#white matter of left posterior cingulate gyrus#wm-lh-posteriorcingulate
+RID17179#white matter of left short insular gyrus#wm-lh-G_insular_short
+RID24453#t6 branch to left spinalis thoracis#ctx-rh-G_and_S_occipital_inferior
+RID24469#medial branch of posterior ramus of left seventh thoracic nerve to left longissimus thoracis#ctx-rh-posteriorcingulate
+RID17176#white matter of left long insular gyrus#wm-lh-G_insular_long
+RID24450#t6 branch to left semispinalis capitis#ctx-rh-lingual
+RID20361#gray matter of right inferior occipital gyrus#ctx-rh-G_and_S_occipital_inferior
+RID24381#t2 branch to semispinalis capitis#ctx-rh-medialorbitofrontal
+RID24397#t3 branch to semispinalis capitis#ctx-rh-parahippocampal
+RID18016#left stria medullaris of thalamus#Right-fimbria
+RID24443#t6 branch to right multifidus#lateraloccipital
+RID13902#right superior frontal gyrus#Right-F1
+RID13902#right superior frontal gyrus#Right-F1
+RID17150#white matter of right cingulate gyrus#wm-rh-G_cingulate-Main_part
+RID13918#left posterior orbital gyrus#Left-pOg
+RID13918#left posterior orbital gyrus#Left-Porg
+RID13918#left posterior orbital gyrus#Left-pOg
+RID13918#left posterior orbital gyrus#Left-Porg
+RID20308#gray matter of right superior temporal gyrus#ctx-rh-S_temporal_superior
+RID20308#gray matter of right superior temporal gyrus#ctx-rh-superiortemporal
+RID17166#white matter of isthmus of left cingulate gyrus#wm-lh-isthmuscingulate
+RID17166#white matter of isthmus of left cingulate gyrus#wm-lh-G_cingulate-Isthmus
+RID20742#left substantia nigra#Left-Substancia-Nigra
+RID17017#white matter of right insula#wm-lh-G_parietal_inferior-Supramarginal_part
+RID17017#white matter of right insula#wm-lh-supramarginal
+RID17017#white matter of right insula#wm-rh-S_central_insula
+RID20351#gray matter of lateral occipital gyrus#lateraloccipital
+RID16991#posterior forceps of right half of corpus callosum#wm-rh-middletemporal
+RID16991#posterior forceps of right half of corpus callosum#wm-rh-G_temporal_middle
+RID17060#white matter of left inferior frontal gyrus#wm-lh-S_frontal_inferior
+RID17079#white matter of gyrus of temporal lobe#wm-rh-G_insular_long
+RID25406#nerve to second posterior cervical intertransversarius#ctx-rh-parstriangularis
+RID25406#nerve to second posterior cervical intertransversarius#ctx-rh-G_frontal_inf-Triangular_part
+RID16955#nerve to left iliacus (n)#wm-lh-S_frontal_middle
+RID16955#nerve to left iliacus (n)#wm-lh-G_frontal_middle
+RID20312#gray matter of left middle temporal gyrus#ctx-lh-middletemporal
+RID20312#gray matter of left middle temporal gyrus#ctx-lh-G_temporal_middle
+RID25413#nerve to right fourth posterior cervical intertransversarius#ctx-lh-parsorbitalis
+RID25413#nerve to right fourth posterior cervical intertransversarius#ctx-lh-G_frontal_inf-Orbital_part
+RID24407#t4 branch to semispinalis cervicis#ctx-lh-S_temporal_inferior
+RID24407#t4 branch to semispinalis cervicis#ctx-lh-G_temporal_inferior
+RID24407#t4 branch to semispinalis cervicis#ctx-lh-inferiortemporal
+RID25410#nerve to right third posterior cervical intertransversarius#ctx-lh-parsopercularis
+RID25410#nerve to right third posterior cervical intertransversarius#ctx-lh-G_frontal_inf-Opercular_part
+RID14083#ventral part of precentral gyrus#BA4a
+RID14083#ventral part of precentral gyrus#BA4a
+RID24442#t6 branch to multifidus#ctx-lh-G_occipital_superior
+RID14080#middle part of precentral gyrus#BA6
+RID14080#middle part of precentral gyrus#BA6
+RID20315#gray matter of left inferior temporal gyrus#ctx-lh-S_temporal_inferior
+RID20315#gray matter of left inferior temporal gyrus#ctx-lh-G_temporal_inferior
+RID20315#gray matter of left inferior temporal gyrus#ctx-lh-inferiortemporal
+RID22704#gray matter of opercular part of right inferior frontal gyrus#ctx-rh-G_frontal_inf-Opercular_part
+RID22704#gray matter of opercular part of right inferior frontal gyrus#ctx-rh-parsopercularis
+RID20410#frontal operculum#BA44
+RID17199#white matter of posterior part of left middle frontal gyrus#wm-lh-caudalmiddlefrontal
+RID22701#gray matter of triangular part of right inferior frontal gyrus#ctx-rh-parstriangularis
+RID22701#gray matter of triangular part of right inferior frontal gyrus#ctx-rh-G_frontal_inf-Triangular_part
+RID21021#right nucleus accumbens#Right-Accumbens-area
+RID16922#vastus intermedius branch of femoral nerve (1)#wm-lh-S_central_insula
+RID16883#medulla of tonsil of cerebellum#wm-rh-Corpus_callosum
+RID16883#medulla of tonsil of cerebellum#wm-rh-corpuscallosum
+RID17137#white matter of right cuneus#wm-rh-frontalpole
+RID17137#white matter of right cuneus#wm-rh-cuneus
+RID17137#white matter of right cuneus#wm-rh-G_cuneus
+RID20356#gray matter of left cuneus#ctx-lh-G_cuneus
+RID20356#gray matter of left cuneus#ctx-lh-cuneus
+RID20305#gray matter of right parahippocampal gyrus#ctx-rh-parahippocampal
+RID24448#t6 branch to semispinalis capitis#ctx-lh-G_cuneus
+RID24448#t6 branch to semispinalis capitis#ctx-lh-cuneus
+RID20302#gray matter of left orbital gyrus#ctx-lh-G_orbital
+RID13969#right paraterminal gyrus#ctx-rh-G_subcallosal
+RID13969#right paraterminal gyrus#ctx-rh-G_subcallosal
+RID17014#white matter of right limbic lobe#wm-lh-S_postcentral
+RID17014#white matter of right limbic lobe#wm-lh-G_postcentral
+RID17014#white matter of right limbic lobe#wm-lh-postcentral
+RID24404#t4 branch to multifidus#ctx-lh-middletemporal
+RID24404#t4 branch to multifidus#ctx-lh-G_temporal_middle
+RID13524#cortex of right insula#ctx-rh-S_central_insula
+RID13524#cortex of right insula#ctx-rh-S_central_insula
+RID24401#t3 branch to right spinalis capitis#ctx-lh-superiortemporal
+RID24401#t3 branch to right spinalis capitis#ctx-lh-S_temporal_superior
+RID17127#white matter of right paracentral lobule#wm-rh-caudalanteriorcingulate
+RID17127#white matter of right paracentral lobule#wm-rh-S_paracentral
+RID17127#white matter of right paracentral lobule#wm-rh-paracentral
+RID17127#white matter of right paracentral lobule#wm-rh-G_paracentral
+RID17189#white matter of triangular part of right inferior frontal gyrus#wm-rh-G_frontal_inf-Triangular_part
+RID17189#white matter of triangular part of right inferior frontal gyrus#wm-rh-parstriangularis
+RID20328#gray matter of transverse temporal gyrus#transversetemporal
+RID17134#white matter of right lateral occipital gyrus#wm-rh-lateraloccipital
+RID24517#t12 branch to multifidus#Right-CADG-head
+RID16989#splenium of right half of corpus callosum#wm-lh-S_temporal_superior
+RID16989#splenium of right half of corpus callosum#wm-lh-superiortemporal
+RID16986#genu of left half of corpus callosum#wm-lh-G_occipit-temp_med-Parahippocampal_part
+RID16986#genu of left half of corpus callosum#wm-lh-parahippocamp
+RID7361#spinal cord#Spinal-Cord
+RID7361#spinal cord#Spinal-Cord
+RID20291#gray matter of lateral orbital gyrus#lateralorbitofrontal
+RID24383#t2 branch to left semispinalis capitis#lateralorbitofrontal
+RID24445#t6 branch to semispinalis thoracis#ctx-lh-lateraloccipital
+RID16958#nerve to left femoral artery#wm-lh-G_precentral
+RID16958#nerve to left femoral artery#wm-lh-precentral
+RID20353#gray matter of left lateral occipital gyrus#ctx-lh-lateraloccipital
+RID13156#cerebral cortex#Cerebral_Cortex
+RID13156#cerebral cortex#Cerebral_Cortex
+RID22707#gray matter of orbital part of right inferior frontal gyrus#ctx-rh-parsorbitalis
+RID22707#gray matter of orbital part of right inferior frontal gyrus#ctx-rh-G_frontal_inf-Orbital_part
+RID13970#left paraterminal gyrus#ctx-lh-G_subcallosal
+RID13970#left paraterminal gyrus#ctx-lh-G_subcallosal
+RID17124#white matter of right inferior parietal lobule#wm-rh-inferiorparietal
+RID20376#gray matter of posterior cingulate gyrus#posteriorcingulate
+RID20269#gray matter of left superior frontal gyrus#ctx-lh-superiorfrontal
+RID20269#gray matter of left superior frontal gyrus#ctx-lh-G_frontal_superior
+RID20269#gray matter of left superior frontal gyrus#ctx-lh-S_frontal_superior
+RID24380#t2 branch to left semispinalis thoracis#medialorbitofrontal
+RID24399#t3 branch to left semispinalis capitis#superiortemporal
+RID15701#right claustrum#Right-Claustrum
+RID15701#right claustrum#Right-Claustrum
+RID17019#capsule of cerebral hemisphere#wm-rh-G_parietal_inferior-Angular_part
+RID20741#right substantia nigra#Right-Substancia-Nigra
+RID17016#white matter of insula#wm-rh-G_parietal_inferior-Supramarginal_part
+RID17016#white matter of insula#wm-rh-supramarginal
+RID20350#gray matter of left superior occipital gyrus#ctx-lh-G_occipital_superior
+RID17078#white matter of left orbital gyrus#wm-lh-G_orbital
+RID17121#white matter of right precuneus#wm-rh-precuneus
+RID17121#white matter of right precuneus#wm-rh-G_precuneus
+RID17085#white matter of left superior temporal gyrus#wm-lh-S_temporal_superior
+RID17085#white matter of left superior temporal gyrus#wm-lh-superiortemporal
+RID24406#t4 branch to left multifidus#ctx-rh-S_temporal_inferior
+RID24406#t4 branch to left multifidus#ctx-rh-inferiortemporal
+RID24406#t4 branch to left multifidus#ctx-rh-G_temporal_inferior
+RID24468#medial branch of posterior ramus of right seventh thoracic nerve to right longissimus thoracis#posteriorcingulate
+RID17175#white matter of right long insular gyrus#wm-rh-G_insular_long
+RID13924#left lateral orbital gyrus#Left-lOg
+RID13924#left lateral orbital gyrus#Left-lOg
+RID20314#gray matter of right inferior temporal gyrus#ctx-rh-S_temporal_inferior
+RID20314#gray matter of right inferior temporal gyrus#ctx-rh-inferiortemporal
+RID20314#gray matter of right inferior temporal gyrus#ctx-rh-G_temporal_inferior
+RID17147#white matter of left middle occipital gyrus#wm-lh-G_occipital_middle
+RID24393#t3 branch to left semispinalis cervicis#ctx-rh-G_orbital
+RID17144#white matter of left inferior occipital gyrus#wm-lh-Pole_occipital
+RID17144#white matter of left inferior occipital gyrus#wm-lh-G_and_S_occipital_inferior
+RID17237#white matter of left temporal pole#wm-lh-Pole_temporal
+RID17237#white matter of left temporal pole#wm-lh-temporalpole
+RID16980#left half of corpus callosum#wm-lh-corpuscallosum
+RID16980#left half of corpus callosum#wm-lh-Corpus_callosum
+RID17068#white matter of right medial orbital gyrus#wm-rh-medialorbitofrontal
+RID17234#white matter of left frontal pole#wm-lh-frontalpole
+RID24396#t3 branch to left semispinalis thoracis#parahippocampal
+RID17072#white matter of left lateral orbital gyrus#wm-lh-G_frontomarginal
+RID17072#white matter of left lateral orbital gyrus#wm-lh-lateralorbitofrontal
+RID17072#white matter of left lateral orbital gyrus#wm-lh-S_orbital_lateral
+RID13917#right posterior orbital gyrus#Right-Porg
+RID13917#right posterior orbital gyrus#Right-pOg
+RID13917#right posterior orbital gyrus#Right-Porg
+RID13917#right posterior orbital gyrus#Right-pOg
+RID18676#anterior root of left second lumbar nerve#Right-Amygdala-Anterior
+RID25107#descending branch of meningeal branch of right first thoracic nerve#Right-Putamen
+RID17111#white matter of supramarginal gyrus#wm-rh-S_precentral-Superior-part
+RID17020#right internal capsule#wm-lh-G_parietal_inferior-Angular_part
+RID17039#sublenticular part of left internal capsule#wm-lh-lateraloccipital
+RID20272#gray matter of left middle frontal gyrus#ctx-lh-G_frontal_middle
+RID20272#gray matter of left middle frontal gyrus#ctx-lh-S_frontal_middle
+RID21018#left globus pallidus#Left-Pallidum
+RID24403#muscular branch of medial branch of posterior ramus of fourth thoracic nerve#ctx-rh-G_temporal_middle
+RID24403#muscular branch of medial branch of posterior ramus of fourth thoracic nerve#ctx-rh-middletemporal
+RID17036#retrolenticular part of left internal capsule#wm-lh-G_occipital_superior
+RID20362#gray matter of left inferior occipital gyrus#ctx-lh-G_and_S_occipital_inferior
+RID21015#left putamen#Left-Putamen
+RID13523#cortex of left insula#ctx-lh-S_central_insula
+RID13523#cortex of left insula#ctx-lh-S_central_insula
+RID24364#t1 branch to left semispinalis thoracis#ctx-lh-G_frontal_middle
+RID24364#t1 branch to left semispinalis thoracis#ctx-lh-S_frontal_middle
+RID24400#t3 branch to spinalis capitis#ctx-rh-S_temporal_superior
+RID24400#t3 branch to spinalis capitis#ctx-rh-superiortemporal
+RID13921#left medial orbital gyrus#Left-mOg
+RID13921#left medial orbital gyrus#Left-mOg
+RID24454#t6 branch to spinalis capitis#ctx-lh-G_and_S_occipital_inferior
+RID20311#gray matter of right middle temporal gyrus#ctx-rh-G_temporal_middle
+RID20311#gray matter of right middle temporal gyrus#ctx-rh-middletemporal
+RID20334#gray matter of left postcentral gyrus#ctx-lh-G_postcentral
+RID20334#gray matter of left postcentral gyrus#ctx-lh-S_postcentral
+RID20334#gray matter of left postcentral gyrus#ctx-lh-postcentral
+RID17192#white matter of orbital part of right inferior frontal gyrus#wm-rh-G_frontal_inf-Orbital_part
+RID17192#white matter of orbital part of right inferior frontal gyrus#wm-rh-parsorbitalis
+RID7147#fourth ventricle#4th-Ventricle
+RID7147#fourth ventricle#4th-Ventricle
+RID14103#CA2 field#CA2
+RID14103#CA2 field#CA2
+RID20428#left subiculum#Left-subiculum
+RID24426#t5 branch to semispinalis cervicis#ctx-lh-G_postcentral
+RID24426#t5 branch to semispinalis cervicis#ctx-lh-S_postcentral
+RID24426#t5 branch to semispinalis cervicis#ctx-lh-postcentral
+RID16996#cerebral white matter#Cerebral_White_Matter
+RID24835#t7 branch to right iliocostalis lumborum#Left-Substancia-Nigra
+RID20425#right hippocampal formation#Right-CADG-head
+RID17195#white matter of opercular part of right inferior frontal gyrus#wm-rh-parsopercularis
+RID17195#white matter of opercular part of right inferior frontal gyrus#wm-rh-G_frontal_inf-Opercular_part
+RID17026#genu of right internal capsule#wm-lh-precuneus
+RID17026#genu of right internal capsule#wm-lh-G_precuneus
+RID14034#presubiculum#presubiculum
+RID14034#presubiculum#presubiculum
+RID17088#white matter of left middle temporal gyrus#wm-lh-G_temporal_middle
+RID17088#white matter of left middle temporal gyrus#wm-lh-middletemporal
+RID24409#t4 branch to left semispinalis cervicis#ctx-rh-fusiform
+RID17178#white matter of right short insular gyrus#wm-rh-G_insular_short
+RID20301#gray matter of right orbital gyrus#ctx-rh-G_orbital
+RID17029#posterior limb of right internal capsule#wm-lh-inferiorparietal
+RID17010#white matter of occipital lobe#wm-lh-transversetemporal
+RID17010#white matter of occipital lobe#wm-lh-S_temporal_transverse
+RID20317#gray matter of right fusiform gyrus#ctx-rh-fusiform
+RID17131#white matter of right superior occipital gyrus#wm-rh-G_occipital_superior
+RID7137#third ventricle#3rd-Ventricle
+RID7137#third ventricle#3rd-Ventricle
+RID24475#t8 branch to right semispinalis thoracis#ctx-rh-isthmuscingulate
+RID17182#white matter of left accessory short gyrus#Left-Cerebellum-White-Matter
+RID17146#white matter of right middle occipital gyrus#wm-rh-G_occipital_middle
+RID13803#temporal horn of left lateral ventricle#Left-Inf-Lat-Vent
+RID13803#temporal horn of left lateral ventricle#Left-Inf-Lat-Vent
+RID24474#t8 branch to semispinalis thoracis#isthmuscingulate
+RID17956#t8 segment of right posterior spinocerebellar tract#wm-lh-centrum-semiovale
+RID20382#gray matter of isthmus of cingulate gyrus#isthmuscingulate
+RID20278#gray matter of left straight gyrus#ctx-lh-G_rectus
+RID24457#muscular branch of medial branch of posterior ramus of seventh thoracic nerve#ctx-lh-G_occipital_middle
+RID16954#nerve to right iliacus (n)#wm-rh-S_frontal_middle
+RID16954#nerve to right iliacus (n)#wm-rh-G_frontal_middle
+RID17208#white matter of superior part of left precentral gyrus#wm-lh-S_precentral-Superior-part
+RID17023#anterior limb of right internal capsule#wm-lh-superiorparietal
+RID17023#anterior limb of right internal capsule#wm-lh-G_parietal_superior
+RID20275#gray matter of left precentral gyrus#ctx-lh-G_precentral
+RID20275#gray matter of left precentral gyrus#ctx-lh-precentral
+RID13978#opercular part of left inferior frontal gyrus#Left-Operculum
+RID13978#opercular part of left inferior frontal gyrus#Left-Operculum
+RID25412#nerve to fourth posterior cervical intertransversarius#ctx-rh-parsorbitalis
+RID25412#nerve to fourth posterior cervical intertransversarius#ctx-rh-G_frontal_inf-Orbital_part
+RID17077#white matter of right orbital gyrus#wm-rh-G_orbital
+RID20365#gray matter of left middle occipital gyrus#ctx-lh-G_occipital_middle
+RID24367#t1 branch to left semispinalis capitis#ctx-lh-G_precentral
+RID24367#t1 branch to left semispinalis capitis#ctx-lh-precentral
+RID16957#nerve to right femoral artery#wm-rh-G_precentral
+RID16957#nerve to right femoral artery#wm-rh-precentral
+RID24519#t12 branch to left multifidus#Right-subiculum
+RID17198#white matter of posterior part of right middle frontal gyrus#wm-rh-caudalmiddlefrontal
+RID20337#gray matter of left supramarginal gyrus#ctx-lh-G_parietal_inferior-Supramarginal_part
+RID20337#gray matter of left supramarginal gyrus#ctx-lh-supramarginal
+RID17215#white matter of polar part of right superior temporal gyrus#wm-rh-G_temp_sup-Planum_polare
+RID17120#white matter of precuneus#wm-lh-G_temp_sup-Planum_polare
+RID24429#t5 branch to semispinalis thoracis#ctx-lh-G_parietal_inferior-Supramarginal_part
+RID24429#t5 branch to semispinalis thoracis#ctx-lh-supramarginal
+RID17081#white matter of right parahippocampal gyrus#wm-rh-G_occipit-temp_med-Parahippocampal_part
+RID17081#white matter of right parahippocampal gyrus#wm-rh-parahippocampal
+RID17013#white matter of limbic lobe#wm-rh-postcentral
+RID17013#white matter of limbic lobe#wm-rh-S_postcentral
+RID17013#white matter of limbic lobe#wm-rh-G_postcentral
+RID17143#white matter of right inferior occipital gyrus#wm-rh-Pole_occipital
+RID17143#white matter of right inferior occipital gyrus#wm-rh-G_and_S_occipital_inferior
+RID17064#white matter of posterior orbital gyrus#wm-lh-posteriorcingulate
+RID20268#gray matter of right superior frontal gyrus#ctx-rh-G_frontal_superior
+RID20268#gray matter of right superior frontal gyrus#ctx-rh-S_frontal_superior
+RID20268#gray matter of right superior frontal gyrus#ctx-rh-superiorfrontal
+RID17071#white matter of right lateral orbital gyrus#wm-rh-S_orbital_lateral
+RID17071#white matter of right lateral orbital gyrus#wm-rh-lateralorbitofrontal
+RID17071#white matter of right lateral orbital gyrus#wm-rh-G_frontomarginal
+RID13916#left anterior orbital gyrus#Left-Aorg
+RID13916#left anterior orbital gyrus#Left-Aorg
+RID16951#nerve to right iliacus (2)#wm-rh-S_frontal_superior
+RID16951#nerve to right iliacus (2)#wm-rh-superiorfrontal
+RID16951#nerve to right iliacus (2)#wm-rh-G_frontal_superior
+RID17205#white matter of inferior part of left precentral gyrus#wm-lh-S_precentral-Inferior-part
+RID17240#white matter of left occipital pole#wm-lh-Pole_occipital
+RID17097#white matter of left anterior transverse temporal gyrus#wm-lh-parsorbitalis
+RID17097#white matter of left anterior transverse temporal gyrus#wm-lh-G_frontal_inf-Orbital_part
+RID6518#amygdala#Amygdala
+RID6518#amygdala#Amygdala
+RID13920#right medial orbital gyrus#Right-mOg
+RID13920#right medial orbital gyrus#Right-mOg
+RID14102#CA1 field#CA1
+RID14102#CA1 field#CA1
+RID17140#white matter of right lingual gyrus#wm-rh-Pole_temporal
+RID17140#white matter of right lingual gyrus#wm-rh-temporalpole
+RID17140#white matter of right lingual gyrus#wm-rh-G_occipit-temp_med-Lingual_part
+RID17140#white matter of right lingual gyrus#wm-rh-lingual
+RID17159#white matter of right posterior cingulate gyrus#wm-rh-posteriorcingulate
+RID16995#posterior part of anterior commissure#wm-lh-S_temporal_inferior
+RID16995#posterior part of anterior commissure#wm-lh-inferiortemporal
+RID16995#posterior part of anterior commissure#wm-lh-G_temporal_inferior
+RID16992#posterior forceps of left half of corpus callosum#wm-lh-G_temporal_middle
+RID16992#posterior forceps of left half of corpus callosum#wm-lh-middletemporal
+RID6534#dentate gyrus of hippocampus#GC-DG
+RID24451#t6 branch to spinalis thoracis#ctx-lh-lingual
+RID20288#gray matter of medial orbital gyrus#medialorbitofrontal
+RID17202#white matter of anterior part of left middle frontal gyrus#wm-lh-rostralmiddlefrontal
+RID16964#infrapatellar branch of left saphenous nerve#wm-lh-S_frontal_inferior
+RID20378#gray matter of left posterior cingulate gyrus#ctx-lh-posteriorcingulate
+RID24361#t1 branch to left semispinalis cervicis#ctx-lh-superiorfrontal
+RID24361#t1 branch to left semispinalis cervicis#ctx-lh-G_frontal_superior
+RID24361#t1 branch to left semispinalis cervicis#ctx-lh-S_frontal_superior
+RID17087#white matter of right middle temporal gyrus#wm-rh-middletemporal
+RID17087#white matter of right middle temporal gyrus#wm-rh-G_temporal_middle
+RID21014#right putamen#Right-Putamen
+RID17035#retrolenticular part of right internal capsule#wm-rh-G_occipital_superior
+RID7093#dura mater#Dura
+RID7093#dura mater#Dura
+RID17032#lenticulothalamic part of internal capsule#wm-lh-S_paracentral
+RID17032#lenticulothalamic part of internal capsule#wm-lh-paracentral
+RID17032#lenticulothalamic part of internal capsule#wm-lh-G_paracentral
+RID24360#t1 branch to right semispinalis cervicis#ctx-rh-G_frontal_superior
+RID24360#t1 branch to right semispinalis cervicis#ctx-rh-S_frontal_superior
+RID24360#t1 branch to right semispinalis cervicis#ctx-rh-superiorfrontal
+RID17094#white matter of left fusiform gyrus#wm-lh-parstriangulari
+RID17094#white matter of left fusiform gyrus#wm-lh-G_frontal_inf-Triangular_part
+RID17094#white matter of left fusiform gyrus#wm-lh-G_occipit-temp_lat-Or_fusiform
+RID17094#white matter of left fusiform gyrus#wm-lh-fusiform
+RID17955#t8 segment of posterior spinocerebellar tract#wm-rh-centrum-semiovale
+RID24520#t12 branch to spinalis thoracis#Left-subiculum
+RID25411#nerve to left third posterior cervical intertransversarius#parsorbitalis
+RID17022#subdivision of internal capsule#wm-rh-superiorparietal
+RID17022#subdivision of internal capsule#wm-rh-G_parietal_superior
+RID18445#right anterior amygdaloid area#Right-Amygdala-Anterior
+RID16902#cutaneous branch of anterior branch of medial femoral cutaneous nerve#Left-Cerebral-White-Matter
+RID17084#white matter of right superior temporal gyrus#wm-rh-S_temporal_superior
+RID17084#white matter of right superior temporal gyrus#wm-rh-superiortemporal
+RID13923#right lateral orbital gyrus#Right-lOg
+RID13923#right lateral orbital gyrus#Right-lOg
+RID17025#genu of internal capsule#wm-rh-precuneus
+RID17025#genu of internal capsule#wm-rh-G_precuneus
+RID13977#opercular part of right inferior frontal gyrus#Right-Operculum
+RID13977#opercular part of right inferior frontal gyrus#Right-Operculum
+RID17091#white matter of left inferior temporal gyrus#wm-lh-S_temporal_inferior
+RID17091#white matter of left inferior temporal gyrus#wm-lh-inferiortemporal
+RID17091#white matter of left inferior temporal gyrus#wm-lh-G_temporal_inferior
+RID16998#white matter of left cerebral hemisphere#wm-lh-G_occipit-temp_lat-Or_fusiform
+RID16998#white matter of left cerebral hemisphere#wm-lh-fusiform
+RID16998#white matter of left cerebral hemisphere#Left-Cerebral-White-Matter
+RID17313#white matter of left hemisphere of cerebellum#Left-Cerebellum-White-Matter
+RID24435#t5 branch to spinalis thoracis#ctx-lh-G_parietal_superior
+RID24435#t5 branch to spinalis thoracis#ctx-lh-superiorparietal
+RID20346#gray matter of left precuneus#ctx-lh-precuneus
+RID20346#gray matter of left precuneus#ctx-lh-G_precuneus
+RID17312#white matter of right hemisphere of cerebellum#Right-Cerebellum-White-Matter
+RID24470#muscular branch of medial branch of posterior ramus of eighth thoracic nerve#ctx-lh-posteriorcingulate
+RID24489#t9 branch to left semispinalis thoracis#ctx-lh-G_insular_short
+RID24359#t1 branch to semispinalis cervicis#superiorfrontal
+RID20343#gray matter of left superior parietal lobule#ctx-lh-G_parietal_superior
+RID20343#gray matter of left superior parietal lobule#ctx-lh-superiorparietal
+RID18113#fimbria of left hippocampus#Left-fimbria
+RID24438#t5 branch to spinalis capitis#ctx-lh-precuneus
+RID24438#t5 branch to spinalis capitis#ctx-lh-G_precuneus
+RID20267#gray matter of superior frontal gyrus#superiorfrontal
+RID20310#gray matter of middle temporal gyrus#middletemporal
+RID20329#gray matter of right transverse temporal gyrus#ctx-rh-transversetemporal
+RID17204#white matter of inferior part of right precentral gyrus#wm-rh-S_precentral-Inferior-part
+RID17038#sublenticular part of right internal capsule#wm-rh-lateraloccipital
+RID20271#gray matter of right middle frontal gyrus#ctx-rh-G_frontal_middle
+RID20271#gray matter of right middle frontal gyrus#ctx-rh-S_frontal_middle
+RID21017#right globus pallidus#Right-Pallidum
+RID24366#t1 branch to right semispinalis capitis#ctx-rh-G_precentral
+RID24366#t1 branch to right semispinalis capitis#ctx-rh-precentral
+RID25108#descending branch of meningeal branch of left first thoracic nerve#Left-Putamen
+RID24402#t3 branch to left spinalis capitis#middletemporal
+RID24363#t1 branch to right semispinalis thoracis#ctx-rh-G_frontal_middle
+RID24363#t1 branch to right semispinalis thoracis#ctx-rh-S_frontal_middle
+RID17070#white matter of lateral orbital gyrus#wm-lh-isthmuscingulate
+RID17070#white matter of lateral orbital gyrus#wm-lh-G_cingulate-Isthmus
+RID17207#white matter of superior part of right precentral gyrus#wm-rh-S_precentral-Superior-part
+RID20274#gray matter of right precentral gyrus#ctx-rh-G_precentral
+RID20274#gray matter of right precentral gyrus#ctx-rh-precentral
+RID20336#gray matter of right supramarginal gyrus#ctx-rh-G_parietal_inferior-Supramarginal_part
+RID20336#gray matter of right supramarginal gyrus#ctx-rh-supramarginal
+RID13981#orbital part of left inferior frontal gyrus#Left-F3orb
+RID13981#orbital part of left inferior frontal gyrus#Left-F3orb
+RID20333#gray matter of right postcentral gyrus#ctx-rh-S_postcentral
+RID20333#gray matter of right postcentral gyrus#ctx-rh-G_postcentral
+RID20333#gray matter of right postcentral gyrus#ctx-rh-postcentral
+RID17045#white matter of gyrus of frontal lobe#wm-lh-lingual
+RID17045#white matter of gyrus of frontal lobe#wm-lh-G_occipit-temp_med-Lingual_part
+RID14105#cA4 field#CA4
+RID14105#cA4 field#CA4
+RID17042#right extreme capsule#wm-lh-G_cuneus
+RID17042#right extreme capsule#wm-lh-cuneus
+RID24428#t5 branch to left semispinalis cervicis#ctx-rh-G_parietal_inferior-Supramarginal_part
+RID24428#t5 branch to left semispinalis cervicis#ctx-rh-supramarginal
+RID17135#white matter of left lateral occipital gyrus#wm-lh-lateraloccipital
+RID20427#right subiculum#Right-subiculum
+RID24370#t1 branch to left spinalis capitis#ctx-lh-G_rectus
+RID24425#t5 branch to left multifidus#ctx-rh-S_postcentral
+RID24425#t5 branch to left multifidus#ctx-rh-G_postcentral
+RID24425#t5 branch to left multifidus#ctx-rh-postcentral
+RID17132#white matter of left superior occipital gyrus#wm-lh-G_occipital_superior
+RID24432#t5 branch to semispinalis capitis#ctx-lh-G_parietal_inferior-Angular_part
+RID13871#left insula#Left-Insula
+RID13871#left insula#Left-Insula
+RID17028#posterior limb of internal capsule#wm-rh-inferiorparietal
+RID17165#white matter of isthmus of right cingulate gyrus#wm-rh-G_cingulate-Isthmus
+RID17165#white matter of isthmus of right cingulate gyrus#wm-rh-isthmuscingulate
+RID17201#white matter of anterior part of right middle frontal gyrus#wm-rh-rostralmiddlefrontal
+RID20304#gray matter of parahippocampal gyrus#parahippocampal
+RID17162#white matter of right anterior cingulate gyrus#wm-rh-rostralanteriorcingulate
+RID17093#white matter of right fusiform gyrus#wm-rh-G_frontal_inf-Triangular_part
+RID17093#white matter of right fusiform gyrus#wm-rh-parstriangularis
+RID17093#white matter of right fusiform gyrus#wm-rh-fusiform
+RID17093#white matter of right fusiform gyrus#wm-rh-G_occipit-temp_lat-Or_fusiform
+RID24422#muscular branch of medial branch of posterior ramus of fifth thoracic nerve#ctx-lh-transversetemporal
+RID1544#cerebrospinal fluid#CSF
+RID1544#cerebrospinal fluid#CSF
+RID17090#white matter of right inferior temporal gyrus#wm-rh-G_temporal_inferior
+RID17090#white matter of right inferior temporal gyrus#wm-rh-S_temporal_inferior
+RID17090#white matter of right inferior temporal gyrus#wm-rh-inferiortemporal
+RID16973#medial cutaneous nerve of right leg#wm-lh-medialorbitofrontal
+RID24476#t8 branch to left semispinalis thoracis#ctx-lh-isthmuscingulate
+RID24476#t8 branch to left semispinalis thoracis#ctx-lh-G_cingulate-Isthmus
+RID20330#gray matter of left transverse temporal gyrus#ctx-lh-transversetemporal
+RID20349#gray matter of right superior occipital gyrus#ctx-rh-G_occipital_superior
+RID20384#gray matter of isthmus of left cingulate gyrus#ctx-lh-isthmuscingulate
+RID20384#gray matter of isthmus of left cingulate gyrus#ctx-lh-G_cingulate-Isthmus
+RID17224#white matter of caudal part of left anterior cingulate gyrus#wm-lh-caudalanteriorcingulate
+RID20277#gray matter of right straight gyrus#ctx-rh-G_rectus
+RID15671#gray matter of inferior parietal lobule#inferiorparietal
+RID15671#gray matter of inferior parietal lobule#inferiorparietal
+RID24369#t1 branch to right spinalis capitis#ctx-rh-G_rectus
+RID17080#white matter of parahippocampal gyrus#wm-lh-G_insular_long
+RID17099#white matter of right posterior transverse temporal gyrus#wm-rh-parsopercularis
+RID17099#white matter of right posterior transverse temporal gyrus#wm-rh-G_frontal_inf-Opercular_part
+RID16963#infrapatellar branch of right saphenous nerve#wm-rh-S_frontal_inferior
+RID20339#gray matter of right angular gyrus#ctx-rh-G_parietal_inferior-Angular_part
+RID17217#segment of white matter of gyrus of occipital lobe#Left-Cerebellum-White-Matter
+RID16960#left saphenous nerve#wm-rh-G_rectus
+RID16979#right half of corpus callosum#wm-rh-Corpus_callosum
+RID16979#right half of corpus callosum#wm-rh-corpuscallosum
+RID17048#white matter of left superior frontal gyrus#wm-lh-G_and_S_occipital_inferior
+RID17048#white matter of left superior frontal gyrus#wm-lh-G_frontal_superior
+RID17048#white matter of left superior frontal gyrus#wm-lh-superiorfrontal
+RID17048#white matter of left superior frontal gyrus#wm-lh-S_frontal_superior
+RID20281#gray matter of left inferior frontal gyrus#ctx-lh-S_frontal_inferior
+RID18051#right semioval center#wm-rh-centrum-semiovale
+RID13496#left thalamus#Left-Thalamus
+RID13496#left thalamus#Left-Thalamus
+RID17083#white matter of superior temporal gyrus#wm-lh-G_insular_short
+RID24373#t2 branch to right multifidus#ctx-lh-S_frontal_inferior
+RID25115#descending branch of meningeal branch of fourth thoracic nerve#Left-Accumbens-area
+RID17047#white matter of right superior frontal gyrus#wm-rh-G_and_S_occipital_inferior
+RID17047#white matter of right superior frontal gyrus#wm-rh-S_frontal_superior
+RID17047#white matter of right superior frontal gyrus#wm-rh-superiorfrontal
+RID17047#white matter of right superior frontal gyrus#wm-rh-G_frontal_superior
+RID20397#gray matter of left short insular gyrus#ctx-lh-G_insular_short
+RID22706#gray matter of orbital part of inferior frontal gyrus#parsorbitalis
+RID13495#right thalamus#Right-Thalamus
+RID13495#right thalamus#Right-Thalamus
+RID18018#right lateral funiculus of medulla oblongata#alveus
+RID17196#white matter of opercular part of left inferior frontal gyrus#wm-lh-parsopercularis
+RID17196#white matter of opercular part of left inferior frontal gyrus#wm-lh-G_frontal_inf-Opercular_part
+RID25408#nerve to left second posterior cervical intertransversarius#parsopercularis
+RID17109#white matter of right postcentral gyrus#wm-lh-S_precentral-Inferior-part
+RID17109#white matter of right postcentral gyrus#wm-rh-postcentral
+RID17109#white matter of right postcentral gyrus#wm-rh-S_postcentral
+RID17109#white matter of right postcentral gyrus#wm-rh-G_postcentral
+RID15573#right cerebellar cortex#Right-Cerebellum-Cortex
+RID15573#right cerebellar cortex#Right-Cerebellum-Cortex
+RID13789#left lateral ventricle#Left-Lateral-Ventricles
+RID13789#left lateral ventricle#Left-Lateral-Ventricle
+RID13789#left lateral ventricle#Left-Lateral-Ventricles
+RID13789#left lateral ventricle#Left-Lateral-Ventricle
+RID20307#gray matter of superior temporal gyrus#superiortemporal
+RID25112#descending branch of meningeal branch of third thoracic nerve#Right-Caudate
+RID17096#white matter of right anterior transverse temporal gyrus#wm-rh-G_frontal_inf-Orbital_part
+RID17096#white matter of right anterior transverse temporal gyrus#wm-rh-parsorbitalis
+RID16976#white matter of telencephalon#wm-lh-G_frontomarginal
+RID16976#white matter of telencephalon#wm-lh-lateralorbitofrontal
+RID16976#white matter of telencephalon#wm-lh-S_orbital_lateral
+RID7128#temporal horn of lateral ventricle#Inf_Lat_Vent
+RID7128#temporal horn of lateral ventricle#Inf_Lat_Vent
+RID20289#gray matter of right medial orbital gyrus#ctx-rh-medialorbitofrontal
+RID20394#gray matter of left long insular gyrus#ctx-lh-G_insular_long
+RID18015#right stria medullaris of thalamus#fimbria
+RID24486#t9 branch to left multifidus#ctx-lh-G_insular_long
+RID17193#white matter of orbital part of left inferior frontal gyrus#wm-lh-parsorbitalis
+RID17193#white matter of orbital part of left inferior frontal gyrus#wm-lh-G_frontal_inf-Orbital_part
+RID17009#white matter of left temporal lobe#wm-rh-S_temporal_transverse
+RID17009#white matter of left temporal lobe#wm-rh-transversetemporal
+RID20340#gray matter of left angular gyrus#ctx-lh-G_parietal_inferior-Angular_part
+RID20359#gray matter of left lingual gyrus#ctx-lh-lingual
+RID20342#gray matter of right superior parietal lobule#ctx-rh-superiorparietal
+RID20342#gray matter of right superior parietal lobule#ctx-rh-G_parietal_superior
+RID18112#fimbria of right hippocampus#Right-fimbria
+RID17106#white matter of left transverse temporal gyrus#wm-lh-rostralmiddlefrontal
+RID17106#white matter of left transverse temporal gyrus#wm-lh-transversetemporal
+RID17106#white matter of left transverse temporal gyrus#wm-lh-S_temporal_transverse
+RID20358#gray matter of right lingual gyrus#ctx-rh-lingual
+RID17067#white matter of medial orbital gyrus#wm-lh-rostralanteriorcingulate
+RID17103#white matter of left temporal lobe proper#wm-lh-caudalmiddlefrontal
+RID24434#t5 branch to left semispinalis capitis#ctx-rh-superiorparietal
+RID24434#t5 branch to left semispinalis capitis#ctx-rh-G_parietal_superior
+RID24431#t5 branch to left semispinalis thoracis#ctx-rh-G_parietal_inferior-Angular_part
+RID17031#subdivision of posterior limb of internal capsule#wm-rh-S_paracentral
+RID17031#subdivision of posterior limb of internal capsule#wm-rh-paracentral
+RID17031#subdivision of posterior limb of internal capsule#wm-rh-G_paracentral
+RID17278#white matter of cerebellum#Left-Cerebellum-White-Matter
+RID15699#right amygdala#Right-Amygdala
+RID15699#right amygdala#Right-Amygdala
+RID17110#white matter of left postcentral gyrus#wm-lh-S_postcentral
+RID17110#white matter of left postcentral gyrus#wm-lh-G_postcentral
+RID17110#white matter of left postcentral gyrus#wm-lh-postcentral
+RID6641#optic chiasm#Optic-Chiasm
+RID6641#optic chiasm#Optic-Chiasm
+RID24424#t5 branch to right multifidus#postcentral
+RID17057#white matter of left straight gyrus#wm-lh-G_rectus
+RID24421#t4 branch to left spinalis capitis#ctx-rh-transversetemporal
+RID17190#white matter of triangular part of left inferior frontal gyrus#wm-lh-parstriangulari
+RID17190#white matter of triangular part of left inferior frontal gyrus#wm-lh-G_frontal_inf-Triangular_part
+RID20332#gray matter of postcentral gyrus#postcentral
+RID15673#gray matter of right inferior parietal lobule#ctx-rh-inferiorparietal
+RID15673#gray matter of right inferior parietal lobule#ctx-rh-inferiorparietal
+RID21019#right caudate nucleus#Right-Caudate
+RID16901#branch of anterior branch of medial femoral cutaneous nerve#Right-Cerebral-White-Matter
+RID13870#right insula#Right-Insula
+RID13870#right insula#Right-Insula
+RID17100#white matter of left posterior transverse temporal gyrus#wm-lh-parsopercularis
+RID17100#white matter of left posterior transverse temporal gyrus#wm-lh-G_frontal_inf-Opercular_part
+RID17119#white matter of left superior parietal lobule#wm-rh-G_temp_sup-Planum_polare
+RID17119#white matter of left superior parietal lobule#wm-lh-superiorparietal
+RID17119#white matter of left superior parietal lobule#wm-lh-G_parietal_superior
+RID16900#posterior branch of left medial femoral cutaneous nerve#Cerebral_White_Matter
+RID17216#white matter of polar part of left superior temporal gyrus#Right-Cerebellum-White-Matter
+RID17216#white matter of polar part of left superior temporal gyrus#wm-lh-G_temp_sup-Planum_polare
+RID17213#white matter of lateral part of left superior temporal gyrus#wm-lh-G_temp_sup-Lateral_aspect
+RID17082#white matter of left parahippocampal gyrus#wm-rh-G_insular_short
+RID17082#white matter of left parahippocampal gyrus#wm-lh-G_occipit-temp_med-Parahippocampal_part
+RID17082#white matter of left parahippocampal gyrus#wm-lh-parahippocamp
+RID20396#gray matter of right short insular gyrus#ctx-rh-G_insular_short
+RID24398#t3 branch to right semispinalis capitis#ctx-lh-parahippocampal
+RID18017#lateral funiculus of medulla oblongata#Left-fimbria
+RID17141#white matter of left lingual gyrus#wm-lh-Pole_temporal
+RID17141#white matter of left lingual gyrus#wm-lh-temporalpole
+RID17141#white matter of left lingual gyrus#wm-lh-lingual
+RID17141#white matter of left lingual gyrus#wm-lh-G_occipit-temp_med-Lingual_part
+RID20345#gray matter of right precuneus#ctx-rh-precuneus
+RID20345#gray matter of right precuneus#ctx-rh-G_precuneus
+RID16985#genu of right half of corpus callosum#wm-rh-G_occipit-temp_med-Parahippocampal_part
+RID16985#genu of right half of corpus callosum#wm-rh-parahippocampal
+RID20290#gray matter of left medial orbital gyrus#ctx-lh-medialorbitofrontal
+RID24488#t9 branch to right semispinalis thoracis#ctx-rh-G_insular_short
+RID6531#parahippocampal gyrus#Perirhinal
+RID6531#parahippocampal gyrus#Perirhinal
+RID17239#white matter of right occipital pole#wm-rh-Pole_occipital
+RID17054#white matter of left precentral gyrus#wm-rh-G_cingulate-Main_part
+RID17054#white matter of left precentral gyrus#wm-lh-G_precentral
+RID17054#white matter of left precentral gyrus#wm-lh-precentral
+RID24437#t5 branch to left spinalis thoracis#ctx-rh-precuneus
+RID24437#t5 branch to left spinalis thoracis#ctx-rh-G_precuneus
+RID17051#white matter of left middle frontal gyrus#wm-lh-G_occipital_middle
+RID17051#white matter of left middle frontal gyrus#wm-lh-S_frontal_middle
+RID17051#white matter of left middle frontal gyrus#wm-lh-G_frontal_middle
+RID24382#t2 branch to right semispinalis capitis#ctx-lh-medialorbitofrontal
+RID20273#gray matter of precentral gyrus#precentral
+RID17113#white matter of left supramarginal gyrus#wm-lh-G_parietal_inferior-Supramarginal_part
+RID17113#white matter of left supramarginal gyrus#wm-lh-supramarginal
+RID24441#muscular branch of medial branch of posterior ramus of sixth thoracic nerve#ctx-rh-G_occipital_superior
+RID24365#t1 branch to semispinalis capitis#precentral
+RID20352#gray matter of right lateral occipital gyrus#ctx-rh-lateraloccipital
+RID6446#triangular part of inferior frontal gyrus#BA45
+RID6446#triangular part of inferior frontal gyrus#BA45
+RID17116#white matter of left angular gyrus#wm-rh-G_temp_sup-Lateral_aspect
+RID17116#white matter of left angular gyrus#wm-lh-G_parietal_inferior-Angular_part
+RID24444#t6 branch to left multifidus#ctx-rh-lateraloccipital
+RID16952#nerve to left iliacus (2)#wm-lh-G_frontal_superior
+RID16952#nerve to left iliacus (2)#wm-lh-superiorfrontal
+RID16952#nerve to left iliacus (2)#wm-lh-S_frontal_superior
+RID16975#white matter of forebrain#wm-rh-S_orbital_lateral
+RID16975#white matter of forebrain#wm-rh-lateralorbitofrontal
+RID16975#white matter of forebrain#wm-rh-G_frontomarginal
+RID20335#gray matter of supramarginal gyrus#supramarginal
+RID20280#gray matter of right inferior frontal gyrus#ctx-rh-S_frontal_inferior
+RID6530#subiculum#subiculum
+RID6530#subiculum#subiculum
+RID13980#orbital part of right inferior frontal gyrus#Right-F3orb
+RID13980#orbital part of right inferior frontal gyrus#Right-F3orb
+RID17044#white matter of gyrus#wm-rh-G_occipit-temp_med-Lingual_part
+RID17044#white matter of gyrus#wm-rh-lingual
+RID25114#descending branch of meningeal branch of left third thoracic nerve#Right-Accumbens-area
+RID22703#gray matter of opercular part of inferior frontal gyrus#parsopercularis
+RID24372#t2 branch to multifidus#ctx-rh-S_frontal_inferior
+RID24427#t5 branch to right semispinalis cervicis#supramarginal
+RID17041#left external capsule#wm-rh-cuneus
+RID17041#left external capsule#wm-rh-G_cuneus
+RID21020#left caudate nucleus#Left-Caudate
+RID25111#descending branch of meningeal branch of left second thoracic nerve#Left-Pallidum
+RID16921#vastus intermedius branch of femoral nerve#wm-rh-S_central_insula
+RID17233#white matter of right frontal pole#wm-rh-frontalpole
+RID20393#gray matter of right long insular gyrus#ctx-rh-G_insular_long
+RID24485#t9 branch to right multifidus#ctx-rh-G_insular_long
+RID16982#anterior forceps of left half of corpus callosum#wm-lh-G_orbital
+RID17236#white matter of right temporal pole#wm-rh-Pole_temporal
+RID17236#white matter of right temporal pole#wm-rh-temporalpole
+RID18446#left anterior amygdaloid area#Left-Amygdala-Anterior
+RID20306#gray matter of left parahippocampal gyrus#ctx-lh-parahippocampal
+RID13502#parasubiculum#parasubiculum
+RID13502#parasubiculum#parasubiculum
+RID15700#left claustrum#Left-Claustrum
+RID15700#left claustrum#Left-Claustrum
+RID24385#t2 branch to right spinalis capitis#ctx-lh-G_frontomarginal
+RID24385#t2 branch to right spinalis capitis#ctx-lh-lateralorbitofrontal
+RID16972#medial cutaneous nerve of leg#wm-rh-medialorbitofrontal
+RID16988#body of left half of corpus callosum#wm-rh-S_temporal_superior
+RID16988#body of left half of corpus callosum#wm-rh-superiortemporal
+RID20293#gray matter of left lateral orbital gyrus#ctx-lh-G_frontomarginal
+RID20293#gray matter of left lateral orbital gyrus#ctx-lh-lateralorbitofrontal
+RID20383#gray matter of isthmus of right cingulate gyrus#ctx-rh-isthmuscingulate
+RID17223#white matter of caudal part of right anterior cingulate gyrus#wm-rh-caudalanteriorcingulate
+RID24447#t6 branch to left semispinalis thoracis#ctx-rh-G_cuneus
+RID24447#t6 branch to left semispinalis thoracis#ctx-rh-cuneus
+RID17151#white matter of left cingulate gyrus#wm-lh-G_cingulate-Main_part
+RID20355#gray matter of right cuneus#ctx-rh-G_cuneus
+RID20355#gray matter of right cuneus#ctx-rh-cuneus
+RID20354#gray matter of cuneus#cuneus
+RID17102#white matter of right temporal lobe proper#wm-rh-caudalmiddlefrontal
+RID17063#white matter of left anterior orbital gyrus#wm-rh-posteriorcingulate
+RID17118#white matter of right superior parietal lobule#wm-rh-superiorparietal
+RID17118#white matter of right superior parietal lobule#wm-rh-G_parietal_superior
+RID24446#t6 branch to right semispinalis thoracis#cuneus
+RID6486#fusiform gyrus#Ectorhinal
+RID6486#fusiform gyrus#Ectorhinal
+RID22708#gray matter of orbital part of left inferior frontal gyrus#ctx-lh-parsorbitalis
+RID22708#gray matter of orbital part of left inferior frontal gyrus#ctx-lh-G_frontal_inf-Orbital_part
+RID18052#left semioval center#wm-lh-centrum-semiovale
+RID22705#gray matter of opercular part of left inferior frontal gyrus#ctx-lh-parsopercularis
+RID22705#gray matter of opercular part of left inferior frontal gyrus#ctx-lh-G_frontal_inf-Opercular_part
+RID17125#white matter of left inferior parietal lobule#wm-lh-inferiorparietal
+RID17018#white matter of left insula#wm-lh-S_central_insula
+RID18114#alveus of hippocampus#alveus
+RID25407#nerve to right second posterior cervical intertransversarius#ctx-lh-parstriangularis
+RID25407#nerve to right second posterior cervical intertransversarius#ctx-lh-G_frontal_inf-Triangular_part
+RID20344#gray matter of precuneus#precuneus
+RID17053#white matter of right precentral gyrus#wm-rh-G_precentral
+RID17053#white matter of right precentral gyrus#wm-rh-precentral
+RID17108#white matter of postcentral gyrus#wm-rh-S_precentral-Inferior-part
+RID13903#left superior frontal gyrus#Left-F1
+RID13903#left superior frontal gyrus#Left-F1
+RID24436#t5 branch to right spinalis thoracis#precuneus
+RID14077#dorsal part of precentral gyrus#BA4p
+RID14077#dorsal part of precentral gyrus#BA4p
+RID20309#gray matter of left superior temporal gyrus#ctx-lh-superiortemporal
+RID20309#gray matter of left superior temporal gyrus#ctx-lh-S_temporal_superior
+RID13788#right lateral ventricle#Right-Lateral-Ventricles
+RID13788#right lateral ventricle#Right-Lateral-Ventricle
+RID13788#right lateral ventricle#Right-Lateral-Ventricles
+RID13788#right lateral ventricle#Right-Lateral-Ventricle
+RID24834#t7 branch to iliocostalis lumborum#Right-Substancia-Nigra
+RID20313#gray matter of inferior temporal gyrus#inferiortemporal
+RID24408#t4 branch to right semispinalis cervicis#fusiform
+RID17115#white matter of right angular gyrus#wm-rh-G_parietal_inferior-Angular_part
+RID20316#gray matter of fusiform gyrus#fusiform

@@ -1,0 +1,9 @@
+PREFIX radlex: <http://bioontology.org/projects/ontologies/radlex/radlexOwl#> 
+SELECT ?codes ?names 
+WHERE {
+    ?codes radlex:Freesurfer ?name
+    FILTER regex(?name, "FREENAME")
+    ?codes radlex:Preferred_name ?names
+}
+LIMIT 1
+"""

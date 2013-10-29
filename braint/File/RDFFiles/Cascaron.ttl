@@ -1,0 +1,287 @@
+@prefix : <http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53> .
+
+<http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53> rdf:type owl:Ontology ;
+                                                                                
+                                                                                rdfs:comment "Ontología que permite tener un esqueleto RDF de integración entre: Jerarquías de evaluaciones, Bibliografía, Datos de pacientes, Relaciones entre las jerarquías, etc.." .
+
+
+#################################################################
+#
+#    Object Properties
+#
+#################################################################
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#hasAReferenceOf
+
+:hasAReferenceOf rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#hasAResultIn
+
+:hasAResultIn rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#hasSubSubTest
+
+:hasSubSubTest rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#hasSubTest
+
+:hasSubTest rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#hasTest
+
+:hasTest rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#hasValue
+
+:hasValue rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#hasVisualization
+
+:hasVisualization rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#isFromPatient
+
+:isFromPatient rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#isMentionedIn
+
+:isMentionedIn rdf:type owl:ObjectProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#isRelatedWith
+
+:isRelatedWith rdf:type owl:ObjectProperty .
+
+
+
+
+
+#################################################################
+#
+#    Data properties
+#
+#################################################################
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Evaluation_Description
+
+:Evaluation_Description rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Evaluation_Name
+
+:Evaluation_Name rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#HypoThesis_Author
+
+:HypoThesis_Author rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Hypothesis_Title
+
+:Hypothesis_Title rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Patient_Code
+
+:Patient_Code rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Possible_Speciality
+
+:Possible_Speciality rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Processing_Software
+
+:Processing_Software rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Publication_Author
+
+:Publication_Author rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Publication_KeyWords
+
+:Publication_KeyWords rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Publication_Title
+
+:Publication_Title rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Publication_Year
+
+:Publication_Year rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Score
+
+:Score rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubSubTest_DataType
+
+:SubSubTest_DataType rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubSubTest_Description
+
+:SubSubTest_Description rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubSubtest_Name
+
+:SubSubtest_Name rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Freesurfer_Name
+
+:Freesurfer_Name rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubTest_DataType
+
+:SubTest_DataType rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubTest_Description
+
+:SubTest_Description rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Subtest_Name
+
+:Subtest_Name rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Test_DataType
+
+:Test_DataType rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Test_Description
+
+:Test_Description rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Test_Name
+
+:Test_Name rdf:type owl:DatatypeProperty .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Visualization_Name
+
+:Visualization_Name rdf:type owl:DatatypeProperty .
+
+
+
+
+
+#################################################################
+#
+#    Classes
+#
+#################################################################
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Evaluation
+
+:Evaluation rdf:type owl:Class .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Hypothesis
+
+:Hypothesis rdf:type owl:Class .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Patient
+
+:Patient rdf:type owl:Class .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Publication
+
+:Publication rdf:type owl:Class .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubSubTest
+
+:SubSubTest rdf:type owl:Class .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubTest
+
+:SubTest rdf:type owl:Class .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Test
+
+:Test rdf:type owl:Class .
+
+
+
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#Visualization
+
+:Visualization rdf:type owl:Class .
+
+
+
+
+###  Generated by the OWL API (version 3.4.2) http://owlapi.sourceforge.net
+

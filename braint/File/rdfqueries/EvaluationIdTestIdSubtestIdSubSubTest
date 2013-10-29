@@ -1,0 +1,16 @@
+PREFIX dc:<http://purl.org/dc/elements/1.1/>
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX foaf:<http://xmlns.com/foaf/0.1/>
+PREFIX owl:<http://www.w3.org/2002/07/owl#>
+PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX vcard:<http://www.w3.org/2001/vcard-rdf/3.0#>
+PREFIX dcterms:<http://purl.org/dc/terms/>
+PREFIX braint:<http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#>
+SELECT  ?Evaluation ?Test ?SubTest ?SubSubTest
+WHERE { 
+  ?X braint:Evaluation_Name ?Evaluation .
+  OPTIONAL {?X braint:hasTest ?Test}   
+  OPTIONAL {?Test braint:hasSubTest ?SubTest} .
+  OPTIONAL {?SubTest braint:hasSubSubTest ?SubSubTest }
+}
