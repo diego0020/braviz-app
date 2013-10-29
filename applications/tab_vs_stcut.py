@@ -321,6 +321,7 @@ def add_correlation():
     reg_line.SetInputData(reg_line_table, 0, 1)
     reg_line.Update()
     refresh_display()
+    chart.SetTitle(" r = %.2f "%r_value)
     #print reg_line_table.GetValue(0,0)
     #print reg_line_table.GetValue(0,1)
     #print reg_line_table.GetValue(1,0)
@@ -527,7 +528,13 @@ def listen_and_print(obj,event):
     print "================"
     #print obj
     print
-    
+
+chart.SetTitle("hola")
+title_properties=chart.GetTitleProperties()
+title_properties.SetFontSize(14)
+title_properties.SetColor(228/255,26/255,28/255)
+refresh_table()
+refresh_display()
 
 # Start Tkinter event loop
 root.mainloop()
