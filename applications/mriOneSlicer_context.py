@@ -187,8 +187,7 @@ def change_context():
     for c_model,c_mapper,c_actor in context_dict.itervalues():
         balloon_widget.RemoveBalloon(c_actor)
         ren.RemoveActor(c_actor)
-        
-        
+
     context_dict.clear()
     for m in context_models:
         c_model=reader.get('model',currSubj,space=currSpace,name=m)
@@ -207,8 +206,7 @@ def change_context():
         add_solid_balloon(balloon_widget, c_actor,m,volume_model )
         context_dict[m]=(c_model,c_mapper,c_actor)
 
-    
-    
+
 #===============================================Inteface=================================
 
 root = tk.Tk()
@@ -222,6 +220,7 @@ control_frame = tk.Frame(top,width=100)
 #select_subj_frame=tk.LabelFrame(control_frame,text='Subject',padx=10,pady=5,height='100')
 select_subj_frame=braviz.interaction.subjects_list(reader,setSubj,control_frame,text='Subject',padx=10,pady=5,height='100')
 select_subj_frame.pack(side='top',fill='x',expand='false')
+
 
 #======================Space change============================
 

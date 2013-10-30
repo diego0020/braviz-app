@@ -17,6 +17,8 @@ reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small.csv')
 cancel_calculation_flag=False
+named_fibers=set(reader.get('fibers','093',index=1))
+
 
 def get_headers():
     csv_file=open(file_name)
@@ -72,15 +74,16 @@ def column_to_vtk_array(col,name='unknown'):
 
 
 def get_struct_metric(struct_name,code,metric='volume'):
-    try:
-        model=reader.get('model',code,name=struct_name)
-    except Exception:
-        #print "%s not found for subject %s"%(struct_name,code)
-        return float('nan')
+    if not struct_name.startswith('Fib'):
+        try:
+            model=reader.get('model',code,name=struct_name)
+        except Exception:
+            print "%s not found for subject %s"%(struct_name,code)
+            return float('nan')
     if metric=='volume':
         return reader.get('model',code,name=struct_name,volume=1)
-    area,volume=braviz.interaction.compute_volume_and_area(model)
     if metric=='area':
+        area, volume = braviz.interaction.compute_volume_and_area(model)
         return area
     elif metric=='nfibers':
         return get_fibers_metric(struct_name,code,'number')
@@ -94,26 +97,36 @@ def get_struct_metric(struct_name,code,metric='volume'):
 
 def get_fibers_metric(struct_name,code,metric='number'):
     #print "calculating for subject %s"%code
-    try:
-        fibers=reader.get('fibers',code,waypoint=struct_name,color='fa')
-    except:
-        n=float('nan')
+    n=0
+    if struct_name.startswith('Fibs:'):
+        #print "we are dealing with special fibers"
+        try:
+            fibers = reader.get('fibers', code, name=struct_name[6:], color='fa')
+        except Exception:
+            n = float('nan')
+            return n
     else:
-        if fibers is None:
-            #print "Problem loading fibers for subject %s"%code
+        try:
+            fibers=reader.get('fibers',code,waypoint=struct_name,color='fa')
+        except Exception:
             n=float('nan')
-        elif metric=='number':
-            n=fibers.GetNumberOfLines()
-        elif metric=='mean_length':
-            desc=braviz.interaction.get_fiber_bundle_descriptors(fibers)
-            n=float(desc[1])
-        elif metric=='mean_fa':
-            desc=braviz.interaction.aggregate_fiber_scalar(fibers, component=0, norm_factor=1/255)
-            del fibers
-            n=float(desc[1])
-        else:
-            print 'unknowm fiber metric %s'%metric
-            return float('nan')
+            return n
+    if fibers is None:
+        #print "Problem loading fibers for subject %s"%code
+        n=float('nan')
+        return n
+    elif metric=='number':
+        n=fibers.GetNumberOfLines()
+    elif metric=='mean_length':
+        desc=braviz.interaction.get_fiber_bundle_descriptors(fibers)
+        n=float(desc[1])
+    elif metric=='mean_fa':
+        desc=braviz.interaction.aggregate_fiber_scalar(fibers, component=0, norm_factor=1/255)
+        del fibers
+        n=float(desc[1])
+    else:
+        print 'unknowm fiber metric %s'%metric
+        return float('nan')
     #print '%s : %f'%(code,n)
     return n
 
@@ -123,7 +136,7 @@ def get_struct_metrics_col():
     metric_temp=long_names_dict[metric_var.get()]
     struct_idx = model_list.curselection()
     struct_name_temp = model_list.get(struct_idx)
-    key='column_%s_%s'%(struct_name_temp,metric_temp)
+    key='column_%s_%s'%(struct_name_temp.replace(':','_'),metric_temp.replace(':','_'))
     cache_file_name=path_join(reader.getDataRoot(),'pickles','%s.pickle'%key)
     try:
         with open(cache_file_name,'rb') as cachef:
@@ -136,24 +149,24 @@ def get_struct_metrics_col():
         refresh_table()
         refresh_display()
         return
-    print "Calculating %s for structure %s"%(metric_temp,struct_name)
+    print "Calculating %s for structure %s"%(metric_temp,struct_name_temp)
     temp_struct_metrics_col=[]
     #async_get_struct_metric()
     calculate_button['text']='Cancel'
     processing=True
     cancel_calculation_flag=False
-    thread.start_new_thread(async_get_struct_metric,(metric_temp,))
+    thread.start_new_thread(async_get_struct_metric,(metric_temp,struct_name_temp))
     top.after(20,finish_get_struct_metric,cache_file_name)
 
 
-def async_get_struct_metric(metric_temp):
+def async_get_struct_metric(metric_temp,struct_name_temp):
     global temp_struct_metrics_col
     for code in codes:
         if cancel_calculation_flag is True:
             print "cancel flag received"
             temp_struct_metrics_col = []
             break
-        scalar=get_struct_metric(struct_name,code,metric_temp)
+        scalar=get_struct_metric(struct_name_temp,code,metric_temp)
         temp_struct_metrics_col.append(scalar)
 
 
@@ -262,8 +275,10 @@ def add_correlation():
     """adapted from mini_scatter_plot"""
     global corr_coefficient, reg_line_table, reg_line
     #print "adding correlation"
-
-    x, y = zip(*filter(lambda x: np.all(np.isfinite(x)), izip(tab_column, struct_metrics_col)))
+    try:
+        x, y = zip(*filter(lambda x: np.all(np.isfinite(x)), izip(tab_column, struct_metrics_col)))
+    except ValueError:
+        return
     if len(x) < 2:
         return
 
@@ -430,9 +445,21 @@ models=reader.get('model','093',index='t')
 
 for m in sorted(models):
     model_list.insert(tk.END,m)
+for special_fibers in named_fibers:
+    model_list.insert(tk.END, "Fibs: "+special_fibers)
 
 model_list.select_set(3,3)
-
+def check_selection_compatibility(event=None):
+    model_idx=model_list.curselection()
+    model_name=model_list.get(model_idx)
+    if model_name.startswith('Fibs'):
+        if metric_var.get() in ['Volume','Area']:
+            metric_var.set('Number of fibers crossing')
+        metric_select['values'] = ['Number of fibers crossing','Mean length of fibers crossing',
+                                   'Mean FA of fibers crossing']
+    else:
+        metric_select['values'] = sorted(long_names_dict.keys(), reverse=True)
+model_list.bind('<<ListboxSelect>>',check_selection_compatibility)
 
 select_model_frame.grid(row=2,column=0,sticky='snew',pady=5)
 
@@ -447,10 +474,6 @@ def change_struct(event=None):
         return
     for w in widgets:
         w['state']='disabled'
-
-
-
-
     get_struct_metrics_col()
 
 

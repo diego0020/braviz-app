@@ -205,7 +205,7 @@ The path containing this structure must be set."""
                 available=self.__loadFreeSurferModel(subject,index='T')
                 if not name in available:
                     print 'Model %s not available'%name
-                    return None
+                    raise Exception('Model %s not available'%name)
                 filename=path+'/'+name+'.vtk'
                 reader=vtk.vtkPolyDataReader()
                 reader.SetFileName(filename)
@@ -420,7 +420,7 @@ The path containing this structure must be set."""
                 named_tract_func=getattr(braviz.readAndFilter.named_tracts,kw['name'])
             except AttributeError:
                 raise Exception("unknown tract name %s"%kw['name'])
-            fibers=named_tract_func(self,subj)
+            fibers=named_tract_func(self,subj,color=kw.get('color','orient'))
             #this are in world coordinates, check if we need to change them
             if kw.get('space','world').lower()!='world':
                 transformed_streams=self.__movePointsToSpace(fibers, kw['space'],subj)

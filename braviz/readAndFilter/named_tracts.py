@@ -1,11 +1,11 @@
 __author__ = 'Diego'
-# Functions to get special named tracts, All shoud have the signature tract_name(reader,subject)
+# Functions to get special named tracts, All shoud have the signature tract_name(reader,subject,color)
 # Try not to import modules into the main namespace in orer for indexing to work
 
-def cortico_spinal_l(reader,subject):
+def cortico_spinal_l(reader,subject,color):
     import vtk
     try:
-        tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'])
+        tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'],color=color)
     except Exception:
         print "Tracts not found for subject %s"%subject
         return None
@@ -30,15 +30,20 @@ def cortico_spinal_l(reader,subject):
     tracts3 = extractor2.GetOutput()
 
     #move back to world coordinates
+    #TODO Avoid to much changes in space.....
     tracts4 = reader.transformPointsToSpace(tracts3, 'dartel', subject, inverse=True)
     return tracts4
 
 
-def cortico_spinal_r(reader,subject):
+def cortico_spinal_r(reader,subject,color):
     import vtk
-    tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-rh-precentral', 'Brain-Stem'])
+    try:
+        tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-rh-precentral', 'Brain-Stem'],color=color)
+    except Exception:
+        print "Tracts not found for subject %s" % subject
+        return None
 
-    #first cut
+#first cut
     implicit_plane = vtk.vtkPlane()
     implicit_plane.SetOrigin(-6, -61, 80)
     implicit_plane.SetNormal(1, 0, 0)
