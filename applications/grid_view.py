@@ -30,6 +30,7 @@ color_data_dict={}
 sort_data_dict={}
 sort_column=None
 overlay_view=False
+messages_dict={}
 
 widgets=[]
 models_dict={}
@@ -147,11 +148,12 @@ def color_models():
     update_balloons()
     grid_view.Render()
 
+
 def update_balloons():
     global messages_dict
     messages_dict={}
     for subj in id_list:
-        message="%s\n%s : %.2f\n%s : %.2f"%(subj if overlay_view is False else sort_data_dict[subj],
+        message="%s\n%s : %.2f\n%s : %.2f"%(subj ,
                                             color_column,color_data_dict.get(subj,float('nan')),
                                             sort_column,sort_data_dict.get(subj,float('nan')))
         messages_dict[subj]=message
@@ -237,6 +239,8 @@ struct_frame.columnconfigure(0, weight=1)
 struct_frame.rowconfigure(1, weight=1)
 struct_label=tk.Label(struct_frame,text='Structures')
 struct_label.grid(row=0,column=0,sticky='ew',pady=5)
+
+
 def change_models(action,model_name):
     if action=='add':
         models_set.add(model_name)
@@ -245,6 +249,7 @@ def change_models(action,model_name):
 
 select_model_frame=braviz.interaction.structureList(reader,'144',change_models,struct_frame)
 select_model_frame.grid(row=1,column=0,sticky='snew',pady=5)
+
 
 def set_hide_waypoints_state(event=None):
     if fibers_var.get() is True:
@@ -279,6 +284,8 @@ grid_manip_frame=tk.Frame(control_frame)
 
 scatter_sel_var=tk.BooleanVar()
 scatter_sel_var.set(1)
+
+
 def show_scatter_plot(event=None):
     grid_view.set_mini_scatter_visible(scatter_sel_var.get())
 
@@ -288,17 +295,43 @@ scatter_sel_box.grid(sticky='w')
 
 labels_sel_var=tk.BooleanVar()
 labels_sel_var.set(0)
+
+
 def show_labels(event=None):
     if event is not None:
         update_balloons()
     else:
         if labels_sel_var.get():
-            grid_view.add_labels(messages_dict)
+            if overlay_view is True:
+                group_message_dict=get_group_message_dict()
+                grid_view.add_labels(group_message_dict)
+            else:
+                grid_view.add_labels(messages_dict)
         else:
             grid_view.remove_labels()
 
+
+def get_group_message_dict():
+    working_dict={}
+    group_repr_dict={}
+    for subj,group in sort_data_dict.iteritems():
+        color_val=color_data_dict[subj]
+        data_list = working_dict.setdefault(group, [])
+        group_repr_dict.setdefault(group,subj)
+        if np.isfinite(color_val):
+            data_list.append(color_val)
+    for group,val_list in working_dict.iteritems():
+        working_dict[group]=np.mean(val_list)
+    group_message_dict={}
+    for group,group_repr in group_repr_dict.iteritems():
+        group_message_dict[group_repr]="Group %s\nMean %s: %.2f"%(group,color_column,working_dict[group])
+    return group_message_dict
+
+
 labels_sel_box=tk.Checkbutton(grid_manip_frame,text='Show text labels',variable=labels_sel_var,command=show_labels)
 labels_sel_box.grid(sticky='w')
+
+
 def remove_id(event=None):
     global removed_items
     id_to_remove=grid_view.get_selection()
