@@ -13,7 +13,7 @@ from scipy.stats import linregress
 import numpy as np
 from itertools import izip
 
-reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
+reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small.csv')
 cancel_calculation_flag=False

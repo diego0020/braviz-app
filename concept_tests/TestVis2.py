@@ -205,7 +205,7 @@ class TestVis:
     def getRDFDBManager(self):
         return self.myManager
      
-reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
+reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
 data_root=reader.getDataRoot()
 myVis=TestVis('File\\baseFinal.csv') ##Crear objeto del tipo TestVis 
 #print myVis.get_headers()

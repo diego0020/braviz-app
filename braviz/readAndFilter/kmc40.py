@@ -655,11 +655,11 @@ def autoReader(**kw_args):
     """Initialized a kmc40Reader based on the computer name"""
 
     known_nodes={ #
-    # Name          :  ( data root                   , cache size)
-    'IIND-EML753022': ('C:\\Users\\da.angulo39\\Documents\\Kanguro',200),
-    'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db',500),
-    'Unidelosandes' : ('K:\\JohanaForero\\KAB-db',200),
-    'dieg8' : (r'C:\Users\Diego\Documents\kmc40-db\KAB-db',200),
+    # Name          :  ( data root                   , cache size in MB)
+    #'IIND-EML753022': ('C:\\Users\\da.angulo39\\Documents\\Kanguro',1400), (No longer exists :( )
+    'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db',4000),
+    'Unidelosandes' : ('K:\\JohanaForero\\KAB-db',1200),
+    'dieg8' : (r'C:\Users\Diego\Documents\kmc40-db\KAB-db',1200),
     }
     node_id=platform.node()
 
@@ -667,6 +667,7 @@ def autoReader(**kw_args):
         data_root=known_nodes[node_id][0]
         if kw_args.get('max_cache',0)>0:
             max_cache=kw_args.pop('max_cache')
+            print "Max cache set to %.2f MB"%max_cache
         else:
             max_cache=known_nodes[node_id][1]
         return kmc40Reader(data_root,max_cache=max_cache,**kw_args)

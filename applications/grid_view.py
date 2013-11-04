@@ -18,7 +18,7 @@ import braviz
 __author__ = 'Diego'
 root = tk.Tk()
 root.withdraw()
-reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
+reader=braviz.readAndFilter.kmc40AutoReader()
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small.csv')
 id_list=reader.get('ids')

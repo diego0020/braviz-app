@@ -14,7 +14,7 @@ from braviz.interaction.tk_tooltip import ToolTip
 import braviz
 from itertools import izip
 __author__ = 'Diego'
-reader = braviz.readAndFilter.kmc40AutoReader(max_cache=100)
+reader = braviz.readAndFilter.kmc40AutoReader()
 
 
 #=======global variables=======
@@ -121,6 +121,7 @@ group_colors_dict={
     '3': 'SlateGray1',  # gorditos
 }
 
+
 def turn_on_animation():
     global animation
     animation=True
@@ -135,7 +136,7 @@ def get_img(subject,img_type,side='r'):
         try:
             fibers = reader.get('fibers', subject, space='talairach',operation='or',
                             waypoint=['CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior','CC_Posterior'])
-        except:
+        except Exception:
             fibers_actor.SetVisibility(0)
             orientation_message.SetVisibility(0)
         else:
@@ -156,7 +157,7 @@ def get_img(subject,img_type,side='r'):
             fibers = reader.get('fibers', subject, space='talairach',name='cortico_spinal_%c'%side)
             brain_stem = reader.get('model', current_subject, space='talairach',name='Brain-Stem')
             precentral = reader.get('model', current_subject, space='talairach',name='ctx-%ch-precentral'%side)
-        except:
+        except Exception:
             fibers_actor.SetVisibility(0)
             precentral_actor.SetVisibility(0)
             brain_stem_actor.SetVisibility(0)
@@ -205,7 +206,6 @@ def set_data(event=None):
     if len(group_dict)==0:
         grupo = get_column(csv_file, 'UBICA')  # 1=canguro, 2=control, 3=gorditos
         group_dict.update(izip(codes,grupo))
-
 
     TMS_metric = get_column(csv_file, tms_column, True)
     if invert_data_values is True:

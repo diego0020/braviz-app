@@ -10,7 +10,8 @@ import copy
 import nibabel as nib
 import vtk
 import numpy as np
-
+from collections import OrderedDict
+import psutil
 
 def nibNii2vtk(nii):
     "Transform a nifti image read by nibabel into a vtkImageData"
@@ -257,11 +258,19 @@ def readFreeSurferTransform(filename):
     return nar
 
 
+class LastUpdatedOrderedDict(OrderedDict):
+    'Store items in the order the keys were last added'
+
+    def __setitem__(self, key, value):
+        if key in self:
+            del self[key]
+        OrderedDict.__setitem__(self, key, value)
+
 def cache_function(max_cache_size):
     "modified classic python @memo decorator to handle some special cases in braviz"
 
     def decorator(f):
-        cache = f.cache = {}
+        cache = f.cache = LastUpdatedOrderedDict()
         #print "max cache is %d"%max_cache_size
         #cache will store tuples (output,date)
         max_cache = f.max_cache = max_cache_size
@@ -274,9 +283,18 @@ def cache_function(max_cache_size):
             if key not in cache:
                 output = f(*args, **kw_args)
                 if output is not None:
-                    if len(cache) >= max_cache:
-                        oldest = min(cache.iteritems(), key=lambda x: x[1][1])[0]
-                        cache.pop(oldest)
+                    #new method to test memory in cache
+                    process_id=psutil.Process(os.getpid())
+                    mem=process_id.get_memory_info()[0]/(2**20)
+                    if mem >= max_cache:
+                        print "freeing cache"
+                        try:
+                            while mem > 0.9*max_cache:
+                                rem_key,val=cache.popitem(last=False)
+                                #print "removing %s with access time= %s"%(rem_key,val[1])
+                                mem = process_id.get_memory_info()[0] / (2 ** 20)
+                        except KeyError:
+                            print "Cache is empty and memory still too high! check your program for memory leaks"
                     cache[key] = (output, time.time())
             else:
                 output, _ = cache[key]

@@ -18,7 +18,7 @@ __author__ = 'Diego'
 print "DEPRECATED"
 print "Use tms_view2 with view all"
 
-reader=braviz.readAndFilter.kmc40AutoReader(max_cache=100)
+reader=braviz.readAndFilter.kmc40AutoReader()
 
 
 #=======global variables=======

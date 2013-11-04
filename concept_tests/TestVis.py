@@ -205,7 +205,7 @@ class TestVis:
     def getRDFDBManager(self):
         return self.myManager
      
-reader=braviz.readAndFilter.kmc40AutoReader(max_cache=2)
+reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
 data_root=reader.getDataRoot()
 working_director=os.path.dirname(__file__)
 working_director=os.path.join(working_director,'../braint')

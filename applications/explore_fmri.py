@@ -28,7 +28,7 @@ current_mode='space' #time or space
 #===============================================
 
 
-reader=braviz.readAndFilter.kmc40AutoReader(max_cache=10)
+reader=braviz.readAndFilter.kmc40AutoReader()
 t_stat_img=reader.get('fMRI',subject,format='VTK',space='func',name='precision')
 origin=t_stat_img.GetOrigin()
 spacing=t_stat_img.GetSpacing()
