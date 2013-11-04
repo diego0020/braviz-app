@@ -303,6 +303,7 @@
 		braint:isRelatedWith :ECOSI ;
 		braint:isMentionedIn :SKRA2012;
 		braint:isRelatedWith :SCHFA ;
+		braint:isRelatedWith :RID7137 ;
 		braint:isMentionedIn :REASONER .
 		
 
@@ -433,23 +434,8 @@
 								  :GNUSI ,
 								  :ECOSI .
 								  
-:VOLUM rdf:type braint:SubTest ,
-             owl:NamedIndividual ;
-			braint:SubTest_Name "Volume" ;
-			braint:SubTest_DataType "Ordinal" ;
-			braint:SubTest_Description "missing" ;
-			braint:hasVisualization :JAVI1 ;
-			braint:hasSubSubTest  :CORVO ,
-								  :CERVO ,
-								  :HIPVO ,
-								  :CANVO ,
-								  :GMAVO ,
-								  :WMAVO ,
-								  :LVEVO ,
-								  :GNUVO ,
-								  :ECOVO .
 
-:Surface rdf:type braint:SubTest ,
+:SURFA rdf:type braint:SubTest ,
              owl:NamedIndividual ;
 			braint:SubTest_Name "Surface" ;
 			braint:SubTest_DataType "Ordinal" ;

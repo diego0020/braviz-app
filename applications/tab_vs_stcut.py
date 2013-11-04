@@ -74,6 +74,7 @@ def column_to_vtk_array(col,name='unknown'):
 
 
 def get_struct_metric(struct_name,code,metric='volume'):
+    print "calculating %s for %s"%(metric,struct_name)
     if not struct_name.startswith('Fib'):
         try:
             model=reader.get('model',code,name=struct_name)
@@ -210,12 +211,11 @@ struct_name='CC_Anterior'
 metric='volume'
 table=vtk.vtkTable()
 
-struct_metrics_col=map(lambda code: get_struct_metric(struct_name,code,'volume') ,codes)
+struct_metrics_col=[]
 
 view=vtk.vtkContextView()
 view.GetRenderer().SetBackground(1.0,1.0,1.0)
 view.GetRenderWindow().SetSize(400,300)
-
 
 
 chart=vtk.vtkChartXY()
@@ -238,7 +238,6 @@ def refresh_table():
     #print struct_metrics_col
     table.AddColumn(column_to_vtk_array(tab_column,tab_var_name))
     table.AddColumn(column_to_vtk_array(struct_metrics_col,'%s - %s'%(struct_name,metric) ))
-    
      
     #for c,t,s in izip(codes,tab_column,struct_metrics_col):
     #    print "%s: %f , %f"%(c,t,s)
@@ -265,8 +264,6 @@ def refresh_table():
     else:
         yaxis.SetTitle('unknown')
     add_correlation()
-
-
 
 corr_coefficient=''
 reg_line_table=None
@@ -480,8 +477,6 @@ def change_struct(event=None):
 
 #model_list.bind('<<ListboxSelect>>',change_struct)
 
-
-
 calculate_frame=tk.Frame(struct_frame)
 calculate_button=tk.Button(calculate_frame,text='calculate',command=change_struct)
 calculate_button.grid(sticky='ew',pady=5)
@@ -497,17 +492,12 @@ renderer_frame = tk.Frame(top)
 renderer_frame.grid(row=0,column=1,sticky='ewsn')
 top.columnconfigure(1, weight=1)
 
-
-
 renWin=vtk.vtkRenderWindow()
 render_widget = vtkTkRenderWindowInteractor(renderer_frame,rw=renWin,width=600, height=600)  
 
 iact=render_widget.GetRenderWindow().GetInteractor()                            
 view.SetRenderWindow(render_widget.GetRenderWindow())
 view.SetInteractor(iact)
-
-
-
 
 renderer_frame.columnconfigure(0, weight=1)
 renderer_frame.rowconfigure(0, weight=1)
@@ -556,6 +546,7 @@ chart.SetTitle("hola")
 title_properties=chart.GetTitleProperties()
 title_properties.SetFontSize(14)
 title_properties.SetColor(228/255,26/255,28/255)
+get_struct_metrics_col()
 refresh_table()
 refresh_display()
 

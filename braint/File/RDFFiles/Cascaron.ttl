@@ -8,7 +8,7 @@
 
 <http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53> rdf:type owl:Ontology ;
                                                                                 
-                                                                                rdfs:comment "Ontología que permite tener un esqueleto RDF de integración entre: Jerarquías de evaluaciones, Bibliografía, Datos de pacientes, Relaciones entre las jerarquías, etc.." .
+                                                                                rdfs:comment "Ontologia que permite tener un esqueleto RDF de integración entre: Jerarquías de evaluaciones, Bibliografía, Datos de pacientes, Relaciones entre las jerarquías, etc.." .
 
 
 #################################################################

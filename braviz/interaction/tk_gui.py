@@ -27,6 +27,7 @@ class subjects_list(LabelFrame):
         scrollbar.pack(side=tk.RIGHT,fill=tk.Y)
         subjects_list_box.pack(side="left",fill='y',expand=1)
         subjects=reader.get('ids')
+        self.list=subjects
         self.subjects_list=subjects_list_box
         tk_listvariable.set(tuple(subjects))
         subjects_list_box.select_set(0,0)
@@ -53,6 +54,16 @@ class subjects_list(LabelFrame):
     def listVariable(self):
         "Returns a tuple containing the subjects in the list"
         return ast.literal_eval(self.tk_listvariable.get())
+    
+    
+    def setSelection(self, index):
+        "YOYIS: Sets the current selection to the given index"
+        print self.subjects_list.size()
+        self.subjects_list.selection_clear(0, tk.END)
+        self.subjects_list.selection_set(index, index)
+    def getSelectionIndex(self, value):
+        "YOYIS: Returns the index of the given value in the patients list"
+        return self.list.index(value)
 
 class structureList(LabelFrame):
     """A tkMegaWidget for listing freesurfer segmentation models.
@@ -64,7 +75,7 @@ class structureList(LabelFrame):
     Not all subjects have the same structures, the list of directly chosen structures is not changed
     when the subject changes, but the command function is called in order to do the corresponding changes
     (See mriMultSlicer application for an example)
-    The listVariable method return a tuple with the models currently in the list
+    The listVariable method returns a tuple with the models currently in the list
     The get method can be used to retrieve a list of currently selected models"""
     
     def __init__(self,reader,initial_subj,command,parent,initial_models=None,**kw):

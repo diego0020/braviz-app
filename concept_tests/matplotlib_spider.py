@@ -12,8 +12,10 @@ from braviz.visualization.radar_chart import radar_factory
 
 reader = braviz.readAndFilter.kmc40AutoReader(max_cache=100)
 csv_file = os.path.join(reader.getDataRoot(), 'baseFinal_TMS.csv')
-pow_wanted_cols = ('ICId', 'ICInd', 'ICFd', 'ICFnd', 'RMTd', 'RMTnd')
-time_wanted_cols = ('IHIlatd', 'IHIlatnd', 'IHIdurd', 'IHIdurnd', 'MEPlatd', 'MEPlatnd')
+pow_wanted_cols = ('IHIlatd',  'IHIdurd',  'MEPlatd', 'freq_duration_d')
+#pow_wanted_cols = ('ICId', 'ICInd', 'ICFd', 'ICFnd', 'RMTd', 'RMTnd')
+time_wanted_cols = ('IHIlatnd',  'IHIdurnd',  'MEPlatnd', 'freq_duration_nd')
+#time_wanted_cols = ('IHIlatd', 'IHIlatnd', 'IHIdurd', 'IHIdurnd', 'MEPlatd', 'MEPlatnd')
 
 data_rows = {
     'Times': time_wanted_cols,
@@ -21,7 +23,7 @@ data_rows = {
 }
 max_values = {
     'Times': 50,
-    'Signal': 300,
+    'Signal': 50,
 }
 fig = plt.figure(figsize=(9, 9))
 
