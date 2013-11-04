@@ -314,7 +314,8 @@ def show_labels(event=None):
 def get_group_message_dict():
     working_dict={}
     group_repr_dict={}
-    for subj,group in sort_data_dict.iteritems():
+    for subj in id_list:
+        group=sort_data_dict[subj]
         color_val=color_data_dict[subj]
         data_list = working_dict.setdefault(group, [])
         group_repr_dict.setdefault(group,subj)

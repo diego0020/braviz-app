@@ -469,11 +469,15 @@ class grid_view(vtk.vtkRenderWindow):
 
 
         for key,value in labels_dict.iteritems():
+            try:
+                center_point=self.__actors_dict[key].GetPosition()
+            except:
+                print "%s actor not found"%key
+                continue
             caption=vtk.vtkTextActor()
             self.__captions_dict[key]=caption
             caption=self.__captions_dict[key]
             caption.SetInput(value)
-            center_point=self.__actors_dict[key].GetPosition()
             point1 = np.array(center_point)-(self.max_space/2.2,-1*self.max_space*(0.5+1/2.2) ,0)
             point2 = np.array(center_point) + (self.max_space / 2.2,-1* self.max_space*(-0.5+1/2.2), 0)
             #caption.SetAttachmentPoint(center_point)
