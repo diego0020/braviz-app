@@ -27,6 +27,7 @@ term_std_dev = 0
 codes2 = []
 tms_data2 = []
 tms_data_dict = {}
+group_stats_dict={}
 context_lines = [term_mean + term_std_dev, term_mean, term_mean - term_std_dev]
 context_dashes = [True, False, True]
 data_code = 'ICI'
@@ -272,7 +273,6 @@ def set_data(event=None):
     bars_view2.set_y_limits(*limits_dict[data_code],right=True)
     bars_view2.set_color_fun(lambda  x: get_color(x,color_inversion_factor))
     bars_view2.set_lines(context_lines, context_dashes)
-    draw_bars_1()
     try:
         previous_selection = select_subj_frame.get()
     except tk.TclError:
@@ -291,9 +291,29 @@ def set_data(event=None):
     else:
         for i, cod in enumerate(codes2):
             select_subj_frame.itemconfigure(i, background='')
+    draw_bars_1()
     animation=False
     root.after(100,turn_on_animation)
-    setSubj()
+    set_subj()
+
+def get_group_stats():
+    group_values_dict={}
+    for cd in codes2:
+        group=group_dict[cd]
+        value=tms_data_dict[cd]
+        if np.isfinite(value):
+            group_values_dict.setdefault(group,[]).append(value)
+    results=[]
+    for g in ['1','2','3']: # 1=canguro, 2=control, 3=gorditos
+        values=group_values_dict[g]
+        if len(values)>0:
+            mean=np.mean(values)
+            std=np.std(values)
+        else:
+            mean=0
+            std=0
+        results.append((mean,std))
+    return zip(*results)
 
 
 
@@ -308,14 +328,21 @@ def draw_bars_1():
         else:
             bars_view1.set_higlight_index(idx)
     else:
-        selected_values = [tms_data_dict[s] for s in codes2]
-        bars_view1.set_data(selected_values, codes2)
-        try:
-            idx = codes2.index(current_subject)
-        except ValueError:
-            bars_view1.set_higlight_index(None)
+        if not show_groups_var.get():
+            selected_values = [tms_data_dict[s] for s in codes2]
+            bars_view1.set_data(selected_values, codes2)
+            try:
+                idx = codes2.index(current_subject)
+            except ValueError:
+                bars_view1.set_higlight_index(None)
+            else:
+                bars_view1.set_higlight_index(idx)
         else:
-            bars_view1.set_higlight_index(idx)
+            means,stds=get_group_stats()
+            bars_view1.set_data(means, ['KMC','INCUB','TERM'],stds)
+            group_stats_dict.update(zip(['KMC','INCUB','TERM'], zip(means,stds)))
+            bars_view1.set_higlight_index(None)
+
     bars_view1.paint_bar_chart()
 
 
@@ -323,7 +350,7 @@ previous_value = 0
 animated_draw_bar_id=None
 
 
-def setSubj(event=None):
+def set_subj(event=None):
     global fibers, current_subject, previous_value,animated_draw_bar_id
     #print "setting subjects"
     if len(codes2) == 0:
@@ -339,8 +366,10 @@ def setSubj(event=None):
         select_subj_frame.subjects_list.select_set(0, 0)
         current_subject = select_subj_frame.get()
     try:
-        if showing_history is True:
+        if showing_history is True :
             idx = selected_codes.index(current_subject)
+        elif show_groups_var.get():
+            idx=int(group_dict[current_subject])-1
         else:
             idx = codes2.index(current_subject)
     except ValueError:
@@ -427,7 +456,7 @@ limits_dict = {
     'IHIfreq': (-1, 100),
     'RMT': (0, 100),
     'IHIdur': (0, 35),
-    'MEPlat': (0, 20),
+    'MEPlat': (10, 15),
     'ICF': (-10, 400),
     'ICI': (-10, 100),
     'IHIlat': (0, 35 )
@@ -566,7 +595,7 @@ show_groups_box=tk.Checkbutton(select_data_frame,text='Show groups',variable=sho
 show_groups_box.grid(row=4,column=0,columnspan=2,sticky='w')
 select_data_frame.grid(row=0, pady=5)
 
-select_subj_frame = braviz.interaction.subjects_list(reader, setSubj, control_frame, text='Subject', padx=10, pady=5,
+select_subj_frame = braviz.interaction.subjects_list(reader, set_subj, control_frame, text='Subject', padx=10, pady=5,
                                                      height='100')
 select_subj_frame.grid(column=0, row=1, sticky='news')
 control_frame.rowconfigure(1, weight=1)
@@ -673,23 +702,7 @@ def quit2():
 root.protocol("WM_DELETE_WINDOW", clean_exit)
 
 
-iact = render_widget.GetRenderWindow().GetInteractor()
-custom_iact_style = config.get_interaction_style()
-iact_style = getattr(vtk, custom_iact_style)()
-iact.SetInteractorStyle(iact_style)
 
-cam1 = ren.GetActiveCamera()
-cam1.SetPosition(0.358526, 8.24682, 122.243)
-cam1.SetViewUp(1, 0, 0)
-cam1.SetFocalPoint(-0.00880438, -6.19902, 5.5735)
-ren.ResetCameraClippingRange()
-render_widget.Render()
-
-iact.Initialize()
-renWin.Render()
-iact.Start()
-set_data()
-setSubj()
 
 
 def print_event(caller=None, event=None):
@@ -697,20 +710,26 @@ def print_event(caller=None, event=None):
 
 
 def click_in_bar(event=None):
+    if show_groups_var.get() and not showing_history:
+        print "Not implemented yet"
+        return
     clicked_subj=bars_view1.get_current_name()
     if clicked_subj is not None:
         select_subj_frame.subjects_list.selection_clear(0, tk.END)
         index=codes2.index(clicked_subj)
         select_subj_frame.subjects_list.select_set(index,index)
-        setSubj()
+        set_subj()
 bars_widget1.bind('<<BarSelected>>',click_in_bar)
 
 
 def bars_1_msg_func(event=None):
     hover_subj=bars_view1.get_current_name()
+    if not showing_history and show_groups_var.get():
+        mean,std=group_stats_dict[hover_subj]
+        return "%s : %.2f ( %.2f )"%(hover_subj,mean,std)
     if hover_subj is None:
         return ''
-    return "%s : %.2f"%(hover_subj,tms_data2[codes2.index(hover_subj)])
+    return "%s : %.2f"%(hover_subj,tms_data_dict[hover_subj])
 
 bars_1_tooltip=ToolTip(bars_widget1, msgFunc=bars_1_msg_func, follow=1, delay=0.5)
 
@@ -727,5 +746,24 @@ data_selection_tree.see('inhi')
 data_selection_tree.selection_add('inhi')
 
 root.after(8000,turn_on_animation)
+
+iact = render_widget.GetRenderWindow().GetInteractor()
+custom_iact_style = config.get_interaction_style()
+iact_style = getattr(vtk, custom_iact_style)()
+iact.SetInteractorStyle(iact_style)
+
+cam1 = ren.GetActiveCamera()
+cam1.SetPosition(0.358526, 8.24682, 122.243)
+cam1.SetViewUp(1, 0, 0)
+cam1.SetFocalPoint(-0.00880438, -6.19902, 5.5735)
+ren.ResetCameraClippingRange()
+render_widget.Render()
+
+iact.Initialize()
+renWin.Render()
+iact.Start()
+set_data()
+set_subj()
+
 root.focus()
 root.mainloop()

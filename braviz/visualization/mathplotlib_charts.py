@@ -36,6 +36,7 @@ class BarPlot():
         self.current_xcoord=0
         self.highlight=None
         self.style='bars'
+        self.yerror=0
 
 
     def change_style(self,new_style):
@@ -88,9 +89,14 @@ class BarPlot():
             if dash is True:
                 ls=':'
             self.hlines.append({'y':pos, 'ls':ls, 'color':'k'})
-    def set_data(self,values,codes):
+    def set_data(self,values,codes,error=None):
         self.bar_heights=values
         self.bar_names=codes
+        if error is not None and len(error)==len(values):
+            self.yerror=error
+        else:
+            self.yerror=0
+
     def set_color_fun(self,color_function):
         self.color_function=color_function
     def paint_bar_chart(self):
@@ -129,7 +135,7 @@ class BarPlot():
             return
         colors = [self.color_function(x) for x in self.bar_heights]
         if self.style == 'bars':
-            patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center')
+            patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center',yerr=self.yerror)
             if self.highlight is not None:
                 highlighted_rect = patches[self.highlight]
                 highlighted_rect.set_linewidth(4)
@@ -143,6 +149,8 @@ class BarPlot():
                 sizes[self.highlight]=80
                 linewidths[self.highlight]=2
             patches = a.scatter(bar_positions, self.bar_heights, c=colors, marker='s', s=sizes,edgecolors=edge_colors,linewidths=linewidths)
+            if self.yerror is not 0:
+                a.errorbar(bar_positions, self.bar_heights, yerr=self.yerror, fmt=None)
         self.show()
         self.bars=patches
     def change_bars(self,new_heights):
