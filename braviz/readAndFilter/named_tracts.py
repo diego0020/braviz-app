@@ -1,5 +1,7 @@
 __author__ = 'Diego'
 # Functions to get special named tracts, All shoud have the signature tract_name(reader,subject,color)
+# they return fibers,space tuples, where space is the space of the resulting fibers.. this is used to avoid unnecessary
+# transformation of solution
 # Try not to import modules into the main namespace in orer for indexing to work
 
 def cortico_spinal_l(reader,subject,color):
@@ -8,6 +10,7 @@ def cortico_spinal_l(reader,subject,color):
         tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'],color=color)
     except Exception:
         print "Tracts not found for subject %s"%subject
+        raise
         return None
 
     #first cut
@@ -29,14 +32,12 @@ def cortico_spinal_l(reader,subject,color):
     extractor2.Update()
     tracts3 = extractor2.GetOutput()
 
-    #move back to world coordinates
-    #TODO Avoid to much changes in space.....
-    tracts4 = reader.transformPointsToSpace(tracts3, 'dartel', subject, inverse=True)
-    return tracts4
+    return tracts3,'dartel'
 
 
 def cortico_spinal_r(reader,subject,color):
     import vtk
+    from braviz.readAndFilter import extract_poly_data_subset
     try:
         tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-rh-precentral', 'Brain-Stem'],color=color)
     except Exception:
@@ -64,9 +65,10 @@ def cortico_spinal_r(reader,subject,color):
     tracts3 = extractor2.GetOutput()
 
     #move back to world coordinates
-    tracts4 = reader.transformPointsToSpace(tracts3, 'dartel', subject, inverse=True)
-    return tracts4
+    #tracts3 = reader.transformPointsToSpace(tracts3, 'dartel', subject, inverse=True)
+    return tracts3,'dartel'
 
-def corpus_callosum(reader,subject):
+def corpus_callosum(reader,subject,color):
     return reader.get('fibers',subject,operation = 'or',
-                waypoint = ['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior','CC_Mid_Posterior', 'CC_Posterior'])
+                waypoint = ['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior','CC_Mid_Posterior', 'CC_Posterior'],
+                color=color)   ,  'world'

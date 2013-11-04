@@ -13,6 +13,7 @@ from braviz.interaction.tk_tooltip import ToolTip
 
 import braviz
 from itertools import izip
+import thread
 __author__ = 'Diego'
 reader = braviz.readAndFilter.kmc40AutoReader()
 
@@ -128,15 +129,24 @@ def turn_on_animation():
 #===============read data=====================
 
 previous_img_type=None
+generating_images=False
+def init_get_img(subject,img_type,side='r'):
+    global generating_images
+    generating_images=True
+    render_widget.after(50,end_get_img, img_type)
+    #get_img(subject,img_type,side)
+    thread.start_new_thread(get_img,(subject,img_type,side))
+
+
 def get_img(subject,img_type,side='r'):
-    global previous_img_type,fibers,brain_stem,precentral
+    global fibers,brain_stem,precentral,generating_images
     if img_type == 'cc':
         precentral_actor.SetVisibility(0)
         brain_stem_actor.SetVisibility(0)
         try:
-            fibers = reader.get('fibers', subject, space='talairach',operation='or',
-                            waypoint=['CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior','CC_Posterior'])
+            fibers = reader.get('fibers', subject, space='talairach',name='corpus_callosum')
         except Exception:
+            print "cc not found"
             fibers_actor.SetVisibility(0)
             orientation_message.SetVisibility(0)
         else:
@@ -144,13 +154,6 @@ def get_img(subject,img_type,side='r'):
             fibers_actor.SetVisibility(1)
             orientation_message.SetVisibility(1)
             orientation_message.SetInput('Posterior')
-        if img_type != previous_img_type:
-            #reset camera
-            cam = ren.GetActiveCamera()
-            cam.SetPosition(0.358526, 8.24682, 122.243)
-            cam.SetViewUp(1, 0, 0)
-            cam.SetFocalPoint(-0.00880438, -6.19902, 5.5735)
-            ren.ResetCameraClippingRange()
     elif img_type=='motor':
         try:
             #fibers = reader.get('fibers', subject, space='talairach',waypoint=['ctx-%ch-precentral'%side,'Brain-Stem'])
@@ -171,13 +174,6 @@ def get_img(subject,img_type,side='r'):
             brain_stem_actor.SetVisibility(1)
             orientation_message.SetVisibility(1)
             orientation_message.SetInput('Right')
-        if img_type != previous_img_type:
-            #reset camera
-            cam = ren.GetActiveCamera()
-            cam.SetPosition(-18.2446, -261.939, 170.821)
-            cam.SetViewUp(0, 0.5, 1)
-            cam.SetFocalPoint(1.8137, -10.6985, -0.800431)
-            ren.ResetCameraClippingRange()
     else:
         print "not supported yet"
         fibers_actor.SetVisibility(0)
@@ -186,9 +182,29 @@ def get_img(subject,img_type,side='r'):
         number_of_fibers_message.SetInput('%d\nFibers'%fibers.GetNumberOfLines())
     else:
         number_of_fibers_message.SetVisibility(0)
-    previous_img_type=img_type
-    render_widget.Render()
+    generating_images=False
 
+def end_get_img(img_type):
+    global previous_img_type,generating_images
+    if generating_images is True:
+        render_widget.after(50,end_get_img,img_type)
+        return
+    if img_type != previous_img_type:
+        #reset camera
+        cam = ren.GetActiveCamera()
+        if img_type=='motor':
+            cam.SetPosition(-18.2446, -261.939, 170.821)
+            cam.SetViewUp(0, 0.5, 1)
+            cam.SetFocalPoint(1.8137, -10.6985, -0.800431)
+        elif img_type=='cc':
+            cam.SetPosition(0.358526, 8.24682, 122.243)
+            cam.SetViewUp(1, 0, 0)
+            cam.SetFocalPoint(-0.00880438, -6.19902, 5.5735)
+        else:
+            print "Unkown image type"
+        ren.ResetCameraClippingRange()
+    previous_img_type = img_type
+    render_widget.Render()
 
 def set_data(event=None):
     global codes2, tms_data2, term_mean, term_std_dev, tms_column, context_lines, data_code, animation,tms_data_dict
@@ -305,6 +321,8 @@ def draw_bars_1():
 
 previous_value = 0
 animated_draw_bar_id=None
+
+
 def setSubj(event=None):
     global fibers, current_subject, previous_value,animated_draw_bar_id
     #print "setting subjects"
@@ -341,8 +359,6 @@ def setSubj(event=None):
             if laterality_dict.get(current_subject) == '1':
                 hemisphere='r'
 
-    get_img(current_subject, images_dict[data_code],hemisphere)
-
     #update bar chart 2
 
     new_value = tms_data_dict[current_subject]
@@ -350,21 +366,20 @@ def setSubj(event=None):
         bars_view2.set_data([new_value], [current_subject])
         bars_view2.paint_bar_chart()
         previous_value=new_value
-        return
-    time_steps = 7
-
-    if time_steps > 0:
-        slope = (new_value - previous_value) / time_steps
     else:
+        time_steps = 7
+
+        if time_steps > 0:
+            slope = (new_value - previous_value) / time_steps
+        else:
+            previous_value = new_value
+            slope = 0
+        bars_view2.set_data([previous_value],[current_subject])
+        if animated_draw_bar_id is not None: root.after_cancel(animated_draw_bar_id)
+        animated_draw_bar(time_steps-1, slope, previous_value+slope)
         previous_value = new_value
-        slope = 0
-    bars_view2.set_data([previous_value],[current_subject])
-    if animated_draw_bar_id is not None: root.after_cancel(animated_draw_bar_id)
-    animated_draw_bar(time_steps-1, slope, previous_value+slope)
-    previous_value = new_value
 
-
-
+    init_get_img(current_subject, images_dict[data_code], hemisphere)
 
 def animated_draw_bar(time, slope, value):
     global animated_draw_bar_id
@@ -536,7 +551,7 @@ dominant_radio = tk.Radiobutton(select_data_frame, text='Dominant', variable=sid
 non_dominant_radio = tk.Radiobutton(select_data_frame, text='Nondominant', variable=side_var, value='nd',
                                     command=set_data)
 dominant_radio.grid(row=2, column=0, sticky='w')
-non_dominant_radio.grid(row=2, column=1)
+non_dominant_radio.grid(row=2, column=1,sticky='w')
 #select gender
 male_selected_var = tk.BooleanVar()
 female_selected_var = tk.BooleanVar()

@@ -4,8 +4,10 @@ import nibabel as nib
 import numpy as np
 from numpy.linalg import inv
 
-from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, readFreeSurferTransform, cache_function,numpy2vtkMatrix
-from braviz.readAndFilter.surfer_input import surface2vtkPolyData,read_annot,read_morph_data,addScalars,getMorphLUT,surfLUT2VTK
+from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData,\
+    readFreeSurferTransform, cache_function,numpy2vtkMatrix,extract_poly_data_subset
+from braviz.readAndFilter.surfer_input import surface2vtkPolyData,read_annot,read_morph_data,addScalars,getMorphLUT,\
+    surfLUT2VTK
 from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
@@ -14,7 +16,7 @@ import braviz.readAndFilter.color_fibers
 import os
 import re
 import vtk
-import platform #for the autoReader
+import platform # for the autoReader
 import cPickle
 
 class kmc40Reader:
@@ -420,10 +422,15 @@ The path containing this structure must be set."""
                 named_tract_func=getattr(braviz.readAndFilter.named_tracts,kw['name'])
             except AttributeError:
                 raise Exception("unknown tract name %s"%kw['name'])
-            fibers=named_tract_func(self,subj,color=kw.get('color','orient'))
-            #this are in world coordinates, check if we need to change them
-            if kw.get('space','world').lower()!='world':
-                transformed_streams=self.__movePointsToSpace(fibers, kw['space'],subj)
+            fibers,result_space=named_tract_func(self,subj,color=kw.get('color','orient'))
+            #this are in result_splace coordinates, check if we need to change them
+            target_space=kw.get('space','world').lower()
+            if target_space==result_space:
+                return fibers
+            if result_space != 'world':
+                fibers=self.transformPointsToSpace(fibers, result_space, subj, inverse=True)
+            if target_space!='world':
+                transformed_streams=self.__movePointsToSpace(fibers, kw['space'],subj,inverse=False)
                 return transformed_streams
             return fibers
         if not kw.has_key('waypoint'):
@@ -463,21 +470,7 @@ The path containing this structure must be set."""
 
                 #Take advantage of buffer
                 fibers=self.get('fibers', subj,space='world',color=kw.get('color','orient'))
-                extract_lines=vtk.vtkExtractSelectedPolyDataIds()
-                id_list=vtk.vtkIdTypeArray()
-                id_list.SetNumberOfTuples(len(valid_ids))
-                for i,cell_id in enumerate(valid_ids):
-                    id_list.SetTuple1(i,cell_id)
-                selection=vtk.vtkSelection()
-                selection_node=vtk.vtkSelectionNode()
-                selection_node.GetProperties().Set(vtk.vtkSelectionNode.CONTENT_TYPE(),vtk.vtkSelectionNode.INDICES)
-                selection_node.GetProperties().Set(vtk.vtkSelectionNode.FIELD_TYPE(),vtk.vtkSelectionNode.CELL)
-                selection.AddNode(selection_node)
-                selection_node.SetSelectionList(id_list)
-                extract_lines.SetInputData(1,selection)
-                extract_lines.SetInputData(0,fibers)
-                extract_lines.Update()
-                fibers2=extract_lines.GetOutput()
+                fibers2=extract_poly_data_subset(fibers,valid_ids)
                 return fibers2
             else:
                 #space is not world

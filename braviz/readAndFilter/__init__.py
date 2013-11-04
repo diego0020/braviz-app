@@ -224,6 +224,27 @@ def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
         return valid_fibers
 
 
+def extract_poly_data_subset(polydata,id_list):
+    extract_lines = vtk.vtkExtractSelectedPolyDataIds()
+    if isinstance(id_list,vtk.vtkIdTypeArray):
+        id_array=id_list
+    else:
+        id_array = vtk.vtkIdTypeArray()
+        id_array.SetNumberOfTuples(len(id_list))
+        for i, cell_id in enumerate(id_list):
+            id_array.SetTuple1(i, cell_id)
+    selection = vtk.vtkSelection()
+    selection_node = vtk.vtkSelectionNode()
+    selection_node.GetProperties().Set(vtk.vtkSelectionNode.CONTENT_TYPE(), vtk.vtkSelectionNode.INDICES)
+    selection_node.GetProperties().Set(vtk.vtkSelectionNode.FIELD_TYPE(), vtk.vtkSelectionNode.CELL)
+    selection.AddNode(selection_node)
+    selection_node.SetSelectionList(id_array)
+    extract_lines.SetInputData(1, selection)
+    extract_lines.SetInputData(0, polydata)
+    extract_lines.Update()
+    return extract_lines.GetOutput()
+
+
 def boundingBoxIntesection(box1, box2):
     "test if two bounding boxes intersect"
     #Test intersection in three axis
