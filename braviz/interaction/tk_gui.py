@@ -1,7 +1,7 @@
 import Tkinter as tk
 from Tkinter import LabelFrame
 import ast
-
+from braviz.interaction.tk_tooltip import ToolTip
 class subjects_list(LabelFrame):
     """A subjects list  tkMegaWidget. It gets the available subjects from a braviz reader and calls a function when changed
     The get method can be used to query the currently selected subject
@@ -128,6 +128,10 @@ class structureList(LabelFrame):
         self.see=model_list.see
         self.itemconfigure=model_list.itemconfigure
         self.itemconfig=model_list.itemconfig
+        self.tool_tip=ToolTip(model_list,msgFunc=self.__get_tooltip,follow=1, delay=0.5)
+        from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
+        self.cool_names=cached_get_free_surfer_dict(reader)
+        parent.focus()
     def __update(self,*args):
         "Internally handles changes in subject selection and calls 'command' if necessary"
         model_idx=set(self.model_list.curselection())
@@ -187,3 +191,10 @@ class structureList(LabelFrame):
         "Get a list of currently selected items"
         select_idx=self.model_list.curselection()
         return [self.model_list.get(i) for i in select_idx]
+    def __get_tooltip(self,event=None):
+        #print dir(event)
+        y_coord=event.y
+        index=self.model_list.nearest(y_coord)
+        name=self.model_list.get(index)
+        cool_name=self.cool_names.get(name,'')
+        return "%s : %s " %(name,cool_name)

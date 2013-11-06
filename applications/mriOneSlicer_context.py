@@ -11,7 +11,8 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz.readAndFilter
 from braviz.visualization import add_solid_balloon,add_fibers_balloon
 from braviz.interaction.tkSimpleDialog import Dialog as simpleDialog
-
+from braviz.interaction.tk_tooltip import ToolTip
+from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 
 currSubj='093'
 currSpace='World'
@@ -306,6 +307,19 @@ model_list.select_set(0,0)
 model_list.bind('<Double-Button-1>',setModel)
 model_list.bind('<Key>',setModel)
 model_list.bind('<<ListboxSelect>>',setModel)
+
+cool_names_dict=cached_get_free_surfer_dict(reader)
+
+def get_tooltip( event=None):
+    y_coord = event.y
+    index = model_list.nearest(y_coord)
+    name = model_list.get(index)
+    cool_name = cool_names_dict.get(name, '')
+    return "%s : %s " % (name, cool_name)
+
+models_tooltip=ToolTip(model_list,msgFunc=get_tooltip,delay=0.5,follow=True)
+model_list.focus()
+
 
 class ctx_dialog(simpleDialog):
     def body(self,master):

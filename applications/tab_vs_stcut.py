@@ -12,6 +12,8 @@ import braviz
 from scipy.stats import linregress
 import numpy as np
 from itertools import izip
+from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
+from braviz.interaction.tk_tooltip import ToolTip
 
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
 data_root=reader.getDataRoot()
@@ -446,6 +448,17 @@ for special_fibers in named_fibers:
     model_list.insert(tk.END, "Fibs: "+special_fibers)
 
 model_list.select_set(3,3)
+cool_names_dict=cached_get_free_surfer_dict(reader)
+
+def get_tooltip( event=None):
+    y_coord = event.y
+    index = model_list.nearest(y_coord)
+    name = model_list.get(index)
+    cool_name = cool_names_dict.get(name, '')
+    return "%s : %s " % (name, cool_name)
+
+models_tooltip=ToolTip(model_list,msgFunc=get_tooltip,delay=0.5,follow=True)
+model_list.focus()
 def check_selection_compatibility(event=None):
     model_idx=model_list.curselection()
     model_name=model_list.get(model_idx)
