@@ -198,3 +198,16 @@ class structureList(LabelFrame):
         name=self.model_list.get(index)
         cool_name=self.cool_names.get(name,'')
         return "%s : %s " %(name,cool_name)
+
+def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=[]):
+    for name,childs in hierarchy_dict.iteritems():
+        tags2=tags[:]
+        if len(childs)>0:
+            tags2.append('parent')
+        else:
+            tags2.append('leaf')
+        iid=':'.join((root,name))
+        iid=iid.replace(' ','_')
+        tree_view.insert(root, 'end', iid, text=name, tags=tags2)
+        if len(childs)>0:
+            hierarchy_dict_to_tree(tree_view,childs,iid,tags)

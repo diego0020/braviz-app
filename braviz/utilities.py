@@ -1,5 +1,6 @@
 import contextlib
 import os
+from collections import defaultdict
 
 
 @contextlib.contextmanager
@@ -23,3 +24,7 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
+
+
+def recursive_default_dict():
+    return defaultdict(recursive_default_dict)
