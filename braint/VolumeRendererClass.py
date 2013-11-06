@@ -60,70 +60,16 @@ class VolumeRendererClass:
         return self.render_window
 
     def render(self, render_widget):
+        #TODO: El nombre de este metodo esta como confuso..... mejor como incializar o algo asi
         interactor = render_widget.GetRenderWindow().GetInteractor()
         interactor.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        
+
+        #TODO: Ten cuidado... puede que esto no exista
         self.image_plane.SetInteractor(interactor)
         self.image_plane.On()
         interactor.Initialize()
         interactor.Start()
-        
-    #===========================================================================
-    # def show_transform_grid(self, event=None):
-    #     self.image_plane.GetTexturePlaneProperty().SetOpacity(1.0)
-    #     
-    #     grid_mapper=vtk.vtkPolyDataMapper()
-    #     grid_actor=vtk.vtkActor()
-    #     grid_actor.SetMapper(grid_mapper)
-    #     self.renderer.AddActor(grid_actor)
-    #     grid_actor.SetVisibility(0)
-    #     
-    #     
-    #     if not select_show_warp_grid_status.get():
-    #         grid_actor.SetVisibility(0)
-    #         
-    #         renWin.Render()
-    #         return
-    #     subj = select_subj_frame.get()
-    #     #get original slice index
-    #     p1 = planeWidget.GetPoint1()
-    #     p2 = planeWidget.GetPoint2()
-    #     center=(np.array(p1)+np.array(p2))/2
-    #     orig_images={
-    #         'MRI':      {'space':'world'},
-    #         'FA':       {'space':'world'},
-    #         'APARC' :   {'space':'world'},
-    #         'Precision':{'space':'func_Precision'} ,
-    #         'Power' :   {'space':'func_Power'},
-    #     }
-    # 
-    #     #get orig_img
-    #     orig_img_desc=orig_images[image_var.get()]
-    #     if image_var.get() in ('Precision','Power'):
-    #         orig_img = reader.get('fmri', subj, format='vtk', name=image_var.get(), **orig_img_desc)
-    #     else:
-    #         orig_img=reader.get(image_var.get(),subj,format='vtk',**orig_img_desc )
-    #     #target_space -> world
-    #     orig_center = reader.transformPointsToSpace(center, space_var.get(), subj, True)
-    #     #world-> orig_space
-    #     orig_center=reader.transformPointsToSpace(orig_center, orig_img_desc['space'], subj, False)
-    #     #to image coordinates
-    #     orig_img_center=(np.array(orig_center)-orig_img.GetOrigin())/orig_img.GetSpacing()
-    #     orig_slice=round(orig_img_center[0])
-    #     print orig_slice
-    #     #get grid
-    #     grid=braviz.visualization.build_grid(orig_img,orig_slice,5)
-    #     #transform to current space
-    #     #orig_space -> world
-    #     grid = self.reader.transformPointsToSpace(grid, orig_img_desc['space'], subj, True)
-    #     #world -> current space
-    #     grid = self.reader.transformPointsToSpace(grid, space_var.get(), subj, False)
-    #     #paint grid
-    #     grid_mapper.SetInputData(grid)
-    #     grid_actor.SetVisibility(1)
-    #     self.image_plane.GetTexturePlaneProperty().SetOpacity(0.8)
-    #     self.render_window.Render()
-    #===========================================================================
+
         
     def clean_exit(self):
          self.render_window.Finalize()

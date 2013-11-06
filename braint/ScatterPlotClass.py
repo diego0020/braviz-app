@@ -149,7 +149,7 @@ class ScatterPlotClass:
     def get_struct_volume(self,reader, struct_name,code):
         try:
             model=reader.get('model',code,name=struct_name)
-        except:
+        except Exception:
             return float('nan')
         _,volume=braviz.interaction.compute_volume_and_area(model)
         return volume

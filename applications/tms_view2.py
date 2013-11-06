@@ -677,7 +677,7 @@ bars_widget2.grid(column=1, row=0, sticky='nsew')
 
 graphs_frame.grid(padx=3, pady=3, row=1, column=0, sticky='nsew')
 graphs_frame.columnconfigure(0, weight=3)
-graphs_frame.columnconfigure(1, weight=1)
+graphs_frame.columnconfigure(1, weight=0)
 graphs_frame.rowconfigure(0, weight=1)
 
 display_frame.rowconfigure(0, weight=3)

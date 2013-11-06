@@ -7,7 +7,8 @@ import ttk
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-from kernel.RDFDBManagerClass import *
+import kernel
+from kernel.RDFDBManagerClass import  RDFDBManager
 
 from ScatterPlotClass import ScatterPlotClass
 from VolumeRendererClass import VolumeRendererClass
@@ -136,6 +137,7 @@ class MainFrame(Frame):
         self.my_tree.heading('#0', text='BraInt Hierarchy', anchor='w')
         abspath = 'BraInt'
         parent=self.my_tree.insert('', 'end', text=abspath, open=True)
+        self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://guitaca.uniandes.edu.co:8080')
         #self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://localhost:8080') ##Crear objeto del tipo RDFDBmanager
         #self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://gambita.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
         self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://guitaca.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
@@ -292,6 +294,7 @@ class MainFrame(Frame):
         
     def update_tables(self, x_axis_code, x_axis_name, y_axis_code, y_axis_name):
         if x_axis_code in self.volume_list:
+            self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://guitaca.uniandes.edu.co:8080')
             #self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://localhost:8080') ##Crear objeto del tipo RDFDBmanager
             #self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://gambita.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
             self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://guitaca.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
@@ -313,6 +316,7 @@ class MainFrame(Frame):
             self.current_subject_x_score = [self.current_x_axis[self.current_subject_index]]
             
         if y_axis_code in self.volume_list:
+            self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://guitaca.uniandes.edu.co:8080')
             #self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://localhost:8080') ##Crear objeto del tipo RDFDBmanager
             #self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://gambita.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
             self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://guitaca.uniandes.edu.co:8080') ##Crear objeto del tipo RDFDBmanager
@@ -340,7 +344,7 @@ class MainFrame(Frame):
         self.scatterPlot = ScatterPlotClass(500,500)
         self.codes = self.scatterPlot.get_columnFromCSV(self.file_name, 'CODE', False)
         self.scatterPlot.set_callback(self.scatterplot_callback)
-        #self.update_plot_one_patient()
+        self.update_plot_one_patient()
         
         
         
@@ -494,5 +498,5 @@ root = Tk()
 mainFrame = MainFrame(root)
 w, h = root.winfo_screenwidth(), root.winfo_screenheight()
 root.geometry("%dx%d+0+0" % (w, h))
-root.wm_title("Braint V 1.0")
+root.wm_title("Braint V 1.1")
 root.mainloop()
