@@ -7,11 +7,13 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 import braviz
 from braviz.interaction.tk_gui import hierarchy_dict_to_tree
-
+from itertools import izip
 
 import os
-__author__ = 'Diego'
+
 from functools import partial
+__author__ = 'Diego'
+
 
 class VariableSelectFrame(tkFrame):
     def __init__(self,parent,**kwargs):
@@ -76,6 +78,8 @@ class VariableSelectFrame(tkFrame):
         self.__apply_selection_button=apply_selection_button
         self.__progress=progress
         self.__add_observers()
+        #public access to tree_view
+        self.tree_view=super_tree
 
     def __fill_super_tree(self):
         super_tree=self.__super_tree
@@ -101,8 +105,9 @@ class VariableSelectFrame(tkFrame):
         metric_select_box['state'] = 'disabled'
         valid_metrics = {
             'fibers': ("Number", "Mean FA", "Mean Length"),
-            'multiple': ('Volume', 'Fibers Crossing', 'Mean FA of Fibers Crossing'),
-            'leaf_struct': ('Volume', 'Surface Area', 'Fibers Crossing', 'Mean FA of Fibers Crossing')
+            'multiple': ('Volume', 'Fibers Crossing', 'Mean FA of Fibers Crossing','Mean Length of Fibers Crossing'),
+            'leaf_struct': ('Volume', 'Surface Area', 'Fibers Crossing',
+                            'Mean FA of Fibers Crossing','Mean Length of Fibers Crossing')
         }
 
         def toggle_add_button(event=None):
@@ -227,8 +232,10 @@ class GraphFrame(tkFrame):
             print "Not Implemented"
 
 class DataFetcher():
-    def __init__(self,reader):
+    def __init__(self,reader,tree_view=None,codes=None):
         self.__reader=reader
+        self.__tree_view=tree_view
+        self.__codes=codes
     def get_data(self,data_variables):
         #decode
         data_dict={}
@@ -243,7 +250,6 @@ class DataFetcher():
     def get_tms_data_col(self,col):
         from braviz.interaction.tms_variables import data_codes_dict
         from braviz.readAndFilter.read_csv import get_column
-        from itertools import izip
         tms_csv_file=os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
         tokens=col.split(':')
         hemisphere=tokens[-1]
@@ -258,37 +264,87 @@ class DataFetcher():
         codes_col=get_column(tms_csv_file,'CODE',numeric=False)
         data_dict=dict(izip(codes_col,data_col))
         return data_dict
+    def set_codes(self,codes):
+        self.__codes=codes
+    def get_codes(self):
+        from braviz.readAndFilter.read_csv import get_column
+        if self.__codes is not None:
+            return self.__codes
+        else:
+            tms_csv_file = os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
+            codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
+            return codes_col
     def get_structural_data_col(self,col):
+        from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_get_struct_metric_col
         #decode
+        metrics_dict={
+            'Volume':'volume',
+            'Surface Area':'area',
+            'Fibers Crossing':'nfibers',
+            'Mean FA':'fa_fibers',
+            'Mean FA of Fibers Crossing':'fa_fibers',
+            'Number':'nfibers',
+            'Mean Length':'lfibers',
+            'Mean Length of Fibers Crossing':'lfibers',
+        }
+        print col
         tokens=col.split(':')
-        metric=tokens[0]
-        structure_type=tokens[1]
-        if structure_type=='Fibers':
-            name=tokens[2]
-            print "Calculate %s for named fibers %s"%(metric,name)
-            return
-        if structure_type=='Base':
-            name=tokens[2]
-        elif structure_type[0]=='C':
+        metric=metrics_dict[tokens[0]]
+
+        id_in_tree='structural:'+':'.join(tokens[1:])
+        selection_tags = self.__tree_view.item(id_in_tree)['tags']
+        children=self.__tree_view.get_children(id_in_tree)
+
+        #print children
+        if len(children) == 0:
+            children=(col,)
+
+        def test_for_leaf(kid):
+            tokens=kid.split(':')
+            id_in_tree = 'structural:' + ':'.join(tokens[1:])
+            return len(self.__tree_view.get_children(id_in_tree))==0
+        children2=filter(test_for_leaf,children)
+        names=[]
+        for kid in children2:
+            tokens2 = kid.split(':')
+            name=self.__reconstruct_struct_name(tokens2)
+            names.append(name)
+        codes = self.get_codes()
+        metric_func=partial(get_mult_struct_metric,self.__reader,names,metric=metric)
+        #data_col=map(metric_func,codes)
+        data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric)
+        result_dict=dict(izip(codes,data_col))
+        return result_dict
+
+
+
+
+
+    def __reconstruct_struct_name(self,tokens):
+        structure_type = tokens[1]
+        if structure_type == 'Fibers':
+            name = 'Fibs:' + tokens[2]
+        elif structure_type == 'Base':
+            name = tokens[2]
+        elif structure_type[0] == 'C':
             #Corpus Callosum
-            name='CC-'+tokens[2]
+            name = 'CC_' + tokens[2]
         else:
             #cortex
-            if tokens[-1][0]=='G':
+            if tokens[-1][0] == 'G':
                 #gray matter
-                matter='ctx'
+                matter = 'ctx'
             else:
                 #white matter
-                matter='wm'
-            if structure_type[0]=='L':
-                h='lh'
+                matter = 'wm'
+            if structure_type[0] == 'L':
+                h = 'lh'
             else:
-                h='rh'
-            pname=tokens[-2]
-            full_name='-'.join([matter,h,pname])
-            name=full_name
-        print "calculating %s for structure %s" % (metric, name)
-
+                h = 'rh'
+            pname = tokens[-2]
+            full_name = '-'.join([matter, h, pname])
+            name = full_name
+        return name
 
     def get_braint_data_col(self):
         print "Not yet implemented"
@@ -323,7 +379,7 @@ if __name__=="__main__":
     display_frame.columnconfigure(0,weight=1)
 
     #variable_select_frame.set_apply_callback(graph_frame.update_representation)
-    fetcher=DataFetcher(reader)
+    fetcher=DataFetcher(reader,variable_select_frame.tree_view)
     variable_select_frame.set_apply_callback(fetcher.get_data)
 
     tk.mainloop()

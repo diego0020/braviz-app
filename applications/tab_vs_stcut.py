@@ -14,6 +14,7 @@ import numpy as np
 from itertools import izip
 from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.tk_tooltip import ToolTip
+from braviz.interaction.structure_metrics import cached_get_struct_metric_col
 
 reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
 data_root=reader.getDataRoot()
@@ -75,133 +76,42 @@ def column_to_vtk_array(col,name='unknown'):
     return array
 
 
-def get_struct_metric(struct_name,code,metric='volume'):
-    print "calculating %s for %s"%(metric,struct_name)
-    if not struct_name.startswith('Fib'):
-        try:
-            model=reader.get('model',code,name=struct_name)
-        except Exception:
-            print "%s not found for subject %s"%(struct_name,code)
-            return float('nan')
-    if metric=='volume':
-        return reader.get('model',code,name=struct_name,volume=1)
-    if metric=='area':
-        area, volume = braviz.interaction.compute_volume_and_area(model)
-        return area
-    elif metric=='nfibers':
-        return get_fibers_metric(struct_name,code,'number')
-    elif metric=='lfibers':
-        return get_fibers_metric(struct_name,code,'mean_length')
-    elif metric=='fa_fibers':
-        return get_fibers_metric(struct_name,code,'mean_fa')
-    else:
-        print "unknown metric %s"%metric
-        return None
-
-def get_fibers_metric(struct_name,code,metric='number'):
-    #print "calculating for subject %s"%code
-    n=0
-    if struct_name.startswith('Fibs:'):
-        #print "we are dealing with special fibers"
-        try:
-            fibers = reader.get('fibers', code, name=struct_name[6:], color='fa')
-        except Exception:
-            n = float('nan')
-            return n
-    else:
-        try:
-            fibers=reader.get('fibers',code,waypoint=struct_name,color='fa')
-        except Exception:
-            n=float('nan')
-            return n
-    if fibers is None:
-        #print "Problem loading fibers for subject %s"%code
-        n=float('nan')
-        return n
-    elif metric=='number':
-        n=fibers.GetNumberOfLines()
-    elif metric=='mean_length':
-        desc=braviz.interaction.get_fiber_bundle_descriptors(fibers)
-        n=float(desc[1])
-    elif metric=='mean_fa':
-        desc=braviz.interaction.aggregate_fiber_scalar(fibers, component=0, norm_factor=1/255)
-        del fibers
-        n=float(desc[1])
-    else:
-        print 'unknowm fiber metric %s'%metric
-        return float('nan')
-    #print '%s : %f'%(code,n)
-    return n
-
-
 def get_struct_metrics_col():
-    global struct_metrics_col,temp_struct_metrics_col,processing,cancel_calculation_flag,struct_name,metric
-    metric_temp=long_names_dict[metric_var.get()]
+    global cancel_calculation_flag,processing
     struct_idx = model_list.curselection()
-    struct_name_temp = model_list.get(struct_idx)
-    key='column_%s_%s'%(struct_name_temp.replace(':','_'),metric_temp.replace(':','_'))
-    cache_file_name=path_join(reader.getDataRoot(),'pickles','%s.pickle'%key)
-    try:
-        with open(cache_file_name,'rb') as cachef:
-            struct_metrics_col=cPickle.Unpickler(cachef).load()
-    except IOError:
-        pass
-    else:
-        struct_name=struct_name_temp
-        metric=metric_temp
-        refresh_table()
-        refresh_display()
-        return
-    print "Calculating %s for structure %s"%(metric_temp,struct_name_temp)
-    temp_struct_metrics_col=[]
-    #async_get_struct_metric()
-    calculate_button['text']='Cancel'
+    struct_name_temp =  model_list.get(struct_idx)
+    metric_temp = long_names_dict[metric_var.get()]
+    cancel_calculation_flag = False
+    async_metrics_variables={'working':False,'cancel':False }
     processing=True
-    cancel_calculation_flag=False
-    thread.start_new_thread(async_get_struct_metric,(metric_temp,struct_name_temp))
-    top.after(20,finish_get_struct_metric,cache_file_name)
+    calculate_button['text'] = 'Cancel'
+    #cached_get_struct_metric_col(reader,codes,struct_name_temp,metric_temp,state_variables=async_metrics_variables)
+    thread.start_new_thread(cached_get_struct_metric_col, (reader,codes,struct_name_temp,metric_temp,
+                                                           async_metrics_variables))
+    top.after(20, finish_get_struct_metric,async_metrics_variables)
+    return
 
 
-def async_get_struct_metric(metric_temp,struct_name_temp):
-    global temp_struct_metrics_col
-    for code in codes:
-        if cancel_calculation_flag is True:
-            print "cancel flag received"
-            temp_struct_metrics_col = []
-            break
-        scalar=get_struct_metric(struct_name_temp,code,metric_temp)
-        temp_struct_metrics_col.append(scalar)
-
-
-def finish_get_struct_metric(cache_file_name):
+def finish_get_struct_metric(state_variables):
     global struct_metrics_col,processing,struct_name,metric
-    number_calculated = len(temp_struct_metrics_col)
-    if (cancel_calculation_flag is True) and (number_calculated==0):
-        print "aborting"
-        processing=False
+    number_calculated = state_variables.get('number_calculated',0)
+    #print state_variables
+    if cancel_calculation_flag is True:
+        #print "aborting"
+        state_variables['cancel']=True
+    if state_variables['working'] is False or number_calculated==len(codes):
         calculate_button['text']='Calculate'
-        refresh_table()
-        refresh_display()
-        return
-    if number_calculated==len(codes):
-        try:
-            with open(cache_file_name,'wb') as cachef: cPickle.Pickler(cachef,2).dump(struct_metrics_col)
-        except Exception:
-            print "cache write failed"
-            print "file was %s"%cache_file_name
-            pass
-        struct_metrics_col=temp_struct_metrics_col
-        metric=long_names_dict[metric_var.get()]
         processing = False
-        calculate_button['text']='Calculate'
-        struct_idx = model_list.curselection()
-        struct_name = model_list.get(struct_idx)
+        if state_variables['cancel'] is False:
+            struct_metrics_col=state_variables['output']
+            struct_name = state_variables['struct_name']
+            metric = state_variables['metric']
         refresh_table()
         refresh_display()
     else:
         #print number_calculated/len(codes)
         progress_bar_var.set(number_calculated/len(codes)*100)
-        top.after(20, finish_get_struct_metric, cache_file_name)
+        top.after(20, finish_get_struct_metric,state_variables)
 
 tab_var_name='WMIIQ'
 tab_column=get_column(tab_var_name, True)
@@ -560,8 +470,8 @@ title_properties=chart.GetTitleProperties()
 title_properties.SetFontSize(14)
 title_properties.SetColor(228/255,26/255,28/255)
 get_struct_metrics_col()
-refresh_table()
-refresh_display()
+#refresh_table()
+#refresh_display()
 
 # Start Tkinter event loop
 root.mainloop()

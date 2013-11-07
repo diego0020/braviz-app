@@ -2,10 +2,33 @@ import braviz
 import vtk
 from os.path import join as path_join
 import cPickle
+import numpy as np
 __author__ = 'Diego'
 
+def get_mult_struct_metric(reader,struct_names,code,metric='volume'):
+    values=[]
+    nfibers=[]
+    for struct in struct_names:
+        value=get_struct_metric(reader,struct,code,metric)
+        values.append(value)
+        if metric in ('lfibers','fa_fibers'):
+            #we need number of fibers to aggregate
+            n=get_struct_metric(reader,struct,code,'nfibers')
+            nfibers.append(n)
+    if metric in ('volume','area','nfibers'):
+        result=np.sum(values)
+    elif metric in ('lfibers','fa_fibers'):
+        total=np.dot(values,nfibers)
+        total=np.sum(total)
+        total_fibs=np.sum(nfibers)
+        result=total/total_fibs
+    else:
+        raise Exception('Unknown metric')
+    return result
+
+
 def get_struct_metric(reader,struct_name,code,metric='volume'):
-    print "calculating %s for %s"%(metric,struct_name)
+    #print "calculating %s for %s (%s)"%(metric,struct_name,code)
     if not struct_name.startswith('Fib'):
         try:
             model=reader.get('model',code,name=struct_name)
@@ -18,11 +41,11 @@ def get_struct_metric(reader,struct_name,code,metric='volume'):
         area, volume = braviz.interaction.compute_volume_and_area(model)
         return area
     elif metric=='nfibers':
-        return get_fibers_metric(struct_name,code,'number')
+        return get_fibers_metric(reader,struct_name,code,'number')
     elif metric=='lfibers':
-        return get_fibers_metric(struct_name,code,'mean_length')
+        return get_fibers_metric(reader,struct_name,code,'mean_length')
     elif metric=='fa_fibers':
-        return get_fibers_metric(struct_name,code,'mean_fa')
+        return get_fibers_metric(reader,struct_name,code,'mean_fa')
     else:
         print "unknown metric %s"%metric
         return None
@@ -61,10 +84,22 @@ def get_fibers_metric(reader, struct_name,code,metric='number'):
         return float('nan')
     return n
 
-def cached_get_struct_metric_col(reader,struct_name_temp,metric_temp,async=False,state_variables={}):
+def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables={}):
     #global struct_metrics_col, temp_struct_metrics_col, processing, cancel_calculation_flag, struct_name, metric
+    state_variables['struct_name']=struct_name
+    state_variables['metric']=metric
     state_variables['working']=True
-    key = 'column_%s_%s' % (struct_name_temp.replace(':', '_'), metric_temp.replace(':', '_'))
+    state_variables['output']=None
+    state_variables['number_calculated']=0
+    calc_function=get_struct_metric
+    if hasattr(struct_name,'__iter__'):
+        #we have multiple sequences
+        calc_function=get_mult_struct_metric
+        standard_list=list(struct_name)
+        standard_list.sort()
+        key='column_%s_%s' % (''.join(struct_name).replace(':', '_'), metric.replace(':', '_'))
+    else:
+        key = 'column_%s_%s' % (struct_name.replace(':', '_'), metric.replace(':', '_'))
     cache_file_name = path_join(reader.getDataRoot(), 'pickles', '%s.pickle' % key)
     try:
         with open(cache_file_name, 'rb') as cachef:
@@ -72,26 +107,29 @@ def cached_get_struct_metric_col(reader,struct_name_temp,metric_temp,async=False
     except IOError:
         pass
     else:
+        state_variables['working'] = False
+        state_variables['output'] = struct_metrics_col
+        state_variables['number_calculated'] = len(struct_metrics_col)
         return struct_metrics_col
-    print "Calculating %s for structure %s" % (metric_temp, struct_name_temp)
+    print "Calculating %s for structure %s" % (metric, struct_name)
     temp_struct_metrics_col = []
-    codes=reader.get('ids')
     for code in codes:
         cancel_calculation_flag=state_variables.get('cancel',False)
         if cancel_calculation_flag is True:
             print "cancel flag received"
             state_variables['working'] = False
             return
-        scalar = get_struct_metric(struct_name_temp, code, metric_temp)
+
+        scalar = calc_function(reader,struct_name, code, metric)
         temp_struct_metrics_col.append(scalar)
         state_variables['number_calculated'] = len(temp_struct_metrics_col)
     try:
         with open(cache_file_name, 'wb') as cachef:
-            cPickle.Pickler(cachef, 2).dump(struct_metrics_col)
-    except Exception:
+            cPickle.Pickler(cachef, 2).dump(temp_struct_metrics_col)
+    except IOError:
         print "cache write failed"
         print "file was %s" % cache_file_name
-        pass
+    state_variables['output']=temp_struct_metrics_col
     state_variables['working'] = False
     return temp_struct_metrics_col
 

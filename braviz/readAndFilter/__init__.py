@@ -308,11 +308,12 @@ def cache_function(max_cache_size):
                     process_id=psutil.Process(os.getpid())
                     mem=process_id.get_memory_info()[0]/(2**20)
                     if mem >= max_cache:
-                        print "freeing cache"
+                        #print "freeing cache"
                         try:
                             while mem > 0.9*max_cache:
-                                rem_key,val=cache.popitem(last=False)
-                                #print "removing %s with access time= %s"%(rem_key,val[1])
+                                for i in xrange(len(cache)//10):
+                                    rem_key,val=cache.popitem(last=False)
+                                    #print "removing %s with access time= %s"%(rem_key,val[1])
                                 mem = process_id.get_memory_info()[0] / (2 ** 20)
                         except KeyError:
                             print "Cache is empty and memory still too high! check your program for memory leaks"
