@@ -7,10 +7,11 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 import braviz
 from braviz.interaction.tk_gui import hierarchy_dict_to_tree
-from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
-from braviz.interaction.tms_variables import hierarchy as tms_hierarchy
-from braviz.interaction.structural_hierarchy import get_structural_hierarchy
+
+
+import os
 __author__ = 'Diego'
+from functools import partial
 
 class VariableSelectFrame(tkFrame):
     def __init__(self,parent,**kwargs):
@@ -51,10 +52,18 @@ class VariableSelectFrame(tkFrame):
 
         remove_from_selection_button=tk.Button(bottom_buttons_frame,text='Remove')
         clear_selection_button=tk.Button(bottom_buttons_frame,text='Clear')
+        apply_selection_button=tk.Button(bottom_buttons_frame,text='Apply Selection')
+        progress=tk.IntVar()
+        progress.set(100)
+        progress_bar=ttk.Progressbar(bottom_buttons_frame,orient='horizontal',length='100',mode='determinate',
+                                     variable=progress)
         clear_selection_button.grid(row=0,column=0,sticky='ew')
         remove_from_selection_button.grid(row=0,column=1,sticky='ew')
+        apply_selection_button.grid(row=1,column=0,columnspan=2,sticky='ew')
+        progress_bar.grid(row=2,column=0,columnspan=2,sticky='ew')
         bottom_buttons_frame.columnconfigure(0,weight=1)
         bottom_buttons_frame.columnconfigure(1,weight=1)
+
         self.__super_tree = super_tree
         self.__fill_super_tree()
 
@@ -64,19 +73,24 @@ class VariableSelectFrame(tkFrame):
         self.__selected_variables_list=selected_variables_list
         self.__clear_selection_button=clear_selection_button
         self.__remove_from_selection_button=remove_from_selection_button
+        self.__apply_selection_button=apply_selection_button
+        self.__progress=progress
         self.__add_observers()
 
     def __fill_super_tree(self):
         super_tree=self.__super_tree
         #BRAINT
+        from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
         braint = get_braint_hierarchy()
         super_tree.insert('', tk.END, 'braint', text='Braint')
         hierarchy_dict_to_tree(super_tree, braint, 'braint', tags=['braint'])
         #TMS
+        from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
         super_tree.insert('', tk.END, 'tms', text='TMS')
         hierarchy_dict_to_tree(super_tree, tms_hierarchy, 'tms', tags=['tms'])
 
         #ANATOMY
+        from braviz.interaction.structural_hierarchy import get_structural_hierarchy
         super_tree.insert('', tk.END, 'structural', text='Structural')
         anatomy_hierarchy = get_structural_hierarchy(reader, '144')
         hierarchy_dict_to_tree(super_tree, anatomy_hierarchy, 'structural', tags=['struct'])
@@ -153,8 +167,16 @@ class VariableSelectFrame(tkFrame):
 
         remove_from_selection_button=self.__remove_from_selection_button
         remove_from_selection_button['command'] = remove_variable
+    def get_selected_variables(self):
+        return self.__selected_variables_list.get(0,tk.END)
+    def set_apply_callback(self,callback):
+        def callback2(event=None):
+            callback(self.get_selected_variables())
+        self.__apply_selection_button['command']=callback2
+    def set_progress(self,prog):
+        self.__progress.set(prog)
 
-class vtk_widget(tkFrame):
+class VtkWidget(tkFrame):
     def __init__(self,reader,parent,**kwargs):
 
         tkFrame.__init__(self, parent, **kwargs)
@@ -184,13 +206,92 @@ class vtk_widget(tkFrame):
         self.picker = vtk.vtkCellPicker()
         self.picker.SetTolerance(0.005)
         cam1 = self.ren.GetActiveCamera()
-        cam1.Elevation(80)
-        cam1.Azimuth(80)
-        cam1.SetViewUp(0, 0, 1)
+        self.ren.ResetCamera()
+        #cam1.Elevation(80)
+        #cam1.Azimuth(80)
+        #cam1.SetViewUp(0, 0, 1)
         self.pd_actors=[]
 
         self.renWin.Render()
 
+
+class GraphFrame(tkFrame):
+    def __init__(self,parent,**kwargs):
+        tkFrame.__init__(self,parent,**kwargs)
+
+    def update_representation(self,data):
+        print data
+        if len(data)==1:
+            print "yey"
+        else:
+            print "Not Implemented"
+
+class DataFetcher():
+    def __init__(self,reader):
+        self.__reader=reader
+    def get_data(self,data_variables):
+        #decode
+        data_dict={}
+        for col in data_variables:
+            print col
+            if col.startswith('braint'):
+                print self.get_braint_data_col(col)
+            elif col.startswith('tms'):
+                print self.get_tms_data_col(col)
+            else:
+                print self.get_structural_data_col(col)
+    def get_tms_data_col(self,col):
+        from braviz.interaction.tms_variables import data_codes_dict
+        from braviz.readAndFilter.read_csv import get_column
+        from itertools import izip
+        tms_csv_file=os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
+        tokens=col.split(':')
+        hemisphere=tokens[-1]
+        if hemisphere=='Dominant':
+            h='d'
+        else:
+            h='nd'
+        decoded_col = tokens[-2]
+        decoded_col=decoded_col.replace('_',' ')
+        decoded_col=data_codes_dict[decoded_col]
+        data_col=get_column(tms_csv_file,decoded_col+h,numeric=True)
+        codes_col=get_column(tms_csv_file,'CODE',numeric=False)
+        data_dict=dict(izip(codes_col,data_col))
+        return data_dict
+    def get_structural_data_col(self,col):
+        #decode
+        tokens=col.split(':')
+        metric=tokens[0]
+        structure_type=tokens[1]
+        if structure_type=='Fibers':
+            name=tokens[2]
+            print "Calculate %s for named fibers %s"%(metric,name)
+            return
+        if structure_type=='Base':
+            name=tokens[2]
+        elif structure_type[0]=='C':
+            #Corpus Callosum
+            name='CC-'+tokens[2]
+        else:
+            #cortex
+            if tokens[-1][0]=='G':
+                #gray matter
+                matter='ctx'
+            else:
+                #white matter
+                matter='wm'
+            if structure_type[0]=='L':
+                h='lh'
+            else:
+                h='rh'
+            pname=tokens[-2]
+            full_name='-'.join([matter,h,pname])
+            name=full_name
+        print "calculating %s for structure %s" % (metric, name)
+
+
+    def get_braint_data_col(self):
+        print "Not yet implemented"
 
 if __name__=="__main__":
     root=tk.Tk()
@@ -210,8 +311,9 @@ if __name__=="__main__":
     panned_window.add(display_frame)
 
     #vtk_frame=tk.Frame(display_frame,bg='green',height=400,width=600)
-    graph_frame=tk.Frame(display_frame,bg='blue',height=200,width=600)
-    vtk_frame=vtk_widget(reader,display_frame,height=400,width=600)
+    #graph_frame=tk.Frame(display_frame,bg='blue',height=200,width=600)
+    graph_frame=GraphFrame(display_frame,bg='blue',height=200,width=600)
+    vtk_frame=VtkWidget(reader,display_frame,height=400,width=600)
 
     vtk_frame.grid(row=0,column=0,sticky='nsew')
     graph_frame.grid(row=1,column=0,sticky='nsew')
@@ -219,6 +321,10 @@ if __name__=="__main__":
     display_frame.rowconfigure(0,weight=1)
     display_frame.rowconfigure(1,weight=1)
     display_frame.columnconfigure(0,weight=1)
+
+    #variable_select_frame.set_apply_callback(graph_frame.update_representation)
+    fetcher=DataFetcher(reader)
+    variable_select_frame.set_apply_callback(fetcher.get_data)
 
     tk.mainloop()
 

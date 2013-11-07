@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import Tkinter as Tk
 from itertools import izip
 
+
 class BarPlot():
     def __init__(self):
         f = Figure( dpi=100,tight_layout=True,facecolor='w',frameon=False,edgecolor='r')
@@ -179,3 +180,11 @@ class BarPlot():
         return None
     def set_higlight_index(self,index):
         self.highlight=index
+
+
+class ScatterPlot():
+    pass
+
+
+class SpiderPlot():
+    pass

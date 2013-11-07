@@ -39,3 +39,19 @@ hierarchy={
         }
     }
 }
+
+hierarchy_dnd={
+    'Motor Brain' : {
+        'Excitability' : {'Dominant' : {}, 'Nondominant': {}},
+        'Synchronization' : {'Dominant' : {}, 'Nondominant': {}},
+        'Balanced Activity' :{
+            'Level of Inhibition':{'Dominant' : {}, 'Nondominant': {}},
+            'Level of Facilitation' : {'Dominant' : {}, 'Nondominant': {}},
+        },
+        'Cooperation between hemispheres':{
+            'Frequency':{'Dominant' : {}, 'Nondominant': {}},
+            'Transfer time':{'Dominant' : {}, 'Nondominant': {}},
+            'Duration':{'Dominant' : {}, 'Nondominant': {}},
+        }
+    }
+}

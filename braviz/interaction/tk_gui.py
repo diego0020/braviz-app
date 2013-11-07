@@ -200,7 +200,7 @@ class structureList(LabelFrame):
         return "%s : %s " %(name,cool_name)
 
 def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=[]):
-    for name,childs in hierarchy_dict.iteritems():
+    for name,childs in sorted(hierarchy_dict.items(),key=lambda x:x[0]):
         tags2=tags[:]
         if len(childs)>0:
             tags2.append('parent')
