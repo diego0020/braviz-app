@@ -5,14 +5,15 @@ import ttk
 from itertools import izip
 import os
 from functools import partial
-
+from braviz.visualization.create_lut import get_colorbrewer_lut
+import numpy as np
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 import braviz
 from braviz.interaction.tk_gui import hierarchy_dict_to_tree
-from braviz.visualization.mathplotlib_charts import BarPlot
+from braviz.visualization.mathplotlib_charts import BarPlot,ScatterPlot,SpiderPlot
 import numpy as np
 __author__ = 'Diego'
 
@@ -227,59 +228,119 @@ class GraphFrame(tkFrame):
         tkFrame.__init__(self,parent,**kwargs)
         self.__ubica_dict=ubica_dict
         self.__bar_chart=None
+        self.__scatter_plot=None
         self.__widget=None
+        self.__spider_plot=None
 
 
     def update_representation(self,data):
-        import numpy as np
-        from braviz.visualization.create_lut import get_colorbrewer_lut
-        print data
+        #print data
+        if len(data)==0:
+            return
         if self.__widget is not None:
             self.__widget.grid_forget()
             self.__widget=None
         if len(data)==1:
-            y_label,data_dict=data.popitem()
-            good_data=dict(( (k,v) for k,v in data_dict.iteritems() if np.isfinite(v)))
-            term_data=[v for k,v in good_data.iteritems() if self.__ubica_dict[k]=='3']
-            term_mean=np.mean(term_data)
-            term_std=np.std(term_data)
-            if self.__bar_chart is None:
-                bar_plot=BarPlot()
-            else:
-                bar_plot=self.__bar_chart
-            bar_widget=bar_plot.get_widget(self,height=200,width=600)
-            bar_widget.grid(row=0,column=0,sticky='NSEW')
-            self.rowconfigure(0,weight=1)
-            self.columnconfigure(0,weight=1)
-            good_min = np.min(good_data.values())
-            good_max = np.max(good_data.values())
-            bar_plot.set_y_limits(good_min, good_max)
-            bar_plot.set_lines([term_mean-term_std,term_mean,term_mean+term_std],(True,False,True))
-            bar_plot.set_y_title(y_label)
-            data_tuples=good_data.items()
-            data_tuples.sort(key=lambda x:self.__ubica_dict[x[0]])
-
-            color_lut=get_colorbrewer_lut(good_min,good_max,'RdYlGn',11,continuous=True)
-            def color_fun(value):
-                return color_lut.GetColor(value)
-
-            bar_plot.set_color_fun(color_fun)
-            codes,datums=zip(*data_tuples)
-            bar_plot.set_data(datums,codes)
-            group_stats=self.get_group_stats(good_data)
-            means,stds,ns=group_stats
-
-            bar_plot.set_back_bars(back_bars=zip(means,ns),back_error=stds)
-            bar_plot.paint_bar_chart()
-
+            self.draw_bar_chart(data)
+        elif len(data)==2:
+            self.draw_scatter(data)
         else:
-            print "Not Implemented"
-    def normalize_variables(self,data):
+            self.draw_spiders(data)
+    def draw_bar_chart(self,data):
+        y_label, data_dict = data.popitem()
+        good_data = dict(( (k, v) for k, v in data_dict.iteritems() if np.isfinite(v)))
+        term_data = [v for k, v in good_data.iteritems() if self.__ubica_dict[k] == '3']
+        term_mean = np.mean(term_data)
+        term_std = np.std(term_data)
+        if self.__bar_chart is None:
+            bar_plot = BarPlot(tight=True)
+            self.__bar_chart=bar_plot
+        else:
+            bar_plot = self.__bar_chart
+        bar_widget = bar_plot.get_widget(self, height=200, width=600)
+        bar_widget.grid(row=0, column=0, sticky='NSEW')
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        good_min = np.min(good_data.values())
+        good_max = np.max(good_data.values())
+        bar_plot.set_y_limits(good_min, good_max)
+        bar_plot.set_lines([term_mean - term_std, term_mean, term_mean + term_std], (True, False, True))
+        bar_plot.set_y_title(y_label)
+        data_tuples = good_data.items()
+        data_tuples.sort(key=lambda x: self.__ubica_dict[x[0]])
 
-        for data_row in data:
-            items=data.values()
-            minimum=np.min(items)
-            maximum=np.max(items)
+        color_lut = get_colorbrewer_lut(good_min, good_max, 'RdYlGn', 11, continuous=True)
+
+        def color_fun(value):
+            return color_lut.GetColor(value)
+
+        bar_plot.set_color_fun(color_fun)
+        codes, datums = zip(*data_tuples)
+        bar_plot.set_data(datums, codes)
+        group_stats = self.get_group_stats(good_data)
+        means, stds, ns = group_stats
+
+        bar_plot.set_back_bars(back_bars=zip(means, ns), back_error=stds)
+        bar_plot.paint_bar_chart()
+    def draw_scatter(self,data_dict):
+        good_data_dict=self.filter_dict(data_dict)
+        if self.__scatter_plot is None:
+            self.__scatter_plot=ScatterPlot(tight=True)
+        scatter=self.__scatter_plot
+        scatter_widget=scatter.get_widget(self,height=200, width=600)
+        scatter_widget.grid(row=0,column=0,sticky='nsew')
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.__widget=scatter_widget
+        x_label,x_data_dict=good_data_dict.popitem()
+        y_label,y_data_dict=good_data_dict.popitem()
+        codes=x_data_dict.keys()
+        x_data=[x_data_dict[k] for k in codes]
+        y_data=[y_data_dict[k] for k in codes]
+        x_min=np.min(x_data)
+        x_max=np.max(x_data)
+        x_extent=x_max-x_min
+        y_min=np.min(y_data)
+        y_max=np.max(y_data)
+        y_extent=y_max-y_min
+        scatter.set_limits((x_min-x_extent/10,x_max+x_extent/10),
+                           (y_min - y_extent / 10, y_max + y_extent / 10))
+        scatter.set_labels(x_label,y_label)
+        scatter.set_data(x_data,y_data)
+        #print zip(x_data,y_data)
+        scatter.draw_scatter()
+    def draw_spiders(self,data_dict):
+        good_data_dict = self.filter_dict(data_dict)
+        if self.__spider_plot is None:
+            self.__spider_plot=SpiderPlot()
+        spider=self.__spider_plot
+        spider_widget=spider.get_widget(self,height=200, width=600)
+        spider_widget.grid(row=0, column=0, sticky='nsew')
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.__widget=spider_widget
+
+        norm_data=self.normalize_variables(good_data_dict)
+        spider_dict={}
+        variables=norm_data.keys()
+        codes=norm_data[variables[0]].keys()
+        for cd in codes:
+            spider_dict[cd]=[norm_data[v][cd] for v in variables]
+        spider.set_data(spider_dict,variables)
+        spider.set_rmax(1)
+        spider.draw_spider()
+
+    def normalize_variables(self,data_frame):
+        for key,data_dict in data_frame.iteritems():
+            keys,values=zip(*data_dict.items())
+            minimum=np.min(values)
+            maximum=np.max(values)
+            width=maximum-minimum
+            if width<0.001:
+                width=1
+            norm_values=map(lambda x:(x-minimum)/width,values)
+            data_dict.update(izip(keys,norm_values))
+        return data_frame
 
     def get_group_stats(self,data_dict):
         group_values_dict = {}
@@ -299,6 +360,25 @@ class GraphFrame(tkFrame):
                 std = 0
             results.append((mean, std,n))
         return zip(*results)
+    def filter_dict(self,data,get_subj_dict=False):
+        """ Removes all ids which contain nan values"""
+        from collections import defaultdict
+        subjects_dir=defaultdict(dict)
+        for col,col_data in data.iteritems():
+            for subj,value in col_data.iteritems():
+                subjects_dir[subj][col]=col_data.get(subj,float('nan'))
+        for subj,data_dict in subjects_dir.items():
+            if not np.all(np.isfinite(data_dict.values())):
+                subjects_dir.pop(subj)
+        out_data={}
+        for col in data.iterkeys():
+            out_data[col]=dict( (k,values[col]) for k,values in subjects_dir.iteritems())
+        return out_data
+    def resize_bars(self):
+        if self.__bar_chart is not None:
+            #self.__bar_chart.figure.subplots_adjust(top=100,bottom=0)
+            #self.__bar_chart.figure.subplots_adjust(bottom=0,top=1)
+            self.__bar_chart.show()
 
 
 
@@ -312,7 +392,7 @@ class DataFetcher():
         #decode
         data_dict={}
         for col in data_variables:
-            print col
+            #print col
             if col.startswith('braint'):
                 out_data= self.get_braint_data_col(col)
             elif col.startswith('tms'):
@@ -368,7 +448,7 @@ class DataFetcher():
             'Mean Length':'lfibers',
             'Mean Length of Fibers Crossing':'lfibers',
         }
-        print col
+        #print col
         tokens=col.split(':')
         metric=metrics_dict[tokens[0]]
 
@@ -471,6 +551,12 @@ if __name__=="__main__":
         graph_frame.update_representation(new_data)
     #variable_select_frame.set_apply_callback(fetcher.get_data)
     variable_select_frame.set_apply_callback(update_all)
+
+    aux_button=tk.Button(variable_select_frame,text="aux")
+    aux_button.grid(sticky='ew')
+    def bars_resize(event=None):
+        graph_frame.resize_bars()
+    aux_button['command']=bars_resize
 
     tk.mainloop()
 

@@ -112,10 +112,10 @@ orientation_message.GetPositionCoordinate().SetValue(0.99,0.5)
 csv_file = os.path.join(reader.getDataRoot(), 'baseFinal_TMS.csv')
 #--------------------------------------------------------
 #create_chart_1
-bars_view1 = BarPlot()
+bars_view1 = BarPlot(tight=True)
 
 #create chart2
-bars_view2 = BarPlot()
+bars_view2 = BarPlot(tight=True)
 
 group_colors_dict={
     '1': 'navajo white', # canguro
