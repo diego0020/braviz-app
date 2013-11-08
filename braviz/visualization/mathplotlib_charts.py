@@ -38,8 +38,13 @@ class BarPlot():
         self.highlight=None
         self.style='bars'
         self.yerror=0
+        self.back_bars=None
+        self.back_error=0
+        self.widget=None
 
-
+    def set_back_bars(self,back_bars,back_error=0):
+        self.back_bars=back_bars
+        self.back_error=back_error
     def change_style(self,new_style):
         """must be 'bars' or 'markers'"""
         if new_style not in ('bars','markers'):
@@ -50,6 +55,8 @@ class BarPlot():
 
     def get_widget(self,master,**kwargs):
         # a tk.DrawingArea
+        if self.widget is not None:
+            return self.widget
         canvas = FigureCanvasTkAgg(self.figure, master=master)
 
         def on_key_event(event):
@@ -69,6 +76,7 @@ class BarPlot():
             widget.event_generate('<<BarSelected>>')
 
         cid2 = self.figure.canvas.mpl_connect('button_press_event', generate_tk_event)
+        self.widget=widget
         return widget
 
     def show(self):
@@ -136,6 +144,19 @@ class BarPlot():
             return
         colors = [self.color_function(x) for x in self.bar_heights]
         if self.style == 'bars':
+            if self.back_bars is not None:
+                back_heights,back_widths=zip(*self.back_bars)
+                back_colors=map(self.color_function,back_heights)
+                back_positions=np.cumsum([0]+list(back_widths))
+                back_positions=back_positions[:-1]
+                back_positions=np.subtract(back_positions,0.8)
+                back_positions=np.add(back_positions,[0,1,2])
+                offsets=[0]*back_widths[0]+[1]*back_widths[1]+[2]*back_widths[2]
+                back_widths=np.add(back_widths,0.6)
+                bar_positions=np.add(bar_positions,offsets)
+                a.set_xticks(bar_positions)
+                a.set_xlim(-1, len(bar_positions)+2)
+                a.bar(back_positions,back_heights,color=back_colors,width=back_widths,alpha=0.5,yerr=self.back_error)
             patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center',yerr=self.yerror)
             if self.highlight is not None:
                 highlighted_rect = patches[self.highlight]

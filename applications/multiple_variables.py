@@ -2,16 +2,18 @@ from __future__ import division
 import Tkinter as tk
 from Tkinter import Frame as tkFrame
 import ttk
+from itertools import izip
+import os
+from functools import partial
+
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
+
 import braviz
 from braviz.interaction.tk_gui import hierarchy_dict_to_tree
-from itertools import izip
-
-import os
-
-from functools import partial
+from braviz.visualization.mathplotlib_charts import BarPlot
+import numpy as np
 __author__ = 'Diego'
 
 
@@ -221,15 +223,85 @@ class VtkWidget(tkFrame):
 
 
 class GraphFrame(tkFrame):
-    def __init__(self,parent,**kwargs):
+    def __init__(self,ubica_dict,parent,**kwargs):
         tkFrame.__init__(self,parent,**kwargs)
+        self.__ubica_dict=ubica_dict
+        self.__bar_chart=None
+        self.__widget=None
+
 
     def update_representation(self,data):
+        import numpy as np
+        from braviz.visualization.create_lut import get_colorbrewer_lut
         print data
+        if self.__widget is not None:
+            self.__widget.grid_forget()
+            self.__widget=None
         if len(data)==1:
-            print "yey"
+            y_label,data_dict=data.popitem()
+            good_data=dict(( (k,v) for k,v in data_dict.iteritems() if np.isfinite(v)))
+            term_data=[v for k,v in good_data.iteritems() if self.__ubica_dict[k]=='3']
+            term_mean=np.mean(term_data)
+            term_std=np.std(term_data)
+            if self.__bar_chart is None:
+                bar_plot=BarPlot()
+            else:
+                bar_plot=self.__bar_chart
+            bar_widget=bar_plot.get_widget(self,height=200,width=600)
+            bar_widget.grid(row=0,column=0,sticky='NSEW')
+            self.rowconfigure(0,weight=1)
+            self.columnconfigure(0,weight=1)
+            good_min = np.min(good_data.values())
+            good_max = np.max(good_data.values())
+            bar_plot.set_y_limits(good_min, good_max)
+            bar_plot.set_lines([term_mean-term_std,term_mean,term_mean+term_std],(True,False,True))
+            bar_plot.set_y_title(y_label)
+            data_tuples=good_data.items()
+            data_tuples.sort(key=lambda x:self.__ubica_dict[x[0]])
+
+            color_lut=get_colorbrewer_lut(good_min,good_max,'RdYlGn',11,continuous=True)
+            def color_fun(value):
+                return color_lut.GetColor(value)
+
+            bar_plot.set_color_fun(color_fun)
+            codes,datums=zip(*data_tuples)
+            bar_plot.set_data(datums,codes)
+            group_stats=self.get_group_stats(good_data)
+            means,stds,ns=group_stats
+
+            bar_plot.set_back_bars(back_bars=zip(means,ns),back_error=stds)
+            bar_plot.paint_bar_chart()
+
         else:
             print "Not Implemented"
+    def normalize_variables(self,data):
+
+        for data_row in data:
+            items=data.values()
+            minimum=np.min(items)
+            maximum=np.max(items)
+
+    def get_group_stats(self,data_dict):
+        group_values_dict = {}
+        for cd,value in data_dict.iteritems():
+            group = self.__ubica_dict[cd]
+            if np.isfinite(value):
+                group_values_dict.setdefault(group, []).append(value)
+        results = []
+        for g in ['1', '2', '3']: # 1=canguro, 2=control, 3=gorditos
+            values = group_values_dict[g]
+            n=len(values)
+            if len(values) > 0:
+                mean = np.mean(values)
+                std = np.std(values)
+            else:
+                mean = 0
+                std = 0
+            results.append((mean, std,n))
+        return zip(*results)
+
+
+
 
 class DataFetcher():
     def __init__(self,reader,tree_view=None,codes=None):
@@ -242,11 +314,13 @@ class DataFetcher():
         for col in data_variables:
             print col
             if col.startswith('braint'):
-                print self.get_braint_data_col(col)
+                out_data= self.get_braint_data_col(col)
             elif col.startswith('tms'):
-                print self.get_tms_data_col(col)
+                out_data = self.get_tms_data_col(col)
             else:
-                print self.get_structural_data_col(col)
+                out_data = self.get_structural_data_col(col)
+            data_dict[col] = out_data
+        return data_dict
     def get_tms_data_col(self,col):
         from braviz.interaction.tms_variables import data_codes_dict
         from braviz.readAndFilter.read_csv import get_column
@@ -274,6 +348,13 @@ class DataFetcher():
             tms_csv_file = os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
             codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
             return codes_col
+    def get_ubica_dict(self):
+        from braviz.readAndFilter.read_csv import get_column
+        tms_csv_file = os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
+        codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
+        ubica_col = get_column(tms_csv_file, 'UBICA', numeric=False)
+        return dict(izip(codes_col,ubica_col))
+
     def get_structural_data_col(self,col):
         from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_get_struct_metric_col
         #decode
@@ -368,7 +449,11 @@ if __name__=="__main__":
 
     #vtk_frame=tk.Frame(display_frame,bg='green',height=400,width=600)
     #graph_frame=tk.Frame(display_frame,bg='blue',height=200,width=600)
-    graph_frame=GraphFrame(display_frame,bg='blue',height=200,width=600)
+
+    fetcher=DataFetcher(reader,variable_select_frame.tree_view)
+    groups_dict=fetcher.get_ubica_dict()
+
+    graph_frame=GraphFrame(groups_dict,display_frame,bg='blue',height=200,width=600)
     vtk_frame=VtkWidget(reader,display_frame,height=400,width=600)
 
     vtk_frame.grid(row=0,column=0,sticky='nsew')
@@ -379,8 +464,13 @@ if __name__=="__main__":
     display_frame.columnconfigure(0,weight=1)
 
     #variable_select_frame.set_apply_callback(graph_frame.update_representation)
-    fetcher=DataFetcher(reader,variable_select_frame.tree_view)
-    variable_select_frame.set_apply_callback(fetcher.get_data)
+
+    def update_all(new_data_vars):
+        new_data=fetcher.get_data(new_data_vars)
+        #print new_data
+        graph_frame.update_representation(new_data)
+    #variable_select_frame.set_apply_callback(fetcher.get_data)
+    variable_select_frame.set_apply_callback(update_all)
 
     tk.mainloop()
 
