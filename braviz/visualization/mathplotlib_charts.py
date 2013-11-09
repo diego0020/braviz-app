@@ -35,7 +35,7 @@ class BarPlot():
         self.bar_names=['nothing']
         self.bar_positions=[0]
         self.bars=None
-        self.color_function=lambda x:(1,1,0)
+        self.color_function=lambda x,y:(1,1,0)
         self.current_xcoord=0
         self.highlight=None
         self.style='bars'
@@ -45,10 +45,13 @@ class BarPlot():
         self.widget=None
         self.resizing = None
         self.tight=tight
+        self.back_codes=None
 
-    def set_back_bars(self,back_bars,back_error=0):
+    def set_back_bars(self,back_bars,back_error=0,back_codes=tuple()):
         self.back_bars=back_bars
         self.back_error=back_error
+        self.back_codes=back_codes
+
     def change_style(self,new_style):
         """must be 'bars' or 'markers'"""
         if new_style not in ('bars','markers'):
@@ -87,9 +90,6 @@ class BarPlot():
             #    print "unbinding"
             #    widget.unbind('<Configure>',bind_id)
             #widget.bind('<Unmap>',unbind_conf)
-        widget.focus()
-        self.widget=widget
-        return widget
 
         def update_mouse_pos(event):
             self.current_xcoord=event.xdata
@@ -99,6 +99,7 @@ class BarPlot():
             widget.event_generate('<<BarSelected>>')
 
         cid2 = self.figure.canvas.mpl_connect('button_press_event', generate_tk_event)
+        widget.focus()
         self.widget=widget
         return widget
 
@@ -138,8 +139,13 @@ class BarPlot():
         else:
             self.yerror=0
 
-    def set_color_fun(self,color_function):
-        self.color_function=color_function
+    def set_color_fun(self,color_function,code_and_val=False):
+        """color_function receives(value,code) if code and val is True,
+        otherwise it receives just value. If codes are not provided code is None"""
+        if code_and_val is False:
+            self.color_function=lambda x,y: color_function(x)
+        else:
+            self.color_function = color_function
     def paint_bar_chart(self):
         a=self.axis
         a.cla()
@@ -177,11 +183,13 @@ class BarPlot():
         if len(self.bar_heights) == 0:
             self.show()
             return
-        colors = [self.color_function(x) for x in self.bar_heights]
+        #colors = [self.color_function(x,y) for x,y in izip(self.bar_heights,self.bar_names)]
+        colors = map(self.color_function, self.bar_heights,self.bar_names)
         if self.style == 'bars':
             if self.back_bars is not None:
                 back_heights,back_widths=zip(*self.back_bars)
-                back_colors=map(self.color_function,back_heights)
+                back_names=self.back_codes
+                back_colors=map(self.color_function,back_heights,back_names)
                 back_positions=np.cumsum([0]+list(back_widths))
                 back_positions=back_positions[:-1]
                 back_positions=np.subtract(back_positions,0.8)
@@ -191,7 +199,8 @@ class BarPlot():
                 bar_positions=np.add(bar_positions,offsets)
                 a.set_xticks(bar_positions)
                 a.set_xlim(-1, len(bar_positions)+2)
-                a.bar(back_positions,back_heights,color=back_colors,width=back_widths,alpha=0.5,yerr=self.back_error)
+                a.bar(back_positions,back_heights,color=back_colors,width=back_widths,alpha=0.5,yerr=self.back_error,
+                      error_kw={'elinewidth':3,'ecolor':'k','barsabove':True,'capsize':5,'capthick':3})
             patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center',yerr=self.yerror)
             if self.highlight is not None:
                 highlighted_rect = patches[self.highlight]
@@ -218,7 +227,8 @@ class BarPlot():
             return
         self.bars.remove()
         self.bar_heights=new_heights
-        colors = [self.color_function(x) for x in self.bar_heights]
+        #colors = [self.color_function(x,y) for x,y in izip(self.bar_heights,self.bar_names)]
+        colors = map(self.color_function,self.bar_heights,self.bar_names)
         a=self.axis
         bar_positions=self.bar_positions
         if self.style == 'bars':
@@ -249,6 +259,7 @@ class ScatterPlot():
         self.widget=None
         self.x_values=[]
         self.y_values=[]
+        self.__data_names=[]
         self.x_limits=(0,1)
         self.y_limits=(0,1)
         self.reg_line= None
@@ -256,6 +267,9 @@ class ScatterPlot():
         self.y_label=''
         self.tight=tight
         self.resizing=None
+        self.__color_fun=lambda x,y:(0,1,1)
+        self.__groups_dict = None
+
 
     def get_widget(self,master,**kwargs):
         if self.widget is not None:
@@ -290,16 +304,17 @@ class ScatterPlot():
         self.widget.update_idletasks()
         self.figure.subplots_adjust(bottom=0.0, top=1.0,hspace=0)
         self.canvas.show()
-    def set_data(self,x_values,y_values):
+    def set_data(self,x_values,y_values,names=[]):
         self.y_values=y_values
         self.x_values=x_values
-        self.calculate_regression_line()
-    def calculate_regression_line(self):
+        self.__data_names=names
+    @staticmethod
+    def calculate_regression_line(x,y):
         from scipy.stats import linregress
-        slope, intercept, r_value, p_value, std_err = linregress(self.x_values, self.y_values)
+        slope, intercept, r_value, p_value, std_err = linregress(x, y)
         def reg_line(x):
             return intercept+slope*x
-        self.reg_line=reg_line
+        return reg_line,r_value
 
     def draw_scatter(self):
         a=self.axis
@@ -308,10 +323,21 @@ class ScatterPlot():
         a.set_xlim(self.x_limits[0],self.x_limits[1])
         a.set_xlabel(self.x_label)
         a.set_ylabel(self.y_label)
-        a.plot(self.x_values,self.y_values,'o')
-        if self.reg_line is not None:
-            a.plot(self.x_limits,map(self.reg_line,self.x_limits))
-        a.autoscale_view()
+        colors=map(self.__color_fun,izip(self.x_values,self.y_values),
+                                         self.__data_names)
+        a.scatter(self.x_values,self.y_values,color=colors)
+        reg_line,r=self.calculate_regression_line(self.x_values,self.y_values)
+        a.plot(self.x_limits,map(reg_line,self.x_limits),c='k',label="all (r=%.2f)"%r)
+        if self.__groups_dict is not None:
+            groups=set(self.__groups_dict.itervalues())
+            x_data=np.array(self.x_values)
+            y_data=np.array(self.y_values)
+            for g in groups:
+                g_idxs=filter(lambda i:self.__groups_dict[self.__data_names[i]]==g,xrange(len(self.__data_names)))
+                reg_line,r=self.calculate_regression_line(x_data[g_idxs],y_data[g_idxs])
+                a.plot(self.x_limits, map(reg_line, self.x_limits), c=self.__color_fun(0,g),label="%s (r=%.2f)"%(g,r))
+        a.legend(fontsize='small')
+        #a.autoscale_view()
         self.show()
     def set_limits(self,x_lim,y_lim):
         self.x_limits=x_lim
@@ -319,6 +345,12 @@ class ScatterPlot():
     def set_labels(self,x_label='',y_label=''):
         self.x_label=x_label
         self.y_label=y_label
+    def set_color_function(self,color_fun):
+        "function must take val,code pairs"
+        self.__color_fun=color_fun
+    def set_groups(self,group_dict):
+        """Extra regression lines will be added for the groups, a legend will be shown with r-values"""
+        self.__groups_dict=group_dict
 class SpiderPlot():
 
     def __init__(self,tight=True):
@@ -330,8 +362,10 @@ class SpiderPlot():
         self.data_dict={}
         self.r_max=1
         self.axis_labels=None
-        self.color_fun=lambda *x:'r'
+        self.color_fun=lambda x,y:'g'
         self.canvas=None
+        self.__groups_dict={}
+        self.__groups=[None]
 
 
     def get_widget(self,master,**kwargs):
@@ -371,6 +405,10 @@ class SpiderPlot():
 
     def set_rmax(self,r_max):
         self.r_max=r_max
+    def set_groups(self,groups_dict):
+        self.__groups=set(groups_dict.itervalues())
+        self.__groups_dict=groups_dict
+
     def set_color_fun(self,color_fun):
         """colof function must take two arguments, key and values array"""
         self.color_fun=color_fun
@@ -378,18 +416,20 @@ class SpiderPlot():
     def draw_spider(self):
         from braviz.visualization.radar_chart import radar_factory
         theta = radar_factory(self.N, frame='polygon')
-        a=self.figure.gca(axisbg='w',projection='radar')
-        a.cla()
 
-        for k,val in self.data_dict.iteritems():
-            col=self.color_fun(k,val)
-            a.plot(theta,val,color=col)
-            a.fill(theta,val,color=col,alpha=0.15)
-        a.set_rmax(self.r_max)
-        a.set_rgrids(np.linspace(0,self.r_max,5)[1:],visible=False)
-        a.set_rmin(0)
-        if self.axis_labels is not None:
-            a.set_varlabels(self.axis_labels)
+        for i,g in enumerate(self.__groups):
+            a=self.figure.add_subplot(1,len(self.__groups), i,
+                                      axisbg='w',projection='radar')
+            for k,val in self.data_dict.iteritems():
+                if self.__groups_dict.get(k)==g:
+                    col=self.color_fun(val,k)
+                    a.plot(theta,val,color=col)
+                    a.fill(theta,val,color=col,alpha=0.15)
+            a.set_rmax(self.r_max)
+            a.set_rgrids(np.linspace(0,self.r_max,5)[1:],visible=False)
+            a.set_rmin(0)
+            if self.axis_labels is not None:
+                a.set_varlabels(self.axis_labels)
         self.show()
 if __name__=='__main__':
     import Tkinter as tk
@@ -406,7 +446,7 @@ if __name__=='__main__':
     scatter_widget.grid(row=1, sticky="NSEW")
     spider_widget.grid(row=2, sticky="NSEW")
 
-    def color_fun(key,val):
+    def color_fun(value,key):
         from colorbrewer import BrBG
         color_array=BrBG[10]
         return map(lambda x:x/255.0, color_array[key])

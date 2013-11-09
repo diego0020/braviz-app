@@ -184,6 +184,7 @@ class VariableSelectFrame(tkFrame):
     def set_progress(self,prog):
         self.__progress.set(prog)
 
+
 class VtkWidget(tkFrame):
     def __init__(self,reader,parent,**kwargs):
 
@@ -231,6 +232,19 @@ class GraphFrame(tkFrame):
         self.__scatter_plot=None
         self.__widget=None
         self.__spider_plot=None
+        self.__color_fun=lambda x,y:(1,0,1)
+        init_panel=tk.Frame(self,relief='ridge',border=2,height=kwargs.get('height',200),width=kwargs.get('width',600),)
+
+        init_label=tk.Label(init_panel,text='Select some data to start')
+        init_panel.pack_propagate(0)
+        init_label.pack(fill='both',expand=True)
+
+        init_panel.grid(row=0,column=0,sticky='NSEW',padx=2,pady=2)
+        self.rowconfigure(0,weight=1)
+        self.columnconfigure(0,weight=1)
+    def set_color_function(self,color_func):
+        """Function must take val,code pairs and return a color"""
+        self.__color_fun=color_func
 
 
     def update_representation(self,data):
@@ -269,18 +283,13 @@ class GraphFrame(tkFrame):
         data_tuples = good_data.items()
         data_tuples.sort(key=lambda x: self.__ubica_dict[x[0]])
 
-        color_lut = get_colorbrewer_lut(good_min, good_max, 'RdYlGn', 11, continuous=True)
-
-        def color_fun(value):
-            return color_lut.GetColor(value)
-
-        bar_plot.set_color_fun(color_fun)
+        bar_plot.set_color_fun(self.__color_fun,code_and_val=True)
         codes, datums = zip(*data_tuples)
         bar_plot.set_data(datums, codes)
         group_stats = self.get_group_stats(good_data)
         means, stds, ns = group_stats
 
-        bar_plot.set_back_bars(back_bars=zip(means, ns), back_error=stds)
+        bar_plot.set_back_bars(back_bars=zip(means, ns), back_error=stds,back_codes=("1","2","3"))
         bar_plot.paint_bar_chart()
     def draw_scatter(self,data_dict):
         good_data_dict=self.filter_dict(data_dict)
@@ -306,7 +315,9 @@ class GraphFrame(tkFrame):
         scatter.set_limits((x_min-x_extent/10,x_max+x_extent/10),
                            (y_min - y_extent / 10, y_max + y_extent / 10))
         scatter.set_labels(x_label,y_label)
-        scatter.set_data(x_data,y_data)
+        scatter.set_data(x_data,y_data,codes)
+        scatter.set_color_function(self.__color_fun)
+        scatter.set_groups(self.__ubica_dict)
         #print zip(x_data,y_data)
         scatter.draw_scatter()
     def draw_spiders(self,data_dict):
@@ -326,8 +337,10 @@ class GraphFrame(tkFrame):
         codes=norm_data[variables[0]].keys()
         for cd in codes:
             spider_dict[cd]=[norm_data[v][cd] for v in variables]
-        spider.set_data(spider_dict,variables)
+        spider.set_data(spider_dict,range(len(variables)))
+        spider.set_groups(self.__ubica_dict)
         spider.set_rmax(1)
+        spider.set_color_fun(self.__color_fun)
         spider.draw_spider()
 
     def normalize_variables(self,data_frame):
@@ -379,8 +392,6 @@ class GraphFrame(tkFrame):
             #self.__bar_chart.figure.subplots_adjust(top=100,bottom=0)
             #self.__bar_chart.figure.subplots_adjust(bottom=0,top=1)
             self.__bar_chart.show()
-
-
 
 
 class DataFetcher():
@@ -532,8 +543,19 @@ if __name__=="__main__":
 
     fetcher=DataFetcher(reader,variable_select_frame.tree_view)
     groups_dict=fetcher.get_ubica_dict()
+    groups_colors={
+        "1": 'r',
+        "2": 'g',
+        "3": 'b',
+    }
+    def group_color_fun(val,key):
+        col=groups_colors.get(key,None)
+        if col is None:
+            col=groups_colors[groups_dict[key]]
+        return col
 
-    graph_frame=GraphFrame(groups_dict,display_frame,bg='blue',height=200,width=600)
+    graph_frame=GraphFrame(groups_dict,display_frame,height=200,width=600)
+    graph_frame.set_color_function(group_color_fun)
     vtk_frame=VtkWidget(reader,display_frame,height=400,width=600)
 
     vtk_frame.grid(row=0,column=0,sticky='nsew')

@@ -686,21 +686,20 @@ control_frame.pack(side="left", anchor="n", fill="y", expand="false")
 display_frame.pack(side="left", anchor="n", fill="both", expand="true")
 
 
-def clean_exit():
+def clean_exit(event=None):
     global renWin
     print "adios"
     renWin.FastDelete()
     del renWin
-    root.withdraw()
-    root.after_idle(quit2)
-
-
-def quit2():
-    root.quit()
+    root.after_idle(root.quit)
     root.destroy()
-    quit(0)
-root.protocol("WM_DELETE_WINDOW", clean_exit)
 
+    #root.destroy()
+    #root.withdraw()
+    #root.after_idle(quit2)
+
+root.protocol("WM_DELETE_WINDOW", clean_exit)
+#render_widget.bind('<Destroy>',clean_exit,'+')
 
 
 
