@@ -80,8 +80,8 @@ class ToolTip( Toplevel ):
             if len(self.msgVar.get())==0:
                 self.hide()
                 self.spawn()
-        except:
-            pass
+        except Exception as e:
+            print e
         self.after( int( self.delay * 1000 ), self.show )
             
     def hide( self, event=None ):

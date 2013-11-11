@@ -14,6 +14,7 @@ import Tkinter as Tk
 from itertools import izip
 
 
+
 class BarPlot():
     def __init__(self,tight=True):
         #f = Figure( dpi=100,tight_layout=True,facecolor='w',frameon=False,edgecolor='r')
@@ -46,6 +47,7 @@ class BarPlot():
         self.resizing = None
         self.tight=tight
         self.back_codes=None
+        self.pos2name_dict={}
 
     def set_back_bars(self,back_bars,back_error=0,back_codes=tuple()):
         self.back_bars=back_bars
@@ -93,6 +95,11 @@ class BarPlot():
 
         def update_mouse_pos(event):
             self.current_xcoord=event.xdata
+            if event.xdata is  None:
+                if event.x < self.axis.bbox.xmin:
+                    self.current_xcoord="y_axis"
+                elif event.y < self.axis.bbox.ymin:
+                    self.current_xcoord = "x_axis"
             #print event.xdata, event.ydata
         cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
         def generate_tk_event(event=None):
@@ -202,6 +209,7 @@ class BarPlot():
                 a.bar(back_positions,back_heights,color=back_colors,width=back_widths,alpha=0.5,yerr=self.back_error,
                       error_kw={'elinewidth':3,'ecolor':'k','barsabove':True,'capsize':5,'capthick':3})
             patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center',yerr=self.yerror)
+            self.pos2name_dict=dict(izip(bar_positions,self.bar_names))
             if self.highlight is not None:
                 highlighted_rect = patches[self.highlight]
                 highlighted_rect.set_linewidth(4)
@@ -238,14 +246,13 @@ class BarPlot():
         self.bars=patches
         self.show()
     def get_current_name(self):
+
         if self.current_xcoord is None:
             return None
-        bar_names=self.bar_names
-        idx=round(self.current_xcoord)
-        idx = int(idx)
-        if 0 <= idx < len(bar_names):
-            return bar_names[idx]
-        return None
+        if type(self.current_xcoord) is str:
+            return self.current_xcoord
+        pos=int(round(self.current_xcoord))
+        return self.pos2name_dict.get(pos,"unknown")
     def set_higlight_index(self,index):
         self.highlight=index
 
@@ -269,6 +276,8 @@ class ScatterPlot():
         self.resizing=None
         self.__color_fun=lambda x,y:(0,1,1)
         self.__groups_dict = None
+        self.__paths=None
+        self.current_id=None
 
 
     def get_widget(self,master,**kwargs):
@@ -279,8 +288,15 @@ class ScatterPlot():
         widget = self.canvas.get_tk_widget()
         widget.configure(bd=4, bg='white', highlightcolor='red', highlightthickness=0, **kwargs)
         def update_mouse_pos(event):
-            self.current_xcoord=event.xdata
-            #print event.xdata, event.ydata
+            if self.axis.contains(event)[0]:
+                self.current_id=None
+                #Pick will change it if over a point
+                self.__paths.pick(event)
+            else:
+                if event.x < self.axis.bbox.xmin:
+                    self.current_id="y_axis"
+                elif event.y < self.axis.bbox.ymin:
+                    self.current_id = "x_axis"
         cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
         def generate_tk_event(event=None):
             widget.event_generate('<<ScatterClick>>')
@@ -325,7 +341,7 @@ class ScatterPlot():
         a.set_ylabel(self.y_label)
         colors=map(self.__color_fun,izip(self.x_values,self.y_values),
                                          self.__data_names)
-        a.scatter(self.x_values,self.y_values,color=colors)
+        self.__paths =a.scatter(self.x_values,self.y_values,color=colors,picker=1)
         reg_line,r=self.calculate_regression_line(self.x_values,self.y_values)
         a.plot(self.x_limits,map(reg_line,self.x_limits),c='k',label="all (r=%.2f)"%r)
         if self.__groups_dict is not None:
@@ -336,8 +352,12 @@ class ScatterPlot():
                 g_idxs=filter(lambda i:self.__groups_dict[self.__data_names[i]]==g,xrange(len(self.__data_names)))
                 reg_line,r=self.calculate_regression_line(x_data[g_idxs],y_data[g_idxs])
                 a.plot(self.x_limits, map(reg_line, self.x_limits), c=self.__color_fun(0,g),label="%s (r=%.2f)"%(g,r))
-        a.legend(fontsize='small')
+        leg=a.legend(fontsize='small',fancybox=True)
+        leg.get_frame().set_alpha(0.7)
         #a.autoscale_view()
+        def on_pick(event):
+            self.current_id=event.ind
+        self.canvas.mpl_connect('pick_event',on_pick)
         self.show()
     def set_limits(self,x_lim,y_lim):
         self.x_limits=x_lim
@@ -351,6 +371,13 @@ class ScatterPlot():
     def set_groups(self,group_dict):
         """Extra regression lines will be added for the groups, a legend will be shown with r-values"""
         self.__groups_dict=group_dict
+    def get_current_name(self,event=None):
+        if self.current_id is None:
+            return None
+        if type(self.current_id) is str:
+            return self.current_id
+        else:
+            return self.__data_names[self.current_id[0]]
 class SpiderPlot():
 
     def __init__(self,tight=True):
@@ -416,20 +443,33 @@ class SpiderPlot():
     def draw_spider(self):
         from braviz.visualization.radar_chart import radar_factory
         theta = radar_factory(self.N, frame='polygon')
-
-        for i,g in enumerate(self.__groups):
+        def custom_pick(artis,event=None):
+            angle=event.ydata
+            radius=event.xdata
+            print radius
+            if not artis.contains_point((event.xdata,event.ydata)):
+                return False, {}
+            else:
+                return True, {'url':artis.get_url()}
+        for i,g in enumerate(sorted(self.__groups)):
             a=self.figure.add_subplot(1,len(self.__groups), i,
-                                      axisbg='w',projection='radar')
+                                      axisbg='w',projection='radar',label=g)
             for k,val in self.data_dict.iteritems():
                 if self.__groups_dict.get(k)==g:
                     col=self.color_fun(val,k)
-                    a.plot(theta,val,color=col)
-                    a.fill(theta,val,color=col,alpha=0.15)
+                    a.plot(theta,val,color=col,label=k,picker=True)
+                    patches=a.fill(theta,val,color=col,alpha=0.15,picker=True)
+                    for p in patches:
+                        p.set_picker(custom_pick)
+                        p.set_url(k)
             a.set_rmax(self.r_max)
             a.set_rgrids(np.linspace(0,self.r_max,5)[1:],visible=False)
             a.set_rmin(0)
             if self.axis_labels is not None:
                 a.set_varlabels(self.axis_labels)
+        def on_pick(event):
+            print "auch"
+        self.canvas.mpl_connect('pick_event', on_pick)
         self.show()
 if __name__=='__main__':
     import Tkinter as tk
@@ -465,7 +505,7 @@ if __name__=='__main__':
         N=random.randrange(3,10)
 
         spider_test_data={}
-        for i in xrange(10):
+        for i in xrange(1):
             spider_test_data[i]=[random.random() for j in xrange(N)]
         spider_plot.set_data(spider_test_data,range(N))
         spider_plot.draw_spider()

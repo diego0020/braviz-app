@@ -15,6 +15,7 @@ import braviz
 from braviz.interaction.tk_gui import hierarchy_dict_to_tree
 from braviz.visualization.mathplotlib_charts import BarPlot,ScatterPlot,SpiderPlot
 import numpy as np
+from braviz.interaction.tk_tooltip import ToolTip
 __author__ = 'Diego'
 
 
@@ -232,6 +233,7 @@ class GraphFrame(tkFrame):
         self.__scatter_plot=None
         self.__widget=None
         self.__spider_plot=None
+        self.__active_plot=None
         self.__color_fun=lambda x,y:(1,0,1)
         init_panel=tk.Frame(self,relief='ridge',border=2,height=kwargs.get('height',200),width=kwargs.get('width',600),)
 
@@ -242,6 +244,8 @@ class GraphFrame(tkFrame):
         init_panel.grid(row=0,column=0,sticky='NSEW',padx=2,pady=2)
         self.rowconfigure(0,weight=1)
         self.columnconfigure(0,weight=1)
+        self.__widget=init_panel
+        self.tool_tip=ToolTip(init_label,msgFunc=self.get_subject_message,follow=1,delay=0.5)
     def set_color_function(self,color_func):
         """Function must take val,code pairs and return a color"""
         self.__color_fun=color_func
@@ -256,10 +260,15 @@ class GraphFrame(tkFrame):
             self.__widget=None
         if len(data)==1:
             self.draw_bar_chart(data)
+            self.__active_plot =self.__bar_chart
         elif len(data)==2:
             self.draw_scatter(data)
+            self.__active_plot = self.__scatter_plot
         else:
             self.draw_spiders(data)
+            self.__active_plot = self.__spider_plot
+        del self.tool_tip
+        self.tool_tip = ToolTip(self.__widget, msgFunc=self.get_subject_message, follow=1, delay=0.5)
     def draw_bar_chart(self,data):
         y_label, data_dict = data.popitem()
         good_data = dict(( (k, v) for k, v in data_dict.iteritems() if np.isfinite(v)))
@@ -291,6 +300,7 @@ class GraphFrame(tkFrame):
 
         bar_plot.set_back_bars(back_bars=zip(means, ns), back_error=stds,back_codes=("1","2","3"))
         bar_plot.paint_bar_chart()
+        self.__widget=bar_widget
     def draw_scatter(self,data_dict):
         good_data_dict=self.filter_dict(data_dict)
         if self.__scatter_plot is None:
@@ -320,6 +330,7 @@ class GraphFrame(tkFrame):
         scatter.set_groups(self.__ubica_dict)
         #print zip(x_data,y_data)
         scatter.draw_scatter()
+        self.__widget = scatter_widget
     def draw_spiders(self,data_dict):
         good_data_dict = self.filter_dict(data_dict)
         if self.__spider_plot is None:
@@ -342,6 +353,7 @@ class GraphFrame(tkFrame):
         spider.set_rmax(1)
         spider.set_color_fun(self.__color_fun)
         spider.draw_spider()
+        self.__widget = spider_widget
 
     def normalize_variables(self,data_frame):
         for key,data_dict in data_frame.iteritems():
@@ -373,7 +385,9 @@ class GraphFrame(tkFrame):
                 std = 0
             results.append((mean, std,n))
         return zip(*results)
-    def filter_dict(self,data,get_subj_dict=False):
+
+    @staticmethod
+    def filter_dict(data,get_subj_dict=False):
         """ Removes all ids which contain nan values"""
         from collections import defaultdict
         subjects_dir=defaultdict(dict)
@@ -387,6 +401,14 @@ class GraphFrame(tkFrame):
         for col in data.iterkeys():
             out_data[col]=dict( (k,values[col]) for k,values in subjects_dir.iteritems())
         return out_data
+    def update_popups_messages(self):
+        pass
+    def get_subject_message(self,event=None):
+        if self.__active_plot is not None:
+            hover_item=self.__active_plot.get_current_name()
+        else:
+            return 'Select some data and click "Apply Selection"'
+        return "hola: %s"%hover_item
     def resize_bars(self):
         if self.__bar_chart is not None:
             #self.__bar_chart.figure.subplots_adjust(top=100,bottom=0)
