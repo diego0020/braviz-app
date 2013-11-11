@@ -28,7 +28,8 @@ max_values = {
 }
 fig = plt.figure(figsize=(9, 9))
 
-colors = ['#E41A1C', '#377EB8', '#4DAF4A']
+#colors = ['#DD1C77', '#377EB8', '#4DAF4A']
+colors = ['#4DAF4A']*3
 col_names = ['Canguro', 'Control', 'Gorditos']
 
 ubica_dict = get_tuples_dict(csv_file, 'CODE', 'UBICA', numeric=True)
@@ -52,7 +53,7 @@ for row, (row_name, wanted_cols) in enumerate(data_rows.iteritems()):
                      horizontalalignment='center', verticalalignment='center')
         for code,data2 in ifilter(lambda (x,y): ubica_dict[x]==col+1,data_dict.iteritems()):
             ax.plot(theta,data2,color=color)
-            ax.fill(theta, data2, alpha=0.15,color=color)
+            ax.fill(theta, data2, alpha=0.05,color=color)
         ax.set_rmax(max_radius)
         ax.set_varlabels(wanted_cols)
         ax.set_rmin(0.0)

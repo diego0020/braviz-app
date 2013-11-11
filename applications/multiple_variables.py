@@ -87,6 +87,8 @@ class VariableSelectFrame(tkFrame):
 
     def __fill_super_tree(self):
         super_tree=self.__super_tree
+        #TABLE
+        #TODO
         #BRAINT
         from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
         braint = get_braint_hierarchy()

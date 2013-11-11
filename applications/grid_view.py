@@ -48,7 +48,7 @@ def load_models(event=None):
     async_processing_models=True
     progress.set(0)
     #async_load_models()
-    thread.start_new_thread(async_load_models,tuple())
+    thread.start_new_thread(async_load_models,(fibers_var.get(),hide_waypoints_var.get()))
     top.after(20,finish_load_models)
     #finish_load_models()
 
@@ -66,19 +66,19 @@ def finish_load_models():
         top.after(20,finish_load_models)
     progress.set(len(models_dict)/len(id_list)*100)
 #-------------------------
-def async_load_models():
+def async_load_models(fibers_var_bool,hide_waypoints_bar_bool):
     global models_dict,async_processing_models
     models_dict.clear()
     for i,subj in enumerate(id_list):
         models=[]
-        if not (fibers_var.get() and hide_waypoints_var.get()):
+        if not (fibers_var_bool and hide_waypoints_bar_bool):
             for model_name in models_set:
                 try:
                     models.append(reader.get('model',subj,name=model_name))
                 except Exception:
                     pass
         #load fibers
-        if fibers_var.get() is True:
+        if fibers_var_bool is True:
             if fibers_op_var.get()=='through any':
                 operation='or'
             else:
@@ -119,7 +119,7 @@ def sort_models(overlay=False):
     grid_view.sort(sorted_subjects,overlay=overlay)
     if overlay_view != overlay:
         overlay_view = overlay
-        color_models()
+    color_models(new_variable=False)
     overlay_view = overlay
     grid_view.reset_camera()
     update_balloons()
@@ -128,11 +128,12 @@ def sort_models(overlay=False):
     grid_view.Render()
 
 
-def color_models():
+def color_models(new_variable=True):
     global color_data_dict,color_column
-    col_idx=tab_list.curselection()
-    color_column=tab_list.get(col_idx)
-    color_data_dict=get_data_dict(color_column)
+    if new_variable is True:
+        col_idx=tab_list.curselection()
+        color_column=tab_list.get(col_idx)
+        color_data_dict=get_data_dict(color_column)
     min_value=min(color_data_dict.values())
     max_value=max(color_data_dict.values())
     color_table=get_colorbrewer_lut(min_value,max_value,scheme='RdBu',steps=9,nan_color=(0.95,0.47,0.85))
@@ -450,7 +451,7 @@ top.protocol("WM_DELETE_WINDOW", clean_exit)
 
 #===============================================
 #create interesting initial view
-async_load_models()
+async_load_models(False,False)
 finish_load_models()
 color_models()
 sort_models()
