@@ -1,4 +1,4 @@
-__author__ = 'Diego'
+from __future__ import division
 import matplotlib
 matplotlib.use('TkAgg')
 
@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # implement the default mpl key bindings
 from matplotlib.backend_bases import key_press_handler
+from matplotlib.text import Text as matplotlib_text
 import math
 import random
 from matplotlib.figure import Figure
@@ -13,7 +14,7 @@ import matplotlib.pyplot as plt
 import Tkinter as Tk
 from itertools import izip
 
-
+__author__ = 'Diego'
 
 class BarPlot():
     def __init__(self,tight=True):
@@ -393,6 +394,9 @@ class SpiderPlot():
         self.canvas=None
         self.__groups_dict={}
         self.__groups=[None]
+        self.__current_name=None
+        self.__axis_labels=[]
+
 
 
     def get_widget(self,master,**kwargs):
@@ -402,10 +406,7 @@ class SpiderPlot():
         self.canvas=canvas
         widget = self.canvas.get_tk_widget()
         widget.configure(bd=4, bg='white', highlightcolor='red', highlightthickness=0, **kwargs)
-        def update_mouse_pos(event):
-            self.current_xcoord=event.xdata
-            #print event.xdata, event.ydata
-        cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
+
         def generate_tk_event(event=None):
             widget.event_generate('<<ScatterClick>>')
         cid2 = self.figure.canvas.mpl_connect('button_press_event', generate_tk_event)
@@ -443,34 +444,99 @@ class SpiderPlot():
     def draw_spider(self):
         from braviz.visualization.radar_chart import radar_factory
         theta = radar_factory(self.N, frame='polygon')
-        def custom_pick(artis,event=None):
-            angle=event.ydata
-            radius=event.xdata
-            print radius
-            if not artis.contains_point((event.xdata,event.ydata)):
-                return False, {}
-            else:
-                return True, {'url':artis.get_url()}
+
+
         for i,g in enumerate(sorted(self.__groups)):
             a=self.figure.add_subplot(1,len(self.__groups), i,
                                       axisbg='w',projection='radar',label=g)
+            filtered_keys = []
+            pickers_dict = {}
             for k,val in self.data_dict.iteritems():
                 if self.__groups_dict.get(k)==g:
+                    filtered_keys.append(k)
                     col=self.color_fun(val,k)
-                    a.plot(theta,val,color=col,label=k,picker=True)
-                    patches=a.fill(theta,val,color=col,alpha=0.15,picker=True)
+                    a.plot(theta,val,color=col,label=k)
+                    patches=a.fill(theta,val,color=col,alpha=0.15)
                     for p in patches:
-                        p.set_picker(custom_pick)
-                        p.set_url(k)
+                        max_r_func=self.get_r_functions(p.xy)
+                        pickers_dict[k]=max_r_func
             a.set_rmax(self.r_max)
             a.set_rgrids(np.linspace(0,self.r_max,5)[1:],visible=False)
             a.set_rmin(0)
             if self.axis_labels is not None:
-                a.set_varlabels(self.axis_labels)
+                a.set_varlabels(self.axis_labels,picker=True)
+            custom_pick=self.get_custom_picker_function(filtered_keys,pickers_dict)
+            a.set_picker(custom_pick)
+        #end axis
         def on_pick(event):
-            print "auch"
+            #print "auch, %s (%f)"%(event.url,event.r_max)
+            if isinstance(event.artist,matplotlib_text):
+                self.__current_name = "axis-%s"%event.artist.get_text()
+            else:
+                self.__current_name=event.url
         self.canvas.mpl_connect('pick_event', on_pick)
+        def update_mouse_pos(event):
+            self.__current_name = None
+            if event.inaxes is None:
+                self.figure.pick(event)
+                #print "axes=%s"%self.__current_name
+            else:
+                event.inaxes.pick(event)
+            #print self.__current_name
+        cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
         self.show()
+    def get_current_name(self):
+        return self.__current_name
+    @staticmethod
+    def get_r_functions(patches):
+        def r_function(theta):
+            #patches are uniformly spaced:
+            #Find to which patch the angle belongs
+#            print theta
+            theta_moved = (theta - np.pi / 2)
+            if theta_moved < 0:
+                theta_moved += 2 * np.pi
+            try:
+                index = int(theta_moved // (2 * np.pi / (len(patches) - 1)))
+            except ValueError:
+                print theta
+                return 0
+            #print "%f in [%f , %f) "%(theta,patches[index][0],patches[index+1][0])
+            t1, r1 = patches[index]
+            t2, r2 = patches[index + 1]
+            x1 = r1 * np.cos(t1)
+            x2 = r2 * np.cos(t2)
+            y1 = r1 * np.sin(t1)
+            y2 = r2 * np.sin(t2)
+            m = (y2 - y1) / (x2 - x1)
+            q = y1 - x1 * m
+            g = np.arctan(m)
+            r3 = (q / np.sqrt(1 + m * m)) / np.sin(theta - g)
+            return np.abs(r3)
+        return r_function
+    @staticmethod
+    def get_custom_picker_function(filtered_keys2,pickers_dict2):
+        filtered_keys=filtered_keys2[:]
+        pickers_dict=dict(pickers_dict2.iteritems())
+        def custom_pick(artist, event=None):
+            if event.ydata is None:
+                return False, {}
+            radius = event.ydata
+            angle = event.xdata
+            #print radius
+            min_k = None
+            min_r = float('+inf')
+            for k in filtered_keys:
+                r_max = pickers_dict[k](angle)
+                if radius < r_max < min_r:
+                    min_r, min_k = r_max, k
+            if min_k is not None:
+                return True, {'url': min_k, 'r_max': min_r}
+            else:
+                return False, {}
+        return custom_pick
+
+
 if __name__=='__main__':
     import Tkinter as tk
     import random
@@ -505,7 +571,7 @@ if __name__=='__main__':
         N=random.randrange(3,10)
 
         spider_test_data={}
-        for i in xrange(1):
+        for i in xrange(10):
             spider_test_data[i]=[random.random() for j in xrange(N)]
         spider_plot.set_data(spider_test_data,range(N))
         spider_plot.draw_spider()
