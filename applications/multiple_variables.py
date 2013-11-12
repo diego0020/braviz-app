@@ -17,7 +17,7 @@ from braviz.interaction.tk_gui import hierarchy_dict_to_tree
 from braviz.visualization.mathplotlib_charts import BarPlot,ScatterPlot,SpiderPlot
 from braviz.interaction.tk_tooltip import ToolTip
 from braviz.interaction.tms_variables import data_codes_dict
-from braviz.readAndFilter.read_csv import get_column
+from braviz.readAndFilter.read_csv import get_column,get_headers
 from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
 from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_get_struct_metric_col
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy
@@ -28,7 +28,7 @@ __author__ = 'Diego'
 
 
 class VariableSelectFrame(tkFrame):
-    def __init__(self,parent,**kwargs):
+    def __init__(self,reader,parent,**kwargs):
         tkFrame.__init__(self,parent,**kwargs)
         super_tree_frame=tk.Frame(self)
         self.columnconfigure(0,weight=1)
@@ -78,6 +78,7 @@ class VariableSelectFrame(tkFrame):
         bottom_buttons_frame.columnconfigure(0,weight=1)
         bottom_buttons_frame.columnconfigure(1,weight=1)
 
+        self.__reader = reader
         self.__super_tree = super_tree
         self.__fill_super_tree()
 
@@ -90,13 +91,18 @@ class VariableSelectFrame(tkFrame):
         self.__apply_selection_button=apply_selection_button
         self.__progress=progress
         self.__add_observers()
+
         #public access to tree_view
         self.tree_view=super_tree
 
     def __fill_super_tree(self):
         super_tree=self.__super_tree
         #TABLE
-        #TODO
+        table_file=os.path.join(self.__reader.getDataRoot(),'test_small.csv')
+        table_headers=get_headers(table_file)
+        table_dict=dict(((hdr,{}) for hdr in table_headers ))
+        super_tree.insert('', tk.END, 'table', text='Table')
+        hierarchy_dict_to_tree(super_tree, table_dict, 'table', tags=['table'])
         #BRAINT
 
         braint = get_braint_hierarchy()
@@ -110,7 +116,7 @@ class VariableSelectFrame(tkFrame):
         #ANATOMY
 
         super_tree.insert('', tk.END, 'structural', text='Structural')
-        anatomy_hierarchy = get_structural_hierarchy(reader, '144')
+        anatomy_hierarchy = get_structural_hierarchy(self.__reader, '144')
         hierarchy_dict_to_tree(super_tree, anatomy_hierarchy, 'structural', tags=['struct'])
     def __add_observers(self):
         add_to_selection_button=self.__add_to_selection_button
@@ -461,6 +467,7 @@ class DataFetcher():
         self.__reader=reader
         self.__tree_view=tree_view
         self.__codes=codes
+
     def get_data(self,data_variables):
         #decode
         data_dict=OrderedDict()
@@ -470,10 +477,13 @@ class DataFetcher():
                 out_data= self.get_braint_data_col(col)
             elif col.startswith('tms'):
                 out_data = self.get_tms_data_col(col)
+            elif col.startswith('table') :
+                out_data = self.get_matrix_data_col(col)
             else:
                 out_data = self.get_structural_data_col(col)
             data_dict[col] = out_data
         return data_dict
+
     def get_tms_data_col(self,col):
 
         tms_csv_file=os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
@@ -490,8 +500,10 @@ class DataFetcher():
         codes_col=get_column(tms_csv_file,'CODE',numeric=False)
         data_dict=dict(izip(codes_col,data_col))
         return data_dict
+
     def set_codes(self,codes):
         self.__codes=codes
+
     def get_codes(self):
 
         if self.__codes is not None:
@@ -500,6 +512,7 @@ class DataFetcher():
             tms_csv_file = os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
             codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
             return codes_col
+
     def get_ubica_dict(self):
 
         tms_csv_file = os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
@@ -545,11 +558,19 @@ class DataFetcher():
         codes = self.get_codes()
         metric_func=partial(get_mult_struct_metric,self.__reader,names,metric=metric)
         #data_col=map(metric_func,codes)
-        data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric)
+        data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric,force_reload=True)
         result_dict=dict(izip(codes,data_col))
         return result_dict
 
-
+    def get_matrix_data_col(self,col):
+        matrix_file=os.path.join(self.__reader.getDataRoot(), 'test_small.csv')
+        tokens=col.split(':')
+        decoded_col = tokens[-1]
+        data_col=get_column(matrix_file,decoded_col,numeric=True)
+        codes_col=get_column(matrix_file,'code',numeric=False)
+        data_dict_1=dict(izip(codes_col,data_col))
+        data_dict_2=dict(( (cd,data_dict_1.get(cd,float('nan'))) for cd in self.get_codes()))
+        return data_dict_2
 
 
 
@@ -587,14 +608,14 @@ if __name__=="__main__":
     root.focus()
     root.title('Braviz-Multiple Variables')
 
-    reader=braviz.readAndFilter.kmc40AutoReader()
+    reader2=braviz.readAndFilter.kmc40AutoReader()
 
     panned_window=ttk.PanedWindow(root,orient=tk.HORIZONTAL)
     panned_window.grid(sticky='nsew')
     root.columnconfigure(0,weight=1)
     root.rowconfigure(0,weight=1)
 
-    variable_select_frame=VariableSelectFrame(panned_window,height=600,width=200)
+    variable_select_frame=VariableSelectFrame(reader2,panned_window,height=600,width=200)
     display_frame=tk.Frame(panned_window,height=600,width=600,bg='black')
     panned_window.add(variable_select_frame)
     panned_window.add(display_frame)
@@ -602,7 +623,7 @@ if __name__=="__main__":
     #vtk_frame=tk.Frame(display_frame,bg='green',height=400,width=600)
     #graph_frame=tk.Frame(display_frame,bg='blue',height=200,width=600)
 
-    fetcher=DataFetcher(reader,variable_select_frame.tree_view)
+    fetcher=DataFetcher(reader2,variable_select_frame.tree_view)
     groups_dict=fetcher.get_ubica_dict()
     groups_colors={
         "1": 'r',
@@ -617,7 +638,7 @@ if __name__=="__main__":
 
     graph_frame=GraphFrame(groups_dict,display_frame,height=200,width=600)
     graph_frame.set_color_function(group_color_fun)
-    vtk_frame=VtkWidget(reader,display_frame,height=400,width=600)
+    vtk_frame=VtkWidget(reader2,display_frame,height=400,width=600)
 
     vtk_frame.grid(row=0,column=0,sticky='nsew')
     graph_frame.grid(row=1,column=0,sticky='nsew')

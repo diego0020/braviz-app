@@ -122,7 +122,8 @@ class BarPlot():
 
 
     def set_y_title(self,title):
-        self.y_title=title
+        if len(title)>20:
+            self.y_title="".join(("...",title[-20:]))
         self.axis.set_ylabel(self.y_title)
 
     def set_y_limits(self,button,top,right=False):
@@ -364,6 +365,10 @@ class ScatterPlot():
         self.x_limits=x_lim
         self.y_limits=y_lim
     def set_labels(self,x_label='',y_label=''):
+        if len(y_label)>20:
+            y_label="".join(("...",y_label[-20:]))
+        if len(x_label)>50:
+            x_label="".join(("...",x_label[-50:]))
         self.x_label=x_label
         self.y_label=y_label
     def set_color_function(self,color_fun):

@@ -1,8 +1,12 @@
-import braviz
-import vtk
+from __future__ import division
 from os.path import join as path_join
 import cPickle
+import random
+
 import numpy as np
+
+import braviz
+
 __author__ = 'Diego'
 
 def get_mult_struct_metric(reader,struct_names,code,metric='volume'):
@@ -56,7 +60,7 @@ def get_fibers_metric(reader, struct_name,code,metric='number'):
     if struct_name.startswith('Fibs:'):
         #print "we are dealing with special fibers"
         try:
-            fibers = reader.get('fibers', code, name=struct_name[6:], color='fa')
+            fibers = reader.get('fibers', code, name=struct_name[5:], color='fa')
         except Exception:
             n = float('nan')
             return n
@@ -84,7 +88,7 @@ def get_fibers_metric(reader, struct_name,code,metric='number'):
         return float('nan')
     return n
 
-def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables={}):
+def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables={},force_reload=False):
     #global struct_metrics_col, temp_struct_metrics_col, processing, cancel_calculation_flag, struct_name, metric
     state_variables['struct_name']=struct_name
     state_variables['metric']=metric
@@ -92,6 +96,8 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
     state_variables['output']=None
     state_variables['number_calculated']=0
     calc_function=get_struct_metric
+    if random.random()<0.01:
+        force_reload=True
     if hasattr(struct_name,'__iter__'):
         #we have multiple sequences
         calc_function=get_mult_struct_metric
@@ -101,16 +107,17 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
     else:
         key = 'column_%s_%s' % (struct_name.replace(':', '_'), metric.replace(':', '_'))
     cache_file_name = path_join(reader.getDataRoot(), 'pickles', '%s.pickle' % key)
-    try:
-        with open(cache_file_name, 'rb') as cachef:
-            struct_metrics_col = cPickle.Unpickler(cachef).load()
-    except IOError:
-        pass
-    else:
-        state_variables['working'] = False
-        state_variables['output'] = struct_metrics_col
-        state_variables['number_calculated'] = len(struct_metrics_col)
-        return struct_metrics_col
+    if force_reload is not True:
+        try:
+            with open(cache_file_name, 'rb') as cachef:
+                struct_metrics_col = cPickle.Unpickler(cachef).load()
+        except IOError:
+            pass
+        else:
+            state_variables['working'] = False
+            state_variables['output'] = struct_metrics_col
+            state_variables['number_calculated'] = len(struct_metrics_col)
+            return struct_metrics_col
     print "Calculating %s for structure %s" % (metric, struct_name)
     temp_struct_metrics_col = []
     for code in codes:

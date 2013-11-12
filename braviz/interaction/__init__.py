@@ -1,3 +1,4 @@
+from __future__ import division
 import vtk
 import numpy as np
 
@@ -41,7 +42,7 @@ def get_fiber_bundle_descriptors(fib):
         d=[0]
     return len(d),np.mean(d),np.max(d),np.min(d),np.std(d)
 
-def aggregate_fiber_scalar(fib,component=0,norm_factor=1/255):
+def aggregate_fiber_scalar(fib,component=0,norm_factor=1.0/255):
     scalars=fib.GetPointData().GetScalars()
     if scalars is None or scalars.GetNumberOfTuples()==0:
         d=[float('nan')]
