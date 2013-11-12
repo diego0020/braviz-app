@@ -28,3 +28,13 @@ def ignored(*exceptions):
 
 def recursive_default_dict():
     return defaultdict(recursive_default_dict)
+
+def get_leafs(rec_dict,name):
+    if len(rec_dict) == 0:
+        return [name]
+    leafs=[]
+    for k,sub_d in rec_dict.iteritems():
+        sub_leafs=get_leafs(sub_d,k)
+        sub_leafs=map(lambda x:':'.join((name,x)),sub_leafs)
+        leafs.extend(sub_leafs)
+    return leafs

@@ -507,6 +507,8 @@ class SpiderPlot():
             except ValueError:
                 print theta
                 return 0
+            if index==len(patches):
+                index-=1
             #print "%f in [%f , %f) "%(theta,patches[index][0],patches[index+1][0])
             t1, r1 = patches[index]
             t2, r2 = patches[index + 1]
@@ -514,6 +516,9 @@ class SpiderPlot():
             x2 = r2 * np.cos(t2)
             y1 = r1 * np.sin(t1)
             y2 = r2 * np.sin(t2)
+            if x2==x1:
+                #vertical line
+                return np.min(np.abs((y1,y2)))
             m = (y2 - y1) / (x2 - x1)
             q = y1 - x1 * m
             g = np.arctan(m)

@@ -22,7 +22,7 @@ from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
 from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_get_struct_metric_col
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy
 from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
-
+from braviz.utilities import get_leafs
 
 __author__ = 'Diego'
 
@@ -104,10 +104,13 @@ class VariableSelectFrame(tkFrame):
         super_tree.insert('', tk.END, 'table', text='Table')
         hierarchy_dict_to_tree(super_tree, table_dict, 'table', tags=['table'])
         #BRAINT
-
-        braint = get_braint_hierarchy()
-        super_tree.insert('', tk.END, 'braint', text='Braint')
-        hierarchy_dict_to_tree(super_tree, braint, 'braint', tags=['braint'])
+        try:
+            braint = get_braint_hierarchy()
+        except Exception:
+            super_tree.insert('', tk.END, 'braint', text='Braint (offline)')
+        else:
+            super_tree.insert('', tk.END, 'braint', text='Braint')
+            hierarchy_dict_to_tree(super_tree, braint, 'braint', tags=['braint'])
         #TMS
 
         super_tree.insert('', tk.END, 'tms', text='TMS')
@@ -143,6 +146,10 @@ class VariableSelectFrame(tkFrame):
                     else:
                         metrics = valid_metrics['fibers']
                 elif 'parent' in selection_tags:
+                    if selection[0] in ('structural:Left_Hemisphere','structural:Right_Hemisphere'):
+                        metric_select_box['state'] = 'disabled'
+                        add_to_selection_button['state'] = 'disabled'
+                        return
                     metrics = valid_metrics['multiple']
                 else:
                     metrics = valid_metrics['leaf_struct']
@@ -174,7 +181,7 @@ class VariableSelectFrame(tkFrame):
             selected_variables_list.insert(tk.END, tree_variable)
 
         add_to_selection_button['command'] = add_variable
-
+        self.__super_tree.bind("<Double-Button-1>",add_variable)
 
         def clear_variables(event=None):
             selected_variables_list = self.__selected_variables_list
@@ -239,6 +246,9 @@ class VtkWidget(tkFrame):
         self.pd_actors=[]
 
         self.renWin.Render()
+    def update_structures(self,struct_list):
+        print struct_list
+
 
 
 class GraphFrame(tkFrame):
@@ -307,7 +317,8 @@ class GraphFrame(tkFrame):
         self.columnconfigure(0, weight=1)
         good_min = np.min(good_data.values())
         good_max = np.max(good_data.values())
-        bar_plot.set_y_limits(good_min, good_max)
+        good_extent=good_max-good_min
+        bar_plot.set_y_limits(good_min-good_extent/20, good_max+good_extent/20)
         bar_plot.set_lines([term_mean - term_std, term_mean, term_mean + term_std], (True, False, True))
         bar_plot.set_y_title(y_label)
         data_tuples = good_data.items()
@@ -435,7 +446,7 @@ class GraphFrame(tkFrame):
             group_stats=self.get_group_stats(var_dict)
             for subj,value in var_dict.iteritems():
                 subj_group=self.__group_dict[subj]
-                subj_data.setdefault(subj,["%s (%s)"%(subj,subj_group)]).append(
+                subj_data.setdefault(subj,["%s ( group %s )"%(subj,subj_group)]).append(
                     "%s : %.2f (%.2f)"%(var,value,group_stats[subj_group][0]))
         for subj,data in subj_data.iteritems():
             messages[subj]="\n".join(data)
@@ -463,26 +474,28 @@ class GraphFrame(tkFrame):
 
 
 class DataFetcher():
-    def __init__(self,reader,tree_view=None,codes=None):
+    def __init__(self,reader,codes=None):
         self.__reader=reader
-        self.__tree_view=tree_view
         self.__codes=codes
+        self.__struct_hierarchy = get_structural_hierarchy(self.__reader,'144')
 
     def get_data(self,data_variables):
         #decode
         data_dict=OrderedDict()
+        structures=set()
         for col in data_variables:
             #print col
             if col.startswith('braint'):
-                out_data= self.get_braint_data_col(col)
+                out_data = self.get_braint_data_col(col)
             elif col.startswith('tms'):
                 out_data = self.get_tms_data_col(col)
             elif col.startswith('table') :
                 out_data = self.get_matrix_data_col(col)
             else:
-                out_data = self.get_structural_data_col(col)
+                out_data, structural_structs = self.get_structural_data_col(col)
+                structures.update(structural_structs)
             data_dict[col] = out_data
-        return data_dict
+        return data_dict,structures
 
     def get_tms_data_col(self,col):
 
@@ -536,31 +549,26 @@ class DataFetcher():
         #print col
         tokens=col.split(':')
         metric=metrics_dict[tokens[0]]
-
-        id_in_tree='structural:'+':'.join(tokens[1:])
-        selection_tags = self.__tree_view.item(id_in_tree)['tags']
-        children=self.__tree_view.get_children(id_in_tree)
+        sub_d=self.__struct_hierarchy
+        for tok in tokens[1:]:
+            if sub_d.has_key(tok):
+                sub_d=sub_d[tok]
+            else:
+                sub_d = sub_d[tok.replace('_',' ')]
 
         #print children
-        if len(children) == 0:
-            children=(col,)
+        if len(sub_d) == 0:
+            children=(tokens,)
+        else:
+            children_str=get_leafs(sub_d,col)
+            children=map(lambda x:x.split(':'),children_str)
+        names=map(self.__reconstruct_struct_name,children)
 
-        def test_for_leaf(kid):
-            tokens=kid.split(':')
-            id_in_tree = 'structural:' + ':'.join(tokens[1:])
-            return len(self.__tree_view.get_children(id_in_tree))==0
-        children2=filter(test_for_leaf,children)
-        names=[]
-        for kid in children2:
-            tokens2 = kid.split(':')
-            name=self.__reconstruct_struct_name(tokens2)
-            names.append(name)
         codes = self.get_codes()
-        metric_func=partial(get_mult_struct_metric,self.__reader,names,metric=metric)
         #data_col=map(metric_func,codes)
         data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric,force_reload=True)
         result_dict=dict(izip(codes,data_col))
-        return result_dict
+        return result_dict,names
 
     def get_matrix_data_col(self,col):
         matrix_file=os.path.join(self.__reader.getDataRoot(), 'test_small.csv')
@@ -574,7 +582,8 @@ class DataFetcher():
 
 
 
-    def __reconstruct_struct_name(self,tokens):
+    @staticmethod
+    def __reconstruct_struct_name(tokens):
         structure_type = tokens[1]
         if structure_type == 'Fibers':
             name = 'Fibs:' + tokens[2]
@@ -585,21 +594,28 @@ class DataFetcher():
             name = 'CC_' + tokens[2]
         else:
             #cortex
-            if tokens[-1][0] == 'G':
-                #gray matter
-                matter = 'ctx'
+            if tokens[2].startswith('All_'):
+                if tokens[2][4]=='G':
+                    matter='ctx'
+                else:
+                    matter = 'wm'
+                pname = tokens[-1]
             else:
-                #white matter
-                matter = 'wm'
+                if tokens[-1][0] == 'G':
+                    #gray matter
+                    matter = 'ctx'
+                else:
+                    #white matter
+                    matter = 'wm'
+                pname = tokens[-2]
             if structure_type[0] == 'L':
                 h = 'lh'
             else:
                 h = 'rh'
-            pname = tokens[-2]
+
             full_name = '-'.join([matter, h, pname])
             name = full_name
         return name
-
     def get_braint_data_col(self):
         print "Not yet implemented"
 
@@ -623,7 +639,7 @@ if __name__=="__main__":
     #vtk_frame=tk.Frame(display_frame,bg='green',height=400,width=600)
     #graph_frame=tk.Frame(display_frame,bg='blue',height=200,width=600)
 
-    fetcher=DataFetcher(reader2,variable_select_frame.tree_view)
+    fetcher=DataFetcher(reader2)
     groups_dict=fetcher.get_ubica_dict()
     groups_colors={
         "1": 'r',
@@ -650,7 +666,7 @@ if __name__=="__main__":
     #variable_select_frame.set_apply_callback(graph_frame.update_representation)
 
     def update_all(new_data_vars):
-        new_data=fetcher.get_data(new_data_vars)
+        new_data,structures=fetcher.get_data(new_data_vars)
         graph_frame.update_representation(new_data)
     #variable_select_frame.set_apply_callback(fetcher.get_data)
     variable_select_frame.set_apply_callback(update_all)

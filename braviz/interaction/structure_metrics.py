@@ -2,7 +2,7 @@ from __future__ import division
 from os.path import join as path_join
 import cPickle
 import random
-
+import hashlib
 import numpy as np
 
 import braviz
@@ -33,14 +33,19 @@ def get_mult_struct_metric(reader,struct_names,code,metric='volume'):
 
 def get_struct_metric(reader,struct_name,code,metric='volume'):
     #print "calculating %s for %s (%s)"%(metric,struct_name,code)
+
+    if metric=='volume':
+        try:
+            return reader.get('model',code,name=struct_name,volume=1)
+        except IOError:
+            return float('nan')
+    #volume don't require the structure to exist
     if not struct_name.startswith('Fib'):
         try:
             model=reader.get('model',code,name=struct_name)
         except Exception:
             print "%s not found for subject %s"%(struct_name,code)
             return float('nan')
-    if metric=='volume':
-        return reader.get('model',code,name=struct_name,volume=1)
     if metric=='area':
         area, volume = braviz.interaction.compute_volume_and_area(model)
         return area
@@ -51,8 +56,8 @@ def get_struct_metric(reader,struct_name,code,metric='volume'):
     elif metric=='fa_fibers':
         return get_fibers_metric(reader,struct_name,code,'mean_fa')
     else:
-        print "unknown metric %s"%metric
-        return None
+        raise Exception("unknown metric %s"%metric)
+
 
 def get_fibers_metric(reader, struct_name,code,metric='number'):
     #print "calculating for subject %s"%code
@@ -106,6 +111,8 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
         key='column_%s_%s' % (''.join(struct_name).replace(':', '_'), metric.replace(':', '_'))
     else:
         key = 'column_%s_%s' % (struct_name.replace(':', '_'), metric.replace(':', '_'))
+    if len(key)>250:
+        key=hashlib.sha1(key).hexdigest()
     cache_file_name = path_join(reader.getDataRoot(), 'pickles', '%s.pickle' % key)
     if force_reload is not True:
         try:

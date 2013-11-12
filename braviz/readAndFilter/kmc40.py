@@ -244,7 +244,7 @@ The path containing this structure must be set."""
             complete_file_name = os.path.join(data_dir, file_name)
             vol = read_free_surfer_csv_file(complete_file_name, name, 'StructName', 'Volume_mm3')
         if vol is None:
-            vol = 0
+            vol = 'nan'
         return float(vol)
 
     def __createColorDictionary(self):
