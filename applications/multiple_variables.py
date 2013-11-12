@@ -23,7 +23,7 @@ from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_g
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy
 from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
 from braviz.utilities import get_leafs
-
+from braviz.visualization.grid_viewer import grid_view
 __author__ = 'Diego'
 
 
@@ -171,6 +171,8 @@ class VariableSelectFrame(tkFrame):
 
 
         def add_variable(event=None):
+            if not self.__add_to_selection_button['state']=='normal':
+                return
             super_tree=self.__super_tree
             metric_selection_var=self.__metric_selection_var
 
@@ -211,43 +213,70 @@ class VariableSelectFrame(tkFrame):
 
 class VtkWidget(tkFrame):
     def __init__(self,reader,parent,**kwargs):
+        self.__default_struct_list= ['Brain-Stem','CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior',
+                                     'CC_Posterior','ctx-lh-paracentral','ctx-lh-precuneus','ctx-lh-superiorfrontal']
 
+        self.__groups_dict={}
+        self.__groups_list_list=[]
+        self.__codes=[]
+        self.__reader=reader
+        self.__color_fun=lambda x:(1.0,0.0,0.0)
         tkFrame.__init__(self, parent, **kwargs)
-        self.ren=vtk.vtkRenderer()
-        self.renWin=vtk.vtkRenderWindow()
+        self.__grid_viewer=grid_view(use_lod=False)
+        grid_widget = vtkTkRenderWindowInteractor(self, rw=self.__grid_viewer,
+                                                  width=kwargs.get('width',600), height=kwargs.get('height',300))
+        grid_widget.grid(row=0,column=0,sticky='NSEW')
+        self.rowconfigure(0,weight=1)
+        self.columnconfigure(0,weight=1)
+        iact=grid_widget.GetRenderWindow().GetInteractor()
+        self.__grid_viewer.set_interactor(iact)
+        self.grid_view=self.__grid_viewer
+        self.__grid_viewer.set_orientation((0, -90, 90))
 
-        self.renWin.AddRenderer(self.ren)
-        self.ren.SetBackground2(170/255,204/255,245/255)
-        self.ren.SetBackground(107/255,150/255,299/255)
-        self.ren.SetGradientBackground(1)
-        render_widget = vtkTkRenderWindowInteractor(self,rw=self.renWin)
-        render_widget.pack(fill='both', expand='true')
 
-        sphere_source=vtk.vtkSphereSource()
-        sphere_mapper=vtk.vtkPolyDataMapper()
-        sphere_actor=vtk.vtkActor()
-        self.ren.AddActor(sphere_actor)
-        sphere_actor.SetMapper(sphere_mapper)
-        sphere_mapper.SetInputConnection(sphere_source.GetOutputPort())
-
-        self.iren=render_widget.GetRenderWindow().GetInteractor()
-        self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        self.iren.SetRenderWindow(self.renWin)
-        self.ren.Render()
-        self.renWin.Initialize()
-        self.iren.Initialize()
-        self.picker = vtk.vtkCellPicker()
-        self.picker.SetTolerance(0.005)
-        cam1 = self.ren.GetActiveCamera()
-        self.ren.ResetCamera()
-        #cam1.Elevation(80)
-        #cam1.Azimuth(80)
-        #cam1.SetViewUp(0, 0, 1)
-        self.pd_actors=[]
-
-        self.renWin.Render()
+    def set_groups_dict(self,groups_dict,group_colors):
+        self.__groups_dict=groups_dict
+        self.__codes=groups_dict.keys()
+        inv_groups_dict=defaultdict(list)
+        for subj,group in groups_dict.iteritems():
+            inv_groups_dict[group].append(subj)
+        groups_list=inv_groups_dict.items()
+        groups_list.sort(key=lambda x:x[0])
+        self.__groups_list_list=[x[1] for x in groups_list]
+        def color_function(subj_id):
+            return group_colors[groups_dict[subj_id]]
+        self.__color_fun=color_function
     def update_structures(self,struct_list):
-        print struct_list
+        models_dict={}
+        if len(struct_list)==0:
+            struct_list=self.__default_struct_list
+            #self.__grid_viewer.set_orientation((3.060316756674142, -94.78573096609321, 97.86560994941594))
+            self.__grid_viewer.set_orientation((0, -90, 90))
+        for cod in self.__codes:
+            try:
+                model_list=map(partial(self.get_structure,cod),struct_list)
+            except Exception:
+                "couldn't load models for subjec %s"%cod
+            else:
+                models_dict[cod]=model_list
+        self.__grid_viewer.set_data(models_dict)
+        self.__grid_viewer.set_color_function(self.__color_fun,opacity=0.05)
+        group_list = self.__groups_list_list[:]
+        filter_func=lambda y:filter(lambda x: x in models_dict.keys(),y)
+        group_list=map(filter_func,group_list)
+        self.__grid_viewer.sort(group_list,overlay=True)
+        self.__grid_viewer.reset_camera()
+        self.__grid_viewer.Render()
+
+    def set_messages(self,message_dict):
+        self.__grid_viewer.set_balloon_messages(message_dict)
+
+    def get_structure(self,code,struct_name):
+        if struct_name.startswith('Fibs:'):
+            return None
+        else:
+            model=self.__reader.get('model',code,name=struct_name)
+            return model
 
 
 
@@ -264,7 +293,9 @@ class GraphFrame(tkFrame):
         self.__data={}
         self.__axes=[]
         self.__messages={}
-        init_panel=tk.Frame(self,relief='ridge',border=2,height=kwargs.get('height',200),width=kwargs.get('width',600),)
+        self.__width=kwargs.get('width',600)
+        self.__height=kwargs.get('height',200)
+        init_panel=tk.Frame(self,relief='ridge',border=2,height=self.__height,width=self.__width,)
 
         init_label=tk.Label(init_panel,text='Select some data to start')
         init_panel.pack_propagate(0)
@@ -311,7 +342,7 @@ class GraphFrame(tkFrame):
             self.__bar_chart=bar_plot
         else:
             bar_plot = self.__bar_chart
-        bar_widget = bar_plot.get_widget(self, height=200, width=600)
+        bar_widget = bar_plot.get_widget(self, height=self.__height, width=self.__width)
         bar_widget.grid(row=0, column=0, sticky='NSEW')
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
@@ -340,7 +371,7 @@ class GraphFrame(tkFrame):
         if self.__scatter_plot is None:
             self.__scatter_plot=ScatterPlot(tight=True)
         scatter=self.__scatter_plot
-        scatter_widget=scatter.get_widget(self,height=200, width=600)
+        scatter_widget=scatter.get_widget(self,height=self.__height, width=self.__width)
         scatter_widget.grid(row=0,column=0,sticky='nsew')
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
@@ -371,7 +402,7 @@ class GraphFrame(tkFrame):
         if self.__spider_plot is None:
             self.__spider_plot=SpiderPlot()
         spider=self.__spider_plot
-        spider_widget=spider.get_widget(self,height=200, width=600)
+        spider_widget=spider.get_widget(self,height=self.__height, width=self.__width)
         spider_widget.grid(row=0, column=0, sticky='nsew')
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
@@ -465,7 +496,8 @@ class GraphFrame(tkFrame):
         else:
             return 'Select some data and click "Apply Selection"'
         return "hola: %s"%hover_item
-
+    def get_messages_dict(self):
+        return self.__messages
     def resize_bars(self):
         if self.__bar_chart is not None:
             #self.__bar_chart.figure.subplots_adjust(top=100,bottom=0)
@@ -631,8 +663,8 @@ if __name__=="__main__":
     root.columnconfigure(0,weight=1)
     root.rowconfigure(0,weight=1)
 
-    variable_select_frame=VariableSelectFrame(reader2,panned_window,height=600,width=200)
-    display_frame=tk.Frame(panned_window,height=600,width=600,bg='black')
+    variable_select_frame=VariableSelectFrame(reader2,panned_window,height=500,width=200)
+    display_frame=tk.Frame(panned_window,height=500,width=800,bg='black')
     panned_window.add(variable_select_frame)
     panned_window.add(display_frame)
 
@@ -641,21 +673,26 @@ if __name__=="__main__":
 
     fetcher=DataFetcher(reader2)
     groups_dict=fetcher.get_ubica_dict()
-    groups_colors={
-        "1": 'r',
-        "2": 'g',
-        "3": 'b',
+    groups_colors_matplotlib={
+        "1": '#E6AB02',
+        "2": '#D95F02',
+        "3": '#66A61E',
     }
+    groups_colors_vtk={
+        '1': [0.9019607843137255, 0.6705882352941176, 0.00784313725490196],
+        '2': [0.8509803921568627, 0.37254901960784315, 0.00784313725490196],
+        '3': [0.4, 0.6509803921568628, 0.11764705882352941]}
+
     def group_color_fun(val,key):
-        col=groups_colors.get(key,None)
+        col=groups_colors_matplotlib.get(key,None)
         if col is None:
-            col=groups_colors[groups_dict[key]]
+            col=groups_colors_matplotlib[groups_dict[key]]
         return col
 
-    graph_frame=GraphFrame(groups_dict,display_frame,height=200,width=600)
+    graph_frame=GraphFrame(groups_dict,display_frame,height=250,width=800)
     graph_frame.set_color_function(group_color_fun)
-    vtk_frame=VtkWidget(reader2,display_frame,height=400,width=600)
-
+    vtk_frame=VtkWidget(reader2,display_frame,height=250,width=800)
+    vtk_frame.set_groups_dict(groups_dict,groups_colors_vtk)
     vtk_frame.grid(row=0,column=0,sticky='nsew')
     graph_frame.grid(row=1,column=0,sticky='nsew')
 
@@ -668,14 +705,16 @@ if __name__=="__main__":
     def update_all(new_data_vars):
         new_data,structures=fetcher.get_data(new_data_vars)
         graph_frame.update_representation(new_data)
+        vtk_frame.update_structures(structures)
+        vtk_frame.set_messages(graph_frame.get_messages_dict())
     #variable_select_frame.set_apply_callback(fetcher.get_data)
     variable_select_frame.set_apply_callback(update_all)
 
     aux_button=tk.Button(variable_select_frame,text="aux")
     aux_button.grid(sticky='ew')
-    def bars_resize(event=None):
-        graph_frame.resize_bars()
-    aux_button['command']=bars_resize
+    def print_orientation(event=None):
+        print vtk_frame.grid_view.get_orientation()
+    aux_button['command']=print_orientation
 
     tk.mainloop()
 

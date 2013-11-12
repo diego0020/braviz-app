@@ -74,6 +74,7 @@ def setSubj(event=None):
     planeWidget.SetInputData(img)
     planeWidget.addLabels(aparc)
     availableModels=reader.get('MODEL',subj,index='t')
+    availableModels.sort()
     outline.SetInputData(img)
     #update model
     select_model_frame.changeSubj(subj)

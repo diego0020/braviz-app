@@ -10,8 +10,10 @@ __author__ = 'Diego'
 
 
 class grid_view(vtk.vtkRenderWindow):
-    def __init__(self):
+    def __init__(self,use_lod=False):
         self.ren = vtk.vtkRenderer()
+        self.SetMultiSamples(2)
+        self.AlphaBitPlanesOn()
         self.AddRenderer(self.ren)
         self.SetSize(600, 400)
         self.ren.Render()
@@ -19,7 +21,7 @@ class grid_view(vtk.vtkRenderWindow):
         #self.Initialize()
         self.picker = vtk.vtkCellPicker()
         self.picker.SetTolerance(0.005)
-
+        self.__use__lod=use_lod
         self.set_background((0.2, 0.2, 0.2), (0.5, 0.5, 0.5))
         # subj->actor
         self.__actors_dict = {}
@@ -29,9 +31,13 @@ class grid_view(vtk.vtkRenderWindow):
         self.__mapper_dict = {}
         self.__messages_dict = {}
         self.__positions_dict = {}
+        self.__prop_dict={}
+        self.__decimation_dicts={}
+        self.__lod_indexed_dict={}
         self.balloon_w = vtk.vtkBalloonWidget()
         self.balloon_repr = vtk.vtkBalloonRepresentation()
         self.balloon_w.SetRepresentation(self.balloon_repr)
+        self.balloon_w.SetTimerDuration(1000)
 
         self.__outline_filter = vtk.vtkOutlineFilter()
         self.__outline_actor=vtk.vtkActor()
@@ -64,6 +70,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.__mini_scatter_visible = False
         self.__mini_scatter_dict={}
 
+        self.__orientation = (0, -90, 90)
         self.__captions_dict={}
         self.__labels_dict={}
         #observers
@@ -84,13 +91,12 @@ class grid_view(vtk.vtkRenderWindow):
             if self.__modified_actor is not None:
                 return
             self.__modified_actor = caller
+            #self.select_actor(self.__modified_actor)
 
             #print 'auch %s'%self.__picking_dict[caller]
 
         def unregister_object(caller=None, event=None):
             self.__modified_actor = None
-
-
 
 
         def after_intareaction(caller=None, event=None):
@@ -105,6 +111,7 @@ class grid_view(vtk.vtkRenderWindow):
                         self.__sort_message_actor.SetInput(self.__sort_message_actor.GetInput() + ' (modified)')
                     self.__sort_modified = True
             mimic_actor(self.__modified_actor)
+            self.__orientation=self.__modified_actor.GetOrientation()
             self.select_actor(self.__modified_actor)
             self.__modified_actor = None
             if len(self.__labels_dict)>0 :
@@ -190,7 +197,13 @@ class grid_view(vtk.vtkRenderWindow):
     def select_actor(self,actor):
         if actor is None:
             return
-
+        if self.__selected_actor is not None:
+            prop = self.__prop_dict[self.__selected_actor]
+            prop.SetOpacity(self.__opacity)
+            if self.__use__lod is True:
+                lod_idxs = self.__lod_indexed_dict[self.__selected_actor]
+                self.__selected_actor.EnableLOD(lod_idxs[1])
+                #self.__selected_actor.EnableLOD(lod_idxs[2])
         key = self.__picking_dict[actor]
         poly_data = self.__poly_data_dict[key]
         self.__outline_filter.SetInputData(poly_data)
@@ -199,6 +212,12 @@ class grid_view(vtk.vtkRenderWindow):
         self.__outline_actor.SetOrientation(actor.GetOrientation())
         self.__outline_actor.SetScale(actor.GetScale())
         self.__selected_actor = actor
+        prop=self.__prop_dict[self.__selected_actor]
+        prop.SetOpacity(1.0)
+        if self.__use__lod is True:
+            lod_idxs = self.__lod_indexed_dict[self.__selected_actor]
+            self.__selected_actor.DisableLOD(lod_idxs[1])
+            #self.__selected_actor.DisableLOD(lod_idxs[2])
         if self.__mini_scatter is not None:
             scatter_id = self.__mini_scatter_dict.get(key, None)
             self.__mini_scatter.select_point(scatter_id)
@@ -206,14 +225,20 @@ class grid_view(vtk.vtkRenderWindow):
         self.iren.Render()
     def clear_selection(self):
         self.__outline_actor.SetVisibility(0)
+        if self.__selected_actor is not None:
+            prop = self.__prop_dict[self.__selected_actor]
+            prop.SetOpacity(self.__opacity)
+            if self.__use__lod is True:
+                lod_idxs = self.__lod_indexed_dict[self.__selected_actor]
+                self.__selected_actor.EnableLOD(lod_idxs[1])
+                #self.__selected_actor.EnableLOD(lod_idxs[2])
         self.__selected_actor = None
         if self.__mini_scatter is not None:
             self.__mini_scatter.select_point(None)
         if self.iren is not None:
             self.iren.Render()
     def get_selection(self):
-        selected_id=self.__picking_dict.get(self.__selected_actor,None)
-        return selected_id
+        return self.__picking_dict.get(self.__selected_actor,None)
     def set_background(self, color1, color2=None):
         if color2 is not None:
             self.ren.GradientBackgroundOn()
@@ -228,6 +253,9 @@ class grid_view(vtk.vtkRenderWindow):
             act.SetVisibility(0)
         for id, polydata in data_dict.iteritems():
             #center polydata
+            if hasattr(polydata,'__iter__'):
+                polydata=merge_polydata(polydata)
+
             center = polydata.GetCenter()
             trans = vtk.vtkTransformPolyDataFilter()
             t = vtk.vtkTransform()
@@ -245,23 +273,47 @@ class grid_view(vtk.vtkRenderWindow):
             mapper = self.__mapper_dict[id]
             mapper.SetInputData(polydata2)
             if not self.__actors_dict.has_key(id):
-                actor = vtk.vtkActor()
+                #actor = vtk.vtkActor()
+                actor=vtk.vtkLODProp3D()
+
                 self.__actors_dict[id] = actor
                 self.ren.AddActor(actor)
+                actor.SetOrientation(self.__orientation)
                 self.__picking_dict[actor] = id
                 if self.__actor_observer_fun is not None:
                     actor.AddObserver(vtk.vtkCommand.PickEvent, self.__actor_observer_fun)
             actor = self.__actors_dict[id]
-            actor.SetMapper(mapper)
+            #actor.SetMapper(mapper)
+            prop=vtk.vtkProperty()
+            idx0=actor.AddLOD(mapper,prop,0)
+            self.__lod_indexed_dict[actor]=[idx0]
+            if self.__use__lod is True:
+                tringle_filter,decimation_filter,decimation_mapper=self.__decimation_dicts.setdefault(id,
+                                            (vtk.vtkTriangleFilter(),vtk.vtkDecimatePro(),vtk.vtkPolyDataMapper()))
+                tringle_filter.SetInputData(polydata2)
+                decimation_filter.SetInputConnection(tringle_filter.GetOutputPort())
+                decimation_filter.SetTargetReduction(0.95)
+                decimation_mapper.SetInputConnection(decimation_filter.GetOutputPort())
+                dummy_pd=vtk.vtkPolyData()
+                dummy_mapper=vtk.vtkPolyDataMapper()
+                dummy_mapper.SetInputData(dummy_pd)
+                idx0 = actor.AddLOD(decimation_mapper,prop,0)
+                self.__lod_indexed_dict[actor].append(idx0)
+                idx0 = actor.AddLOD(dummy_mapper, 0)
+                self.__lod_indexed_dict[actor].append(idx0)
+            self.__prop_dict[actor]=prop
+            #actor.GetProperty = lambda: self.__prop_dict[actor]
             actor.SetVisibility(1)
             if self.__color_function is not None:
-                actor.GetProperty().SetColor(self.__color_function(id))
-            actor.GetProperty().SetOpacity(self.__opacity)
+                prop.SetColor(self.__color_function(id))
+                prop.SetOpacity(self.__opacity)
 
 
     def set_balloon_messages(self, messages_dict):
-        for key, message in messages_dict.iteritems():
-            self.balloon_w.AddBalloon(self.__actors_dict[key], message)
+        #for key, message in messages_dict.iteritems():
+        #    self.balloon_w.AddBalloon(self.__actors_dict[key], message)
+        for key,actor in self.__actors_dict.iteritems():
+            self.balloon_w.AddBalloon(actor,messages_dict.get(key,key))
 
     def sort(self, sorted_ids, title=None,overlay=False):
         """actors will be displayed in the grid according to the sorted_ids list,
@@ -275,7 +327,7 @@ class grid_view(vtk.vtkRenderWindow):
             return math.sqrt((Xmax - Xmin) ** 2 + (Ymax - Ymin) ** 2 + (Zmax - Zmin) ** 2)
 
         self.max_space = max([get_max_diagonal(actor) for actor in self.__picking_dict])
-        self.max_space *= 0.95
+        self.max_space *= 0.90
         #calculate renWin proportions
         width, height = self.GetSize()
         if self.__color_bar_visibility is True:
@@ -285,7 +337,7 @@ class grid_view(vtk.vtkRenderWindow):
         row_proportion = width / height
 
         len1=len(sorted_ids)
-        n_row = math.ceil(math.sqrt(len1 / row_proportion))
+        n_row = math.floor(math.sqrt(len1 / row_proportion))
         n_col = math.ceil(len1 / n_row)
 
         #positions_dict={}
@@ -307,8 +359,9 @@ class grid_view(vtk.vtkRenderWindow):
     def set_color_function(self, color_function, opacity=1.0, scalar_colors=False):
         self.__color_function = color_function
         for subj, ac in self.__actors_dict.iteritems():
-            ac.GetProperty().SetColor(color_function(subj))
-            ac.GetProperty().SetOpacity(opacity)
+            prop=self.__prop_dict[ac]
+            prop.SetColor(color_function(subj))
+            prop.SetOpacity(opacity)
         if scalar_colors is True:
             for mapper in self.__mapper_dict.itervalues():
                 mapper.ScalarVisibilityOn()
@@ -346,8 +399,12 @@ class grid_view(vtk.vtkRenderWindow):
         self.iren.Start()
 
     def set_orientation(self, orientation):
+        self.__orientation=orientation
         for actor in self.__picking_dict:
             actor.SetOrientation(orientation)
+    def get_orientation(self):
+        for actor in self.__picking_dict:
+            return actor.GetOrientation()
 
     def update_color_bar(self, lut, title):
         if self.__scalar_bar_actor is None:
@@ -508,6 +565,17 @@ class grid_view(vtk.vtkRenderWindow):
         if partial is False:
             self.__labels_dict={}
             self.iren.Render()
+
+
+def merge_polydata(models):
+    if len(models)==1:
+        return models[0]
+    append_filter=vtk.vtkAppendPolyData()
+    for mod in models:
+        append_filter.AddInputData(mod)
+    append_filter.Update()
+    merged=append_filter.GetOutput()
+    return merged
 
 if __name__ == '__main__':
     test = grid_view()
