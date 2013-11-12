@@ -98,9 +98,9 @@ class BarPlot():
             self.current_xcoord=event.xdata
             if event.xdata is  None:
                 if event.x < self.axis.bbox.xmin:
-                    self.current_xcoord="y_axis"
-                elif event.y < self.axis.bbox.ymin:
-                    self.current_xcoord = "x_axis"
+                    self.current_xcoord="axis_0"
+                #elif event.y < self.axis.bbox.ymin:
+                    #self.current_xcoord = "axis_y"
             #print event.xdata, event.ydata
         cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
         def generate_tk_event(event=None):
@@ -253,7 +253,7 @@ class BarPlot():
         if type(self.current_xcoord) is str:
             return self.current_xcoord
         pos=int(round(self.current_xcoord))
-        return self.pos2name_dict.get(pos,"unknown")
+        return self.pos2name_dict.get(pos,None)
     def set_higlight_index(self,index):
         self.highlight=index
 
@@ -295,9 +295,9 @@ class ScatterPlot():
                 self.__paths.pick(event)
             else:
                 if event.x < self.axis.bbox.xmin:
-                    self.current_id="y_axis"
+                    self.current_id="axis_0"
                 elif event.y < self.axis.bbox.ymin:
-                    self.current_id = "x_axis"
+                    self.current_id = "axis_1"
         cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
         def generate_tk_event(event=None):
             widget.event_generate('<<ScatterClick>>')
@@ -445,9 +445,10 @@ class SpiderPlot():
         from braviz.visualization.radar_chart import radar_factory
         theta = radar_factory(self.N, frame='polygon')
 
-
-        for i,g in enumerate(sorted(self.__groups)):
-            a=self.figure.add_subplot(1,len(self.__groups), i,
+        group_list=sorted(list(self.__groups))
+        print group_list
+        for i,g in enumerate(group_list):
+            a=self.figure.add_subplot(1,len(self.__groups), i+1,
                                       axisbg='w',projection='radar',label=g)
             filtered_keys = []
             pickers_dict = {}
@@ -471,7 +472,7 @@ class SpiderPlot():
         def on_pick(event):
             #print "auch, %s (%f)"%(event.url,event.r_max)
             if isinstance(event.artist,matplotlib_text):
-                self.__current_name = "axis-%s"%event.artist.get_text()
+                self.__current_name = "axis_%s"%event.artist.get_text()
             else:
                 self.__current_name=event.url
         self.canvas.mpl_connect('pick_event', on_pick)

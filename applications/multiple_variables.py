@@ -5,7 +5,8 @@ import ttk
 from itertools import izip
 import os
 from functools import partial
-from braviz.visualization.create_lut import get_colorbrewer_lut
+from collections import defaultdict,OrderedDict
+
 import numpy as np
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
@@ -14,8 +15,15 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz
 from braviz.interaction.tk_gui import hierarchy_dict_to_tree
 from braviz.visualization.mathplotlib_charts import BarPlot,ScatterPlot,SpiderPlot
-import numpy as np
 from braviz.interaction.tk_tooltip import ToolTip
+from braviz.interaction.tms_variables import data_codes_dict
+from braviz.readAndFilter.read_csv import get_column
+from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
+from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_get_struct_metric_col
+from braviz.interaction.structural_hierarchy import get_structural_hierarchy
+from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
+
+
 __author__ = 'Diego'
 
 
@@ -90,17 +98,17 @@ class VariableSelectFrame(tkFrame):
         #TABLE
         #TODO
         #BRAINT
-        from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
+
         braint = get_braint_hierarchy()
         super_tree.insert('', tk.END, 'braint', text='Braint')
         hierarchy_dict_to_tree(super_tree, braint, 'braint', tags=['braint'])
         #TMS
-        from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
+
         super_tree.insert('', tk.END, 'tms', text='TMS')
         hierarchy_dict_to_tree(super_tree, tms_hierarchy, 'tms', tags=['tms'])
 
         #ANATOMY
-        from braviz.interaction.structural_hierarchy import get_structural_hierarchy
+
         super_tree.insert('', tk.END, 'structural', text='Structural')
         anatomy_hierarchy = get_structural_hierarchy(reader, '144')
         hierarchy_dict_to_tree(super_tree, anatomy_hierarchy, 'structural', tags=['struct'])
@@ -230,13 +238,16 @@ class VtkWidget(tkFrame):
 class GraphFrame(tkFrame):
     def __init__(self,ubica_dict,parent,**kwargs):
         tkFrame.__init__(self,parent,**kwargs)
-        self.__ubica_dict=ubica_dict
+        self.__group_dict=ubica_dict
         self.__bar_chart=None
         self.__scatter_plot=None
         self.__widget=None
         self.__spider_plot=None
         self.__active_plot=None
         self.__color_fun=lambda x,y:(1,0,1)
+        self.__data={}
+        self.__axes=[]
+        self.__messages={}
         init_panel=tk.Frame(self,relief='ridge',border=2,height=kwargs.get('height',200),width=kwargs.get('width',600),)
 
         init_label=tk.Label(init_panel,text='Select some data to start')
@@ -248,13 +259,14 @@ class GraphFrame(tkFrame):
         self.columnconfigure(0,weight=1)
         self.__widget=init_panel
         self.tool_tip=ToolTip(init_label,msgFunc=self.get_subject_message,follow=1,delay=0.5)
+
     def set_color_function(self,color_func):
         """Function must take val,code pairs and return a color"""
         self.__color_fun=color_func
 
-
     def update_representation(self,data):
-        #print data
+        self.__data=data
+        self.update_popups_messages()
         if len(data)==0:
             return
         if self.__widget is not None:
@@ -271,10 +283,11 @@ class GraphFrame(tkFrame):
             self.__active_plot = self.__spider_plot
         del self.tool_tip
         self.tool_tip = ToolTip(self.__widget, msgFunc=self.get_subject_message, follow=1, delay=0.5)
+
     def draw_bar_chart(self,data):
         y_label, data_dict = data.popitem()
         good_data = dict(( (k, v) for k, v in data_dict.iteritems() if np.isfinite(v)))
-        term_data = [v for k, v in good_data.iteritems() if self.__ubica_dict[k] == '3']
+        term_data = [v for k, v in good_data.iteritems() if self.__group_dict[k] == '3']
         term_mean = np.mean(term_data)
         term_std = np.std(term_data)
         if self.__bar_chart is None:
@@ -292,17 +305,19 @@ class GraphFrame(tkFrame):
         bar_plot.set_lines([term_mean - term_std, term_mean, term_mean + term_std], (True, False, True))
         bar_plot.set_y_title(y_label)
         data_tuples = good_data.items()
-        data_tuples.sort(key=lambda x: self.__ubica_dict[x[0]])
+        data_tuples.sort(key=lambda x: self.__group_dict[x[0]])
 
         bar_plot.set_color_fun(self.__color_fun,code_and_val=True)
         codes, datums = zip(*data_tuples)
         bar_plot.set_data(datums, codes)
         group_stats = self.get_group_stats(good_data)
-        means, stds, ns = group_stats
+        groups=sorted(group_stats.keys())
+        means, stds, ns = zip(*map(group_stats.get,groups))
 
         bar_plot.set_back_bars(back_bars=zip(means, ns), back_error=stds,back_codes=("1","2","3"))
         bar_plot.paint_bar_chart()
         self.__widget=bar_widget
+
     def draw_scatter(self,data_dict):
         good_data_dict=self.filter_dict(data_dict)
         if self.__scatter_plot is None:
@@ -313,11 +328,11 @@ class GraphFrame(tkFrame):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
         self.__widget=scatter_widget
-        x_label,x_data_dict=good_data_dict.popitem()
-        y_label,y_data_dict=good_data_dict.popitem()
+        x_label, x_data_dict = good_data_dict.popitem()
+        y_label, y_data_dict = good_data_dict.popitem()
         codes=x_data_dict.keys()
+        y_data = [y_data_dict[k] for k in codes]
         x_data=[x_data_dict[k] for k in codes]
-        y_data=[y_data_dict[k] for k in codes]
         x_min=np.min(x_data)
         x_max=np.max(x_data)
         x_extent=x_max-x_min
@@ -329,10 +344,11 @@ class GraphFrame(tkFrame):
         scatter.set_labels(x_label,y_label)
         scatter.set_data(x_data,y_data,codes)
         scatter.set_color_function(self.__color_fun)
-        scatter.set_groups(self.__ubica_dict)
+        scatter.set_groups(self.__group_dict)
         #print zip(x_data,y_data)
         scatter.draw_scatter()
         self.__widget = scatter_widget
+
     def draw_spiders(self,data_dict):
         good_data_dict = self.filter_dict(data_dict)
         if self.__spider_plot is None:
@@ -351,13 +367,14 @@ class GraphFrame(tkFrame):
         for cd in codes:
             spider_dict[cd]=[norm_data[v][cd] for v in variables]
         spider.set_data(spider_dict,range(len(variables)))
-        spider.set_groups(self.__ubica_dict)
+        spider.set_groups(self.__group_dict)
         spider.set_rmax(1)
         spider.set_color_fun(self.__color_fun)
         spider.draw_spider()
         self.__widget = spider_widget
 
-    def normalize_variables(self,data_frame):
+    @staticmethod
+    def normalize_variables(data_frame):
         for key,data_dict in data_frame.iteritems():
             keys,values=zip(*data_dict.items())
             minimum=np.min(values)
@@ -372,12 +389,11 @@ class GraphFrame(tkFrame):
     def get_group_stats(self,data_dict):
         group_values_dict = {}
         for cd,value in data_dict.iteritems():
-            group = self.__ubica_dict[cd]
+            group = self.__group_dict[cd]
             if np.isfinite(value):
                 group_values_dict.setdefault(group, []).append(value)
-        results = []
-        for g in ['1', '2', '3']: # 1=canguro, 2=control, 3=gorditos
-            values = group_values_dict[g]
+        results = {}
+        for g,values in group_values_dict.iteritems(): # 1=canguro, 2=control, 3=gorditos
             n=len(values)
             if len(values) > 0:
                 mean = np.mean(values)
@@ -385,13 +401,13 @@ class GraphFrame(tkFrame):
             else:
                 mean = 0
                 std = 0
-            results.append((mean, std,n))
-        return zip(*results)
+            results[g]=(mean, std,n)
+        return results
 
     @staticmethod
     def filter_dict(data,get_subj_dict=False):
         """ Removes all ids which contain nan values"""
-        from collections import defaultdict
+
         subjects_dir=defaultdict(dict)
         for col,col_data in data.iteritems():
             for subj,value in col_data.iteritems():
@@ -399,18 +415,40 @@ class GraphFrame(tkFrame):
         for subj,data_dict in subjects_dir.items():
             if not np.all(np.isfinite(data_dict.values())):
                 subjects_dir.pop(subj)
-        out_data={}
+        out_data=OrderedDict()
         for col in data.iterkeys():
             out_data[col]=dict( (k,values[col]) for k,values in subjects_dir.iteritems())
         return out_data
+
     def update_popups_messages(self):
-        pass
+        messages={}
+        subj_data={}
+        axes=[]
+        for var,var_dict in self.__data.iteritems():
+            axes.append(var)
+            group_stats=self.get_group_stats(var_dict)
+            for subj,value in var_dict.iteritems():
+                subj_group=self.__group_dict[subj]
+                subj_data.setdefault(subj,["%s (%s)"%(subj,subj_group)]).append(
+                    "%s : %.2f (%.2f)"%(var,value,group_stats[subj_group][0]))
+        for subj,data in subj_data.iteritems():
+            messages[subj]="\n".join(data)
+        self.__messages=messages
+        self.__axes=axes
+
     def get_subject_message(self,event=None):
         if self.__active_plot is not None:
             hover_item=self.__active_plot.get_current_name()
+            if hover_item is None:
+                return ''
+            elif hover_item.startswith('axis'):
+                return self.__axes[int(hover_item[5:])]
+            else:
+                return self.__messages[hover_item]
         else:
             return 'Select some data and click "Apply Selection"'
         return "hola: %s"%hover_item
+
     def resize_bars(self):
         if self.__bar_chart is not None:
             #self.__bar_chart.figure.subplots_adjust(top=100,bottom=0)
@@ -425,7 +463,7 @@ class DataFetcher():
         self.__codes=codes
     def get_data(self,data_variables):
         #decode
-        data_dict={}
+        data_dict=OrderedDict()
         for col in data_variables:
             #print col
             if col.startswith('braint'):
@@ -437,8 +475,7 @@ class DataFetcher():
             data_dict[col] = out_data
         return data_dict
     def get_tms_data_col(self,col):
-        from braviz.interaction.tms_variables import data_codes_dict
-        from braviz.readAndFilter.read_csv import get_column
+
         tms_csv_file=os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
         tokens=col.split(':')
         hemisphere=tokens[-1]
@@ -456,7 +493,7 @@ class DataFetcher():
     def set_codes(self,codes):
         self.__codes=codes
     def get_codes(self):
-        from braviz.readAndFilter.read_csv import get_column
+
         if self.__codes is not None:
             return self.__codes
         else:
@@ -464,14 +501,14 @@ class DataFetcher():
             codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
             return codes_col
     def get_ubica_dict(self):
-        from braviz.readAndFilter.read_csv import get_column
+
         tms_csv_file = os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
         codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
         ubica_col = get_column(tms_csv_file, 'UBICA', numeric=False)
         return dict(izip(codes_col,ubica_col))
 
     def get_structural_data_col(self,col):
-        from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_get_struct_metric_col
+
         #decode
         metrics_dict={
             'Volume':'volume',
@@ -593,7 +630,6 @@ if __name__=="__main__":
 
     def update_all(new_data_vars):
         new_data=fetcher.get_data(new_data_vars)
-        #print new_data
         graph_frame.update_representation(new_data)
     #variable_select_frame.set_apply_callback(fetcher.get_data)
     variable_select_frame.set_apply_callback(update_all)
