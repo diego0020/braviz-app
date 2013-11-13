@@ -9,7 +9,7 @@ from itertools import izip
 __author__ = 'Diego'
 
 
-class grid_view(vtk.vtkRenderWindow):
+class GridView(vtk.vtkRenderWindow):
     def __init__(self,use_lod=False):
         self.ren = vtk.vtkRenderer()
         self.SetMultiSamples(2)
@@ -74,6 +74,7 @@ class grid_view(vtk.vtkRenderWindow):
         self.__captions_dict={}
         self.__labels_dict={}
         #observers
+        self.actor_selected_event=vtk.vtkCommand.UserEvent+1
 
     def set_interactor(self, iren=None):
         if iren is None:
@@ -194,7 +195,11 @@ class grid_view(vtk.vtkRenderWindow):
 
         self.balloon_w.AddObserver('AnyEvent', unregister_object)
 
-    def select_actor(self,actor):
+    def select_name(self,name):
+        actor=self.__actors_dict.get(name)
+        self.select_actor(actor,propagate=False)
+
+    def select_actor(self,actor,propagate=True):
         if actor is None:
             return
         if self.__selected_actor is not None:
@@ -221,7 +226,8 @@ class grid_view(vtk.vtkRenderWindow):
         if self.__mini_scatter is not None:
             scatter_id = self.__mini_scatter_dict.get(key, None)
             self.__mini_scatter.select_point(scatter_id)
-
+        if propagate is True:
+            self.InvokeEvent(self.actor_selected_event)
         self.iren.Render()
     def clear_selection(self):
         self.__outline_actor.SetVisibility(0)
@@ -578,7 +584,7 @@ def merge_polydata(models):
     return merged
 
 if __name__ == '__main__':
-    test = grid_view()
+    test = GridView()
     test_data = {}
     for i in range(10):
         sp = vtk.vtkSphereSource()

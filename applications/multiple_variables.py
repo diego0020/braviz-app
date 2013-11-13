@@ -23,7 +23,7 @@ from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_g
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy
 from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
 from braviz.utilities import get_leafs
-from braviz.visualization.grid_viewer import grid_view
+from braviz.visualization.grid_viewer import GridView
 __author__ = 'Diego'
 
 
@@ -222,7 +222,7 @@ class VtkWidget(tkFrame):
         self.__reader=reader
         self.__color_fun=lambda x:(1.0,0.0,0.0)
         tkFrame.__init__(self, parent, **kwargs)
-        self.__grid_viewer=grid_view(use_lod=False)
+        self.__grid_viewer=GridView(use_lod=False)
         grid_widget = vtkTkRenderWindowInteractor(self, rw=self.__grid_viewer,
                                                   width=kwargs.get('width',600), height=kwargs.get('height',300))
         grid_widget.grid(row=0,column=0,sticky='NSEW')
@@ -278,7 +278,14 @@ class VtkWidget(tkFrame):
             model=self.__reader.get('model',code,name=struct_name)
             return model
 
-
+    def set_selection(self,subj_id):
+        self.__grid_viewer.select_name(subj_id)
+    def set_selection_handler(self,function):
+        """function will receive two parameters, (event,subj_id) """
+        def internal_observer(caller=None,event=None):
+            subj_id=self.__grid_viewer.get_selection()
+            function("actor_selected_event",subj_id)
+        self.__grid_viewer.AddObserver(self.__grid_viewer.actor_selected_event,internal_observer)
 
 class GraphFrame(tkFrame):
     def __init__(self,ubica_dict,parent,**kwargs):
@@ -295,6 +302,8 @@ class GraphFrame(tkFrame):
         self.__messages={}
         self.__width=kwargs.get('width',600)
         self.__height=kwargs.get('height',200)
+        self.__selection_handler=lambda x:None
+        self.__name2idx={}
         init_panel=tk.Frame(self,relief='ridge',border=2,height=self.__height,width=self.__width,)
 
         init_label=tk.Label(init_panel,text='Select some data to start')
@@ -311,13 +320,17 @@ class GraphFrame(tkFrame):
         """Function must take val,code pairs and return a color"""
         self.__color_fun=color_func
 
-    def update_representation(self,data):
-        self.__data=data
-        self.update_popups_messages()
+    def update_representation(self,data=None):
+        if data is None:
+            data=self.__data
+        else:
+            self.__data=data
+            self.update_popups_messages()
         if len(data)==0:
             return
         if self.__widget is not None:
             self.__widget.grid_forget()
+            self.__widget.bind('<<PlotSelected>>')
             self.__widget=None
         if len(data)==1:
             self.draw_bar_chart(data)
@@ -330,6 +343,7 @@ class GraphFrame(tkFrame):
             self.__active_plot = self.__spider_plot
         del self.tool_tip
         self.tool_tip = ToolTip(self.__widget, msgFunc=self.get_subject_message, follow=1, delay=0.5)
+        self.__widget.bind('<<PlotSelected>>', self.__selection_handler)
 
     def draw_bar_chart(self,data):
         y_label, data_dict = data.popitem()
@@ -358,6 +372,8 @@ class GraphFrame(tkFrame):
         bar_plot.set_color_fun(self.__color_fun,code_and_val=True)
         codes, datums = zip(*data_tuples)
         bar_plot.set_data(datums, codes)
+        for i,cd in enumerate(codes):
+            self.__name2idx[cd]=i
         group_stats = self.get_group_stats(good_data)
         groups=sorted(group_stats.keys())
         means, stds, ns = zip(*map(group_stats.get,groups))
@@ -379,6 +395,8 @@ class GraphFrame(tkFrame):
         x_label, x_data_dict = good_data_dict.popitem()
         y_label, y_data_dict = good_data_dict.popitem()
         codes=x_data_dict.keys()
+        for i,cd in enumerate(codes):
+            self.__name2idx[cd]=i
         y_data = [y_data_dict[k] for k in codes]
         x_data=[x_data_dict[k] for k in codes]
         x_min=np.min(x_data)
@@ -503,7 +521,20 @@ class GraphFrame(tkFrame):
             #self.__bar_chart.figure.subplots_adjust(top=100,bottom=0)
             #self.__bar_chart.figure.subplots_adjust(bottom=0,top=1)
             self.__bar_chart.show()
-
+    def set_selection_handler(self,function):
+        """funciton must take two parameters, (event, subj_id)"""
+        def selection_handler_internal(event=None):
+            current_subj=self.__active_plot.get_current_name()
+            function(event,current_subj)
+        self.__selection_handler=selection_handler_internal
+        self.__widget.bind('<<PlotSelected>>',self.__selection_handler)
+    def set_highlight(self,highlight_code):
+        if self.__active_plot==self.__spider_plot:
+            self.__spider_plot.set_highlighted_key(highlight_code)
+        else:
+            idx=self.__name2idx[highlight_code]
+            self.__active_plot.set_higlight_index(idx)
+        self.__active_plot.paint()
 
 class DataFetcher():
     def __init__(self,reader,codes=None):
@@ -673,26 +704,26 @@ if __name__=="__main__":
 
     fetcher=DataFetcher(reader2)
     groups_dict=fetcher.get_ubica_dict()
-    groups_colors_matplotlib={
-        "1": '#E6AB02',
-        "2": '#D95F02',
-        "3": '#66A61E',
-    }
-    groups_colors_vtk={
-        '1': [0.9019607843137255, 0.6705882352941176, 0.00784313725490196],
-        '2': [0.8509803921568627, 0.37254901960784315, 0.00784313725490196],
-        '3': [0.4, 0.6509803921568628, 0.11764705882352941]}
+    int_colors={
+        '1': [77, 175, 74],
+        '2': [55, 126, 184],
+        '3': [166, 86, 40]}
 
-    def group_color_fun(val,key):
-        col=groups_colors_matplotlib.get(key,None)
+    float_colors={}
+    for key,color in int_colors.iteritems():
+        float_colors[key]=map(lambda x:x/255.0,color)
+    groups_colors_matplotlib=int_colors=float_colors
+
+    def group_color_fun(val,key2):
+        col=groups_colors_matplotlib.get(key2,None)
         if col is None:
-            col=groups_colors_matplotlib[groups_dict[key]]
+            col=groups_colors_matplotlib[groups_dict[key2]]
         return col
 
     graph_frame=GraphFrame(groups_dict,display_frame,height=250,width=800)
     graph_frame.set_color_function(group_color_fun)
     vtk_frame=VtkWidget(reader2,display_frame,height=250,width=800)
-    vtk_frame.set_groups_dict(groups_dict,groups_colors_vtk)
+    vtk_frame.set_groups_dict(groups_dict,int_colors)
     vtk_frame.grid(row=0,column=0,sticky='nsew')
     graph_frame.grid(row=1,column=0,sticky='nsew')
 
@@ -700,6 +731,15 @@ if __name__=="__main__":
     display_frame.rowconfigure(1,weight=1)
     display_frame.columnconfigure(0,weight=1)
 
+    def plot_selection(event=None,subject=None):
+        #print "graph selection: %s"%subject
+        vtk_frame.set_selection(subject)
+    graph_frame.set_selection_handler(plot_selection)
+
+    def vtk_event_listener(event,subj_id):
+        #print subj_id
+        graph_frame.set_highlight(subj_id)
+    vtk_frame.set_selection_handler(vtk_event_listener)
     #variable_select_frame.set_apply_callback(graph_frame.update_representation)
 
     def update_all(new_data_vars):

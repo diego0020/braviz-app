@@ -371,7 +371,7 @@ renderer_frame.grid(row=0,column=1,sticky='ewsn')
 top.columnconfigure(1, weight=1)
 
 
-grid_view=braviz.visualization.grid_view()
+grid_view=braviz.visualization.GridView()
 
 removed_reminder=vtk.vtkTextActor()
 grid_view.ren.AddViewProp(removed_reminder)

@@ -246,6 +246,8 @@ class BarPlot():
         #a.autoscale_view()
         self.bars=patches
         self.show()
+    def paint(self):
+        self.paint_bar_chart()
     def change_bars(self,new_heights):
         """doesn't do highlight"""
         if self.bars is None:
@@ -397,6 +399,8 @@ class ScatterPlot():
             self.current_id=event.ind
         self.canvas.mpl_connect('pick_event',on_pick)
         self.show()
+    def paint(self):
+        self.draw_scatter()
     def set_limits(self,x_lim,y_lim):
         self.x_limits=x_lim
         self.y_limits=y_lim
@@ -518,7 +522,7 @@ class SpiderPlot():
                     col=self.color_fun(val,k)
                     if k==self.__highlight_key:
                         a.plot(theta,val,color=highlight_color,label=k,linewidth=2,marker='o',
-                               mew=2,ms=5,zorder=10,mec=col)
+                               mew=0,ms=5,zorder=10,mec=col)
                     else:
                         a.plot(theta,val,color=col,label=k)
                     patches=a.fill(theta,val,color=col,alpha=0.15)
@@ -550,6 +554,8 @@ class SpiderPlot():
             #print self.__current_name
         cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
         self.show()
+    def paint(self):
+        self.draw_spider()
     def get_current_name(self):
         return self.__current_name
     def set_highlighted_key(self,high_key=None):

@@ -526,4 +526,4 @@ def test_arrow(head,tail):
     ren.AddViewProp(arrow_actor)
     iren.Start()
 
-from grid_viewer import grid_view
+from grid_viewer import GridView
