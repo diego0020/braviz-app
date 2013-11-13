@@ -7,11 +7,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # implement the default mpl key bindings
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.text import Text as matplotlib_text
-import math
 import random
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-import Tkinter as Tk
 from itertools import izip
 from braviz.utilities import ignored
 
@@ -437,7 +434,6 @@ def calculate_regression_line(x,y):
 class SpiderPlot():
 
     def __init__(self,tight=True):
-        from braviz.visualization.radar_chart import radar_factory
         f = Figure(tight_layout=tight, facecolor='w', frameon=False, edgecolor='r')
         self.figure=f
         self.widget=None
@@ -470,7 +466,7 @@ class SpiderPlot():
                 self.draw_spider()
                 widget.event_generate('<<PlotSelected>>')
             else:
-                self.set_higlight_index(None)
+                self.set_highlighted_key(None)
                 self.draw_spider()
 
         cid2 = self.figure.canvas.mpl_connect('button_press_event', click_on_spider)

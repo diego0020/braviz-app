@@ -6,9 +6,8 @@ from itertools import izip
 import os
 from functools import partial
 from collections import defaultdict,OrderedDict
-
+from tkFileDialog import askopenfile,asksaveasfile
 import numpy as np
-import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
@@ -19,11 +18,14 @@ from braviz.interaction.tk_tooltip import ToolTip
 from braviz.interaction.tms_variables import data_codes_dict
 from braviz.readAndFilter.read_csv import get_column,get_headers
 from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
-from braviz.interaction.structure_metrics import get_mult_struct_metric,cached_get_struct_metric_col
+from braviz.interaction.structure_metrics import cached_get_struct_metric_col
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy
 from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
 from braviz.utilities import get_leafs
 from braviz.visualization.grid_viewer import GridView
+from collections import namedtuple
+from tkMessageBox import showerror,showinfo
+import json
 __author__ = 'Diego'
 
 
@@ -203,6 +205,9 @@ class VariableSelectFrame(tkFrame):
         remove_from_selection_button['command'] = remove_variable
     def get_selected_variables(self):
         return self.__selected_variables_list.get(0,tk.END)
+    def set_selected_variables(self,selection):
+        self.__selected_variables_list.delete(0,tk.END)
+        self.__selected_variables_list.insert(0,*selection)
     def set_apply_callback(self,callback):
         def callback2(event=None):
             callback(self.get_selected_variables())
@@ -253,11 +258,16 @@ class VtkWidget(tkFrame):
             #self.__grid_viewer.set_orientation((3.060316756674142, -94.78573096609321, 97.86560994941594))
             self.__grid_viewer.set_orientation((0, -90, 90))
         for cod in self.__codes:
-            try:
-                model_list=map(partial(self.get_structure,cod),struct_list)
-            except Exception:
-                "couldn't load models for subjec %s"%cod
-            else:
+            model_list=[]
+            for struct in struct_list:
+                try:
+                    model=self.get_structure(cod,struct)
+                except Exception:
+                    "couldn't load model %s for subject %s"%(struct,cod)
+                else:
+                    if model is not None:
+                        model_list.append(model)
+            if len(model_list)>0:
                 models_dict[cod]=model_list
         self.__grid_viewer.set_data(models_dict)
         self.__grid_viewer.set_color_function(self.__color_fun,opacity=0.05)
@@ -273,20 +283,27 @@ class VtkWidget(tkFrame):
 
     def get_structure(self,code,struct_name):
         if struct_name.startswith('Fibs:'):
-            return None
+            model=self.__reader.get('fibers',code,name=struct_name)
+            return model
         else:
             model=self.__reader.get('model',code,name=struct_name)
             return model
 
     def set_selection(self,subj_id):
         self.__grid_viewer.select_name(subj_id)
+
     def set_selection_handler(self,function):
         """function will receive two parameters, (event,subj_id) """
         def internal_observer(caller=None,event=None):
             subj_id=self.__grid_viewer.get_selection()
             function("actor_selected_event",subj_id)
         self.__grid_viewer.AddObserver(self.__grid_viewer.actor_selected_event,internal_observer)
-
+    def get_orientation(self):
+        return self.grid_view.get_orientation()
+    def set_orientation(self,orintation):
+        self.grid_view.set_orientation(orintation)
+    def get_selected_id(self):
+        return self.grid_view.get_selection()
 class GraphFrame(tkFrame):
     def __init__(self,ubica_dict,parent,**kwargs):
         tkFrame.__init__(self,parent,**kwargs)
@@ -448,7 +465,7 @@ class GraphFrame(tkFrame):
             width=maximum-minimum
             if width<0.001:
                 width=1
-            norm_values=map(lambda x:(x-minimum)/width,values)
+            norm_values=map(lambda x:0.9*(x-minimum)/width+0.1,values)
             data_dict.update(izip(keys,norm_values))
         return data_frame
 
@@ -546,6 +563,7 @@ class DataFetcher():
         #decode
         data_dict=OrderedDict()
         structures=set()
+        fibers_set=set()
         for col in data_variables:
             #print col
             if col.startswith('braint'):
@@ -555,9 +573,12 @@ class DataFetcher():
             elif col.startswith('table') :
                 out_data = self.get_matrix_data_col(col)
             else:
-                out_data, structural_structs = self.get_structural_data_col(col)
+                out_data, structural_structs,fibers = self.get_structural_data_col(col)
                 structures.update(structural_structs)
+                if fibers is not None:
+                    fibers_set.update(fibers)
             data_dict[col] = out_data
+
         return data_dict,structures
 
     def get_tms_data_col(self,col):
@@ -631,7 +652,12 @@ class DataFetcher():
         #data_col=map(metric_func,codes)
         data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric,force_reload=True)
         result_dict=dict(izip(codes,data_col))
-        return result_dict,names
+        struct_tuple=namedtuple('struct_descriptor',['with_fibers','names'])
+        if metric.endswith('fibers'):
+            fibers=tuple(names)
+        else:
+            fibers=None
+        return result_dict,names,fibers
 
     def get_matrix_data_col(self,col):
         matrix_file=os.path.join(self.__reader.getDataRoot(), 'test_small.csv')
@@ -682,9 +708,50 @@ class DataFetcher():
     def get_braint_data_col(self):
         print "Not yet implemented"
 
+class SaveAndRestore():
+    def __init__(self,application_name,parent,default_dir=None):
+        self.__application_name=application_name
+        self.__parent=parent
+        self.__extension='.braviz'
+        self.__defautl_dir=default_dir
+    def save(self,variables_dict={}):
+        write_file=asksaveasfile(mode='w',defaultextension=self.__extension,parent=self.__parent,title="Save Scenario",
+                                 initialdir=self.__defautl_dir,filetypes=[("braviz scenario","*.braviz")] )
+        if write_file is None:
+            return
+        try:
+            variables_dict["__app_name__"]=self.__application_name
+            json.dump(variables_dict,write_file,sort_keys=True,separators=(',',': '),indent=4)
+        except TypeError:
+            showerror("Braviz","Fatal Error, please contact application developer")
+        except IOError:
+            showerror("Braviz","There was a problem saving the file, please try again")
+        else:
+            showinfo("Braviz","File saved correctly")
+        finally:
+            write_file.close()
+
+    def load(self):
+        read_file = askopenfile(mode='r', defaultextension=self.__extension, parent=self.__parent,
+                                   title="Load Scenario",
+                                   initialdir=self.__defautl_dir, filetypes=[("braviz scenario", "*.braviz")])
+        if read_file is None:
+            return
+        try:
+            variables_dict=json.load(read_file, )
+            if not variables_dict.pop("__app_name__") == self.__application_name:
+                showerror("Braviz","This file was NOT created with the current application")
+                return
+        except Exception:
+            showerror("Braviz", "Invalid File")
+        finally:
+            read_file.close()
+        return variables_dict
+
+
+
 if __name__=="__main__":
     root=tk.Tk()
-    root.focus()
     root.title('Braviz-Multiple Variables')
 
     reader2=braviz.readAndFilter.kmc40AutoReader()
@@ -742,7 +809,9 @@ if __name__=="__main__":
     vtk_frame.set_selection_handler(vtk_event_listener)
     #variable_select_frame.set_apply_callback(graph_frame.update_representation)
 
-    def update_all(new_data_vars):
+    def update_all(new_data_vars=None):
+        if new_data_vars is None:
+            new_data_vars=variable_select_frame.get_selected_variables()
         new_data,structures=fetcher.get_data(new_data_vars)
         graph_frame.update_representation(new_data)
         vtk_frame.update_structures(structures)
@@ -756,6 +825,31 @@ if __name__=="__main__":
         print vtk_frame.grid_view.get_orientation()
     aux_button['command']=print_orientation
 
+    save_and_restore=SaveAndRestore(application_name=os.path.basename(__file__),
+                                    default_dir=os.path.join(os.path.dirname(__file__),"saved_scenarios"),
+                                    parent=root)
+    menu_bar=tk.Menu(root)
+    file_menu=tk.Menu(menu_bar,tearoff=0)
+
+    def save_state(event=None):
+        fields = {}
+        fields["selected_variables"]=variable_select_frame.get_selected_variables()
+        fields["orientation"]=vtk_frame.get_orientation()
+        fields["Selected_subject"]=vtk_frame.get_selected_id()
+        save_and_restore.save(fields)
+
+    def load_state(event=None):
+        fields=save_and_restore.load()
+        variable_select_frame.set_selected_variables(fields["selected_variables"])
+        vtk_frame.set_orientation(fields["orientation"])
+        update_all()
+        vtk_frame.set_selection(fields["Selected_subject"])
+        graph_frame.set_highlight(fields["Selected_subject"])
+    file_menu.add_command(label="Open", command=load_state)
+    file_menu.add_command(label="Save",command=save_state)
+    menu_bar.add_cascade(label="File",menu=file_menu)
+    root.config(menu=menu_bar)
+    root.focus()
     tk.mainloop()
 
 
