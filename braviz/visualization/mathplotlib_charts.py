@@ -13,9 +13,10 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import Tkinter as Tk
 from itertools import izip
+from braviz.utilities import ignored
 
 __author__ = 'Diego'
-
+highlight_color='#FF7F00'
 class BarPlot():
     def __init__(self,tight=True):
         #f = Figure( dpi=100,tight_layout=True,facecolor='w',frameon=False,edgecolor='r')
@@ -43,12 +44,13 @@ class BarPlot():
         self.style='bars'
         self.yerror=0
         self.back_bars=None
-        self.back_error=0
+        self.back_error=None
         self.widget=None
         self.resizing = None
         self.tight=tight
         self.back_codes=None
         self.pos2name_dict={}
+        self.__names2idx_dict={}
 
     def set_back_bars(self,back_bars,back_error=0,back_codes=tuple()):
         self.back_bars=back_bars
@@ -73,7 +75,7 @@ class BarPlot():
             print('you pressed %s' % event.key)
             key_press_handler(event, canvas)
 
-        canvas.mpl_connect('key_press_event', on_key_event)
+        #canvas.mpl_connect('key_press_event', on_key_event)
         #canvas.mpl_connect('resize_event', resize_event_handler)
         self.canvas = canvas
         widget=canvas.get_tk_widget()
@@ -99,14 +101,25 @@ class BarPlot():
             if event.xdata is  None:
                 if event.x < self.axis.bbox.xmin:
                     self.current_xcoord="axis_0"
-                #elif event.y < self.axis.bbox.ymin:
-                    #self.current_xcoord = "axis_y"
+                elif event.y < self.axis.bbox.ymin:
+                    self.current_xcoord = None
             #print event.xdata, event.ydata
         cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
-        def generate_tk_event(event=None):
-            widget.event_generate('<<BarSelected>>')
+        def click_on_bar(event=None):
+            curr_name=self.get_current_name()
+            try:
+                #idx=self.bar_names.index(curr_name)
+                idx=self.__names2idx_dict[curr_name]
+            except KeyError:
+                self.set_higlight_index(None)
+                self.paint_bar_chart()
+            else:
+                widget.event_generate('<<PlotSelected>>')
+                self.set_higlight_index(idx)
+                self.paint_bar_chart()
 
-        cid2 = self.figure.canvas.mpl_connect('button_press_event', generate_tk_event)
+
+        cid2 = self.figure.canvas.mpl_connect('button_press_event', click_on_bar)
         widget.focus()
         self.widget=widget
         return widget
@@ -140,13 +153,15 @@ class BarPlot():
     def set_data(self,values,codes,error=None):
         self.bar_heights=values
         self.bar_names=codes
+        for i,cd in enumerate(codes):
+            self.__names2idx_dict[cd]=i
         if error is not None:
             if hasattr(error,'__iter__') and len(error)==len(values):
                 self.yerror=error
             elif np.isfinite(error):
                 self.yerror = error
         else:
-            self.yerror=0
+            self.yerror=None
 
     def set_color_fun(self,color_function,code_and_val=False):
         """color_function receives(value,code) if code and val is True,
@@ -215,13 +230,13 @@ class BarPlot():
             if self.highlight is not None:
                 highlighted_rect = patches[self.highlight]
                 highlighted_rect.set_linewidth(4)
-                highlighted_rect.set_edgecolor('#FF7F00')
+                highlighted_rect.set_edgecolor(highlight_color)
         else:
             edge_colors = ['#000000'] * len(self.bar_heights)
             sizes=[40]*len(self.bar_heights)
             linewidths=[1.0]*len(self.bar_heights)
             if self.highlight is not None:
-                edge_colors[self.highlight]='#FF7F00'
+                edge_colors[self.highlight]=highlight_color
                 sizes[self.highlight]=80
                 linewidths[self.highlight]=2
             patches = a.scatter(bar_positions, self.bar_heights, c=colors, marker='s', s=sizes,edgecolors=edge_colors,linewidths=linewidths)
@@ -280,6 +295,8 @@ class ScatterPlot():
         self.__groups_dict = None
         self.__paths=None
         self.current_id=None
+        self.__highlited = None
+        self.__name2idx_dict={}
 
 
     def get_widget(self,master,**kwargs):
@@ -304,7 +321,19 @@ class ScatterPlot():
             widget.event_generate('<<ScatterClick>>')
         cid2 = self.figure.canvas.mpl_connect('button_press_event', generate_tk_event)
         self.widget = widget
+        def click_on_scatter(event=None):
+            curr_name=self.get_current_name()
+            try:
+                idx=self.__name2idx_dict[curr_name]
+            except KeyError:
+                self.set_higlight_index(None)
+                self.draw_scatter()
+            else:
+                widget.event_generate('<<PlotSelected>>')
+                self.set_higlight_index(idx)
+                self.draw_scatter()
 
+        cid2 = self.figure.canvas.mpl_connect('button_press_event', click_on_scatter)
         if self.tight is True:
             self.resizing = None
             def resize_event_handler(event=None):
@@ -322,17 +351,16 @@ class ScatterPlot():
         self.widget.update_idletasks()
         self.figure.subplots_adjust(bottom=0.0, top=1.0,hspace=0)
         self.canvas.show()
-    def set_data(self,x_values,y_values,names=[]):
+    def set_data(self,x_values,y_values,names=None):
         self.y_values=y_values
         self.x_values=x_values
-        self.__data_names=names
-    @staticmethod
-    def calculate_regression_line(x,y):
-        from scipy.stats import linregress
-        slope, intercept, r_value, p_value, std_err = linregress(x, y)
-        def reg_line(x):
-            return intercept+slope*x
-        return reg_line,r_value
+        if names is None:
+            self.__data_names = range(len(x_values))
+        else:
+            self.__data_names=names
+        for i,name in enumerate(self.__data_names):
+            self.__name2idx_dict[name]=i
+
 
     def draw_scatter(self):
         a=self.axis
@@ -343,8 +371,16 @@ class ScatterPlot():
         a.set_ylabel(self.y_label)
         colors=map(self.__color_fun,izip(self.x_values,self.y_values),
                                          self.__data_names)
-        self.__paths =a.scatter(self.x_values,self.y_values,color=colors,picker=1)
-        reg_line,r=self.calculate_regression_line(self.x_values,self.y_values)
+        sizes=[20]*len(self.x_values)
+        linewidths=[0]*len(self.x_values)
+        if self.__highlited is not None:
+            with ignored(ValueError):
+                idx=self.__highlited
+                sizes[idx] = 40
+                linewidths[idx]=2
+        self.__paths =a.scatter(self.x_values,self.y_values,color=colors,picker=1
+            ,s=sizes,linewidths=linewidths,edgecolor=highlight_color)
+        reg_line,r=calculate_regression_line(self.x_values,self.y_values)
         a.plot(self.x_limits,map(reg_line,self.x_limits),c='k',label="all (r=%.2f)"%r)
         if self.__groups_dict is not None:
             groups=set(self.__groups_dict.itervalues())
@@ -352,7 +388,7 @@ class ScatterPlot():
             y_data=np.array(self.y_values)
             for g in groups:
                 g_idxs=filter(lambda i:self.__groups_dict[self.__data_names[i]]==g,xrange(len(self.__data_names)))
-                reg_line,r=self.calculate_regression_line(x_data[g_idxs],y_data[g_idxs])
+                reg_line,r=calculate_regression_line(x_data[g_idxs],y_data[g_idxs])
                 a.plot(self.x_limits, map(reg_line, self.x_limits), c=self.__color_fun(0,g),label="%s (r=%.2f)"%(g,r))
         leg=a.legend(fontsize='small',fancybox=True)
         leg.get_frame().set_alpha(0.7)
@@ -384,6 +420,16 @@ class ScatterPlot():
             return self.current_id
         else:
             return self.__data_names[self.current_id[0]]
+
+    def set_higlight_index(self,highlighted_id=None):
+        self.__highlited=highlighted_id
+def calculate_regression_line(x,y):
+    from scipy.stats import linregress
+    slope, intercept, r_value, p_value, std_err = linregress(x, y)
+    def reg_line(x):
+        return intercept+slope*x
+    return reg_line,r_value
+
 class SpiderPlot():
 
     def __init__(self,tight=True):
@@ -401,6 +447,7 @@ class SpiderPlot():
         self.__groups=[None]
         self.__current_name=None
         self.__axis_labels=[]
+        self.__highlight_key=None
 
 
 
@@ -412,9 +459,17 @@ class SpiderPlot():
         widget = self.canvas.get_tk_widget()
         widget.configure(bd=4, bg='white', highlightcolor='red', highlightthickness=0, **kwargs)
 
-        def generate_tk_event(event=None):
-            widget.event_generate('<<ScatterClick>>')
-        cid2 = self.figure.canvas.mpl_connect('button_press_event', generate_tk_event)
+        def click_on_spider(event=None):
+            curr_name=self.get_current_name()
+            if curr_name in self.data_dict:
+                self.set_highlighted_key(curr_name)
+                self.draw_spider()
+                widget.event_generate('<<PlotSelected>>')
+            else:
+                self.set_higlight_index(None)
+                self.draw_spider()
+
+        cid2 = self.figure.canvas.mpl_connect('button_press_event', click_on_spider)
         self.widget = widget
         widget.focus()
         return widget
@@ -451,7 +506,7 @@ class SpiderPlot():
         theta = radar_factory(self.N, frame='polygon')
 
         group_list=sorted(list(self.__groups))
-        print group_list
+        #print group_list
         for i,g in enumerate(group_list):
             a=self.figure.add_subplot(1,len(self.__groups), i+1,
                                       axisbg='w',projection='radar',label=g)
@@ -461,7 +516,11 @@ class SpiderPlot():
                 if self.__groups_dict.get(k)==g:
                     filtered_keys.append(k)
                     col=self.color_fun(val,k)
-                    a.plot(theta,val,color=col,label=k)
+                    if k==self.__highlight_key:
+                        a.plot(theta,val,color=highlight_color,label=k,linewidth=2,marker='o',
+                               mew=2,ms=5,zorder=10,mec=col)
+                    else:
+                        a.plot(theta,val,color=col,label=k)
                     patches=a.fill(theta,val,color=col,alpha=0.15)
                     for p in patches:
                         max_r_func=self.get_r_functions(p.xy)
@@ -493,6 +552,8 @@ class SpiderPlot():
         self.show()
     def get_current_name(self):
         return self.__current_name
+    def set_highlighted_key(self,high_key=None):
+        self.__highlight_key=high_key
     @staticmethod
     def get_r_functions(patches):
         def r_function(theta):
@@ -505,7 +566,7 @@ class SpiderPlot():
             try:
                 index = int(theta_moved // (2 * np.pi / (len(patches) - 1)))
             except ValueError:
-                print theta
+                #print theta
                 return 0
             if index==len(patches):
                 index-=1
@@ -570,7 +631,9 @@ if __name__=='__main__':
     spider_plot.set_color_fun(color_fun)
     def recalc():
         test_data=[random.randrange(1,10) for i in xrange(10)]
+        highlight=random.randrange(0,10)
         bar_plot.set_data(test_data,range(10),2)
+        bar_plot.set_higlight_index(highlight)
         bar_plot.set_y_limits(0,10)
         bar_plot.paint_bar_chart()
 
@@ -578,6 +641,8 @@ if __name__=='__main__':
         test_data_y=[random.random()*2 for i in xrange(10)]
         scatter_plot.set_limits((0,1),(0,2))
         scatter_plot.set_data(test_data_x,test_data_y)
+        scatter_plot.set_higlight_index(highlight)
+
         scatter_plot.draw_scatter()
         N=random.randrange(3,10)
 
@@ -585,6 +650,7 @@ if __name__=='__main__':
         for i in xrange(10):
             spider_test_data[i]=[random.random() for j in xrange(N)]
         spider_plot.set_data(spider_test_data,range(N))
+        spider_plot.set_highlighted_key(highlight)
         spider_plot.draw_spider()
 
     recalc()

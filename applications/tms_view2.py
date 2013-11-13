@@ -698,7 +698,7 @@ def clean_exit(event=None):
     #root.withdraw()
     #root.after_idle(quit2)
 
-root.protocol("WM_DELETE_WINDOW", clean_exit)
+#root.protocol("WM_DELETE_WINDOW", clean_exit)
 #render_widget.bind('<Destroy>',clean_exit,'+')
 
 
@@ -712,13 +712,12 @@ def click_in_bar(event=None):
     if show_groups_var.get() and not showing_history:
         print "Not implemented yet"
         return
+    select_subj_frame.subjects_list.selection_clear(0, tk.END)
     clicked_subj=bars_view1.get_current_name()
-    if clicked_subj is not None:
-        select_subj_frame.subjects_list.selection_clear(0, tk.END)
-        index=codes2.index(clicked_subj)
-        select_subj_frame.subjects_list.select_set(index,index)
-        set_subj()
-bars_widget1.bind('<<BarSelected>>',click_in_bar)
+    index=codes2.index(clicked_subj)
+    select_subj_frame.subjects_list.select_set(index,index)
+    set_subj()
+bars_widget1.bind('<<PlotSelected>>',click_in_bar)
 
 
 def bars_1_msg_func(event=None):
