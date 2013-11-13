@@ -251,9 +251,10 @@ class VtkWidget(tkFrame):
         def color_function(subj_id):
             return group_colors[groups_dict[subj_id]]
         self.__color_fun=color_function
-    def update_structures(self,struct_list):
+    def update_structures(self,struct_list,fibers_list):
         models_dict={}
-        if len(struct_list)==0:
+        self.grid_view.clear_all()
+        if len(struct_list)+len(fibers_list)==0:
             struct_list=self.__default_struct_list
             #self.__grid_viewer.set_orientation((3.060316756674142, -94.78573096609321, 97.86560994941594))
             self.__grid_viewer.set_orientation((0, -90, 90))
@@ -261,12 +262,22 @@ class VtkWidget(tkFrame):
             model_list=[]
             for struct in struct_list:
                 try:
+                    print "loading model %s for subject %s" % (struct, cod)
                     model=self.get_structure(cod,struct)
                 except Exception:
-                    "couldn't load model %s for subject %s"%(struct,cod)
+                    print "couldn't load model %s for subject %s"%(struct,cod)
                 else:
                     if model is not None:
                         model_list.append(model)
+
+            try:
+                print "loading fibers %s for subject %s" % (fibers_list, cod)
+                fibers=self.get_fibers(cod,fibers_list)
+            except Exception:
+                print "couldn't load fibers %s for subject %s" % (fibers_list, cod)
+            else:
+                if fibers is not None:
+                    model_list.append(fibers)
             if len(model_list)>0:
                 models_dict[cod]=model_list
         self.__grid_viewer.set_data(models_dict)
@@ -283,12 +294,15 @@ class VtkWidget(tkFrame):
 
     def get_structure(self,code,struct_name):
         if struct_name.startswith('Fibs:'):
-            model=self.__reader.get('fibers',code,name=struct_name)
+            model=self.__reader.get('fibers',code,name=struct_name[5:])
             return model
         else:
             model=self.__reader.get('model',code,name=struct_name)
             return model
 
+    def get_fibers(self,code,waypoints):
+        fibs=self.__reader.get('fibers',code,waypoint=waypoints,operation='or')
+        return fibs
     def set_selection(self,subj_id):
         self.__grid_viewer.select_name(subj_id)
 
@@ -579,7 +593,7 @@ class DataFetcher():
                     fibers_set.update(fibers)
             data_dict[col] = out_data
 
-        return data_dict,structures
+        return data_dict,structures,fibers_set
 
     def get_tms_data_col(self,col):
 
@@ -647,10 +661,11 @@ class DataFetcher():
             children_str=get_leafs(sub_d,col)
             children=map(lambda x:x.split(':'),children_str)
         names=map(self.__reconstruct_struct_name,children)
-
+        #unique names
+        names=set(names)
         codes = self.get_codes()
         #data_col=map(metric_func,codes)
-        data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric,force_reload=True)
+        data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric,force_reload=False)
         result_dict=dict(izip(codes,data_col))
         struct_tuple=namedtuple('struct_descriptor',['with_fibers','names'])
         if metric.endswith('fibers'):
@@ -754,7 +769,8 @@ if __name__=="__main__":
     root=tk.Tk()
     root.title('Braviz-Multiple Variables')
 
-    reader2=braviz.readAndFilter.kmc40AutoReader()
+    reader2=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
+    #reader2=braviz.readAndFilter.kmc40AutoReader()
 
     panned_window=ttk.PanedWindow(root,orient=tk.HORIZONTAL)
     panned_window.grid(sticky='nsew')
@@ -812,17 +828,25 @@ if __name__=="__main__":
     def update_all(new_data_vars=None):
         if new_data_vars is None:
             new_data_vars=variable_select_frame.get_selected_variables()
-        new_data,structures=fetcher.get_data(new_data_vars)
+        print "getting variables"
+        print "================="
+        new_data,structures,fibers=fetcher.get_data(new_data_vars)
+        print "generating plot"
+        print "================="
         graph_frame.update_representation(new_data)
-        vtk_frame.update_structures(structures)
+        print "generating vtk graphics"
+        print "================="
+        vtk_frame.update_structures(structures,fibers)
         vtk_frame.set_messages(graph_frame.get_messages_dict())
+        print "done"
+        print "================="
     #variable_select_frame.set_apply_callback(fetcher.get_data)
     variable_select_frame.set_apply_callback(update_all)
 
     aux_button=tk.Button(variable_select_frame,text="aux")
     aux_button.grid(sticky='ew')
     def print_orientation(event=None):
-        print vtk_frame.grid_view.get_orientation()
+        print vtk_frame.grid_view.clear_all()
     aux_button['command']=print_orientation
 
     save_and_restore=SaveAndRestore(application_name=os.path.basename(__file__),

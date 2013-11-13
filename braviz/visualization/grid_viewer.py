@@ -6,6 +6,8 @@ import numpy as np
 from braviz.visualization import get_arrow
 from braviz.visualization.vtk_charts import mini_scatter_plot
 from itertools import izip
+import gc
+
 __author__ = 'Diego'
 
 
@@ -314,12 +316,31 @@ class GridView(vtk.vtkRenderWindow):
                 prop.SetColor(self.__color_function(id))
                 prop.SetOpacity(self.__opacity)
 
+    def clear_all(self):
+        for act in self.__picking_dict:
+            self.ren.RemoveViewProp(act)
+            self.balloon_w.RemoveBalloon(act)
+        self.__actors_dict={}
+        self.__picking_dict={}
+        self.__mapper_dict = {}
+        self.__poly_data_dict={}
+        self.__messages_dict = {}
+        self.__positions_dict = {}
+        self.__prop_dict={}
+        self.__decimation_dicts={}
+        self.__lod_indexed_dict={}
+        self.__captions_dict={}
+        self.__labels_dict={}
+        self.__selected_actor=None
 
+        self.iren.Render()
+        gc.collect()
     def set_balloon_messages(self, messages_dict):
         #for key, message in messages_dict.iteritems():
         #    self.balloon_w.AddBalloon(self.__actors_dict[key], message)
         for key,actor in self.__actors_dict.iteritems():
             self.balloon_w.AddBalloon(actor,messages_dict.get(key,key))
+
 
     def sort(self, sorted_ids, title=None,overlay=False):
         """actors will be displayed in the grid according to the sorted_ids list,
@@ -344,6 +365,8 @@ class GridView(vtk.vtkRenderWindow):
 
         len1=len(sorted_ids)
         n_row = math.floor(math.sqrt(len1 / row_proportion))
+        if n_row<=0:
+            n_row=1
         n_col = math.ceil(len1 / n_row)
 
         #positions_dict={}

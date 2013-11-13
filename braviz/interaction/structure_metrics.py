@@ -12,20 +12,19 @@ __author__ = 'Diego'
 def get_mult_struct_metric(reader,struct_names,code,metric='volume'):
     values=[]
     nfibers=[]
-    for struct in struct_names:
-        value=get_struct_metric(reader,struct,code,metric)
-        values.append(value)
-        if metric in ('lfibers','fa_fibers'):
-            #we need number of fibers to aggregate
-            n=get_struct_metric(reader,struct,code,'nfibers')
-            nfibers.append(n)
-    if metric in ('volume','area','nfibers'):
+    if metric in ('lfibers','fa_fibers','nfibers'):
+        #we need to get all the fibers
+        if metric == 'nfibers':
+            result=get_fibers_metric(reader, struct_names, code, 'number')
+        elif metric == 'lfibers':
+            result=get_fibers_metric(reader, struct_names, code, 'mean_length')
+        elif metric == 'fa_fibers':
+            result=get_fibers_metric(reader, struct_names, code, 'mean_fa')
+    elif metric in ('area','volume'):
+        for struct in struct_names:
+            value=get_struct_metric(reader,struct,code,metric)
+            values.append(value)
         result=np.sum(values)
-    elif metric in ('lfibers','fa_fibers'):
-        total=np.dot(values,nfibers)
-        total=np.sum(total)
-        total_fibs=np.sum(nfibers)
-        result=total/total_fibs
     else:
         raise Exception('Unknown metric')
     return result
@@ -62,7 +61,7 @@ def get_struct_metric(reader,struct_name,code,metric='volume'):
 def get_fibers_metric(reader, struct_name,code,metric='number'):
     #print "calculating for subject %s"%code
     n=0
-    if struct_name.startswith('Fibs:'):
+    if (type(struct_name)==str) and struct_name.startswith('Fibs:'):
         #print "we are dealing with special fibers"
         try:
             fibers = reader.get('fibers', code, name=struct_name[5:], color='fa')
@@ -71,7 +70,7 @@ def get_fibers_metric(reader, struct_name,code,metric='number'):
             return n
     else:
         try:
-            fibers=reader.get('fibers',code,waypoint=struct_name,color='fa')
+            fibers=reader.get('fibers',code,waypoint=struct_name,color='fa',operation='or')
         except Exception:
             n=float('nan')
             return n
