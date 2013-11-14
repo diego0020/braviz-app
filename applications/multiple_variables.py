@@ -820,7 +820,7 @@ class AsyncUpdataAll():
             new_data_vars = self.var_select.get_selected_variables()
         state_vars={
             'stage':0,
-            'previous_stage':0
+            'previous_stage':-1
         }
         self.var_select.disable_apply()
         self.var_select.set_progress(0)
@@ -866,6 +866,7 @@ class AsyncUpdataAll():
             generate_vtk()
             state_vars['stage'] = 2
 
+        self.var_select.set_progress(10)
         thread.start_new_thread(async_update,tuple())
         #async_update()
 
