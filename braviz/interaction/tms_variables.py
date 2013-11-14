@@ -1,13 +1,13 @@
 __author__ = 'Diego'
 
 long_messages_dict = {
-    'motor_brain': 'Tms tests',
+    'Motor Brain': 'Tms tests',
     'Excitability': 'Basic level = 100% - motor threshold',
     'Synchronization': 'Corticospinal efficiency, msec',
-    'balan': 'Balance between inhibition and facilitation mechanisms',
+    'Balanced Activity': 'Balance between inhibition and facilitation mechanisms',
     'Level of Inhibition': 'GABAa synapses = 100% - cond*100/test',
     'Level of Facilitation': 'Glutamate synapses = cond*100/test - 100%',
-    'coop': 'Integrity of corpus callosum = test of inhibition from the other hemisphere',
+    'Cooperation between hemispheres': 'Integrity of corpus callosum = test of inhibition from the other hemisphere',
     'Frequency': 'Frequency of observation of an inhibition triggered by the other hemisphere',
     'Transfer time': 'Time for the transfer of the inhibition triggered by the other hemisphere',
     'Duration': 'Duration of the inhibition triggered by the other hemisphere',

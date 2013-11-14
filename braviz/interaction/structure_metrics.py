@@ -11,7 +11,6 @@ __author__ = 'Diego'
 
 def get_mult_struct_metric(reader,struct_names,code,metric='volume'):
     values=[]
-    nfibers=[]
     if metric in ('lfibers','fa_fibers','nfibers'):
         #we need to get all the fibers
         if metric == 'nfibers':
@@ -23,8 +22,12 @@ def get_mult_struct_metric(reader,struct_names,code,metric='volume'):
     elif metric in ('area','volume'):
         for struct in struct_names:
             value=get_struct_metric(reader,struct,code,metric)
-            values.append(value)
-        result=np.sum(values)
+            if np.isfinite(value):
+                values.append(value)
+        if len(values)>0:
+            result=np.sum(values)
+        else:
+            result=float('nan')
     else:
         raise Exception('Unknown metric')
     return result
@@ -134,7 +137,8 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
             print "cancel flag received"
             state_variables['working'] = False
             return
-
+        if code=="600":
+            print "600"
         scalar = calc_function(reader,struct_name, code, metric)
         temp_struct_metrics_col.append(scalar)
         state_variables['number_calculated'] = len(temp_struct_metrics_col)

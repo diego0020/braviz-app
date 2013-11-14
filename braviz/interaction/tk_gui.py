@@ -199,7 +199,7 @@ class structureList(LabelFrame):
         cool_name=self.cool_names.get(name,'')
         return "%s : %s " %(name,cool_name)
 
-def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=[]):
+def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=[],tooltip_dict=None,tooltip_source={},default_message=''):
     for name,childs in sorted(hierarchy_dict.items(),key=lambda x:x[0]):
         tags2=tags[:]
         if len(childs)>0:
@@ -209,5 +209,7 @@ def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=[]):
         iid=':'.join((root,name))
         iid=iid.replace(' ','_')
         tree_view.insert(root, 'end', iid, text=name, tags=tags2)
+        if tooltip_dict is not None:
+            tooltip_dict[iid]=tooltip_source.get(name,default_message)
         if len(childs)>0:
-            hierarchy_dict_to_tree(tree_view,childs,iid,tags)
+            hierarchy_dict_to_tree(tree_view,childs,iid,tags,tooltip_dict,tooltip_source,tooltip_source.get(name,''))

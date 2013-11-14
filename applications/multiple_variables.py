@@ -4,9 +4,12 @@ from Tkinter import Frame as tkFrame
 import ttk
 from itertools import izip
 import os
-from functools import partial
 from collections import defaultdict,OrderedDict
 from tkFileDialog import askopenfile,asksaveasfile
+from collections import namedtuple
+from tkMessageBox import showerror,showinfo
+import json
+
 import numpy as np
 from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
@@ -21,11 +24,12 @@ from braviz.readAndFilter.link_with_rdf import get_braint_hierarchy
 from braviz.interaction.structure_metrics import cached_get_struct_metric_col
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy
 from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
+from braviz.interaction.tms_variables import long_messages_dict as tms_long_messages
 from braviz.utilities import get_leafs
 from braviz.visualization.grid_viewer import GridView
-from collections import namedtuple
-from tkMessageBox import showerror,showinfo
-import json
+from braviz.readAndFilter.link_with_rdf import get_free_surfer_pretty_names_dict
+import thread
+
 __author__ = 'Diego'
 
 
@@ -42,7 +46,8 @@ class VariableSelectFrame(tkFrame):
         super_tree_scroll.grid(row=0,column=1,sticky='sn')
         super_tree_frame.rowconfigure(0,weight=1)
         super_tree_frame.columnconfigure(0,weight=1)
-
+        self.__super_tree_tooltip=None
+        self.__super_tree_message_dict={}
         self.rowconfigure(0,weight=1)
         self.rowconfigure(5,weight=0)
 
@@ -62,6 +67,12 @@ class VariableSelectFrame(tkFrame):
 
         selected_variables_list=tk.Listbox(self,height=10,exportselection=0)
         selected_variables_list.grid(row=5,sticky='nsew',padx=2,pady=5)
+        def get_full_name(event=None):
+            y=event.y
+            index=selected_variables_list.nearest(y)
+            full_name=selected_variables_list.get(index)
+            return full_name
+        self.__selected_valriables_tooltip=ToolTip(selected_variables_list,msgFunc=get_full_name,delay=0.5,follow=1)
 
         bottom_buttons_frame=tk.Frame(self)
         bottom_buttons_frame.grid(row=6,sticky='ew',pady=5,padx=2)
@@ -99,11 +110,13 @@ class VariableSelectFrame(tkFrame):
 
     def __fill_super_tree(self):
         super_tree=self.__super_tree
+        message_dict=self.__super_tree_message_dict
         #TABLE
         table_file=os.path.join(self.__reader.getDataRoot(),'test_small.csv')
         table_headers=get_headers(table_file)
         table_dict=dict(((hdr,{}) for hdr in table_headers ))
         super_tree.insert('', tk.END, 'table', text='Table')
+        message_dict['table']="From big table file"
         hierarchy_dict_to_tree(super_tree, table_dict, 'table', tags=['table'])
         #BRAINT
         try:
@@ -116,13 +129,27 @@ class VariableSelectFrame(tkFrame):
         #TMS
 
         super_tree.insert('', tk.END, 'tms', text='TMS')
-        hierarchy_dict_to_tree(super_tree, tms_hierarchy, 'tms', tags=['tms'])
+        message_dict['tms']="TMS-Tests"
+        hierarchy_dict_to_tree(super_tree, tms_hierarchy, 'tms', tags=['tms'],
+                               tooltip_dict=message_dict, tooltip_source=tms_long_messages,default_message="TMS-Tests")
 
         #ANATOMY
 
         super_tree.insert('', tk.END, 'structural', text='Structural')
         anatomy_hierarchy = get_structural_hierarchy(self.__reader, '144')
-        hierarchy_dict_to_tree(super_tree, anatomy_hierarchy, 'structural', tags=['struct'])
+        free_surfer_pretty_names=get_free_surfer_pretty_names_dict()
+        hierarchy_dict_to_tree(super_tree, anatomy_hierarchy, 'structural', tags=['struct'],
+                               tooltip_dict=message_dict,tooltip_source=free_surfer_pretty_names)
+
+
+        def get_super_tree_tooltip(event=None):
+            coord = event.y
+            element = super_tree.identify_row(coord)
+            if len(element) == 0:
+                return ''
+            else:
+                return self.__super_tree_message_dict.get(element,"missing")
+        self.__super_tree_tooltip = ToolTip(super_tree,msgFunc=get_super_tree_tooltip,follow=1,delay=0.5)
     def __add_observers(self):
         add_to_selection_button=self.__add_to_selection_button
         add_to_selection_button['state'] = 'disabled'
@@ -148,10 +175,10 @@ class VariableSelectFrame(tkFrame):
                     else:
                         metrics = valid_metrics['fibers']
                 elif 'parent' in selection_tags:
-                    if selection[0] in ('structural:Left_Hemisphere','structural:Right_Hemisphere'):
-                        metric_select_box['state'] = 'disabled'
-                        add_to_selection_button['state'] = 'disabled'
-                        return
+                    #if selection[0] in ('structural:Left_Hemisphere','structural:Right_Hemisphere'):
+                    #    metric_select_box['state'] = 'disabled'
+                    #    add_to_selection_button['state'] = 'disabled'
+                    #    return
                     metrics = valid_metrics['multiple']
                 else:
                     metrics = valid_metrics['leaf_struct']
@@ -214,13 +241,16 @@ class VariableSelectFrame(tkFrame):
         self.__apply_selection_button['command']=callback2
     def set_progress(self,prog):
         self.__progress.set(prog)
-
+    def disable_apply(self):
+        self.__apply_selection_button['state']='disabled'
+    def enable_apply(self):
+        self.__apply_selection_button['state'] = 'normal'
 
 class VtkWidget(tkFrame):
-    def __init__(self,reader,parent,**kwargs):
+    def __init__(self,reader,parent,max_structs=30,**kwargs):
         self.__default_struct_list= ['Brain-Stem','CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior',
                                      'CC_Posterior','ctx-lh-paracentral','ctx-lh-precuneus','ctx-lh-superiorfrontal']
-
+        self.__max_structs=max_structs
         self.__groups_dict={}
         self.__groups_list_list=[]
         self.__codes=[]
@@ -258,6 +288,9 @@ class VtkWidget(tkFrame):
             struct_list=self.__default_struct_list
             #self.__grid_viewer.set_orientation((3.060316756674142, -94.78573096609321, 97.86560994941594))
             self.__grid_viewer.set_orientation((0, -90, 90))
+        if len(struct_list)  >= self.__max_structs:
+            #get the first 10, from fibers and if left from structs
+            struct_list=sorted(struct_list)[:self.__max_structs]
         for cod in self.__codes:
             model_list=[]
             for struct in struct_list:
@@ -381,6 +414,8 @@ class GraphFrame(tkFrame):
 
     def draw_bar_chart(self,data):
         y_label, data_dict = data.popitem()
+        #put it back in, incase it is reused
+        data[y_label]=data_dict
         good_data = dict(( (k, v) for k, v in data_dict.iteritems() if np.isfinite(v)))
         term_data = [v for k, v in good_data.iteritems() if self.__group_dict[k] == '3']
         term_mean = np.mean(term_data)
@@ -766,6 +801,47 @@ class SaveAndRestore():
             read_file.close()
         return variables_dict
 
+class AsyncUpdataAll():
+    def __init__(self,var_select,fetch,plots,vtk_view):
+        self.var_select=var_select
+        self.fetcher=fetch
+        self.plots=plots
+        self.vtk_view=vtk_view
+        self.fetched_data=None
+
+    def update_all(self,new_data_vars):
+        if new_data_vars is None:
+            new_data_vars = self.var_select.get_selected_variables()
+        state_vars={
+            'stage':0,
+        }
+
+        def poll_progress():
+            print "polling"
+
+        def fetch_data():
+            print "getting variables"
+            print "================="
+            self.fetched_data=self.fetcher.get_data(new_data_vars)
+
+        def generate_vtk():
+            print "generating vtk graphics"
+            print "================="
+            new_data, structures, fibers = self.fetched_data
+            self.vtk_view.update_structures(structures, fibers)
+
+        def generate_plots():
+            print "generating plot"
+            print "================="
+            new_data, _,_ = self.fetched_data
+            self.plots.update_representation(new_data)
+            self.vtk_view.set_messages(self.plots.get_messages_dict())
+
+        fetch_data()
+        generate_vtk()
+        generate_plots()
+        print "done"
+        print "================="
 
 
 if __name__=="__main__":
@@ -828,29 +904,15 @@ if __name__=="__main__":
     vtk_frame.set_selection_handler(vtk_event_listener)
     #variable_select_frame.set_apply_callback(graph_frame.update_representation)
 
-    def update_all(new_data_vars=None):
-        if new_data_vars is None:
-            new_data_vars=variable_select_frame.get_selected_variables()
-        print "getting variables"
-        print "================="
-        new_data,structures,fibers=fetcher.get_data(new_data_vars)
-        print "generating plot"
-        print "================="
-        graph_frame.update_representation(new_data)
-        print "generating vtk graphics"
-        print "================="
-        vtk_frame.update_structures(structures,fibers)
-        vtk_frame.set_messages(graph_frame.get_messages_dict())
-        print "done"
-        print "================="
+    updater=AsyncUpdataAll(variable_select_frame,fetcher,graph_frame,vtk_frame)
     #variable_select_frame.set_apply_callback(fetcher.get_data)
-    variable_select_frame.set_apply_callback(update_all)
+    variable_select_frame.set_apply_callback(updater.update_all)
 
-    aux_button=tk.Button(variable_select_frame,text="aux")
-    aux_button.grid(sticky='ew')
-    def print_orientation(event=None):
-        print vtk_frame.grid_view.clear_all()
-    aux_button['command']=print_orientation
+    #aux_button=tk.Button(variable_select_frame,text="aux")
+    #aux_button.grid(sticky='ew')
+    #def print_orientation(event=None):
+    #    print vtk_frame.grid_view.clear_all()
+    #aux_button['command']=print_orientation
 
     save_and_restore=SaveAndRestore(application_name=os.path.basename(__file__),
                                     default_dir=os.path.join(os.path.dirname(__file__),"saved_scenarios"),
@@ -869,7 +931,7 @@ if __name__=="__main__":
         fields=save_and_restore.load()
         variable_select_frame.set_selected_variables(fields["selected_variables"])
         vtk_frame.set_orientation(fields["orientation"])
-        update_all()
+        updater.update_all()
         vtk_frame.set_selection(fields["Selected_subject"])
         graph_frame.set_highlight(fields["Selected_subject"])
     file_menu.add_command(label="Open", command=load_state)
