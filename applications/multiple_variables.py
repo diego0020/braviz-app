@@ -262,7 +262,7 @@ class VtkWidget(tkFrame):
             model_list=[]
             for struct in struct_list:
                 try:
-                    print "loading model %s for subject %s" % (struct, cod)
+                    #print "loading model %s for subject %s" % (struct, cod)
                     model=self.get_structure(cod,struct)
                 except Exception:
                     print "couldn't load model %s for subject %s"%(struct,cod)
@@ -271,7 +271,7 @@ class VtkWidget(tkFrame):
                         model_list.append(model)
 
             try:
-                print "loading fibers %s for subject %s" % (fibers_list, cod)
+                #print "loading fibers %s for subject %s" % (fibers_list, cod)
                 fibers=self.get_fibers(cod,fibers_list)
             except Exception:
                 print "couldn't load fibers %s for subject %s" % (fibers_list, cod)
@@ -301,8 +301,11 @@ class VtkWidget(tkFrame):
             return model
 
     def get_fibers(self,code,waypoints):
-        fibs=self.__reader.get('fibers',code,waypoint=waypoints,operation='or')
-        return fibs
+        if len(waypoints)>0:
+            fibs=self.__reader.get('fibers',code,waypoint=waypoints,operation='or')
+            return fibs
+        else:
+            return None
     def set_selection(self,subj_id):
         self.__grid_viewer.select_name(subj_id)
 

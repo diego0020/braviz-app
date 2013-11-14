@@ -116,13 +116,15 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
     if force_reload is not True:
         try:
             with open(cache_file_name, 'rb') as cachef:
-                struct_metrics_col = cPickle.Unpickler(cachef).load()
+                struct_metrics_col_and_codes = cPickle.Unpickler(cachef).load()
         except IOError:
             pass
         else:
-            state_variables['working'] = False
-            state_variables['output'] = struct_metrics_col
-            state_variables['number_calculated'] = len(struct_metrics_col)
+            cache_codes,struct_metrics_col,  = zip(*struct_metrics_col_and_codes)
+            if list(cache_codes)==list(codes):
+                state_variables['working'] = False
+                state_variables['output'] = struct_metrics_col
+                state_variables['number_calculated'] = len(struct_metrics_col)
             return struct_metrics_col
     print "Calculating %s for structure %s" % (metric, struct_name)
     temp_struct_metrics_col = []
@@ -138,7 +140,7 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
         state_variables['number_calculated'] = len(temp_struct_metrics_col)
     try:
         with open(cache_file_name, 'wb') as cachef:
-            cPickle.Pickler(cachef, 2).dump(temp_struct_metrics_col)
+            cPickle.Pickler(cachef, 2).dump(zip(codes,temp_struct_metrics_col))
     except IOError:
         print "cache write failed"
         print "file was %s" % cache_file_name

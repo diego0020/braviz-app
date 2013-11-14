@@ -26,7 +26,7 @@ picker.SetTolerance(0.005)
 ren=vtk.vtkRenderer()
 renWin=vtk.vtkRenderWindow()
 renWin.AddRenderer(ren)
-
+renWin.SetMultiSamples(2)
 config=braviz.interaction.get_config(__file__)
 background= config.get_background()
 ren.SetBackground(background)
