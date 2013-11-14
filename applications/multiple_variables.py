@@ -267,7 +267,7 @@ class VtkWidget(tkFrame):
         self.__grid_viewer.set_interactor(iact)
         self.grid_view=self.__grid_viewer
         self.__grid_viewer.set_orientation((0, -90, 90))
-
+        self.__models_dict=None
 
     def set_groups_dict(self,groups_dict,group_colors):
         self.__groups_dict=groups_dict
@@ -281,7 +281,7 @@ class VtkWidget(tkFrame):
         def color_function(subj_id):
             return group_colors[groups_dict[subj_id]]
         self.__color_fun=color_function
-    def update_structures(self,struct_list,fibers_list):
+    def update_structures(self,struct_list,fibers_list,async=False):
         models_dict={}
         self.grid_view.clear_all()
         if len(struct_list)+len(fibers_list)==0:
@@ -313,6 +313,12 @@ class VtkWidget(tkFrame):
                     model_list.append(fibers)
             if len(model_list)>0:
                 models_dict[cod]=model_list
+
+        self.__models_dict = models_dict
+        if async is False:
+            self.render()
+    def render(self):
+        models_dict = self.__models_dict
         self.__grid_viewer.set_data(models_dict)
         self.__grid_viewer.set_color_function(self.__color_fun,opacity=0.05)
         group_list = self.__groups_list_list[:]
@@ -814,21 +820,21 @@ class AsyncUpdataAll():
             new_data_vars = self.var_select.get_selected_variables()
         state_vars={
             'stage':0,
+            'previous_stage':0
         }
-
-        def poll_progress():
-            print "polling"
-
+        self.var_select.disable_apply()
+        self.var_select.set_progress(0)
         def fetch_data():
             print "getting variables"
             print "================="
             self.fetched_data=self.fetcher.get_data(new_data_vars)
 
+
         def generate_vtk():
             print "generating vtk graphics"
             print "================="
             new_data, structures, fibers = self.fetched_data
-            self.vtk_view.update_structures(structures, fibers)
+            self.vtk_view.update_structures(structures, fibers,async=True)
 
         def generate_plots():
             print "generating plot"
@@ -837,11 +843,31 @@ class AsyncUpdataAll():
             self.plots.update_representation(new_data)
             self.vtk_view.set_messages(self.plots.get_messages_dict())
 
-        fetch_data()
-        generate_vtk()
-        generate_plots()
-        print "done"
-        print "================="
+        def poll_progress(event=None):
+            #print "polling: stage=%d"%state_vars['stage']
+            if state_vars['stage']==3:
+                self.vtk_view.render()
+                generate_plots()
+                print "done"
+                print "================="
+                self.var_select.set_progress(100)
+                self.var_select.enable_apply()
+                return
+            elif state_vars['stage']==1:
+                self.var_select.set_progress(50)
+            elif state_vars['stage']==2:
+                self.var_select.set_progress(90)
+                state_vars['stage'] = 3
+            self.var_select.after(20, poll_progress)
+        self.var_select.after(20, poll_progress)
+        def async_update():
+            fetch_data()
+            state_vars['stage'] = 1
+            generate_vtk()
+            state_vars['stage'] = 2
+
+        thread.start_new_thread(async_update,tuple())
+        #async_update()
 
 
 if __name__=="__main__":
