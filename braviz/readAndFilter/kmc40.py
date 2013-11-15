@@ -366,7 +366,7 @@ The path containing this structure must be set."""
             fib_writer.SetFileTypeToBinary()
             try:
                 fib_writer.Update()
-                if fib_writer.GetErrorCode != 0:
+                if fib_writer.GetErrorCode() != 0:
                     print 'cache write failed'
             except Exception:
                 print 'cache write failed'

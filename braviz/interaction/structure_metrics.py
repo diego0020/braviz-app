@@ -61,9 +61,11 @@ def get_struct_metric(reader,struct_name,code,metric='volume'):
         raise Exception("unknown metric %s"%metric)
 
 
-def get_fibers_metric(reader, struct_name,code,metric='number'):
+def get_fibers_metric(reader, struct_name,code,metric='number',):
     #print "calculating for subject %s"%code
     n=0
+    if hasattr(struct_name,"__iter__") and len(struct_name)==1:
+        struct_name=iter(struct_name).next()
     if (type(struct_name)==str) and struct_name.startswith('Fibs:'):
         #print "we are dealing with special fibers"
         try:
@@ -182,6 +184,9 @@ def solve_laterality(laterality,names):
         elif name.startswith('wm-'):
             h=name[3]
             new_name = ''.join((name[:3], get_right_or_left_hemisphere(h, laterality), name[4:]))
+        elif name[-2:] in ('_d','_n'):
+            h=get_right_or_left_hemisphere(name[-1],laterality)
+            new_name=name[:-1]+h
         new_names.append(new_name)
 
     return new_names

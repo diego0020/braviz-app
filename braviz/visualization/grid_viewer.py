@@ -207,6 +207,7 @@ class GridView(vtk.vtkRenderWindow):
         if self.__selected_actor is not None:
             prop = self.__prop_dict[self.__selected_actor]
             prop.SetOpacity(self.__opacity)
+            prop.SetLineWidth(1.0)
             if self.__use__lod is True:
                 lod_idxs = self.__lod_indexed_dict[self.__selected_actor]
                 self.__selected_actor.EnableLOD(lod_idxs[1])
@@ -221,6 +222,7 @@ class GridView(vtk.vtkRenderWindow):
         self.__selected_actor = actor
         prop=self.__prop_dict[self.__selected_actor]
         prop.SetOpacity(1.0)
+        prop.SetLineWidth(2.0)
         if self.__use__lod is True:
             lod_idxs = self.__lod_indexed_dict[self.__selected_actor]
             self.__selected_actor.DisableLOD(lod_idxs[1])
@@ -236,6 +238,7 @@ class GridView(vtk.vtkRenderWindow):
         if self.__selected_actor is not None:
             prop = self.__prop_dict[self.__selected_actor]
             prop.SetOpacity(self.__opacity)
+            prop.SetLineWidth(1.0)
             if self.__use__lod is True:
                 lod_idxs = self.__lod_indexed_dict[self.__selected_actor]
                 self.__selected_actor.EnableLOD(lod_idxs[1])

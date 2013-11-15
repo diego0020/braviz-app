@@ -4,7 +4,48 @@ __author__ = 'Diego'
 # transformation of solution
 # Try not to import modules into the main namespace in orer for indexing to work
 
-def cortico_spinal_l(reader,subject,color):
+def __cached_named_tract(name_tract_func):
+    import os
+    import functools
+    import vtk
+    @functools.wraps(name_tract_func)
+    def cached_func(reader,subject,color):
+        cache_file='named_fibs_%s_%s.vtk'%(name_tract_func.__name__,subject)
+        cache_full_path=os.path.join(reader.getDataRoot(),'pickles',cache_file)
+        if os.path.isfile(cache_full_path):
+            fib_reader=vtk.vtkPolyDataReader()
+            fib_reader.SetFileName(cache_full_path)
+            try:
+                fib_reader.Update()
+            except Exception:
+                print "problems reading %s" % cache_full_path
+                raise
+            else:
+                out_fib = fib_reader.GetOutput()
+                fib_reader.CloseVTKFile()
+                return out_fib,name_tract_func(None,None,None,get_out_space=True)
+
+        fibers,out_space=name_tract_func(reader,subject,color)
+        fib_writer = vtk.vtkPolyDataWriter()
+        fib_writer.SetFileName(cache_full_path)
+        fib_writer.SetInputData(fibers)
+        fib_writer.SetFileTypeToBinary()
+        try:
+            fib_writer.Update()
+            if fib_writer.GetErrorCode() != 0:
+                print 'cache write failed'
+        except Exception:
+            print 'cache write failed'
+        finally:
+            fib_writer.CloseVTKFile()
+        return fibers,out_space
+    return cached_func
+
+
+@__cached_named_tract
+def cortico_spinal_l(reader,subject,color,get_out_space=False):
+    if get_out_space is True:
+        return 'dartel'
     import vtk
     try:
         tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'],color=color)
@@ -35,7 +76,10 @@ def cortico_spinal_l(reader,subject,color):
     return tracts3,'dartel'
 
 
-def cortico_spinal_r(reader,subject,color):
+@__cached_named_tract
+def cortico_spinal_r(reader,subject,color,get_out_space=False):
+    if get_out_space is True:
+        return 'dartel'
     import vtk
     from braviz.readAndFilter import extract_poly_data_subset
     try:
@@ -68,7 +112,11 @@ def cortico_spinal_r(reader,subject,color):
     #tracts3 = reader.transformPointsToSpace(tracts3, 'dartel', subject, inverse=True)
     return tracts3,'dartel'
 
-def corpus_callosum(reader,subject,color):
+def corpus_callosum(reader,subject,color,get_out_space=False):
+    if get_out_space is True:
+        return 'world'
     return reader.get('fibers',subject,operation = 'or',
                 waypoint = ['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior','CC_Mid_Posterior', 'CC_Posterior'],
                 color=color)   ,  'world'
+
+

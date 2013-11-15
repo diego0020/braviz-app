@@ -34,6 +34,10 @@ def get_structural_hierarchy(reader,subj):
     named_fibers=reader.get('fibers',subj,index=True)
     for fib in named_fibers:
         hierarchy_dict['Fibers'][fib]
+        if fib.endswith('_r'):
+            #dominant and non dominant
+            hierarchy_dict['Fibers'][fib[:-1]+'d']
+            hierarchy_dict['Fibers'][fib[:-1] + 'n']
     return hierarchy_dict
 
 

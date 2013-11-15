@@ -594,7 +594,7 @@ class GraphFrame(tkFrame):
             for subj,value in var_dict.iteritems():
                 subj_group=self.__group_dict[subj]
                 subj_data.setdefault(subj,["%s ( group %s )"%(subj,subj_group)]).append(
-                    "%s : %.2f (%.2f)"%(var,value,group_stats[subj_group][0]))
+                    "%s : %.2f (%.2f)"%(var,value,group_stats.get(subj_group,(0,))[0]))
         for subj,data in subj_data.iteritems():
             messages[subj]="\n".join(data)
         self.__messages=messages
@@ -763,7 +763,8 @@ class DataFetcher():
         result_dict=dict(izip(codes,data_col))
         struct_tuple=namedtuple('struct_descriptor',['with_fibers','names'])
         if metric.endswith('fibers'):
-            fibers=tuple(names)
+            if len(names)>0 or not iter(names).next().startswith('Fibs:'):
+                fibers=tuple(names)
         else:
             fibers=None
         return result_dict,names,fibers
