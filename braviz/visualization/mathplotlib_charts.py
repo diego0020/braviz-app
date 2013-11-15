@@ -225,9 +225,12 @@ class BarPlot():
             patches=a.bar(bar_positions,self.bar_heights, color=colors, align='center',yerr=self.yerror)
             self.pos2name_dict=dict(izip(bar_positions,self.bar_names))
             if self.highlight is not None:
-                highlighted_rect = patches[self.highlight]
-                highlighted_rect.set_linewidth(4)
-                highlighted_rect.set_edgecolor(highlight_color)
+                try:
+                    highlighted_rect = patches[self.highlight]
+                    highlighted_rect.set_linewidth(4)
+                    highlighted_rect.set_edgecolor(highlight_color)
+                except IndexError:
+                    pass
         else:
             edge_colors = ['#000000'] * len(self.bar_heights)
             sizes=[40]*len(self.bar_heights)

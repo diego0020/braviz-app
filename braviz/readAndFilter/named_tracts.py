@@ -10,7 +10,7 @@ def __cached_named_tract(name_tract_func):
     import vtk
     @functools.wraps(name_tract_func)
     def cached_func(reader,subject,color):
-        cache_file='named_fibs_%s_%s.vtk'%(name_tract_func.__name__,subject)
+        cache_file='named_fibs_%s_%s_%s.vtk'%(name_tract_func.__name__,subject,color)
         cache_full_path=os.path.join(reader.getDataRoot(),'pickles',cache_file)
         if os.path.isfile(cache_full_path):
             fib_reader=vtk.vtkPolyDataReader()
@@ -52,7 +52,7 @@ def cortico_spinal_l(reader,subject,color,get_out_space=False):
     except Exception:
         print "Tracts not found for subject %s"%subject
         raise
-        return None
+
 
     #first cut
     implicit_plane = vtk.vtkPlane()
@@ -86,7 +86,7 @@ def cortico_spinal_r(reader,subject,color,get_out_space=False):
         tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-rh-precentral', 'Brain-Stem'],color=color)
     except Exception:
         print "Tracts not found for subject %s" % subject
-        return None
+        raise Exception("Tracts not found for subject %s" % subject)
 
 #first cut
     implicit_plane = vtk.vtkPlane()

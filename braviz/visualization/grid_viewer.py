@@ -285,7 +285,10 @@ class GridView(vtk.vtkRenderWindow):
             mapper.SetInputData(polydata2)
             if not self.__actors_dict.has_key(id):
                 #actor = vtk.vtkActor()
-                actor=vtk.vtkLODProp3D()
+                if self.__use__lod is True:
+                    actor=vtk.vtkLODProp3D()
+                else:
+                    actor = vtk.vtkActor()
 
                 self.__actors_dict[id] = actor
                 self.ren.AddActor(actor)
@@ -296,8 +299,12 @@ class GridView(vtk.vtkRenderWindow):
             actor = self.__actors_dict[id]
             #actor.SetMapper(mapper)
             prop=vtk.vtkProperty()
-            idx0=actor.AddLOD(mapper,prop,0)
-            self.__lod_indexed_dict[actor]=[idx0]
+            if self.__use__lod is True:
+                idx0=actor.AddLOD(mapper,prop,0)
+                self.__lod_indexed_dict[actor]=[idx0]
+            else:
+                actor.SetMapper(mapper)
+                actor.SetProperty(prop)
             if self.__use__lod is True:
                 tringle_filter,decimation_filter,decimation_mapper=self.__decimation_dicts.setdefault(id,
                                             (vtk.vtkTriangleFilter(),vtk.vtkDecimatePro(),vtk.vtkPolyDataMapper()))

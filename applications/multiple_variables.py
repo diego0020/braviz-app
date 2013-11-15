@@ -310,11 +310,12 @@ class VtkWidget(tkFrame):
             model_list=[]
             struct_list2=solve_laterality(self.__laterality.get(cod,'unknwon'),struct_list)
             for struct in struct_list2:
+                #print "loading model %s for subject %s" % (struct, cod)
                 try:
-                    #print "loading model %s for subject %s" % (struct, cod)
                     model=self.get_structure(cod,struct)
-                except Exception:
-                    print "couldn't load model %s for subject %s"%(struct,cod)
+                except Exception as e:
+                    print "**couldn't load model %s for subject %s"%(struct,cod)
+                    print e
                 else:
                     if model is not None:
                         model_list.append(model)
@@ -445,19 +446,25 @@ class GraphFrame(tkFrame):
         y_label, data_dict = data.popitem()
         #put it back in, incase it is reused
         data[y_label]=data_dict
-        good_data = dict(( (k, v) for k, v in data_dict.iteritems() if np.isfinite(v)))
-        term_data = [v for k, v in good_data.iteritems() if self.__group_dict[k] == '3']
-        term_mean = np.mean(term_data)
-        term_std = np.std(term_data)
+
         if self.__bar_chart is None:
             bar_plot = BarPlot(tight=True)
             self.__bar_chart=bar_plot
         else:
             bar_plot = self.__bar_chart
+
         bar_widget = bar_plot.get_widget(self, height=self.__height, width=self.__width)
         bar_widget.grid(row=0, column=0, sticky='NSEW')
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
+        self.__widget = bar_widget
+        good_data = dict(( (k, v) for k, v in data_dict.iteritems() if np.isfinite(v)))
+        if len(good_data)==0:
+            print "Something went wrong... there are not real values"
+            return
+        term_data = [v for k, v in good_data.iteritems() if self.__group_dict[k] == '3']
+        term_mean = np.mean(term_data)
+        term_std = np.std(term_data)
         good_min = np.min(good_data.values())
         good_max = np.max(good_data.values())
         good_extent=good_max-good_min
@@ -478,7 +485,7 @@ class GraphFrame(tkFrame):
 
         bar_plot.set_back_bars(back_bars=zip(means, ns), back_error=stds,back_codes=("1","2","3"))
         bar_plot.paint_bar_chart()
-        self.__widget=bar_widget
+
 
     def draw_scatter(self,data_dict):
         good_data_dict=self.filter_dict(data_dict)
@@ -762,8 +769,7 @@ class DataFetcher():
                                               laterality_dict=self.__laterality,state_variables=state_vars)
         result_dict=dict(izip(codes,data_col))
         struct_tuple=namedtuple('struct_descriptor',['with_fibers','names'])
-        if metric.endswith('fibers'):
-            if len(names)>0 or not iter(names).next().startswith('Fibs:'):
+        if metric.endswith('fibers') and (len(names)>1 or not iter(names).next().startswith('Fibs:')):
                 fibers=tuple(names)
         else:
             fibers=None
@@ -956,6 +962,7 @@ class AsyncUpdataAll():
                 internal_vars['stage'] = 2
             except Exception as e:
                 print e
+                raise e
                 internal_vars['stage'] = -1
             finally:
                 return None
@@ -965,6 +972,7 @@ class AsyncUpdataAll():
         self.vtk_view.clear_memory()
         internal_vars['plots_rendered'] = 0
         thread_id=thread.start_new_thread(async_update,tuple())
+        #async_update()
         self.var_select.after(20, poll_progress)
         #async_update()
 
