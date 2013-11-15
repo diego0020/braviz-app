@@ -346,12 +346,16 @@ class GridView(vtk.vtkRenderWindow):
         """actors will be displayed in the grid according to the sorted_ids list,
         actors not in list will become invisible, if overlay is true then sorted ids should containg group of ids"""
 
+        if len(self.__picking_dict) == 0:
+            return
+
         for ac in self.__picking_dict:
             ac.SetVisibility(0)
 
         def get_max_diagonal(actor):
             Xmin, Xmax, Ymin, Ymax, Zmin, Zmax = actor.GetBounds()
             return math.sqrt((Xmax - Xmin) ** 2 + (Ymax - Ymin) ** 2 + (Zmax - Zmin) ** 2)
+
 
         self.max_space = max([get_max_diagonal(actor) for actor in self.__picking_dict])
         self.max_space *= 0.90

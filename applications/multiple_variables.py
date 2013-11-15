@@ -9,6 +9,8 @@ from tkFileDialog import askopenfile,asksaveasfile
 from collections import namedtuple
 from tkMessageBox import showerror,showinfo
 import json
+import thread
+import threading
 
 import numpy as np
 from vtk.tk.vtkTkRenderWindowInteractor import \
@@ -28,7 +30,7 @@ from braviz.interaction.tms_variables import long_messages_dict as tms_long_mess
 from braviz.utilities import get_leafs
 from braviz.visualization.grid_viewer import GridView
 from braviz.readAndFilter.link_with_rdf import get_free_surfer_pretty_names_dict
-import thread
+from braviz.interaction.structure_metrics import solve_laterality
 
 __author__ = 'Diego'
 
@@ -246,6 +248,7 @@ class VariableSelectFrame(tkFrame):
     def enable_apply(self):
         self.__apply_selection_button['state'] = 'normal'
 
+
 class VtkWidget(tkFrame):
     def __init__(self,reader,parent,max_structs=30,**kwargs):
         self.__default_struct_list= ['Brain-Stem','CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior',
@@ -268,6 +271,10 @@ class VtkWidget(tkFrame):
         self.grid_view=self.__grid_viewer
         self.__grid_viewer.set_orientation((0, -90, 90))
         self.__models_dict=None
+        self.__laterality={}
+
+    def set_laterality_dict(self,lat_dict):
+        self.__laterality=lat_dict
 
     def set_groups_dict(self,groups_dict,group_colors):
         self.__groups_dict=groups_dict
@@ -281,7 +288,12 @@ class VtkWidget(tkFrame):
         def color_function(subj_id):
             return group_colors[groups_dict[subj_id]]
         self.__color_fun=color_function
-    def update_structures(self,struct_list,fibers_list,async=False):
+
+    def clear_memory(self):
+        self.__models_dict={}
+        self.grid_view.clear_all()
+
+    def update_structures(self,struct_list,fibers_list,async=False,state_vars={}):
         models_dict={}
         self.grid_view.clear_all()
         if len(struct_list)+len(fibers_list)==0:
@@ -291,9 +303,13 @@ class VtkWidget(tkFrame):
         if len(struct_list)  >= self.__max_structs:
             #get the first 10, from fibers and if left from structs
             struct_list=sorted(struct_list)[:self.__max_structs]
-        for cod in self.__codes:
+        state_vars['number_requested']=len(self.__codes)
+        state_vars['number_loaded']=0
+        for i,cod in enumerate(self.__codes):
+            state_vars['number_loaded'] = i
             model_list=[]
-            for struct in struct_list:
+            struct_list2=solve_laterality(self.__laterality.get(cod,'unknwon'),struct_list)
+            for struct in struct_list2:
                 try:
                     #print "loading model %s for subject %s" % (struct, cod)
                     model=self.get_structure(cod,struct)
@@ -313,10 +329,11 @@ class VtkWidget(tkFrame):
                     model_list.append(fibers)
             if len(model_list)>0:
                 models_dict[cod]=model_list
-
+        state_vars['number_loaded'] = len(self.__codes)
         self.__models_dict = models_dict
         if async is False:
             self.render()
+
     def render(self):
         models_dict = self.__models_dict
         self.__grid_viewer.set_data(models_dict)
@@ -345,6 +362,7 @@ class VtkWidget(tkFrame):
             return fibs
         else:
             return None
+
     def set_selection(self,subj_id):
         self.__grid_viewer.select_name(subj_id)
 
@@ -354,12 +372,17 @@ class VtkWidget(tkFrame):
             subj_id=self.__grid_viewer.get_selection()
             function("actor_selected_event",subj_id)
         self.__grid_viewer.AddObserver(self.__grid_viewer.actor_selected_event,internal_observer)
+
     def get_orientation(self):
         return self.grid_view.get_orientation()
+
     def set_orientation(self,orintation):
         self.grid_view.set_orientation(orintation)
+
     def get_selected_id(self):
         return self.grid_view.get_selection()
+
+
 class GraphFrame(tkFrame):
     def __init__(self,ubica_dict,parent,**kwargs):
         tkFrame.__init__(self,parent,**kwargs)
@@ -611,17 +634,22 @@ class GraphFrame(tkFrame):
             self.__active_plot.set_higlight_index(idx)
         self.__active_plot.paint()
 
+
 class DataFetcher():
     def __init__(self,reader,codes=None):
         self.__reader=reader
         self.__codes=codes
         self.__struct_hierarchy = get_structural_hierarchy(self.__reader,'144')
+        self.__laterality=None
+        self.__tms_file=os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
 
-    def get_data(self,data_variables):
+    def get_data(self,data_variables,state_dict={}):
         #decode
         data_dict=OrderedDict()
         structures=set()
         fibers_set=set()
+        state_dict['len']=len(data_variables)
+        state_dict['done']=0
         for col in data_variables:
             #print col
             if col.startswith('braint'):
@@ -631,17 +659,19 @@ class DataFetcher():
             elif col.startswith('table') :
                 out_data = self.get_matrix_data_col(col)
             else:
-                out_data, structural_structs,fibers = self.get_structural_data_col(col)
+                out_data, structural_structs,fibers = self.get_structural_data_col(col,state_dict)
                 structures.update(structural_structs)
                 if fibers is not None:
                     fibers_set.update(fibers)
             data_dict[col] = out_data
+            state_dict['number_calculated'] = 0
+            state_dict['done'] +=1
 
         return data_dict,structures,fibers_set
 
     def get_tms_data_col(self,col):
 
-        tms_csv_file=os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
+        tms_csv_file=os.path.join(self.__reader.getDataRoot(), self.__tms_file)
         tokens=col.split(':')
         hemisphere=tokens[-1]
         if hemisphere=='Dominant':
@@ -670,12 +700,28 @@ class DataFetcher():
 
     def get_ubica_dict(self):
 
-        tms_csv_file = os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
+        tms_csv_file = os.path.join(self.__reader.getDataRoot(), self.__tms_file)
         codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
         ubica_col = get_column(tms_csv_file, 'UBICA', numeric=False)
         return dict(izip(codes_col,ubica_col))
 
-    def get_structural_data_col(self,col):
+    def get_later_dict(self):
+        if self.__laterality is not None:
+            return self.__laterality
+        tms_csv_file = os.path.join(self.__reader.getDataRoot(), self.__tms_file)
+        codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
+        ubica_col = get_column(tms_csv_file, 'LATER', numeric=False)
+        #1: Right Handed
+        def words_laterality(x):
+            if x=="1":
+                return "r"
+            elif x=="2":
+                return "l"
+            else:
+                return "u"
+        return dict(izip(codes_col,map(words_laterality,ubica_col)))
+
+    def get_structural_data_col(self,col,state_vars={}):
 
         #decode
         metrics_dict={
@@ -709,7 +755,11 @@ class DataFetcher():
         names=set(names)
         codes = self.get_codes()
         #data_col=map(metric_func,codes)
-        data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric,force_reload=False)
+        if self.__laterality is None:
+            self.__laterality=self.get_later_dict()
+
+        data_col=cached_get_struct_metric_col(self.__reader,codes,names,metric,force_reload=False,
+                                              laterality_dict=self.__laterality,state_variables=state_vars)
         result_dict=dict(izip(codes,data_col))
         struct_tuple=namedtuple('struct_descriptor',['with_fibers','names'])
         if metric.endswith('fibers'):
@@ -727,8 +777,6 @@ class DataFetcher():
         data_dict_1=dict(izip(codes_col,data_col))
         data_dict_2=dict(( (cd,data_dict_1.get(cd,float('nan'))) for cd in self.get_codes()))
         return data_dict_2
-
-
 
     @staticmethod
     def __reconstruct_struct_name(tokens):
@@ -758,14 +806,21 @@ class DataFetcher():
                 pname = tokens[-2]
             if structure_type[0] == 'L':
                 h = 'lh'
-            else:
+            elif structure_type[0] == 'R':
                 h = 'rh'
-
+            elif structure_type[0] == 'D':
+                h='dh'
+            elif structure_type[0] == 'N':
+                h = 'nh'
             full_name = '-'.join([matter, h, pname])
             name = full_name
         return name
-    def get_braint_data_col(self):
-        print "Not yet implemented"
+
+    def get_braint_data_col(self,col):
+        print "Braint data Not yet implemented"
+        raise Exception("Not Implemented")
+
+
 
 class SaveAndRestore():
     def __init__(self,application_name,parent,default_dir=None):
@@ -807,6 +862,7 @@ class SaveAndRestore():
             read_file.close()
         return variables_dict
 
+
 class AsyncUpdataAll():
     def __init__(self,var_select,fetch,plots,vtk_view):
         self.var_select=var_select
@@ -818,23 +874,32 @@ class AsyncUpdataAll():
     def update_all(self,new_data_vars):
         if new_data_vars is None:
             new_data_vars = self.var_select.get_selected_variables()
-        state_vars={
+        internal_vars={
             'stage':0,
-            'previous_stage':-1
         }
+        #stage -1: Error
+        #stage 0: Fetching Data
+        #stage 1: Loading Vtk
+        #stage 2: Prepared to render vtk
+        #stage 3: Rendering vtk
+        #stage 4: unused
+        #stage 5: Done
+
+
         self.var_select.disable_apply()
         self.var_select.set_progress(0)
-        def fetch_data():
+        external_state={}
+        def fetch_data(state_vars):
             print "getting variables"
             print "================="
-            self.fetched_data=self.fetcher.get_data(new_data_vars)
+            self.fetched_data=self.fetcher.get_data(new_data_vars,state_dict=external_state)
 
 
-        def generate_vtk():
+        def generate_vtk(state_vars):
             print "generating vtk graphics"
             print "================="
             new_data, structures, fibers = self.fetched_data
-            self.vtk_view.update_structures(structures, fibers,async=True)
+            self.vtk_view.update_structures(structures, fibers,async=True,state_vars=state_vars)
 
         def generate_plots():
             print "generating plot"
@@ -845,29 +910,61 @@ class AsyncUpdataAll():
 
         def poll_progress(event=None):
             #print "polling: stage=%d"%state_vars['stage']
-            if state_vars['stage']==3:
+            if internal_vars['stage']==3:
+                #final stage
                 self.vtk_view.render()
                 generate_plots()
                 print "done"
                 print "================="
                 self.var_select.set_progress(100)
-                self.var_select.enable_apply()
-                return
-            elif state_vars['stage']==1:
-                self.var_select.set_progress(50)
-            elif state_vars['stage']==2:
+                internal_vars['stage'] = 5
+            elif internal_vars['stage']==0:
+                #fetching data
+                prog_per_var = (50/ external_state.get('len', 10000))
+                progress=external_state.get('done',0)* prog_per_var
+                sub_progress = (external_state.get('number_calculated', 0) / (external_state.get('number_requested', 1)))
+                progress+= sub_progress * prog_per_var
+                self.var_select.set_progress(progress)
+            elif internal_vars['stage']==1:
+                #loading vtk models
+                progress=50+external_state.get('number_loaded',0)/external_state['number_requested']*40
+                self.var_select.set_progress(progress)
+            elif internal_vars['stage']==2:
+                #preparing for final rendering... interface will freeze
                 self.var_select.set_progress(90)
-                state_vars['stage'] = 3
-            self.var_select.after(20, poll_progress)
-        self.var_select.after(20, poll_progress)
-        def async_update():
-            fetch_data()
-            state_vars['stage'] = 1
-            generate_vtk()
-            state_vars['stage'] = 2
+                internal_vars['stage'] = 3
+            elif internal_vars['stage'] <0:
+                showerror("Error calculating","There was an error loading the data, please check output")
+                self.var_select.set_progress(0)
+                self.var_select.enable_apply()
+                internal_vars['stage'] = 5
 
-        self.var_select.set_progress(10)
-        thread.start_new_thread(async_update,tuple())
+            if internal_vars['stage'] < 5:
+                self.var_select.after(20, poll_progress)
+            else:
+                self.var_select.enable_apply()
+                print "number of threads: ",threading.active_count()
+                return
+
+        def async_update():
+            try:
+                internal_vars['stage'] = 0
+                fetch_data(external_state)
+                internal_vars['stage'] = 1
+                generate_vtk(external_state)
+                internal_vars['stage'] = 2
+            except Exception as e:
+                print e
+                internal_vars['stage'] = -1
+            finally:
+                return None
+
+
+        self.var_select.set_progress(1)
+        self.vtk_view.clear_memory()
+        internal_vars['plots_rendered'] = 0
+        thread_id=thread.start_new_thread(async_update,tuple())
+        self.var_select.after(20, poll_progress)
         #async_update()
 
 
@@ -913,6 +1010,7 @@ if __name__=="__main__":
     graph_frame.set_color_function(group_color_fun)
     vtk_frame=VtkWidget(reader2,display_frame,height=250,width=800)
     vtk_frame.set_groups_dict(groups_dict,int_colors)
+    vtk_frame.set_laterality_dict(fetcher.get_later_dict())
     vtk_frame.grid(row=0,column=0,sticky='nsew')
     graph_frame.grid(row=1,column=0,sticky='nsew')
 

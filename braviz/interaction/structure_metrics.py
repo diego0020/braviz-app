@@ -95,13 +95,15 @@ def get_fibers_metric(reader, struct_name,code,metric='number'):
         return float('nan')
     return n
 
-def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables={},force_reload=False):
+def cached_get_struct_metric_col(reader,codes,struct_name,metric,
+                                 state_variables={},force_reload=False,laterality_dict={}):
     #global struct_metrics_col, temp_struct_metrics_col, processing, cancel_calculation_flag, struct_name, metric
     state_variables['struct_name']=struct_name
     state_variables['metric']=metric
     state_variables['working']=True
     state_variables['output']=None
     state_variables['number_calculated']=0
+    state_variables['number_requested'] = len(codes)
     calc_function=get_struct_metric
     if random.random()<0.01:
         force_reload=True
@@ -127,7 +129,7 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
             if list(cache_codes)==list(codes):
                 state_variables['working'] = False
                 state_variables['output'] = struct_metrics_col
-                state_variables['number_calculated'] = len(struct_metrics_col)
+                state_variables['number_calculated'] = 0
             return struct_metrics_col
     print "Calculating %s for structure %s" % (metric, struct_name)
     temp_struct_metrics_col = []
@@ -137,9 +139,8 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
             print "cancel flag received"
             state_variables['working'] = False
             return
-        if code=="600":
-            print "600"
-        scalar = calc_function(reader,struct_name, code, metric)
+        struct_name2=solve_laterality(laterality_dict.get(code,'unknown'),struct_name)
+        scalar = calc_function(reader,struct_name2, code, metric)
         temp_struct_metrics_col.append(scalar)
         state_variables['number_calculated'] = len(temp_struct_metrics_col)
     try:
@@ -153,4 +154,34 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,state_variables
     return temp_struct_metrics_col
 
 
+laterality_lut={
+    #dominant or non_dominant, right_handed or left_handed : resulting hemisphere
+    ('d','r'):'l',
+    ('d','l'):'r',
+    ('n','r'):'r',
+    ('n','l'):'l',
+}
+def get_right_or_left_hemisphere(hemisphere,laterality):
+    if hemisphere in ('d', 'n'):
+        if laterality[0].lower() not in ('r','l'):
+            raise Exception('Unknown laterality')
+        new_hemisphere = laterality_lut[(hemisphere, laterality[0])]
+    elif hemisphere in ('r','l'):
+        new_hemisphere=hemisphere
+    else:
+        raise Exception('Unknwon hemisphere')
+    return new_hemisphere
 
+def solve_laterality(laterality,names):
+    new_names=[]
+    for name in names:
+        new_name=name
+        if name.startswith('ctx-'):
+            h=name[4]
+            new_name=''.join((name[:4],get_right_or_left_hemisphere(h,laterality),name[5:]))
+        elif name.startswith('wm-'):
+            h=name[3]
+            new_name = ''.join((name[:3], get_right_or_left_hemisphere(h, laterality), name[4:]))
+        new_names.append(new_name)
+
+    return new_names

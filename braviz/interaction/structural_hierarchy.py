@@ -13,11 +13,19 @@ def get_structural_hierarchy(reader,subj):
             name=struct[7:]
             hierarchy_dict[hemisphere][name]['Gray Matter']
             hierarchy_dict[hemisphere]['All Gray Matter'][name]
+            hierarchy_dict['Dominant Hemisphere']['All Gray Matter'][name]
+            hierarchy_dict['Nondominant Hemisphere']['All Gray Matter'][name]
+            hierarchy_dict['Dominant Hemisphere'][name]['Gray Matter']
+            hierarchy_dict['Nondominant Hemisphere'][name]['Gray Matter']
         elif struct.startswith('wm-'):
             hemisphere = 'Right Hemisphere' if struct[3] == 'r' else 'Left Hemisphere'
             name = struct[6:]
             hierarchy_dict[hemisphere][name]['White Matter']
             hierarchy_dict[hemisphere]['All White Matter'][name]
+            hierarchy_dict['Dominant Hemisphere']['All White Matter'][name]
+            hierarchy_dict['Nondominant Hemisphere']['All White Matter'][name]
+            hierarchy_dict['Dominant Hemisphere'][name]['White Matter']
+            hierarchy_dict['Nondominant Hemisphere'][name]['White Matter']
         elif struct.startswith('CC'):
             name=struct[3:]
             hierarchy_dict['Corpus Callosum'][name]
