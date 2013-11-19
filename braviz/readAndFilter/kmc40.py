@@ -370,8 +370,6 @@ The path containing this structure must be set."""
                     print 'cache write failed'
             except Exception:
                 print 'cache write failed'
-            finally:
-                fib_writer.CloseVTKFile()
             return fibers
     def __cached_filter_fibers(self,subj,waypoint):
         "Only one waypoint, returns a set"

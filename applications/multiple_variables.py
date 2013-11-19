@@ -309,6 +309,7 @@ class VtkWidget(tkFrame):
             state_vars['number_loaded'] = i
             model_list=[]
             struct_list2=solve_laterality(self.__laterality.get(cod,'unknwon'),struct_list)
+            fibers_list2=solve_laterality(self.__laterality.get(cod,'unknwon'),fibers_list)
             for struct in struct_list2:
                 #print "loading model %s for subject %s" % (struct, cod)
                 try:
@@ -322,9 +323,9 @@ class VtkWidget(tkFrame):
 
             try:
                 #print "loading fibers %s for subject %s" % (fibers_list, cod)
-                fibers=self.get_fibers(cod,fibers_list)
+                fibers=self.get_fibers(cod,fibers_list2)
             except Exception:
-                print "couldn't load fibers %s for subject %s" % (fibers_list, cod)
+                print "couldn't load fibers %s for subject %s" % (fibers_list2, cod)
             else:
                 if fibers is not None:
                     model_list.append(fibers)

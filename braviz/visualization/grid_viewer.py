@@ -387,7 +387,8 @@ class GridView(vtk.vtkRenderWindow):
         for i, subj_group in enumerate(sorted_ids):
             if overlay is False:
                 subj_group=(subj_group,)
-            column ,row= i % n_col , i // n_col
+            #column ,row= i % n_col , i // n_col
+            row ,column= i % n_row , i // n_row
             x , y = column * self.max_space , row * self.max_space
             for subj_id in subj_group:
                 actor = self.__actors_dict[subj_id]
