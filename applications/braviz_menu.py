@@ -11,7 +11,7 @@ class MenuButton(tkFrame):
     def __init__(self,name,image,program,parent,**kw):
         tkFrame.__init__(self,parent,**kw)
         self.pack_propagate(0)
-        with working_directory(os_path.dirname(__file__)):
+        with working_directory(os_path.dirname(os_path.realpath(__file__))):
             self.img=tk.PhotoImage(file=os_path.join("icons",image))
             def launch_program(event=None):
                 subprocess.Popen((sys.executable,program))

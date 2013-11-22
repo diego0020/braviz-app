@@ -133,7 +133,7 @@ class BarPlot():
 
     def set_y_title(self,title):
         if len(title)>25:
-            self.y_title="".join(("...",title[-20:]))
+            title="".join(("...",title[-20:]))
         self.y_title=title
         self.axis.set_ylabel(self.y_title)
 

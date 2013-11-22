@@ -879,7 +879,7 @@ class AsyncUpdataAll():
         self.vtk_view=vtk_view
         self.fetched_data=None
 
-    def update_all(self,new_data_vars):
+    def update_all(self,new_data_vars=None):
         if new_data_vars is None:
             new_data_vars = self.var_select.get_selected_variables()
         internal_vars={

@@ -651,6 +651,8 @@ def autoReader(**kw_args):
     'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db',4000),
     'Unidelosandes' : ('K:\\JohanaForero\\KAB-db',1200),
     'dieg8' : (r'C:\Users\Diego\Documents\kmc40-db\KAB-db',1200),
+    'TiberioHernande' : (r'E:\KAB-db',1100),
+    'localhost.localdomain' : ('/home/diego/braviz/subjects',1000),
     }
     node_id=platform.node()
 
