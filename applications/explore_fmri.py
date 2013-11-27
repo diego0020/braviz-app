@@ -86,7 +86,7 @@ set_cursor= cursors.set_cursor
 ren.AddActor(cursors)
 
 
-outline = braviz.visualization.outline_actor()
+outline = braviz.visualization.OutlineActor()
 outline.set_input_data(t_stat_img)
 
 config=braviz.interaction.get_config(__file__)

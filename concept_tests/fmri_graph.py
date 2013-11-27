@@ -98,7 +98,7 @@ plane_widget.GetColorMap().SetLookupTable(None)
 plane_widget.DisplayTextOff()
 
 # An outline is shown for context.
-outline = braviz.visualization.outline_actor()
+outline = braviz.visualization.OutlineActor()
 outline.set_input_data(t_stat_img)
 
 viewer.ren.AddActor(outline)

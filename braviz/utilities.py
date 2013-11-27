@@ -1,3 +1,4 @@
+"""Utility functions used in braviz library but not directly related to the interactive visual analysis of brain data"""
 import contextlib
 import os
 from collections import defaultdict
@@ -20,7 +21,7 @@ from contextlib import contextmanager
 
 @contextmanager
 def ignored(*exceptions):
-    #A context manager which ignores exceptions of specific types
+    """A context manager which ignores exceptions of specific types"""
     try:
         yield
     except exceptions:
@@ -28,13 +29,13 @@ def ignored(*exceptions):
 
 
 def recursive_default_dict():
-    #A default dict which by default contains default dicts which by default contain default dicts....
+    """A default dict which by default contains default dicts which by default contain default dicts...."""
     return defaultdict(recursive_default_dict)
 
 def get_leafs(rec_dict,name):
-    #input should be a recursive dicitionary whose elements are dictionaries, and a base name
-    #output will be a list of leafs, this is, elements which contain empty dictionaries as sons
-    #names in the output list will have the structure name:grandparent:parent:leaf
+    """ input should be a recursive dicitionary whose elements are dictionaries, and a base name
+    output will be a list of leafs, this is, elements which contain empty dictionaries as sons
+    names in the output list will have the structure name:grandparent:parent:leaf"""
     if len(rec_dict) == 0:
         return [name]
     leafs=[]

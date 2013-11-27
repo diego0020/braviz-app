@@ -3,7 +3,7 @@ import vtk
 import random
 import math
 import numpy as np
-from braviz.visualization import get_arrow
+from braviz.visualization import get_arrow, OutlineActor
 from braviz.visualization.vtk_charts import mini_scatter_plot
 from itertools import izip
 import gc
@@ -41,11 +41,7 @@ class GridView(vtk.vtkRenderWindow):
         self.balloon_w.SetRepresentation(self.balloon_repr)
         self.balloon_w.SetTimerDuration(1000)
 
-        self.__outline_filter = vtk.vtkOutlineFilter()
-        self.__outline_actor=vtk.vtkActor()
-        outline_mapper=vtk.vtkPolyDataMapper()
-        outline_mapper.SetInputConnection(self.__outline_filter.GetOutputPort())
-        self.__outline_actor.SetMapper(outline_mapper)
+        self.__outline_actor=OutlineActor()
         self.ren.AddActor(self.__outline_actor)
         self.__outline_actor.SetVisibility(0)
 
@@ -214,7 +210,7 @@ class GridView(vtk.vtkRenderWindow):
                 #self.__selected_actor.EnableLOD(lod_idxs[2])
         key = self.__picking_dict[actor]
         poly_data = self.__poly_data_dict[key]
-        self.__outline_filter.SetInputData(poly_data)
+        self.__outline_actor.SetInputData(poly_data)
         self.__outline_actor.SetVisibility(1)
         self.__outline_actor.SetPosition(actor.GetPosition())
         self.__outline_actor.SetOrientation(actor.GetOrientation())
