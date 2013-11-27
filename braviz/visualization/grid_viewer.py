@@ -1,3 +1,5 @@
+"""A class for displaying multiple solids organized in a grid, and related functions"""
+
 from __future__ import division
 import vtk
 import random
@@ -12,7 +14,13 @@ __author__ = 'Diego'
 
 
 class GridView(vtk.vtkRenderWindow):
+    """A class for displaying multiple solids organized in a grid
+
+    All objects inside the grid have a name which is the key for all the dictionaries in the class,
+    and the common way to refer to it in most functions"""
     def __init__(self,use_lod=False):
+        """Initializes the grid viewer, use_lod is very experimental, attempts to create level of detail actors
+        in order to keep interactivity when multiple complex actors are in the scene"""
         self.ren = vtk.vtkRenderer()
         self.SetMultiSamples(2)
         self.AlphaBitPlanesOn()
@@ -75,6 +83,8 @@ class GridView(vtk.vtkRenderWindow):
         self.actor_selected_event=vtk.vtkCommand.UserEvent+1
 
     def set_interactor(self, iren=None):
+        """Set the windowInteractor associated to the viewer and registers all the callback functions
+        """
         if iren is None:
             iren = vtk.vtkRenderWindowInteractor()
         self.iren = iren
@@ -86,6 +96,7 @@ class GridView(vtk.vtkRenderWindow):
         self.iren.SetPicker(self.picker)
 
         def register_change(caller=None, envent=None):
+            """Keeps track of the actor which whom the user is iteracting"""
             #self.__panning = False
             if self.__modified_actor is not None:
                 return
@@ -95,17 +106,21 @@ class GridView(vtk.vtkRenderWindow):
             #print 'auch %s'%self.__picking_dict[caller]
 
         def unregister_object(caller=None, event=None):
+            """Finishes the interaction"""
             self.__modified_actor = None
 
 
         def after_intareaction(caller=None, event=None):
+            """If an actor was modified, make the other actors mimic the new position and orientation
+            Additionally, if movement is too high, displays a sort(modified) message
+            Also updates the position of the corresponding label"""
             #print "finito"
             if self.__modified_actor is None:
                 return
             if len(self.__positions_dict) > 0:
                 sorted_position = np.array(self.__positions_dict[self.__modified_actor])
                 if self.__sort_modified is False and np.linalg.norm(
-                                sorted_position - self.__modified_actor.GetPosition()) > self.max_space:
+                        sorted_position - self.__modified_actor.GetPosition()) > self.max_space:
                     if self.__sort_message_actor is not None:
                         self.__sort_message_actor.SetInput(self.__sort_message_actor.GetInput() + ' (modified)')
                     self.__sort_modified = True
@@ -117,12 +132,16 @@ class GridView(vtk.vtkRenderWindow):
                 self.add_labels()
 
         def mimic_actor(caller=None, event=None):
+            """Copies orientation and position from another actor"""
             for ac in self.__picking_dict:
                 if ac is not caller:
                     ac.SetOrientation(caller.GetOrientation())
                     ac.SetScale(caller.GetScale())
 
         def wheel_zoom(caller=None, event=None):
+            """Does a zoom operation when rotating the mouse wheel
+            TODO: Requieres higher granularity zoom
+            """
             factor = 0.5
             cam1 = self.ren.GetActiveCamera()
             if event == 'MouseWheelForwardEvent':
@@ -135,6 +154,7 @@ class GridView(vtk.vtkRenderWindow):
 
 
         def pan(caller=None, event=None):
+            """Pans the camera along the view"""
             if event == 'MiddleButtonPressEvent':
                 event_pos_x, event_pos_y = caller.GetEventPosition()
                 if self.__modified_actor is not None or (self.ren.PickProp(event_pos_x, event_pos_y) is not None):
@@ -159,6 +179,7 @@ class GridView(vtk.vtkRenderWindow):
             caller.Render()
 
         def follow_bar(caller=None, event=None):
+            """Keeps the color bar in the right position when the window is resized"""
             if self.__color_bar_visibility is True:
                 width, height = self.GetSize()
                 if width > 60:
@@ -166,6 +187,7 @@ class GridView(vtk.vtkRenderWindow):
                     self.__scalar_bar_actor.SetPosition(new_pos, 0.1)
 
         def follow_arrow(caller=None, event=None):
+            """Keeps the arrow in the right position when the window is resized"""
             if self.__sort_message_visibility is True:
                 width, height = self.GetSize()
                 if height > 30:
@@ -189,15 +211,20 @@ class GridView(vtk.vtkRenderWindow):
             actor.AddObserver(vtk.vtkCommand.PickEvent, self.__actor_observer_fun)
 
         def print_event(caller=None, event=None):
+            """Useful for tests"""
             print event
 
+        #Unregister the modified actor when the event is showing a balloon
         self.balloon_w.AddObserver('AnyEvent', unregister_object)
 
     def select_name(self,name):
+        """Set selected actor by name"""
         actor=self.__actors_dict.get(name)
         self.select_actor(actor,propagate=False)
 
     def select_actor(self,actor,propagate=True):
+        """Set selected actor by explicitly giving the actor object,
+        if propagate is True an actor_selected_event is invoked"""
         if actor is None:
             return
         if self.__selected_actor is not None:
@@ -230,6 +257,7 @@ class GridView(vtk.vtkRenderWindow):
             self.InvokeEvent(self.actor_selected_event)
         self.iren.Render()
     def clear_selection(self):
+        """Clear actors selection"""
         self.__outline_actor.SetVisibility(0)
         if self.__selected_actor is not None:
             prop = self.__prop_dict[self.__selected_actor]
@@ -245,15 +273,17 @@ class GridView(vtk.vtkRenderWindow):
         if self.iren is not None:
             self.iren.Render()
     def get_selection(self):
+        """Gets name of currently selected actor"""
         return self.__picking_dict.get(self.__selected_actor,None)
     def set_background(self, color1, color2=None):
+        "Set background color"
         if color2 is not None:
             self.ren.GradientBackgroundOn()
             self.ren.SetBackground2(color2)
         self.ren.SetBackground(color1)
 
     def set_data(self, data_dict):
-        "data_dict must be a dictionary with ids as keys and polydata as values"
+        """data_dict must be a dictionary with ids as keys and polydata as values"""
         #hide all actors
         self.clear_selection()
         for act in self.__picking_dict:
@@ -323,6 +353,7 @@ class GridView(vtk.vtkRenderWindow):
                 prop.SetOpacity(self.__opacity)
 
     def clear_all(self):
+        """Clear all internal data structures in order to recover memory"""
         for act in self.__picking_dict:
             self.ren.RemoveViewProp(act)
             self.balloon_w.RemoveBalloon(act)
@@ -342,6 +373,7 @@ class GridView(vtk.vtkRenderWindow):
         self.iren.Render()
         gc.collect()
     def set_balloon_messages(self, messages_dict):
+        """messages_dict must be a dictionary containing names and messages"""
         #for key, message in messages_dict.iteritems():
         #    self.balloon_w.AddBalloon(self.__actors_dict[key], message)
         for key,actor in self.__actors_dict.iteritems():
@@ -397,6 +429,10 @@ class GridView(vtk.vtkRenderWindow):
         pass
 
     def set_color_function(self, color_function, opacity=1.0, scalar_colors=False):
+        """Sets the function that will be called for determining the color of each actor
+        The function by default must take as arguments a name and a scalar value,
+        if scalar_colors is True, the first argument is ommited
+        the opacity value will be applied to all actors"""
         self.__color_function = color_function
         for subj, ac in self.__actors_dict.iteritems():
             prop=self.__prop_dict[ac]
@@ -411,11 +447,13 @@ class GridView(vtk.vtkRenderWindow):
         self.__opacity=opacity
 
     def set_color_bar_visibility(self, color_bar_visibility):
+        """Displays or hides the color bar"""
         self.__color_bar_visibility = color_bar_visibility
         if self.__scalar_bar_actor is not None and color_bar_visibility is False:
             self.__color_bar_visibility.SetVisibility(0)
 
     def reset_camera(self):
+        """Resets camera to a standard position"""
         n_col = self.n_cols
         max_space = self.max_space
         n_row = self.n_rows
@@ -434,19 +472,23 @@ class GridView(vtk.vtkRenderWindow):
         self.ren.ResetCameraClippingRange()
 
     def start_interaction(self):
+        """Initialize interactor"""
         self.iren.Initialize()
         self.Start()
         self.iren.Start()
 
     def set_orientation(self, orientation):
+        """Sets the orientation of actors"""
         self.__orientation=orientation
         for actor in self.__picking_dict:
             actor.SetOrientation(orientation)
     def get_orientation(self):
+        """Gets the current orientation of actors"""
         for actor in self.__picking_dict:
             return actor.GetOrientation()
 
     def update_color_bar(self, lut, title):
+        """Updates the color bar, given a lookuptable and a title"""
         if self.__scalar_bar_actor is None:
             self.__scalar_bar_actor = vtk.vtkScalarBarActor()
             self.ren.AddActor(self.__scalar_bar_actor)
@@ -460,6 +502,7 @@ class GridView(vtk.vtkRenderWindow):
             self.__scalar_bar_actor.SetPosition(new_pos, 0.1)
 
     def __add_sort_indication(self):
+        """Adds the message and arrow indicating the sort operation"""
         width, height = self.GetSize()
         arrow = get_arrow((width * 0.5, 0, 0), (0, 0, 0))
         arrow_mapper = vtk.vtkPolyDataMapper2D()
@@ -480,6 +523,7 @@ class GridView(vtk.vtkRenderWindow):
         self.__arrow_actor.SetVisibility(0)
 
     def set_sort_message_visibility(self, visibility):
+        """Hides or displays the sort message"""
         self.__sort_message_visibility = visibility
         if self.__sort_message_actor is not None:
             self.__sort_message_actor.SetVisibility(visibility)
@@ -487,6 +531,7 @@ class GridView(vtk.vtkRenderWindow):
             self.__arrow_actor.SetVisibility(visibility)
 
     def update_sort_message(self, title):
+        """Sets the title of the sort message"""
         if self.__arrow_actor is None:
             self.__add_sort_indication()
         message_text = 'Sorted by: %s' % title
@@ -498,6 +543,8 @@ class GridView(vtk.vtkRenderWindow):
         self.Render()
 
     def __add_mini_scatter_plot(self, title_x=None, title_y=None, color=None):
+        """Adds a mini mini_scatter_plot in the corner, connected to the actors
+        The values displayed in the scatter plot are set by update_mini_scatter"""
         mini_scatter = mini_scatter_plot()
         mini_scatter.set_renderer(self.ren)
         self.ren.AddViewProp(mini_scatter)
@@ -509,6 +556,8 @@ class GridView(vtk.vtkRenderWindow):
         self.__mini_scatter = mini_scatter
 
     def update_mini_scatter(self, data_dict, x_title=None, y_title=None):
+        """Updates the data displayed in the scatter plot
+        data dict must contain the names of the objects as keys, and tuples as values"""
         if self.__mini_scatter is None:
             self.__add_mini_scatter_plot()
         self.__mini_scatter.set_x_axis(x_title)
@@ -550,11 +599,13 @@ class GridView(vtk.vtkRenderWindow):
         self.iren.AddObserver('LeftButtonPressEvent', scatter_pick_observer, 10)
 
     def set_mini_scatter_visible(self, visible):
+        """Hides or displays mini_scatter_plot"""
         self.__mini_scatter_visible = visible
         if self.__mini_scatter is not None:
             self.__mini_scatter.SetVisibility(visible)
         self.iren.Render()
     def add_labels(self,labels_dict=None):
+        """Adds labels to objects in the grid"""
         if labels_dict is not None:
             self.remove_labels()
             self.__labels_dict=labels_dict
@@ -599,6 +650,8 @@ class GridView(vtk.vtkRenderWindow):
         self.iren.Render()
 
     def remove_labels(self,partial=False):
+        """Removes the labels associated to each object
+        if partial is True, only the actors are removed """
         for caption in self.__captions_dict.itervalues():
             self.ren.RemoveViewProp(caption)
         self.__captions_dict.clear()
@@ -608,6 +661,7 @@ class GridView(vtk.vtkRenderWindow):
 
 
 def merge_polydata(models):
+    """Combines various polydata objects into one polydata"""
     if len(models)==1:
         return models[0]
     append_filter=vtk.vtkAppendPolyData()
@@ -642,9 +696,9 @@ if __name__ == '__main__':
     test.set_balloon_messages(messages)
     test.set_color_function(rand_color)
     test.Render()
-    iren = vtk.vtkRenderWindowInteractor()
-    iren.SetRenderWindow(test)
-    test.set_interactor(iren)
+    test_iren = vtk.vtkRenderWindowInteractor()
+    test_iren.SetRenderWindow(test)
+    test.set_interactor(test_iren)
     test.start_interaction()
     ids = range(10)
     random.shuffle(ids)
