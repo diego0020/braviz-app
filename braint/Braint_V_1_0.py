@@ -13,6 +13,8 @@ class MainFrame:
         self.braintProperties = BraintProperties.BraintProperties()
         self.container = Frame(rootTk)
         self.container.grid(row=0, sticky=W+E+N+S)
+
+
         #self.container.pack(expand=YES, fill=BOTH)
         menubar = Menu(rootTk)
         

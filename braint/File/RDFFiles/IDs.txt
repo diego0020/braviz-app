@@ -6,6 +6,8 @@ clinical information: CLINI
 UBIC3: UBICA
 GENERO: GENDE
 PESNACER: BIWEI
+***tallanacer:BIHEI
+
 nivm1: EDLEM
 nivp1: EDLEF
 OFTALMO: OPHTA
@@ -41,7 +43,7 @@ epilepsia: EPILE Epilepsia
 nutricion: NUTRI: Nutrition
 difhabla: SPEDE difucultad para hablar
 neuroresum: ABRNER :examen neurologico resumido
-educafamilia: Educacion familia
+***educafamilia: FLEED Educacion familia
 
 
 Cognition: COGNI
@@ -55,6 +57,7 @@ Processing Speed:PSIIQ
 composite Full Score:FSIQ .
 
 Neurosensorial:NEURO
+
 Beery-Buktenica Developmental Test of Visual-Motor Integration:VMITE
 
 Visual_StS Visual perception:VISPE

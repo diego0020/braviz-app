@@ -2,8 +2,10 @@
 Install:
 Add the location of this directory to PYTHONPATH environment variable.
 Prerequisites:
-- Python
-- VTK with Python wrapping
+- Python 2.75
+- VTK 6.0 with Python wrapping
+
+Python packages:
 - nibabel
 - colorbrewer
 - numpy

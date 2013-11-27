@@ -1,6 +1,8 @@
 UBIC3: UBICA
 GENERO: GENDE
 PESNACER: BIWEI
+*tallanacer:BIHEI
+
 nivm1: EDLEM
 nivp1: EDLEF
 OFTALMO: OPHTA
@@ -27,7 +29,7 @@ examenneurosicoa1ano: NEMOT
 sensorial: SENSP
 
 funcionalidad: DAYFU :functional daily living skills
-exameneuropediatras: neuropediatric exam: NEUPEda
+exameneuropediatras: neuropediatric exam: NEUPE
 vision: VISIO : Vision
 audicion: AUDIT : Audition
 TDHA: TDHA: Hyperactivity

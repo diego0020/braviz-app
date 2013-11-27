@@ -32,6 +32,7 @@
 		braint:SubTest_Name "Localization in 3 different study groups" ;
 		braint:SubTest_DataType "Ordinal" ;
 		braint:isRelatedWith :BIWEI ;
+		braint:isRelatedWith :VMI ;
 		braint:isMentionedIn :REASONER;
 		braint:SubTest_Description "missing" .
 		
@@ -39,6 +40,8 @@
                          owl:NamedIndividual ;
 		braint:SubTest_Name "Gender" ;
 		braint:SubTest_DataType "Ordinal" ;
+		braint:isRelatedWith :VMI ;
+		braint:isMentionedIn :GELD2012 ;
 		braint:SubTest_Description "missing" .
 
 :BIWEI rdf:type braint:SubTest ,
@@ -47,6 +50,8 @@
 		braint:SubTest_DataType "Ordinal" ;
 		braint:isRelatedWith :UBICA ;
 		braint:isMentionedIn :REASONER ;
+		braint:isRelatedWith :VMI ;
+		braint:isMentionedIn :GELD2012 .
 		braint:SubTest_Description "missing" .
 		
 :EDLEM rdf:type braint:SubTest ,
@@ -304,6 +309,8 @@
 		braint:isMentionedIn :SKRA2012;
 		braint:isRelatedWith :SCHFA ;
 		braint:isRelatedWith :RID7137 ;
+		braint:isRelatedWith :VMI ;
+		braint:isMentionedIn :GELD2012
 		braint:isMentionedIn :REASONER .
 		
 
@@ -335,6 +342,11 @@
 		braint:SubTest_Name "Visual Motor Integration " ;
 		braint:SubTest_DataType "Ordinal" ;
 		braint:SubTest_Description "Consists of coordinating visual perceptual skills together with gross-motor movement and fine-motor movement. (Vision and Learning)" .
+		braint:isRelatedWith :BIWEI ;
+		braint:isRelatedWith :UBICA ;
+		braint:isRelatedWith :FSIQ ;
+		braint:isRelatedWith :GENDE ;
+		braint:isMentionedIn :GELD2012 .
 
 
 :STRMA rdf:type braint:Evaluation ,
@@ -503,7 +515,18 @@
 			braint:hasAReferenceOf :FSIQ ;
 			braint:hasAReferenceOf :ECOSI .
 
-
+:GELD2012 rdf:type braint:Publication ,
+                     owl:NamedIndividual ;
+            braint:Publication_Title "Visual perception and visual-motor integration in very preterm and/or very low birth weight children: A meta-analysis" ;
+			braint:Publication_Author "C.J.A. Geldof, A.G. van Wassenaer, J.F. de Kieviet, J.H. Kok, J. Oosterlaan" ;
+			braint:Publication_KeyWords "Very preterm, Very low birth weight, Visual perception, Visual-motor integration, Outcome" ;
+			braint:Publication_Year "2012" ;
+			braint:hasAReferenceOf :VMI ;
+			braint:hasAReferenceOf :UBICA ;
+			braint:hasAReferenceOf :FSIQ ;
+			braint:hasAReferenceOf :GENDE ;
+			braint:hasAReferenceOf :BIWEI .
+			
 :REASONER rdf:type braint:Publication ,
                      owl:NamedIndividual ;
             braint:Publication_Title "Reasoner Inference" ;

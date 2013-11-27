@@ -31,11 +31,21 @@ class SpiderPlotClass:
             array_i.SetNumberOfTuples(self.num_tuples)
             self.floats_array.append(array_i)
         
+        self.MyTextProp = vtk.vtkTextProperty()
         self.actor=vtk.vtkSpiderPlotActor()
         self.actor.SetTitle(title)
+        self.MyTextProp.SetColor(0.0, 0.00, 0.0)
+        self.MyTextProp.BoldOn()
+        self.actor.SetTitleTextProperty(self.MyTextProp)
         self.actor.SetIndependentVariablesToColumns()
-        self.actor.GetProperty().SetColor(1,0,0)
+        self.actor.GetProperty().SetColor(0.5, 0.5, 0.5) #Set the axis colors (gray)
+        self.actor.GetProperty().SetLineWidth(0.5)
         self.actor.SetNumberOfRings(0)
+        self.MyTextProp.SetFontSize(5)
+        self.MyTextProp.SetColor(0.0, 0.0, 0.0)
+        self.actor.SetLabelTextProperty(self.MyTextProp)
+        
+        
                 
         self.actor.GetPositionCoordinate().SetValue(0.05,0.1,0.0)
         self.actor.GetPosition2Coordinate().SetValue(0.95,0.85,0.0)
@@ -56,13 +66,14 @@ class SpiderPlotClass:
 
         for i in range(self.num_tuples):
             self.actor.SetPlotColor(i,random.random(),random.random(),random.random())
+        #self.actor.LegendVisibilityOn()
         
         ############################
         #VTK
         self.renderer = vtk.vtkRenderer()
         self.render_window = vtk.vtkRenderWindow()
         self.render_window.AddRenderer(self.renderer)
-        self.renderer.SetBackground(0.0, 0.0, 0.0)
+        self.renderer.SetBackground(1.0, 1.0, 1.0)
         
         
     def update_data(self, data):

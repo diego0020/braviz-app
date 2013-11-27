@@ -1,6 +1,6 @@
 import Tkinter as tk
 from Tkinter import Frame as tkFrame
-from braviz.utilities import working_directory
+import os
 import os.path as os_path
 import subprocess
 import sys
@@ -11,14 +11,14 @@ class MenuButton(tkFrame):
     def __init__(self,name,image,program,parent,**kw):
         tkFrame.__init__(self,parent,**kw)
         self.pack_propagate(0)
-        with working_directory(os_path.dirname(os_path.realpath(__file__))):
-            self.img=tk.PhotoImage(file=os_path.join("icons",image))
-            def launch_program(event=None):
-                subprocess.Popen((sys.executable,program))
+        self.img=tk.PhotoImage(file=os_path.join("icons",image))
+        def launch_program(event=None):
+            subprocess.Popen((sys.executable,program))
         button=tk.Button(self,text=name,image=self.img,compound=tk.TOP,command=launch_program)
         button.pack(fill='both',expand=1)
 
 applications_dict={
+    #short name : (Long name, icon, script)
     "mult_var": ( "Multiple Variables", "multiple_variables.gif", "multiple_variables.py"),
     "comp_fib": (  "Compare Fibers","compare_fibers.gif","compareFibers.py"),
     "comp_str": ("Compare Structures"  ,"compare_structs.gif","compareStructs.py"),
@@ -37,6 +37,7 @@ applications_dict={
 if __name__=="__main__":
     root=tk.Tk()
     root.title("Braviz-Menu")
+    os.chdir(os_path.dirname(os_path.realpath(__file__)))
     def create_and_grid(key, row, column):
         button1 = MenuButton(*applications_dict[key], parent=root, width=140, height=140)
         button1.grid(row=row, column=column, sticky='NSEW',padx=5,pady=5)
