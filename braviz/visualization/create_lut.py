@@ -1,3 +1,4 @@
+"""Contains functions for transforming ColorBrewer schemes into lookuptables"""
 from __future__ import division
 import vtk
 import colorbrewer
@@ -7,16 +8,16 @@ __author__ = 'Diego'
 
 
 def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(1.0,0,0)):
-    #build lut
+    """Creates a vtkColorTransferFunction from a colorbrewer scheme
+    the values will be clamped between minimum and maximum,
+    the name of the scheme and number of steps must correspond to those in colorbrewer2.org
+    if continuous is True the resulting lookuptable interpolates linearly (in Lab space) between the different steps,
+    otherwise no interpolation is used and the output function is stair like
+    The nan_color is returned by the vtkColorTransferFunction for non finite values"""
     scalar_lookup_table = vtk.vtkColorTransferFunction()
 
     scalar_lookup_table.ClampingOn()
     scalar_lookup_table.SetColorSpaceToLab()
-    width=maximum-minimum
-    #scalar_lookup_table.SetRange(minimum, maximum)
-    #minimum-=0.001*width
-    #maximum+=0.001*width
-    #scalar_lookup_table.Build()
     assert steps>1
     sharpness=1
     if continuous is True:
@@ -25,7 +26,7 @@ def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(
     try:
         cb_list=getattr(colorbrewer,scheme)
     except AttributeError:
-        print "Unknown scheme %s, please look at http://colorbrewer2.org/ for available strings"%scheme
+        print "Unknown scheme %s, please look at http://colorbrewer2.org/ for available schemes"%scheme
         raise
 
     try:

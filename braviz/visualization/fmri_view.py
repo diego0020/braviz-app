@@ -1,9 +1,13 @@
+"""Contains utilities for displaying fMRI images"""
+
 from __future__ import division
 import vtk
 import functools
 __author__ = 'Diego'
 
 def memoize(obj):
+    """A wrapper that saves the return values for a function,
+    and returns them if the funcion is called again with the same arguments"""
     cache = obj.cache = {}
 
     @functools.wraps(obj)
@@ -14,11 +18,11 @@ def memoize(obj):
     return memoizer
 
 class blend_fmri_and_mri(vtk.vtkImageBlend):
+    """Class that blends an fMRI t-score map with a matchin MRI image"""
     def __init__(self,fmri_img,mri_img,window=2000,level=1000,alfa=True,threshold=3):
-        """Retruns a blend object, to which you can apply
+        """Returns a blend object, to which you can apply
         GetOutput: To get the resulting image
         GetOutputPort: To connect to a vtk pipeline"""
-
 
         fmri_mapper = vtk.vtkImageMapToColors()
         fmri_mapper.SetInputData(fmri_img)
@@ -49,18 +53,24 @@ class blend_fmri_and_mri(vtk.vtkImageBlend):
         self.fmri_mapper=fmri_mapper
         self.mri_mapper=mri_mapper
         self.alfa=alfa
+
     def change_imgs(self,mri_img,fmri_img):
+        """Set new MRI and fMRI images"""
         self.fmri_mapper.SetInputData(fmri_img)
         self.mri_mapper.SetInputData(mri_img)
         self.Update()
     def change_threshold(self,threshold):
+        """Change the threshold for displaying the fMRI scores"""
         self.fmri_lut=get_fmri_lut(threshold,self.alfa)
         self.fmri_mapper.SetLookupTable(self.fmri_lut)
         self.Update()
 
-
+#Usually the same function will be used throughout the application
 @memoize
 def get_fmri_lut(threshold=0,alpha=False,n_pts=200):
+    """Returns a standard look up table for fMRI data
+    If alpha is True, the opacity of the colors below the threshold will be less than one,
+    more precisely, the opacity will be a line from 0 to 1 between 0 and the threshold"""
 
     color_interpolator = vtk.vtkColorTransferFunction()
     color_interpolator.ClampingOn()
@@ -77,7 +87,6 @@ def get_fmri_lut(threshold=0,alpha=False,n_pts=200):
     if alpha is False:
         return color_interpolator
 
-
     fmri_lut = vtk.vtkLookupTable()
     fmri_lut.SetTableRange(-7.0, 7.0)
     fmri_lut.SetNumberOfColors(n_pts+1)
@@ -93,8 +102,11 @@ def get_fmri_lut(threshold=0,alpha=False,n_pts=200):
 
     return fmri_lut
 
+
 class time_slice_viewer(vtk.vtkImageSlice):
+    """Class for displaying a single slice of a time-moment in BOLD time series"""
     def __init__(self,orientation=0):
+        """Orientation is 0:x , 1:y, 2:z """
         slice_mapper = vtk.vtkImageSliceMapper()
         slice_mapper.SetOrientation(orientation)
         self.SetMapper(slice_mapper)
@@ -116,6 +128,9 @@ class time_slice_viewer(vtk.vtkImageSlice):
         self.orientation=orientation
 
     def set_time_point(self,time):
+        """
+        Set the time point at which the time series should be sampled
+        """
         TR=self.TR
         space_slice=self.spatial_slice
         position=[0,0,0]
@@ -124,6 +139,7 @@ class time_slice_viewer(vtk.vtkImageSlice):
         self.slice_mapper.SetSliceNumber(time)
 
     def set_input(self,input_data,spatial_pos=0,time=0,orientation=0):
+        """Sets the input 4D image, the position across the perpendicular axis, the time point and the orientation """
         self.slice_mapper.SetInputData(input_data)
         spacing=input_data.GetSpacing()
         self.TR=spacing[orientation]
@@ -134,9 +150,10 @@ class time_slice_viewer(vtk.vtkImageSlice):
 
 
     def set_window_level(self,window,level):
+        """Sets window and level for the display image"""
         image_property = self.GetProperty()
         image_property.SetColorWindow(window)
         image_property.SetColorLevel(level)
     def set_z_spacing(self,spacing):
-        "spacing of z axis in space volume"
+        """spacing in perpendicular axis, used to position the resulting slice in the right place"""
         self.spacing=spacing
