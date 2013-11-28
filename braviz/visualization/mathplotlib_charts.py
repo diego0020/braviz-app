@@ -1,3 +1,4 @@
+"""Maptplotlib widgets which represent scalars in several charts"""
 from __future__ import division
 import matplotlib
 matplotlib.use('TkAgg')
@@ -15,7 +16,12 @@ from braviz.utilities import ignored
 __author__ = 'Diego'
 highlight_color='#FF7F00'
 class BarPlot():
+    """Displays a series of scalars in a bar plot.
+    Optionally can highlight a bar, can add error bars, can add background bars to create groups
+    Colors are defined by a color function
+    Invokes '<<PlotSelected>>' when a bar is clicked"""
     def __init__(self,tight=True):
+        """If tight is True uses the tightlayout option of matplotlib"""
         #f = Figure( dpi=100,tight_layout=True,facecolor='w',frameon=False,edgecolor='r')
         f = Figure( dpi=None,tight_layout=tight,facecolor='w',frameon=False,edgecolor='r')
         #f = Figure( dpi=None,facecolor='w',frameon=False,edgecolor='r')
@@ -49,7 +55,8 @@ class BarPlot():
         self.pos2name_dict={}
         self.__names2idx_dict={}
 
-    def set_back_bars(self,back_bars,back_error=0,back_codes=tuple()):
+    def set_back_bars(self,back_bars,back_error=None,back_codes=tuple()):
+        """Add background bars and group the front bars, see multipleVariables for an example"""
         self.back_bars=back_bars
         self.back_error=back_error
         self.back_codes=back_codes
@@ -63,7 +70,7 @@ class BarPlot():
 
 
     def get_widget(self,master,**kwargs):
-        # a tk.DrawingArea
+        """Get the widget associated to this plot, register callbacks"""
         if self.widget is not None:
             return self.widget
         canvas = FigureCanvasTkAgg(self.figure, master=master)
@@ -94,6 +101,7 @@ class BarPlot():
             #widget.bind('<Unmap>',unbind_conf)
 
         def update_mouse_pos(event):
+            """Updates the coordinates whete the mouse was last seen"""
             self.current_xcoord=event.xdata
             if event.xdata is  None:
                 if event.x < self.axis.bbox.xmin:
@@ -103,9 +111,9 @@ class BarPlot():
             #print event.xdata, event.ydata
         cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
         def click_on_bar(event=None):
+            """Handles clicks over bars"""
             curr_name=self.get_current_name()
             try:
-                #idx=self.bar_names.index(curr_name)
                 idx=self.__names2idx_dict[curr_name]
             except KeyError:
                 self.set_higlight_index(None)
@@ -122,6 +130,7 @@ class BarPlot():
         return widget
 
     def show(self):
+        """Trys to fix bug with layout at changing window size"""
         self.resizing = None
         self.widget.update_idletasks()
         self.figure.subplots_adjust(bottom=0.0, top=1.0,hspace=0)
@@ -132,6 +141,7 @@ class BarPlot():
 
 
     def set_y_title(self,title):
+        """Title for Y axis"""
         if len(title)>25:
             title="".join(("...",title[-20:]))
         self.y_title=title
@@ -139,10 +149,14 @@ class BarPlot():
 
 
     def set_y_limits(self,button,top,right=False):
+        """Limits of y axis"""
         self.y_limits=(button,top)
         self.right_y=right
         self.axis.set_ylim(self.y_limits[0], self.y_limits[1])
     def set_lines(self,lines,dashes):
+        """Context lines
+        lines: coordinates for lines
+        dashes True or False array, indicating if the corresponding line should be dashed"""
         self.hlines=[]
         for pos,dash in izip(lines,dashes):
             ls='-'
@@ -150,6 +164,9 @@ class BarPlot():
                 ls=':'
             self.hlines.append({'y':pos, 'ls':ls, 'color':'k'})
     def set_data(self,values,codes,error=None):
+        """Set the data in the vars, values are the heights of the bars,
+         codes should be an array of the same length and are used to identify the bars,
+         errors bars can be added additionally"""
         self.bar_heights=values
         self.bar_names=codes
         for i,cd in enumerate(codes):
@@ -170,6 +187,7 @@ class BarPlot():
         else:
             self.color_function = color_function
     def paint_bar_chart(self):
+        """Updates the currently displayed bar chart"""
         a=self.axis
         a.cla()
         #y axis
@@ -249,9 +267,10 @@ class BarPlot():
         self.bars=patches
         self.show()
     def paint(self):
+        """same as paint_bar_chart, for providing a common api"""
         self.paint_bar_chart()
     def change_bars(self,new_heights):
-        """doesn't do highlight"""
+        """doesn't do highlight nor errors, used to quickly change bar heights"""
         if self.bars is None:
             return
         self.bars.remove()
@@ -267,7 +286,7 @@ class BarPlot():
         self.bars=patches
         self.show()
     def get_current_name(self):
-
+        """Get the name of the object currently under the mouse, or "axis_0" if mouse is over x axis"""
         if self.current_xcoord is None:
             return None
         if type(self.current_xcoord) is str:
@@ -275,11 +294,18 @@ class BarPlot():
         pos=int(round(self.current_xcoord))
         return self.pos2name_dict.get(pos,None)
     def set_higlight_index(self,index):
+        """Set index of bar to highlight"""
         self.highlight=index
 
 
 class ScatterPlot():
+    """A widget for displaying two variables in a scatter plot with an optional regression line"""
     def __init__(self,tight=True):
+        """If tight is True uses the tightlayout option of matplotlib
+        Colors are defined by a color function
+        Invokes <<PlotSelected>>  if a dot is selected
+        Invokes <<ScatterClick>> if a mouse is clicked over the scatter plot
+        """
         f = Figure(tight_layout=tight, facecolor='w', frameon=False, edgecolor='r')
         a = f.gca(axisbg='w')
         self.figure=f
@@ -304,6 +330,7 @@ class ScatterPlot():
 
 
     def get_widget(self,master,**kwargs):
+        """Get the widget associated to this plot, register callbacks"""
         if self.widget is not None:
             return self.widget
         canvas = FigureCanvasTkAgg(self.figure, master=master)
@@ -311,6 +338,7 @@ class ScatterPlot():
         widget = self.canvas.get_tk_widget()
         widget.configure(bd=4, bg='white', highlightcolor='red', highlightthickness=0, **kwargs)
         def update_mouse_pos(event):
+            """Updates the coordinates whete the mouse was last seen"""
             if self.axis.contains(event)[0]:
                 self.current_id=None
                 #Pick will change it if over a point
@@ -326,6 +354,7 @@ class ScatterPlot():
         cid2 = self.figure.canvas.mpl_connect('button_press_event', generate_tk_event)
         self.widget = widget
         def click_on_scatter(event=None):
+            """Handles click on scatter"""
             curr_name=self.get_current_name()
             try:
                 idx=self.__name2idx_dict[curr_name]
@@ -341,6 +370,7 @@ class ScatterPlot():
         if self.tight is True:
             self.resizing = None
             def resize_event_handler(event=None):
+                """Tries to adapt to resize events"""
                 #print "rererererere"
                 #self.show()
                 if self.resizing is not None:
@@ -351,11 +381,14 @@ class ScatterPlot():
         widget.focus()
         return widget
     def show(self):
+        """Show widget, attempt to fix bugs when resizing"""
         self.resizing = None
         self.widget.update_idletasks()
         self.figure.subplots_adjust(bottom=0.0, top=1.0,hspace=0)
         self.canvas.show()
     def set_data(self,x_values,y_values,names=None):
+        """Sets the data for the scatter plot, x_values and y_values should be arrays of the same size,
+        names if provided is used to identify the points, it should have the same size as x_values and y_values"""
         self.y_values=y_values
         self.x_values=x_values
         if names is None:
@@ -367,6 +400,7 @@ class ScatterPlot():
 
 
     def draw_scatter(self):
+        """Updates the scatter representation"""
         a=self.axis
         a.cla()
         a.set_ylim(self.y_limits[0],self.y_limits[1])
@@ -402,11 +436,14 @@ class ScatterPlot():
         self.canvas.mpl_connect('pick_event',on_pick)
         self.show()
     def paint(self):
+        """same as draw_scatter, for providing a common api"""
         self.draw_scatter()
     def set_limits(self,x_lim,y_lim):
+        """Set limits for x and y axes"""
         self.x_limits=x_lim
         self.y_limits=y_lim
     def set_labels(self,x_label='',y_label=''):
+        """Set names for the plot labels"""
         if len(y_label)>20:
             y_label="".join(("...",y_label[-20:]))
         if len(x_label)>50:
@@ -414,12 +451,13 @@ class ScatterPlot():
         self.x_label=x_label
         self.y_label=y_label
     def set_color_function(self,color_fun):
-        "function must take val,code pairs"
+        """function must take val,code pairs"""
         self.__color_fun=color_fun
     def set_groups(self,group_dict):
         """Extra regression lines will be added for the groups, a legend will be shown with r-values"""
         self.__groups_dict=group_dict
     def get_current_name(self,event=None):
+        """Get the name of the dot current under the mouse, if mouse is over an axis retunr axis_0 or axis_1"""
         if self.current_id is None:
             return None
         if type(self.current_id) is str:
@@ -428,8 +466,10 @@ class ScatterPlot():
             return self.__data_names[self.current_id[0]]
 
     def set_higlight_index(self,highlighted_id=None):
+        """Sets the dot to highlight"""
         self.__highlited=highlighted_id
 def calculate_regression_line(x,y):
+    """uses scipy to calculate a regression line between arrays x and y"""
     from scipy.stats import linregress
     slope, intercept, r_value, p_value, std_err = linregress(x, y)
     def reg_line(x):
@@ -437,8 +477,9 @@ def calculate_regression_line(x,y):
     return reg_line,r_value
 
 class SpiderPlot():
-
+    """Shows several variables in a spider plot, colors are defined by a color function"""
     def __init__(self,tight=True):
+        """If tight is True uses the tightlayout option of matplotlib"""
         f = Figure(tight_layout=tight, facecolor='w', frameon=False, edgecolor='r')
         self.figure=f
         self.widget=None
@@ -457,6 +498,8 @@ class SpiderPlot():
 
 
     def get_widget(self,master,**kwargs):
+        """Get the widget associated to this plot, register callbacks,
+        Invokes <<PlotSelected>> when a web is selected"""
         if self.widget is not None:
             return self.widget
         canvas = FigureCanvasTkAgg(self.figure, master=master)
@@ -465,6 +508,7 @@ class SpiderPlot():
         widget.configure(bd=4, bg='white', highlightcolor='red', highlightthickness=0, **kwargs)
 
         def click_on_spider(event=None):
+            """Handles clicks on the chart"""
             curr_name=self.get_current_name()
             if curr_name in self.data_dict:
                 self.set_highlighted_key(curr_name)
@@ -479,8 +523,11 @@ class SpiderPlot():
         widget.focus()
         return widget
     def show(self):
+        """Show figure"""
         self.canvas.show()
     def set_data(self,data_dict,axis_labels=None):
+        """Sets data for the plot, it should be a dictionary containing ids as keys, and iterables as values,
+        All iterables should be of the same length. Axis labels may also be set here"""
         self.data_dict=data_dict
         #check dimensions
         N=None
@@ -497,8 +544,11 @@ class SpiderPlot():
                 self.axis_labels=None
 
     def set_rmax(self,r_max):
+        """Sets maximum radius of the web"""
         self.r_max=r_max
     def set_groups(self,groups_dict):
+        """Divides the data into different groups,
+        groups_dict should contain the same keys as the data_dict from set_data, values define groups"""
         self.__groups=set(groups_dict.itervalues())
         self.__groups_dict=groups_dict
 
@@ -507,6 +557,7 @@ class SpiderPlot():
         self.color_fun=color_fun
 
     def draw_spider(self):
+        """Updates the graph with all the setted parameters"""
         from braviz.visualization.radar_chart import radar_factory
         theta = radar_factory(self.N, frame='polygon')
 
@@ -539,6 +590,7 @@ class SpiderPlot():
             a.set_picker(custom_pick)
         #end axis
         def on_pick(event):
+            """handles picks on widget"""
             #print "auch, %s (%f)"%(event.url,event.r_max)
             if isinstance(event.artist,matplotlib_text):
                 self.__current_name = "axis_%s"%event.artist.get_text()
@@ -546,6 +598,7 @@ class SpiderPlot():
                 self.__current_name=event.url
         self.canvas.mpl_connect('pick_event', on_pick)
         def update_mouse_pos(event):
+            """registers last known mouse position"""
             self.__current_name = None
             if event.inaxes is None:
                 self.figure.pick(event)
@@ -556,14 +609,19 @@ class SpiderPlot():
         cid = self.figure.canvas.mpl_connect('motion_notify_event', update_mouse_pos)
         self.show()
     def paint(self):
+        """Analogous to draw_spider, to provide common api"""
         self.draw_spider()
     def get_current_name(self):
+        """Gets name currently under the mouse, or axis_n if over an axis"""
         return self.__current_name
     def set_highlighted_key(self,high_key=None):
+        """sets the highlighted web"""
         self.__highlight_key=high_key
     @staticmethod
     def get_r_functions(patches):
+        """Creates functions that help decide if a click is inside a web"""
         def r_function(theta):
+            "r(theta) for all theta in a web"
             #patches are uniformly spaced:
             #Find to which patch the angle belongs
 #            print theta
@@ -595,6 +653,7 @@ class SpiderPlot():
         return r_function
     @staticmethod
     def get_custom_picker_function(filtered_keys2,pickers_dict2):
+        """picks the outer web which stills traps the mouse"""
         filtered_keys=filtered_keys2[:]
         pickers_dict=dict(pickers_dict2.iteritems())
         def custom_pick(artist, event=None):

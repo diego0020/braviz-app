@@ -1,10 +1,12 @@
-#Visualizations based on vtkCharts
+"""Visualizations based on vtkCharts"""
 from __future__ import division
 import vtk
 import numpy as np
 #line plot
 class LinePlot(vtk.vtkContextActor):
+    """A vtk line plot"""
     def __init__(self):
+        """Initializes internal structures"""
         chart = vtk.vtkChartXY()
         scene = vtk.vtkContextScene()
 
@@ -27,17 +29,19 @@ class LinePlot(vtk.vtkContextActor):
         self.vertical_line_id=None
         self.position=None
     def set_position(self, x, y, width, height):
+        """Sets the position in the render of the plot"""
         self.chart.SetAutoSize(False)
         self.chart.SetSize(vtk.vtkRectf(x, y, width, height))
         self.position=(x,y,width,height)
     def get_position(self):
-        "Return (x,y,width,height)"
+        """Return (x,y,width,height)"""
         if self.position is not None:
             return self.position
         x1,y1=self.chart.GetPoint1()
         x2, y2 = self.chart.GetPoint2()
         return x1,y1,x2-x1,y2-y1
     def set_renderer(self, ren):
+        """Sets the renderer for the plot"""
         self.scene.SetRenderer(ren)
     def set_values(self, values, color=None,width=None,marker=None):
         """Values should be a list of lists, the first list will be used for the x asis
@@ -119,6 +123,7 @@ class LinePlot(vtk.vtkContextActor):
         self.x_axis = axis_x
         self.y_axis = axis_y
     def set_x_axis(self, title=None, limits=None, ticks=None, visible=True):
+        """Sets parameters for the x axis"""
         self.x_limits = limits
         if ticks is not None:
             ticks_array = vtk.vtkDoubleArray()
@@ -132,6 +137,7 @@ class LinePlot(vtk.vtkContextActor):
         self.x_visible = visible
 
     def set_y_axis(self, title=None, limits=None, ticks=None, visible=True):
+        """Sets parameters for the y axis"""
         self.y_limits = limits
         if ticks is not None:
             ticks_array = vtk.vtkDoubleArray()
@@ -145,6 +151,7 @@ class LinePlot(vtk.vtkContextActor):
         self.y_visible = visible
 
     def add_vertical_line(self,x_coordinate,min_y=None,max_y=None,color=(255,0,0,255)):
+        """Adds a vertical line at x_coordinate to the chart"""
         if self.vertical_line_id is not None:
             self.chart.RemovePlot(self.vertical_line_id)
         if x_coordinate is None:
@@ -171,7 +178,9 @@ class LinePlot(vtk.vtkContextActor):
         line.SetInputData(line_table, 0, 1)
 
 class BarPlot(vtk.vtkContextActor):
+    """A vtk based bar plot which displays a single bar"""
     def __init__(self):
+        """Initializes internal structures"""
         chart = vtk.vtkChartXY()
         scene = vtk.vtkContextScene()
 
@@ -204,9 +213,11 @@ class BarPlot(vtk.vtkContextActor):
         self.y_visible = True
         self.position=None
     def set_renderer(self, ren):
+        """Sets the renderer for the plot"""
         self.scene.SetRenderer(ren)
 
     def set_value(self, value, color=None):
+        """Set the value for the bar"""
         self.chart.ClearPlots()
         #=============================================
         self.table.SetValue(0, 0, 1) #dummy for x axis
@@ -267,11 +278,12 @@ class BarPlot(vtk.vtkContextActor):
         self.y_axis = axis_y
 
     def set_position(self, x, y, width, height):
+        """sets the position for the bar plot"""
         self.chart.SetAutoSize(False)
         self.chart.SetSize(vtk.vtkRectf(x, y, width, height))
         self.position=(x,y,width,height)
     def get_position(self):
-        "Return (x,y,width,height)"
+        """Return (x,y,width,height)"""
         if self.position is not None:
             return self.position
         x1,y1=self.chart.GetPoint1()
@@ -280,6 +292,7 @@ class BarPlot(vtk.vtkContextActor):
 
 
     def set_x_axis(self, title=None, limits=None, ticks=None,visible=True):
+        """sets parameters for the x axis"""
         self.x_limits = limits
         if ticks is not None:
             ticks_array = vtk.vtkDoubleArray()
@@ -293,6 +306,7 @@ class BarPlot(vtk.vtkContextActor):
         self.x_visible = visible
 
     def set_y_axis(self, title=None, limits=None, ticks=None,visible=True):
+        """Sets parameters for the y axis"""
         self.y_limits = limits
         if ticks is not None:
             ticks_array = vtk.vtkDoubleArray()
@@ -307,8 +321,9 @@ class BarPlot(vtk.vtkContextActor):
 
 
 class multi_bar_plot(vtk.vtkContextView):
-    "This class is designed to use inside a single widget"
+    """This class is designed to use inside a single widget, displays several bars (buggy)"""
     def __init__(self):
+        """Initialize internal structures"""
         #easy access to renderer
         self.ren=self.GetRenderer()
 
@@ -334,13 +349,15 @@ class multi_bar_plot(vtk.vtkContextView):
         self.x_title = ""
         self.enphasis=None
     def set_enphasis(self,index):
+        """Highlights a bar"""
         self.enphasis=index
 
     def get_bar_graph_width(self):
+        """Gets the current width of bars"""
         n_elements=self.max_elements
         col_width=self.width
         return n_elements * (col_width + 1) - 1
-
+    #What follows is all very hacky, and probable dependant on implementation details
     def get_minimum_start(self):
         #2*s > w*n
         n_elements=self.max_elements
@@ -421,7 +438,7 @@ class multi_bar_plot(vtk.vtkContextView):
 
         return bars
     def set_color_fun(self,color_function):
-        "color_function must take an scalar value and rerturn a (r,g,b,a) tuple"
+        """color_function must take an scalar value and rerturn a (r,g,b,a) tuple"""
         self.color_fun=color_function
     def __add_line2(self,y_pos,dashed,limits):
         line = self.chart.AddPlot(vtk.vtkChart.LINE)
@@ -449,11 +466,12 @@ class multi_bar_plot(vtk.vtkContextView):
 
 
     def set_data(self,data,data_tips=None):
+        """sets data for the bar chart, and optionally data tips"""
         self.data=data
         self.data_tip=data_tips
 
     def set_lines(self,line_pos,dashed=None):
-        "Dashed must be a true or false array of the same length as line_pos"
+        """Dashed must be a true or false array of the same length as line_pos"""
         if dashed and len(dashed)==len(line_pos):
             lines=zip(line_pos,dashed)
         else:
@@ -461,14 +479,18 @@ class multi_bar_plot(vtk.vtkContextView):
         self.lines=lines
         return True
     def set_y_limis(self,y_min,y_max):
+        """sets limits for the y axis"""
         self.y_min=y_min
         self.y_max=y_max
     def set_y_title(self,y_title):
+        """set y title for y axis"""
         self.y_title=y_title
 
     def set_x_title(self, x_title):
+        """sets title for x axis"""
         self.x_title = x_title
     def paint_bar_chart(self):
+        """paints the chart"""
         w = self.width
         s = self.start
         data=self.data
@@ -529,7 +551,9 @@ class multi_bar_plot(vtk.vtkContextView):
 
 
 class mini_scatter_plot(vtk.vtkContextActor):
+    """A scatter plot designed to be overlayed on top of a 3d scene"""
     def __init__(self):
+        """Initializes all itnernal structures"""
         chart = vtk.vtkChartXY()
         scene = vtk.vtkContextScene()
 
@@ -567,16 +591,18 @@ class mini_scatter_plot(vtk.vtkContextActor):
         self.scatter=None
         self.locator=None
     def set_renderer(self, ren):
+        """Sets the renderer for the plot"""
         self.scene.SetRenderer(ren)
         self.ren=ren
 
     def set_position(self, x, y, width, height):
+        """Sets the position of the plot"""
         self.chart.SetAutoSize(False)
         self.chart.SetSize(vtk.vtkRectf(x, y, width, height))
         self.position = (x, y, width, height)
 
     def get_position(self):
-        "Return (x,y,width,height)"
+        """Return (x,y,width,height)"""
         if self.position is not None:
             return self.position
         x1, y1 = self.chart.GetPoint1()
@@ -585,6 +611,7 @@ class mini_scatter_plot(vtk.vtkContextActor):
 
 
     def set_x_axis(self, title=None, limits=None, ticks=None, visible=True):
+        """sets parameter for the x axis"""
         self.x_limits = limits
         if ticks is not None:
             ticks_array = vtk.vtkDoubleArray()
@@ -598,6 +625,7 @@ class mini_scatter_plot(vtk.vtkContextActor):
         self.x_visible = visible
 
     def set_y_axis(self, title=None, limits=None, ticks=None, visible=True):
+        """sets parameter for the y axis"""
         self.y_limits = limits
         if ticks is not None:
             ticks_array = vtk.vtkDoubleArray()
@@ -610,11 +638,13 @@ class mini_scatter_plot(vtk.vtkContextActor):
         self.y_title = title
         self.y_visible = visible
     def set_color(self,color):
+        """sets colors for the dots"""
         if type(color[0]) == float:
             rgb_color = np.dot(color, 255)
             color = map(int, rgb_color)
         self.color=color
     def add_correlation(self,data):
+        """Adds a regression line"""
         from scipy.stats import linregress
         x,y=zip(*data)
         if len(x)<2:
@@ -669,6 +699,7 @@ class mini_scatter_plot(vtk.vtkContextActor):
             reg_line.SetInputData(table,0,1)
 
     def set_values(self, values):
+        """Sets the values for the plot and updates it"""
         self.chart.ClearPlots()
         #=============================================
         self.table.SetNumberOfRows(len(values))
@@ -746,14 +777,17 @@ class mini_scatter_plot(vtk.vtkContextActor):
         self.add_correlation(values)
 
     def select_point(self,point_id):
+        """Selects a point in the scatter"""
         selected_ids=vtk.vtkIdTypeArray()
         if point_id is not None:
             selected_ids.InsertNextValue(point_id)
         self.scatter.SetSelection(selected_ids)
         self.InvokeEvent(vtk.vtkCommand.InteractionEvent)
     def find_point(self,coordinates):
+        """Finds the id of the point closer to coordinates"""
         coordinates3=(coordinates[0],coordinates[1],0)
         closest_id=self.locator.FindClosestPoint(coordinates3)
         return closest_id
     def get_point_by_id(self,point_id):
+        """Returns the coordinates of a point given its id"""
         return self.locator.GetDataSet().GetPoint(point_id)
