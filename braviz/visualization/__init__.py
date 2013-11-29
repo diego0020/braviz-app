@@ -53,12 +53,13 @@ class simpleVtkViewer():
         self.pd_actors.append(actor)
         self.ren.Render()
         return actor
-    def start(self):
+    def start(self,reset=True):
         """Call this method to start the interaction, interaction can be stopped by pressing 'q' on the main window"""
         print "press 'Q' on viewer window to stop"
-        self.ren.ResetCameraClippingRange()
-        self.ren.ResetCamera()
-        self.ren.Render()
+        if reset is True:
+            self.ren.ResetCameraClippingRange()
+            self.ren.ResetCamera()
+        self.renWin.Render()
         self.iren.Start()
 
     def addImg(self,img):
