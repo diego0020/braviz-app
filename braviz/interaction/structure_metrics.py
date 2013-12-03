@@ -1,3 +1,4 @@
+"""Functions for calculating or reading structure metrics"""
 from __future__ import division
 from os.path import join as path_join
 import cPickle
@@ -10,6 +11,10 @@ import braviz
 __author__ = 'Diego'
 
 def get_mult_struct_metric(reader,struct_names,code,metric='volume'):
+    """Aggregates a metric across multiple structures
+
+    If metric is area or volume the values for the different structures are added,
+    if metric is nfiber,lfibers or fa_fibers get_fibers_metric is used"""
     values=[]
     if metric in ('lfibers','fa_fibers','nfibers'):
         #we need to get all the fibers
@@ -34,6 +39,15 @@ def get_mult_struct_metric(reader,struct_names,code,metric='volume'):
 
 
 def get_struct_metric(reader,struct_name,code,metric='volume'):
+    """Calculates a metric for a specific structure
+
+    The supported metrics are:
+    volume: Volume of the structure, read from freesurfer files
+    area: Surfrace area of the structure
+    nfibers: Number of fibers that cross the structure, or number of fibers in the bundle if structure is Fibs:*
+    lfibers: Mean length of fibers going through structure or in bundle
+    fa_fibers: Mean fa of fibers crossing the structure or in bundle
+    """
     #print "calculating %s for %s (%s)"%(metric,struct_name,code)
 
     if metric=='volume':
@@ -62,6 +76,14 @@ def get_struct_metric(reader,struct_name,code,metric='volume'):
 
 
 def get_fibers_metric(reader, struct_name,code,metric='number',):
+    """Calculates metrics for groups of fibers
+
+    struct_name can be the name of a freesurfer model, in which case the bundle will be the fibers that cross it,
+    if struct_name is a list of structures, the fibers crossing any of those structures will be used
+    finally struct_name can be a named fiber, which will be used as a bundle
+
+    metrics are number, mean_length and mean_fa
+    """
     #print "calculating for subject %s"%code
     n=0
     if hasattr(struct_name,"__iter__") and len(struct_name)==1:
@@ -99,6 +121,22 @@ def get_fibers_metric(reader, struct_name,code,metric='number',):
 
 def cached_get_struct_metric_col(reader,codes,struct_name,metric,
                                  state_variables={},force_reload=False,laterality_dict={}):
+    """
+    calculates a structure metrics for all subjects in a list of codes
+
+    It has a disk cache which is used to try to save results, and if available read from disk instead of calculating again
+    if force_reload is True, a cached result will be ignored, and the column will be calculated again
+    A laterality_dict may be used for solving dominand and non dominant structures specifications
+    It has a dictionary of state_variables which can be used to monitor or cancel the calculation from a different thread
+    The states variables are:
+    'struct_name': the requested structure name
+    'metric' ; the requested metric
+    'working' : Set to true at start of function, and to false just before returning
+    'output' : A partial list of results will be stored here, this is the same object that will be returned
+    'number_calculated' : number of metrics calculated
+    'number_requested' : number of metrics requested (length of codes list)
+    'cancel' : Set this to True, to cancel the operation and return before the next iteration
+    """
     #global struct_metrics_col, temp_struct_metrics_col, processing, cancel_calculation_flag, struct_name, metric
     state_variables['struct_name']=struct_name
     state_variables['metric']=metric
@@ -164,6 +202,10 @@ laterality_lut={
     ('n','l'):'l',
 }
 def get_right_or_left_hemisphere(hemisphere,laterality):
+    """
+    Translates d (dominant) and n (nondominant) into r (right) or l (left) using laterality,
+    laterality should be r (right handed) or l (left handed)
+    hemisphere can also be r or l; which will be outputed again"""
     if hemisphere in ('d', 'n'):
         if laterality[0].lower() not in ('r','l'):
             raise Exception('Unknown laterality')
@@ -175,6 +217,11 @@ def get_right_or_left_hemisphere(hemisphere,laterality):
     return new_hemisphere
 
 def solve_laterality(laterality,names):
+    """translates dominant and nondominant freesurfer names into right and left names,
+    laterality should be  (right handed) or l (left handed)
+    names is a list of names to translate
+    currently wm-[d|n|r|l]h-* , ctx-[d|n|r|l]h-* and fiber bundles ending in '_[d|n|r|l]' are supported"""
+    #TODO: Support Left-Amygdala
     new_names=[]
     for name in names:
         new_name=name
@@ -184,7 +231,7 @@ def solve_laterality(laterality,names):
         elif name.startswith('wm-'):
             h=name[3]
             new_name = ''.join((name[:3], get_right_or_left_hemisphere(h, laterality), name[4:]))
-        elif name[-2:] in ('_d','_n'):
+        elif name[-2:] in ('_d','_n','_r','_l'):
             h=get_right_or_left_hemisphere(name[-1],laterality)
             new_name=name[:-1]+h
         new_names.append(new_name)

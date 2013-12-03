@@ -1,15 +1,20 @@
+"""A class and methods for manipulating a configuration file"""
+
 import os
 import vtk
 from ConfigParser import RawConfigParser
 __author__ = 'Diego'
 
 class braviz_config(RawConfigParser):
+    """A configuration file parser with functions to get braviz specific parameters"""
     def get_background(self):
+        """returns a floats list with the background color specified in the configuration file"""
         back_string=self.get('VTK','background')
         back_list=back_string.split(' ')
         back_nums=map(float,back_list)
         return tuple(back_nums)
     def get_interaction_style(self):
+        """Checks if the intraction style is a valid vtk interaction style and returns vtk name"""
         vtk_attrs=dir(vtk)
         upper_vtk_attrs=map(lambda x:x.upper(),vtk_attrs)
         custom_interactor_style=self.get('VTK','interaction_style')
@@ -41,6 +46,7 @@ def get_config(custom_dir=None):
     return braviz_conf
 
 def make_default_config():
+    """Creates a configuration file with defailt parameters and stores it as 'braviz.cfg'"""
     config_dir=os.path.dirname(os.path.realpath(__file__))
     config_file_name='braviz.cfg'
     default_config_name=os.path.join(config_dir,config_file_name)
@@ -49,13 +55,11 @@ def make_default_config():
     braviz_conf.set('VTK','Background','0.1 0.1 0.2')
     braviz_conf.set('VTK','Interaction_Style','TrackballCamera')
     try:
-        config_file=open(default_config_name,'w')
-        braviz_conf.write(config_file)
-        config_file.close()
+        with open(default_config_name,'w') as config_file:
+            braviz_conf.write(config_file)
         print "default configuration file created in %s"%default_config_name
-    except:
+    except IOError:
         print "couldn't create default configuration file in %s"%default_config_name
-
 
     return braviz_conf
 

@@ -1,3 +1,4 @@
+"""Creating hierarchies from free surfer names"""
 import braviz
 from braviz.utilities import recursive_default_dict
 __author__ = 'Diego'
@@ -5,6 +6,18 @@ __author__ = 'Diego'
 
 
 def get_structural_hierarchy(reader,subj):
+    """
+    returns a dictionary with a hierarchy from free surfer structures read from reader
+
+    The hierarchy contains multiples copies of each structure, for different search options the top levels are:
+    Right Hemisphere : Gray and white matter
+    Left Hemisphere : Gray and white matter
+    Dominant Hemisphere : Gray and white matter
+    Nondominant Hemisphere : Gray and white matter
+    Corpus Callosum : Gray and white matter
+    Base (Subcortical structures)
+    Fibers (named fibers)
+    """
     structure_names=reader.get('model',subj,index=True)
     hierarchy_dict=recursive_default_dict()
     for struct in structure_names:
@@ -42,6 +55,6 @@ def get_structural_hierarchy(reader,subj):
 
 
 if __name__=='__main__':
-    reader=braviz.readAndFilter.kmc40AutoReader()
-    hier=get_structural_hierarchy(reader,'144')
+    reader2=braviz.readAndFilter.kmc40AutoReader()
+    hier=get_structural_hierarchy(reader2,'144')
     print hier

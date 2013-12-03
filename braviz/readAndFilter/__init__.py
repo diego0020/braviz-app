@@ -14,13 +14,13 @@ from collections import OrderedDict
 import psutil
 
 def nibNii2vtk(nii):
-    "Transform a nifti image read by nibabel into a vtkImageData"
+    """Transform a nifti image read by nibabel into a vtkImageData"""
     d = nii.get_data()
     return numpy2vtk_img(d)
 
 
 def numpy2vtk_img(d):
-    "Transform a 3d numpy array into a vtk image data object"
+    """Transform a 3d numpy array into a vtk image data object"""
     data_type = d.dtype
     importer = vtk.vtkImageImport()
     dstring = d.flatten(order='F').tostring()
@@ -33,6 +33,8 @@ def numpy2vtk_img(d):
         importer.SetDataScalarTypeToInt()
     elif data_type.type == np.int16:
         importer.SetDataScalarTypeToShort()
+    elif data_type.type == np.uint8:
+        importer.SetDataScalarTypeToUnsignedChar()
         #======================================
     if data_type.byteorder == '>':
         #Fix byte order

@@ -33,7 +33,7 @@
 		braint:SubTest_DataType "Ordinal" ;
 		braint:isRelatedWith :BIWEI ;
 		braint:isRelatedWith :VMI ;
-		braint:isMentionedIn :REASONER;
+		braint:isMentionedIn :REASONER ;
 		braint:SubTest_Description "missing" .
 		
 :GENDE rdf:type braint:SubTest ,
@@ -51,7 +51,7 @@
 		braint:isRelatedWith :UBICA ;
 		braint:isMentionedIn :REASONER ;
 		braint:isRelatedWith :VMI ;
-		braint:isMentionedIn :GELD2012 .
+		braint:isMentionedIn :GELD2012 ;
 		braint:SubTest_Description "missing" .
 		
 :EDLEM rdf:type braint:SubTest ,
@@ -175,7 +175,7 @@
                          owl:NamedIndividual ;
 		braint:SubTest_Name "Execution Development Quotient at sixth month of birth" ;
 		braint:SubTest_DataType "Ordinal" ;
-		braint:isRelatedWith :DEXQS ;
+		braint:isRelatedWith :DEXQT ;
 		braint:isMentionedIn :REASONER ;
 		braint:SubTest_Description "missing" .
 		
@@ -310,7 +310,7 @@
 		braint:isRelatedWith :SCHFA ;
 		braint:isRelatedWith :RID7137 ;
 		braint:isRelatedWith :VMI ;
-		braint:isMentionedIn :GELD2012
+		braint:isMentionedIn :GELD2012 ;
 		braint:isMentionedIn :REASONER .
 		
 
@@ -341,7 +341,7 @@
                          owl:NamedIndividual ;
 		braint:SubTest_Name "Visual Motor Integration " ;
 		braint:SubTest_DataType "Ordinal" ;
-		braint:SubTest_Description "Consists of coordinating visual perceptual skills together with gross-motor movement and fine-motor movement. (Vision and Learning)" .
+		braint:SubTest_Description "Consists of coordinating visual perceptual skills together with gross-motor movement and fine-motor movement. (Vision and Learning)" ;
 		braint:isRelatedWith :BIWEI ;
 		braint:isRelatedWith :UBICA ;
 		braint:isRelatedWith :FSIQ ;
@@ -513,6 +513,7 @@
 			braint:Publication_KeyWords "VLBW, Preterm birth, Brain, Cortical thickness, Entorhinal cortex, VMI, WISC-III, IQ, Executive function" ;
 			braint:Publication_Year "2012" ;
 			braint:hasAReferenceOf :FSIQ ;
+			braint:hasAReferenceOf :RID7137 ;
 			braint:hasAReferenceOf :ECOSI .
 
 :GELD2012 rdf:type braint:Publication ,

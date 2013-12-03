@@ -72,10 +72,37 @@ class RDFDBManager:
         childrenList = list()
         for miItem in miLista:
             xValue = miItem['Result']['value']
-            xVal,xSep,xAft = xValue.partition('#')
+            if '#' in xValue:
+                xVal,xSep,xAft = xValue.partition('#')
+            else:
+                xAft = xValue
             childrenList.append(xAft)
         return childrenList
-    
+
+    def loadQueryRdfType(self,filename, parent):
+        data= open(filename, 'r').read()
+        data=data.replace('PARENT_CODE', parent)
+        endpoint = "%s/openrdf-sesame/repositories/%s" % (self.RepEndPoint, self.repository)
+        #print "POSTing SPARQL query to %s" % (endpoint)
+        params = { 'query': data }
+        headers = {
+                   'content-type': 'application/x-www-form-urlencoded',
+                   'accept': 'application/sparql-results+json'
+                   }
+        (response, content) = httplib2.Http().request(endpoint, 'POST', urllib.urlencode(params), headers=headers)
+        #print "Response %s" % response.status
+        results = json.loads(content)
+       # print results
+        #print results['results']['bindings']
+        #print len(results['results']['bindings'])
+        miLista = results['results']['bindings']
+        childrenList = list()
+        for miItem in miLista:
+            xValue = miItem['type']['value']
+            if 'untitled-ontology-53' in xValue:
+                xVal,xSep,xAft = xValue.partition('#')
+                childrenList.append(xAft)
+        return childrenList
     
     
     def loadFreeSurferNames(self,filename,structure):
