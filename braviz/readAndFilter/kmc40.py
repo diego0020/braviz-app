@@ -18,6 +18,7 @@ import re
 import vtk
 import platform # for the autoReader
 import cPickle
+import hashlib
 
 class kmc40Reader:
     """
@@ -634,12 +635,76 @@ The path containing this structure must be set."""
 
 
     def getDataRoot(self):
-        "Returns the data_root of this reader"
+        """Returns the data_root of this reader"""
         return self.__root
     def transformPointsToSpace(self,point_set,space,subj,inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space. 
         If inverse is true moves from space to world"""
         return self.__movePointsToSpace(point_set, space, subj, inverse)
+    def save_into_cache(self,key,data):
+        """
+        Saves some data into a cache, can deal with vtkData and python objects which can be pickled
+
+        key should be printable by %s, and it can be used to later retrive the data using load_from_cache
+        you should not use the same key for python objects and vtk objects
+        returnt true if success, and false if failure
+        """
+        key="%s"%key
+        if len(key) > 250:
+            key = hashlib.sha1(key).hexdigest()
+        cache_dir=os.path.join(self.getDataRoot(),'.braviz_cache')
+        if not os.path.isdir(cache_dir):
+            os.mkdir(cache_dir)
+        if isinstance(data,vtk.vtkObject):
+            cache_file=os.path.join(cache_dir,"%s.vtk"%key)
+            writer = vtk.vtkGenericDataObjectWriter()
+            writer.SetInputData(data)
+            writer.SetFileName(cache_file)
+            writer.SetFileTypeToBinary()
+            res=writer.Write()
+            if res==1:
+                return True
+            else:
+                return False
+        else:
+            # Python object, try to pickle
+            cache_file = os.path.join(cache_dir, "%s.pickle"%key)
+            with open(cache_file,'wb') as cache_descriptor:
+                try:
+                    cPickle.dump(data,cache_descriptor,-1)
+                except cPickle.PicklingError:
+                    return False
+            return True
+
+    def load_from_cache(self,key):
+        """
+        Loads data stored into cache with the function save_into_cache
+
+        Data can be a vtkobject or a python structure, if both were stored with the same key, python object will be returned
+        returns None if object not found
+        """
+        key="%s"%key
+        if len(key) > 250:
+            key = hashlib.sha1(key).hexdigest()
+        cache_dir = os.path.join(self.getDataRoot(), '.braviz_cache')
+        cache_file = os.path.join(cache_dir, "%s.pickle" % key)
+        try:
+            with open(cache_file, 'rb') as cache_descriptor:
+                try:
+                    ans=cPickle.load(cache_descriptor)
+                except cPickle.UnpicklingError:
+                    print "File %s is corrupted "%cache_file
+                    return None
+                else:
+                    return ans
+        except IOError:
+            pass
+        reader=vtk.vtkGenericDataObjectReader()
+        cache_file = os.path.join(cache_dir, "%s.vtk" % key)
+        reader.SetFileName(cache_file)
+        reader.Update()
+        return reader.GetOutput()
+
 
 #===============================================================================================
 def autoReader(**kw_args):
