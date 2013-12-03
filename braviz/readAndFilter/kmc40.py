@@ -641,6 +641,18 @@ The path containing this structure must be set."""
         """Access to the internal coordinate transform function. Moves from world to space. 
         If inverse is true moves from space to world"""
         return self.__movePointsToSpace(point_set, space, subj, inverse)
+    def __process_key(self,key):
+        data_root_length=len(self.getDataRoot())
+        key="%s"%key
+        if len(key)+data_root_length>250:
+            key = hashlib.sha1(key).hexdigest()
+        else:
+            ilegal=['<','>',':','"','/',"\\",'|','?','*']
+            for il in ilegal:
+                key=key.replace('il','_')
+        return key
+
+
     def save_into_cache(self,key,data):
         """
         Saves some data into a cache, can deal with vtkData and python objects which can be pickled
@@ -648,10 +660,9 @@ The path containing this structure must be set."""
         key should be printable by %s, and it can be used to later retrive the data using load_from_cache
         you should not use the same key for python objects and vtk objects
         returnt true if success, and false if failure
+        WARNING: Long keys are hashed using sha1: Low risk of collisions, no checking is done
         """
-        key="%s"%key
-        if len(key) > 250:
-            key = hashlib.sha1(key).hexdigest()
+        key=self.__process_key(key)
         cache_dir=os.path.join(self.getDataRoot(),'.braviz_cache')
         if not os.path.isdir(cache_dir):
             os.mkdir(cache_dir)
@@ -669,11 +680,15 @@ The path containing this structure must be set."""
         else:
             # Python object, try to pickle
             cache_file = os.path.join(cache_dir, "%s.pickle"%key)
-            with open(cache_file,'wb') as cache_descriptor:
-                try:
-                    cPickle.dump(data,cache_descriptor,-1)
-                except cPickle.PicklingError:
-                    return False
+            try:
+                with open(cache_file,'wb') as cache_descriptor:
+                    try:
+                        cPickle.dump(data,cache_descriptor,-1)
+                    except cPickle.PicklingError:
+                        return False
+            except OSError:
+                print "couldn't open file %s"%cache_file
+                return False
             return True
 
     def load_from_cache(self,key):
@@ -683,9 +698,7 @@ The path containing this structure must be set."""
         Data can be a vtkobject or a python structure, if both were stored with the same key, python object will be returned
         returns None if object not found
         """
-        key="%s"%key
-        if len(key) > 250:
-            key = hashlib.sha1(key).hexdigest()
+        key=self.__process_key(key)
         cache_dir = os.path.join(self.getDataRoot(), '.braviz_cache')
         cache_file = os.path.join(cache_dir, "%s.pickle" % key)
         try:
@@ -699,9 +712,14 @@ The path containing this structure must be set."""
                     return ans
         except IOError:
             pass
-        reader=vtk.vtkGenericDataObjectReader()
+
         cache_file = os.path.join(cache_dir, "%s.vtk" % key)
+        if not os.path.isfile(cache_file):
+            return None
+        reader = vtk.vtkGenericDataObjectReader()
         reader.SetFileName(cache_file)
+        if reader.ReadOutputType()<0:
+            return None
         reader.Update()
         return reader.GetOutput()
 

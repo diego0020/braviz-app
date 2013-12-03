@@ -155,17 +155,11 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,
         key='column_%s_%s' % (''.join(struct_name).replace(':', '_'), metric.replace(':', '_'))
     else:
         key = 'column_%s_%s' % (struct_name.replace(':', '_'), metric.replace(':', '_'))
-    if len(key)>250:
-        key=hashlib.sha1(key).hexdigest()
-    cache_file_name = path_join(reader.getDataRoot(), 'pickles', '%s.pickle' % key)
+    key+=';'.join(sorted(codes))
     if force_reload is not True:
-        try:
-            with open(cache_file_name, 'rb') as cachef:
-                struct_metrics_col_and_codes = cPickle.Unpickler(cachef).load()
-        except IOError:
-            pass
-        else:
-            cache_codes,struct_metrics_col,  = zip(*struct_metrics_col_and_codes)
+        cached=reader.load_from_cache(key)
+        if cached is not None:
+            cache_codes,struct_metrics_col,  = zip(*cached)
             if list(cache_codes)==list(codes):
                 state_variables['working'] = False
                 state_variables['output'] = struct_metrics_col
@@ -183,12 +177,7 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,
         scalar = calc_function(reader,struct_name2, code, metric)
         temp_struct_metrics_col.append(scalar)
         state_variables['number_calculated'] = len(temp_struct_metrics_col)
-    try:
-        with open(cache_file_name, 'wb') as cachef:
-            cPickle.Pickler(cachef, 2).dump(zip(codes,temp_struct_metrics_col))
-    except IOError:
-        print "cache write failed"
-        print "file was %s" % cache_file_name
+    reader.save_into_cache(key,zip(codes,temp_struct_metrics_col))
     state_variables['output']=temp_struct_metrics_col
     state_variables['working'] = False
     return temp_struct_metrics_col
