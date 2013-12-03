@@ -2,7 +2,6 @@ from __future__ import division
 import Tkinter as tk
 import ttk
 from os.path import join as path_join
-import cPickle
 import thread
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \

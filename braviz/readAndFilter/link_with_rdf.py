@@ -26,20 +26,14 @@ def get_free_surfer_pretty_names_dict():
 
 def cached_get_free_surfer_dict(reader=None):
     from braviz.readAndFilter import kmc40AutoReader
-    import cPickle
     if reader is None:
         reader=kmc40AutoReader()
-    data_root=reader.getDataRoot()
-    pickles_dir=os.path.join(data_root,'pickles')
-    cache_file=os.path.join(pickles_dir,'free_surfer_long_names_dict.pickle')
-    with ignored(IOError):
-        with open(cache_file,'rb') as pickle_file:
-            names_dict=cPickle.Unpickler(pickle_file).load()
-            return names_dict
+    key='free_surfer_long_names_dict'
+    names_dict=reader.load_from_cache(key)
+    if names_dict is not None:
+        return names_dict
     names_dict=get_free_surfer_pretty_names_dict()
-    with ignored(IOError):
-        with open(cache_file,'wb') as pickle_file:
-            cPickle.Pickler(pickle_file, 2).dump(names_dict)
+    reader.save_into_cache(key,names_dict)
     return names_dict
 
 

@@ -29,7 +29,7 @@ from braviz.interaction.tms_variables import hierarchy_dnd as tms_hierarchy
 from braviz.interaction.tms_variables import long_messages_dict as tms_long_messages
 from braviz.utilities import get_leafs
 from braviz.visualization.grid_viewer import GridView
-from braviz.readAndFilter.link_with_rdf import get_free_surfer_pretty_names_dict
+from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.structure_metrics import solve_laterality
 
 __author__ = 'Diego'
@@ -139,7 +139,7 @@ class VariableSelectFrame(tkFrame):
 
         super_tree.insert('', tk.END, 'structural', text='Structural')
         anatomy_hierarchy = get_structural_hierarchy(self.__reader, '144')
-        free_surfer_pretty_names=get_free_surfer_pretty_names_dict()
+        free_surfer_pretty_names=cached_get_free_surfer_dict()
         hierarchy_dict_to_tree(super_tree, anatomy_hierarchy, 'structural', tags=['struct'],
                                tooltip_dict=message_dict,tooltip_source=free_surfer_pretty_names)
 

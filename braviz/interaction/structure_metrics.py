@@ -1,9 +1,6 @@
 """Functions for calculating or reading structure metrics"""
 from __future__ import division
-from os.path import join as path_join
-import cPickle
 import random
-import hashlib
 import numpy as np
 
 import braviz

@@ -1,5 +1,6 @@
 from __future__ import division
 
+import base64
 import nibabel as nib
 import numpy as np
 from numpy.linalg import inv
@@ -645,7 +646,7 @@ The path containing this structure must be set."""
         data_root_length=len(self.getDataRoot())
         key="%s"%key
         if len(key)+data_root_length>250:
-            key = hashlib.sha1(key).hexdigest()
+            key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
         else:
             ilegal=['<','>',':','"','/',"\\",'|','?','*']
             for il in ilegal:
