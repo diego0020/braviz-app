@@ -90,7 +90,7 @@ The path containing this structure must be set."""
         elif data=='IDS':
             return self.__getIds()
         elif data=='MODEL':
-            return self.__loadFreeSurferModel(subj, **kw)
+            return self.__load_free_surfer_model(subj, **kw)
         elif data=='SURF':
             return self.__loadFreeSurferSurf(subj,**kw)
         elif data=='SURF_SCALAR':
@@ -184,15 +184,27 @@ The path containing this structure must be set."""
         ids=[c for c in contents if numbers.match(c) is not None]
         ids.sort(key=int)
         return ids
-    def __loadFreeSurferModel(self,subject,**kw):
-        "Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"
+    __spharm_models={'Left-Amygdala': 'l_amygdala',
+                     'Left-Caudate': 'l_caudate',
+                     'Left-Hippocampus': 'l_hippocampus',
+                     'Right-Amygdala': 'r_amygdala',
+                     'Right-Caudate': 'r_caudate',
+                     'Right-Hippocampus': 'r_hippocampus'}
+
+    def __load_free_surfer_model(self,subject,**kw):
+        """Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"""
         #path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
         #path=self.__root+'/'+str(subject)+'/Models2'
         path=os.path.join(self.__root,str(subject),'Models3')
+        spharm_path=os.path.join(self.__root,str(subject),'spharm')
         if kw.get('index',False):
             contents=os.listdir(path)
             pattern=re.compile(r'.*\.vtk$')
             models=[m[0:-4] for m in contents if pattern.match(m) is not None]
+            #look for spharm_models
+            for k,val in self.__spharm_models.iteritems():
+                if os.path.isfile(os.path.join(spharm_path,"%sSPHARM.vtk"%val)):
+                    models.append(k+'-SPHARM')
             return models
         if kw.has_key('name'):
             name=kw['name']
@@ -202,19 +214,33 @@ The path containing this structure must be set."""
                 else:
                     colors=self.__createColorDictionary()
                     self.free_surfer_LUT=colors
-                return colors[name]
+                if name.endswith('-SPHARM'):
+                    return colors[name[:-7]]
+                else:
+                    return colors[name]
             elif kw.get('volume'):
+                if name.endswith('-SPHARM'):
+                    name=name[:-7]
                 return self.__get_volume(subject,name)
             else:
-                available=self.__loadFreeSurferModel(subject,index='T')
+                available=self.__load_free_surfer_model(subject,index='T')
                 if not name in available:
                     print 'Model %s not available'%name
                     raise Exception('Model %s not available'%name)
-                filename=path+'/'+name+'.vtk'
-                reader=vtk.vtkPolyDataReader()
-                reader.SetFileName(filename)
-                reader.Update()
-                output=reader.GetOutput()
+                if name.endswith('-SPHARM'):
+                    spharm_name=self.__spharm_models[name[:-7]]
+                    filename = os.path.join(spharm_path, spharm_name + 'SPHARM.vtk')
+                    reader=vtk.vtkPolyDataReader()
+                    reader.SetFileName(filename)
+                    reader.Update()
+                    output=reader.GetOutput()
+                    output=self.__movePointsToSpace(output, 'spharm', subject,True)
+                else:
+                    filename=os.path.join(path,name+'.vtk')
+                    reader=vtk.vtkPolyDataReader()
+                    reader.SetFileName(filename)
+                    reader.Update()
+                    output=reader.GetOutput()
                 if kw.get('space','native').lower()=='native':
                     return output
                 else:
@@ -222,7 +248,6 @@ The path containing this structure must be set."""
         else:
             print 'Either "index" or "name" is required.'
             raise(Exception('Either "index" or "name" is required.'))
-
 
     def __get_volume(self,subject, model_name):
         data_root = self.getDataRoot()
@@ -496,6 +521,7 @@ The path containing this structure must be set."""
             tensors_mri=transformGeneralData(tensor_data,matrix)
             return tensors_mri
         return tensor_data
+
     def __movePointsToSpace(self,point_set,space,subj,inverse=False):
         """Transforms a set of points in 'world' space to the talairach or template spaces
         If inverse is True, the points will be moved from 'space' to world"""
@@ -518,6 +544,22 @@ The path containing this structure must be set."""
             paradigm = space[5:]
             trans=self.__read_func_transform(subj,paradigm,inverse)
             return transformPolyData(point_set, trans)
+        elif space.lower()=='spharm':
+            #This is very hacky.... but works well, not explanation available :S
+            aparc_img=self.get('aparc',subj)
+            m=aparc_img.get_affine()
+            m2=np.copy(m)
+            m2[0, 3] = 0
+            m2[1, 3] = 0
+            m2[1, 2] = m[2, 1]
+            m2[2, 1] = m[1, 2]
+
+            m3=np.dot(m2,inv(m))
+
+            if inverse:
+                m3=inv(m3)
+            return transformPolyData(point_set, m3)
+
         else:
             print 'Unknown Space %s'%space
             raise Exception('Unknown Space %s'%space)

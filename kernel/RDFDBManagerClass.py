@@ -12,9 +12,9 @@ import sys
 
 class RDFDBManager:
     def __init__(self,repositoryName, graphName, RepositoryEndPoint): ##Constructor donde inicializo mis atributos de repositorio y grafo
-       self.repository=repositoryName
-       self.graph=graphName
-       self.RepEndPoint=RepositoryEndPoint
+        self.repository=repositoryName
+        self.graph=graphName
+        self.RepEndPoint=RepositoryEndPoint
        
     def loadRdf(self,filename):
         #print "Loading %s into %s in Sesame" % (filename, self.graph)
