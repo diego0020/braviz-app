@@ -791,7 +791,7 @@ class DataFetcher():
         structure_type = tokens[1]
         if structure_type == 'Fibers':
             name = 'Fibs:' + tokens[2]
-        elif structure_type == 'Base':
+        elif structure_type in ('Base','Spharm'):
             name = tokens[2]
         elif structure_type[0] == 'C':
             #Corpus Callosum

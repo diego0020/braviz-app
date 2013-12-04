@@ -21,7 +21,10 @@ def get_structural_hierarchy(reader,subj):
     structure_names=reader.get('model',subj,index=True)
     hierarchy_dict=recursive_default_dict()
     for struct in structure_names:
-        if struct.startswith('ctx-'):
+        if struct.endswith('-SPHARM'):
+            name = struct[:-7]
+            hierarchy_dict['Spharm'][struct]
+        elif struct.startswith('ctx-'):
             hemisphere= 'Right Hemisphere' if struct[4]=='r' else 'Left Hemisphere'
             name=struct[7:]
             hierarchy_dict[hemisphere][name]['Gray Matter']
