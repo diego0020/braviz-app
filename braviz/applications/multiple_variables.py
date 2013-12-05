@@ -978,102 +978,114 @@ class AsyncUpdataAll():
         #async_update()
 
 
+class MultipleVariablesApp():
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title('Braviz-Multiple Variables')
+
+        self.reader2 = braviz.readAndFilter.kmc40AutoReader(max_cache=500)
+        #reader2=braviz.readAndFilter.kmc40AutoReader()
+
+        self.panned_window = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
+        self.panned_window.grid(sticky='nsew')
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+
+        self.variable_select_frame = VariableSelectFrame(self.reader2, self.panned_window, height=500, width=200)
+        self.display_frame = tk.Frame(self.panned_window, height=500, width=800, bg='black')
+        self.panned_window.add(self.variable_select_frame)
+        self.panned_window.add(self.display_frame)
+
+        #vtk_frame=tk.Frame(display_frame,bg='green',height=400,width=600)
+        #graph_frame=tk.Frame(display_frame,bg='blue',height=200,width=600)
+
+        self.fetcher = DataFetcher(self.reader2)
+        self.groups_dict = self.fetcher.get_ubica_dict()
+        self.int_colors = {
+            '1': [77, 175, 74],
+            '2': [55, 126, 184],
+            '3': [166, 86, 40]}
+
+        self.float_colors = {}
+        for key, color in self.int_colors.iteritems():
+            self.float_colors[key] = map(lambda x: x / 255.0, color)
+        self.groups_colors_matplotlib = self.float_colors
+
+        def group_color_fun(val, key2):
+            col = self.groups_colors_matplotlib.get(key2, None)
+            if col is None:
+                col = self.groups_colors_matplotlib[self.groups_dict[key2]]
+            return col
+
+        self.graph_frame = GraphFrame(self.groups_dict, self.display_frame, height=250, width=800)
+        self.graph_frame.set_color_function(group_color_fun)
+        self.vtk_frame = VtkWidget(self.reader2, self.display_frame, height=250, width=800)
+        self.vtk_frame.set_groups_dict(self.groups_dict, self.float_colors)
+        self.vtk_frame.set_laterality_dict(self.fetcher.get_later_dict())
+        self.vtk_frame.grid(row=0, column=0, sticky='nsew')
+        self.graph_frame.grid(row=1, column=0, sticky='nsew')
+
+        self.display_frame.rowconfigure(0, weight=1)
+        self.display_frame.rowconfigure(1, weight=1)
+        self.display_frame.columnconfigure(0, weight=1)
+
+        def plot_selection(event=None, subject=None):
+            #print "graph selection: %s"%subject
+            self.vtk_frame.set_selection(subject)
+
+        self.graph_frame.set_selection_handler(plot_selection)
+
+        def vtk_event_listener(event, subj_id):
+            #print subj_id
+            self.graph_frame.set_highlight(subj_id)
+
+        self.vtk_frame.set_selection_handler(vtk_event_listener)
+        #variable_select_frame.set_apply_callback(graph_frame.update_representation)
+
+        self.updater = AsyncUpdataAll(self.variable_select_frame, self.fetcher, self.graph_frame, self.vtk_frame)
+        #variable_select_frame.set_apply_callback(fetcher.get_data)
+        self.variable_select_frame.set_apply_callback(self.updater.update_all)
+
+        #aux_button=tk.Button(variable_select_frame,text="aux")
+        #aux_button.grid(sticky='ew')
+        #def print_orientation(event=None):
+        #    print vtk_frame.grid_view.clear_all()
+        #aux_button['command']=print_orientation
+
+        self.save_and_restore = SaveAndRestore(application_name=os.path.basename(__file__),
+                                          default_dir=os.path.join(os.path.dirname(__file__), "saved_scenarios"),
+                                          parent=self.root)
+        self.menu_bar = tk.Menu(self.root)
+        self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
+
+        def save_state(event=None):
+            fields = dict()
+            fields["selected_variables"] = self.variable_select_frame.get_selected_variables()
+            fields["orientation"] = self.vtk_frame.get_orientation()
+            fields["Selected_subject"] = self.vtk_frame.get_selected_id()
+            self.save_and_restore.save(fields)
+
+        def load_state(event=None):
+            fields = self.save_and_restore.load()
+            self.variable_select_frame.set_selected_variables(fields["selected_variables"])
+            self.vtk_frame.set_orientation(fields["orientation"])
+            self.updater.update_all()
+            self.vtk_frame.set_selection(fields["Selected_subject"])
+            self.graph_frame.set_highlight(fields["Selected_subject"])
+
+        self.file_menu.add_command(label="Open", command=load_state)
+        self.file_menu.add_command(label="Save", command=save_state)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.root.config(menu=self.menu_bar)
+
+    def run(self):
+        self.root.focus()
+        tk.mainloop()
+
+
+def launch_new():
+    application=MultipleVariablesApp()
+    application.run()
+
 if __name__=="__main__":
-    root=tk.Tk()
-    root.title('Braviz-Multiple Variables')
-
-    reader2=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
-    #reader2=braviz.readAndFilter.kmc40AutoReader()
-
-    panned_window=ttk.PanedWindow(root,orient=tk.HORIZONTAL)
-    panned_window.grid(sticky='nsew')
-    root.columnconfigure(0,weight=1)
-    root.rowconfigure(0,weight=1)
-
-    variable_select_frame=VariableSelectFrame(reader2,panned_window,height=500,width=200)
-    display_frame=tk.Frame(panned_window,height=500,width=800,bg='black')
-    panned_window.add(variable_select_frame)
-    panned_window.add(display_frame)
-
-    #vtk_frame=tk.Frame(display_frame,bg='green',height=400,width=600)
-    #graph_frame=tk.Frame(display_frame,bg='blue',height=200,width=600)
-
-    fetcher=DataFetcher(reader2)
-    groups_dict=fetcher.get_ubica_dict()
-    int_colors={
-        '1': [77, 175, 74],
-        '2': [55, 126, 184],
-        '3': [166, 86, 40]}
-
-    float_colors={}
-    for key,color in int_colors.iteritems():
-        float_colors[key]=map(lambda x:x/255.0,color)
-    groups_colors_matplotlib=int_colors=float_colors
-
-    def group_color_fun(val,key2):
-        col=groups_colors_matplotlib.get(key2,None)
-        if col is None:
-            col=groups_colors_matplotlib[groups_dict[key2]]
-        return col
-
-    graph_frame=GraphFrame(groups_dict,display_frame,height=250,width=800)
-    graph_frame.set_color_function(group_color_fun)
-    vtk_frame=VtkWidget(reader2,display_frame,height=250,width=800)
-    vtk_frame.set_groups_dict(groups_dict,int_colors)
-    vtk_frame.set_laterality_dict(fetcher.get_later_dict())
-    vtk_frame.grid(row=0,column=0,sticky='nsew')
-    graph_frame.grid(row=1,column=0,sticky='nsew')
-
-    display_frame.rowconfigure(0,weight=1)
-    display_frame.rowconfigure(1,weight=1)
-    display_frame.columnconfigure(0,weight=1)
-
-    def plot_selection(event=None,subject=None):
-        #print "graph selection: %s"%subject
-        vtk_frame.set_selection(subject)
-    graph_frame.set_selection_handler(plot_selection)
-
-    def vtk_event_listener(event,subj_id):
-        #print subj_id
-        graph_frame.set_highlight(subj_id)
-    vtk_frame.set_selection_handler(vtk_event_listener)
-    #variable_select_frame.set_apply_callback(graph_frame.update_representation)
-
-    updater=AsyncUpdataAll(variable_select_frame,fetcher,graph_frame,vtk_frame)
-    #variable_select_frame.set_apply_callback(fetcher.get_data)
-    variable_select_frame.set_apply_callback(updater.update_all)
-
-    #aux_button=tk.Button(variable_select_frame,text="aux")
-    #aux_button.grid(sticky='ew')
-    #def print_orientation(event=None):
-    #    print vtk_frame.grid_view.clear_all()
-    #aux_button['command']=print_orientation
-
-    save_and_restore=SaveAndRestore(application_name=os.path.basename(__file__),
-                                    default_dir=os.path.join(os.path.dirname(__file__),"saved_scenarios"),
-                                    parent=root)
-    menu_bar=tk.Menu(root)
-    file_menu=tk.Menu(menu_bar,tearoff=0)
-
-    def save_state(event=None):
-        fields = {}
-        fields["selected_variables"]=variable_select_frame.get_selected_variables()
-        fields["orientation"]=vtk_frame.get_orientation()
-        fields["Selected_subject"]=vtk_frame.get_selected_id()
-        save_and_restore.save(fields)
-
-    def load_state(event=None):
-        fields=save_and_restore.load()
-        variable_select_frame.set_selected_variables(fields["selected_variables"])
-        vtk_frame.set_orientation(fields["orientation"])
-        updater.update_all()
-        vtk_frame.set_selection(fields["Selected_subject"])
-        graph_frame.set_highlight(fields["Selected_subject"])
-    file_menu.add_command(label="Open", command=load_state)
-    file_menu.add_command(label="Save",command=save_state)
-    menu_bar.add_cascade(label="File",menu=file_menu)
-    root.config(menu=menu_bar)
-    root.focus()
-    tk.mainloop()
-
-
+    launch_new()
