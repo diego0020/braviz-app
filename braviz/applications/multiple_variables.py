@@ -635,6 +635,8 @@ class GraphFrame(tkFrame):
         self.__selection_handler=selection_handler_internal
         self.__widget.bind('<<PlotSelected>>',self.__selection_handler)
     def set_highlight(self,highlight_code):
+        if self.__active_plot==None:
+            return
         if self.__active_plot==self.__spider_plot:
             self.__spider_plot.set_highlighted_key(highlight_code)
         else:
@@ -1058,7 +1060,9 @@ class MultipleVariablesApp():
         #    print vtk_frame.grid_view.clear_all()
         #aux_button['command']=print_orientation
 
-        self.save_and_restore = SaveAndRestore(application_name=os.path.basename(__file__),
+        app_name=application_name=os.path.basename(__file__)
+        app_name=os.path.splitext(app_name)[0]
+        self.save_and_restore = SaveAndRestore(app_name+'.py',
                                           default_dir=os.path.join(os.path.dirname(__file__), "saved_scenarios"),
                                           parent=self.root)
         self.menu_bar = tk.Menu(self.root)
@@ -1094,8 +1098,8 @@ class MultipleVariablesApp():
                         self.graph_frame.set_highlight(subj)
 
             self.root.after(200, poll_for_messages)
-
-        self.root.after(500, poll_for_messages)
+        if self.pipe is not None:
+            self.root.after(500, poll_for_messages)
     def run(self):
         self.root.focus()
         tk.mainloop()

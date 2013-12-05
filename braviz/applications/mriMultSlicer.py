@@ -502,7 +502,8 @@ class MriMultSlicerApp():
                             setSubj()
 
             root.after(200, poll_for_messages)
-        root.after(500,poll_for_messages)
+        if self.pipe is not None:
+            root.after(500,poll_for_messages)
 
         self.root=root
     def run(self):
