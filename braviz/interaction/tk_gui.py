@@ -60,9 +60,10 @@ class subjects_list(LabelFrame):
     
     def setSelection(self, index):
         """YOYIS: Sets the current selection to the given index"""
-        print self.subjects_list.size()
+        #print self.subjects_list.size()
         self.subjects_list.selection_clear(0, tk.END)
         self.subjects_list.selection_set(index, index)
+        self.subjects_list.see(index)
     def getSelectionIndex(self, value):
         """YOYIS: Returns the index of the given value in the patients list"""
         return self.list.index(value)

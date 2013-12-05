@@ -979,7 +979,9 @@ class AsyncUpdataAll():
 
 
 class MultipleVariablesApp():
-    def __init__(self):
+    def __init__(self,pipe=None):
+        self.pipe=pipe
+
         self.root = tk.Tk()
         self.root.title('Braviz-Multiple Variables')
 
@@ -1032,12 +1034,16 @@ class MultipleVariablesApp():
         def plot_selection(event=None, subject=None):
             #print "graph selection: %s"%subject
             self.vtk_frame.set_selection(subject)
+            if self.pipe is not None:
+                self.pipe.send({'subject':subject})
 
         self.graph_frame.set_selection_handler(plot_selection)
 
         def vtk_event_listener(event, subj_id):
             #print subj_id
             self.graph_frame.set_highlight(subj_id)
+            if self.pipe is not None:
+                self.pipe.send({'subject':subj_id})
 
         self.vtk_frame.set_selection_handler(vtk_event_listener)
         #variable_select_frame.set_apply_callback(graph_frame.update_representation)
@@ -1078,13 +1084,25 @@ class MultipleVariablesApp():
         self.menu_bar.add_cascade(label="File", menu=self.file_menu)
         self.root.config(menu=self.menu_bar)
 
+        def poll_for_messages(event=None):
+            if self.pipe is not None:
+                if self.pipe.poll():
+                    message = self.pipe.recv()
+                    subj = message.get('subject')
+                    if subj is not None:
+                        self.vtk_frame.set_selection(subj)
+                        self.graph_frame.set_highlight(subj)
+
+            self.root.after(200, poll_for_messages)
+
+        self.root.after(500, poll_for_messages)
     def run(self):
         self.root.focus()
         tk.mainloop()
 
 
-def launch_new():
-    application=MultipleVariablesApp()
+def launch_new(pipe=None):
+    application=MultipleVariablesApp(pipe)
     application.run()
 
 if __name__=="__main__":
