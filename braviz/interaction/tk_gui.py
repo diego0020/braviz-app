@@ -203,7 +203,7 @@ class structureList(LabelFrame):
         cool_name=self.cool_names.get(name,'')
         return "%s : %s " %(name,cool_name)
 
-def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=[],tooltip_dict=None,tooltip_source={},default_message=''):
+def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=tuple(),tooltip_dict=None,tooltip_source=None,default_message=''):
     """
     Reads from a hierarchy dictionary and adds the hierarchy to a tk tree view
 
