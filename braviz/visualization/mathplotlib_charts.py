@@ -12,6 +12,7 @@ import random
 from matplotlib.figure import Figure
 from itertools import izip
 from braviz.utilities import ignored
+from braviz.interaction import ransac
 
 __author__ = 'Diego'
 highlight_color='#FF7F00'
@@ -300,12 +301,13 @@ class BarPlot():
 
 class ScatterPlot():
     """A widget for displaying two variables in a scatter plot with an optional regression line"""
-    def __init__(self,tight=True):
+    def __init__(self,tight=True,use_ransac=True):
         """If tight is True uses the tightlayout option of matplotlib
         Colors are defined by a color function
         Invokes <<PlotSelected>>  if a dot is selected
         Invokes <<ScatterClick>> if a mouse is clicked over the scatter plot
         """
+        self.use_ransac=use_ransac
         f = Figure(tight_layout=tight, facecolor='w', frameon=False, edgecolor='r')
         a = f.gca(axisbg='w')
         self.figure=f
@@ -418,7 +420,10 @@ class ScatterPlot():
                 linewidths[idx]=2
         self.__paths =a.scatter(self.x_values,self.y_values,color=colors,picker=1
             ,s=sizes,linewidths=linewidths,edgecolor=highlight_color)
-        reg_line,r=calculate_regression_line(self.x_values,self.y_values)
+        if self.use_ransac is False:
+            reg_line,r=calculate_regression_line(self.x_values,self.y_values)
+        else:
+            reg_line,r=calculate_ransac_regression(self.x_values,self.y_values)
         a.plot(self.x_limits,map(reg_line,self.x_limits),c='k',label="all (r=%.2f)"%r)
         if self.__groups_dict is not None:
             groups=set(self.__groups_dict.itervalues())
@@ -475,6 +480,27 @@ def calculate_regression_line(x,y):
     def reg_line(x):
         return intercept+slope*x
     return reg_line,r_value
+
+def calculate_ransac_regression(x,y):
+    ax=np.array(x)
+    ay=np.array(y)
+    ax=np.reshape(ax,(-1,1))
+    ay=np.reshape(ay,(-1,1))
+    all_data=np.hstack((ax,ay))
+    model = ransac.LinearRegression([0], [1], debug=False)
+    try:
+        ransac_fit, ransac_data = ransac.ransac(all_data, model,
+                                         len(x) // 4+2, 1000, 7e3, len(x)//3+1, # misc. parameters
+                                         debug=False, return_all=True)
+        intercept,slope,r_value=ransac_fit
+    except ValueError:
+        return lambda x:float('nan'),float('nan')
+
+    def reg_line(x):
+        return intercept+slope*x
+    return reg_line,r_value
+
+
 
 class SpiderPlot():
     """Shows several variables in a spider plot, colors are defined by a color function"""

@@ -213,6 +213,7 @@ def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=tuple(),tooltip
     This is, the resulting message for the tooltip will be tooltip_source[tooltip_dict[key]] where key is the element in
     the hierarchy_dict. If tooltip_source does not contain dict, the default message will be used instead
     """
+
     for name,childs in sorted(hierarchy_dict.items(),key=lambda x:x[0]):
         tags2=tags[:]
         if len(childs)>0:
@@ -225,4 +226,8 @@ def hierarchy_dict_to_tree(tree_view,hierarchy_dict,root='',tags=tuple(),tooltip
         if tooltip_dict is not None:
             tooltip_dict[iid]=tooltip_source.get(name,default_message)
         if len(childs)>0:
-            hierarchy_dict_to_tree(tree_view,childs,iid,tags,tooltip_dict,tooltip_source,tooltip_source.get(name,''))
+            if tooltip_source is None:
+                hierarchy_dict_to_tree(tree_view,childs,iid,tags,tooltip_dict,tooltip_source,'')
+            else:
+                hierarchy_dict_to_tree(tree_view,childs,iid,tags,tooltip_dict,tooltip_source,tooltip_source.get(name,''))
+

@@ -30,7 +30,7 @@ applications_dict={
     "surf" : ("Cortex Surfaces"     ,"surf.gif","mriOneSurf.py"),
     "tab" : ("Tabulas VS Structural"      ,"tab_vs_struct.gif","tab_vs_stcut.py"),
     "tms" : ("TMS View"      ,"tms.gif","tms_view2.py"),
-    "braint" : ("Braint"      ,"braint.gif",os_path.join("..","braint","Braint_V_1_2.py")),
+    "braint" : ("Braint"      ,"braint.gif",os_path.join("..","..","braint","Braint_V_1_4.py")),
 }
 
 
