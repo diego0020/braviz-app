@@ -937,7 +937,7 @@ class AsyncUpdataAll():
                 self.var_select.set_progress(progress)
             elif internal_vars['stage']==1:
                 #loading vtk models
-                progress=50+external_state.get('number_loaded',0)/external_state['number_requested']*40
+                progress=50+external_state.get('number_loaded',0)/external_state.get('number_requested', 1)*40
                 self.var_select.set_progress(progress)
             elif internal_vars['stage']==2:
                 #preparing for final rendering... interface will freeze

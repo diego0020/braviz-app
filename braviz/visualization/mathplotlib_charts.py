@@ -329,6 +329,29 @@ class ScatterPlot():
         self.current_id=None
         self.__highlited = None
         self.__name2idx_dict={}
+        self.__reg_line=(lambda x:float('nan'),float('nan'))
+        self.__new_data=False
+        self.__groups_regs = {}
+
+    def get_regression_line(self,group=None,x_data=None,y_data=None):
+        if self.use_ransac is True:
+            reg_func=calculate_ransac_regression
+        else:
+            reg_func=calculate_regression_line
+        if self.__new_data is False:
+            if group is None:
+                return self.__reg_line
+            else:
+                return self.__groups_regs.get(group, (lambda x:float('nan'),float('nan') ) )
+        else:
+            reg_line,r_value=reg_func(x_data,y_data)
+            if group is None:
+                self.__reg_line=(reg_line,r_value)
+            else:
+                self.__groups_regs[group]=(reg_line,r_value)
+            return reg_line,r_value
+
+
 
 
     def get_widget(self,master,**kwargs):
@@ -399,6 +422,7 @@ class ScatterPlot():
             self.__data_names=names
         for i,name in enumerate(self.__data_names):
             self.__name2idx_dict[name]=i
+        self.__new_data = True
 
 
     def draw_scatter(self):
@@ -420,18 +444,18 @@ class ScatterPlot():
                 linewidths[idx]=2
         self.__paths =a.scatter(self.x_values,self.y_values,color=colors,picker=1
             ,s=sizes,linewidths=linewidths,edgecolor=highlight_color)
-        if self.use_ransac is False:
-            reg_line,r=calculate_regression_line(self.x_values,self.y_values)
-        else:
-            reg_line,r=calculate_ransac_regression(self.x_values,self.y_values)
-        a.plot(self.x_limits,map(reg_line,self.x_limits),c='k',label="all (r=%.2f)"%r)
+
+        reg_line,r_value=self.get_regression_line(None,self.x_values,self.y_values)
+
+        a.plot(self.x_limits,map(reg_line,self.x_limits),c='k',label="all (r=%.2f)"%r_value)
         if self.__groups_dict is not None:
             groups=set(self.__groups_dict.itervalues())
             x_data=np.array(self.x_values)
             y_data=np.array(self.y_values)
             for g in groups:
                 g_idxs=filter(lambda i:self.__groups_dict[self.__data_names[i]]==g,xrange(len(self.__data_names)))
-                reg_line,r=calculate_regression_line(x_data[g_idxs],y_data[g_idxs])
+                #reg_line,r=calculate_regression_line(x_data[g_idxs],y_data[g_idxs])
+                reg_line, r = self.get_regression_line(g,x_data[g_idxs], y_data[g_idxs])
                 a.plot(self.x_limits, map(reg_line, self.x_limits), c=self.__color_fun(0,g),label="%s (r=%.2f)"%(g,r))
         leg=a.legend(fontsize='small',fancybox=True)
         leg.get_frame().set_alpha(0.7)
@@ -440,6 +464,7 @@ class ScatterPlot():
             self.current_id=event.ind
         self.canvas.mpl_connect('pick_event',on_pick)
         self.show()
+        self.__new_data = False
     def paint(self):
         """same as draw_scatter, for providing a common api"""
         self.draw_scatter()
@@ -488,9 +513,13 @@ def calculate_ransac_regression(x,y):
     ay=np.reshape(ay,(-1,1))
     all_data=np.hstack((ax,ay))
     model = ransac.LinearRegression([0], [1], debug=False)
+    error_threshold=((max(ay)-min(ay))/5)**2
+    n_fit=len(x) // 4+2 # number of elements used to fit the model
+    additiona_fit= len(x)-n_fit-len(x)//10-1 # maximum 10% outliers
+    iterations=1000
     try:
         ransac_fit, ransac_data = ransac.ransac(all_data, model,
-                                         len(x) // 4+2, 1000, 7e3, len(x)//3+1, # misc. parameters
+                                                n_fit, iterations,error_threshold, additiona_fit, # misc. parameters
                                          debug=False, return_all=True)
         intercept,slope,r_value=ransac_fit
     except ValueError:
