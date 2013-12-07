@@ -779,6 +779,7 @@ def autoReader(**kw_args):
     'dieg8' : (r'C:\Users\Diego\Documents\kmc40-db\KAB-db',1200),
     'TiberioHernande' : (r'E:\KAB-db',1100),
     'localhost.localdomain' : ('/home/diego/braviz/subjects',1000),
+    'ISIS-EML725001' : (r'C:\KAB-db',1200),
     }
     node_id=platform.node()
 
