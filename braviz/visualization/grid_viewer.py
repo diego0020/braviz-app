@@ -26,7 +26,7 @@ class GridView(vtk.vtkRenderWindow):
         self.AlphaBitPlanesOn()
         self.AddRenderer(self.ren)
         self.SetSize(600, 400)
-        self.ren.Render()
+        #self.ren.Render()
         self.iren=None
         #self.Initialize()
         self.picker = vtk.vtkCellPicker()

@@ -771,12 +771,12 @@ The path containing this structure must be set."""
 def autoReader(**kw_args):
     """Initialized a kmc40Reader based on the computer name"""
 
-    known_nodes={ #
+    known_nodes={  #
     # Name          :  ( data root                   , cache size in MB)
     #'IIND-EML753022': ('C:\\Users\\da.angulo39\\Documents\\Kanguro',1400), (No longer exists :( )
     'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db',4000),
     'Unidelosandes' : ('K:\\JohanaForero\\KAB-db',1200),
-    'dieg8' : (r'C:\Users\Diego\Documents\kmc40-db\KAB-db',1200),
+    'dieg8' : (r'C:\Users\Diego\Documents\kmc40-db\KAB-db',4000),
     'TiberioHernande' : (r'E:\KAB-db',1100),
     'localhost.localdomain' : ('/home/diego/braviz/subjects',1000),
     'ISIS-EML725001' : (r'C:\KAB-db',1200),

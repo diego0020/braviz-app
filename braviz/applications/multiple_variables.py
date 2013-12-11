@@ -987,7 +987,7 @@ class MultipleVariablesApp():
         self.root = tk.Tk()
         self.root.title('Braviz-Multiple Variables')
 
-        self.reader2 = braviz.readAndFilter.kmc40AutoReader(max_cache=500)
+        self.reader2 = braviz.readAndFilter.kmc40AutoReader()
         #reader2=braviz.readAndFilter.kmc40AutoReader()
 
         self.panned_window = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
