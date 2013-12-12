@@ -23,9 +23,9 @@ class simpleVtkViewer():
         self.iren.SetRenderWindow(self.renWin)
         self.renWin.AddRenderer(self.ren)
         self.renWin.SetSize(600,400)
-        self.ren.Render()
         self.renWin.Initialize()
         self.iren.Initialize()
+        self.ren.Render()
         self.picker = vtk.vtkCellPicker()
         self.picker.SetTolerance(0.005)
         cam1 = self.ren.GetActiveCamera()
@@ -501,6 +501,32 @@ def build_grid(orig_img, slice, sampling_rate=5):
     cleaner.Update()
     clean_grid = cleaner.GetOutput()
     return clean_grid
+
+def remove_nan_from_grid(grid):
+    out=vtk.vtkPolyData()
+    points=grid.GetPoints()
+    out.SetPoints(points)
+    lines=vtk.vtkCellArray()
+    lines.Initialize()
+    for ic in xrange(grid.GetNumberOfCells()):
+        c=grid.GetCell(ic)
+        pids=c.GetPointIds()
+        l=[]
+        for ip in xrange(pids.GetNumberOfIds()):
+            pid=pids.GetId(ip)
+            pt=grid.GetPoint(pid)
+            if np.all(np.isfinite(pt)):
+                l.append(pid)
+        if len(l)>0:
+            lines.InsertNextCell(len(l))
+            for p in l:
+                lines.InsertCellPoint(p)
+    out.SetLines(lines)
+    return out
+
+
+
+    return grid
 
 def get_arrow(head,tail):
     """generic arrow polydata"""

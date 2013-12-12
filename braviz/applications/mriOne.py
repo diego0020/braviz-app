@@ -219,6 +219,8 @@ def show_transform_grid(event=None):
     grid = reader.transformPointsToSpace(grid, orig_img_desc['space'], subj, True)
     #world -> current space
     grid = reader.transformPointsToSpace(grid, space_var.get(), subj, False)
+    if space_var.get().lower() == 'dartel':
+        grid=braviz.visualization.remove_nan_from_grid(grid)
     #paint grid
     grid_mapper.SetInputData(grid)
     grid_actor.SetVisibility(1)

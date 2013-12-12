@@ -156,12 +156,14 @@ def transformGeneralData(data, transform):
         vtkTrans.SetInput(transform)
     elif isinstance(transform, vtk.vtkAbstractTransform):
         vtkTrans = transform
+        if isinstance(vtkTrans,vtk.vtkGridTransform):
+            vtkTrans.SetInterpolationModeToCubic()
     else:
         print "Method not implemented for %s transform" % type(transform)
         raise Exception("Method not implemented for %s transform" % type(transform))
     if isinstance(data, vtk.vtkPolyData):
         transFilter = vtk.vtkTransformPolyDataFilter()
-    elif isinstance(data,vtk.vtkDataSet):
+    if isinstance(data,vtk.vtkDataSet):
         transFilter = vtk.vtkTransformFilter()
     else:
         return vtkTrans.TransformPoint(data)
