@@ -210,10 +210,10 @@ class MriMultSlicerApp():
                 text2.SetVisibility(1)
                 i=self.availableModels.index(picked_model)
                 select_model_frame.see(i)
-                highlighted_item=i
-                select_model_frame.itemconfigure(highlighted_item,selectbackground='sea green')
-                picked_actor=picker.GetProp3D()
-                picked_actor_property=picked_actor.GetProperty()
+                self.highlighted_item=i
+                select_model_frame.itemconfigure(self.highlighted_item,selectbackground='sea green')
+                self.picked_actor=picker.GetProp3D()
+                picked_actor_property=self.picked_actor.GetProperty()
                 picked_actor_property.SetEdgeVisibility(1)
                 picked_actor_property.SetEdgeColor((1,1,1))
             else:
