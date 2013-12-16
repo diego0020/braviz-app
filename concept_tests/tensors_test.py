@@ -56,7 +56,7 @@ root_path=kmc_40_reader.getDataRoot()
 image_path=os.path.join(root_path,'911','camino','camino_dt.nii.gz')
 #r'C:\Users\da.angulo39\Documents\Kanguro\911\camino\camino_dt.nii.gz'
 
-fa_image_path=os.path.join(root_path,'911','camino','FA-masked.nii.gz')
+fa_image_path=os.path.join(root_path,'911','camino','FA_masked.nii.gz')
 #r'C:\Users\da.angulo39\Documents\Kanguro\911\camino\FA-masked.nii.gz'
 img=nib.load(image_path)
 shape=img.get_shape()
@@ -222,7 +222,7 @@ ren.SetBackground(0.5, 0.5, 0.5)
 
 renWin = vtk.vtkRenderWindow()
 renWin.AddRenderer(ren)
-renWin.Render()
+
 
 iren=vtk.vtkRenderWindowInteractor()
 iren.SetRenderWindow(renWin)

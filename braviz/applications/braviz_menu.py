@@ -26,7 +26,7 @@ applications_dict={
     "grid" : ("Grid Viewer"     ,"grid_view.gif","grid_view.py"),
     "mult" : ("Multiple Structures"     ,"mult_slicer.gif","mriMultSlicer.py"),
     "mri" : ("Images and tractography"      ,"mri1.gif","mriOne.py"),
-    "ctxt" : ("Structures in context"     ,"mri1_context.gif","mriOneSlicer_context.py"),
+    "ctxt" : ("Fibers in context"     ,"mri1_context.gif","mriOneSlicer_context.py"),
     "surf" : ("Cortex Surfaces"     ,"surf.gif","mriOneSurf.py"),
     "tab" : ("Tabulas VS Structural"      ,"tab_vs_struct.gif","tab_vs_stcut.py"),
     "tms" : ("TMS View"      ,"tms.gif","tms_view2.py"),

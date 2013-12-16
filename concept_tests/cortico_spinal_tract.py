@@ -45,8 +45,14 @@ if left is True:
 
     viewer.clear_poly_data()
     viewer.addPolyData(tracts2)
+    plane_widget.Off()
     viewer.renWin.Render()
     viewer.iren.Start()
+
+    plane_widget.On()
+    viewer.renWin.Render()
+    viewer.iren.Start()
+
 
     #second cut
 

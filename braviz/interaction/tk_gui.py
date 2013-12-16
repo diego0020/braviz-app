@@ -21,13 +21,13 @@ class subjects_list(LabelFrame):
             kw['pady']=5
         LabelFrame.__init__(self,master,**kw)
         list_and_bar=tk.Frame(self)
-        list_and_bar.pack(side='top',fill='y',expand=1)
+        list_and_bar.pack(side='top',fill='both',expand=1)
         scrollbar=tk.Scrollbar(list_and_bar,orient=tk.VERTICAL)
         self.tk_listvariable=tk_listvariable=tk.StringVar()
         subjects_list_box=tk.Listbox(list_and_bar,selectmode=tk.BROWSE,yscrollcommand=scrollbar.set,exportselection=0,listvariable=tk_listvariable)
         scrollbar.config(command=subjects_list_box.yview)
         scrollbar.pack(side=tk.RIGHT,fill=tk.Y)
-        subjects_list_box.pack(side="left",fill='y',expand=1)
+        subjects_list_box.pack(side="left",fill='both',expand=1)
         subjects=reader.get('ids')
         self.list=subjects
         self.subjects_list=subjects_list_box
@@ -101,7 +101,7 @@ class structureList(LabelFrame):
         model_list=tk.Listbox(model_list_and_bar,selectmode=tk.MULTIPLE,yscrollcommand=model_scrollbar.set,exportselection=0,listvariable=self.tk_listvariable)
         model_scrollbar.config(command=model_list.yview)
         model_scrollbar.pack(side=tk.RIGHT,fill=tk.Y,expand=1)
-        model_list.pack(side="left",fill='y',expand=1)
+        model_list.pack(side="left",fill='both',expand=1)
         model_list.bind('<<ListboxSelect>>',self.__update)
         
         availableModels=reader.get('model',initial_subj,index='t')

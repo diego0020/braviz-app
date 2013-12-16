@@ -16,6 +16,7 @@ from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 
 currSubj='093'
 currSpace='World'
+current_models=[]
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
 reader=braviz.readAndFilter.kmc40AutoReader()
 img=reader.get('MRI',currSubj,format='VTK',space=currSpace)
@@ -70,49 +71,52 @@ def setSubj(event=None):
     planeWidget.addLabels(aparc)
     outline.SetInputData(img)
     #update model
-    model_idx=model_list.curselection()
-    previous_model_name=model_list.get(model_idx)
-    models=reader.get('model',currSubj,index='t')
-    model_list.delete(0, tk.END)
-    models.sort()
-    for m in (models):
-        model_list.insert(tk.END,m)
-    try:
-        index=models.index(previous_model_name)
-        model_list.select_set(index,index)
-        setModel()    
-    except ValueError:
-        print 'model %s not available for subject %s'%(previous_model_name,currSubj)
-    
+    model_list.changeSubj(currSubj)
+    setModel()
+
     update_context()
     renWin.Render()
     
 #=========================================Load freeSurfer Model=========================
-availableModels=reader.get('model',currSubj,index='T')
-model=reader.get('MODEL',currSubj,name=availableModels[0],space=currSpace)
-model_color=reader.get('MODEL',None,name=availableModels[0],color='T')
-model_mapper=vtk.vtkPolyDataMapper()
-model_actor=vtk.vtkActor()
-model_properties=model_actor.GetProperty()
-model_properties.SetColor(list(model_color[0:3]))
-model_mapper.SetInputData(model)
-model_actor.SetMapper(model_mapper)
-volume_model=reader.get('model',currSubj,name=availableModels[0],volume=1)
-add_solid_balloon(balloon_widget, model_actor,availableModels[0],volume_model )
-ren.AddActor(model_actor)
+
+# model=reader.get('MODEL',currSubj,name=availableModels[0],space=currSpace)
+#name -> (polydata, mapper, actor)
+models=dict()
+#
+# model_color=reader.get('MODEL',None,name=availableModels[0],color='T')
+# model_mapper=vtk.vtkPolyDataMapper()
+# model_actor=vtk.vtkActor()
+# model_properties=model_actor.GetProperty()
+# model_properties.SetColor(list(model_color[0:3]))
+# model_mapper.SetInputData(model)
+# model_actor.SetMapper(model_mapper)
+# volume_model=reader.get('model',currSubj,name=availableModels[0],volume=1)
+# add_solid_balloon(balloon_widget, model_actor,availableModels[0],volume_model )
+# ren.AddActor(model_actor)
 
 
 def setModel(event=None):
-    global model,model_color
-    model_idx=model_list.curselection()
-    model_name=model_list.get(model_idx)
-    model=reader.get('MODEL',currSubj,name=model_name,space=currSpace)
-    model_mapper.SetInputData(model)
-    model_mapper.Update()
-    model_color=reader.get('MODEL',None,name=model_name,color='T')
-    model_properties.SetColor(list(model_color[0:3]))
-    volume_model = reader.get('model', currSubj, name=model_name, volume=1)
-    add_solid_balloon(balloon_widget, model_actor,model_name,volume_model )
+    requested=model_list.get()
+    for _,_,actor in models.itervalues():
+        actor.SetVisibility(0)
+
+    for model_name in requested:
+        poly_data,mapper,actor=models.get(model_name,(None,None,None))
+        poly_data=reader.get('MODEL',currSubj,name=model_name,space=currSpace)
+        if mapper is None:
+            mapper=vtk.vtkPolyDataMapper()
+            actor=vtk.vtkActor()
+            actor.SetMapper(mapper)
+            ren.AddActor(actor)
+        actor.SetVisibility(1)
+        mapper.SetInputData(poly_data)
+        mapper.Update()
+        model_color=reader.get('MODEL',None,name=model_name,color='T')
+        model_properties=actor.GetProperty()
+        model_properties.SetColor(list(model_color[0:3]))
+        volume_model = reader.get('model', currSubj, name=model_name, volume=1)
+        add_solid_balloon(balloon_widget, actor,model_name,volume_model )
+        models[model_name]=(poly_data,mapper,actor)
     show_fibers()
     
     
@@ -131,40 +135,38 @@ def show_fibers():
             w.configure(state='disabled')
         space_sel['state']='disabled'
         progress.set(0)
-        model_idx=model_list.curselection()
-        model_name=model_list.get(model_idx)
         fibers_working=True
-        thread.start_new_thread(async_load_fibers, (model_name,))
+        fibers_progress_bar['mode']='indeterminate'
+        fibers_progress_bar.start(20)
+        thread.start_new_thread(async_load_fibers,(model_list.get(),and_or_variable.get() ) )
         #async_load_fibers(model_name)
         fibers_progress_bar.after(20,refresh_display )
     else:
         fibers_actor.SetVisibility(0)
         refresh_display()
 
-def async_load_fibers(model_name):
+def async_load_fibers(models,operation):
     global fibers_working,fibers
-    fibers=reader.get('fibers', currSubj,waypoint=model_name,progress=progress_internal,space=currSpace)
+    fibers=reader.get('fibers', currSubj,waypoint=models,space=currSpace,operation=operation)
     #print 'finished reading fibers %s'%model_name
-    progress_internal.set(100)
+    fibers_mapper.SetInputData(fibers)
+    fibers_actor.SetVisibility(1)
+    add_fibers_balloon(balloon_widget, fibers_actor,'Fibers bundle')
     fibers_lock.acquire()
     fibers_working=False
     fibers_lock.release()
 def refresh_display(*args):
-    progress.set(progress_internal.get())
     fibers_lock.acquire()
     if fibers_working:
         fibers_progress_bar.after(100,refresh_display )
     else:
-        if fibers_active.get():
-            fibers_mapper.SetInputData(fibers)
-            fibers_actor.SetVisibility(1)
-            model_idx=model_list.curselection()
-            model_name=model_list.get(model_idx)
-            add_fibers_balloon(balloon_widget, fibers_actor,'Fibers crossing %s'%model_name)            
         renWin.Render()
         for w in widgets:
             w.configure(state='normal')
         space_sel['state']='readonly'
+        fibers_progress_bar.stop()
+        fibers_progress_bar['mode']='determinate'
+        progress.set(100)
     fibers_lock.release()    
     
 #================================CONTEXT==========================
@@ -262,13 +264,13 @@ class locked_IntVar():
 fibers_active=tk.BooleanVar()
 fibers_active.set(False)
 progress=tk.IntVar()
-progress_internal=locked_IntVar(0)
-progress.set(progress_internal.get())
+progress.set(100)
 
 fibers_frame=tk.Frame(control_frame,padx=10,pady=1)
 fibers_check=tk.Checkbutton(fibers_frame,text='Fibers',command=show_fibers,variable=fibers_active)
 
-fibers_progress_bar=ttk.Progressbar(fibers_frame,orient='horizontal',length='100',mode='determinate',variable=progress)
+fibers_progress_bar=ttk.Progressbar(fibers_frame,orient='horizontal',length='150',mode='determinate',
+                                    variable=progress)
 
 
 #=========================Show Planes========================
@@ -284,40 +286,19 @@ active_planes.set(True)
 show_planes=tk.Checkbutton(fibers_frame,text='Plane',command=imagePlanesStatus,variable=active_planes,pady=10)
 show_planes.grid(column=0,row=0)
 fibers_check.grid(column=1,row=0)
-fibers_progress_bar.grid(row=1,columnspan=2)
+and_or_variable=tk.StringVar()
+and_or_variable.set('or')
+and_or_combo=ttk.Combobox(fibers_frame,textvariable=and_or_variable,values=['and','or'],state='readonly',width=4)
+and_or_combo.grid(row=0,column=2)
+fibers_progress_bar.grid(row=1,columnspan=3)
 fibers_frame.pack(side='top')
 #===========================models list=======================
 
-select_model_frame=tk.LabelFrame(control_frame,text='Model',padx=10,pady=5)
-select_model_frame.pack(side='top',fill='both',expand=1,pady=5)
 
-model_list_and_bar=tk.Frame(select_model_frame)
-model_list_and_bar.pack(side='top',fill='both',expand=1)
-model_scrollbar=tk.Scrollbar(model_list_and_bar,orient=tk.VERTICAL)
-model_list=tk.Listbox(model_list_and_bar,selectmode=tk.BROWSE,yscrollcommand=model_scrollbar.set,exportselection=0)
-model_scrollbar.config(command=model_list.yview)
-model_scrollbar.pack(side=tk.RIGHT,fill=tk.Y,expand=1)
-model_list.pack(side="left",fill='y',expand=1)
-models=reader.get('model',currSubj,index='t')
 
-for m in sorted(models):
-    model_list.insert(tk.END,m)
+model_list=braviz.interaction.tk_gui.structureList(reader,currSubj,None,control_frame)
+model_list.pack(side='top',fill='both',expand=1)
 
-model_list.select_set(0,0)
-model_list.bind('<Double-Button-1>',setModel)
-model_list.bind('<Key>',setModel)
-model_list.bind('<<ListboxSelect>>',setModel)
-
-cool_names_dict=cached_get_free_surfer_dict(reader)
-
-def get_tooltip( event=None):
-    y_coord = event.y
-    index = model_list.nearest(y_coord)
-    name = model_list.get(index)
-    cool_name = cool_names_dict.get(name, '')
-    return "%s : %s " % (name, cool_name)
-
-models_tooltip=ToolTip(model_list,msgFunc=get_tooltip,delay=0.5,follow=True)
 model_list.focus()
 
 
@@ -341,10 +322,14 @@ def ctx_action(event=None):
     ctx_but.config(text='Change Context')
     
 
-ctx_but=tk.Button(control_frame,text='Add Context',command=ctx_action,pady=1)
-ctx_but.pack(side='top',fill='x',expand=1,pady=1)
+apply_but=tk.Button(control_frame,text='Apply Selection',command=setModel,pady=0)
+apply_but.pack(side='top',fill='x',expand=0,pady=1)
 
-widgets=[model_list, fibers_check, select_subj_frame, show_planes,ctx_but]
+ctx_but=tk.Button(control_frame,text='Add Context',command=ctx_action,pady=0)
+ctx_but.pack(side='top',fill='x',expand=0,pady=1)
+
+
+widgets=[model_list, fibers_check, select_subj_frame, show_planes,ctx_but,apply_but,model_list]
 
 
 #=====================================================================
@@ -382,7 +367,7 @@ planeWidget.On()
 
 balloon_widget.SetInteractor(iact)
 balloon_widget.On()
-
+setModel()
 cam1 = ren.GetActiveCamera()
 cam1.Elevation(80)
 cam1.SetViewUp(0, 0, 1)
