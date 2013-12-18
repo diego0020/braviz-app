@@ -1,0 +1,13 @@
+{
+    "Selected_subject": null,
+    "__app_name__": "multiple_variables.py",
+    "orientation": [
+        0.0,
+        -89.99999999999999,
+        89.99999999999999
+    ],
+    "selected_variables": [
+        "table:Motor_ScS",
+        "table:Motor_StS"
+    ]
+}

@@ -1,0 +1,434 @@
+<!--<vertex name="primero">
+
+  <vertex  name="child 1"/>
+
+  <vertex  name="child 2"/>
+  <vertex  name="child 3"/>
+  <vertex name="child 4">
+    <vertex  name="child 4.1"/>
+    <vertex  name="child 4.2"/>
+    <vertex  name="child 4.3"/>
+    <vertex  name="child 4.4"/>
+  </vertex>
+  <vertex  name="child 5"/>
+  <vertex  name="child 6"/>
+  <vertex  name="child 7"/>
+
+</vertex>-->
+<vertex name="">
+	<vertex name="Cognition">
+		<vertex name="WISC">
+			<vertex name="PRIIQ">
+			</vertex>
+			<vertex name="VCIIQ">
+			</vertex>
+			<vertex name="WMIIQ">
+			</vertex>
+			<vertex name="FSIQ">
+			</vertex>
+			<vertex name="PSIIQ">
+			</vertex>
+		</vertex>
+	</vertex>
+	<vertex name="Clinical">
+		<vertex name="CLINI">
+			<vertex name="DALQT">
+			</vertex>
+			<vertex name="DLOQS">
+			</vertex>
+			<vertex name="NEMOS">
+			</vertex>
+			<vertex name="DLOQT">
+			</vertex>
+			<vertex name="DOMQT">
+			</vertex>
+			<vertex name="DOMQS">
+			</vertex>
+			<vertex name="SENSP">
+			</vertex>
+			<vertex name="DALQS">
+			</vertex>
+			<vertex name="DEVQT">
+			</vertex>
+			<vertex name="DEVQS">
+			</vertex>
+			<vertex name="NEURS">
+			</vertex>
+			<vertex name="DEXQT">
+			</vertex>
+			<vertex name="DPSQS">
+			</vertex>
+			<vertex name="PSMOS">
+			</vertex>
+			<vertex name="NEMOT">
+			</vertex>
+			<vertex name="DPSQT">
+			</vertex>
+			<vertex name="DEXQS">
+			</vertex>
+			<vertex name="OPHTA">
+			</vertex>
+		</vertex>
+		<vertex name="GENER">
+			<vertex name="ACTWE">
+			</vertex>
+			<vertex name="EDLEF">
+			</vertex>
+			<vertex name="TYPFA">
+			</vertex>
+			<vertex name="SCHFA">
+			</vertex>
+			<vertex name="GENDE">
+			</vertex>
+			<vertex name="LATER">
+			</vertex>
+			<vertex name="ACTHE">
+			</vertex>
+			<vertex name="BIWEI">
+			</vertex>
+			<vertex name="EDLEM">
+			</vertex>
+			<vertex name="UBICA">
+			</vertex>
+		</vertex>
+	</vertex>
+	<vertex name="Neurosensorial">
+		<vertex name="VMITE">
+			<vertex name="VISPE">
+			</vertex>
+			<vertex name="VMI">
+			</vertex>
+			<vertex name="MOTCO">
+			</vertex>
+		</vertex>
+	</vertex>
+	<vertex name="Structure and maturation of the brain">
+		<vertex name="fMRI">
+			<vertex name="VFORE">
+			</vertex>
+			<vertex name="POWGR">
+			</vertex>
+			<vertex name="PREGR">
+			</vertex>
+			<vertex name="UMVRE">
+			</vertex>
+			<vertex name="BMVRE">
+			</vertex>
+		</vertex>
+		<vertex name="DTI">
+			<vertex name="TONUM">
+				<vertex name="CORTN"/>
+				<vertex name="HIPTN"/>
+				<vertex name="CESTN"/>
+				<vertex name="ICATN"/>
+				<vertex name="VIMTN"/>
+			</vertex>
+			<vertex name="FA">
+				<vertex name="CORFA"/>
+				<vertex name="HIPFA"/>
+				<vertex name="CESFA"/>
+				<vertex name="ICAFA"/>
+				<vertex name="VIMFA"/>
+			</vertex>
+			<vertex name="QUALY">
+				<vertex name="CORQU"/>
+				<vertex name="HIPQU"/>
+				<vertex name="CESQU"/>
+				<vertex name="ICAQU"/>
+				<vertex name="VIMQU"/>
+			</vertex>
+			<vertex name="LENGT">
+				<vertex name="CORLE"/>
+				<vertex name="HIPLE"/>
+				<vertex name="CESLE"/>
+				<vertex name="ICALE"/>
+				<vertex name="VIMLE"/>
+			</vertex>
+		</vertex>
+		<vertex name="TMS">
+			<vertex name="VELOC">
+			</vertex>
+			<vertex name="TIME">
+			</vertex>
+		</vertex>
+		<vertex name="MRI">
+			<vertex name="SURFA">
+				<vertex name="CORSU"/>
+				<vertex name="CERSU"/>
+				<vertex name="HIPSU"/>
+				<vertex name="CANSU"/>
+				<vertex name="GMASU"/>
+				<vertex name="WMASU"/>
+				<vertex name="LVESU"/>
+				<vertex name="GNUSU"/>
+				<vertex name="ECOSU"/>
+			</vertex>
+			<vertex name="VOLUM">
+				<vertex name="RID7137"/>
+				<vertex name="RID7147"/>
+				<vertex name="RID6677"/>
+				<vertex name="RID1544"/>
+				<vertex name="RID26841"/>
+				<vertex name="RID26835"/>
+				<vertex name="RID20356"/>
+				<vertex name="RID24448"/>
+				<vertex name="RID26411"/>
+				<vertex name="RID26767"/>
+				<vertex name="RID26541"/>
+				<vertex name="RID27590"/>
+				<vertex name="RID24407"/>
+				<vertex name="RID20315"/>
+				<vertex name="RID20384"/>
+				<vertex name="RID24476"/>
+				<vertex name="RID24445"/>
+				<vertex name="RID20353"/>
+				<vertex name="RID24385"/>
+				<vertex name="RID20293"/>
+				<vertex name="RID20359"/>
+				<vertex name="RID24451"/>
+				<vertex name="RID24382"/>
+				<vertex name="RID20290"/>
+				<vertex name="RID20312"/>
+				<vertex name="RID24404"/>
+				<vertex name="RID27593"/>
+				<vertex name="RID20306"/>
+				<vertex name="RID24398"/>
+				<vertex name="RID25410"/>
+				<vertex name="RID22705"/>
+				<vertex name="RID25413"/>
+				<vertex name="RID22708"/>
+				<vertex name="RID22702"/>
+				<vertex name="RID25407"/>
+				<vertex name="RID24426"/>
+				<vertex name="RID20334"/>
+				<vertex name="RID24470"/>
+				<vertex name="RID20378"/>
+				<vertex name="RID20275"/>
+				<vertex name="RID24367"/>
+				<vertex name="RID24438"/>
+				<vertex name="RID20346"/>
+				<vertex name="RID26838"/>
+				<vertex name="RID26832"/>
+				<vertex name="RID20269"/>
+				<vertex name="RID24361"/>
+				<vertex name="RID24435"/>
+				<vertex name="RID20343"/>
+				<vertex name="RID24401"/>
+				<vertex name="RID20309"/>
+				<vertex name="RID24429"/>
+				<vertex name="RID20337"/>
+				<vertex name="RID26770"/>
+				<vertex name="RID20330"/>
+				<vertex name="RID24422"/>
+				<vertex name="RID26840"/>
+				<vertex name="RID26834"/>
+				<vertex name="RID24447"/>
+				<vertex name="RID20355"/>
+				<vertex name="RID26410"/>
+				<vertex name="RID26766"/>
+				<vertex name="RID20317"/>
+				<vertex name="RID24409"/>
+				<vertex name="RID15673"/>
+				<vertex name="RID20314"/>
+				<vertex name="RID24406"/>
+				<vertex name="RID24475"/>
+				<vertex name="RID20383"/>
+				<vertex name="RID24444"/>
+				<vertex name="RID20352"/>
+				<vertex name="RID20292"/>
+				<vertex name="RID24384"/>
+				<vertex name="RID20358"/>
+				<vertex name="RID24450"/>
+				<vertex name="RID20289"/>
+				<vertex name="RID24381"/>
+				<vertex name="RID20311"/>
+				<vertex name="RID24403"/>
+				<vertex name="RID27592"/>
+				<vertex name="RID20305"/>
+				<vertex name="RID24397"/>
+				<vertex name="RID25409"/>
+				<vertex name="RID22704"/>
+				<vertex name="RID22707"/>
+				<vertex name="RID25412"/>
+				<vertex name="RID25406"/>
+				<vertex name="RID22701"/>
+				<vertex name="RID20333"/>
+				<vertex name="RID24425"/>
+				<vertex name="RID20377"/>
+				<vertex name="RID24469"/>
+				<vertex name="RID24366"/>
+				<vertex name="RID20274"/>
+				<vertex name="RID20345"/>
+				<vertex name="RID24437"/>
+				<vertex name="RID26837"/>
+				<vertex name="RID26831"/>
+				<vertex name="RID20268"/>
+				<vertex name="RID24360"/>
+				<vertex name="RID20342"/>
+				<vertex name="RID24434"/>
+				<vertex name="RID20308"/>
+				<vertex name="RID24400"/>
+				<vertex name="RID24428"/>
+				<vertex name="RID20336"/>
+				<vertex name="RID26769"/>
+				<vertex name="RID20329"/>
+				<vertex name="RID24421"/>
+				<vertex name="RID21022"/>
+				<vertex name="RID25115"/>
+				<vertex name="RID15698"/>
+				<vertex name="RID25113"/>
+				<vertex name="RID21020"/>
+				<vertex name="RID15574"/>
+				<vertex name="RID17182"/>
+				<vertex name="RID17217"/>
+				<vertex name="RID17278"/>
+				<vertex name="RID17313"/>
+				<vertex name="RID27793"/>
+				<vertex name="RID26565"/>
+				<vertex name="RID13803"/>
+				<vertex name="RID13789"/>
+				<vertex name="RID21018"/>
+				<vertex name="RID25111"/>
+				<vertex name="RID21015"/>
+				<vertex name="RID25108"/>
+				<vertex name="RID6641"/>
+				<vertex name="RID21021"/>
+				<vertex name="RID25114"/>
+				<vertex name="RID15699"/>
+				<vertex name="RID21019"/>
+				<vertex name="RID25112"/>
+				<vertex name="RID15573"/>
+				<vertex name="RID17312"/>
+				<vertex name="RID17216"/>
+				<vertex name="RID27792"/>
+				<vertex name="RID26564"/>
+				<vertex name="RID13802"/>
+				<vertex name="RID13788"/>
+				<vertex name="RID21017"/>
+				<vertex name="RID25110"/>
+				<vertex name="RID21014"/>
+				<vertex name="RID25107"/>
+				<vertex name="RID17224"/>
+				<vertex name="RID17128"/>
+				<vertex name="RID17199"/>
+				<vertex name="RID17103"/>
+				<vertex name="RID17138"/>
+				<vertex name="RID17042"/>
+				<vertex name="RID17234"/>
+				<vertex name="RID16998"/>
+				<vertex name="RID17094"/>
+				<vertex name="RID17029"/>
+				<vertex name="RID17125"/>
+				<vertex name="RID16995"/>
+				<vertex name="RID17091"/>
+				<vertex name="RID17166"/>
+				<vertex name="RID17070"/>
+				<vertex name="RID17039"/>
+				<vertex name="RID17135"/>
+				<vertex name="RID16976"/>
+				<vertex name="RID17072"/>
+				<vertex name="RID17141"/>
+				<vertex name="RID17045"/>
+				<vertex name="RID17069"/>
+				<vertex name="RID16973"/>
+				<vertex name="RID17088"/>
+				<vertex name="RID16992"/>
+				<vertex name="RID17032"/>
+				<vertex name="RID17196"/>
+				<vertex name="RID17100"/>
+				<vertex name="RID17193"/>
+				<vertex name="RID17097"/>
+				<vertex name="RID17110"/>
+				<vertex name="RID17014"/>
+				<vertex name="RID17064"/>
+				<vertex name="RID17160"/>
+				<vertex name="RID16958"/>
+				<vertex name="RID17054"/>
+				<vertex name="RID17122"/>
+				<vertex name="RID17026"/>
+				<vertex name="RID17163"/>
+				<vertex name="RID17067"/>
+				<vertex name="RID17106"/>
+				<vertex name="RID17202"/>
+				<vertex name="RID17048"/>
+				<vertex name="RID16952"/>
+				<vertex name="RID17119"/>
+				<vertex name="RID17023"/>
+				<vertex name="RID17085"/>
+				<vertex name="RID16989"/>
+				<vertex name="RID17113"/>
+				<vertex name="RID17017"/>
+				<vertex name="RID17237"/>
+				<vertex name="RID17010"/>
+				<vertex name="RID17127"/>
+				<vertex name="RID17223"/>
+				<vertex name="RID17102"/>
+				<vertex name="RID17198"/>
+				<vertex name="RID17041"/>
+				<vertex name="RID17137"/>
+				<vertex name="RID17233"/>
+				<vertex name="RID16997"/>
+				<vertex name="RID17093"/>
+				<vertex name="RID17124"/>
+				<vertex name="RID17028"/>
+				<vertex name="RID17090"/>
+				<vertex name="RID16994"/>
+				<vertex name="RID17165"/>
+				<vertex name="RID17134"/>
+				<vertex name="RID17038"/>
+				<vertex name="RID17071"/>
+				<vertex name="RID16975"/>
+				<vertex name="RID17140"/>
+				<vertex name="RID17044"/>
+				<vertex name="RID17068"/>
+				<vertex name="RID16972"/>
+				<vertex name="RID17087"/>
+				<vertex name="RID16991"/>
+				<vertex name="RID17031"/>
+				<vertex name="RID16985"/>
+				<vertex name="RID17081"/>
+				<vertex name="RID17099"/>
+				<vertex name="RID17195"/>
+				<vertex name="RID17192"/>
+				<vertex name="RID17096"/>
+				<vertex name="RID17189"/>
+				<vertex name="RID17013"/>
+				<vertex name="RID17109"/>
+				<vertex name="RID17159"/>
+				<vertex name="RID17063"/>
+				<vertex name="RID17053"/>
+				<vertex name="RID16957"/>
+				<vertex name="RID17121"/>
+				<vertex name="RID17025"/>
+				<vertex name="RID17066"/>
+				<vertex name="RID17162"/>
+				<vertex name="RID17105"/>
+				<vertex name="RID17201"/>
+				<vertex name="RID16951"/>
+				<vertex name="RID17047"/>
+				<vertex name="RID17022"/>
+				<vertex name="RID17118"/>
+				<vertex name="RID16988"/>
+				<vertex name="RID17084"/>
+				<vertex name="RID17112"/>
+				<vertex name="RID17016"/>
+				<vertex name="RID17236"/>
+				<vertex name="RID17009"/>
+				<vertex name="RID6525"/>
+			</vertex>
+			<vertex name="SIZE">
+				<vertex name="ECOSI"/>
+				<vertex name="CORSI"/>
+				<vertex name="CERSI"/>
+				<vertex name="HIPSI"/>
+				<vertex name="CANSI"/>
+				<vertex name="GMASI"/>
+				<vertex name="WMASI"/>
+				<vertex name="LVESI"/>
+				<vertex name="GNUSI"/>
+			</vertex>
+		</vertex>
+	</vertex>
+</vertex>
+
+
