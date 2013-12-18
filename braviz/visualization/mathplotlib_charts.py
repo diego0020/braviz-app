@@ -8,7 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # implement the default mpl key bindings
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.text import Text as matplotlib_text
-import random
+
 from matplotlib.figure import Figure
 from itertools import izip
 from braviz.utilities import ignored

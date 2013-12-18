@@ -293,9 +293,10 @@ class VtkWidget(tkFrame):
         self.__models_dict={}
         self.grid_view.clear_all()
 
-    def update_structures(self,struct_list,fibers_list,async=False,state_vars={}):
+    def update_structures(self,struct_list,fibers_list,async=True,state_vars={}):
         models_dict={}
-        self.grid_view.clear_all()
+        if async is False:
+            self.grid_view.clear_all()
         if len(struct_list)+len(fibers_list)==0:
             struct_list=self.__default_struct_list
             #self.__grid_viewer.set_orientation((3.060316756674142, -94.78573096609321, 97.86560994941594))
