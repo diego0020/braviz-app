@@ -353,7 +353,7 @@ class GridView(vtk.vtkRenderWindow):
                 prop.SetOpacity(self.__opacity)
 
     def clear_all(self):
-        """Clear all internal data structures in order to recover memory"""
+        """Clear all internal data structures in order to recover memory, call only from main thread"""
         for act in self.__picking_dict:
             self.ren.RemoveViewProp(act)
             self.balloon_w.RemoveBalloon(act)
