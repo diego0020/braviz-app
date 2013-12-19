@@ -158,8 +158,8 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,
         if cached is not None:
             cache_codes,struct_metrics_col,  = zip(*cached)
             if list(cache_codes)==list(codes):
-                state_variables['working'] = False
                 state_variables['output'] = struct_metrics_col
+                state_variables['working'] = False
                 state_variables['number_calculated'] = 0
             return struct_metrics_col
     print "Calculating %s for structure %s" % (metric, struct_name)
@@ -209,7 +209,11 @@ def solve_laterality(laterality,names):
     currently wm-[d|n|r|l]h-* , ctx-[d|n|r|l]h-* and fiber bundles ending in '_[d|n|r|l]' are supported"""
     #TODO: Support Left-Amygdala
     new_names=[]
-    for name in names:
+    if type(names)==str:
+        names2=(names,)
+    else:
+        names2=names
+    for name in names2:
         new_name=name
         if name.startswith('ctx-'):
             h=name[4]
@@ -221,5 +225,8 @@ def solve_laterality(laterality,names):
             h=get_right_or_left_hemisphere(name[-1],laterality)
             new_name=name[:-1]+h
         new_names.append(new_name)
+    if type(names)==str:
+        return new_names[0]
+    else:
+        return new_names
 
-    return new_names

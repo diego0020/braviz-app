@@ -15,7 +15,7 @@ from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.tk_tooltip import ToolTip
 from braviz.interaction.structure_metrics import cached_get_struct_metric_col
 
-reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
+reader=braviz.readAndFilter.kmc40AutoReader()
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small.csv')
 cancel_calculation_flag=False
@@ -98,11 +98,12 @@ def finish_get_struct_metric(state_variables):
     if cancel_calculation_flag is True:
         #print "aborting"
         state_variables['cancel']=True
-    if state_variables['working'] is False or number_calculated==len(codes):
+    if state_variables['working'] is False :
         calculate_button['text']='Calculate'
         processing = False
         if state_variables['cancel'] is False:
             struct_metrics_col=state_variables['output']
+            assert hasattr(struct_metrics_col,"__iter__")
             struct_name = state_variables['struct_name']
             metric = state_variables['metric']
         refresh_table()
@@ -385,7 +386,7 @@ select_model_frame.grid(row=2,column=0,sticky='snew',pady=5)
 
 processing=False
 def change_struct(event=None):
-    global struct_name,metric,struct_metrics_col,processing,cancel_calculation_flag
+    global struct_name,metric,processing,cancel_calculation_flag
     if processing is True:
         cancel_calculation_flag=True
         print "CANCELLING"
