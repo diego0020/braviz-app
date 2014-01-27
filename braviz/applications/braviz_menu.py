@@ -12,9 +12,17 @@ class MenuButton(tkFrame):
         tkFrame.__init__(self,parent,**kw)
         self.pack_propagate(0)
         self.img=tk.PhotoImage(file=os_path.join("icons",image))
+
+        button=tk.Button(self,text=name,image=self.img,compound=tk.TOP)
+        def reset(event=None):
+            button['state']='normal'
+            button['relief']='raised'
         def launch_program(event=None):
             subprocess.Popen((sys.executable,program))
-        button=tk.Button(self,text=name,image=self.img,compound=tk.TOP,command=launch_program)
+            button['state']='disabled'
+            button['relief']='sunken'
+            button.after(5000,reset)
+        button['command']=launch_program
         button.pack(fill='both',expand=1)
 
 applications_dict={
