@@ -276,15 +276,20 @@ The path containing this structure must be set."""
 
     def __createColorDictionary(self):
         "Creates an inernal representation of the freesurfer color LUT"
+        cached=self.load_from_cache('free_surfer_color_lut_internal')
+        if cached is not None:
+            return cached
         color_file_name=os.path.join(self.__root,'FreeSurferColorLUT.txt')
 
         with open(color_file_name) as color_file:
             color_lines=color_file.readlines()
             color_file.close()
-            color_lists=[l.split() for l in color_lines if l[0] not in ['#','\n',' '] ]
-            color_tuples=[(l[1],tuple([float(c)/256 for c in l[2:]])) for l in color_lists]
+            color_lists=(l.split() for l in color_lines if l[0] not in ['#','\n',' '] )
+            color_tuples=((l[1],tuple([float(c)/256 for c in l[2:]])) for l in color_lists)
             color_dict=dict(color_tuples)
+            self.save_into_cache('free_surfer_color_lut_internal',color_dict)
             return color_dict
+
 
     def __loadFreeSurferSurf(self,subj,**kw):
         """Auxiliary function to read the corresponding surface file for hemi and name.
@@ -566,20 +571,29 @@ The path containing this structure must be set."""
 
     def __create_surfer_lut(self):
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
-        color_file_name=os.path.join(self.getDataRoot(),'FreeSurferColorLUT.txt')
-        try:
-            color_file=open(color_file_name)
-        except IOError as e:
-            print e
-            raise
-        color_lines=color_file.readlines()
-        color_file.close()
-        color_lists=[l.split() for l in color_lines if l[0] not in ['#','\n',' '] ]
-        color_tuples=[(int(l[0]),
-                      ( tuple( [float(c)/256 for c in l[2:2+3] ]+[1.0])
-                        ,l[1]) )
-                      for l in color_lists]           # (index,(color,annot) )
-        color_dict=dict(color_tuples)
+        #Based on subject 143
+        color_dict=self.load_from_cache('aparc_color_tuples_dictionary')
+        if color_dict is None:
+            aparc_img=self.get('APARC','143')
+            aparc_data=aparc_img.get_data()
+            aparc_values=set()
+            for v in aparc_data.flat:
+                aparc_values.add(v)
+            color_file_name=os.path.join(self.getDataRoot(),'FreeSurferColorLUT.txt')
+            try:
+                color_file=open(color_file_name)
+            except IOError as e:
+                print e
+                raise
+            color_lines=color_file.readlines()
+            color_file.close()
+            color_lists=(l.split() for l in color_lines if l[0] not in ['#','\n',' '] )
+            color_tuples=((int(l[0]),
+                          ( tuple( [float(c)/256 for c in l[2:2+3] ]+[1.0])
+                            ,l[1]) )
+                          for l in color_lists if int(l[0]) in aparc_values)           # (index,(color,annot) )
+            color_dict=dict(color_tuples)
+            self.save_into_cache('aparc_color_tuples_dictionary',color_dict)
         out_lut=vtk.vtkLookupTable()
         out_lut.SetNanColor(0.0, 1.0, 0.0, 1.0)
         out_lut.SetNumberOfTableValues(max(color_dict.iterkeys())+1)
@@ -589,7 +603,7 @@ The path containing this structure must be set."""
         for i in color_dict:    # HACKY.... maybe there is a bug?
             idx=out_lut.GetAnnotatedValueIndex(i)
             out_lut.SetTableValue(idx,color_dict[i][0] )
-
+        #self.save_into_cache('free_surfer_vtk_color_lut',out_lut)
         return out_lut
     def __read_func_transform(self,subject,paradigm,inverse=False):
         "reads the transform from world to functional space"
