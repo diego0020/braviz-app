@@ -723,11 +723,12 @@ bars_widget1.bind('<<PlotSelected>>',click_in_bar)
 def bars_1_msg_func(event=None):
     hover_subj=bars_view1.get_current_name()
     if not showing_history and show_groups_var.get():
-        mean,std=group_stats_dict[hover_subj]
+        mean,std=group_stats_dict.get(hover_subj)
         return "%s : %.2f ( %.2f )"%(hover_subj,mean,std)
-    if hover_subj is None:
+    tms_value=tms_data_dict.get(hover_subj)
+    if tms_value is None:
         return ''
-    return "%s : %.2f"%(hover_subj,tms_data_dict[hover_subj])
+    return "%s : %.2f"%(hover_subj,tms_value)
 
 bars_1_tooltip=ToolTip(bars_widget1, msgFunc=bars_1_msg_func, follow=1, delay=0.5)
 
@@ -736,7 +737,13 @@ def bars_2_msg_func(event=None):
     hover_subj=bars_view2.get_current_name()
     if hover_subj is None:
         return ''
-    return "%s : %.2f"%(hover_subj,tms_data2[codes2.index(hover_subj)])
+    try:
+        hover_code=codes2.index(hover_subj)
+    except ValueError:
+        return ''
+    tms_value=tms_data2[hover_code]
+    return "%s : %.2f"%(hover_subj,tms_value)
+
 
 bars_2_tooltip=ToolTip(bars_widget2, msgFunc=bars_2_msg_func, follow=1, delay=0.5)
 

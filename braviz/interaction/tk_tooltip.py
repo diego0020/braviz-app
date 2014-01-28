@@ -81,6 +81,7 @@ class ToolTip( Toplevel ):
                 self.hide()
                 self.spawn()
         except Exception as e:
+            print "exeption %s in message function"%type(e)
             print e
         self.after( int( self.delay * 1000 ), self.show )
             
