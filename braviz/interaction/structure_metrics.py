@@ -157,7 +157,9 @@ def cached_get_struct_metric_col(reader,codes,struct_name,metric,
         cached=reader.load_from_cache(key)
         if cached is not None:
             cache_codes,struct_metrics_col,  = zip(*cached)
-            if list(cache_codes)==list(codes):
+            if np.sum(np.isnan(struct_metrics_col))/len(cache_codes)>0.5:
+                print "Cache looks wrong, recalculating"
+            elif list(cache_codes)==list(codes):
                 state_variables['output'] = struct_metrics_col
                 state_variables['working'] = False
                 state_variables['number_calculated'] = 0

@@ -481,7 +481,7 @@ The path containing this structure must be set."""
             if  kw.get('space','world').lower()=='world':
                 #Do filtering in world coordinates
                 models=kw.pop('waypoint')
-                if isinstance(models,str):
+                if isinstance(models,str) or isinstance(models,unicode):
                     models=(models,)
                 valid_ids=None
                 for nm,model_name in enumerate(models):

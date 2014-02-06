@@ -22,8 +22,11 @@ class GridView(vtk.vtkRenderWindow):
         """Initializes the grid viewer, use_lod is very experimental, attempts to create level of detail actors
         in order to keep interactivity when multiple complex actors are in the scene"""
         self.ren = vtk.vtkRenderer()
-        self.SetMultiSamples(2)
+        self.ren.SetUseDepthPeeling(1)
+        self.SetMultiSamples(0)
         self.AlphaBitPlanesOn()
+        self.ren.SetOcclusionRatio(0.1)
+
         self.AddRenderer(self.ren)
         self.SetSize(600, 400)
         #self.ren.Render()

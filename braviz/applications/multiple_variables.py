@@ -506,11 +506,20 @@ class GraphFrame(tkFrame):
             self.__name2idx[cd]=i
         y_data = [y_data_dict[k] for k in codes]
         x_data=[x_data_dict[k] for k in codes]
-        x_min=np.min(x_data)
-        x_max=np.max(x_data)
+        try:
+            x_min=np.min(x_data)
+            x_max=np.max(x_data)
+        except ValueError:
+            x_min=0
+            x_max=1
         x_extent=x_max-x_min
-        y_min=np.min(y_data)
-        y_max=np.max(y_data)
+        try:
+            y_min=np.min(y_data)
+            y_max=np.max(y_data)
+        except ValueError:
+            y_max=1
+            y_min=0
+
         y_extent=y_max-y_min
         scatter.set_limits((x_min-x_extent/10,x_max+x_extent/10),
                            (y_min - y_extent / 10, y_max + y_extent / 10))

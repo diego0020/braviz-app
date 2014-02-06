@@ -53,6 +53,22 @@ outlineActor = vtk.vtkActor()
 outlineActor.SetMapper(outlineMapper)
 ren.AddActor(outlineActor)
 
+axes_actor=vtk.vtkAnnotatedCubeActor()
+axes_actor.SetXPlusFaceText("R")
+axes_actor.SetXMinusFaceText("L")
+axes_actor.SetYPlusFaceText("A")
+axes_actor.SetYMinusFaceText("P")
+axes_actor.SetZPlusFaceText("S")
+axes_actor.SetZMinusFaceText("I")
+
+axes_actor.GetTextEdgesProperty().SetColor(1,1,1)
+axes_actor.GetTextEdgesProperty().SetLineWidth(2)
+axes_actor.GetCubeProperty().SetColor(0.3,0.3,0.3)
+
+axes=vtk.vtkOrientationMarkerWidget()
+axes.SetOrientationMarker(axes_actor)
+axes.SetViewport(0, 0, 0.1,0.1)
+
 balloon_widget=vtk.vtkBalloonWidget()
 balloon_widget_repr=vtk.vtkBalloonRepresentation()
 balloon_widget.SetRepresentation(balloon_widget_repr)
@@ -367,13 +383,23 @@ planeWidget.On()
 
 balloon_widget.SetInteractor(iact)
 balloon_widget.On()
+
+axes.SetInteractor(iact)
+axes.EnabledOn()
+axes.InteractiveOn()
+
+render_widget.GetRenderWindow().SetAlphaBitPlanes(1)
+render_widget.GetRenderWindow().SetMultiSamples(0)
+ren.SetUseDepthPeeling(1)
+
+
+render_widget.Render()
 setModel()
 cam1 = ren.GetActiveCamera()
 cam1.Elevation(80)
 cam1.SetViewUp(0, 0, 1)
 cam1.Azimuth(80)
 ren.ResetCameraClippingRange()
-render_widget.Render()
 
 iact.Initialize()
 renWin.Render()
