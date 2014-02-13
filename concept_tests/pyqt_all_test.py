@@ -24,20 +24,26 @@ class vtk_widget(QVTKRenderWindowInteractor):
         self.vtk_render_widget=None
         self.ren=None
         self.renWin=None
-        self.initRender()
         self.setMinimumSize(200,200)
+        self.data=None
+        self.reader=braviz.readAndFilter.kmc40AutoReader()
+        self.initRender()
     def initRender(self):
         self.Initialize()
         self.Start()
+        data=self.reader.get('SURF','143',name='pial',hemi='r',scalars='aparc')
+        data_lut=self.reader.get('SURF_SCALAR','143',hemi='r',scalars='aparc',lut=True)
         self.ren=vtk.vtkRenderer()
         self.renWin=self.GetRenderWindow()
         self.renWin.AddRenderer(self.ren)
-        cone=vtk.vtkConeSource()
+        #cone=vtk.vtkConeSource()
         cone_map=vtk.vtkPolyDataMapper()
+        cone_map.SetLookupTable(data_lut)
         cone_act=vtk.vtkActor()
 
         cone_act.SetMapper(cone_map)
-        cone_map.SetInputConnection(cone.GetOutputPort())
+        #cone_map.SetInputConnection(cone.GetOutputPort())
+        cone_map.SetInputData(data)
         self.ren.AddActor(cone_act)
 
         #self.vtk_render_widget.show()
