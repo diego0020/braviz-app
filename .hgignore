@@ -2,3 +2,4 @@ syntax: glob
 .idea/*
 *.pyc
 braviz/vtkError.log
+braviz/interaction/qt_guis/*.py
