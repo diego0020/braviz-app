@@ -9,7 +9,7 @@ from PyQt4.QtGui import QMainWindow
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 import braviz.interaction.qt_models as braviz_models
-
+from braviz.readAndFilter.tabular_data import get_connection
 
 class outcome_select_dialog(QtGui.QDialog):
     def __init__(self):
@@ -24,6 +24,32 @@ class outcome_select_dialog(QtGui.QDialog):
         var_name=self.vars_list_model.data(curr_idx,QtCore.Qt.DisplayRole)
         print "lalalalala: %s"%var_name
         self.ui.var_name.setText(var_name)
+        self.ui.save_button.setEnabled(True)
+        self.ui.var_type_combo.setEnabled(True)
+        conn=get_connection()
+        cur=conn.cursor()
+        cur.execute("SELECT is_real from variables where var_name=?",(var_name,))
+        is_real=cur.fetchone()[0]
+        if is_real is not None:
+            print is_real
+        else:
+            print "unknown type, assuming real"
+            is_real=False
+        if not is_real:
+            self.create_nominal_details(var_name)
+        conn.close()
+    def create_real_details(self):
+        pass
+    def create_nominal_details(self,var_name):
+        print "creating details"
+        nom_table_view=QtGui.QTableView()
+        model=braviz_models.nominal_variables_meta(var_name)
+        nom_table_view.setModel(model)
+        details_layout=QtGui.QVBoxLayout()
+        details_layout.addWidget(nom_table_view)
+        self.ui.details_frame.setLayout(details_layout)
+
+
 
 
 class anova_app(QMainWindow):
