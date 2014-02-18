@@ -246,6 +246,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="calculate_button">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="toolTip">
           <string>Perform the anova calculation</string>
          </property>
