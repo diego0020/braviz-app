@@ -8,6 +8,8 @@ from PyQt4.QtGui import QMainWindow
 #load gui
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
+from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
+
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection
 
@@ -42,12 +44,11 @@ class outcome_select_dialog(QtGui.QDialog):
         pass
     def create_nominal_details(self,var_name):
         print "creating details"
-        nom_table_view=QtGui.QTableView()
         model=braviz_models.nominal_variables_meta(var_name)
-        nom_table_view.setModel(model)
-        details_layout=QtGui.QVBoxLayout()
-        details_layout.addWidget(nom_table_view)
-        self.ui.details_frame.setLayout(details_layout)
+        details_ui=Ui_nominal_details_frame()
+        details_ui.setupUi(self.ui.details_frame)
+        details_ui.labels_names_table.setModel(model)
+
 
 
 
