@@ -4,7 +4,6 @@ __author__ = 'Diego'
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 from PyQt4.QtGui import QMainWindow
-import functools
 import numpy as np
 
 #load gui
@@ -196,15 +195,20 @@ class outcome_select_dialog(QtGui.QDialog):
             (SELECT var_idx FROM variables WHERE var_name = ?),
             ? , ? , ? );
             """
-            self.conn.execute(query,
+            try:
+                self.conn.execute(query,
                               (self.var_name,self.rational["min"],
                                self.rational["max"],self.rational["opt"])
-            )
-            self.conn.commit()
+                )
+            except (KeyError,ValueError):
+                pass
+            else:
+                self.conn.commit()
         elif var_type==0:
             self.model.save_into_db()
         pass
     def select_and_return(self,*args):
+        self.save_meta_data()
         self.params_dict["selected_outcome"]=self.var_name
         self.done(self.Accepted)
 
@@ -264,13 +268,16 @@ class anova_app(QMainWindow):
     def setup_gui(self):
         self.ui=Ui_Anova_gui()
         self.ui.setupUi(self)
+        self.ui.outcome_sel.insertSeparator(1)
+        self.ui.outcome_sel.setCurrentIndex(2)
         self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
         self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
+
     def dispatch_outcome_select(self):
 
-        print "outcome select %s / %s"%(self.ui.outcome_sel.currentIndex(),self.ui.outcome_sel.count()-1)
+        #print "outcome select %s / %s"%(self.ui.outcome_sel.currentIndex(),self.ui.outcome_sel.count()-1)
         if self.ui.outcome_sel.currentIndex() == self.ui.outcome_sel.count()-1:
-            print "dispatching dialog"
+            #print "dispatching dialog"
             params={}
             dialog=outcome_select_dialog(params)
             selection=dialog.exec_()
@@ -282,17 +289,30 @@ class anova_app(QMainWindow):
 
 
     def set_outcome_var_type(self,new_var):
+        new_var=unicode(new_var)
         if new_var == self.outcome_var_name:
             return
-        print "succesfully selected %s"%self.outcome_var_name
+        print "succesfully selected %s"%new_var
         index=self.ui.outcome_sel.findText(new_var)
         if index<0:
-            #insert
+            self.ui.outcome_sel.setCurrentIndex(index)
+            self.ui.outcome_sel.insertItem(0,new_var)
+            index=0
             pass
-        self.ui.outcome_sel.setCurrentIndex(index)
-
-
         self.outcome_var_name=new_var
+        self.ui.outcome_sel.setCurrentIndex(index)
+        conn=get_connection()
+        try:
+            var_is_real=conn.execute("SELECT is_real FROM variables WHERE var_name = ? ;",(new_var,)).fetchone()[0]
+        except TypeError:
+            var_type_text="Type"
+        else:
+            var_type_text="Real" if var_is_real else "Nominal"
+        self.ui.outcome_type.setText(var_type_text)
+
+
+
+
 
 
 if __name__ == '__main__':
