@@ -12,7 +12,7 @@ WHERE {
   OPTIONAL { ?X braint:Evaluation_Name ?Evaluation .}
   OPTIONAL { ?Y braint:Test_Name ?Test . }
   OPTIONAL { ?Z braint:SubTest_Name ?Subtest .}
-  OPTIONAL { ?W braint:SubSubtest_Name ?SubSubTest .}
+  OPTIONAL { ?W braint:SubSubTest_Name ?SubSubTest .}
 }
 
 #=============================================================================== 

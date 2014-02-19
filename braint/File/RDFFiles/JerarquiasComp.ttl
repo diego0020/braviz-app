@@ -379,9 +379,9 @@
 								  
 :CORFA rdf:type braint:SubSubTest ,
              owl:NamedIndividual ;
-			braint:SubSubtest_Name " Fractional Anisotropy in Corpus Callosum" ;
+			braint:SubSubTest_Name " Fractional Anisotropy in Corpus Callosum" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "Is a scalar value between zero and one that describes the degree of anisotropy of a diffusion process. A value of zero means that diffusion is isotropic, i.e. it is unrestricted (or equally restricted) in all directions. A value of one means that diffusion occurs only along one axis and is fully restricted along all other directions. FA is a measure often used in diffusion imaging where it is thought to reflect fiber density, axonal diameter, and myelination in white matter. The FA is an extension of the concept of eccentricity of conic sections in 3 dimensions, normalized to the unit range. (Wikipedia)" ;
+			braint:SubSubTest_Description "Is a scalar value between zero and one that describes the degree of anisotropy of a diffusion process. A value of zero means that diffusion is isotropic, i.e. it is unrestricted (or equally restricted) in all directions. A value of one means that diffusion occurs only along one axis and is fully restricted along all other directions. FA is a measure often used in diffusion imaging where it is thought to reflect fiber density, axonal diameter, and myelination in white matter. The FA is an extension of the concept of eccentricity of conic sections in 3 dimensions, normalized to the unit range. (Wikipedia)" ;
 			braint:hasVisualization :JAVI1 .
 			
 :TONUM rdf:type braint:SubTest ,
@@ -465,9 +465,9 @@
 								  
 :ECOSI rdf:type braint:SubSubTest ,
              owl:NamedIndividual ;
-			braint:SubSubtest_Name " Size of Enthorinal Cortex" ;
+			braint:SubSubTest_Name " Size of Enthorinal Cortex" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :JAVI1 ;
 			braint:isRelatedWith :FSIQ ;
 			braint:isMentionedIn :SKRA2012 .

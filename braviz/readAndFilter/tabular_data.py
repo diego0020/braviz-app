@@ -1,6 +1,6 @@
 __author__ = 'Diego'
 
-import pandas
+
 import sqlite3
 from pandas.io import sql
 import os

@@ -646,10 +646,14 @@ class MainFrame(Frame):
 
     def create_treering(self, parent_frame):
         hierarchy_file =os.path.join(base_dir,'treetest.xml')
-        relations_file = os.path.join(base_dir,'testfilerelations2.xml')
+        #relations_file = os.path.join(base_dir,'testfilerelations2.xml')
         #hierarchy_file = 'treetest.xml'
         #relations_file = 'testfilerelations2.xml'
-        self.treering_plot = TreeRingViewClass(relations_file,hierarchy_file)
+
+        nodes_csv = "testfilenodes.csv"
+        relations_csv = "testfilerelations.csv"
+
+        self.treering_plot = TreeRingViewClass(relations_csv, nodes_csv, hierarchy_file)
         self.treering_plot.set_handler(self.treering_handler)
         ren_win = self.treering_plot.get_render_window()
         self.render_widget_treering = vtkTkRenderWindowInteractor(parent_frame,rw=ren_win, width=700, height=700)
@@ -661,8 +665,8 @@ class MainFrame(Frame):
 
     def create_list_relations(self, parent_frame):
         self.list_relations=tk.Listbox(parent_frame, width=33, height=20)
-        ysb = ttk.Scrollbar(parent_frame, orient='vertical', command=self.my_tree.yview)
-        xsb = ttk.Scrollbar(parent_frame, orient='horizontal', command=self.my_tree.xview)
+        ysb = ttk.Scrollbar(parent_frame, orient='vertical', command=self.list_relations.yview)
+        xsb = ttk.Scrollbar(parent_frame, orient='horizontal', command=self.list_relations.xview)
         self.list_relations.configure(yscrollcommand=ysb.set, xscrollcommand=xsb.set)
         parent_frame.rowconfigure(0, weight=1)# para quse se extienda hasta abajo
         parent_frame.columnconfigure(0, weight=1)
@@ -681,8 +685,8 @@ class MainFrame(Frame):
 
     def create_list_variable_selection(self, parent_frame):
         self.list_items_to_add=tk.Listbox(parent_frame, width=33, height=27)
-        ysb = ttk.Scrollbar(parent_frame, orient='vertical', command=self.my_tree.yview)
-        xsb = ttk.Scrollbar(parent_frame, orient='horizontal', command=self.my_tree.xview)
+        ysb = ttk.Scrollbar(parent_frame, orient='vertical', command=self.list_items_to_add.yview)
+        xsb = ttk.Scrollbar(parent_frame, orient='horizontal', command=self.list_items_to_add.xview)
         self.list_items_to_add.configure(yscrollcommand=ysb.set, xscrollcommand=xsb.set)
         parent_frame.rowconfigure(0, weight=1)# para quse se extienda hasta abajo
         parent_frame.columnconfigure(0, weight=1)
@@ -752,6 +756,8 @@ mainFrame = MainFrame(root, width_win, height_win)
 root.configure(background='blue')
 
 root.geometry("%dx%d+0+0" % (width_win*0.8, height_win*0.7))
-root.wm_title("Braint V 1.3")
+root.wm_title("Braint V 1.4")
+mainFrame.tree_ring_frame.focus()
+mainFrame.main_frame_root.lower()
 
 root.mainloop()

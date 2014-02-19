@@ -11,6 +11,8 @@ from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
 from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
+from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
+
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection,get_data_frame
@@ -18,13 +20,13 @@ from braviz.readAndFilter.tabular_data import get_connection,get_data_frame
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-class outcome_select_dialog(QtGui.QDialog):
+class OutcomeSelectDialog(QtGui.QDialog):
     def __init__(self,params_dict):
         self.params_dict=params_dict
-        super(outcome_select_dialog,self).__init__()
+        super(OutcomeSelectDialog,self).__init__()
         self.ui=Ui_SelectOutcomeDialog()
         self.ui.setupUi(self)
-        self.vars_list_model=braviz_models.var_list_model()
+        self.vars_list_model=braviz_models.VarListModel()
         self.ui.tableView.setModel(self.vars_list_model)
         self.ui.tableView.activated.connect(self.update_right_side)
         self.ui.var_type_combo.currentIndexChanged.connect(self.update_details)
@@ -150,7 +152,7 @@ class outcome_select_dialog(QtGui.QDialog):
         var_name=self.var_name
         #print "creating details"
         if self.model is None:
-            self.model=braviz_models.nominal_variables_meta(var_name)
+            self.model=braviz_models.NominalVariablesMeta(var_name)
         else:
             self.model.update_model(var_name)
         details_ui=Ui_nominal_details_frame()
@@ -161,7 +163,7 @@ class outcome_select_dialog(QtGui.QDialog):
     def create_matplotlib_frame(self):
         target=self.ui.plot_frame
         layout=QtGui.QVBoxLayout()
-        self.matplot_widget=matplotlib_widget()
+        self.matplot_widget=MatplotWidget()
         layout.addWidget(self.matplot_widget)
         target.setLayout(layout)
     def update_limits_in_plot(self,*args):
@@ -213,7 +215,7 @@ class outcome_select_dialog(QtGui.QDialog):
         self.done(self.Accepted)
 
 
-class matplotlib_widget(FigureCanvas):
+class MatplotWidget(FigureCanvas):
     def __init__(self,parent=None,dpi=100):
         fig=Figure(figsize=(5,5),dpi=dpi,tight_layout=True)
         self.fig=fig
@@ -255,12 +257,21 @@ class matplotlib_widget(FigureCanvas):
         self.axes.draw_artist(opt_line)
         self.blit(self.axes.bbox)
 
+class RegressorSelectDialog(QtGui.QDialog):
+    def __init__(self,outcome_var,params_dict):
+        super(RegressorSelectDialog,self).__init__()
+        self.params_dict=params_dict
+        self.outcome_var=outcome_var
+        self.ui=Ui_AddRegressorDialog()
+        self.ui.setupUi(self)
+        self.vars_model=braviz_models.VarAndGiniModel(outcome_var)
+        self.ui.tableView.setModel(self.vars_model)
 
 
 
 
 
-class anova_app(QMainWindow):
+class AnovaApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setup_gui()
@@ -272,6 +283,7 @@ class anova_app(QMainWindow):
         self.ui.outcome_sel.setCurrentIndex(2)
         self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
         self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
+        self.ui.add_regressor_button.pressed.connect(self.launch_add_regressor_dialog)
 
     def dispatch_outcome_select(self):
 
@@ -279,7 +291,7 @@ class anova_app(QMainWindow):
         if self.ui.outcome_sel.currentIndex() == self.ui.outcome_sel.count()-1:
             #print "dispatching dialog"
             params={}
-            dialog=outcome_select_dialog(params)
+            dialog=OutcomeSelectDialog(params)
             selection=dialog.exec_()
             if selection>0:
                 self.set_outcome_var_type(params["selected_outcome"])
@@ -310,6 +322,10 @@ class anova_app(QMainWindow):
             var_type_text="Real" if var_is_real else "Nominal"
         self.ui.outcome_type.setText(var_type_text)
 
+    def launch_add_regressor_dialog(self):
+        params_dict={}
+        reg_dialog=RegressorSelectDialog(self.outcome_var_name,params_dict)
+        result=reg_dialog.exec_()
 
 
 
@@ -318,6 +334,6 @@ class anova_app(QMainWindow):
 if __name__ == '__main__':
     import sys
     app=QtGui.QApplication(sys.argv)
-    main_window=anova_app()
+    main_window=AnovaApp()
     main_window.show()
     app.exec_()

@@ -15,7 +15,7 @@ class VolumeRendererClass:
         self.render_window = vtk.vtkRenderWindow()
         self.render_window.AddRenderer(self.renderer)
         self.renderer.SetBackground(0.0, 0.0, 0.0)
-        
+        self.image_plane=braviz.visualization.persistentImagePlane()
         self.current_actors = list()
         
     def load_model(self, vtk_structure, patient_number, vol_name):
@@ -40,13 +40,20 @@ class VolumeRendererClass:
         
     def load_image_plane(self, type_image, patient_name, image_format):
         image=self.reader.get(type_image,patient_name, format = image_format)
-        self.image_plane=braviz.visualization.persistentImagePlane()
+        
         self.image_plane.SetInputData(image)
         
     def update_image_plane(self, type_image, patient_name, image_format):
         image=self.reader.get(type_image,patient_name, format = image_format)
         self.image_plane.SetInputData(image)
         
+    def set_image_plane_on(self):
+        interactor = self.render_widget.GetRenderWindow().GetInteractor()
+        interactor.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        self.image_plane.SetInteractor(interactor)
+        self.image_plane.On()
+        interactor.Initialize()
+        interactor.Start()
         
     def load_fibers(self,patient_number, fiber_color, fiber_waypoint):
         fibers_l=self.reader.get('fibers',patient_number,color = fiber_color, waypoint = fiber_waypoint)
@@ -70,6 +77,11 @@ class VolumeRendererClass:
         interactor.Initialize()
         interactor.Start()
 
+    def set_render_widget(self, render_widget):
+        self.render_widget = render_widget
+
+    def reset_camera(self):
+        self.renderer.ResetCamera()
         
     def clean_exit(self):
          self.render_window.Finalize()

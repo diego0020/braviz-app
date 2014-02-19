@@ -109,3 +109,7 @@ class SpiderPlotClass:
         
     def refresh(self):
         self.render_window.Render()
+        
+    def clean_exit(self):
+        self.render_window.Finalize()
+        del self.render_window

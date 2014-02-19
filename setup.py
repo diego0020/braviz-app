@@ -10,16 +10,16 @@ def read(fname):
 
 setup(
     name = "PyTanic",
-    version = "0.0.5",
+    version = "0.0.6",
     author = "Imagine",
     author_email = "da.angulo39@uniandes.edu.co",
     description = "A framework for interactive analysis of brain data",
     license = "?",
-    keywords = "example documentation tutorial",
+    keywords = "visual analytics brain data",
     url = "imagine.uniandes.edu.co",
     packages=['braviz', 'braint'],
     long_description=read('README.txt'),
     install_requires=['nibabel','colorbrewer','numpy',
                       'scipy','rdflib','httplib2','psutil',
-                      'matplotlib'],
+                      'matplotlib','PyQt4','sip','pandas'],
 )

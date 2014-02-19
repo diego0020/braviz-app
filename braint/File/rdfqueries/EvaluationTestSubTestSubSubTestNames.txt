@@ -14,5 +14,5 @@ WHERE {
   OPTIONAL {?Test braint:hasSubTest ?SubTest} .
   OPTIONAL {?SubTest braint:SubTest_Name ?SubTestName} .
   OPTIONAL {?SubTest braint:hasSubSubTest ?SubSubTest. 
-  OPTIONAL {?SubSubTest braint:SubSubtest_Name ?SubSubTestName}} .
+  OPTIONAL {?SubSubTest braint:SubSubTest_Name ?SubSubTestName}} .
 }

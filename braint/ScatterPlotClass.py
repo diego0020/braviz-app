@@ -188,3 +188,6 @@ class ScatterPlotClass:
                 print "-- empty"
       
         print ""
+    def clean_exit(self):
+        self.render_window.Finalize()
+        del self.render_window

@@ -3,7 +3,7 @@ __author__ = 'jc.forero47'
 from vtk import *
 
 class TreeRingViewClass:
-    def __init__(self, relations_xml, hierarchies_xml):
+    def __init__(self, relations_csv, nodes_csv, hierarchies_xml):
         #reader1 = vtkXMLTreeReader()
         #reader1.SetFileName(relations_xml)
         #reader1.SetEdgePedigreeIdArrayName("tree edge")
@@ -18,8 +18,11 @@ class TreeRingViewClass:
 
 
 
-        FILENAME_VERT_TABLE = "testfilenodes.csv"
-        FILENAME_EDGE_TABLE = "testfilerelations.csv"
+        #FILENAME_VERT_TABLE = "testfilenodes.csv"
+        #FILENAME_EDGE_TABLE = "testfilerelations.csv"
+
+        FILENAME_VERT_TABLE = nodes_csv
+        FILENAME_EDGE_TABLE = relations_csv
 
 
         # Load the vertex table from CSV file
@@ -78,13 +81,11 @@ class TreeRingViewClass:
         self.renderer = self.view.GetRenderer()
         self.renderer.SetBackground(1.0, 1.0, 1.0)
         self.render_window = vtk.vtkRenderWindow()
-        #self.render_window.AddRenderer(self.renderer)
 
     def set_handler(self, handler):
         self.annotation_link.AddObserver("AnnotationChangedEvent", handler)
 
     def handler(self, caller, event):
-        print 'hola'
         sel = caller.GetCurrentSelection()
         for nn in range(sel.GetNumberOfNodes()):
             sel_ids = sel.GetNode(nn).GetSelectionList()
@@ -97,12 +98,15 @@ class TreeRingViewClass:
         return self.render_window
 
 
-    def init_render(self, render_widget):
-        self.view.SetRenderWindow(render_widget.GetRenderWindow())
-        self.interactor = render_widget.GetRenderWindow().GetInteractor()
+    def init_render(self):
+        self.view.SetRenderWindow(self.render_window)
+        self.interactor = self.render_window.GetInteractor()
         self.interactor.Initialize()
         self.interactor.Start()
 
         self.view.ResetCamera()
         self.view.Render()
 
+    def clean_exit(self):
+        self.render_window.Finalize()
+        del self.render_window

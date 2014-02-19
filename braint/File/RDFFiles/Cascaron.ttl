@@ -171,9 +171,9 @@
 
 
 
-###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubSubtest_Name
+###  http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53#SubSubTest_Name
 
-:SubSubtest_Name rdf:type owl:DatatypeProperty .
+:SubSubTest_Name rdf:type owl:DatatypeProperty .
 
 
 

@@ -9,10 +9,10 @@
 
 :RID7137 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of third ventricle" ;
+			braint:SubSubTest_Name "volume of third ventricle" ;
 			braint:Freesurfer_Name "3rd-Ventricle" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:isRelatedWith :FSIQ ;
 			braint:isMentionedIn :SKRA2012 ;
 			braint:hasVisualization :a .
@@ -22,10 +22,10 @@
 
 :RID7147 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of fourth ventricle" ;
+			braint:SubSubTest_Name "volume of fourth ventricle" ;
 			braint:Freesurfer_Name "4th-Ventricle" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -33,10 +33,10 @@
 
 :RID6677 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of brainstem" ;
+			braint:SubSubTest_Name "volume of brainstem" ;
 			braint:Freesurfer_Name "Brain-Stem" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -44,10 +44,10 @@
 
 :RID1544 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of cerebrospinal fluid" ;
+			braint:SubSubTest_Name "volume of cerebrospinal fluid" ;
 			braint:Freesurfer_Name "CSF" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -55,10 +55,10 @@
 
 :RID26841 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of caudal part of left anterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of caudal part of left anterior cingulate gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-caudalanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -66,10 +66,10 @@
 
 :RID26835 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of posterior part of left middle frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of posterior part of left middle frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-caudalmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -77,10 +77,10 @@
 
 :RID20356 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of infrapatellar branch of right saphenous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of infrapatellar branch of right saphenous nerve" ;
 			braint:Freesurfer_Name "ctx-lh-cuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -88,10 +88,10 @@
 
 :RID24448 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left cuneus" ;
+			braint:SubSubTest_Name "volume of gray matter of left cuneus" ;
 			braint:Freesurfer_Name "ctx-lh-cuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -99,10 +99,10 @@
 
 :RID26411 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left entorhinal area" ;
+			braint:SubSubTest_Name "volume of left entorhinal area" ;
 			braint:Freesurfer_Name "ctx-lh-entorhinal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -110,10 +110,10 @@
 
 :RID26767 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left frontal pole" ;
+			braint:SubSubTest_Name "volume of gray matter of left frontal pole" ;
 			braint:Freesurfer_Name "ctx-lh-frontalpole" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -121,10 +121,10 @@
 
 :RID26541 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left fusiform gyrus" ;
+			braint:SubSubTest_Name "volume of left fusiform gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-fusiform" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -132,10 +132,10 @@
 
 :RID27590 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left inferior parietal lobule" ;
+			braint:SubSubTest_Name "volume of gray matter of left inferior parietal lobule" ;
 			braint:Freesurfer_Name "ctx-lh-inferiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -143,10 +143,10 @@
 
 :RID24407 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left inferior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left inferior temporal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-inferiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -154,10 +154,10 @@
 
 :RID20315 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of anterior cutaneous branch of femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of anterior cutaneous branch of femoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-inferiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -165,10 +165,10 @@
 
 :RID20384 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of muscular branch of left obturator nerve" ;
+			braint:SubSubTest_Name "volume of trunk of muscular branch of left obturator nerve" ;
 			braint:Freesurfer_Name "ctx-lh-isthmuscingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -176,10 +176,10 @@
 
 :RID24476 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of isthmus of left cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of isthmus of left cingulate gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-isthmuscingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -187,10 +187,10 @@
 
 :RID24445 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left lateral occipital gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left lateral occipital gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-lateraloccipital" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -198,10 +198,10 @@
 
 :RID20353 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of left saphenous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of left saphenous nerve" ;
 			braint:Freesurfer_Name "ctx-lh-lateraloccipital" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -209,10 +209,10 @@
 
 :RID24385 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left lateral orbital gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left lateral orbital gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-lateralorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -220,10 +220,10 @@
 
 :RID20293 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of labium majus branch of genital branch of left genitofemoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of labium majus branch of genital branch of left genitofemoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-lateralorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -231,10 +231,10 @@
 
 :RID20359 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of medial cutaneous nerve of right leg" ;
+			braint:SubSubTest_Name "volume of trunk of medial cutaneous nerve of right leg" ;
 			braint:Freesurfer_Name "ctx-lh-lingual" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -242,10 +242,10 @@
 
 :RID24451 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left lingual gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left lingual gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-lingual" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -253,10 +253,10 @@
 
 :RID24382 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left medial orbital gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left medial orbital gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-medialorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -264,10 +264,10 @@
 
 :RID20290 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of mons pubis branch of genital branch of left genitofemoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of mons pubis branch of genital branch of left genitofemoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-medialorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -275,10 +275,10 @@
 
 :RID20312 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of right femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of right femoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-middletemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -286,10 +286,10 @@
 
 :RID24404 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left middle temporal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left middle temporal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-middletemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -297,10 +297,10 @@
 
 :RID27593 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left paracentral lobule" ;
+			braint:SubSubTest_Name "volume of gray matter of left paracentral lobule" ;
 			braint:Freesurfer_Name "ctx-lh-paracentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -308,10 +308,10 @@
 
 :RID20306 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of anterior branch of right lateral femoral cutaneous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of anterior branch of right lateral femoral cutaneous nerve" ;
 			braint:Freesurfer_Name "ctx-lh-parahippocampal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -319,10 +319,10 @@
 
 :RID24398 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left parahippocampal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left parahippocampal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-parahippocampal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -330,10 +330,10 @@
 
 :RID25410 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of opercular part of left inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of opercular part of left inferior frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-parsopercularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -341,10 +341,10 @@
 
 :RID22705 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of t12 branch to right spinalis thoracis" ;
+			braint:SubSubTest_Name "volume of t12 branch to right spinalis thoracis" ;
 			braint:Freesurfer_Name "ctx-lh-parsopercularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -352,10 +352,10 @@
 
 :RID25413 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of orbital part of left inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of orbital part of left inferior frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-parsorbitalis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -363,10 +363,10 @@
 
 :RID22708 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of medial branch of posterior ramus of right twelfth thoracic nerve to right longissimus thoracis" ;
+			braint:SubSubTest_Name "volume of medial branch of posterior ramus of right twelfth thoracic nerve to right longissimus thoracis" ;
 			braint:Freesurfer_Name "ctx-lh-parsorbitalis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -374,10 +374,10 @@
 
 :RID22702 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of t12 branch to right multifidus" ;
+			braint:SubSubTest_Name "volume of t12 branch to right multifidus" ;
 			braint:Freesurfer_Name "ctx-lh-parstriangularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -385,10 +385,10 @@
 
 :RID25407 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of triangular part of left inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of triangular part of left inferior frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-parstriangularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -396,10 +396,10 @@
 
 :RID24426 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left postcentral gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left postcentral gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-postcentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -407,10 +407,10 @@
 
 :RID20334 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of quadriceps femoris branch of right femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of quadriceps femoris branch of right femoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-postcentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -418,10 +418,10 @@
 
 :RID24470 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left posterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left posterior cingulate gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-posteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -429,10 +429,10 @@
 
 :RID20378 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of muscular branch of posterior branch of left obturator nerve" ;
+			braint:SubSubTest_Name "volume of trunk of muscular branch of posterior branch of left obturator nerve" ;
 			braint:Freesurfer_Name "ctx-lh-posteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -440,10 +440,10 @@
 
 :RID20275 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of communicating branch of right iliohypogastric nerve with subcostal nerve" ;
+			braint:SubSubTest_Name "volume of trunk of communicating branch of right iliohypogastric nerve with subcostal nerve" ;
 			braint:Freesurfer_Name "ctx-lh-precentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -451,10 +451,10 @@
 
 :RID24367 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left precentral gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left precentral gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-precentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -462,10 +462,10 @@
 
 :RID24438 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left precuneus" ;
+			braint:SubSubTest_Name "volume of gray matter of left precuneus" ;
 			braint:Freesurfer_Name "ctx-lh-precuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -473,10 +473,10 @@
 
 :RID20346 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of vastus medialis branch of right femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of vastus medialis branch of right femoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-precuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -484,10 +484,10 @@
 
 :RID26838 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of rostral part of left anterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of rostral part of left anterior cingulate gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-rostralanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -495,10 +495,10 @@
 
 :RID26832 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of anterior part of left middle frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of anterior part of left middle frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-rostralmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -506,10 +506,10 @@
 
 :RID20269 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of cutaneous branch of hypogastric branch of right iliohypogastric nerve" ;
+			braint:SubSubTest_Name "volume of trunk of cutaneous branch of hypogastric branch of right iliohypogastric nerve" ;
 			braint:Freesurfer_Name "ctx-lh-superiorfrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -517,10 +517,10 @@
 
 :RID24361 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left superior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left superior frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-superiorfrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -528,10 +528,10 @@
 
 :RID24435 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left superior parietal lobule" ;
+			braint:SubSubTest_Name "volume of gray matter of left superior parietal lobule" ;
 			braint:Freesurfer_Name "ctx-lh-superiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -539,10 +539,10 @@
 
 :RID20343 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of vastus intermedius branch of right femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of vastus intermedius branch of right femoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-superiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -550,10 +550,10 @@
 
 :RID24401 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left superior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left superior temporal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-superiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -561,10 +561,10 @@
 
 :RID20309 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of posterior branch of right lateral femoral cutaneous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of posterior branch of right lateral femoral cutaneous nerve" ;
 			braint:Freesurfer_Name "ctx-lh-superiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -572,10 +572,10 @@
 
 :RID24429 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left supramarginal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left supramarginal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-supramarginal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -583,10 +583,10 @@
 
 :RID20337 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of rectus femoris branch of right femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of rectus femoris branch of right femoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-supramarginal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -594,10 +594,10 @@
 
 :RID26770 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left temporal pole" ;
+			braint:SubSubTest_Name "volume of gray matter of left temporal pole" ;
 			braint:Freesurfer_Name "ctx-lh-temporalpole" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -605,10 +605,10 @@
 
 :RID20330 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of sartorius branch of femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of sartorius branch of femoral nerve" ;
 			braint:Freesurfer_Name "ctx-lh-transversetemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -616,10 +616,10 @@
 
 :RID24422 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of left transverse temporal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of left transverse temporal gyrus" ;
 			braint:Freesurfer_Name "ctx-lh-transversetemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -627,10 +627,10 @@
 
 :RID26840 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of caudal part of right anterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of caudal part of right anterior cingulate gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-caudalanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -638,10 +638,10 @@
 
 :RID26834 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of posterior part of right middle frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of posterior part of right middle frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-caudalmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -649,10 +649,10 @@
 
 :RID24447 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right cuneus" ;
+			braint:SubSubTest_Name "volume of gray matter of right cuneus" ;
 			braint:Freesurfer_Name "ctx-rh-cuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -660,10 +660,10 @@
 
 :RID20355 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of infrapatellar branch of saphenous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of infrapatellar branch of saphenous nerve" ;
 			braint:Freesurfer_Name "ctx-rh-cuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -671,10 +671,10 @@
 
 :RID26410 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right entorhinal area" ;
+			braint:SubSubTest_Name "volume of right entorhinal area" ;
 			braint:Freesurfer_Name "ctx-rh-entorhinal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -682,10 +682,10 @@
 
 :RID26766 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right frontal pole" ;
+			braint:SubSubTest_Name "volume of gray matter of right frontal pole" ;
 			braint:Freesurfer_Name "ctx-rh-frontalpole" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -693,10 +693,10 @@
 
 :RID20317 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of right medial femoral cutaneous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of right medial femoral cutaneous nerve" ;
 			braint:Freesurfer_Name "ctx-rh-fusiform" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -704,10 +704,10 @@
 
 :RID24409 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right fusiform gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right fusiform gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-fusiform" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -715,10 +715,10 @@
 
 :RID15673 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right inferior parietal lobule" ;
+			braint:SubSubTest_Name "volume of gray matter of right inferior parietal lobule" ;
 			braint:Freesurfer_Name "ctx-rh-inferiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -726,10 +726,10 @@
 
 :RID20314 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of branch of femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of branch of femoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-inferiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -737,10 +737,10 @@
 
 :RID24406 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right inferior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right inferior temporal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-inferiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -748,10 +748,10 @@
 
 :RID24475 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of isthmus of right cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of isthmus of right cingulate gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-isthmuscingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -759,10 +759,10 @@
 
 :RID20383 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of muscular branch of right obturator nerve" ;
+			braint:SubSubTest_Name "volume of trunk of muscular branch of right obturator nerve" ;
 			braint:Freesurfer_Name "ctx-rh-isthmuscingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -770,10 +770,10 @@
 
 :RID24444 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right lateral occipital gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right lateral occipital gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-lateraloccipital" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -781,10 +781,10 @@
 
 :RID20352 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of right saphenous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of right saphenous nerve" ;
 			braint:Freesurfer_Name "ctx-rh-lateraloccipital" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -792,10 +792,10 @@
 
 :RID20292 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of labium majus branch of genital branch of right genitofemoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of labium majus branch of genital branch of right genitofemoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-lateralorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -803,10 +803,10 @@
 
 :RID24384 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right lateral orbital gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right lateral orbital gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-lateralorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -814,10 +814,10 @@
 
 :RID20358 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of medial cutaneous nerve of leg" ;
+			braint:SubSubTest_Name "volume of trunk of medial cutaneous nerve of leg" ;
 			braint:Freesurfer_Name "ctx-rh-lingual" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -825,10 +825,10 @@
 
 :RID24450 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right lingual gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right lingual gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-lingual" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -836,10 +836,10 @@
 
 :RID20289 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of mons pubis branch of genital branch of right genitofemoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of mons pubis branch of genital branch of right genitofemoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-medialorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -847,10 +847,10 @@
 
 :RID24381 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right medial orbital gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right medial orbital gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-medialorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -858,10 +858,10 @@
 
 :RID20311 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of femoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-middletemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -869,10 +869,10 @@
 
 :RID24403 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right middle temporal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right middle temporal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-middletemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -880,10 +880,10 @@
 
 :RID27592 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right paracentral lobule" ;
+			braint:SubSubTest_Name "volume of gray matter of right paracentral lobule" ;
 			braint:Freesurfer_Name "ctx-rh-paracentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -891,10 +891,10 @@
 
 :RID20305 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of anterior branch of lateral femoral cutaneous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of anterior branch of lateral femoral cutaneous nerve" ;
 			braint:Freesurfer_Name "ctx-rh-parahippocampal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -902,10 +902,10 @@
 
 :RID24397 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right parahippocampal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right parahippocampal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-parahippocampal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -913,10 +913,10 @@
 
 :RID25409 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of opercular part of right inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of opercular part of right inferior frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-parsopercularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -924,10 +924,10 @@
 
 :RID22704 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of t12 branch to spinalis thoracis" ;
+			braint:SubSubTest_Name "volume of t12 branch to spinalis thoracis" ;
 			braint:Freesurfer_Name "ctx-rh-parsopercularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -935,10 +935,10 @@
 
 :RID22707 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of medial branch of posterior ramus of twelfth thoracic nerve to longissimus thoracis" ;
+			braint:SubSubTest_Name "volume of medial branch of posterior ramus of twelfth thoracic nerve to longissimus thoracis" ;
 			braint:Freesurfer_Name "ctx-rh-parsorbitalis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -946,10 +946,10 @@
 
 :RID25412 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of orbital part of right inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of orbital part of right inferior frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-parsorbitalis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -957,10 +957,10 @@
 
 :RID25406 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of triangular part of right inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of triangular part of right inferior frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-parstriangularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -968,10 +968,10 @@
 
 :RID22701 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of t12 branch to multifidus" ;
+			braint:SubSubTest_Name "volume of t12 branch to multifidus" ;
 			braint:Freesurfer_Name "ctx-rh-parstriangularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -979,10 +979,10 @@
 
 :RID20333 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of quadriceps femoris branch of femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of quadriceps femoris branch of femoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-postcentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -990,10 +990,10 @@
 
 :RID24425 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right postcentral gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right postcentral gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-postcentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1001,10 +1001,10 @@
 
 :RID20377 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of muscular branch of posterior branch of right obturator nerve" ;
+			braint:SubSubTest_Name "volume of trunk of muscular branch of posterior branch of right obturator nerve" ;
 			braint:Freesurfer_Name "ctx-rh-posteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1012,10 +1012,10 @@
 
 :RID24469 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right posterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right posterior cingulate gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-posteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1023,10 +1023,10 @@
 
 :RID24366 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right precentral gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right precentral gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-precentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1034,10 +1034,10 @@
 
 :RID20274 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of communicating branch of iliohypogastric nerve with subcostal nerve" ;
+			braint:SubSubTest_Name "volume of trunk of communicating branch of iliohypogastric nerve with subcostal nerve" ;
 			braint:Freesurfer_Name "ctx-rh-precentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1045,10 +1045,10 @@
 
 :RID20345 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of vastus medialis branch of femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of vastus medialis branch of femoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-precuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1056,10 +1056,10 @@
 
 :RID24437 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right precuneus" ;
+			braint:SubSubTest_Name "volume of gray matter of right precuneus" ;
 			braint:Freesurfer_Name "ctx-rh-precuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1067,10 +1067,10 @@
 
 :RID26837 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of rostral part of right anterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of rostral part of right anterior cingulate gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-rostralanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1078,10 +1078,10 @@
 
 :RID26831 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of anterior part of right middle frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of anterior part of right middle frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-rostralmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1089,10 +1089,10 @@
 
 :RID20268 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of cutaneous branch of hypogastric branch of iliohypogastric nerve" ;
+			braint:SubSubTest_Name "volume of trunk of cutaneous branch of hypogastric branch of iliohypogastric nerve" ;
 			braint:Freesurfer_Name "ctx-rh-superiorfrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1100,10 +1100,10 @@
 
 :RID24360 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right superior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right superior frontal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-superiorfrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1111,10 +1111,10 @@
 
 :RID20342 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of vastus intermedius branch of femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of vastus intermedius branch of femoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-superiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1122,10 +1122,10 @@
 
 :RID24434 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right superior parietal lobule" ;
+			braint:SubSubTest_Name "volume of gray matter of right superior parietal lobule" ;
 			braint:Freesurfer_Name "ctx-rh-superiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1133,10 +1133,10 @@
 
 :RID20308 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of posterior branch of lateral femoral cutaneous nerve" ;
+			braint:SubSubTest_Name "volume of trunk of posterior branch of lateral femoral cutaneous nerve" ;
 			braint:Freesurfer_Name "ctx-rh-superiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1144,10 +1144,10 @@
 
 :RID24400 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right superior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right superior temporal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-superiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1155,10 +1155,10 @@
 
 :RID24428 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right supramarginal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right supramarginal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-supramarginal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1166,10 +1166,10 @@
 
 :RID20336 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of rectus femoris branch of femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of rectus femoris branch of femoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-supramarginal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1177,10 +1177,10 @@
 
 :RID26769 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right temporal pole" ;
+			braint:SubSubTest_Name "volume of gray matter of right temporal pole" ;
 			braint:Freesurfer_Name "ctx-rh-temporalpole" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1188,10 +1188,10 @@
 
 :RID20329 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of trunk of pectineus branch of left femoral nerve" ;
+			braint:SubSubTest_Name "volume of trunk of pectineus branch of left femoral nerve" ;
 			braint:Freesurfer_Name "ctx-rh-transversetemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1199,10 +1199,10 @@
 
 :RID24421 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of gray matter of right transverse temporal gyrus" ;
+			braint:SubSubTest_Name "volume of gray matter of right transverse temporal gyrus" ;
 			braint:Freesurfer_Name "ctx-rh-transversetemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1210,10 +1210,10 @@
 
 :RID21022 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of anterior ramus of right third lumbar nerve" ;
+			braint:SubSubTest_Name "volume of anterior ramus of right third lumbar nerve" ;
 			braint:Freesurfer_Name "Left-Accumbens-area" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1221,10 +1221,10 @@
 
 :RID25115 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left nucleus accumbens" ;
+			braint:SubSubTest_Name "volume of left nucleus accumbens" ;
 			braint:Freesurfer_Name "Left-Accumbens-area" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1232,10 +1232,10 @@
 
 :RID15698 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left amygdala" ;
+			braint:SubSubTest_Name "volume of left amygdala" ;
 			braint:Freesurfer_Name "Left-Amygdala" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1243,10 +1243,10 @@
 
 :RID25113 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left caudate nucleus" ;
+			braint:SubSubTest_Name "volume of left caudate nucleus" ;
 			braint:Freesurfer_Name "Left-Caudate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1254,10 +1254,10 @@
 
 :RID21020 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of anterior ramus of left second lumbar nerve" ;
+			braint:SubSubTest_Name "volume of anterior ramus of left second lumbar nerve" ;
 			braint:Freesurfer_Name "Left-Caudate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1265,10 +1265,10 @@
 
 :RID15574 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left cerebellar cortex" ;
+			braint:SubSubTest_Name "volume of left cerebellar cortex" ;
 			braint:Freesurfer_Name "Left-Cerebellum-Cortex" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1276,10 +1276,10 @@
 
 :RID17182 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of cerebellum" ;
+			braint:SubSubTest_Name "volume of white matter of cerebellum" ;
 			braint:Freesurfer_Name "Left-Cerebellum-White-Matter" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1287,10 +1287,10 @@
 
 :RID17217 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left hemisphere of cerebellum" ;
+			braint:SubSubTest_Name "volume of white matter of left hemisphere of cerebellum" ;
 			braint:Freesurfer_Name "Left-Cerebellum-White-Matter" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1298,10 +1298,10 @@
 
 :RID17278 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of c8 segment of right dorsal funiculus of spinal cord" ;
+			braint:SubSubTest_Name "volume of c8 segment of right dorsal funiculus of spinal cord" ;
 			braint:Freesurfer_Name "Left-Cerebellum-White-Matter" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1309,10 +1309,10 @@
 
 :RID17313 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of t10 segment of left dorsal funiculus of spinal cord" ;
+			braint:SubSubTest_Name "volume of t10 segment of left dorsal funiculus of spinal cord" ;
 			braint:Freesurfer_Name "Left-Cerebellum-White-Matter" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1320,10 +1320,10 @@
 
 :RID27793 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of choroid plexus of left cerebral hemisphere" ;
+			braint:SubSubTest_Name "volume of choroid plexus of left cerebral hemisphere" ;
 			braint:Freesurfer_Name "Left-choroid-plexus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1331,10 +1331,10 @@
 
 :RID26565 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left hippocampus proper" ;
+			braint:SubSubTest_Name "volume of left hippocampus proper" ;
 			braint:Freesurfer_Name "Left-Hippocampus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1342,10 +1342,10 @@
 
 :RID13803 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of temporal horn of left lateral ventricle" ;
+			braint:SubSubTest_Name "volume of temporal horn of left lateral ventricle" ;
 			braint:Freesurfer_Name "Left-Inf-Lat-Vent" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1353,10 +1353,10 @@
 
 :RID13789 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left lateral ventricle" ;
+			braint:SubSubTest_Name "volume of left lateral ventricle" ;
 			braint:Freesurfer_Name "Left-Lateral-Ventricle" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1364,10 +1364,10 @@
 
 :RID21018 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of anterior ramus of second lumbar nerve" ;
+			braint:SubSubTest_Name "volume of anterior ramus of second lumbar nerve" ;
 			braint:Freesurfer_Name "Left-Pallidum" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1375,10 +1375,10 @@
 
 :RID25111 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left globus pallidus" ;
+			braint:SubSubTest_Name "volume of left globus pallidus" ;
 			braint:Freesurfer_Name "Left-Pallidum" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1386,10 +1386,10 @@
 
 :RID21015 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of anterior ramus of first lumbar nerve" ;
+			braint:SubSubTest_Name "volume of anterior ramus of first lumbar nerve" ;
 			braint:Freesurfer_Name "Left-Putamen" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1397,10 +1397,10 @@
 
 :RID25108 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left putamen" ;
+			braint:SubSubTest_Name "volume of left putamen" ;
 			braint:Freesurfer_Name "Left-Putamen" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1408,10 +1408,10 @@
 
 :RID6641 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of optic chiasm" ;
+			braint:SubSubTest_Name "volume of optic chiasm" ;
 			braint:Freesurfer_Name "Optic-Chiasm" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1419,10 +1419,10 @@
 
 :RID21021 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of anterior ramus of third lumbar nerve" ;
+			braint:SubSubTest_Name "volume of anterior ramus of third lumbar nerve" ;
 			braint:Freesurfer_Name "Right-Accumbens-area" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1430,10 +1430,10 @@
 
 :RID25114 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right nucleus accumbens" ;
+			braint:SubSubTest_Name "volume of right nucleus accumbens" ;
 			braint:Freesurfer_Name "Right-Accumbens-area" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1441,10 +1441,10 @@
 
 :RID15699 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right amygdala" ;
+			braint:SubSubTest_Name "volume of right amygdala" ;
 			braint:Freesurfer_Name "Right-Amygdala" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1452,10 +1452,10 @@
 
 :RID21019 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of anterior ramus of right second lumbar nerve" ;
+			braint:SubSubTest_Name "volume of anterior ramus of right second lumbar nerve" ;
 			braint:Freesurfer_Name "Right-Caudate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1463,10 +1463,10 @@
 
 :RID25112 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right caudate nucleus" ;
+			braint:SubSubTest_Name "volume of right caudate nucleus" ;
 			braint:Freesurfer_Name "Right-Caudate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1474,10 +1474,10 @@
 
 :RID15573 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right cerebellar cortex" ;
+			braint:SubSubTest_Name "volume of right cerebellar cortex" ;
 			braint:Freesurfer_Name "Right-Cerebellum-Cortex" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1485,10 +1485,10 @@
 
 :RID17312 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of t10 segment of right dorsal funiculus of spinal cord" ;
+			braint:SubSubTest_Name "volume of t10 segment of right dorsal funiculus of spinal cord" ;
 			braint:Freesurfer_Name "Right-Cerebellum-White-Matter" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1496,10 +1496,10 @@
 
 :RID17216 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right hemisphere of cerebellum" ;
+			braint:SubSubTest_Name "volume of white matter of right hemisphere of cerebellum" ;
 			braint:Freesurfer_Name "Right-Cerebellum-White-Matter" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1507,10 +1507,10 @@
 
 :RID27792 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of choroid plexus of right cerebral hemisphere" ;
+			braint:SubSubTest_Name "volume of choroid plexus of right cerebral hemisphere" ;
 			braint:Freesurfer_Name "Right-choroid-plexus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1518,10 +1518,10 @@
 
 :RID26564 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right hippocampus proper" ;
+			braint:SubSubTest_Name "volume of right hippocampus proper" ;
 			braint:Freesurfer_Name "Right-Hippocampus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1529,10 +1529,10 @@
 
 :RID13802 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of temporal horn of right lateral ventricle" ;
+			braint:SubSubTest_Name "volume of temporal horn of right lateral ventricle" ;
 			braint:Freesurfer_Name "Right-Inf-Lat-Vent" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1540,10 +1540,10 @@
 
 :RID13788 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right lateral ventricle" ;
+			braint:SubSubTest_Name "volume of right lateral ventricle" ;
 			braint:Freesurfer_Name "Right-Lateral-Ventricle" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1551,10 +1551,10 @@
 
 :RID21017 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of anterior ramus of left first lumbar nerve" ;
+			braint:SubSubTest_Name "volume of anterior ramus of left first lumbar nerve" ;
 			braint:Freesurfer_Name "Right-Pallidum" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1562,10 +1562,10 @@
 
 :RID25110 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right globus pallidus" ;
+			braint:SubSubTest_Name "volume of right globus pallidus" ;
 			braint:Freesurfer_Name "Right-Pallidum" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1573,10 +1573,10 @@
 
 :RID21014 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of anterior ramus of lumbar nerve" ;
+			braint:SubSubTest_Name "volume of anterior ramus of lumbar nerve" ;
 			braint:Freesurfer_Name "Right-Putamen" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1584,10 +1584,10 @@
 
 :RID25107 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right putamen" ;
+			braint:SubSubTest_Name "volume of right putamen" ;
 			braint:Freesurfer_Name "Right-Putamen" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1595,10 +1595,10 @@
 
 :RID17224 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left lateral pes lemniscus" ;
+			braint:SubSubTest_Name "volume of left lateral pes lemniscus" ;
 			braint:Freesurfer_Name "wm-lh-caudalanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1606,10 +1606,10 @@
 
 :RID17128 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of caudal part of left anterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of caudal part of left anterior cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-lh-caudalanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1617,10 +1617,10 @@
 
 :RID17199 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of alar central lobule" ;
+			braint:SubSubTest_Name "volume of white matter of alar central lobule" ;
 			braint:Freesurfer_Name "wm-lh-caudalmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1628,10 +1628,10 @@
 
 :RID17103 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of caudal part of left middle frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of caudal part of left middle frontal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-caudalmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1639,10 +1639,10 @@
 
 :RID17138 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left frontal pole" ;
+			braint:SubSubTest_Name "volume of white matter of left frontal pole" ;
 			braint:Freesurfer_Name "wm-lh-cuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1650,10 +1650,10 @@
 
 :RID17042 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left cuneus" ;
+			braint:SubSubTest_Name "volume of white matter of left cuneus" ;
 			braint:Freesurfer_Name "wm-lh-cuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1661,10 +1661,10 @@
 
 :RID17234 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right lateral lemniscus" ;
+			braint:SubSubTest_Name "volume of right lateral lemniscus" ;
 			braint:Freesurfer_Name "wm-lh-frontalpole" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1672,10 +1672,10 @@
 
 :RID16998 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left fusiform gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left fusiform gyrus" ;
 			braint:Freesurfer_Name "wm-lh-fusiform" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1683,10 +1683,10 @@
 
 :RID17094 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of triangular part of left inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of triangular part of left inferior frontal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-fusiform" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1694,10 +1694,10 @@
 
 :RID17029 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left inferior parietal lobule" ;
+			braint:SubSubTest_Name "volume of white matter of left inferior parietal lobule" ;
 			braint:Freesurfer_Name "wm-lh-inferiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1705,10 +1705,10 @@
 
 :RID17125 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left uncus" ;
+			braint:SubSubTest_Name "volume of white matter of left uncus" ;
 			braint:Freesurfer_Name "wm-lh-inferiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1716,10 +1716,10 @@
 
 :RID16995 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left inferior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left inferior temporal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-inferiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1727,10 +1727,10 @@
 
 :RID17091 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of segment of white matter of gyrus of frontal lobe" ;
+			braint:SubSubTest_Name "volume of segment of white matter of gyrus of frontal lobe" ;
 			braint:Freesurfer_Name "wm-lh-inferiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1738,10 +1738,10 @@
 
 :RID17166 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of deep white layer of right superior colliculus" ;
+			braint:SubSubTest_Name "volume of deep white layer of right superior colliculus" ;
 			braint:Freesurfer_Name "wm-lh-isthmuscingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1749,10 +1749,10 @@
 
 :RID17070 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of isthmus of left cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of isthmus of left cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-lh-isthmuscingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1760,10 +1760,10 @@
 
 :RID17039 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left lateral occipital gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left lateral occipital gyrus" ;
 			braint:Freesurfer_Name "wm-lh-lateraloccipital" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1771,10 +1771,10 @@
 
 :RID17135 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of anterior segment of right paracentral lobule" ;
+			braint:SubSubTest_Name "volume of white matter of anterior segment of right paracentral lobule" ;
 			braint:Freesurfer_Name "wm-lh-lateraloccipital" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1782,10 +1782,10 @@
 
 :RID16976 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left lateral orbital gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left lateral orbital gyrus" ;
 			braint:Freesurfer_Name "wm-lh-lateralorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1793,10 +1793,10 @@
 
 :RID17072 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right paraterminal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right paraterminal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-lateralorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1804,10 +1804,10 @@
 
 :RID17141 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left temporal pole" ;
+			braint:SubSubTest_Name "volume of white matter of left temporal pole" ;
 			braint:Freesurfer_Name "wm-lh-lingual" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1815,10 +1815,10 @@
 
 :RID17045 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left lingual gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left lingual gyrus" ;
 			braint:Freesurfer_Name "wm-lh-lingual" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1826,10 +1826,10 @@
 
 :RID17069 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of isthmus of right cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of isthmus of right cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-lh-medialorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1837,10 +1837,10 @@
 
 :RID16973 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left medial orbital gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left medial orbital gyrus" ;
 			braint:Freesurfer_Name "wm-lh-medialorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1848,10 +1848,10 @@
 
 :RID17088 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right medial frontal lobe" ;
+			braint:SubSubTest_Name "volume of white matter of right medial frontal lobe" ;
 			braint:Freesurfer_Name "wm-lh-middletemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1859,10 +1859,10 @@
 
 :RID16992 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left middle temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left middle temporal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-middletemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1870,10 +1870,10 @@
 
 :RID17032 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left paracentral lobule" ;
+			braint:SubSubTest_Name "volume of white matter of left paracentral lobule" ;
 			braint:Freesurfer_Name "wm-lh-paracentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1881,10 +1881,10 @@
 
 :RID17196 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of gracile lobule" ;
+			braint:SubSubTest_Name "volume of white matter of gracile lobule" ;
 			braint:Freesurfer_Name "wm-lh-parsopercularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1892,10 +1892,10 @@
 
 :RID17100 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of opercular part of left inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of opercular part of left inferior frontal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-parsopercularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1903,10 +1903,10 @@
 
 :RID17193 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of superior semilunar lobule" ;
+			braint:SubSubTest_Name "volume of white matter of superior semilunar lobule" ;
 			braint:Freesurfer_Name "wm-lh-parsorbitalis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1914,10 +1914,10 @@
 
 :RID17097 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of orbital part of left inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of orbital part of left inferior frontal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-parsorbitalis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1925,10 +1925,10 @@
 
 :RID17110 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of superior part of precentral gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of superior part of precentral gyrus" ;
 			braint:Freesurfer_Name "wm-lh-postcentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1936,10 +1936,10 @@
 
 :RID17014 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left postcentral gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left postcentral gyrus" ;
 			braint:Freesurfer_Name "wm-lh-postcentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1947,10 +1947,10 @@
 
 :RID17064 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left posterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left posterior cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-lh-posteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1958,10 +1958,10 @@
 
 :RID17160 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of superficial white layer of right superior colliculus" ;
+			braint:SubSubTest_Name "volume of superficial white layer of right superior colliculus" ;
 			braint:Freesurfer_Name "wm-lh-posteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1969,10 +1969,10 @@
 
 :RID16958 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left precentral gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left precentral gyrus" ;
 			braint:Freesurfer_Name "wm-lh-precentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1980,10 +1980,10 @@
 
 :RID17054 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-lh-precentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -1991,10 +1991,10 @@
 
 :RID17122 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of segment of white matter of gyrus of limbic lobe" ;
+			braint:SubSubTest_Name "volume of segment of white matter of gyrus of limbic lobe" ;
 			braint:Freesurfer_Name "wm-lh-precuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2002,10 +2002,10 @@
 
 :RID17026 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left precuneus" ;
+			braint:SubSubTest_Name "volume of white matter of left precuneus" ;
 			braint:Freesurfer_Name "wm-lh-precuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2013,10 +2013,10 @@
 
 :RID17163 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of middle white layer of right superior colliculus" ;
+			braint:SubSubTest_Name "volume of middle white layer of right superior colliculus" ;
 			braint:Freesurfer_Name "wm-lh-rostralanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2024,10 +2024,10 @@
 
 :RID17067 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left anterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left anterior cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-lh-rostralanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2035,10 +2035,10 @@
 
 :RID17106 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of rostral part of left middle frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of rostral part of left middle frontal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-rostralmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2046,10 +2046,10 @@
 
 :RID17202 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of simple lobule of cerebellum" ;
+			braint:SubSubTest_Name "volume of white matter of simple lobule of cerebellum" ;
 			braint:Freesurfer_Name "wm-lh-rostralmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2057,10 +2057,10 @@
 
 :RID17048 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left inferior occipital gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left inferior occipital gyrus" ;
 			braint:Freesurfer_Name "wm-lh-superiorfrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2068,10 +2068,10 @@
 
 :RID16952 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left superior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left superior frontal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-superiorfrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2079,10 +2079,10 @@
 
 :RID17119 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of polar part of right superior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of polar part of right superior temporal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-superiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2090,10 +2090,10 @@
 
 :RID17023 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left superior parietal lobule" ;
+			braint:SubSubTest_Name "volume of white matter of left superior parietal lobule" ;
 			braint:Freesurfer_Name "wm-lh-superiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2101,10 +2101,10 @@
 
 :RID17085 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right accessory short gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right accessory short gyrus" ;
 			braint:Freesurfer_Name "wm-lh-superiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2112,10 +2112,10 @@
 
 :RID16989 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left superior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left superior temporal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-superiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2123,10 +2123,10 @@
 
 :RID17113 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of segment of white matter of gyrus of parietal lobe" ;
+			braint:SubSubTest_Name "volume of segment of white matter of gyrus of parietal lobe" ;
 			braint:Freesurfer_Name "wm-lh-supramarginal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2134,10 +2134,10 @@
 
 :RID17017 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left supramarginal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left supramarginal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-supramarginal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2145,10 +2145,10 @@
 
 :RID17237 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right medial lemniscus of pons" ;
+			braint:SubSubTest_Name "volume of right medial lemniscus of pons" ;
 			braint:Freesurfer_Name "wm-lh-temporalpole" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2156,10 +2156,10 @@
 
 :RID17010 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left transverse temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of left transverse temporal gyrus" ;
 			braint:Freesurfer_Name "wm-lh-transversetemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2167,10 +2167,10 @@
 
 :RID17127 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of caudal part of right anterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of caudal part of right anterior cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-rh-caudalanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2178,10 +2178,10 @@
 
 :RID17223 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of right lateral pes lemniscus" ;
+			braint:SubSubTest_Name "volume of right lateral pes lemniscus" ;
 			braint:Freesurfer_Name "wm-rh-caudalanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2189,10 +2189,10 @@
 
 :RID17102 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of caudal part of right middle frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of caudal part of right middle frontal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-caudalmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2200,10 +2200,10 @@
 
 :RID17198 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left gracile lobule" ;
+			braint:SubSubTest_Name "volume of white matter of left gracile lobule" ;
 			braint:Freesurfer_Name "wm-rh-caudalmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2211,10 +2211,10 @@
 
 :RID17041 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right cuneus" ;
+			braint:SubSubTest_Name "volume of white matter of right cuneus" ;
 			braint:Freesurfer_Name "wm-rh-cuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2222,10 +2222,10 @@
 
 :RID17137 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right frontal pole" ;
+			braint:SubSubTest_Name "volume of white matter of right frontal pole" ;
 			braint:Freesurfer_Name "wm-rh-cuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2233,10 +2233,10 @@
 
 :RID17233 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of left medial lemniscus of medulla" ;
+			braint:SubSubTest_Name "volume of left medial lemniscus of medulla" ;
 			braint:Freesurfer_Name "wm-rh-frontalpole" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2244,10 +2244,10 @@
 
 :RID16997 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right fusiform gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right fusiform gyrus" ;
 			braint:Freesurfer_Name "wm-rh-fusiform" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2255,10 +2255,10 @@
 
 :RID17093 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of triangular part of right inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of triangular part of right inferior frontal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-fusiform" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2266,10 +2266,10 @@
 
 :RID17124 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right uncus" ;
+			braint:SubSubTest_Name "volume of white matter of right uncus" ;
 			braint:Freesurfer_Name "wm-rh-inferiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2277,10 +2277,10 @@
 
 :RID17028 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right inferior parietal lobule" ;
+			braint:SubSubTest_Name "volume of white matter of right inferior parietal lobule" ;
 			braint:Freesurfer_Name "wm-rh-inferiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2288,10 +2288,10 @@
 
 :RID17090 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of segment of gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of segment of gyrus" ;
 			braint:Freesurfer_Name "wm-rh-inferiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2299,10 +2299,10 @@
 
 :RID16994 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right inferior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right inferior temporal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-inferiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2310,10 +2310,10 @@
 
 :RID17165 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of deep white layer of superior colliculus" ;
+			braint:SubSubTest_Name "volume of deep white layer of superior colliculus" ;
 			braint:Freesurfer_Name "wm-rh-isthmuscingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2321,10 +2321,10 @@
 
 :RID17134 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of anterior segment of left paracentral lobule" ;
+			braint:SubSubTest_Name "volume of white matter of anterior segment of left paracentral lobule" ;
 			braint:Freesurfer_Name "wm-rh-lateraloccipital" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2332,10 +2332,10 @@
 
 :RID17038 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right lateral occipital gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right lateral occipital gyrus" ;
 			braint:Freesurfer_Name "wm-rh-lateraloccipital" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2343,10 +2343,10 @@
 
 :RID17071 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of paraterminal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of paraterminal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-lateralorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2354,10 +2354,10 @@
 
 :RID16975 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right lateral orbital gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right lateral orbital gyrus" ;
 			braint:Freesurfer_Name "wm-rh-lateralorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2365,10 +2365,10 @@
 
 :RID17140 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right temporal pole" ;
+			braint:SubSubTest_Name "volume of white matter of right temporal pole" ;
 			braint:Freesurfer_Name "wm-rh-lingual" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2376,10 +2376,10 @@
 
 :RID17044 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right lingual gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right lingual gyrus" ;
 			braint:Freesurfer_Name "wm-rh-lingual" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2387,10 +2387,10 @@
 
 :RID17068 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of isthmus of cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of isthmus of cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-rh-medialorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2398,10 +2398,10 @@
 
 :RID16972 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right medial orbital gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right medial orbital gyrus" ;
 			braint:Freesurfer_Name "wm-rh-medialorbitofrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2409,10 +2409,10 @@
 
 :RID17087 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of medial frontal lobe" ;
+			braint:SubSubTest_Name "volume of white matter of medial frontal lobe" ;
 			braint:Freesurfer_Name "wm-rh-middletemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2420,10 +2420,10 @@
 
 :RID16991 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right middle temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right middle temporal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-middletemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2431,10 +2431,10 @@
 
 :RID17031 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right paracentral lobule" ;
+			braint:SubSubTest_Name "volume of white matter of right paracentral lobule" ;
 			braint:Freesurfer_Name "wm-rh-paracentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2442,10 +2442,10 @@
 
 :RID16985 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right parahippocampal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right parahippocampal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-parahippocampal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2453,10 +2453,10 @@
 
 :RID17081 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of short insular gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of short insular gyrus" ;
 			braint:Freesurfer_Name "wm-rh-parahippocampal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2464,10 +2464,10 @@
 
 :RID17099 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of opercular part of right inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of opercular part of right inferior frontal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-parsopercularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2475,10 +2475,10 @@
 
 :RID17195 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left superior semilunar lobule" ;
+			braint:SubSubTest_Name "volume of white matter of left superior semilunar lobule" ;
 			braint:Freesurfer_Name "wm-rh-parsopercularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2486,10 +2486,10 @@
 
 :RID17192 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left inferior semilunar lobule" ;
+			braint:SubSubTest_Name "volume of white matter of left inferior semilunar lobule" ;
 			braint:Freesurfer_Name "wm-rh-parsorbitalis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2497,10 +2497,10 @@
 
 :RID17096 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of orbital part of right inferior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of orbital part of right inferior frontal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-parsorbitalis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2508,10 +2508,10 @@
 
 :RID17189 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left posterior quadrangular lobule" ;
+			braint:SubSubTest_Name "volume of white matter of left posterior quadrangular lobule" ;
 			braint:Freesurfer_Name "wm-rh-parstriangularis" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2519,10 +2519,10 @@
 
 :RID17013 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right postcentral gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right postcentral gyrus" ;
 			braint:Freesurfer_Name "wm-rh-postcentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2530,10 +2530,10 @@
 
 :RID17109 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of inferior part of left precentral gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of inferior part of left precentral gyrus" ;
 			braint:Freesurfer_Name "wm-rh-postcentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2541,10 +2541,10 @@
 
 :RID17159 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of superficial white layer of superior colliculus" ;
+			braint:SubSubTest_Name "volume of superficial white layer of superior colliculus" ;
 			braint:Freesurfer_Name "wm-rh-posteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2552,10 +2552,10 @@
 
 :RID17063 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right posterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right posterior cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-rh-posteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2563,10 +2563,10 @@
 
 :RID17053 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-rh-precentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2574,10 +2574,10 @@
 
 :RID16957 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right precentral gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right precentral gyrus" ;
 			braint:Freesurfer_Name "wm-rh-precentral" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2585,10 +2585,10 @@
 
 :RID17121 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of segment of white matter of gyrus of occipital lobe" ;
+			braint:SubSubTest_Name "volume of segment of white matter of gyrus of occipital lobe" ;
 			braint:Freesurfer_Name "wm-rh-precuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2596,10 +2596,10 @@
 
 :RID17025 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right precuneus" ;
+			braint:SubSubTest_Name "volume of white matter of right precuneus" ;
 			braint:Freesurfer_Name "wm-rh-precuneus" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2607,10 +2607,10 @@
 
 :RID17066 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right anterior cingulate gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right anterior cingulate gyrus" ;
 			braint:Freesurfer_Name "wm-rh-rostralanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2618,10 +2618,10 @@
 
 :RID17162 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of middle white layer of superior colliculus" ;
+			braint:SubSubTest_Name "volume of middle white layer of superior colliculus" ;
 			braint:Freesurfer_Name "wm-rh-rostralanteriorcingulate" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2629,10 +2629,10 @@
 
 :RID17105 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of rostral part of right middle frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of rostral part of right middle frontal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-rostralmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2640,10 +2640,10 @@
 
 :RID17201 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of left alar central lobule" ;
+			braint:SubSubTest_Name "volume of white matter of left alar central lobule" ;
 			braint:Freesurfer_Name "wm-rh-rostralmiddlefrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2651,10 +2651,10 @@
 
 :RID16951 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right superior frontal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right superior frontal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-superiorfrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2662,10 +2662,10 @@
 
 :RID17047 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right inferior occipital gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right inferior occipital gyrus" ;
 			braint:Freesurfer_Name "wm-rh-superiorfrontal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2673,10 +2673,10 @@
 
 :RID17022 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right superior parietal lobule" ;
+			braint:SubSubTest_Name "volume of white matter of right superior parietal lobule" ;
 			braint:Freesurfer_Name "wm-rh-superiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2684,10 +2684,10 @@
 
 :RID17118 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of polar part of superior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of polar part of superior temporal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-superiorparietal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2695,10 +2695,10 @@
 
 :RID16988 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right superior temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right superior temporal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-superiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2706,10 +2706,10 @@
 
 :RID17084 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of accessory short gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of accessory short gyrus" ;
 			braint:Freesurfer_Name "wm-rh-superiortemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2717,10 +2717,10 @@
 
 :RID17112 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of superior part of left precentral gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of superior part of left precentral gyrus" ;
 			braint:Freesurfer_Name "wm-rh-supramarginal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2728,10 +2728,10 @@
 
 :RID17016 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right supramarginal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right supramarginal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-supramarginal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2739,10 +2739,10 @@
 
 :RID17236 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of medial lemniscus of pons" ;
+			braint:SubSubTest_Name "volume of medial lemniscus of pons" ;
 			braint:Freesurfer_Name "wm-rh-temporalpole" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2750,10 +2750,10 @@
 
 :RID17009 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of white matter of right transverse temporal gyrus" ;
+			braint:SubSubTest_Name "volume of white matter of right transverse temporal gyrus" ;
 			braint:Freesurfer_Name "wm-rh-transversetemporal" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
@@ -2761,10 +2761,10 @@
 
 :RID6525 rdf:type braint:SubSubTest,
 			owl:NamedIndividual ;
-			braint:SubSubtest_Name "volume of septum pellucidum" ;
+			braint:SubSubTest_Name "volume of septum pellucidum" ;
 			braint:Freesurfer_Name "5th-Ventricle" ;
 			braint:SubSubTest_DataType "Ordinal" ;
-			braint:SubSubtest_Description "missing... Measure from Freesurfer" ;
+			braint:SubSubTest_Description "missing... Measure from Freesurfer" ;
 			braint:hasVisualization :a .
 			
 			
