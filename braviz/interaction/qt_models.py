@@ -70,15 +70,20 @@ class VarAndGiniModel(QAbstractTableModel):
             else:
                 return QtCore.QVariant()
     def headerData(self, p_int, Qt_Orientation, int_role=None):
-        if int_role != QtCore.Qt.DisplayRole:
+        if Qt_Orientation != QtCore.Qt.Horizontal:
             return QtCore.QVariant()
-        if Qt_Orientation==QtCore.Qt.Horizontal:
+        if int_role == QtCore.Qt.DisplayRole:
             if p_int==0:
                 return "Variable"
             elif p_int==1:
-                return "Ginni Index"
+                return "Importance"
+        elif int_role == QtCore.Qt.ToolTipRole:
+            if p_int==0:
+                return "Variable name"
+            elif p_int==1:
+                return "This measure is calculated as how effective each variable is at predicting the outcome"
         else:
-            return QtCore.QVariant()
+                return QtCore.QVariant()
     def sort(self, p_int, Qt_SortOrder_order=None):
         reverse=True
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:

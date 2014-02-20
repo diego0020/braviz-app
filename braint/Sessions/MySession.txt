@@ -1,0 +1,10 @@
+[SESSION]
+patient = 143
+vtkfocus = True
+vars = 3
+var.0.code = RID17278
+var.0.name = Left-Cerebellum-White-Matter
+var.1.code = BIWEI
+var.1.name = Weight at Birth
+var.2.code = UBICA
+var.2.name = Localization in 3 different study groups

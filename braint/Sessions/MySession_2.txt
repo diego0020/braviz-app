@@ -1,0 +1,10 @@
+[SESSION]
+patient = 144
+vtkfocus = False
+vars = 3
+var.0.code = RID17312
+var.0.name = Right-Cerebellum-White-Matter
+var.1.code = VMI
+var.1.name = Visual Motor Integration 
+var.2.code = FSIQ
+var.2.name = Full Score
