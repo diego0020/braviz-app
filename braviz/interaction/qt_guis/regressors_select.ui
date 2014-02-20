@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>940</width>
-    <height>359</height>
+    <width>1015</width>
+    <height>527</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -120,7 +120,20 @@
        </widget>
       </item>
       <item>
-       <widget class="QTableView" name="current_regressors_table"/>
+       <widget class="QTableView" name="current_regressors_table">
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -254,7 +267,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="select_button">
+          <widget class="QPushButton" name="add_button">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -264,7 +277,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="done_button">
            <property name="text">
             <string>Done</string>
            </property>

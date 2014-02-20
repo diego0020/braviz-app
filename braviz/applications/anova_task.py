@@ -290,11 +290,22 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.ui.tableView.setModel(self.vars_model)
         self.finish_ui_setup()
         self.ui.tableView.activated.connect(self.update_right_side)
+        self.ui.add_button.pressed.connect(self.add_regressor)
+        self.regressors_table_model=braviz_models.AnovaRegressorsModel()
+        self.ui.current_regressors_table.setModel(self.regressors_table_model)
+
     def update_right_side(self,name=None):
         curr_idx=self.ui.tableView.currentIndex()
         idx2=self.vars_model.index(curr_idx.row(),0)
         var_name=self.vars_model.data(idx2,QtCore.Qt.DisplayRole)
+        self.ui.add_button.setEnabled(True)
         super(RegressorSelectDialog,self).update_right_side(var_name)
+    def add_regressor(self):
+        #TODO: Create current regressors table
+        self.regressors_table_model.add_regressor(self.var_name)
+    def update_plot(self,data):
+        #TODO: Generate plots for illustrationg relation beteen current regressor and outcome
+        pass
 
 
 
@@ -314,6 +325,7 @@ class AnovaApp(QMainWindow):
         self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
         self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
         self.ui.add_regressor_button.pressed.connect(self.launch_add_regressor_dialog)
+
 
     def dispatch_outcome_select(self):
 
