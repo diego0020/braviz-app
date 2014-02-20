@@ -20,6 +20,12 @@ from braviz.readAndFilter.tabular_data import get_connection,get_data_frame
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
+
+
+class VariableSelectDialog(QtGui.QDialog):
+    def __init__(self):
+
+
 class OutcomeSelectDialog(QtGui.QDialog):
     def __init__(self,params_dict):
         self.params_dict=params_dict
@@ -266,6 +272,10 @@ class RegressorSelectDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.vars_model=braviz_models.VarAndGiniModel(outcome_var)
         self.ui.tableView.setModel(self.vars_model)
+    def update_right_side(self):
+        curr_idx=self.ui.tableView.currentIndex()
+        var_name=self.vars_list_model.data(curr_idx,QtCore.Qt.DisplayRole)
+
 
 
 
