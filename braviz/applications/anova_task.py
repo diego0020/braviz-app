@@ -23,33 +23,24 @@ from matplotlib.figure import Figure
 
 
 class VariableSelectDialog(QtGui.QDialog):
+    """Implement common features for Oucome and Regressor Dialogs"""
     def __init__(self):
-
-
-class OutcomeSelectDialog(QtGui.QDialog):
-    def __init__(self,params_dict):
-        self.params_dict=params_dict
-        super(OutcomeSelectDialog,self).__init__()
-        self.ui=Ui_SelectOutcomeDialog()
-        self.ui.setupUi(self)
-        self.vars_list_model=braviz_models.VarListModel()
-        self.ui.tableView.setModel(self.vars_list_model)
-        self.ui.tableView.activated.connect(self.update_right_side)
-        self.ui.var_type_combo.currentIndexChanged.connect(self.update_details)
+        "remember to call finish_ui_setup() after setting up ui"
+        super(VariableSelectDialog,self).__init__()
+        self.conn=get_connection()
         self.var_name=None
         self.details_ui=None
         self.rational={}
         self.matplot_widget=None
-        self.create_matplotlib_frame()
         self.data=tuple()
-        self.conn=get_connection()
-        self.ui.save_button.pressed.connect(self.save_meta_data)
         self.model=None
-        self.ui.select_button.pressed.connect(self.select_and_return)
 
-    def update_right_side(self):
-        curr_idx=self.ui.tableView.currentIndex()
-        var_name=self.vars_list_model.data(curr_idx,QtCore.Qt.DisplayRole)
+
+    def update_plot(self,data):
+        pass
+
+    def update_right_side(self,var_name):
+
         #print "lalalalala: %s"%var_name
         self.ui.var_name.setText(var_name)
         self.ui.save_button.setEnabled(True)
@@ -62,8 +53,8 @@ class OutcomeSelectDialog(QtGui.QDialog):
         data=get_data_frame(self.var_name)
         self.data=data
         #update scatter
-        self.matplot_widget.compute_scatter(data.get_values())
-        self.ui.select_button.setEnabled(True)
+        self.update_plot(data)
+
 
         #update gui
         if is_real is not None:
@@ -77,9 +68,6 @@ class OutcomeSelectDialog(QtGui.QDialog):
         else:
             self.ui.var_type_combo.setCurrentIndex(1)
             self.update_details(1)
-
-
-
     def update_details(self,index):
         #is_real=self.ui.var_type_combo.currentIndex()
         #print index
@@ -152,8 +140,6 @@ class OutcomeSelectDialog(QtGui.QDialog):
         self.details_ui.maximum_val.valueChanged.connect(self.update_limits_in_plot)
         QtCore.QTimer.singleShot(0 , self.update_limits_in_plot)
 
-
-
     def create_nominal_details(self):
         var_name=self.var_name
         #print "creating details"
@@ -166,12 +152,16 @@ class OutcomeSelectDialog(QtGui.QDialog):
         details_ui.labels_names_table.setModel(self.model)
         self.details_ui=details_ui
         QtCore.QTimer.singleShot(0 , self.update_limits_in_plot)
-    def create_matplotlib_frame(self):
+
+    def finish_ui_setup(self):
         target=self.ui.plot_frame
         layout=QtGui.QVBoxLayout()
         self.matplot_widget=MatplotWidget()
         layout.addWidget(self.matplot_widget)
         target.setLayout(layout)
+        self.ui.save_button.pressed.connect(self.save_meta_data)
+        self.ui.var_type_combo.currentIndexChanged.connect(self.update_details)
+
     def update_limits_in_plot(self,*args):
         if self.ui.var_type_combo.currentIndex()!=0:
             self.matplot_widget.add_max_min_opt_lines(None,None,None)
@@ -184,6 +174,7 @@ class OutcomeSelectDialog(QtGui.QDialog):
         self.rational["min"]=mini
         self.rational["opt"]=opti
         self.matplot_widget.add_max_min_opt_lines(mini,opti,maxi)
+
     def save_meta_data(self):
         var_type=0 #nominal should be 1
         if self.ui.var_type_combo.currentIndex()==0:
@@ -214,7 +205,33 @@ class OutcomeSelectDialog(QtGui.QDialog):
                 self.conn.commit()
         elif var_type==0:
             self.model.save_into_db()
-        pass
+
+class OutcomeSelectDialog(VariableSelectDialog):
+    def __init__(self,params_dict):
+        super(OutcomeSelectDialog,self).__init__()
+        self.ui=Ui_SelectOutcomeDialog()
+        self.ui.setupUi(self)
+        self.finish_ui_setup()
+
+        self.params_dict=params_dict
+
+        self.vars_list_model=braviz_models.VarListModel()
+        self.ui.tableView.setModel(self.vars_list_model)
+        self.ui.tableView.activated.connect(self.update_right_side)
+
+        self.ui.select_button.pressed.connect(self.select_and_return)
+    def update_right_side(self,var_name=None):
+        curr_idx=self.ui.tableView.currentIndex()
+        var_name=self.vars_list_model.data(curr_idx,QtCore.Qt.DisplayRole)
+        self.ui.select_button.setEnabled(True)
+        super(OutcomeSelectDialog,self).update_right_side(var_name)
+
+    def update_plot(self,data):
+        self.matplot_widget.compute_scatter(data.get_values())
+
+
+
+
     def select_and_return(self,*args):
         self.save_meta_data()
         self.params_dict["selected_outcome"]=self.var_name
@@ -263,18 +280,21 @@ class MatplotWidget(FigureCanvas):
         self.axes.draw_artist(opt_line)
         self.blit(self.axes.bbox)
 
-class RegressorSelectDialog(QtGui.QDialog):
+class RegressorSelectDialog(VariableSelectDialog):
     def __init__(self,outcome_var,params_dict):
         super(RegressorSelectDialog,self).__init__()
         self.params_dict=params_dict
-        self.outcome_var=outcome_var
         self.ui=Ui_AddRegressorDialog()
         self.ui.setupUi(self)
         self.vars_model=braviz_models.VarAndGiniModel(outcome_var)
         self.ui.tableView.setModel(self.vars_model)
-    def update_right_side(self):
+        self.finish_ui_setup()
+        self.ui.tableView.activated.connect(self.update_right_side)
+    def update_right_side(self,name=None):
         curr_idx=self.ui.tableView.currentIndex()
-        var_name=self.vars_list_model.data(curr_idx,QtCore.Qt.DisplayRole)
+        idx2=self.vars_model.index(curr_idx.row(),0)
+        var_name=self.vars_model.data(idx2,QtCore.Qt.DisplayRole)
+        super(RegressorSelectDialog,self).update_right_side(var_name)
 
 
 
