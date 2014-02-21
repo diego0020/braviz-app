@@ -12,6 +12,7 @@ from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
 from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
 from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
+from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealog
 
 
 import braviz.interaction.qt_models as braviz_models
@@ -227,7 +228,8 @@ class OutcomeSelectDialog(VariableSelectDialog):
         super(OutcomeSelectDialog,self).update_right_side(var_name)
 
     def update_plot(self,data):
-        self.matplot_widget.compute_scatter(data.get_values())
+        self.matplot_widget.compute_scatter(data.get_values(),
+                                            x_lab=self.var_name,y_lab="jitter")
 
 
 
@@ -254,17 +256,25 @@ class MatplotWidget(FigureCanvas):
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
         self.xlim=self.axes.get_xlim()
         self.data=tuple()
-        self.jitter=tuple()
-    def compute_scatter(self,data):
+        self.data2=tuple()
+    def compute_scatter(self,data,data2=None,x_lab=None,y_lab=None):
         self.axes.clear()
-        jitter=np.random.rand(len(data))
-        self.axes.scatter(data,jitter,color="#2ca25f")
-        self.axes.tick_params('y',left='off',labelleft='off')
+        self.axes.yaxis.set_label_position("right")
+        if data2 is None:
+            data2=np.random.rand(len(data))
+            self.axes.tick_params('y',left='off',labelleft='off',labelright='off')
+        if x_lab is not None:
+            self.axes.set_xlabel(x_lab)
+        if y_lab is not None:
+            self.axes.set_ylabel(y_lab)
+
+        self.axes.scatter(data,data2,color="#2ca25f")
+
         self.draw()
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
         self.xlim=self.axes.get_xlim()
         self.data=data
-        self.jitter=jitter
+        self.data2=data2
     def add_max_min_opt_lines(self,mini,opti,maxi):
 
         self.restore_region(self.back_fig)
@@ -281,9 +291,9 @@ class MatplotWidget(FigureCanvas):
         self.blit(self.axes.bbox)
 
 class RegressorSelectDialog(VariableSelectDialog):
-    def __init__(self,outcome_var,params_dict):
+    def __init__(self,outcome_var,regressors_model):
         super(RegressorSelectDialog,self).__init__()
-        self.params_dict=params_dict
+        self.outcome_var=outcome_var
         self.ui=Ui_AddRegressorDialog()
         self.ui.setupUi(self)
         self.vars_model=braviz_models.VarAndGiniModel(outcome_var)
@@ -291,8 +301,10 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.finish_ui_setup()
         self.ui.tableView.activated.connect(self.update_right_side)
         self.ui.add_button.pressed.connect(self.add_regressor)
-        self.regressors_table_model=braviz_models.AnovaRegressorsModel()
+        self.regressors_table_model=regressors_model
         self.ui.current_regressors_table.setModel(self.regressors_table_model)
+        self.ui.current_regressors_table.customContextMenuRequested.connect(self.show_context_menu)
+        self.ui.done_button.pressed.connect(self.finish_close)
 
     def update_right_side(self,name=None):
         curr_idx=self.ui.tableView.currentIndex()
@@ -301,30 +313,69 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.ui.add_button.setEnabled(True)
         super(RegressorSelectDialog,self).update_right_side(var_name)
     def add_regressor(self):
-        #TODO: Create current regressors table
         self.regressors_table_model.add_regressor(self.var_name)
+    def show_context_menu(self, pos):
+        globalPos=self.ui.current_regressors_table.mapToGlobal(pos)
+        selection=self.ui.current_regressors_table.currentIndex()
+        remove_action=QtGui.QAction("Remove",None)
+        menu=QtGui.QMenu()
+        menu.addAction(remove_action)
+        def remove_item(*args):
+            self.regressors_table_model.removeRows(selection.row(),1)
+        remove_action.triggered.connect(remove_item)
+        menu.addAction(remove_action)
+        selected_item=menu.exec_(globalPos)
+        #print selected_item
+
+
+
     def update_plot(self,data):
-        #TODO: Generate plots for illustrationg relation beteen current regressor and outcome
-        pass
+        regressor_data=data
+        if self.outcome_var is not None:
+            outcome_data=get_data_frame(self.outcome_var)
+            self.matplot_widget.compute_scatter(regressor_data.get_values(),outcome_data.get_values(),
+                                                x_lab=self.var_name,y_lab=self.outcome_var)
+        else:
+            self.matplot_widget.compute_scatter(data.get_values())
 
 
+    def finish_close(self):
+        self.done(self.Accepted)
 
+
+class InteractionSelectDialog(QtGui.QDialog):
+    def __init__(self,regressors_model):
+        super(InteractionSelectDialog,self).__init__()
+        self.full_model=regressors_model
+        regressors=regressors_model.get_regressors()
+        self.only_regs_model=braviz_models.AnovaRegressorsModel(regressors)
+
+        self.ui=Ui_InteractionsDiealog()
+        self.ui.setupUi(self)
+        self.ui.reg_view.setModel(self.only_regs_model)
+        self.full_model.show_regressors(False)
+        self.ui.full_view.setModel(self.full_model)
 
 
 
 class AnovaApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
-        self.setup_gui()
         self.outcome_var_name=None
+        self.regressors_model=braviz_models.AnovaRegressorsModel()
+        self.setup_gui()
+
     def setup_gui(self):
         self.ui=Ui_Anova_gui()
         self.ui.setupUi(self)
         self.ui.outcome_sel.insertSeparator(1)
         self.ui.outcome_sel.setCurrentIndex(2)
         self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
-        self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
+        #self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
         self.ui.add_regressor_button.pressed.connect(self.launch_add_regressor_dialog)
+        self.ui.reg_table.setModel(self.regressors_model)
+        self.ui.reg_table.customContextMenuRequested.connect(self.launch_regressors_context_menu)
+        self.ui.add_interaction_button.pressed.connect(self.dispatch_interactions_dialog)
 
 
     def dispatch_outcome_select(self):
@@ -337,38 +388,65 @@ class AnovaApp(QMainWindow):
             selection=dialog.exec_()
             if selection>0:
                 self.set_outcome_var_type(params["selected_outcome"])
+            else:
+                self.set_outcome_var_type(None)
         else:
             self.set_outcome_var_type(self.ui.outcome_sel.itemText(self.ui.outcome_sel.currentIndex()))
 
+    def dispatch_interactions_dialog(self):
+        interaction_dialog=InteractionSelectDialog(self.regressors_model)
+        interaction_dialog.exec_()
+        self.full_model.show_regressors(True)
 
-
-    def set_outcome_var_type(self,new_var):
-        new_var=unicode(new_var)
-        if new_var == self.outcome_var_name:
+    def set_outcome_var_type(self,new_bar):
+        if new_bar is None:
+            var_type_text="Type"
+            self.ui.outcome_type.setText(var_type_text)
+            self.outcome_var_name=None
+            #self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count()-1)
             return
-        print "succesfully selected %s"%new_var
-        index=self.ui.outcome_sel.findText(new_var)
+        new_bar=unicode(new_bar)
+        if new_bar == self.outcome_var_name:
+            return
+        print "succesfully selected %s"%new_bar
+        index=self.ui.outcome_sel.findText(new_bar)
         if index<0:
             self.ui.outcome_sel.setCurrentIndex(index)
-            self.ui.outcome_sel.insertItem(0,new_var)
+            self.ui.outcome_sel.insertItem(0,new_bar)
             index=0
             pass
-        self.outcome_var_name=new_var
+        self.outcome_var_name=new_bar
         self.ui.outcome_sel.setCurrentIndex(index)
         conn=get_connection()
         try:
-            var_is_real=conn.execute("SELECT is_real FROM variables WHERE var_name = ? ;",(new_var,)).fetchone()[0]
+            var_is_real=conn.execute("SELECT is_real FROM variables WHERE var_name = ? ;",(new_bar,)).fetchone()[0]
         except TypeError:
             var_type_text="Type"
         else:
             var_type_text="Real" if var_is_real else "Nominal"
         self.ui.outcome_type.setText(var_type_text)
+        self.check_if_ready()
 
     def launch_add_regressor_dialog(self):
-        params_dict={}
-        reg_dialog=RegressorSelectDialog(self.outcome_var_name,params_dict)
+        reg_dialog=RegressorSelectDialog(self.outcome_var_name,self.regressors_model)
         result=reg_dialog.exec_()
-
+        self.check_if_ready()
+    def check_if_ready(self):
+        if (self.outcome_var_name is not None) and (self.regressors_model.rowCount()>0):
+            self.ui.calculate_button.setEnabled(True)
+        else:
+            self.ui.calculate_button.setEnabled(False)
+    def launch_regressors_context_menu(self,pos):
+        globalPos=self.ui.reg_table.mapToGlobal(pos)
+        selection=self.ui.reg_table.currentIndex()
+        remove_action=QtGui.QAction("Remove",None)
+        menu=QtGui.QMenu()
+        menu.addAction(remove_action)
+        def remove_item(*args):
+            self.regressors_model.removeRows(selection.row(),1)
+        remove_action.triggered.connect(remove_item)
+        menu.addAction(remove_action)
+        selected_item=menu.exec_(globalPos)
 
 
 

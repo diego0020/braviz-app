@@ -179,19 +179,45 @@ class AnovaRegressorsModel(QAbstractTableModel):
         QAbstractTableModel.__init__(self,parent)
         self.conn=braviz_tab_data.get_connection()
         if len(regressors_list)>0:
-            initial_data=( (r,self.get_degrees_of_freedom(r)) for r in regressors_list )
+            initial_data=( (r,self.get_degrees_of_freedom(r),0) for r in regressors_list )
         else:
             initial_data=None
-        self.data_frame=pd.DataFrame(initial_data,columns=["variable","DF"])
+        self.data_frame=pd.DataFrame(initial_data,columns=["variable","DF","Interaction"])
+        self.display_view=self.data_frame
+        self.__show_interactions=True
+        self.__show_regressors=True
+
+
+    def update_display_view(self):
+        if (self.__show_interactions and self.__show_regressors):
+            self.display_view=self.data_frame
+        else:
+            if self.__show_interactions is True:
+                self.display_view=self.data_frame[self.data_frame["Interaction"]==1]
+            else:
+                self.display_view=self.data_frame[self.data_frame["Interaction"]==0]
+
+
+    def show_interactions(self,value=True):
+        self.__show_interactions=value
+        self.update_display_view()
+        self.modelReset.emit()
+
+    def show_regressors(self,value=True):
+        self.__show_regressors=value
+        self.update_display_view()
+        self.modelReset.emit()
 
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
-        return len(self.data_frame)
+        return len(self.display_view)
+
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return 2
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
             return QtCore.QVariant()
+
         if int_role == QtCore.Qt.DisplayRole:
             if p_int==0:
                 return "Variable"
@@ -202,15 +228,17 @@ class AnovaRegressorsModel(QAbstractTableModel):
         else:
             return  QtCore.QVariant()
     def data(self, QModelIndex, int_role=None):
-        if not (int_role==QtCore.Qt.DisplayRole):
-            return QtCore.QVariant()
         line=QModelIndex.row()
         col=QModelIndex.column()
-        if 0<=line<len(self.data_frame):
+        if not (int_role==QtCore.Qt.DisplayRole):
+            return QtCore.QVariant()
+
+
+        if 0<=line<self.rowCount():
             if col==0:
-                return self.data_frame["variable"].iloc[line]
+                return self.display_view["variable"].iloc[line]
             elif col==1:
-                return str(self.data_frame["DF"].iloc[line])
+                return str(self.display_view["DF"].iloc[line])
             else:
                 return QtCore.QVariant()
     def sort(self, p_int, Qt_SortOrder_order=None):
@@ -222,6 +250,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
             self.data_frame.sort("variable",ascending=reverse,inplace=True)
         elif p_int==1:
             self.data_frame.sort("DF",ascending=reverse,inplace=True)
+        self.update_display_view()
         self.modelReset.emit()
     def add_regressor(self,var_name):
         if (self.data_frame["variable"]==var_name).sum()>0:
@@ -229,18 +258,23 @@ class AnovaRegressorsModel(QAbstractTableModel):
             return
 
         self.beginInsertRows(QtCore.QModelIndex(),len(self.data_frame),len(self.data_frame))
-        self.data_frame=self.data_frame.append(pd.DataFrame([(var_name,self.get_degrees_of_freedom(var_name) ) ],
-                                                            columns=["variable","DF"], index=(len(self.data_frame),)
+        self.data_frame=self.data_frame.append(pd.DataFrame([(var_name,self.get_degrees_of_freedom(var_name),0 ) ],
+                                                            columns=["variable","DF","Interaction"], index=(len(self.data_frame),)
                                                             ))
         self.endInsertRows()
+        self.update_display_view()
 
     def removeRows(self, row, count, QModelIndex_parent=None, *args, **kwargs):
         self.beginRemoveRows(QtCore.QModelIndex(),row,row+count-1)
         indexes=list(self.data_frame.index)
         for i in xrange(count):
             indexes.pop(row)
-        self.data_frame=self.data_frame.iloc[indexes]
+        if len(indexes)==0:
+            self.data_frame=pd.DataFrame(columns=["variable","DF","Interaction"])
+        else:
+            self.data_frame=self.data_frame.iloc[indexes]
         self.endRemoveRows()
+
 
     def get_degrees_of_freedom(self,var_name):
         is_real_cur=self.conn.execute("SELECT is_real FROM variables WHERE var_name = ?",(var_name,))
@@ -250,6 +284,9 @@ class AnovaRegressorsModel(QAbstractTableModel):
         query="""SELECT count(*) FROM nom_meta NATURAL JOIN variables WHERE  var_name=?"""
         cur=self.conn.execute(query,(var_name,))
         return cur.fetchone()[0]
+    def get_regressors(self):
+        regs_col=self.data_frame["variable"][self.data_frame["Interaction"]==0 ]
+        return regs_col.get_values()
 
 
 
