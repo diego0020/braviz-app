@@ -186,6 +186,8 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.display_view=self.data_frame
         self.__show_interactions=True
         self.__show_regressors=True
+        self.__interactors_dict=dict()
+        self.__next_index=0
 
 
     def update_display_view(self):
@@ -259,8 +261,10 @@ class AnovaRegressorsModel(QAbstractTableModel):
 
         self.beginInsertRows(QtCore.QModelIndex(),len(self.data_frame),len(self.data_frame))
         self.data_frame=self.data_frame.append(pd.DataFrame([(var_name,self.get_degrees_of_freedom(var_name),0 ) ],
-                                                            columns=["variable","DF","Interaction"], index=(len(self.data_frame),)
+                                                            columns=["variable","DF","Interaction"],
+                                                            index=(self.__next_index,)
                                                             ))
+        self.__next_index+=1
         self.endInsertRows()
         self.update_display_view()
 
@@ -283,10 +287,49 @@ class AnovaRegressorsModel(QAbstractTableModel):
             return 1
         query="""SELECT count(*) FROM nom_meta NATURAL JOIN variables WHERE  var_name=?"""
         cur=self.conn.execute(query,(var_name,))
-        return cur.fetchone()[0]
+        return cur.fetchone()[0]-1
     def get_regressors(self):
         regs_col=self.data_frame["variable"][self.data_frame["Interaction"]==0 ]
         return regs_col.get_values()
+
+    def add_interactor(self,factor_rw_indexes):
+        #get var_names
+        if len(factor_rw_indexes)<2:
+            return
+        factor_indexes=[self.data_frame.index[i] for i in factor_rw_indexes]
+        #check if already added:
+        if frozenset(factor_indexes) in self.__interactors_dict.values():
+            print "Trying to add duplicated interaction"
+            return
+        factor_names=self.data_frame["variable"].loc[factor_indexes]
+        #create name
+        interactor_name='*'.join(factor_names)
+        print interactor_name
+        #get degrees of freedom
+        interactor_df=self.data_frame["DF"].loc[factor_indexes].prod()
+        print interactor_df
+        #add to dictionary
+        interactor_idx=self.__next_index
+        self.__next_index+=1
+        self.__interactors_dict[interactor_idx]=frozenset(factor_indexes)
+        #add to data frame
+        self.beginInsertRows(QtCore.QModelIndex(),len(self.data_frame),len(self.data_frame))
+
+        temp_data_frame=pd.DataFrame([(interactor_name,interactor_df,1)],columns=["variable","DF","Interaction"],
+                                     index=(interactor_idx,))
+        self.data_frame=self.data_frame.append(temp_data_frame)
+        self.endInsertRows()
+        self.update_display_view()
+    def update_sample_info(self):
+        #TODO: Show in a tree sample distribution along factors
+        pass
+    def calculate_anova(self):
+        pass
+
+
+
+
+
 
 
 

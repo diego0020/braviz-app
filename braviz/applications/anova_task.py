@@ -5,6 +5,7 @@ import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 from PyQt4.QtGui import QMainWindow
 import numpy as np
+import itertools
 
 #load gui
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
@@ -355,7 +356,19 @@ class InteractionSelectDialog(QtGui.QDialog):
         self.ui.reg_view.setModel(self.only_regs_model)
         self.full_model.show_regressors(False)
         self.ui.full_view.setModel(self.full_model)
+        self.ui.add_single_button.pressed.connect(self.add_single_term)
+        self.ui.add_all_button.pressed.connect(self.add_all_combinations)
 
+    def add_single_term(self):
+        selected_indexes=self.ui.reg_view.selectedIndexes()
+        selected_row_numbers=set(i.row() for i in selected_indexes)
+        print selected_row_numbers
+        self.full_model.add_interactor(selected_row_numbers)
+    def add_all_combinations(self):
+        rows=range(self.only_regs_model.rowCount())
+        for r in xrange(2,len(rows)+1):
+            for i in itertools.combinations(rows,r):
+                self.full_model.add_interactor(i)
 
 
 class AnovaApp(QMainWindow):
@@ -396,7 +409,7 @@ class AnovaApp(QMainWindow):
     def dispatch_interactions_dialog(self):
         interaction_dialog=InteractionSelectDialog(self.regressors_model)
         interaction_dialog.exec_()
-        self.full_model.show_regressors(True)
+        self.regressors_model.show_regressors(True)
 
     def set_outcome_var_type(self,new_bar):
         if new_bar is None:
