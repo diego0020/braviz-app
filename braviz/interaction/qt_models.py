@@ -6,7 +6,7 @@ import PyQt4.QtCore as QtCore
 from PyQt4.QtCore import QAbstractListModel
 from PyQt4.QtCore import QAbstractTableModel
 import braviz.readAndFilter.tabular_data as braviz_tab_data
-from braviz.interaction.r_functions import calculate_ginni_index
+from braviz.interaction.r_functions import calculate_ginni_index,calculate_anova
 
 
 
@@ -207,6 +207,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
             self.data_frame=pd.DataFrame(columns=["variable","DF","Interaction"])
         else:
             self.data_frame=self.data_frame.iloc[indexes]
+        self.remove_invalid_interactions()
         self.endRemoveRows()
 
 
@@ -250,16 +251,14 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.data_frame=self.data_frame.append(temp_data_frame)
         self.endInsertRows()
         self.update_display_view()
-    def update_sample_info(self):
-        #TODO: Show in a tree sample distribution along factors
+
+    def remove_invalid_interactions(self):
+        #TODO: when deleting a factor
         pass
-    def calculate_anova(self):
-        pass
-
-
-
-
-
+    def get_data_frame(self):
+        return self.data_frame
+    def get_interactors_dict(self):
+        return self.__interactors_dict
 
 
 
@@ -363,3 +362,41 @@ class NominalVariablesMeta(QAbstractTableModel):
         tuples=( (self.var_name, k, v) for k,v in self.names_dict.iteritems())
         self.conn.executemany(query,tuples)
         self.conn.commit()
+
+class AnovaResultsModel(QAbstractTableModel):
+    def __init__(self,results_df=None):
+        if results_df is None:
+            self.__df=pd.DataFrame(None,columns=["Factor","Sum Sq","Df","F value","Pr(>F)"])
+        else:
+            self.__df=results_df
+        super(AnovaResultsModel,self).__init__()
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.__df)
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return self.__df.shape[1]
+    def data(self, QModelIndex, int_role=None):
+        if not (int_role==QtCore.Qt.DisplayRole):
+            return QtCore.QVariant()
+        line=QModelIndex.row()
+        col=QModelIndex.column()
+        return str(self.__df.iloc[line,col])
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        if Qt_Orientation != QtCore.Qt.Horizontal:
+            return QtCore.QVariant()
+        if int_role == QtCore.Qt.DisplayRole:
+            return self.__df.columns[p_int]
+        return QtCore.QVariant()
+    def sort(self, p_int, Qt_SortOrder_order=None):
+        reverse=True
+        if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
+            reverse=False
+        self.__df.sort(self.__df.columns[p_int],ascending=reverse,inplace=True)
+    def flags(self, QModelIndex):
+        line=QModelIndex.row()
+        col=QModelIndex.column()
+        result=QtCore.Qt.NoItemFlags
+        if 0<=line<=self.rowCount() and 0<=line<=self.columnCount():
+            result|=QtCore.Qt.ItemIsSelectable
+            result|=QtCore.Qt.ItemIsEnabled
+        return result

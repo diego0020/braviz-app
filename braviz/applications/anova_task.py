@@ -15,6 +15,7 @@ from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_detail
 from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
 from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealog
 
+import braviz.interaction.r_functions
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection,get_data_frame
@@ -375,7 +376,9 @@ class AnovaApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.outcome_var_name=None
+        self.anova=None
         self.regressors_model=braviz_models.AnovaRegressorsModel()
+        self.result_model=braviz_models.AnovaResultsModel()
         self.setup_gui()
 
     def setup_gui(self):
@@ -383,13 +386,14 @@ class AnovaApp(QMainWindow):
         self.ui.setupUi(self)
         self.ui.outcome_sel.insertSeparator(1)
         self.ui.outcome_sel.setCurrentIndex(2)
-        self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
-        #self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
+        #self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
+        self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
         self.ui.add_regressor_button.pressed.connect(self.launch_add_regressor_dialog)
         self.ui.reg_table.setModel(self.regressors_model)
         self.ui.reg_table.customContextMenuRequested.connect(self.launch_regressors_context_menu)
         self.ui.add_interaction_button.pressed.connect(self.dispatch_interactions_dialog)
-
+        self.ui.calculate_button.pressed.connect(self.calculate_anova)
+        self.ui.results_table.setModel(self.result_model)
 
     def dispatch_outcome_select(self):
 
@@ -460,6 +464,31 @@ class AnovaApp(QMainWindow):
         remove_action.triggered.connect(remove_item)
         menu.addAction(remove_action)
         selected_item=menu.exec_(globalPos)
+    def update_sample_info(self):
+        #TODO: Show in a tree sample distribution along factors
+        pass
+    def calculate_anova(self):
+        self.anova=braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
+                                                                  self.regressors_model.get_data_frame(),
+                                                                  self.regressors_model.get_interactors_dict())
+        self.result_model=braviz_models.AnovaResultsModel(self.anova)
+        self.ui.results_table.setModel(self.result_model)
+
+        # try:
+        #     self.anova=braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
+        #                                                               self.regressors_model.get_data_frame(),
+        #                                                               self.regressors_model.get_interactors_dict())
+        # except Exception as e:
+        #     msg=QtGui.QMessageBox()
+        #     msg.setText(str(e.message))
+        #     msg.setIcon(msg.Warning)
+        #     msg.setWindowTitle("Anova Error")
+        #     msg.exec_()
+        # else:
+        #     self.result_model=braviz_models.AnovaResultsModel(self.anova)
+        #     self.ui.results_table.setModel(self.result_model)
+
+
 
 
 
