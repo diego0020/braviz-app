@@ -291,6 +291,18 @@ class MatplotWidget(FigureCanvas):
         self.axes.draw_artist(max_line)
         self.axes.draw_artist(opt_line)
         self.blit(self.axes.bbox)
+    def make_box_plot(self,data,xlabel,ylabel,xticks_labels):
+        self.axes.clear()
+        self.axes.tick_params('y',left='off',labelleft='off',labelright='on',right="on")
+        self.axes.yaxis.set_label_position("right")
+        self.axes.set_ylim(auto=True)
+        self.axes.boxplot(data,sym='gD')
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
+        self.axes.get_xaxis().set_ticklabels(xticks_labels)
+
+        self.draw()
+
 
 class RegressorSelectDialog(VariableSelectDialog):
     def __init__(self,outcome_var,regressors_model):
@@ -379,7 +391,9 @@ class AnovaApp(QMainWindow):
         self.anova=None
         self.regressors_model=braviz_models.AnovaRegressorsModel()
         self.result_model=braviz_models.AnovaResultsModel()
+        self.plot=None
         self.setup_gui()
+
 
     def setup_gui(self):
         self.ui=Ui_Anova_gui()
@@ -394,6 +408,14 @@ class AnovaApp(QMainWindow):
         self.ui.add_interaction_button.pressed.connect(self.dispatch_interactions_dialog)
         self.ui.calculate_button.pressed.connect(self.calculate_anova)
         self.ui.results_table.setModel(self.result_model)
+
+        self.ui.matplot_layout=QtGui.QVBoxLayout()
+        self.plot=MatplotWidget()
+        self.ui.matplot_layout.addWidget(self.plot)
+        self.ui.plot_frame.setLayout(self.ui.matplot_layout)
+        self.ui.results_table.activated.connect(self.update_main_plot_from_results)
+        self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
+
 
     def dispatch_outcome_select(self):
 
@@ -468,25 +490,81 @@ class AnovaApp(QMainWindow):
         #TODO: Show in a tree sample distribution along factors
         pass
     def calculate_anova(self):
-        self.anova=braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
-                                                                  self.regressors_model.get_data_frame(),
-                                                                  self.regressors_model.get_interactors_dict())
-        self.result_model=braviz_models.AnovaResultsModel(self.anova)
-        self.ui.results_table.setModel(self.result_model)
+        # self.anova=braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
+        #                                                           self.regressors_model.get_data_frame(),
+        #                                                           self.regressors_model.get_interactors_dict())
+        # self.result_model=braviz_models.AnovaResultsModel(self.anova)
+        # self.ui.results_table.setModel(self.result_model)
 
-        # try:
-        #     self.anova=braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
-        #                                                               self.regressors_model.get_data_frame(),
-        #                                                               self.regressors_model.get_interactors_dict())
-        # except Exception as e:
-        #     msg=QtGui.QMessageBox()
-        #     msg.setText(str(e.message))
-        #     msg.setIcon(msg.Warning)
-        #     msg.setWindowTitle("Anova Error")
-        #     msg.exec_()
-        # else:
-        #     self.result_model=braviz_models.AnovaResultsModel(self.anova)
-        #     self.ui.results_table.setModel(self.result_model)
+        try:
+            self.anova=braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
+                                                                      self.regressors_model.get_data_frame(),
+                                                                      self.regressors_model.get_interactors_dict())
+        except Exception as e:
+            msg=QtGui.QMessageBox()
+            msg.setText(str(e.message))
+            msg.setIcon(msg.Warning)
+            msg.setWindowTitle("Anova Error")
+            msg.exec_()
+        else:
+            self.result_model=braviz_models.AnovaResultsModel(self.anova)
+            self.ui.results_table.setModel(self.result_model)
+
+    def update_main_plot_from_results(self,index):
+        row=index.row()
+        var_name_index=self.result_model.index(row,0)
+        var_name=unicode(self.result_model.data(var_name_index,QtCore.Qt.DisplayRole))
+        self.update_main_plot(var_name)
+
+    def update_main_plot_from_regressors(self,index):
+        row=index.row()
+        var_name_index=self.regressors_model.index(row,0)
+        var_name=unicode(self.regressors_model.data(var_name_index,QtCore.Qt.DisplayRole))
+        self.update_main_plot(var_name)
+
+    def update_main_plot(self,var_name):
+        if self.outcome_var_name is None:
+            return
+        if var_name=="Residuals":
+            #TODO histogram or residuals to check if they look normal
+            pass
+        elif var_name=="(Intercept)":
+            #TODO show jittered outcome and intercept line
+            pass
+        else:
+            if ":" in var_name:
+                # possible interaction
+                pass
+            else:
+                self.one_reg_plot(var_name)
+
+    def one_reg_plot(self,var_name):
+        #find if variable is nominal
+        conn=get_connection()
+        is_reg_real=conn.execute("SELECT is_real FROM variables WHERE var_name=?",(var_name,))
+        is_reg_real=is_reg_real.fetchone()[0]
+        if is_reg_real == 0:
+            #is nominal
+            #create whisker plot
+            labels=conn.execute("SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",(var_name,))
+            labels_dict=dict(labels.fetchall())
+            print labels_dict
+            #get data from
+            data=get_data_frame([self.outcome_var_name,var_name])
+            label_nums=set(data[var_name])
+            data_list=[]
+            ticks=[]
+            for i in label_nums:
+                data_col=data[self.outcome_var_name][data[var_name]==i]
+                data_list.append(data_col.get_values())
+                ticks.append(labels_dict.get(i,str(i)))
+            print data_list
+            self.plot.make_box_plot(data_list,var_name,self.outcome_var_name,ticks)
+
+        else:
+            #is real
+            pass
+
 
 
 

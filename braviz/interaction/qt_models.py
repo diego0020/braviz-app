@@ -410,6 +410,7 @@ class AnovaResultsModel(QAbstractTableModel):
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             reverse=False
         self.__df.sort(self.__df.columns[p_int],ascending=reverse,inplace=True)
+        self.modelReset.emit()
     def flags(self, QModelIndex):
         line=QModelIndex.row()
         col=QModelIndex.column()
