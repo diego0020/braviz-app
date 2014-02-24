@@ -199,6 +199,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.update_display_view()
 
     def removeRows(self, row, count, QModelIndex_parent=None, *args, **kwargs):
+        #self.layoutAboutToBeChanged.emit()
         self.beginRemoveRows(QtCore.QModelIndex(),row,row+count-1)
         indexes=list(self.data_frame.index)
         for i in xrange(count):
@@ -206,9 +207,15 @@ class AnovaRegressorsModel(QAbstractTableModel):
         if len(indexes)==0:
             self.data_frame=pd.DataFrame(columns=["variable","DF","Interaction"])
         else:
-            self.data_frame=self.data_frame.iloc[indexes]
+            print self.data_frame
+            print indexes
+            self.data_frame=self.data_frame.loc[indexes]
+
+
         self.remove_invalid_interactions()
+        self.update_display_view()
         self.endRemoveRows()
+        self.modelReset.emit()
 
 
     def get_degrees_of_freedom(self,var_name):
@@ -226,6 +233,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
     def add_interactor(self,factor_rw_indexes):
         #get var_names
         if len(factor_rw_indexes)<2:
+            #can't add interaction with just one factor
             return
         factor_indexes=[self.data_frame.index[i] for i in factor_rw_indexes]
         #check if already added:
@@ -253,8 +261,18 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.update_display_view()
 
     def remove_invalid_interactions(self):
-        #TODO: when deleting a factor
-        pass
+        index=frozenset(self.data_frame.index)
+        to_remove=[]
+        for k,v in self.__interactors_dict.iteritems():
+            for i in v:
+                if i not in index:
+                    to_remove.append(k)
+                    continue
+        for k in to_remove:
+            del self.__interactors_dict[k]
+            self.data_frame.drop(k,inplace=True)
+        print self.data_frame
+        print self.__interactors_dict
     def get_data_frame(self):
         return self.data_frame
     def get_interactors_dict(self):
