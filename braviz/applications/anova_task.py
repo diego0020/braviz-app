@@ -260,8 +260,8 @@ class MatplotWidget(FigureCanvas):
         self.compute_scatter(tuple())
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
         self.xlim=self.axes.get_xlim()
-        self.data=tuple()
-        self.data2=tuple()
+
+
     def compute_scatter(self,data,data2=None,x_lab=None,y_lab=None,colors=None,labels=None):
         self.axes.clear()
         self.axes.yaxis.set_label_position("right")
@@ -357,7 +357,18 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(ylims[0]-0.1*yspan,ylims[1]+0.1*yspan)
         self.draw()
         pass
+    def make_histogram(self,data,xlabel):
+        self.axes.clear()
+        self.axes.tick_params('y',left='off',labelleft='off',labelright='on',right="on")
+        self.axes.yaxis.set_label_position("right")
+        self.axes.set_ylim(auto=True)
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel("Frequency")
+        self.axes.hist(data,color="#2ca25f")
+        self.draw()
 
+    def add_subject_points(self,x_coords,y_coords,color):
+        self.axes.plot((1,),(50,),"gc")
 
 class RegressorSelectDialog(VariableSelectDialog):
     def __init__(self,outcome_var,regressors_model):
@@ -473,6 +484,7 @@ class AnovaApp(QMainWindow):
         self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
 
         self.ui.sample_tree.setModel(self.sample_model)
+        self.ui.sample_tree.activated.connect(self.add_subjects_to_plot)
 
 
     def dispatch_outcome_select(self):
@@ -548,11 +560,6 @@ class AnovaApp(QMainWindow):
         #TODO: Show in a tree sample distribution along factors
         pass
     def calculate_anova(self):
-        # self.anova=braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
-        #                                                           self.regressors_model.get_data_frame(),
-        #                                                           self.regressors_model.get_interactors_dict())
-        # self.result_model=braviz_models.AnovaResultsModel(self.anova)
-        # self.ui.results_table.setModel(self.result_model)
 
         try:
             self.anova=braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
@@ -564,8 +571,9 @@ class AnovaApp(QMainWindow):
             msg.setIcon(msg.Warning)
             msg.setWindowTitle("Anova Error")
             msg.exec_()
+            #raise
         else:
-            self.result_model=braviz_models.AnovaResultsModel(self.anova)
+            self.result_model=braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)
 
     def update_main_plot_from_results(self,index):
@@ -584,7 +592,8 @@ class AnovaApp(QMainWindow):
         if self.outcome_var_name is None:
             return
         if var_name=="Residuals":
-            #TODO histogram or residuals to check if they look normal
+            residuals=self.result_model.residuals
+            self.plot.make_histogram(residuals,"Residuals")
             pass
         elif var_name=="(Intercept)":
             #TODO show jittered outcome and intercept line
@@ -733,7 +742,8 @@ class AnovaApp(QMainWindow):
                                       data[self.outcome_var_name].get_values(),
                                       var_name,
                                       self.outcome_var_name)
-
+    def add_subjects_to_plot(self,index):
+        self.plot.add_subject_points(None,None,None)
 
 
 

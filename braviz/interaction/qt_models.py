@@ -382,11 +382,14 @@ class NominalVariablesMeta(QAbstractTableModel):
         self.conn.commit()
 
 class AnovaResultsModel(QAbstractTableModel):
-    def __init__(self,results_df=None):
+    def __init__(self,results_df=None,residuals=None,intercept=None):
         if results_df is None:
             self.__df=pd.DataFrame(None,columns=["Factor","Sum Sq","Df","F value","Pr(>F)"])
         else:
             self.__df=results_df
+
+        self.residuals=residuals
+        self.intercept=intercept
         super(AnovaResultsModel,self).__init__()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
