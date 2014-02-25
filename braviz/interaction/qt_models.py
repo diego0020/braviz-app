@@ -8,7 +8,7 @@ from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 from braviz.interaction.r_functions import calculate_ginni_index,calculate_anova
 
-
+from collections import namedtuple
 
 class VarListModel(QAbstractListModel):
     def __init__(self,outcome_var=None, parent=None):
@@ -426,99 +426,125 @@ class sampleTree(QAbstractItemModel):
         if columns is None:
             columns=["lat","UBIC3","GENERO"]
         self.data_aspects=columns
-        self.top_level=dict(enumerate(columns))
-        self.top_level[-1]="All"
-        self.__data_frame=braviz_tab_data.get_data_frame(columns)
         self.__headers={0: "Attribute",1:"N"}
-        self.__str_to_ids_dict={}
-        self.__ids_to_str_dict={}
-        self.populate_ids()
+        self.__data_frame=braviz_tab_data.get_data_frame(columns)
+        self.item_tuple=namedtuple("item_tuple",["nid","row","label","count","parent","children"])
+        self.__tree_list=[]
+        self.__id_index={}
+        self.__next_id=0
+        self.populate_tree_dicts()
 
-    def populate_ids(self):
-        for sufix in "nl":
-            for top in self.top_level.itervalues():
-                #Top Level
-                sid=":".join((sufix,top))
-                nid=len(self.__str_to_ids_dict)
-                self.__str_to_ids_dict[sid]=nid
-                self.__ids_to_str_dict[nid]=sid
-            for subj in self.__data_frame.index:
-                sid=":".join((sufix,"All",str(subj)))
-                nid=len(self.__str_to_ids_dict)
-                self.__str_to_ids_dict[sid]=nid
-                self.__ids_to_str_dict[nid]=sid
+    def __get_next_id(self):
+        iid=self.__next_id
+        self.__next_id += 1
+        #print "returning id",
+        #print iid
+        return iid
+    def populate_tree_dicts(self):
+        #All
+        iid=self.__get_next_id()
+        children=self.__data_frame.index
+        parent_id=iid
+        children_list=[]
+        for r,c in enumerate(children):
+            iid=self.__get_next_id()
+            c_item=self.item_tuple(nid=iid,row=r,label=str(c),count=1,parent=parent_id,children=None)
+            self.__id_index[iid]=c_item
+            children_list.append(c_item)
+        all_item=self.item_tuple(nid=parent_id,row=0,label="All",count=len(self.__data_frame),parent=None,children=children_list)
+        self.__tree_list.append(all_item)
+        self.__id_index[parent_id]=all_item
+
+
+        #Other aspectes
+        for r,aspect in enumerate(self.data_aspects):
+            aspect_id=self.__get_next_id()
+            children=self.populate_aspect(aspect,aspect_id)
+            new_item=self.item_tuple(nid=aspect_id,row=r+1,label=aspect,count=len(self.__data_frame),parent=None,children=children)
+            self.__tree_list.append(new_item)
+            self.__id_index[aspect_id]=new_item
+
+        #check index integrity
+        for i in xrange(self.__next_id):
+            assert self.__id_index.has_key(i)
+
+    def populate_aspect(self,var_name,aspect_id):
+        #get labels
+        conn=braviz_tab_data.get_connection()
+        cur=conn.execute("SELECT label,name FROM nom_meta NATURAL JOIN variables WHERE var_name=?",
+            (var_name,))
+        labels_list=[]
+        for i,(label,name) in enumerate(cur.fetchall()):
+            lab_id=self.__get_next_id()
+            children=self.__data_frame[self.__data_frame[var_name]==label].index
+            children_list=[]
+            for r,c in enumerate(children):
+                c_id=self.__get_next_id()
+                c_item=self.item_tuple(nid=c_id,row=r,label=str(c),count=1,parent=lab_id,children=None)
+                children_list.append(c_item)
+                self.__id_index[c_id]=c_item
+            lab_item=self.item_tuple(nid=lab_id,row=i,label=name,count=len(children_list),parent=aspect_id,children=children_list)
+            labels_list.append(lab_item)
+            self.__id_index[lab_id]=lab_item
+        return labels_list
+
 
     def parent(self, QModelIndex=None):
         if not QModelIndex.isValid():
             return QtCore.QModelIndex()
-        nid=QModelIndex.internalId()
-        sid=self.__ids_to_str_dict[nid]
-        tokens=sid.split(":")
-        if len(tokens)==2:
+        item_id=QModelIndex.internalId()
+        item=self.__id_index[item_id]
+        if item.parent is None:
             return QtCore.QModelIndex()
-        sid2=":".join(("l",tokens[1]))
-        nid2=self.__str_to_ids_dict[sid2]
-        #TODO: Only works with all
-        return self.createIndex(0,0,nid2)
+        else:
+            parent=self.__id_index[item.parent]
+            return self.createIndex(parent.row,0,parent.nid)
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         if not QModelIndex_parent.isValid():
+            #print "top_row_count"
+            #print len(self.data_aspects)+1
             return(len(self.data_aspects)+1)
         nid=QModelIndex_parent.internalId()
-        sid=self.__ids_to_str_dict[nid]
-        tokens=sid.split(":")
-        if tokens[1]=="All":
-            return len(self.__data_frame)
-        return 0
+        item=self.__id_index[nid]
+        if item.children is None:
+            return 0
+        else:
+            return len(item.children)
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return 2
     def data(self, QModelIndex, int_role=None):
         if int_role==QtCore.Qt.DisplayRole:
-            parent=QModelIndex.parent()
-            row=QModelIndex.row()
             col=QModelIndex.column()
             nid=QModelIndex.internalId()
-            sid=self.__ids_to_str_dict[nid]
+            item=self.__id_index[nid]
+            #print item
             #print sid
-
-            if not parent.isValid():
-                if col==0:
-                    return self.top_level.get(row-1,QtCore.QVariant())
-                elif col==1:
-                    return len(self.__data_frame)
-            else:
-                nid=QModelIndex.internalId()
-                sid=self.__ids_to_str_dict[nid]
-                tokens=sid.split(":")
-                if tokens[0]=="n":
-                    return 1
-                if tokens[1]=="All":
-                    return tokens[2]
+            if col==0:
+                return item.label
+            elif col==1:
+                return item.count
 
         return QtCore.QVariant()
     def index(self, p_int, p_int_1, QModelIndex_parent=None, *args, **kwargs):
         if not QModelIndex_parent.isValid():
             #top level
-            if p_int>=len(self.top_level) or p_int<0:
+            if p_int>=len(self.data_aspects)+1 or p_int<0:
                 return QtCore.QModelIndex()
-            suffix="n" if p_int_1==1 else "l"
-            top_str=self.top_level[p_int-1]
-            index_str=":".join((suffix,top_str))
-            nid=self.__str_to_ids_dict[index_str]
+            item=self.__tree_list[p_int]
+            nid=item.nid
             out_index=self.createIndex(p_int,p_int_1,nid)
             assert out_index.isValid()
             return out_index
         else:
-            sid=self.__ids_to_str_dict[QModelIndex_parent.internalId()]
-            tokens=sid.split(":")
-            if tokens[1]=="All":
-                suffix="l"
-                if p_int_1==1:
-                    suffix="n"
-                subj=self.__data_frame.index[p_int]
-            sid2=":".join((suffix,tokens[1],str(subj)))
-            nid=self.__str_to_ids_dict[sid2]
-            out_index= self.createIndex(p_int,p_int_1,nid)
+            parent_id=QModelIndex_parent.internalId()
+            parent_item=self.__id_index[parent_id]
+            childrens=parent_item.children
+            if childrens is None:
+                return QtCore.QModelIndex()
+            else:
+                nid=childrens[p_int].nid
+                out_index= self.createIndex(p_int,p_int_1,nid)
             assert out_index.isValid()
             return out_index
 
@@ -530,14 +556,15 @@ class sampleTree(QAbstractItemModel):
         return QtCore.QVariant()
     def hasChildren(self, QModelIndex_parent=None, *args, **kwargs):
         if not QModelIndex_parent.isValid():
+            #top level has children
             return True
-        row=QModelIndex_parent.row()
-        col=QModelIndex_parent.column()
-        str_index=self.__ids_to_str_dict[QModelIndex_parent.internalId()]
-        #print str_index
-        if str_index=="l:All":
+        parent_item=self.__id_index[QModelIndex_parent.internalId()]
+        #print "has children"
+        #print parent_item
+        if parent_item.children is None:
+            return False
+        else:
             return True
 
 
-        return False
 
