@@ -23,6 +23,9 @@ from braviz.readAndFilter.tabular_data import get_connection,get_data_frame
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
+import colorbrewer
+
+from itertools import izip
 
 
 class VariableSelectDialog(QtGui.QDialog):
@@ -259,7 +262,7 @@ class MatplotWidget(FigureCanvas):
         self.xlim=self.axes.get_xlim()
         self.data=tuple()
         self.data2=tuple()
-    def compute_scatter(self,data,data2=None,x_lab=None,y_lab=None):
+    def compute_scatter(self,data,data2=None,x_lab=None,y_lab=None,colors=None,labels=None):
         self.axes.clear()
         self.axes.yaxis.set_label_position("right")
         if data2 is None:
@@ -270,7 +273,16 @@ class MatplotWidget(FigureCanvas):
         if y_lab is not None:
             self.axes.set_ylabel(y_lab)
 
-        self.axes.scatter(data,data2,color="#2ca25f")
+        if colors is None:
+            colors="#2ca25f"
+            self.axes.scatter(data,data2,color=colors)
+        else:
+            for c,d,d2,lbl in zip(colors,data,data2,labels):
+                self.axes.scatter(d,d2,color=c,label=lbl)
+            self.axes.legend(numpoints=1,fancybox=True,fontsize="small",)
+            self.axes.get_legend().draggable(True)
+
+
 
         self.draw()
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
@@ -302,6 +314,47 @@ class MatplotWidget(FigureCanvas):
         self.axes.get_xaxis().set_ticklabels(xticks_labels)
 
         self.draw()
+
+    def make_linked_box_plot(self,data,xlabel,ylabel,xticks_labels,colors,top_labels,ylims):
+        self.axes.clear()
+        self.axes.tick_params('y',left='off',labelleft='off',labelright='on',right="on")
+        self.axes.yaxis.set_label_position("right")
+        self.axes.set_ylim(auto=True)
+
+        for d_list,col,lbl in izip(data,colors,top_labels):
+            artists_dict=self.axes.boxplot(d_list,sym='D',patch_artist=False)
+            linex=[]
+            liney=[]
+            for b in artists_dict["boxes"]:
+                b.set_visible(False)
+            for m in artists_dict["medians"]:
+                x=m.get_xdata()
+                m.set_visible(False)
+                xm=np.mean(x)
+                ym=m.get_ydata()[0]
+                linex.append(xm)
+                liney.append(ym)
+            for w in artists_dict["whiskers"]:
+                w.set_alpha(0.5)
+                w.set_c(col)
+            for c in artists_dict["caps"]:
+                c.set_c(col)
+            for f in artists_dict["fliers"]:
+                f.set_c(col)
+
+            #print zip(linex,liney)
+            #print col
+            self.axes.plot(linex,liney,'s-',markerfacecolor=col,color=col,label=lbl)
+
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_ylabel(ylabel)
+        self.axes.get_xaxis().set_ticklabels(xticks_labels)
+        self.axes.legend(numpoints=1,fancybox=True,fontsize="small",)
+        self.axes.get_legend().draggable(True)
+        yspan=ylims[1]-ylims[0]
+        self.axes.set_ylim(ylims[0]-0.1*yspan,ylims[1]+0.1*yspan)
+        self.draw()
+        pass
 
 
 class RegressorSelectDialog(VariableSelectDialog):
@@ -533,10 +586,112 @@ class AnovaApp(QMainWindow):
             pass
         else:
             if ":" in var_name:
-                # possible interaction
-                pass
+                factors=var_name.split(":")
+                self.two_factors_plot(factors[:2])
+            elif "*" in var_name:
+                factors=var_name.split("*")
+                self.two_factors_plot(factors[:2])
             else:
                 self.one_reg_plot(var_name)
+
+    def two_factors_plot(self,factors_list):
+        nominal_factors=[]
+        real_factors=[]
+        conn=get_connection()
+        #classify factors
+        for f in factors_list:
+            is_real=conn.execute("SELECT is_real FROM variables WHERE var_name=?",(f,))
+            is_real=is_real.fetchone()[0]
+            if is_real==0:
+                nominal_factors.append(f)
+            else:
+                real_factors.append(f)
+        #print nominal_factors
+        #print real_factors
+        if len(real_factors)==1:
+            n=conn.execute("SELECT count(*) FROM variables NATURAL JOIN nom_meta WHERE var_name=?"
+                           ,(nominal_factors[0],))
+            nlevels=n.fetchone()[0]
+            labels=conn.execute(
+                "SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",
+                (nominal_factors[0],))
+            top_labels_dict=dict(labels.fetchall())
+            top_labels_strings=[top_labels_dict[i] for i in top_labels_dict.iterkeys()]
+            colors=colorbrewer.Dark2[max(len(top_labels_dict),3)]
+            #print top_labels_strings
+            if len(top_labels_dict) == 2:
+                colors=colors[:2]
+            colors=[map(lambda x:x/255,c) for c in colors]
+            colors_dict=dict(izip(top_labels_dict.iterkeys(),colors))
+            #Get Data
+            data=get_data_frame([real_factors[0],nominal_factors[0],self.outcome_var_name])
+
+            datax=[]
+            datay=[]
+            colors=[]
+            labels=[]
+            for k,v in top_labels_dict.iteritems():
+                labels.append(v)
+                colors.append(colors_dict[k])
+                datax.append(data[self.outcome_var_name][data[nominal_factors[0]]==k  ].get_values())
+                datay.append(data[real_factors[0]][data[nominal_factors[0]]==k].get_values())
+            print datax
+
+
+
+            self.plot.compute_scatter(datax,datay,real_factors[0],self.outcome_var_name,colors,labels)
+
+
+        elif len(real_factors)==2:
+            print "Not yet implemented"
+        else:
+            #find number of levels for nominal
+            nlevels={}
+            for f in nominal_factors:
+                n=conn.execute("SELECT count(*) FROM variables NATURAL JOIN nom_meta WHERE var_name=?",(f,))
+                nlevels[f]=n.fetchone()[0]
+            #print nlevels
+            nominal_factors.sort(key=nlevels.get,reverse=True)
+            #print nominal_factors
+            data=get_data_frame(nominal_factors+[self.outcome_var_name])
+            levels_second_factor=set(data[nominal_factors[1]].get_values())
+            levels_first_factor=set(data[nominal_factors[0]].get_values())
+            data_lists_top=[]
+            for i in levels_second_factor:
+                data_list=[]
+                for j in levels_first_factor:
+                    data_col=data[self.outcome_var_name][ (data[ nominal_factors[1]]==i) &
+                                                          (data[nominal_factors[0]] == j)  ].get_values()
+                    data_list.append(data_col)
+                data_lists_top.append(data_list)
+            #print data_lists_top
+            labels=conn.execute(
+                "SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",
+                (nominal_factors[0],))
+            labels_dict=dict(labels.fetchall())
+            labels_strings=[labels_dict[i] for i in levels_first_factor]
+            labels=conn.execute(
+                "SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",
+                (nominal_factors[1],))
+            top_labels_dict=dict(labels.fetchall())
+            top_labels_strings=[top_labels_dict[i] for i in levels_second_factor]
+            colors=colorbrewer.Dark2[max(len(levels_second_factor),3)]
+            #print top_labels_strings
+            if len(levels_second_factor) == 2:
+                colors=colors[:2]
+            colors=[map(lambda x:x/255,c) for c in colors]
+            #print colors
+            #get ylims
+            cur=conn.execute("SELECT min_val , max_val FROM variables NATURAL JOIN ratio_meta WHERE var_name=?",
+                (self.outcome_var_name,))
+            miny,maxy=cur.fetchone()
+            if miny is None or maxy is None:
+                raise Exception("Incosistency in DB")
+
+            self.plot.make_linked_box_plot(data_lists_top,nominal_factors[0],self.outcome_var_name,labels_strings,
+                                           colors,top_labels_strings,ylims=(miny,maxy))
+
+
 
     def one_reg_plot(self,var_name):
         #find if variable is nominal
@@ -548,7 +703,7 @@ class AnovaApp(QMainWindow):
             #create whisker plot
             labels=conn.execute("SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",(var_name,))
             labels_dict=dict(labels.fetchall())
-            print labels_dict
+            #print labels_dict
             #get data from
             data=get_data_frame([self.outcome_var_name,var_name])
             label_nums=set(data[var_name])
@@ -558,12 +713,18 @@ class AnovaApp(QMainWindow):
                 data_col=data[self.outcome_var_name][data[var_name]==i]
                 data_list.append(data_col.get_values())
                 ticks.append(labels_dict.get(i,str(i)))
-            print data_list
+            #print data_list
             self.plot.make_box_plot(data_list,var_name,self.outcome_var_name,ticks)
 
         else:
             #is real
-            pass
+            #create scatter plot
+            data=get_data_frame([self.outcome_var_name,var_name])
+            self.plot.compute_scatter(data[var_name].get_values(),
+                                      data[self.outcome_var_name].get_values(),
+                                      var_name,
+                                      self.outcome_var_name)
+
 
 
 
