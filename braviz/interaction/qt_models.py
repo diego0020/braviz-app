@@ -4,7 +4,7 @@ import numpy as np
 import PyQt4.QtGui
 import PyQt4.QtCore as QtCore
 from PyQt4.QtCore import QAbstractListModel
-from PyQt4.QtCore import QAbstractTableModel
+from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 from braviz.interaction.r_functions import calculate_ginni_index,calculate_anova
 
@@ -419,3 +419,125 @@ class AnovaResultsModel(QAbstractTableModel):
             result|=QtCore.Qt.ItemIsSelectable
             result|=QtCore.Qt.ItemIsEnabled
         return result
+
+class sampleTree(QAbstractItemModel):
+    def __init__(self,columns=None):
+        super(sampleTree,self).__init__()
+        if columns is None:
+            columns=["lat","UBIC3","GENERO"]
+        self.data_aspects=columns
+        self.top_level=dict(enumerate(columns))
+        self.top_level[-1]="All"
+        self.__data_frame=braviz_tab_data.get_data_frame(columns)
+        self.__headers={0: "Attribute",1:"N"}
+        self.__str_to_ids_dict={}
+        self.__ids_to_str_dict={}
+        self.populate_ids()
+
+    def populate_ids(self):
+        for sufix in "nl":
+            for top in self.top_level.itervalues():
+                #Top Level
+                sid=":".join((sufix,top))
+                nid=len(self.__str_to_ids_dict)
+                self.__str_to_ids_dict[sid]=nid
+                self.__ids_to_str_dict[nid]=sid
+            for subj in self.__data_frame.index:
+                sid=":".join((sufix,"All",str(subj)))
+                nid=len(self.__str_to_ids_dict)
+                self.__str_to_ids_dict[sid]=nid
+                self.__ids_to_str_dict[nid]=sid
+
+    def parent(self, QModelIndex=None):
+        if not QModelIndex.isValid():
+            return QtCore.QModelIndex()
+        nid=QModelIndex.internalId()
+        sid=self.__ids_to_str_dict[nid]
+        tokens=sid.split(":")
+        if len(tokens)==2:
+            return QtCore.QModelIndex()
+        sid2=":".join(("l",tokens[1]))
+        nid2=self.__str_to_ids_dict[sid2]
+        #TODO: Only works with all
+        return self.createIndex(0,0,nid2)
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        if not QModelIndex_parent.isValid():
+            return(len(self.data_aspects)+1)
+        nid=QModelIndex_parent.internalId()
+        sid=self.__ids_to_str_dict[nid]
+        tokens=sid.split(":")
+        if tokens[1]=="All":
+            return len(self.__data_frame)
+        return 0
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return 2
+    def data(self, QModelIndex, int_role=None):
+        if int_role==QtCore.Qt.DisplayRole:
+            parent=QModelIndex.parent()
+            row=QModelIndex.row()
+            col=QModelIndex.column()
+            nid=QModelIndex.internalId()
+            sid=self.__ids_to_str_dict[nid]
+            #print sid
+
+            if not parent.isValid():
+                if col==0:
+                    return self.top_level.get(row-1,QtCore.QVariant())
+                elif col==1:
+                    return len(self.__data_frame)
+            else:
+                nid=QModelIndex.internalId()
+                sid=self.__ids_to_str_dict[nid]
+                tokens=sid.split(":")
+                if tokens[0]=="n":
+                    return 1
+                if tokens[1]=="All":
+                    return tokens[2]
+
+        return QtCore.QVariant()
+    def index(self, p_int, p_int_1, QModelIndex_parent=None, *args, **kwargs):
+        if not QModelIndex_parent.isValid():
+            #top level
+            if p_int>=len(self.top_level) or p_int<0:
+                return QtCore.QModelIndex()
+            suffix="n" if p_int_1==1 else "l"
+            top_str=self.top_level[p_int-1]
+            index_str=":".join((suffix,top_str))
+            nid=self.__str_to_ids_dict[index_str]
+            out_index=self.createIndex(p_int,p_int_1,nid)
+            assert out_index.isValid()
+            return out_index
+        else:
+            sid=self.__ids_to_str_dict[QModelIndex_parent.internalId()]
+            tokens=sid.split(":")
+            if tokens[1]=="All":
+                suffix="l"
+                if p_int_1==1:
+                    suffix="n"
+                subj=self.__data_frame.index[p_int]
+            sid2=":".join((suffix,tokens[1],str(subj)))
+            nid=self.__str_to_ids_dict[sid2]
+            out_index= self.createIndex(p_int,p_int_1,nid)
+            assert out_index.isValid()
+            return out_index
+
+
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        if Qt_Orientation==QtCore.Qt.Horizontal and int_role==QtCore.Qt.DisplayRole:
+            self.__headers.get(p_int,QtCore.QVariant())
+            return self.__headers.get(p_int,QtCore.QVariant())
+        return QtCore.QVariant()
+    def hasChildren(self, QModelIndex_parent=None, *args, **kwargs):
+        if not QModelIndex_parent.isValid():
+            return True
+        row=QModelIndex_parent.row()
+        col=QModelIndex_parent.column()
+        str_index=self.__ids_to_str_dict[QModelIndex_parent.internalId()]
+        #print str_index
+        if str_index=="l:All":
+            return True
+
+
+        return False
+

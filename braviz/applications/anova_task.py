@@ -303,7 +303,7 @@ class MatplotWidget(FigureCanvas):
         self.axes.draw_artist(max_line)
         self.axes.draw_artist(opt_line)
         self.blit(self.axes.bbox)
-    def make_box_plot(self,data,xlabel,ylabel,xticks_labels):
+    def make_box_plot(self,data,xlabel,ylabel,xticks_labels,ylims):
         self.axes.clear()
         self.axes.tick_params('y',left='off',labelleft='off',labelright='on',right="on")
         self.axes.yaxis.set_label_position("right")
@@ -312,6 +312,8 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
         self.axes.get_xaxis().set_ticklabels(xticks_labels)
+        yspan=ylims[1]-ylims[0]
+        self.axes.set_ylim(ylims[0]-0.1*yspan,ylims[1]+0.1*yspan)
 
         self.draw()
 
@@ -444,6 +446,7 @@ class AnovaApp(QMainWindow):
         self.anova=None
         self.regressors_model=braviz_models.AnovaRegressorsModel()
         self.result_model=braviz_models.AnovaResultsModel()
+        self.sample_model=braviz_models.sampleTree()
         self.plot=None
         self.setup_gui()
 
@@ -468,6 +471,8 @@ class AnovaApp(QMainWindow):
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
         self.ui.results_table.activated.connect(self.update_main_plot_from_results)
         self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
+
+        self.ui.sample_tree.setModel(self.sample_model)
 
 
     def dispatch_outcome_select(self):
@@ -698,6 +703,10 @@ class AnovaApp(QMainWindow):
         conn=get_connection()
         is_reg_real=conn.execute("SELECT is_real FROM variables WHERE var_name=?",(var_name,))
         is_reg_real=is_reg_real.fetchone()[0]
+        #get outcome min and max values
+        cur=conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name=?",
+                         (self.outcome_var_name,))
+        miny,maxy=cur.fetchone()
         if is_reg_real == 0:
             #is nominal
             #create whisker plot
@@ -714,7 +723,7 @@ class AnovaApp(QMainWindow):
                 data_list.append(data_col.get_values())
                 ticks.append(labels_dict.get(i,str(i)))
             #print data_list
-            self.plot.make_box_plot(data_list,var_name,self.outcome_var_name,ticks)
+            self.plot.make_box_plot(data_list,var_name,self.outcome_var_name,ticks,(miny,maxy))
 
         else:
             #is real
