@@ -20,6 +20,7 @@ import braviz.interaction.r_functions
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection,get_data_frame
 
+import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -246,6 +247,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
 
 class MatplotWidget(FigureCanvas):
+    pick_signal=QtCore.pyqtSignal(float,float,tuple)
     def __init__(self,parent=None,dpi=100,initial_message=None):
         fig=Figure(figsize=(5,5),dpi=dpi,tight_layout=True)
         self.fig=fig
@@ -260,6 +262,11 @@ class MatplotWidget(FigureCanvas):
         self.initial_text(initial_message)
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
         self.xlim=self.axes.get_xlim()
+        #self.mpl_connect("button_press_event",self.print_event)
+        self.mpl_connect("pick_event",self.print_event)
+        self.setMouseTracking(True)
+        self.mpl_connect('motion_notify_event',self.mouseMoveEvent2)
+
 
     def initial_text(self,message):
         if message is None:
@@ -270,8 +277,10 @@ class MatplotWidget(FigureCanvas):
         self.axes.tick_params('x',bottom='off',labelbottom='off',labeltop='off')
         self.draw()
 
+
     def compute_scatter(self,data,data2=None,x_lab=None,y_lab=None,colors=None,labels=None):
         self.axes.clear()
+        self.axes.tick_params('x',bottom='on',labelbottom='on',labeltop='off')
         self.axes.yaxis.set_label_position("right")
         if data2 is None:
             data2=np.random.rand(len(data))
@@ -312,10 +321,13 @@ class MatplotWidget(FigureCanvas):
         self.blit(self.axes.bbox)
     def make_box_plot(self,data,xlabel,ylabel,xticks_labels,ylims):
         self.axes.clear()
+        self.axes.tick_params('x',bottom='on',labelbottom='on',labeltop='off')
         self.axes.tick_params('y',left='off',labelleft='off',labelright='on',right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
-        self.axes.boxplot(data,sym='gD')
+        artists_dict=self.axes.boxplot(data,sym='gD')
+        for a in artists_dict["fliers"]:
+            a.set_picker(5)
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
         if xticks_labels is not None:
@@ -328,6 +340,7 @@ class MatplotWidget(FigureCanvas):
 
     def make_linked_box_plot(self,data,xlabel,ylabel,xticks_labels,colors,top_labels,ylims):
         self.axes.clear()
+        self.axes.tick_params('x',bottom='on',labelbottom='on',labeltop='off')
         self.axes.tick_params('y',left='off',labelleft='off',labelright='on',right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
@@ -369,6 +382,7 @@ class MatplotWidget(FigureCanvas):
 
     def make_histogram(self,data,xlabel):
         self.axes.clear()
+        self.axes.tick_params('x',bottom='on',labelbottom='on',labeltop='off')
         self.axes.tick_params('y',left='off',labelleft='off',labelright='on',right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
@@ -385,6 +399,7 @@ class MatplotWidget(FigureCanvas):
             color="black"
         collection=self.axes.scatter(x_coords,y_coords,marker="o",s=120,edgecolors=color)
         collection.set_facecolor('none')
+
         self.axes.draw_artist(collection)
         #for a in collection:
         #    self.axes.draw_artist(a)
@@ -394,6 +409,22 @@ class MatplotWidget(FigureCanvas):
         self.axes.axhline(ycoord)
         self.draw()
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
+
+    def print_event(self,e):
+        #print type(e.artist)
+        if not (type(e.artist)==matplotlib.lines.Line2D):
+            return
+        dx,dy=e.artist.get_data()
+        #print e.ind
+        ind=e.ind
+        if hasattr(ind,"__iter__"):
+            ind=ind[0]
+        self.pick_signal.emit(dx[ind],dy[ind],(e.mouseevent.x,self.height()-e.mouseevent.y))
+
+    def mouseMoveEvent2( self, event ):
+        #TODO This interferes with legend dragging
+        self.pick(event)
+
 
 
 class RegressorSelectDialog(VariableSelectDialog):
@@ -476,6 +507,8 @@ class InteractionSelectDialog(QtGui.QDialog):
                 self.full_model.add_interactor(i)
 
 
+
+
 class AnovaApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -510,6 +543,7 @@ class AnovaApp(QMainWindow):
         self.plot=MatplotWidget(initial_message="Welcome\n\nSelect Outcome and add Regressors to start")
         self.ui.matplot_layout.addWidget(self.plot)
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
+        self.plot.pick_signal.connect(self.handle_plot_pick)
         self.ui.results_table.activated.connect(self.update_main_plot_from_results)
         self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
 
@@ -824,11 +858,16 @@ class AnovaApp(QMainWindow):
             colors=[self.plot_color[i] for i in z_data]
         self.plot.add_subject_points(x_data,y_data,colors)
 
-
-
-
-
-
+    def handle_plot_pick(self,x,y,position):
+        #print "received signal"
+        #print x_l,y_l
+        if self.plot_data_frame is not None:
+            #identify subject
+            df=self.plot_data_frame
+            subj=df[(df[self.plot_x_var]==x) & (df[self.outcome_var_name]==y)].index
+            #print subj[0]
+            message="Outlier: %s"%subj[0]
+            QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)),message,self.plot)
 
 
 
