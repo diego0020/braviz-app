@@ -1,12 +1,12 @@
 __author__ = 'Diego'
 
-import braviz.readAndFilter.tabular_data as braviz_tab_data
 import pandas as pd
 import pandas.rpy.common as com
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 import numpy as np
 
+import braviz.readAndFilter.tabular_data as braviz_tab_data
 
 
 def calculate_ginni_index(outcome,data_frame):
@@ -31,6 +31,9 @@ def calculate_ginni_index(outcome,data_frame):
     values_data_frame.fillna(method="pad",inplace=True)
     values_data_frame=values_data_frame.iloc[reversed(permutation)]
     values_data_frame.fillna(method="pad",inplace=True)
+    #just in case there are still nas
+    values_data_frame.dropna(0,inplace=True)
+    values_data_frame.dropna(1,inplace=True)
     #create R data frame
     original_column_names=values_data_frame.columns
 
@@ -40,11 +43,14 @@ def calculate_ginni_index(outcome,data_frame):
     r_df=com.convert_to_r_dataframe(values_data_frame)
     #if oucome is nominal transform into factor
     outcome_variable_index=original_column_names.get_loc(outcome)
+    r_environment=robjects.globalenv
+    r_environment["r_df"]=r_df
     if is_nominal:
-        r_environment=robjects.globalenv
-        r_environment["r_df"]=r_df
+
         robjects.r('r_df["c%d"] <- factor( r_df[["c%d"]])'%(outcome_variable_index,outcome_variable_index))
-        r_df=r_environment["r_df"]
+
+
+    r_df=r_environment["r_df"]
 
     #for i,n in enumerate(original_column_names):
     #    print "%d \t %s"%(i,n)
@@ -53,8 +59,9 @@ def calculate_ginni_index(outcome,data_frame):
     randomForest=importr("randomForest")
     #use correct variable in formula
     form=robjects.Formula("c%d~."%outcome_variable_index)
-    #robjects.globalenv["r_df"]=r_df
     #robjects.r("table(complete.cases(r_df))")
+
+
 
     fit=randomForest.randomForest(form,data=r_df,replace=True,importance=True)
     #fit=robjects.r("randomForest.randomForest(c6~.,data=r_df,replace=True,importance=True)")
@@ -166,10 +173,14 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict):
             k="r%d"%i
             contrasts_dict[k]=stats.contr_sum
 
-    contrasts_list=robjects.ListVector(contrasts_dict)
+
     #run anova
     car=importr("car")
-    model=stats.lm(form,data=r_df,contrasts=contrasts_list)
+    if len(contrasts_dict)>0:
+        contrasts_list=robjects.ListVector(contrasts_dict)
+        model=stats.lm(form,data=r_df,contrasts=contrasts_list)
+    else:
+        model=stats.lm(form,data=r_df)
     intercept=model[0][0]
     residuals=np.array(model[1])
     anova=car.Anova(model,type=3)

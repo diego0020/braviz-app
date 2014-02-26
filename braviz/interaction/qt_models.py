@@ -1,14 +1,14 @@
 __author__ = 'Diego'
+from collections import namedtuple
+
 import pandas as pd
-import numpy as np
-import PyQt4.QtGui
 import PyQt4.QtCore as QtCore
 from PyQt4.QtCore import QAbstractListModel
 from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
-import braviz.readAndFilter.tabular_data as braviz_tab_data
-from braviz.interaction.r_functions import calculate_ginni_index,calculate_anova
 
-from collections import namedtuple
+import braviz.readAndFilter.tabular_data as braviz_tab_data
+from braviz.interaction.r_functions import calculate_ginni_index
+
 
 class VarListModel(QAbstractListModel):
     def __init__(self,outcome_var=None, parent=None):
@@ -229,6 +229,10 @@ class AnovaRegressorsModel(QAbstractTableModel):
     def get_regressors(self):
         regs_col=self.data_frame["variable"][self.data_frame["Interaction"]==0 ]
         return regs_col.get_values()
+    def get_interactions(self):
+        regs_col=self.data_frame["variable"][self.data_frame["Interaction"]==1 ]
+        return regs_col.get_values()
+
 
     def add_interactor(self,factor_rw_indexes):
         #get var_names
@@ -568,6 +572,18 @@ class sampleTree(QAbstractItemModel):
             return False
         else:
             return True
+    def get_leafs(self,QModelIndex):
+        iid=QModelIndex.internalId()
+        item=self.__id_index[iid]
+        return self.__get_leafs(item)
+    def __get_leafs(self,item):
+        if item.children is None:
+            return [item.label]
+        else:
+            leafs=[]
+            for c in item.children:
+                leafs.extend(self.__get_leafs(c))
+            return leafs
 
 
 

@@ -162,7 +162,7 @@ class VariableSelectDialog(QtGui.QDialog):
     def finish_ui_setup(self):
         target=self.ui.plot_frame
         layout=QtGui.QVBoxLayout()
-        self.matplot_widget=MatplotWidget()
+        self.matplot_widget=MatplotWidget(initial_message="Double click on variables\nto see plots")
         layout.addWidget(self.matplot_widget)
         target.setLayout(layout)
         self.ui.save_button.pressed.connect(self.save_meta_data)
@@ -246,7 +246,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
 
 class MatplotWidget(FigureCanvas):
-    def __init__(self,parent=None,dpi=100):
+    def __init__(self,parent=None,dpi=100,initial_message=None):
         fig=Figure(figsize=(5,5),dpi=dpi,tight_layout=True)
         self.fig=fig
         self.axes=fig.add_subplot(111)
@@ -257,10 +257,18 @@ class MatplotWidget(FigureCanvas):
         self.updateGeometry()
         palette=self.palette()
         fig.set_facecolor(palette.background().color().getRgbF()[0:3])
-        self.compute_scatter(tuple())
+        self.initial_text(initial_message)
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
         self.xlim=self.axes.get_xlim()
 
+    def initial_text(self,message):
+        if message is None:
+            message="Welcome"
+        self.axes.text(0.5,0.5,message,horizontalalignment='center',
+                       verticalalignment='center', fontsize=12)
+        self.axes.tick_params('y',left='off',labelleft='off',labelright='off')
+        self.axes.tick_params('x',bottom='off',labelbottom='off',labeltop='off')
+        self.draw()
 
     def compute_scatter(self,data,data2=None,x_lab=None,y_lab=None,colors=None,labels=None):
         self.axes.clear()
@@ -287,8 +295,7 @@ class MatplotWidget(FigureCanvas):
         self.draw()
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
         self.xlim=self.axes.get_xlim()
-        self.data=data
-        self.data2=data2
+
     def add_max_min_opt_lines(self,mini,opti,maxi):
 
         self.restore_region(self.back_fig)
@@ -311,11 +318,13 @@ class MatplotWidget(FigureCanvas):
         self.axes.boxplot(data,sym='gD')
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
-        self.axes.get_xaxis().set_ticklabels(xticks_labels)
+        if xticks_labels is not None:
+            self.axes.get_xaxis().set_ticklabels(xticks_labels)
         yspan=ylims[1]-ylims[0]
         self.axes.set_ylim(ylims[0]-0.1*yspan,ylims[1]+0.1*yspan)
 
         self.draw()
+        self.back_fig=self.copy_from_bbox(self.axes.bbox)
 
     def make_linked_box_plot(self,data,xlabel,ylabel,xticks_labels,colors,top_labels,ylims):
         self.axes.clear()
@@ -356,7 +365,8 @@ class MatplotWidget(FigureCanvas):
         yspan=ylims[1]-ylims[0]
         self.axes.set_ylim(ylims[0]-0.1*yspan,ylims[1]+0.1*yspan)
         self.draw()
-        pass
+        self.back_fig=self.copy_from_bbox(self.axes.bbox)
+
     def make_histogram(self,data,xlabel):
         self.axes.clear()
         self.axes.tick_params('y',left='off',labelleft='off',labelright='on',right="on")
@@ -366,9 +376,25 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylabel("Frequency")
         self.axes.hist(data,color="#2ca25f")
         self.draw()
+        self.back_fig=self.copy_from_bbox(self.axes.bbox)
 
-    def add_subject_points(self,x_coords,y_coords,color):
-        self.axes.plot((1,),(50,),"gc")
+    def add_subject_points(self,x_coords,y_coords,color=None):
+        #print "adding subjects"
+        self.restore_region(self.back_fig)
+        if color is None:
+            color="black"
+        collection=self.axes.scatter(x_coords,y_coords,marker="o",s=120,edgecolors=color)
+        collection.set_facecolor('none')
+        self.axes.draw_artist(collection)
+        #for a in collection:
+        #    self.axes.draw_artist(a)
+        self.blit(self.axes.bbox)
+
+    def add_intercept_line(self,ycoord):
+        self.axes.axhline(ycoord)
+        self.draw()
+        self.back_fig=self.copy_from_bbox(self.axes.bbox)
+
 
 class RegressorSelectDialog(VariableSelectDialog):
     def __init__(self,outcome_var,regressors_model):
@@ -459,6 +485,10 @@ class AnovaApp(QMainWindow):
         self.result_model=braviz_models.AnovaResultsModel()
         self.sample_model=braviz_models.sampleTree()
         self.plot=None
+        self.plot_data_frame=None
+        self.plot_x_var=None
+        self.plot_z_var=None
+        self.plot_color=None
         self.setup_gui()
 
 
@@ -477,7 +507,7 @@ class AnovaApp(QMainWindow):
         self.ui.results_table.setModel(self.result_model)
 
         self.ui.matplot_layout=QtGui.QVBoxLayout()
-        self.plot=MatplotWidget()
+        self.plot=MatplotWidget(initial_message="Welcome\n\nSelect Outcome and add Regressors to start")
         self.ui.matplot_layout.addWidget(self.plot)
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
         self.ui.results_table.activated.connect(self.update_main_plot_from_results)
@@ -506,6 +536,11 @@ class AnovaApp(QMainWindow):
         interaction_dialog=InteractionSelectDialog(self.regressors_model)
         interaction_dialog.exec_()
         self.regressors_model.show_regressors(True)
+        ints=self.regressors_model.get_interactions()[-1]
+        if type(ints)==str or type(ints)==unicode:
+            self.update_main_plot(ints)
+        elif len(ints)>0:
+            self.update_main_plot(ints[-1])
 
     def set_outcome_var_type(self,new_bar):
         if new_bar is None:
@@ -539,6 +574,9 @@ class AnovaApp(QMainWindow):
     def launch_add_regressor_dialog(self):
         reg_dialog=RegressorSelectDialog(self.outcome_var_name,self.regressors_model)
         result=reg_dialog.exec_()
+        if self.regressors_model.rowCount()>0:
+            regn=self.regressors_model.get_regressors()[-1]
+            self.update_main_plot(regn)
         self.check_if_ready()
     def check_if_ready(self):
         if (self.outcome_var_name is not None) and (self.regressors_model.rowCount()>0):
@@ -575,6 +613,7 @@ class AnovaApp(QMainWindow):
         else:
             self.result_model=braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)
+            self.update_main_plot("Residuals")
 
     def update_main_plot_from_results(self,index):
         row=index.row()
@@ -589,6 +628,10 @@ class AnovaApp(QMainWindow):
         self.update_main_plot(var_name)
 
     def update_main_plot(self,var_name):
+        self.plot_x_var=None
+        self.plot_data_frame=None
+        self.plot_z_var=None
+        self.plot_color=None
         if self.outcome_var_name is None:
             return
         if var_name=="Residuals":
@@ -596,7 +639,19 @@ class AnovaApp(QMainWindow):
             self.plot.make_histogram(residuals,"Residuals")
             pass
         elif var_name=="(Intercept)":
-            #TODO show jittered outcome and intercept line
+            data=get_data_frame(self.outcome_var_name)
+            self.plot_data_frame=data
+            data_values=data[self.outcome_var_name].get_values()
+
+            conn=get_connection()
+            #get outcome min and max values
+            cur=conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name=?",
+                         (self.outcome_var_name,))
+            ylims=cur.fetchone()
+            self.plot.make_box_plot(data_values,"(Intercept)",self.outcome_var_name,
+                                   None,ylims )
+            self.plot.add_intercept_line(self.result_model.intercept)
+
             pass
         else:
             if ":" in var_name:
@@ -623,23 +678,22 @@ class AnovaApp(QMainWindow):
         #print nominal_factors
         #print real_factors
         if len(real_factors)==1:
-            n=conn.execute("SELECT count(*) FROM variables NATURAL JOIN nom_meta WHERE var_name=?"
-                           ,(nominal_factors[0],))
-            nlevels=n.fetchone()[0]
+
             labels=conn.execute(
                 "SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",
                 (nominal_factors[0],))
             top_labels_dict=dict(labels.fetchall())
-            top_labels_strings=[top_labels_dict[i] for i in top_labels_dict.iterkeys()]
             colors=colorbrewer.Dark2[max(len(top_labels_dict),3)]
             #print top_labels_strings
             if len(top_labels_dict) == 2:
                 colors=colors[:2]
             colors=[map(lambda x:x/255,c) for c in colors]
             colors_dict=dict(izip(top_labels_dict.iterkeys(),colors))
+            self.plot_color=colors_dict
+            self.plot_z_var=nominal_factors[0]
             #Get Data
             data=get_data_frame([real_factors[0],nominal_factors[0],self.outcome_var_name])
-
+            self.plot_data_frame=data
             datax=[]
             datay=[]
             colors=[]
@@ -647,10 +701,10 @@ class AnovaApp(QMainWindow):
             for k,v in top_labels_dict.iteritems():
                 labels.append(v)
                 colors.append(colors_dict[k])
-                datax.append(data[self.outcome_var_name][data[nominal_factors[0]]==k  ].get_values())
-                datay.append(data[real_factors[0]][data[nominal_factors[0]]==k].get_values())
-            print datax
-
+                datay.append(data[self.outcome_var_name][data[nominal_factors[0]]==k  ].get_values())
+                datax.append(data[real_factors[0]][data[nominal_factors[0]]==k].get_values())
+            #print datax
+            self.plot_x_var=real_factors[0]
 
 
             self.plot.compute_scatter(datax,datay,real_factors[0],self.outcome_var_name,colors,labels)
@@ -668,6 +722,7 @@ class AnovaApp(QMainWindow):
             nominal_factors.sort(key=nlevels.get,reverse=True)
             #print nominal_factors
             data=get_data_frame(nominal_factors+[self.outcome_var_name])
+            self.plot_data_frame=data
             levels_second_factor=set(data[nominal_factors[1]].get_values())
             levels_first_factor=set(data[nominal_factors[0]].get_values())
             data_lists_top=[]
@@ -694,6 +749,8 @@ class AnovaApp(QMainWindow):
             if len(levels_second_factor) == 2:
                 colors=colors[:2]
             colors=[map(lambda x:x/255,c) for c in colors]
+            self.plot_color=dict(izip(levels_second_factor,colors))
+            self.plot_z_var=nominal_factors[1]
             #print colors
             #get ylims
             cur=conn.execute("SELECT min_val , max_val FROM variables NATURAL JOIN ratio_meta WHERE var_name=?",
@@ -702,6 +759,7 @@ class AnovaApp(QMainWindow):
             if miny is None or maxy is None:
                 raise Exception("Incosistency in DB")
 
+            self.plot_x_var=nominal_factors[0]
             self.plot.make_linked_box_plot(data_lists_top,nominal_factors[0],self.outcome_var_name,labels_strings,
                                            colors,top_labels_strings,ylims=(miny,maxy))
 
@@ -715,7 +773,9 @@ class AnovaApp(QMainWindow):
         #get outcome min and max values
         cur=conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name=?",
                          (self.outcome_var_name,))
+        #TODO This has to be updatede when implementing logistic regression
         miny,maxy=cur.fetchone()
+        self.plot_x_var=var_name
         if is_reg_real == 0:
             #is nominal
             #create whisker plot
@@ -724,6 +784,7 @@ class AnovaApp(QMainWindow):
             #print labels_dict
             #get data from
             data=get_data_frame([self.outcome_var_name,var_name])
+            self.plot_data_frame=data
             label_nums=set(data[var_name])
             data_list=[]
             ticks=[]
@@ -738,12 +799,33 @@ class AnovaApp(QMainWindow):
             #is real
             #create scatter plot
             data=get_data_frame([self.outcome_var_name,var_name])
+            self.plot_data_frame=data
             self.plot.compute_scatter(data[var_name].get_values(),
                                       data[self.outcome_var_name].get_values(),
                                       var_name,
                                       self.outcome_var_name)
     def add_subjects_to_plot(self,index):
-        self.plot.add_subject_points(None,None,None)
+        #find selected subjects
+        selection=self.ui.sample_tree.currentIndex()
+        leafs=self.sample_model.get_leafs(selection)
+        int_leafs=map(int,leafs)
+        #print leafs
+        #get data
+        if self.plot_data_frame is None:
+            return
+        y_data=self.plot_data_frame[self.outcome_var_name][int_leafs].get_values()
+        if self.plot_x_var is None:
+            x_data=np.ones(y_data.shape)
+        else:
+            x_data=self.plot_data_frame[self.plot_x_var][int_leafs].get_values()
+        colors=None
+        if self.plot_z_var is not None and self.plot_color is not None:
+            z_data=self.plot_data_frame[self.plot_z_var][int_leafs].get_values()
+            colors=[self.plot_color[i] for i in z_data]
+        self.plot.add_subject_points(x_data,y_data,colors)
+
+
+
 
 
 
