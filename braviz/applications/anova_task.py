@@ -896,6 +896,9 @@ class AnovaApp(QMainWindow):
     def handle_scatter_pick(self,subj,position):
         message="Subject: %s"%subj
         QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)),message,self.plot)
+    def create_plot_context_menu(self):
+        #TODO: Open images of a given subject
+        pass
 
 
 
