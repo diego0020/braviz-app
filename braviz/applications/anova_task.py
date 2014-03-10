@@ -247,7 +247,8 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
 
 class MatplotWidget(FigureCanvas):
-    pick_signal=QtCore.pyqtSignal(float,float,tuple)
+    box_outlier_pick_signal=QtCore.pyqtSignal(float,float,tuple)
+    scatter_pick_signal=QtCore.pyqtSignal(str,tuple)
     def __init__(self,parent=None,dpi=100,initial_message=None):
         fig=Figure(figsize=(5,5),dpi=dpi,tight_layout=True)
         self.fig=fig
@@ -262,10 +263,10 @@ class MatplotWidget(FigureCanvas):
         self.initial_text(initial_message)
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
         self.xlim=self.axes.get_xlim()
-        #self.mpl_connect("button_press_event",self.print_event)
-        self.mpl_connect("pick_event",self.print_event)
+        #self.mpl_connect("button_press_event",self.generate_tooltip_event)
+        self.mpl_connect("pick_event",self.generate_tooltip_event)
         self.setMouseTracking(True)
-        self.mpl_connect('motion_notify_event',self.mouseMoveEvent2)
+        self.mpl_connect('motion_notify_event',self.mouse_move_event_handler)
 
 
     def initial_text(self,message):
@@ -278,7 +279,7 @@ class MatplotWidget(FigureCanvas):
         self.draw()
 
 
-    def compute_scatter(self,data,data2=None,x_lab=None,y_lab=None,colors=None,labels=None):
+    def compute_scatter(self,data,data2=None,x_lab=None,y_lab=None,colors=None,labels=None,urls=None):
         self.axes.clear()
         self.axes.tick_params('x',bottom='on',labelbottom='on',labeltop='off')
         self.axes.yaxis.set_label_position("right")
@@ -292,10 +293,10 @@ class MatplotWidget(FigureCanvas):
 
         if colors is None:
             colors="#2ca25f"
-            self.axes.scatter(data,data2,color=colors)
+            self.axes.scatter(data,data2,color=colors,picker=5,urls=urls)
         else:
-            for c,d,d2,lbl in zip(colors,data,data2,labels):
-                self.axes.scatter(d,d2,color=c,label=lbl)
+            for c,d,d2,lbl,url in zip(colors,data,data2,labels,urls):
+                self.axes.scatter(d,d2,color=c,label=lbl,picker=5,urls=url)
             self.axes.legend(numpoints=1,fancybox=True,fontsize="small",)
             self.axes.get_legend().draggable(True,update="loc")
 
@@ -393,12 +394,12 @@ class MatplotWidget(FigureCanvas):
         self.draw()
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
 
-    def add_subject_points(self,x_coords,y_coords,color=None):
+    def add_subject_points(self,x_coords,y_coords,color=None,urls=None):
         #print "adding subjects"
         self.restore_region(self.back_fig)
         if color is None:
             color="black"
-        collection=self.axes.scatter(x_coords,y_coords,marker="o",s=120,edgecolors=color)
+        collection=self.axes.scatter(x_coords,y_coords,marker="o",s=120,edgecolors=color,urls=urls,picker=5)
         collection.set_facecolor('none')
 
         self.axes.draw_artist(collection)
@@ -411,18 +412,29 @@ class MatplotWidget(FigureCanvas):
         self.draw()
         self.back_fig=self.copy_from_bbox(self.axes.bbox)
 
-    def print_event(self,e):
+    def generate_tooltip_event(self,e):
         #print type(e.artist)
-        if not (type(e.artist)==matplotlib.lines.Line2D):
-            return
-        dx,dy=e.artist.get_data()
-        #print e.ind
-        ind=e.ind
-        if hasattr(ind,"__iter__"):
-            ind=ind[0]
-        self.pick_signal.emit(dx[ind],dy[ind],(e.mouseevent.x,self.height()-e.mouseevent.y))
+        if type(e.artist)==matplotlib.lines.Line2D:
+            dx,dy=e.artist.get_data()
+            #print e.ind
+            ind=e.ind
+            if hasattr(ind,"__iter__"):
+                ind=ind[0]
+            self.box_outlier_pick_signal.emit(dx[ind],dy[ind],(e.mouseevent.x,self.height()-e.mouseevent.y))
+        elif type(e.artist)==matplotlib.collections.PathCollection:
+            if e.artist.get_urls()[0] is None:
+                return
+            ind=e.ind
+            if hasattr(ind,"__iter__"):
+                ind=ind[0]
 
-    def mouseMoveEvent2( self, event ):
+            subj= str(e.artist.get_urls()[ind])
+            self.scatter_pick_signal.emit(subj,(e.mouseevent.x,self.height()-e.mouseevent.y))
+
+        else:
+            return
+
+    def mouse_move_event_handler( self, event ):
         #to avoid interference with draggable legend
         #self.pick(event)
         legend=self.axes.get_legend()
@@ -480,7 +492,7 @@ class RegressorSelectDialog(VariableSelectDialog):
         if self.outcome_var is not None:
             outcome_data=get_data_frame(self.outcome_var)
             self.matplot_widget.compute_scatter(regressor_data.get_values(),outcome_data.get_values(),
-                                                x_lab=self.var_name,y_lab=self.outcome_var)
+                                                x_lab=self.var_name,y_lab=self.outcome_var,urls=data.index.get_values())
         else:
             self.matplot_widget.compute_scatter(data.get_values())
 
@@ -552,7 +564,8 @@ class AnovaApp(QMainWindow):
         self.plot=MatplotWidget(initial_message="Welcome\n\nSelect Outcome and add Regressors to start")
         self.ui.matplot_layout.addWidget(self.plot)
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
-        self.plot.pick_signal.connect(self.handle_plot_pick)
+        self.plot.box_outlier_pick_signal.connect(self.handle_box_outlier_pick)
+        self.plot.scatter_pick_signal.connect(self.handle_scatter_pick)
         self.ui.results_table.activated.connect(self.update_main_plot_from_results)
         self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
 
@@ -741,16 +754,18 @@ class AnovaApp(QMainWindow):
             datay=[]
             colors=[]
             labels=[]
+            urls=[]
             for k,v in top_labels_dict.iteritems():
                 labels.append(v)
                 colors.append(colors_dict[k])
                 datay.append(data[self.outcome_var_name][data[nominal_factors[0]]==k  ].get_values())
                 datax.append(data[real_factors[0]][data[nominal_factors[0]]==k].get_values())
+                urls.append(data[self.outcome_var_name][data[nominal_factors[0]]==k  ].index.get_values())
             #print datax
             self.plot_x_var=real_factors[0]
 
 
-            self.plot.compute_scatter(datax,datay,real_factors[0],self.outcome_var_name,colors,labels)
+            self.plot.compute_scatter(datax,datay,real_factors[0],self.outcome_var_name,colors,labels,urls=urls)
 
 
         elif len(real_factors)==2:
@@ -846,7 +861,7 @@ class AnovaApp(QMainWindow):
             self.plot.compute_scatter(data[var_name].get_values(),
                                       data[self.outcome_var_name].get_values(),
                                       var_name,
-                                      self.outcome_var_name)
+                                      self.outcome_var_name,urls=data.index.get_values())
     def add_subjects_to_plot(self,index):
         #find selected subjects
         selection=self.ui.sample_tree.currentIndex()
@@ -857,6 +872,7 @@ class AnovaApp(QMainWindow):
         if self.plot_data_frame is None:
             return
         y_data=self.plot_data_frame[self.outcome_var_name][int_leafs].get_values()
+        subject_ids=self.plot_data_frame[self.outcome_var_name][int_leafs].index.get_values()
         if self.plot_x_var is None:
             x_data=np.ones(y_data.shape)
         else:
@@ -865,9 +881,9 @@ class AnovaApp(QMainWindow):
         if self.plot_z_var is not None and self.plot_color is not None:
             z_data=self.plot_data_frame[self.plot_z_var][int_leafs].get_values()
             colors=[self.plot_color[i] for i in z_data]
-        self.plot.add_subject_points(x_data,y_data,colors)
+        self.plot.add_subject_points(x_data,y_data,colors,urls=subject_ids)
 
-    def handle_plot_pick(self,x,y,position):
+    def handle_box_outlier_pick(self,x,y,position):
         #print "received signal"
         #print x_l,y_l
         if self.plot_data_frame is not None:
@@ -877,6 +893,10 @@ class AnovaApp(QMainWindow):
             #print subj[0]
             message="Outlier: %s"%subj[0]
             QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)),message,self.plot)
+    def handle_scatter_pick(self,subj,position):
+        message="Subject: %s"%subj
+        QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)),message,self.plot)
+
 
 
 
