@@ -235,15 +235,19 @@ class AnovaRegressorsModel(QAbstractTableModel):
 
 
     def add_interactor(self,factor_rw_indexes):
-        #get var_names
-        if len(factor_rw_indexes)<2:
+        #The indexes should be taken from a view showing only the factors in the same order as present model
+        factors_data_frame=self.data_frame[self.data_frame["Interaction"]==0]
+        factor_indexes=[factors_data_frame.index[i] for i in factor_rw_indexes]
+        if len(factor_indexes)<2:
             #can't add interaction with just one factor
             return
-        factor_indexes=[self.data_frame.index[i] for i in factor_rw_indexes]
+
         #check if already added:
         if frozenset(factor_indexes) in self.__interactors_dict.values():
             print "Trying to add duplicated interaction"
             return
+
+        #get var_names
         factor_names=self.data_frame["variable"].loc[factor_indexes]
         #create name
         interactor_name='*'.join(factor_names)

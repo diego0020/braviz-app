@@ -297,7 +297,7 @@ class MatplotWidget(FigureCanvas):
             for c,d,d2,lbl in zip(colors,data,data2,labels):
                 self.axes.scatter(d,d2,color=c,label=lbl)
             self.axes.legend(numpoints=1,fancybox=True,fontsize="small",)
-            self.axes.get_legend().draggable(True)
+            self.axes.get_legend().draggable(True,update="loc")
 
 
 
@@ -365,6 +365,7 @@ class MatplotWidget(FigureCanvas):
                 c.set_c(col)
             for f in artists_dict["fliers"]:
                 f.set_c(col)
+                f.set_picker(5)
 
             #print zip(linex,liney)
             #print col
@@ -374,7 +375,7 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylabel(ylabel)
         self.axes.get_xaxis().set_ticklabels(xticks_labels)
         self.axes.legend(numpoints=1,fancybox=True,fontsize="small",)
-        self.axes.get_legend().draggable(True)
+        self.axes.get_legend().draggable(True,update="loc")
         yspan=ylims[1]-ylims[0]
         self.axes.set_ylim(ylims[0]-0.1*yspan,ylims[1]+0.1*yspan)
         self.draw()
@@ -422,8 +423,16 @@ class MatplotWidget(FigureCanvas):
         self.pick_signal.emit(dx[ind],dy[ind],(e.mouseevent.x,self.height()-e.mouseevent.y))
 
     def mouseMoveEvent2( self, event ):
-        #TODO This interferes with legend dragging
-        self.pick(event)
+        #to avoid interference with draggable legend
+        #self.pick(event)
+        legend=self.axes.get_legend()
+        if (legend is not None) and (legend.legendPatch.contains(event)[0] == 1):
+            pass
+            #print "in legend"
+        else:
+            self.pick(event)
+
+
 
 
 
