@@ -537,7 +537,7 @@ class sampleTree(QAbstractItemModel):
                 return item.count
 
         return QtCore.QVariant()
-    def index(self, p_int, p_int_1, QModelIndex_parent=None, *args, **kwargs):
+    def index(self, p_int, p_int_1, QModelIndex_parent, *args, **kwargs):
         if not QModelIndex_parent.isValid():
             #top level
             if p_int>=len(self.data_aspects)+1 or p_int<0:
