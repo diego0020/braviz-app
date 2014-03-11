@@ -543,6 +543,7 @@ class AnovaApp(QMainWindow):
         self.plot_x_var=None
         self.plot_z_var=None
         self.plot_color=None
+        self.last_viewed_subject=None
         self.setup_gui()
 
 
@@ -566,11 +567,15 @@ class AnovaApp(QMainWindow):
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
         self.plot.box_outlier_pick_signal.connect(self.handle_box_outlier_pick)
         self.plot.scatter_pick_signal.connect(self.handle_scatter_pick)
+        self.plot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.plot.customContextMenuRequested.connect(self.subject_details_from_plot)
         self.ui.results_table.activated.connect(self.update_main_plot_from_results)
         self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
 
         self.ui.sample_tree.setModel(self.sample_model)
         self.ui.sample_tree.activated.connect(self.add_subjects_to_plot)
+        self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.ui.sample_tree.customContextMenuRequested.connect(self.subject_details_from_tree)
 
 
     def dispatch_outcome_select(self):
@@ -651,7 +656,7 @@ class AnovaApp(QMainWindow):
         menu.addAction(remove_action)
         selected_item=menu.exec_(globalPos)
     def update_sample_info(self):
-        #TODO: Show in a tree sample distribution along factors
+        #TODO: Allow choosing different sub-samples
         pass
     def calculate_anova(self):
 
@@ -892,13 +897,50 @@ class AnovaApp(QMainWindow):
             subj=df[(df[self.plot_x_var]==x) & (df[self.outcome_var_name]==y)].index
             #print subj[0]
             message="Outlier: %s"%subj[0]
+            self.last_viewed_subject=subj
+            QtCore.QTimer.singleShot(2000,self.clear_last_viewed_subject)
             QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)),message,self.plot)
     def handle_scatter_pick(self,subj,position):
         message="Subject: %s"%subj
         QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)),message,self.plot)
-    def create_plot_context_menu(self):
+        self.last_viewed_subject=subj
+        QtCore.QTimer.singleShot(2000,self.clear_last_viewed_subject)
+    def create_view_details_context_menu(self,global_pos,subject=None):
         #TODO: Open images of a given subject
-        pass
+        if subject is None:
+            subject=self.last_viewed_subject
+            if subject is None:
+                return
+
+        def show_MRI(*args):
+            print "launching MRI viewer"
+        launch_mri_action=QtGui.QAction("Show subject %s MRI"%subject,None)
+        menu=QtGui.QMenu("Subject %s"%subject)
+        menu.addAction(launch_mri_action)
+        launch_mri_action.triggered.connect(show_MRI)
+        menu.addAction(launch_mri_action)
+        menu.exec_(global_pos)
+
+    def subject_details_from_plot(self,pos):
+        #print "context menu"
+        #print pos
+        global_pos=self.plot.mapToGlobal(pos)
+        self.create_view_details_context_menu(global_pos)
+
+    def subject_details_from_tree(self,pos):
+        global_pos=self.ui.sample_tree.mapToGlobal(pos)
+        selection=self.ui.sample_tree.currentIndex()
+        #check if it is a leaf
+        if self.sample_model.hasChildren(selection) is True:
+            return
+        else:
+            print "this is a leaf"
+            subject=self.sample_model.data(selection,QtCore.Qt.DisplayRole)
+            print subject
+            self.create_view_details_context_menu(global_pos,subject)
+
+    def clear_last_viewed_subject(self):
+        self.last_viewed_subject=None
 
 
 
