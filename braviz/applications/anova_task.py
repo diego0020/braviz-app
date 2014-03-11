@@ -28,6 +28,9 @@ import colorbrewer
 
 from itertools import izip
 
+from braviz.applications import mriMultSlicer
+import multiprocessing
+
 
 class VariableSelectDialog(QtGui.QDialog):
     """Implement common features for Oucome and Regressor Dialogs"""
@@ -544,6 +547,8 @@ class AnovaApp(QMainWindow):
         self.plot_z_var=None
         self.plot_color=None
         self.last_viewed_subject=None
+        self.mri_viewer_pipe=None
+        self.mri_viewer_process=None
         self.setup_gui()
 
 
@@ -914,6 +919,7 @@ class AnovaApp(QMainWindow):
 
         def show_MRI(*args):
             print "launching MRI viewer"
+            self.change_subject_in_mri_viewer(subject)
         launch_mri_action=QtGui.QAction("Show subject %s MRI"%subject,None)
         menu=QtGui.QMenu("Subject %s"%subject)
         menu.addAction(launch_mri_action)
@@ -930,6 +936,7 @@ class AnovaApp(QMainWindow):
     def subject_details_from_tree(self,pos):
         global_pos=self.ui.sample_tree.mapToGlobal(pos)
         selection=self.ui.sample_tree.currentIndex()
+        selection=self.sample_model.index(selection.row(),0,selection.parent())
         #check if it is a leaf
         if self.sample_model.hasChildren(selection) is True:
             return
@@ -941,6 +948,19 @@ class AnovaApp(QMainWindow):
 
     def clear_last_viewed_subject(self):
         self.last_viewed_subject=None
+
+    def launch_mri_viewer(self):
+        print "creating new mri viewer"
+        self.mri_viewer_pipe,pipe_mri_side=multiprocessing.Pipe()
+        self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
+        self.mri_viewer_process.start()
+
+    def change_subject_in_mri_viewer(self,subj):
+        if (self.mri_viewer_process is None) or (not self.mri_viewer_process.is_alive()):
+            self.launch_mri_viewer()
+        if self.mri_viewer_pipe is not None:
+            self.mri_viewer_pipe.send({'subject':subj})
+
 
 
 
