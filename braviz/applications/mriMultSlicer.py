@@ -499,6 +499,10 @@ class MriMultSlicerApp():
                             select_subj_frame.setSelection(idx)
                             self.currSubj=subj
                             setSubj()
+                            if message.get('lift') is True:
+                                print "lifting"
+                                top.deiconify()
+                                top.lift()
 
             root.after(200, poll_for_messages)
         if self.pipe is not None:

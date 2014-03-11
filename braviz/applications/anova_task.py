@@ -941,9 +941,9 @@ class AnovaApp(QMainWindow):
         if self.sample_model.hasChildren(selection) is True:
             return
         else:
-            print "this is a leaf"
+            #print "this is a leaf"
             subject=self.sample_model.data(selection,QtCore.Qt.DisplayRole)
-            print subject
+            #print subject
             self.create_view_details_context_menu(global_pos,subject)
 
     def clear_last_viewed_subject(self):
@@ -959,7 +959,13 @@ class AnovaApp(QMainWindow):
         if (self.mri_viewer_process is None) or (not self.mri_viewer_process.is_alive()):
             self.launch_mri_viewer()
         if self.mri_viewer_pipe is not None:
-            self.mri_viewer_pipe.send({'subject':subj})
+            self.mri_viewer_pipe.send({'subject':subj, 'lift':True})
+    def closeEvent(self, *args, **kwargs):
+        if self.mri_viewer_process is not None:
+            self.mri_viewer_process.terminate()
+        print "ciao"
+
+
 
 
 
