@@ -288,8 +288,8 @@ class MatplotWidget(FigureCanvas):
             message = "Welcome"
         self.axes.text(0.5, 0.5, message, horizontalalignment='center',
                        verticalalignment='center', fontsize=12)
-        self.axes.tick_params('y', left='off', labelleft='off', labelright='off')
-        self.axes.tick_params('x', bottom='off', labelbottom='off', labeltop='off')
+        self.axes.tick_params('y', left='off',right='off', labelleft='off', labelright='off')
+        self.axes.tick_params('x', top='off', bottom='off', labelbottom='off', labeltop='off')
         self.draw()
 
 
