@@ -17,3 +17,7 @@ Python packages:
 
 Subversion repository:
 svn+ssh://imagine@guitaca.uniandes.edu.co/media/DATA/repositories/svn/repos/braviz/
+
+Matplotlib styles changed to those from
+https://gist.github.com/mattions/5291765
+

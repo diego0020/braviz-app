@@ -32,6 +32,8 @@ from itertools import izip
 from braviz.applications import mriMultSlicer
 import multiprocessing
 
+from mpltools import style
+style.use('ggplot')
 
 #TODO: Move all database access to read and filter
 
@@ -937,7 +939,7 @@ class AnovaApp(QMainWindow):
             subj = df[(df[self.plot_x_var] == x) & (df[self.outcome_var_name] == y)].index
             #print subj[0]
             message = "Outlier: %s" % subj[0]
-            self.last_viewed_subject = subj
+            self.last_viewed_subject = subj[0]
             QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
             QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)), message, self.plot)
 

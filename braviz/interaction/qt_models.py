@@ -275,10 +275,13 @@ class AnovaRegressorsModel(QAbstractTableModel):
             for i in v:
                 if i not in index:
                     to_remove.append(k)
-                    continue
+
         for k in to_remove:
             del self.__interactors_dict[k]
-            self.data_frame.drop(k,inplace=True)
+            try:
+                self.data_frame.drop(k,inplace=True)
+            except ValueError:
+                pass
         print self.data_frame
         print self.__interactors_dict
     def get_data_frame(self):
@@ -426,7 +429,7 @@ class AnovaResultsModel(QAbstractTableModel):
         line=QModelIndex.row()
         col=QModelIndex.column()
         result=QtCore.Qt.NoItemFlags
-        if 0<=line<=self.rowCount() and 0<=line<=self.columnCount():
+        if 0<=line<=self.rowCount() and 0<=line<=self.rowCount():
             result|=QtCore.Qt.ItemIsSelectable
             result|=QtCore.Qt.ItemIsEnabled
         return result
