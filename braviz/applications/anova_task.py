@@ -281,6 +281,7 @@ class MatplotWidget(FigureCanvas):
         self.mpl_connect("pick_event", self.generate_tooltip_event)
         self.setMouseTracking(True)
         self.mpl_connect('motion_notify_event', self.mouse_move_event_handler)
+        self.x_order=None
 
 
     def initial_text(self, message):
@@ -288,9 +289,18 @@ class MatplotWidget(FigureCanvas):
             message = "Welcome"
         self.axes.text(0.5, 0.5, message, horizontalalignment='center',
                        verticalalignment='center', fontsize=12)
+        #Remove tick marks
         self.axes.tick_params('y', left='off',right='off', labelleft='off', labelright='off')
         self.axes.tick_params('x', top='off', bottom='off', labelbottom='off', labeltop='off')
+        #Remove axes border
+        for child in self.axes.get_children():
+            if isinstance(child, matplotlib.spines.Spine):
+                child.set_visible(False)
+        #remove minor tick lines
+        for line in self.axes.xaxis.get_ticklines(minor=True) + self.axes.yaxis.get_ticklines(minor=True):
+            line.set_markersize(0)
         self.draw()
+        self.x_order=None
 
 
     def compute_scatter(self, data, data2=None, x_lab=None, y_lab=None, colors=None, labels=None, urls=None):
@@ -317,6 +327,7 @@ class MatplotWidget(FigureCanvas):
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.xlim = self.axes.get_xlim()
+        self.x_order=None
 
     def add_max_min_opt_lines(self, mini, opti, maxi):
 
@@ -334,6 +345,12 @@ class MatplotWidget(FigureCanvas):
         self.blit(self.axes.bbox)
 
     def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims):
+
+        #Sort data and labels according to median
+        x_permutation=range(len(data))
+        data_labels=zip(data,xticks_labels,x_permutation)
+        data_labels.sort(key=lambda x:np.median(x[0]))
+        data,xticks_labels,x_permutation=zip(*data_labels)
         self.axes.clear()
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
         self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
@@ -351,6 +368,7 @@ class MatplotWidget(FigureCanvas):
 
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
+        self.x_order=x_permutation
 
     def make_linked_box_plot(self, data, xlabel, ylabel, xticks_labels, colors, top_labels, ylims):
         self.axes.clear()
@@ -358,6 +376,16 @@ class MatplotWidget(FigureCanvas):
         self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
+        x_permutation=range(len(data[0]))
+        data_join=[list(itertools.chain.from_iterable(l)) for l in zip(*data)]
+        data_order=zip(data_join,x_permutation)
+        data_order.sort(key=lambda x:np.median(x[0]))
+        _,x_permutation=zip(*data_order)
+        # self.x_order=x_permutation # at the end of method for consistency
+        #sort data
+        for k,l in enumerate(data):
+            data[k]=[l[i] for i in x_permutation]
+        xticks_labels=[xticks_labels[i] for i in x_permutation]
 
         for d_list, col, lbl in izip(data, colors, top_labels):
             artists_dict = self.axes.boxplot(d_list, sym='D', patch_artist=False)
@@ -394,6 +422,7 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
+        self.x_order=x_permutation
 
     def make_histogram(self, data, xlabel):
         self.axes.clear()
@@ -403,13 +432,17 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(auto=True)
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel("Frequency")
-        self.axes.hist(data, color="#2ca25f")
+        self.axes.hist(data, color="#2ca25f",bins=20)
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
+        self.x_order=None
 
     def add_subject_points(self, x_coords, y_coords, color=None, urls=None):
         #print "adding subjects"
         self.restore_region(self.back_fig)
+        if self.x_order is not None:
+            #labels go from 1 to n; permutation is from 0 to n-1
+            x_coords=map(lambda k:self.x_order[int(k)-1]+1,x_coords)
         if color is None:
             color = "black"
         collection = self.axes.scatter(x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5)
@@ -617,7 +650,10 @@ class AnovaApp(QMainWindow):
         interaction_dialog = InteractionSelectDialog(self.regressors_model)
         interaction_dialog.exec_()
         self.regressors_model.show_regressors(True)
-        ints = self.regressors_model.get_interactions()[-1]
+        try:
+            ints = self.regressors_model.get_interactions()[-1]
+        except KeyError:
+            return
         if type(ints) == str or type(ints) == unicode:
             self.update_main_plot(ints)
         elif len(ints) > 0:
@@ -1000,7 +1036,7 @@ class AnovaApp(QMainWindow):
         if (self.mri_viewer_process is None) or (not self.mri_viewer_process.is_alive()):
             self.launch_mri_viewer()
         if self.mri_viewer_pipe is not None:
-            self.mri_viewer_pipe.send({'subject': subj, 'lift': True})
+            self.mri_viewer_pipe.send({'subject': str(subj), 'lift': True})
 
     def closeEvent(self, *args, **kwargs):
         if self.mri_viewer_process is not None:
