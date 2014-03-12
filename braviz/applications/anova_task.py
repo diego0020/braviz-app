@@ -607,8 +607,8 @@ class AnovaApp(QMainWindow):
     def setup_gui(self):
         self.ui = Ui_Anova_gui()
         self.ui.setupUi(self)
-        self.ui.outcome_sel.insertSeparator(1)
-        self.ui.outcome_sel.setCurrentIndex(2)
+        self.ui.outcome_sel.insertSeparator(self.ui.outcome_sel.count()-1)
+        self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count()-1)
         #self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
         self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
         self.ui.add_regressor_button.pressed.connect(self.launch_add_regressor_dialog)
