@@ -100,6 +100,11 @@
                </item>
                <item>
                 <property name="text">
+                 <string>IHIlatd</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
                  <string extracomment="select a new variable">Select Outcome...</string>
                 </property>
                </item>
@@ -405,7 +410,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionSave_scneario">
    <property name="text">
-    <string>Save scneario</string>
+    <string>Save scenario</string>
    </property>
   </action>
   <action name="actionLoad_scenario">

@@ -348,6 +348,8 @@ class MatplotWidget(FigureCanvas):
 
         #Sort data and labels according to median
         x_permutation=range(len(data))
+        if xticks_labels is None:
+            xticks_labels=range(len(data))
         data_labels=zip(data,xticks_labels,x_permutation)
         data_labels.sort(key=lambda x:np.median(x[0]))
         data,xticks_labels,x_permutation=zip(*data_labels)
@@ -381,6 +383,7 @@ class MatplotWidget(FigureCanvas):
         data_order=zip(data_join,x_permutation)
         data_order.sort(key=lambda x:np.median(x[0]))
         _,x_permutation=zip(*data_order)
+
         # self.x_order=x_permutation # at the end of method for consistency
         #sort data
         for k,l in enumerate(data):
@@ -442,7 +445,7 @@ class MatplotWidget(FigureCanvas):
         self.restore_region(self.back_fig)
         if self.x_order is not None:
             #labels go from 1 to n; permutation is from 0 to n-1
-            x_coords=map(lambda k:self.x_order[int(k)-1]+1,x_coords)
+            x_coords=map(lambda k:self.x_order.index(int(k)-1)+1,x_coords)
         if color is None:
             color = "black"
         collection = self.axes.scatter(x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5)
@@ -466,7 +469,11 @@ class MatplotWidget(FigureCanvas):
             ind = e.ind
             if hasattr(ind, "__iter__"):
                 ind = ind[0]
-            self.box_outlier_pick_signal.emit(dx[ind], dy[ind], (e.mouseevent.x, self.height() - e.mouseevent.y))
+            x,y=dx[ind],dy[ind]
+            # correct x position from reordering
+            if self.x_order is not None:
+                x=self.x_order[int(x-1)]+1
+            self.box_outlier_pick_signal.emit(x, y, (e.mouseevent.x, self.height() - e.mouseevent.y))
         elif type(e.artist) == matplotlib.collections.PathCollection:
             if e.artist.get_urls()[0] is None:
                 return
@@ -652,7 +659,7 @@ class AnovaApp(QMainWindow):
         self.regressors_model.show_regressors(True)
         try:
             ints = self.regressors_model.get_interactions()[-1]
-        except KeyError:
+        except (KeyError, IndexError):
             return
         if type(ints) == str or type(ints) == unicode:
             self.update_main_plot(ints)
