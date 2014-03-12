@@ -979,7 +979,10 @@ class AnovaApp(QMainWindow):
         if self.plot_data_frame is not None:
             #identify subject
             df = self.plot_data_frame
-            subj = df[(df[self.plot_x_var] == x) & (df[self.outcome_var_name] == y)].index
+            if self.plot_x_var is None:
+                subj = df[df[self.outcome_var_name] == y].index
+            else:
+                subj = df[(df[self.plot_x_var] == x) & (df[self.outcome_var_name] == y)].index
             #print subj[0]
             message = "Outlier: %s" % subj[0]
             self.last_viewed_subject = subj[0]
