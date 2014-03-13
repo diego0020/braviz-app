@@ -69,13 +69,14 @@ class SubjectViewer:
         self.__mri_lut=vtk.vtkLookupTable()
         self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
 
-    def change_image_modality(self,modality,paradigm=None):
+    def change_image_modality(self,modality,paradigm=None,force_reload=False):
         """Changes the modality of the current image
         to hide the image call hide_image
         in the case of fMRI modality should be fMRI and paradigm the name of the paradigm"""
 
         modality=modality.upper()
-        if (modality ==self.__current_image) and (paradigm==self.__curent_fmri_paradigm):
+        if (modality ==self.__current_image) and (paradigm==self.__curent_fmri_paradigm) and \
+                self.__image_plane_widget.GetEnabled() and not force_reload:
             #nothing to do
             return
 
@@ -93,6 +94,8 @@ class SubjectViewer:
             mri_image=self.reader.get("MRI",self.__current_subject,format="VTK",space=self.__current_space)
             fmri_image=self.reader.get("fMRI",self.__current_subject,format="VTK",space=self.__current_space,
                                        name=paradigm)
+            if fmri_image is None:
+                raise Exception("%s not available for subject %s"%(paradigm,self.__current_subject))
             fmri_lut=self.reader.get("fMRI",self.__current_subject,lut=True)
             self.__fmri_blender.set_luts(self.__mri_lut,fmri_lut)
             new_image=self.__fmri_blender.set_images(mri_image,fmri_image)
@@ -100,8 +103,10 @@ class SubjectViewer:
             self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             self.ren_win.Render()
-            self.__current_image=new_image
+            self.__current_image=modality
+            self.__curent_fmri_paradigm=paradigm
             self.__image_plane_widget.text1_value_from_img(fmri_image)
+            self.ren_win.Render()
             return
 
         self.__image_plane_widget.text1_to_std()
@@ -123,7 +128,7 @@ class SubjectViewer:
             self.__image_plane_widget.SetLookupTable(lut)
             #Important:
             self.__image_plane_widget.SetResliceInterpolateToNearestNeighbour()
-        self.__current_image=new_image
+        self.__current_image=modality
         self.ren_win.Render()
 
     def change_image_orientation(self,orientation):
@@ -135,8 +140,15 @@ class SubjectViewer:
         self.__image_plane_widget.set_orientation(orientation)
         self.ren_win.Render()
 
-    def change_current_space(self):
-        pass
+    def change_current_space(self,new_space):
+        if self.__current_space == new_space:
+            return
+        self.__current_space=new_space
+        if self.__image_plane_widget is not None and self.__image_plane_widget.GetEnabled():
+            self.change_image_modality(self.__current_image,self.__curent_fmri_paradigm,force_reload=True)
+
+
+
 
     def reset_camera(self,position):
         """resets the current camera to standard locations. Position may be:

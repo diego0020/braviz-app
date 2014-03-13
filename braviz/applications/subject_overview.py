@@ -37,6 +37,8 @@ class SubjectOverviewApp(QMainWindow):
         #control frame
         #view controls
         self.ui.camera_pos.activated.connect(self.position_camera)
+        self.ui.space_combo.activated.connect(self.space_change)
+
         #image controls
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
@@ -59,11 +61,16 @@ class SubjectOverviewApp(QMainWindow):
             self.ui.reset_window_level.setEnabled(0)
             self.ui.slice_spin.setEnabled(0)
             self.ui.slice_slider.setEnabled(0)
+            return
 
         if selection in ("MRI","FA","APARC"):
             self.vtk_viewer.change_image_modality(selection)
         else:
-            self.vtk_viewer.change_image_modality("FMRI",selection)
+            try:
+                self.vtk_viewer.change_image_modality("FMRI",selection)
+            except Exception as e:
+                print e.message
+                self.statusBar().showMessage(e.message,5000)
 
         self.ui.image_orientation.setEnabled(1)
         self.ui.slice_spin.setEnabled(1)
@@ -86,6 +93,10 @@ class SubjectOverviewApp(QMainWindow):
         camera_pos_dict={"Default":0,"Left":1,"Right":2,"Front":3,"Back":4,"Top":5,"Bottom":6}
         self.vtk_viewer.reset_camera(camera_pos_dict[selection])
 
+    def space_change(self):
+        new_space=str(self.ui.space_combo.currentText())
+        self.vtk_viewer.change_current_space(new_space)
+        print new_space
 
     def print_vtk_camera(self):
         self.vtk_viewer.print_camera()

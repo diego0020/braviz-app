@@ -36,6 +36,12 @@
        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
         <item>
          <widget class="QTabWidget" name="tab_controls">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="currentIndex">
            <number>1</number>
           </property>
@@ -269,18 +275,24 @@
               <property name="fieldGrowthPolicy">
                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
               </property>
+              <property name="labelAlignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+              <property name="formAlignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
               <item row="0" column="0">
                <widget class="QLabel" name="label_3">
                 <property name="text">
-                 <string>Space:</string>
+                 <string>Current Space:</string>
                 </property>
                 <property name="buddy">
-                 <cstring>comboBox</cstring>
+                 <cstring>space_combo</cstring>
                 </property>
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QComboBox" name="comboBox">
+               <widget class="QComboBox" name="space_combo">
                 <item>
                  <property name="text">
                   <string>World</string>
@@ -304,7 +316,7 @@
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this box to move camera to a predefined position&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
-                 <string>Camera:</string>
+                 <string>Camera to:</string>
                 </property>
                 <property name="buddy">
                  <cstring>camera_pos</cstring>
@@ -313,6 +325,12 @@
               </item>
               <item row="1" column="1">
                <widget class="QComboBox" name="camera_pos">
+                <property name="baseSize">
+                 <size>
+                  <width>73</width>
+                  <height>0</height>
+                 </size>
+                </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this box to reset the camera to predefined position&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
@@ -389,6 +407,12 @@
         </property>
         <item>
          <widget class="QFrame" name="vtk_frame">
+          <property name="minimumSize">
+           <size>
+            <width>600</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="frameShape">
            <enum>QFrame::StyledPanel</enum>
           </property>
@@ -420,6 +444,18 @@
            </property>
            <item>
             <widget class="QLabel" name="label_5">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>73</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="font">
               <font>
                <pointsize>12</pointsize>
@@ -435,6 +471,12 @@
            </item>
            <item>
             <widget class="QGroupBox" name="groupBox_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="title">
               <string>Clinical</string>
              </property>
