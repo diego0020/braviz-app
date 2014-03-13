@@ -1054,10 +1054,12 @@ class AnovaApp(QMainWindow):
         print "ciao"
 
 
-if __name__ == '__main__':
+def run():
     import sys
-
     app = QtGui.QApplication(sys.argv)
     main_window = AnovaApp()
     main_window.show()
     app.exec_()
+
+if __name__ == '__main__':
+    run()

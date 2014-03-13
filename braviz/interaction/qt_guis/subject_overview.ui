@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>subject_overview</class>
+ <widget class="QMainWindow" name="subject_overview">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QFrame" name="Control_Frame">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
+        <item>
+         <widget class="QTabWidget" name="tab_controls">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <widget class="QWidget" name="subjects_tab">
+           <attribute name="title">
+            <string>Subject</string>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Select subject</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <item>
+             <widget class="QTableWidget" name="tableWidget"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton">
+              <property name="text">
+               <string>Select Sample</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="image_tab">
+           <attribute name="title">
+            <string>Images</string>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Select image to show</string>
+           </attribute>
+           <layout class="QFormLayout" name="formLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>Modality</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Orientation</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="comboBox_3">
+              <item>
+               <property name="text">
+                <string>None</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>MRI</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>FA</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>APARC</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Precision</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Power</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="comboBox_4">
+              <item>
+               <property name="text">
+                <string>Axial</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Sagital</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Coronal</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Window</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Level</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+            </item>
+            <item row="4" column="1">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
+            </item>
+            <item row="2" column="1">
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab">
+           <attribute name="title">
+            <string>Segmentation</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="tab_2">
+           <attribute name="title">
+            <string>Tractography</string>
+           </attribute>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>View</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QFrame" name="frame_2">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QFormLayout" name="formLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Space</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="comboBox">
+                <item>
+                 <property name="text">
+                  <string>World</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Talairach</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Dartel</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_4">
+                <property name="text">
+                 <string>Camera</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QComboBox" name="comboBox_2">
+                <item>
+                 <property name="text">
+                  <string>3D</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Axial</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Coronal</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Sagital</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QFrame" name="view_frame">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>2</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QFrame" name="vtk_frame">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="clini_frame">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,0,0">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>093</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="title">
+              <string>Clinical</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout">
+              <item row="1" column="3">
+               <widget class="QLabel" name="label_7">
+                <property name="text">
+                 <string>VCIIQ</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QLabel" name="label_8">
+                <property name="text">
+                 <string>Weight at birth</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>GENRE</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string>LAT</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="4">
+               <widget class="QLCDNumber" name="lcdNumber_2"/>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_10">
+                <property name="text">
+                 <string>MALE</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="label_11">
+                <property name="text">
+                 <string>Right handed</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4">
+               <widget class="QLCDNumber" name="lcdNumber"/>
+              </item>
+              <item row="0" column="2">
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_4">
+             <property name="text">
+              <string>Select Variables</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionSave_scenario"/>
+    <addaction name="actionLoad_scenario"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSave_scenario">
+   <property name="text">
+    <string>Save scenario</string>
+   </property>
+  </action>
+  <action name="actionLoad_scenario">
+   <property name="text">
+    <string>Load scenario</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

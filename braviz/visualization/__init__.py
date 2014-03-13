@@ -1,9 +1,12 @@
 """This module contains functions and classes which facilitate the display of brain data in the screen"""
 from __future__ import division
+
 import vtk
 from vtk import vtkImagePlaneWidget
-from braviz.interaction import compute_volume_and_area,get_fiber_bundle_descriptors
 import numpy as np
+
+from braviz.interaction import compute_volume_and_area,get_fiber_bundle_descriptors
+
 
 class simpleVtkViewer():
     """A very simple windows with vtk renderers and interactors.
@@ -616,8 +619,33 @@ def test_arrow(head,tail):
     ren.AddViewProp(arrow_actor)
     iren.Start()
 
-#Easy access to GridView
-from grid_viewer import GridView
 
+class OrientationAxes():
+    def __init__(self):
+        axes_actor=vtk.vtkAnnotatedCubeActor()
+        axes_actor.SetXPlusFaceText("R")
+        axes_actor.SetXMinusFaceText("L")
+        axes_actor.SetYPlusFaceText("A")
+        axes_actor.SetYMinusFaceText("P")
+        axes_actor.SetZPlusFaceText("S")
+        axes_actor.SetZMinusFaceText("I")
+
+        axes_actor.GetTextEdgesProperty().SetColor(1,1,1)
+        axes_actor.GetTextEdgesProperty().SetLineWidth(2)
+        axes_actor.GetCubeProperty().SetColor(0.3,0.3,0.3)
+
+        axes=vtk.vtkOrientationMarkerWidget()
+        axes.SetOrientationMarker(axes_actor)
+        axes.SetViewport(0.9, 0, 1,0.1)
+
+        self.axes=axes
+
+    def initialize(self,render_window_interactor):
+        self.axes.SetInteractor(render_window_interactor)
+        self.axes.EnabledOn()
+        self.axes.InteractiveOn()
+
+
+#Easy access to GridView
 if __name__=="__main__":
     test_arrow((3,4,5),(7,-8,-9))
