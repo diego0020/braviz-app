@@ -1,11 +1,11 @@
 from __future__ import division
 import Tkinter as tk
 import ttk
+
 import numpy as np
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-
 
 import braviz
 
@@ -88,7 +88,7 @@ def setSubj(event=None):
         planeWidget.GetWindowLevel(mri_window_level)
         mri_lut.DeepCopy(planeWidget.GetLookupTable())
     if image_var.get() in ('Precision','Power'):
-        mri_img=img=reader.get('MRI',subj,format='VTK',space=space_var.get())
+        mri_img=reader.get('MRI',subj,format='VTK',space=space_var.get())
         if image_var.get()=='Precision':
             fmri_name='Precision'
         else:

@@ -1,9 +1,16 @@
 from __future__ import division
 
 import base64
+import os
+import re
+import platform # for the autoReader
+import cPickle
+import hashlib
+
 import nibabel as nib
 import numpy as np
 from numpy.linalg import inv
+import vtk
 
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData,\
     readFreeSurferTransform, cache_function,numpy2vtkMatrix,extract_poly_data_subset
@@ -14,12 +21,6 @@ from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 
-import os
-import re
-import vtk
-import platform # for the autoReader
-import cPickle
-import hashlib
 
 class kmc40Reader:
     """
@@ -42,7 +43,7 @@ The path containing this structure must be set."""
             MRI: By default returns a nibnii object, use format='VTK' to get a vtkImageData object. 
                  Additionally use space='native' to ignore the nifti transform.
     
-            FA:  Same options as MRI, but space also accepts 'diffusion'
+            FA:  Same options as MRI, but space also accepts 'diffusion', also accepts 'lut'
             
             APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
             
@@ -86,6 +87,10 @@ The path containing this structure must be set."""
         if data=='MRI':
             return self.__getImg(data,subj,**kw)
         elif data=='FA':
+            if kw.get('lut'):
+                if not hasattr(self,'fa_LUT'):
+                    self.fa_LUT=self.__create_fa_lut()
+                return self.fa_LUT
             return self.__getImg(data,subj,**kw)
         elif data=='IDS':
             return self.__getIds()
@@ -106,6 +111,10 @@ The path containing this structure must be set."""
                 return self.free_surfer_aparc_LUT
             return self.__getImg(data,subj,**kw)
         elif data=="FMRI":
+            if kw.get('lut'):
+                if not hasattr(self,'fmri_LUT'):
+                    self.fmri_LUT=self.__create_fmri_lut()
+                return self.fmri_LUT
             return self.__read_func(subj, **kw)
         elif data=='BOLD':
             return self.__read_bold(subj,kw['name'])
@@ -605,6 +614,30 @@ The path containing this structure must be set."""
             out_lut.SetTableValue(idx,color_dict[i][0] )
         #self.save_into_cache('free_surfer_vtk_color_lut',out_lut)
         return out_lut
+    def __create_fa_lut(self):
+        fa_lut=vtk.vtkLookupTable()
+        fa_lut.SetRampToLinear ()
+        fa_lut.SetTableRange(0.0,1.0)
+        fa_lut.SetHueRange(0.0, 0.0)
+        fa_lut.SetSaturationRange(1.0, 1.0)
+        fa_lut.SetValueRange(0.0, 1.0)
+        fa_lut.Build()
+        return fa_lut
+    def __create_fmri_lut(self):
+        fmri_color_int=vtk.vtkColorTransferFunction()
+        fmri_color_int.ClampingOn()
+        fmri_color_int.SetColorSpaceToRGB()
+        fmri_color_int.SetRange(-7,7)
+        fmri_color_int.Build()
+        #                           x   ,r   ,g   , b
+        fmri_color_int.AddRGBPoint(-7.0 ,0.0 ,1.0 ,1.0)
+        fmri_color_int.AddRGBPoint(-3.0 ,0.0 ,0.0 ,0.0)
+        fmri_color_int.AddRGBPoint( 0.0 ,0.0 ,0.0 ,0.0)
+        fmri_color_int.AddRGBPoint( 3.0 ,0.0 ,0.0 ,0.0)
+        fmri_color_int.AddRGBPoint( 7.0 ,1.0 ,0.27,0.0)
+
+
+        return fmri_color_int
     def __read_func_transform(self,subject,paradigm,inverse=False):
         "reads the transform from world to functional space"
         name=paradigm.upper()

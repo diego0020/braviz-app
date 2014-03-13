@@ -25,15 +25,70 @@ class SubjectOverviewApp(QMainWindow):
         #Init gui
         self.ui=None
         self.setup_gui()
-        self.vtk_viewer.show_cone()
+
+        #load initial image
+        self.image_modality_change()
+        #self.vtk_viewer.show_cone()
 
     def setup_gui(self):
         self.ui=Ui_subject_overview()
         self.ui.setupUi(self)
+
+        #control frame
+        #view controls
+        self.ui.camera_pos.activated.connect(self.position_camera)
+        #image controls
+        self.ui.image_mod_combo.activated.connect(self.image_modality_change)
+        self.ui.image_orientation.activated.connect(self.image_orientation_change)
+
+        #view frame
         self.ui.vtk_frame_layout=QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
         self.ui.vtk_frame_layout.setContentsMargins(0,0,0,0)
+
+
+
+    def image_modality_change(self):
+        selection=str(self.ui.image_mod_combo.currentText())
+        if selection=="None":
+            self.vtk_viewer.hide_image()
+            self.ui.image_orientation.setEnabled(0)
+            self.ui.image_window.setEnabled(0)
+            self.ui.image_level.setEnabled(0)
+            self.ui.reset_window_level.setEnabled(0)
+            self.ui.slice_spin.setEnabled(0)
+            self.ui.slice_slider.setEnabled(0)
+
+        if selection in ("MRI","FA","APARC"):
+            self.vtk_viewer.change_image_modality(selection)
+        else:
+            self.vtk_viewer.change_image_modality("FMRI",selection)
+
+        self.ui.image_orientation.setEnabled(1)
+        self.ui.slice_spin.setEnabled(1)
+        self.ui.slice_slider.setEnabled(1)
+
+        window_level_control=1 if selection in ("MRI","FA") else 0
+        self.ui.image_window.setEnabled(window_level_control)
+        self.ui.image_level.setEnabled(window_level_control)
+        self.ui.reset_window_level.setEnabled(window_level_control)
+
+    def image_orientation_change(self):
+        orientation_dict={"Axial":2 , "Coronal":1, "Sagital":0}
+        selection=str(self.ui.image_orientation.currentText())
+        self.vtk_viewer.change_image_orientation(orientation_dict[selection])
+
+
+    def position_camera(self):
+        self.print_vtk_camera()
+        selection=str(self.ui.camera_pos.currentText())
+        camera_pos_dict={"Default":0,"Left":1,"Right":2,"Front":3,"Back":4,"Top":5,"Bottom":6}
+        self.vtk_viewer.reset_camera(camera_pos_dict[selection])
+
+
+    def print_vtk_camera(self):
+        self.vtk_viewer.print_camera()
 
 
 

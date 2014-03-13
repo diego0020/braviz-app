@@ -157,7 +157,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
             The message in the left corner may be changed so that the value is taken from a second image,
             this is usefurl for example to display a composed fmri image but showing in the message only the z-score
             """
-            if not self.GetDisplayText():
+            if (not self.GetDisplayText()) and (not self.alternative_text1):
                 if self.MiddleButton:
                     self.InvokeEvent(self.slice_change_event)
                 else:
@@ -636,7 +636,7 @@ class OrientationAxes():
 
         axes=vtk.vtkOrientationMarkerWidget()
         axes.SetOrientationMarker(axes_actor)
-        axes.SetViewport(0.9, 0, 1,0.1)
+        axes.SetViewport(0.9, 0.9, 1,1)
 
         self.axes=axes
 
@@ -644,6 +644,30 @@ class OrientationAxes():
         self.axes.SetInteractor(render_window_interactor)
         self.axes.EnabledOn()
         self.axes.InteractiveOn()
+
+
+class fMRI_blender:
+    def __init__(self):
+        self.blend=vtk.vtkImageBlend()
+        self.color_mapper2=vtk.vtkImageMapToColors()
+        self.color_mapper1=vtk.vtkImageMapToWindowLevelColors()
+        self.blend.AddInputConnection(self.color_mapper1.GetOutputPort())
+        self.blend.AddInputConnection(self.color_mapper2.GetOutputPort())
+        self.blend.SetOpacity(0,1)
+        self.blend.SetOpacity(1,.5)
+
+    def set_luts(self,mri_lut,fmri_lut):
+        self.color_mapper1.SetLookupTable(mri_lut)
+        self.color_mapper2.SetLookupTable(fmri_lut)
+
+    def set_images(self,mri_image,fmri_image):
+        self.color_mapper1.SetInputData(mri_image)
+        self.color_mapper2.SetInputData(fmri_image)
+        self.blend.Update()
+        return self.blend.GetOutput()
+
+    def get_blended_img(self):
+        return self.blend.GetOutput()
 
 
 #Easy access to GridView
