@@ -694,5 +694,5 @@ class SubjectsTable(QAbstractTableModel):
             if not is_real:
                 #column 0 is reserved for the Code
                 self.__labels[i] = braviz_tab_data.get_labels_dict(columns[i-1])
-        print self.__labels
+        #print self.__labels
 
