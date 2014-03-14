@@ -81,7 +81,12 @@ class SubjectViewer:
             new_slice = self.__image_plane_widget.GetSliceIndex()
             self.__widget.slice_change_handle(new_slice)
 
+        def detect_window_level_event(source, event):
+            window, level = self.__image_plane_widget.GetWindow(), self.__image_plane_widget.GetLevel()
+            self.__widget.window_level_change_handle(window, level)
+
         self.__image_plane_widget.AddObserver(self.__image_plane_widget.slice_change_event, slice_change_handler)
+        self.__image_plane_widget.AddObserver("WindowLevelEvent",detect_window_level_event)
 
     def change_image_modality(self, modality, paradigm=None, force_reload=False):
         """Changes the modality of the current image
@@ -109,6 +114,7 @@ class SubjectViewer:
             fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
                                          name=paradigm)
             if fmri_image is None:
+                self.hide_image()
                 raise Exception("%s not available for subject %s" % (paradigm, self.__current_subject))
             fmri_lut = self.reader.get("fMRI", self.__current_subject, lut=True)
             self.__fmri_blender.set_luts(self.__mri_lut, fmri_lut)
@@ -173,6 +179,22 @@ class SubjectViewer:
         self.__image_plane_widget.SetSliceIndex(new_slice)
         self.ren_win.Render()
 
+    def get_current_image_window(self):
+        return self.__image_plane_widget.GetWindow()
+
+    def get_current_image_level(self):
+        return self.__image_plane_widget.GetLevel()
+
+    def set_image_window(self,new_window):
+        if self.__image_plane_widget is None:
+            return
+        self.__image_plane_widget.SetWindowLevel(new_window,self.get_current_image_level())
+
+    def set_image_level(self,new_level):
+        if self.__image_plane_widget is None:
+            return
+        self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(),new_level)
+
     def change_current_space(self, new_space):
         if self.__current_space == new_space:
             return
@@ -222,7 +244,8 @@ class SubjectViewer:
 
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
-    window_level_changed = pyqtSignal(float, float)
+    image_window_changed = pyqtSignal(float)
+    image_level_changed = pyqtSignal(float)
 
     def __init__(self, reader):
         QFrame.__init__(self)
@@ -245,3 +268,6 @@ class QSuvjectViwerWidget(QFrame):
         self.slice_changed.emit(new_slice)
         #print new_slice
 
+    def window_level_change_handle(self, window, level):
+        self.image_window_changed.emit(window)
+        self.image_level_changed.emit(level)

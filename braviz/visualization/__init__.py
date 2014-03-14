@@ -122,6 +122,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.labels_dict = None
         self.slice_change_event = vtk.vtkCommand.UserEvent + 1
         self.cursor_change_event = vtk.vtkCommand.UserEvent + 2
+        self.window_level_change_event = vtk.vtkCommand.UserEvent + 3
         self.alternative_text1 = False
 
     def SetInputData(self, img):
@@ -211,12 +212,15 @@ class persistentImagePlane(vtkImagePlaneWidget):
             else:
                 self.MiddleButton = False
 
+        #def detect_window_level_event(obj, event):
+        #    print self.GetWindow(), self.GetLevel()
 
         self.GetInteractor().AddObserver('MiddleButtonPressEvent', detect_middle_button, 1000)
         self.GetInteractor().AddObserver('MiddleButtonReleaseEvent', detect_middle_button, 1000)
         self.AddObserver('InteractionEvent', mouse_interaction)
         self.AddObserver('StartInteractionEvent', mouse_interaction)
         self.AddObserver('EndInteractionEvent', end_interact)
+        #self.AddObserver('WindowLevelEvent',detect_window_level_event)
         self.text2 = text2
 
     def On(self):
@@ -253,7 +257,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         if self.labels_dict is None:
             return l
 
-        if not self.labels_dict.has_key(l):
+        if not l in self.labels_dict:
             idx = self.aparc_lut.GetAnnotatedValueIndex(l)
             label = self.aparc_lut.GetAnnotation(idx)
             self.labels_dict[l] = label
