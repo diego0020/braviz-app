@@ -3,11 +3,11 @@ __author__ = 'Diego'
 
 import PyQt4.QtGui as QtGui
 from PyQt4.QtGui import QMainWindow
-from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
 
 import braviz
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
-from braviz.visualization.subject_viewer import SubjectViewer
+from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 
 
 class SubjectOverviewApp(QMainWindow):
@@ -20,8 +20,8 @@ class SubjectOverviewApp(QMainWindow):
             #GENRE LAT Weight at birth VCIIQ
             initial_vars=(11,6,17,1)
         self.clinical_vars=initial_vars
-        self.vtk_widget=QVTKRenderWindowInteractor()
-        self.vtk_viewer=SubjectViewer(self.vtk_widget,self.reader)
+        self.vtk_widget=QSuvjectViwerWidget(reader=self.reader)
+        self.vtk_viewer=self.vtk_widget.subject_viewer
         #Init gui
         self.ui=None
         self.setup_gui()
