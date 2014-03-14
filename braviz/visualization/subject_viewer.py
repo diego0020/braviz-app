@@ -195,6 +195,13 @@ class SubjectViewer:
             return
         self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(),new_level)
 
+    def reset_window_level(self):
+        if self.__image_plane_widget is None:
+            return
+        self.__image_plane_widget.SetWindowLevel(3000,1500)
+        self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
+
+
     def change_current_space(self, new_space):
         if self.__current_space == new_space:
             return

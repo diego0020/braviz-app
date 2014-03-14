@@ -47,6 +47,7 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget.image_window_changed.connect(self.ui.image_window.setValue)
         self.vtk_widget.image_level_changed.connect(self.ui.image_level.setValue)
         self.ui.image_window.valueChanged.connect(self.vtk_viewer.set_image_window)
+        self.ui.reset_window_level.pressed.connect(self.vtk_viewer.reset_window_level)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
