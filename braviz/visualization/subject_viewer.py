@@ -155,6 +155,24 @@ class SubjectViewer:
         self.__current_image_orientation = orientation
         self.ren_win.Render()
 
+    def get_number_of_image_slices(self):
+        if self.__image_plane_widget is None:
+            return 0
+        dimensions = self.__image_plane_widget.GetInput().GetDimensions()
+
+        return dimensions[self.__current_image_orientation]
+
+    def get_current_image_slice(self):
+        if self.__image_plane_widget is None:
+            return 0
+        return self.__image_plane_widget.GetSliceIndex()
+
+    def set_image_slice(self,new_slice):
+        if self.__image_plane_widget is None:
+            return
+        self.__image_plane_widget.SetSliceIndex(new_slice)
+        self.ren_win.Render()
+
     def change_current_space(self, new_space):
         if self.__current_space == new_space:
             return
@@ -202,19 +220,6 @@ class SubjectViewer:
         print "viewUp: ",
         print cam1.GetViewUp()
 
-    def get_number_of_image_slices(self):
-        if self.__image_plane_widget is None:
-            return 0
-        dimensions = self.__image_plane_widget.GetInput().GetDimensions()
-
-        return dimensions[self.__current_image_orientation]
-
-    def get_current_image_slice(self):
-        if self.__image_plane_widget is None:
-            return 0
-        return self.__image_plane_widget.GetSliceIndex()
-
-
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
     window_level_changed = pyqtSignal(float, float)
@@ -239,5 +244,4 @@ class QSuvjectViwerWidget(QFrame):
     def slice_change_handle(self, new_slice):
         self.slice_changed.emit(new_slice)
         #print new_slice
-
 

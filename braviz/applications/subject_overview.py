@@ -43,6 +43,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
         self.vtk_widget.slice_changed.connect(self.ui.slice_slider.setValue)
+        self.ui.slice_slider.valueChanged.connect(self.vtk_viewer.set_image_slice)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
