@@ -42,6 +42,7 @@ class SubjectOverviewApp(QMainWindow):
         #image controls
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
+        self.vtk_widget.slice_changed.connect(self.ui.slice_slider.setValue)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
@@ -59,6 +60,8 @@ class SubjectOverviewApp(QMainWindow):
             self.ui.reset_window_level.setEnabled(0)
             self.ui.slice_spin.setEnabled(0)
             self.ui.slice_slider.setEnabled(0)
+            self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
+            self.reset_image_slice_controls()
             return
 
         if selection in ("MRI", "FA", "APARC"):
@@ -73,6 +76,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_orientation.setEnabled(1)
         self.ui.slice_spin.setEnabled(1)
         self.ui.slice_slider.setEnabled(1)
+        self.reset_image_slice_controls()
 
         window_level_control = 1 if selection in ("MRI", "FA") else 0
         self.ui.image_window.setEnabled(window_level_control)
@@ -83,6 +87,7 @@ class SubjectOverviewApp(QMainWindow):
         orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
         selection = str(self.ui.image_orientation.currentText())
         self.vtk_viewer.change_image_orientation(orientation_dict[selection])
+        self.reset_image_slice_controls()
 
     def position_camera(self):
         self.print_vtk_camera()
@@ -97,6 +102,11 @@ class SubjectOverviewApp(QMainWindow):
 
     def print_vtk_camera(self):
         self.vtk_viewer.print_camera()
+
+    def reset_image_slice_controls(self):
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
+        self.ui.slice_spin.setMaximum(self.vtk_viewer.get_number_of_image_slices())
+        self.ui.slice_slider.setValue(self.vtk_viewer.get_current_image_slice())
 
 
 def run():

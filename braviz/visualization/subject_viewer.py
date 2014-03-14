@@ -6,10 +6,11 @@ import vtk
 import braviz
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt4.QtGui import QFrame, QHBoxLayout
+from PyQt4.QtCore import pyqtSignal
 
 
 class SubjectViewer:
-    def __init__(self, render_window_interactor, reader):
+    def __init__(self, render_window_interactor, reader, widget):
 
         render_window_interactor.Initialize()
         render_window_interactor.Start()
@@ -47,6 +48,9 @@ class SubjectViewer:
         self.reset_camera(0)
         self.ren.Render()
 
+        #widget, signal handling
+        self.__widget = widget
+
     def show_cone(self):
         """Useful for testing"""
         cone = vtk.vtkConeSource()
@@ -72,6 +76,12 @@ class SubjectViewer:
         self.__image_plane_widget.On()
         self.__mri_lut = vtk.vtkLookupTable()
         self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
+
+        def slice_change_handler(source, event):
+            new_slice = self.__image_plane_widget.GetSliceIndex()
+            self.__widget.slice_change_handle(new_slice)
+
+        self.__image_plane_widget.AddObserver(self.__image_plane_widget.slice_change_event, slice_change_handler)
 
     def change_image_modality(self, modality, paradigm=None, force_reload=False):
         """Changes the modality of the current image
@@ -142,6 +152,7 @@ class SubjectViewer:
         if self.__image_plane_widget is None:
             self.create_image_plane_widget()
         self.__image_plane_widget.set_orientation(orientation)
+        self.__current_image_orientation = orientation
         self.ren_win.Render()
 
     def change_current_space(self, new_space):
@@ -191,25 +202,42 @@ class SubjectViewer:
         print "viewUp: ",
         print cam1.GetViewUp()
 
+    def get_number_of_image_slices(self):
+        if self.__image_plane_widget is None:
+            return 0
+        dimensions = self.__image_plane_widget.GetInput().GetDimensions()
+
+        return dimensions[self.__current_image_orientation]
+
+    def get_current_image_slice(self):
+        if self.__image_plane_widget is None:
+            return 0
+        return self.__image_plane_widget.GetSliceIndex()
+
 
 class QSuvjectViwerWidget(QFrame):
+    slice_changed = pyqtSignal(int)
+    window_level_changed = pyqtSignal(float, float)
+
     def __init__(self, reader):
         QFrame.__init__(self)
         self.__qwindow_interactor = QVTKRenderWindowInteractor()
         self.__qwindow_interactor.Initialize()
         self.__qwindow_interactor.Start()
         self.__reader = reader
-        self.__subject_viewer = SubjectViewer(self.__qwindow_interactor, self.__reader)
+        self.__subject_viewer = SubjectViewer(self.__qwindow_interactor, self.__reader, self)
         self.__layout = QHBoxLayout()
         self.__layout.addWidget(self.__qwindow_interactor)
         self.__layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.__layout)
-
+        self.subject_viewer.ren_win.Render()
 
     @property
     def subject_viewer(self):
         return self.__subject_viewer
 
-
+    def slice_change_handle(self, new_slice):
+        self.slice_changed.emit(new_slice)
+        #print new_slice
 
 
