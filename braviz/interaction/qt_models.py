@@ -468,7 +468,7 @@ class sampleTree(QAbstractItemModel):
             columns = ["lat", "UBIC3", "GENERO"]
         self.data_aspects = columns
         self.__headers = {0: "Attribute", 1: "N"}
-        self.__data_frame = braviz_tab_data.get_data_frame(columns)
+        self.__data_frame = braviz_tab_data.get_data_frame_by_name(columns)
         self.item_tuple = namedtuple("item_tuple", ["nid", "row", "label", "count", "parent", "children"])
         self.__tree_list = []
         self.__id_index = {}
@@ -631,21 +631,68 @@ class sampleTree(QAbstractItemModel):
 
 
 class SubjectsTable(QAbstractTableModel):
-    def __init__(self):
-        pass
+    def __init__(self, initial_columns=None):
+        QAbstractTableModel.__init__(self)
+        if initial_columns is None:
+            initial_columns = tuple()
+        self.__df = None
+        self.__is_var_real=None
+        self.__labels=None
+        self.set_var_columns(initial_columns)
+
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
-        pass
+        return self.__df.shape[0]
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
-        pass
+        return self.__df.shape[1]
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
-        pass
+        if not (int_role in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole)):
+            return QtCore.QVariant()
+        if Qt_Orientation == QtCore.Qt.Vertical:
+            return QtCore.QVariant()
+        elif 0 <= p_int < self.__df.shape[1]:
+            return self.__df.columns[p_int]
+        else:
+            return QtCore.QVariant()
 
     def data(self, QModelIndex, int_role=None):
-        pass
+        if not (int_role in (QtCore.Qt.DisplayRole,QtCore.Qt.ToolTipRole)):
+            return QtCore.QVariant()
+        line = QModelIndex.row()
+        col = QModelIndex.column()
+        if (0 <= line < len(self.__df)) and (0 <= col < self.__df.shape[1]):
+            datum = self.__df.iloc[line, col]
+            if col == 0:
+                return "%d" % int(datum)
+            else:
+                if self.__is_var_real[col]:
+                    return str(datum)
+                else:
+                    return self.__labels[col][int(datum)]
+
+        else:
+            return QtCore.QVariant()
 
     def sort(self, p_int, Qt_SortOrder_order=None):
-        pass
+        reverse = True
+        if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
+            reverse = False
+        self.__df.sort(self.__df.columns[p_int], ascending=reverse, inplace=True)
+        self.modelReset.emit()
+
+    def set_var_columns(self, columns):
+        vars_df = braviz_tab_data.get_data_frame_by_index(columns)
+        codes_df = pd.DataFrame(vars_df.index.get_values(), index=vars_df.index, columns=("Code",))
+        self.__df = codes_df.join(vars_df)
+        is_var_code_real= braviz_tab_data.are_variables_real(columns)
+        #we want to use the column number as index
+        self.__is_var_real=dict((i+1, is_var_code_real[idx]) for i, idx in enumerate(columns))
+        self.__labels={}
+        for i,is_real in self.__is_var_real.iteritems():
+            if not is_real:
+                #column 0 is reserved for the Code
+                self.__labels[i] = braviz_tab_data.get_labels_dict(columns[i-1])
+        print self.__labels
 

@@ -7,6 +7,7 @@ from PyQt4.QtGui import QMainWindow
 
 import braviz
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
+from braviz.interaction.qt_models import SubjectsTable
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 
 
@@ -22,6 +23,7 @@ class SubjectOverviewApp(QMainWindow):
         self.clinical_vars = initial_vars
         self.vtk_widget = QSuvjectViwerWidget(reader=self.reader)
         self.vtk_viewer = self.vtk_widget.subject_viewer
+        self.subjects_model = SubjectsTable(initial_vars)
         #Init gui
         self.ui = None
         self.setup_gui()
@@ -48,6 +50,9 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget.image_level_changed.connect(self.ui.image_level.setValue)
         self.ui.image_window.valueChanged.connect(self.vtk_viewer.set_image_window)
         self.ui.reset_window_level.pressed.connect(self.vtk_viewer.reset_window_level)
+
+        #Subject selection
+        self.ui.subjects_table.setModel(self.subjects_model)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()

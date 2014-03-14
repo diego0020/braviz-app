@@ -18,7 +18,7 @@ def calculate_ginni_index(outcome,data_frame):
     if (is_real is not None) and is_real[0]==0:
         is_nominal=True
 
-    values_data_frame=braviz_tab_data.get_data_frame(data_frame["var_name"])
+    values_data_frame=braviz_tab_data.get_data_frame_by_name(data_frame["var_name"])
     #remove columns with many NaNs
     #df2=values_data_frame.dropna(1,thresh=40)
     values_data_frame.dropna(1,thresh=40,inplace=True)
@@ -126,7 +126,7 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict):
 
     #construct pandas data frame
     var_names.append(outcome)
-    pandas_df=braviz_tab_data.get_data_frame(var_names)
+    pandas_df=braviz_tab_data.get_data_frame_by_name(var_names)
     #print pandas_df
 
     #construct r data frame

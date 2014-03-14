@@ -51,6 +51,12 @@
         </property>
         <item>
          <widget class="QTabWidget" name="tab_controls">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="minimumSize">
            <size>
             <width>200</width>
@@ -69,7 +75,26 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_6">
             <item>
-             <widget class="QTableWidget" name="tableWidget"/>
+             <widget class="QTableView" name="subjects_table">
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <attribute name="horizontalHeaderDefaultSectionSize">
+               <number>50</number>
+              </attribute>
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>true</bool>
+              </attribute>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+             </widget>
             </item>
             <item>
              <widget class="QPushButton" name="pushButton">
@@ -202,6 +227,12 @@
             </item>
             <item row="3" column="1">
              <widget class="QDoubleSpinBox" name="image_window">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="minimum">
                <double>-10000.000000000000000</double>
               </property>
@@ -225,6 +256,12 @@
             </item>
             <item row="4" column="1">
              <widget class="QDoubleSpinBox" name="image_level">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="minimum">
                <double>-10000.000000000000000</double>
               </property>
@@ -238,6 +275,12 @@
             </item>
             <item row="5" column="1">
              <widget class="QPushButton" name="reset_window_level">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>Reset</string>
               </property>
@@ -267,7 +310,14 @@
              </widget>
             </item>
             <item row="7" column="1">
-             <widget class="QSpinBox" name="slice_spin"/>
+             <widget class="QSpinBox" name="slice_spin">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
             </item>
             <item row="8" column="0" colspan="2">
              <widget class="QSlider" name="slice_slider">
@@ -296,6 +346,12 @@
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="toolTip">
                   <string>Open image in &quot;Check Registration&quot; application</string>
                  </property>
@@ -308,6 +364,12 @@
                 <widget class="QPushButton" name="pushButton_2">
                  <property name="enabled">
                   <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
                  <property name="toolTip">
                   <string>Open fMRI in fMRI viewer</string>
@@ -545,7 +607,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>600</width>
+             <width>400</width>
              <height>0</height>
             </size>
            </property>
@@ -618,7 +680,7 @@
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>40</width>
+                <width>20</width>
                 <height>20</height>
                </size>
               </property>
@@ -645,7 +707,7 @@
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>40</width>
+                <width>20</width>
                 <height>20</height>
                </size>
               </property>
@@ -669,24 +731,24 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_8">
-              <property name="text">
-               <string>Weight at birth</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <spacer name="horizontalSpacer">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>40</width>
+                <width>20</width>
                 <height>20</height>
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Weight at birth</string>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QLCDNumber" name="lcdNumber_2">

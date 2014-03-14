@@ -19,7 +19,7 @@ from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealo
 import braviz.interaction.r_functions
 
 import braviz.interaction.qt_models as braviz_models
-from braviz.readAndFilter.tabular_data import get_connection, get_data_frame
+from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -66,7 +66,7 @@ class VariableSelectDialog(QtGui.QDialog):
         cur.execute("SELECT is_real from variables where var_name=?", (var_name,))
         is_real = cur.fetchone()[0]
         self.var_name = var_name
-        data = get_data_frame(self.var_name)
+        data = get_data_frame_by_name(self.var_name)
         self.data = data
         #update scatter
         self.update_plot(data)
@@ -543,7 +543,7 @@ class RegressorSelectDialog(VariableSelectDialog):
     def update_plot(self, data):
         regressor_data = data
         if self.outcome_var is not None:
-            outcome_data = get_data_frame(self.outcome_var)
+            outcome_data = get_data_frame_by_name(self.outcome_var)
             self.matplot_widget.compute_scatter(regressor_data.get_values(), outcome_data.get_values(),
                                                 x_lab=self.var_name, y_lab=self.outcome_var,
                                                 urls=data.index.get_values())
@@ -769,7 +769,7 @@ class AnovaApp(QMainWindow):
             self.plot.make_histogram(residuals, "Residuals")
             pass
         elif var_name == "(Intercept)":
-            data = get_data_frame(self.outcome_var_name)
+            data = get_data_frame_by_name(self.outcome_var_name)
             self.plot_data_frame = data
             data_values = data[self.outcome_var_name].get_values()
 
@@ -822,7 +822,7 @@ class AnovaApp(QMainWindow):
             self.plot_color = colors_dict
             self.plot_z_var = nominal_factors[0]
             #Get Data
-            data = get_data_frame([real_factors[0], nominal_factors[0], self.outcome_var_name])
+            data = get_data_frame_by_name([real_factors[0], nominal_factors[0], self.outcome_var_name])
             self.plot_data_frame = data
             datax = []
             datay = []
@@ -852,7 +852,7 @@ class AnovaApp(QMainWindow):
             #print nlevels
             nominal_factors.sort(key=nlevels.get, reverse=True)
             #print nominal_factors
-            data = get_data_frame(nominal_factors + [self.outcome_var_name])
+            data = get_data_frame_by_name(nominal_factors + [self.outcome_var_name])
             self.plot_data_frame = data
             levels_second_factor = set(data[nominal_factors[1]].get_values())
             levels_first_factor = set(data[nominal_factors[0]].get_values())
@@ -915,7 +915,7 @@ class AnovaApp(QMainWindow):
             labels_dict = dict(labels.fetchall())
             #print labels_dict
             #get data from
-            data = get_data_frame([self.outcome_var_name, var_name])
+            data = get_data_frame_by_name([self.outcome_var_name, var_name])
             self.plot_data_frame = data
             label_nums = set(data[var_name])
             data_list = []
@@ -930,7 +930,7 @@ class AnovaApp(QMainWindow):
         else:
             #is real
             #create scatter plot
-            data = get_data_frame([self.outcome_var_name, var_name])
+            data = get_data_frame_by_name([self.outcome_var_name, var_name])
             self.plot_data_frame = data
             self.plot.compute_scatter(data[var_name].get_values(),
                                       data[self.outcome_var_name].get_values(),
