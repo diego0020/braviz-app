@@ -14,7 +14,7 @@ from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
 from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealog
 
 import braviz.interaction.qt_models as braviz_models
-from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
+from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -23,6 +23,7 @@ from matplotlib.figure import Figure
 from itertools import izip
 
 from mpltools import style
+
 style.use('ggplot')
 
 
@@ -39,7 +40,6 @@ class VariableSelectDialog(QtGui.QDialog):
         self.matplot_widget = None
         self.data = tuple()
         self.model = None
-
 
     def update_plot(self, data):
         pass
@@ -59,7 +59,6 @@ class VariableSelectDialog(QtGui.QDialog):
         self.data = data
         #update scatter
         self.update_plot(data)
-
 
         #update gui
         if is_real is not None:
@@ -117,7 +116,6 @@ class VariableSelectDialog(QtGui.QDialog):
         self.details_ui.minimum_val.setValue(mini)
         self.details_ui.optimum_val.setValue(int((medi - mini) / (maxi - mini)))
         self.update_optimum_real_value()
-
 
     def update_optimum_real_value(self, perc_value=None):
         if perc_value is None:
@@ -184,15 +182,14 @@ class VariableSelectDialog(QtGui.QDialog):
         self.matplot_widget.add_max_min_opt_lines(mini, opti, maxi)
 
     def save_meta_data(self):
-        var_type = 0  #nominal should be 1
+        var_type = 0  # nominal should be 1
         if self.ui.var_type_combo.currentIndex() == 0:
-            var_type = 1  #real should be 1
+            var_type = 1  # real should be 1
 
         #save variable type
         query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
         self.conn.execute(query, (var_type, self.var_name))
         self.conn.commit()
-
 
         #save other values
         if var_type == 1:
@@ -206,7 +203,7 @@ class VariableSelectDialog(QtGui.QDialog):
                 self.conn.execute(query,
                                   (self.var_name, self.rational["min"],
                                    self.rational["max"], self.rational["opt"])
-                )
+                                  )
             except (KeyError, ValueError):
                 pass
             else:
@@ -216,7 +213,7 @@ class VariableSelectDialog(QtGui.QDialog):
 
 
 class OutcomeSelectDialog(VariableSelectDialog):
-    def __init__(self, params_dict):
+    def __init__(self, params_dict,multiple=False):
         super(OutcomeSelectDialog, self).__init__()
         self.ui = Ui_SelectOutcomeDialog()
         self.ui.setupUi(self)
@@ -224,7 +221,8 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
         self.params_dict = params_dict
 
-        self.vars_list_model = braviz_models.VarListModel()
+        self.vars_list_model = braviz_models.VarListModel(checkeable=multiple)
+        self.model=self.vars_list_model
         self.ui.tableView.setModel(self.vars_list_model)
         self.ui.tableView.activated.connect(self.update_right_side)
 
@@ -245,6 +243,28 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.save_meta_data()
         self.params_dict["selected_outcome"] = self.var_name
         self.done(self.Accepted)
+
+
+
+class GenericVariableSelectDialog(OutcomeSelectDialog):
+    """
+    Derived from Outcome Select Dialog,
+    """
+    def __init__(self,params,multiple=False,initial_selection=None):
+        OutcomeSelectDialog.__init__(self,params,multiple=multiple)
+        self.multiple=multiple
+        self.setWindowTitle("Select Variables")
+        self.ui.select_button.setText("Accept Selection")
+        self.ui.select_button.setEnabled(True)
+        self.model.select_items(initial_selection)
+    def select_and_return(self, *args):
+        if self.multiple is True:
+            selected_names = self.model.checks_dict
+            self.params_dict["checked"]=[get_var_idx(name) for name, check in
+                                         selected_names.iteritems() if check is True]
+        OutcomeSelectDialog.select_and_return(self,*args)
+
+
 
 
 class MatplotWidget(FigureCanvas):
@@ -270,8 +290,7 @@ class MatplotWidget(FigureCanvas):
         self.mpl_connect("pick_event", self.generate_tooltip_event)
         self.setMouseTracking(True)
         self.mpl_connect('motion_notify_event', self.mouse_move_event_handler)
-        self.x_order=None
-
+        self.x_order = None
 
     def initial_text(self, message):
         if message is None:
@@ -279,7 +298,7 @@ class MatplotWidget(FigureCanvas):
         self.axes.text(0.5, 0.5, message, horizontalalignment='center',
                        verticalalignment='center', fontsize=12)
         #Remove tick marks
-        self.axes.tick_params('y', left='off',right='off', labelleft='off', labelright='off')
+        self.axes.tick_params('y', left='off', right='off', labelleft='off', labelright='off')
         self.axes.tick_params('x', top='off', bottom='off', labelbottom='off', labeltop='off')
         #Remove axes border
         for child in self.axes.get_children():
@@ -289,7 +308,7 @@ class MatplotWidget(FigureCanvas):
         for line in self.axes.xaxis.get_ticklines(minor=True) + self.axes.yaxis.get_ticklines(minor=True):
             line.set_markersize(0)
         self.draw()
-        self.x_order=None
+        self.x_order = None
 
 
     def compute_scatter(self, data, data2=None, x_lab=None, y_lab=None, colors=None, labels=None, urls=None):
@@ -316,7 +335,7 @@ class MatplotWidget(FigureCanvas):
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.xlim = self.axes.get_xlim()
-        self.x_order=None
+        self.x_order = None
 
     def add_max_min_opt_lines(self, mini, opti, maxi):
 
@@ -336,12 +355,12 @@ class MatplotWidget(FigureCanvas):
     def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims):
 
         #Sort data and labels according to median
-        x_permutation=range(len(data))
+        x_permutation = range(len(data))
         if xticks_labels is None:
-            xticks_labels=range(len(data))
-        data_labels=zip(data,xticks_labels,x_permutation)
-        data_labels.sort(key=lambda x:np.median(x[0]))
-        data,xticks_labels,x_permutation=zip(*data_labels)
+            xticks_labels = range(len(data))
+        data_labels = zip(data, xticks_labels, x_permutation)
+        data_labels.sort(key=lambda x: np.median(x[0]))
+        data, xticks_labels, x_permutation = zip(*data_labels)
         self.axes.clear()
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
         self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
@@ -359,7 +378,7 @@ class MatplotWidget(FigureCanvas):
 
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
-        self.x_order=x_permutation
+        self.x_order = x_permutation
 
     def make_linked_box_plot(self, data, xlabel, ylabel, xticks_labels, colors, top_labels, ylims):
         self.axes.clear()
@@ -367,17 +386,17 @@ class MatplotWidget(FigureCanvas):
         self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
-        x_permutation=range(len(data[0]))
-        data_join=[list(itertools.chain.from_iterable(l)) for l in zip(*data)]
-        data_order=zip(data_join,x_permutation)
-        data_order.sort(key=lambda x:np.median(x[0]))
-        _,x_permutation=zip(*data_order)
+        x_permutation = range(len(data[0]))
+        data_join = [list(itertools.chain.from_iterable(l)) for l in zip(*data)]
+        data_order = zip(data_join, x_permutation)
+        data_order.sort(key=lambda y: np.median(y[0]))
+        _, x_permutation = zip(*data_order)
 
         # self.x_order=x_permutation # at the end of method for consistency
         #sort data
-        for k,l in enumerate(data):
-            data[k]=[l[i] for i in x_permutation]
-        xticks_labels=[xticks_labels[i] for i in x_permutation]
+        for k, l in enumerate(data):
+            data[k] = [l[i] for i in x_permutation]
+        xticks_labels = [xticks_labels[i] for i in x_permutation]
 
         for d_list, col, lbl in izip(data, colors, top_labels):
             artists_dict = self.axes.boxplot(d_list, sym='D', patch_artist=False)
@@ -414,7 +433,7 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
-        self.x_order=x_permutation
+        self.x_order = x_permutation
 
     def make_histogram(self, data, xlabel):
         self.axes.clear()
@@ -424,17 +443,17 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(auto=True)
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel("Frequency")
-        self.axes.hist(data, color="#2ca25f",bins=20)
+        self.axes.hist(data, color="#2ca25f", bins=20)
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
-        self.x_order=None
+        self.x_order = None
 
     def add_subject_points(self, x_coords, y_coords, color=None, urls=None):
         #print "adding subjects"
         self.restore_region(self.back_fig)
         if self.x_order is not None:
             #labels go from 1 to n; permutation is from 0 to n-1
-            x_coords=map(lambda k:self.x_order.index(int(k)-1)+1,x_coords)
+            x_coords = map(lambda k: self.x_order.index(int(k) - 1) + 1, x_coords)
         if color is None:
             color = "black"
         collection = self.axes.scatter(x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5)
@@ -458,10 +477,10 @@ class MatplotWidget(FigureCanvas):
             ind = e.ind
             if hasattr(ind, "__iter__"):
                 ind = ind[0]
-            x,y=dx[ind],dy[ind]
+            x, y = dx[ind], dy[ind]
             # correct x position from reordering
             if self.x_order is not None:
-                x=self.x_order[int(x-1)]+1
+                x = self.x_order[int(x - 1)] + 1
             self.box_outlier_pick_signal.emit(x, y, (e.mouseevent.x, self.height() - e.mouseevent.y))
         elif type(e.artist) == matplotlib.collections.PathCollection:
             if e.artist.get_urls()[0] is None:
@@ -525,9 +544,8 @@ class RegressorSelectDialog(VariableSelectDialog):
 
         remove_action.triggered.connect(remove_item)
         menu.addAction(remove_action)
-        selected_item = menu.exec_(global_pos)
-        #print selected_item
-
+        # selected_item = menu.exec_(global_pos)
+        # print selected_item
 
     def update_plot(self, data):
         regressor_data = data
@@ -538,7 +556,6 @@ class RegressorSelectDialog(VariableSelectDialog):
                                                 urls=data.index.get_values())
         else:
             self.matplot_widget.compute_scatter(data.get_values())
-
 
     def finish_close(self):
         self.done(self.Accepted)

@@ -9,7 +9,7 @@ import braviz
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
 from braviz.interaction.qt_models import SubjectsTable
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
-
+from braviz.interaction.qt_dialogs import GenericVariableSelectDialog
 
 class SubjectOverviewApp(QMainWindow):
     def __init__(self, initial_vars=None):
@@ -53,6 +53,7 @@ class SubjectOverviewApp(QMainWindow):
 
         #Subject selection
         self.ui.subjects_table.setModel(self.subjects_model)
+        self.ui.select_subject_table_vars.pressed.connect(self.launch_subject_variable_select_dialog)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
@@ -120,7 +121,14 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_level.setValue(self.vtk_viewer.get_current_image_level())
         self.ui.image_window.setValue(self.vtk_viewer.get_current_image_window())
 
-
+    def launch_subject_variable_select_dialog(self):
+        params={}
+        dialog=GenericVariableSelectDialog(params,multiple=True,initial_selection=self.clinical_vars)
+        dialog.exec_()
+        new_selection=params["checked"]
+        self.subjects_model.set_var_columns(new_selection)
+        self.clinical_vars=new_selection
+        print "returning"
 
 def run():
     import sys

@@ -104,7 +104,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_4">
+             <widget class="QPushButton" name="select_subject_table_vars">
               <property name="text">
                <string>Select Table Columns</string>
               </property>

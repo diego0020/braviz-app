@@ -11,12 +11,17 @@ from braviz.interaction.r_functions import calculate_ginni_index
 
 
 class VarListModel(QAbstractListModel):
-    def __init__(self, outcome_var=None, parent=None):
+    def __init__(self, outcome_var=None, parent=None,checkeable=False):
         QAbstractListModel.__init__(self, parent)
         self.internal_data = []
         self.header = "Variable"
         self.update_list()
         self.outcome = outcome_var
+        self.checkeable=checkeable
+        self.checks_dict=None
+        if checkeable:
+            self.checks_dict={}
+
 
     def update_list(self):
         panda_data = braviz_tab_data.get_variables()
@@ -27,8 +32,14 @@ class VarListModel(QAbstractListModel):
 
     def data(self, QModelIndex, int_role=None):
         idx = QModelIndex.row()
-        if 0 <= idx < len(self.internal_data) and int_role == QtCore.Qt.DisplayRole:
-            return self.internal_data[idx]
+        if 0 <= idx < len(self.internal_data):
+            if int_role == QtCore.Qt.DisplayRole:
+                return self.internal_data[idx]
+            elif int_role == QtCore.Qt.CheckStateRole:
+                if self.checks_dict.get(self.internal_data[idx], False) is True:
+                    return QtCore.Qt.Checked
+                else:
+                    return QtCore.Qt.Unchecked
         else:
             return QtCore.QVariant()
 
@@ -47,6 +58,33 @@ class VarListModel(QAbstractListModel):
         self.internal_data.sort(reverse=reverse)
         self.modelReset.emit()
 
+    def flags(self, QModelIndex):
+        idx = QModelIndex.row()
+        if (QModelIndex.column()==0) and (0<=idx<len(self.internal_data)):
+            flag=QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+            if self.checkeable is True:
+                flag |= QtCore.Qt.ItemIsUserCheckable
+            return flag
+
+        else:
+            return QtCore.Qt.NoItemFlags
+
+    def setData(self, QModelIndex, QVariant, int_role=None):
+        if not int_role == QtCore.Qt.CheckStateRole:
+            return False
+        else:
+            idx=QModelIndex.row()
+            self.checks_dict[self.internal_data[idx]]=QVariant.toBool()
+            return True
+
+    def select_items_by_name(self,items_list):
+        for i in items_list:
+            self.checks_dict[i]=True
+
+    def select_items(self,items_list):
+        for i in items_list:
+            name=braviz_tab_data.get_var_name(i)
+            self.checks_dict[name]=True
 
 class VarAndGiniModel(QAbstractTableModel):
     def __init__(self, outcome_var=None, parent=None):
@@ -694,5 +732,5 @@ class SubjectsTable(QAbstractTableModel):
             if not is_real:
                 #column 0 is reserved for the Code
                 self.__labels[i] = braviz_tab_data.get_labels_dict(columns[i-1])
-        #print self.__labels
+        self.modelReset.emit()
 

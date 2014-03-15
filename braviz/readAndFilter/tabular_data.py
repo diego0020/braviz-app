@@ -114,3 +114,15 @@ def get_names_label_dict(var_name):
     cur=conn.execute("SELECT label, name FROM nom_meta NATURAL JOIN variables WHERE var_name = ?", (var_name,))
     ans_dict=dict(cur)
     return ans_dict
+
+
+def get_var_name(var_idx):
+    conn=get_connection()
+    cur=conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (var_idx,))
+    return cur.fetchone()[0]
+
+
+def get_var_idx(var_name):
+    conn=get_connection()
+    cur=conn.execute("SELECT var_idx FROM variables WHERE var_name = ?", (var_name,))
+    return cur.fetchone()[0]

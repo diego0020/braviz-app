@@ -1,5 +1,7 @@
 import os
+
 from setuptools import setup
+
 
 # Utility function to read the README file.
 # Used for the long_description.  It's nice, because now 1) we have a top level
@@ -21,5 +23,5 @@ setup(
     long_description=read('README.txt'),
     install_requires=['nibabel','colorbrewer','numpy',
                       'scipy','rdflib','httplib2','psutil',
-                      'matplotlib','PyQt4','sip','pandas'],
+                      'matplotlib','PyQt4','sip','pandas', 'mpltools'],
 )
