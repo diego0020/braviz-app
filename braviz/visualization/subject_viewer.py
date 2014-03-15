@@ -62,6 +62,13 @@ class SubjectViewer:
         self.ren.AddActor(cone_actor)
         self.ren_win.Render()
 
+
+    def change_subject(self,new_subject_img_code):
+        self.__current_subject=new_subject_img_code
+        #update image
+        self.change_image_modality(self.__current_image,self.__curent_fmri_paradigm,force_reload=True)
+
+
     def hide_image(self):
         if self.__image_plane_widget is not None:
             self.__image_plane_widget.Off()
@@ -104,10 +111,15 @@ class SubjectViewer:
         self.__image_plane_widget.On()
 
         #update image labels:
-        aparc_img = self.reader.get("APARC", self.__current_subject, format="VTK", space=self.__current_space)
-        aparc_lut = self.reader.get("APARC", self.__current_subject, lut=True)
-        self.__image_plane_widget.addLabels(aparc_img)
-        self.__image_plane_widget.setLabelsLut(aparc_lut)
+        try:
+            aparc_img = self.reader.get("APARC", self.__current_subject, format="VTK", space=self.__current_space)
+            aparc_lut = self.reader.get("APARC", self.__current_subject, lut=True)
+            self.__image_plane_widget.addLabels(aparc_img)
+            self.__image_plane_widget.setLabelsLut(aparc_lut)
+        except Exception:
+            self.hide_image()
+            raise
+
 
         if modality == "FMRI":
             mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)

@@ -3,6 +3,7 @@ from __future__ import division
 __author__ = 'Diego'
 
 import PyQt4.QtGui as QtGui
+import PyQt4.QtCore as QtCore
 from PyQt4.QtGui import QMainWindow
 
 import braviz
@@ -41,6 +42,11 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.camera_pos.activated.connect(self.position_camera)
         self.ui.space_combo.activated.connect(self.space_change)
 
+        #Subject selection
+        self.ui.subjects_table.setModel(self.subjects_model)
+        self.ui.select_subject_table_vars.pressed.connect(self.launch_subject_variable_select_dialog)
+        self.ui.subjects_table.activated.connect(self.change_subject)
+
         #image controls
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
@@ -51,15 +57,24 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_window.valueChanged.connect(self.vtk_viewer.set_image_window)
         self.ui.reset_window_level.pressed.connect(self.vtk_viewer.reset_window_level)
 
-        #Subject selection
-        self.ui.subjects_table.setModel(self.subjects_model)
-        self.ui.select_subject_table_vars.pressed.connect(self.launch_subject_variable_select_dialog)
-
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
         self.ui.vtk_frame_layout.setContentsMargins(0, 0, 0, 0)
+
+    def change_subject(self,new_subject=None):
+        if isinstance(new_subject,QtCore.QModelIndex):
+            selected_index=new_subject
+            subj_code_index=self.subjects_model.index(selected_index.row(),0)
+            new_subject=self.subjects_model.data(subj_code_index,QtCore.Qt.DisplayRole)
+        #label
+        self.ui.subject_id.setText("%s"%new_subject)
+        #image
+        try:
+            self.vtk_viewer.change_subject(new_subject)
+        except Exception:
+            self.statusBar().showMessage("Couldn't load images for subject %s"%new_subject,5000)
 
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())
