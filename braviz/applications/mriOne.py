@@ -5,27 +5,27 @@ import ttk
 import numpy as np
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
-     vtkTkRenderWindowInteractor
+    vtkTkRenderWindowInteractor
 
 import braviz
 
 
-reader=braviz.readAndFilter.kmc40AutoReader()
-img=reader.get('MRI','093',format='VTK')
+reader = braviz.readAndFilter.kmc40AutoReader()
+img = reader.get('MRI', '093', format='VTK')
 
-config=braviz.interaction.get_config(__file__)
-background= config.get_background()
+config = braviz.interaction.get_config(__file__)
+background = config.get_background()
 
 picker = vtk.vtkCellPicker()
 picker.SetTolerance(0.005)
 
 #Visualization
-ren=vtk.vtkRenderer()
-renWin=vtk.vtkRenderWindow()
+ren = vtk.vtkRenderer()
+renWin = vtk.vtkRenderWindow()
 renWin.AddRenderer(ren)
 ren.SetBackground(background)
 
-planeWidget=braviz.visualization.persistentImagePlane()
+planeWidget = braviz.visualization.persistentImagePlane()
 planeWidget.SetInputData(img)
 
 planeWidget.SetPicker(picker)
@@ -44,136 +44,137 @@ outlineActor = vtk.vtkActor()
 outlineActor.SetMapper(outlineMapper)
 ren.AddActor(outlineActor)
 
-aparc_lut=reader.get('aparc',None,lut=1)
-previous_img='MRI'
-mri_window_level=[0,0]
-mri_lut=vtk.vtkLookupTable()
-fa_lut=vtk.vtkLookupTable()
-fa_lut.SetRampToLinear ()
-fa_lut.SetTableRange(0.0,1.0)
+aparc_lut = reader.get('aparc', None, lut=1)
+previous_img = 'MRI'
+mri_window_level = [0, 0]
+mri_lut = vtk.vtkLookupTable()
+fa_lut = vtk.vtkLookupTable()
+fa_lut.SetRampToLinear()
+fa_lut.SetTableRange(0.0, 1.0)
 fa_lut.SetHueRange(0.0, 0.0)
 fa_lut.SetSaturationRange(1.0, 1.0)
 fa_lut.SetValueRange(0.0, 1.0)
 fa_lut.Build()
 
-fmri_color_int=vtk.vtkColorTransferFunction()
+fmri_color_int = vtk.vtkColorTransferFunction()
 fmri_color_int.ClampingOn()
 fmri_color_int.SetColorSpaceToRGB()
-fmri_color_int.SetRange(-7,7)
+fmri_color_int.SetRange(-7, 7)
 fmri_color_int.Build()
 #                           x   ,r   ,g   , b  
-fmri_color_int.AddRGBPoint(-7.0 ,0.0 ,1.0 ,1.0)
-fmri_color_int.AddRGBPoint(-3.0 ,0.0 ,0.0 ,0.0) 
-fmri_color_int.AddRGBPoint( 0.0 ,0.0 ,0.0 ,0.0) 
-fmri_color_int.AddRGBPoint( 3.0 ,0.0 ,0.0 ,0.0) 
-fmri_color_int.AddRGBPoint( 7.0 ,1.0 ,0.27,0.0)
+fmri_color_int.AddRGBPoint(-7.0, 0.0, 1.0, 1.0)
+fmri_color_int.AddRGBPoint(-3.0, 0.0, 0.0, 0.0)
+fmri_color_int.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
+fmri_color_int.AddRGBPoint(3.0, 0.0, 0.0, 0.0)
+fmri_color_int.AddRGBPoint(7.0, 1.0, 0.27, 0.0)
 
-fmri_lut=vtk.vtkLookupTable()
-fmri_lut.SetTableRange(-7.0,7.0)
+fmri_lut = vtk.vtkLookupTable()
+fmri_lut.SetTableRange(-7.0, 7.0)
 fmri_lut.SetNumberOfColors(101)
 fmri_lut.Build()
 for i in range(101):
-    s=-7+14*i/100
-    if False and (s<-3 or s>3):
-        color=list(fmri_color_int.GetColor(s))+[0.0]
+    s = -7 + 14 * i / 100
+    if False and (s < -3 or s > 3):
+        color = list(fmri_color_int.GetColor(s)) + [0.0]
     else:
-        color=list(fmri_color_int.GetColor(s))+[1.0]
-    fmri_lut.SetTableValue(i,color)
+        color = list(fmri_color_int.GetColor(s)) + [1.0]
+    fmri_lut.SetTableValue(i, color)
+
 
 def setSubj(event=None):
     global previous_img
     #print subj
-    subj=select_subj_frame.get()
-    if previous_img=='MRI':
+    subj = select_subj_frame.get()
+    if previous_img == 'MRI':
         planeWidget.GetWindowLevel(mri_window_level)
         mri_lut.DeepCopy(planeWidget.GetLookupTable())
-    if image_var.get() in ('Precision','Power'):
-        mri_img=reader.get('MRI',subj,format='VTK',space=space_var.get())
-        if image_var.get()=='Precision':
-            fmri_name='Precision'
+    if image_var.get() in ('Precision', 'Power'):
+        mri_img = reader.get('MRI', subj, format='VTK', space=space_var.get())
+        if image_var.get() == 'Precision':
+            fmri_name = 'Precision'
         else:
-            fmri_name='PowerGrip'
+            fmri_name = 'PowerGrip'
         try:
-            fa_img=reader.get('fMRI',subj,format='vtk',space=space_var.get(),name=fmri_name)
+            fa_img = reader.get('fMRI', subj, format='vtk', space=space_var.get(), name=fmri_name)
         except IOError:
-            print "%s not available for subject %s"%(fmri_name,subj)
-            fa_img=None
-        blend=vtk.vtkImageBlend()
-        
-        color_mapper2=vtk.vtkImageMapToColors()
+            print "%s not available for subject %s" % (fmri_name, subj)
+            fa_img = None
+        blend = vtk.vtkImageBlend()
+
+        color_mapper2 = vtk.vtkImageMapToColors()
         color_mapper2.SetInputData(fa_img)
         color_mapper2.SetLookupTable(fmri_color_int)
-
 
         if fa_img is not None:
             blend.AddInputConnection(color_mapper2.GetOutputPort())
             planeWidget.text1_value_from_img(fa_img)
-            
-        color_mapper1=vtk.vtkImageMapToWindowLevelColors()
+
+        color_mapper1 = vtk.vtkImageMapToWindowLevelColors()
         color_mapper1.SetInputData(mri_img)
         color_mapper1.SetLookupTable(mri_lut)
         #color_mapper1.SetWindow(mri_window_level[1])
         #color_mapper1.SetLevel(mri_window_level[0])
-        
+
         blend.AddInputConnection(color_mapper1.GetOutputPort())
 
-
-        blend.SetOpacity(0,.5)
-        blend.SetOpacity(1,.5)
+        blend.SetOpacity(0, .5)
+        blend.SetOpacity(1, .5)
         blend.Update()
-        img=blend.GetOutput()
+        img = blend.GetOutput()
         #img=fa_img
         #print img
     else:
-        img=reader.get(image_var.get(),subj,format='VTK',space=space_var.get())
+        img = reader.get(image_var.get(), subj, format='VTK', space=space_var.get())
         planeWidget.text1_to_std()
 
-    planeWidget.SetInputData(img)  
-    if image_var.get()=='MRI':
+    planeWidget.SetInputData(img)
+    if image_var.get() == 'MRI':
         planeWidget.SetLookupTable(mri_lut)
         planeWidget.SetWindowLevel(*mri_window_level)
         planeWidget.SetResliceInterpolateToCubic()
-    elif image_var.get()=='APARC':
+    elif image_var.get() == 'APARC':
         planeWidget.SetLookupTable(aparc_lut)
         planeWidget.SetResliceInterpolateToNearestNeighbour()
-    elif image_var.get()=='FA':
+    elif image_var.get() == 'FA':
         planeWidget.SetLookupTable(fa_lut)
         planeWidget.SetResliceInterpolateToCubic()
-    elif image_var.get() in ('Precision','Power'):
+    elif image_var.get() in ('Precision', 'Power'):
         #planeWidget.SetLookupTable(mri_lut)
         planeWidget.GetColorMap().SetLookupTable(None)
         #planeWidget.UserControlledLookupTableOff()
         planeWidget.SetResliceInterpolateToCubic()
 
-    aparc_img=reader.get('aparc',subj,format='VTK',space=space_var.get())
+    aparc_img = reader.get('aparc', subj, format='VTK', space=space_var.get())
     planeWidget.addLabels(aparc_img)
     planeWidget.setLabelsLut(aparc_lut)
     outline.SetInputData(img)
-    previous_img=image_var.get()
+    previous_img = image_var.get()
     paint_fibers()
     show_transform_grid()
     #renWin.Render() called by paint fibers
 
 
-
 #================================Fibers==============================
-fib_mapper=vtk.vtkPolyDataMapper()
-fib_actor=vtk.vtkActor()
+fib_mapper = vtk.vtkPolyDataMapper()
+fib_actor = vtk.vtkActor()
 fib_actor.SetVisibility(0)
 fib_actor.SetMapper(fib_mapper)
 ren.AddActor(fib_actor)
+
+
 def paint_fibers(event=None):
     if active_fibers.get():
-        subj=select_subj_frame.get()
-        fibers=reader.get('fibers',subj,space=space_var.get(),color=tract_var.get())
+        subj = select_subj_frame.get()
+        fibers = reader.get('fibers', subj, space=space_var.get(), color=tract_var.get())
         fib_mapper.SetInputData(fibers)
         fib_actor.SetVisibility(1)
     else:
         fib_actor.SetVisibility(0)
     renWin.Render()
 
-grid_mapper=vtk.vtkPolyDataMapper()
-grid_actor=vtk.vtkActor()
+
+grid_mapper = vtk.vtkPolyDataMapper()
+grid_actor = vtk.vtkActor()
 grid_actor.SetMapper(grid_mapper)
 ren.AddActor(grid_actor)
 grid_actor.SetVisibility(0)
@@ -189,38 +190,38 @@ def show_transform_grid(event=None):
     #get original slice index
     p1 = planeWidget.GetPoint1()
     p2 = planeWidget.GetPoint2()
-    center=(np.array(p1)+np.array(p2))/2
-    orig_images={
-        'MRI':      {'space':'world'},
-        'FA':       {'space':'world'},
-        'APARC' :   {'space':'world'},
-        'Precision':{'space':'func_Precision'} ,
-        'Power' :   {'space':'func_Power'},
+    center = (np.array(p1) + np.array(p2)) / 2
+    orig_images = {
+        'MRI': {'space': 'world'},
+        'FA': {'space': 'world'},
+        'APARC': {'space': 'world'},
+        'Precision': {'space': 'func_Precision'},
+        'Power': {'space': 'func_Power'},
     }
 
     #get orig_img
-    orig_img_desc=orig_images[image_var.get()]
-    if image_var.get() in ('Precision','Power'):
+    orig_img_desc = orig_images[image_var.get()]
+    if image_var.get() in ('Precision', 'Power'):
         orig_img = reader.get('fmri', subj, format='vtk', name=image_var.get(), **orig_img_desc)
     else:
-        orig_img=reader.get(image_var.get(),subj,format='vtk',**orig_img_desc )
+        orig_img = reader.get(image_var.get(), subj, format='vtk', **orig_img_desc)
     #target_space -> world
     orig_center = reader.transformPointsToSpace(center, space_var.get(), subj, True)
     #world-> orig_space
-    orig_center=reader.transformPointsToSpace(orig_center, orig_img_desc['space'], subj, False)
+    orig_center = reader.transformPointsToSpace(orig_center, orig_img_desc['space'], subj, False)
     #to image coordinates
-    orig_img_center=(np.array(orig_center)-orig_img.GetOrigin())/orig_img.GetSpacing()
-    orig_slice=round(orig_img_center[0])
+    orig_img_center = (np.array(orig_center) - orig_img.GetOrigin()) / orig_img.GetSpacing()
+    orig_slice = round(orig_img_center[0])
     print orig_slice
     #get grid
-    grid=braviz.visualization.build_grid(orig_img,orig_slice,5)
+    grid = braviz.visualization.build_grid(orig_img, orig_slice, 5)
     #transform to current space
     #orig_space -> world
     grid = reader.transformPointsToSpace(grid, orig_img_desc['space'], subj, True)
     #world -> current space
     grid = reader.transformPointsToSpace(grid, space_var.get(), subj, False)
     if space_var.get().lower() == 'dartel':
-        grid=braviz.visualization.remove_nan_from_grid(grid)
+        grid = braviz.visualization.remove_nan_from_grid(grid)
     #paint grid
     grid_mapper.SetInputData(grid)
     grid_actor.SetVisibility(1)
@@ -235,56 +236,57 @@ root.withdraw()
 top = tk.Toplevel(root)
 top.title('BraViz-Mri')
 
-control_frame = tk.Frame(top,width=100)
+control_frame = tk.Frame(top, width=100)
 
-select_subj_frame=braviz.interaction.subjects_list(reader,setSubj,control_frame,text='Subject',padx=10,pady=5,height='100')
+select_subj_frame = braviz.interaction.subjects_list(reader, setSubj, control_frame, text='Subject', padx=10, pady=5,
+                                                     height='100')
 select_subj_frame.pack(side='top')
 
-
-coordinates_label=tk.Label(control_frame,text='Coordinates:',pady=10)
+coordinates_label = tk.Label(control_frame, text='Coordinates:', pady=10)
 coordinates_label.pack(side='top')
-space_var=tk.StringVar()
-space_sel=ttk.Combobox(control_frame,textvariable=space_var)
-space_sel['values']=('World','Talairach','Dartel')
-space_sel['state']='readonly'
+space_var = tk.StringVar()
+space_sel = ttk.Combobox(control_frame, textvariable=space_var)
+space_sel['values'] = ('World', 'Talairach', 'Dartel')
+space_sel['state'] = 'readonly'
 space_sel.set('World')
 space_sel.pack(side='top')
-space_sel.bind('<<ComboboxSelected>>',setSubj)
+space_sel.bind('<<ComboboxSelected>>', setSubj)
 
-select_show_warp_grid_status=tk.BooleanVar()
+select_show_warp_grid_status = tk.BooleanVar()
 select_show_warp_grid_status.set(False)
-select_show_warp_grid=tk.Checkbutton(control_frame,text="Show tranform grid",variable=select_show_warp_grid_status,command=show_transform_grid)
+select_show_warp_grid = tk.Checkbutton(control_frame, text="Show tranform grid", variable=select_show_warp_grid_status,
+                                       command=show_transform_grid)
 select_show_warp_grid.pack(side='top')
 
-image_label=tk.Label(control_frame,text='Image:',pady=10)
+image_label = tk.Label(control_frame, text='Image:', pady=10)
 image_label.pack(side='top')
-image_var=tk.StringVar()
-image_sel=ttk.Combobox(control_frame,textvariable=image_var)
-image_sel['values']=('MRI','FA','APARC','Precision','Power')
-image_sel['state']='readonly'
+image_var = tk.StringVar()
+image_sel = ttk.Combobox(control_frame, textvariable=image_var)
+image_sel['values'] = ('MRI', 'FA', 'APARC', 'Precision', 'Power')
+image_sel['state'] = 'readonly'
 image_sel.set('MRI')
 image_sel.pack(side='top')
-image_sel.bind('<<ComboboxSelected>>',setSubj)
+image_sel.bind('<<ComboboxSelected>>', setSubj)
 
 
 #---------------------------------------------------------
-separator=ttk.Separator(control_frame,orient='horizontal')
-separator.pack(side='top',fill='x',pady=20)
+separator = ttk.Separator(control_frame, orient='horizontal')
+separator.pack(side='top', fill='x', pady=20)
 
-active_fibers=tk.BooleanVar()
-add_fibers=tk.Checkbutton(control_frame,text='Show tractography',pady=10,variable=active_fibers,command=paint_fibers)
+active_fibers = tk.BooleanVar()
+add_fibers = tk.Checkbutton(control_frame, text='Show tractography', pady=10, variable=active_fibers,
+                            command=paint_fibers)
 add_fibers.pack(side='top')
 
-
-tract_label=tk.Label(control_frame,text='Color:',pady=10)
+tract_label = tk.Label(control_frame, text='Color:', pady=10)
 tract_label.pack(side='top')
-tract_var=tk.StringVar()
-tract_sel=ttk.Combobox(control_frame,textvariable=tract_var)
-tract_sel['values']=('Orient','FA','Curv','Rand','y')
-tract_sel['state']='readonly'
+tract_var = tk.StringVar()
+tract_sel = ttk.Combobox(control_frame, textvariable=tract_var)
+tract_sel['values'] = ('Orient', 'FA', 'Curv', 'Rand', 'y')
+tract_sel['state'] = 'readonly'
 tract_sel.set('orient')
 tract_sel.pack(side='top')
-tract_sel.bind('<<ComboboxSelected>>',paint_fibers)
+tract_sel.bind('<<ComboboxSelected>>', paint_fibers)
 
 
 #=====================================================================
@@ -292,12 +294,14 @@ display_frame = tk.Frame(top)
 control_frame.pack(side="left", anchor="n", fill="y", expand="false")
 display_frame.pack(side="left", anchor="n", fill="both", expand="true")
 renderer_frame = tk.Frame(display_frame)
-renderer_frame.pack(padx=3, pady=3,side="left", 
+renderer_frame.pack(padx=3, pady=3, side="left",
                     fill="both", expand="true")
 
 render_widget = vtkTkRenderWindowInteractor(renderer_frame,
-                                            rw=renWin,width=600,
+                                            rw=renWin, width=600,
                                             height=600)
+
+
 def clean_exit():
     global renWin
     print "adios"
@@ -306,13 +310,15 @@ def clean_exit():
     render_widget.destroy()
     root.quit()
     root.destroy()
+
+
 top.protocol("WM_DELETE_WINDOW", clean_exit)
 
-render_widget.pack(fill='both', expand='true')                                            
+render_widget.pack(fill='both', expand='true')
 #display_frame.pack(side="top", anchor="n", fill="both", expand="true")
 iact = render_widget.GetRenderWindow().GetInteractor()
-custom_iact_style=config.get_interaction_style()
-iact_style=getattr(vtk,custom_iact_style)()
+custom_iact_style = config.get_interaction_style()
+iact_style = getattr(vtk, custom_iact_style)()
 iact.SetInteractorStyle(iact_style)
 planeWidget.SetInteractor(iact)
 planeWidget.On()

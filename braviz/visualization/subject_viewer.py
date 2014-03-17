@@ -38,6 +38,8 @@ class SubjectViewer:
         self.__current_image = None
         self.__current_image_orientation = 0
         self.__curent_fmri_paradigm = None
+        self.__current_mri_window_level=None
+        self.__current_fa_window_level=None
 
         #internal data
         self.__image_plane_widget = None
@@ -83,6 +85,10 @@ class SubjectViewer:
         self.__image_plane_widget.On()
         self.__mri_lut = vtk.vtkLookupTable()
         self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
+        self.__current_mri_window_level=[0,0]
+        self.__current_fa_window_level=[0,0]
+        self.reset_window_level()
+        self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
 
         def slice_change_handler(source, event):
             new_slice = self.__image_plane_widget.GetSliceIndex()
@@ -101,11 +107,19 @@ class SubjectViewer:
         in the case of fMRI modality should be fMRI and paradigm the name of the paradigm"""
 
         modality = modality.upper()
+        if self.__image_plane_widget is not None:
+            if self.__current_image=="MRI":
+                self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
+            elif self.__current_image=="FA":
+                self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
+
+
         if (modality == self.__current_image) and (paradigm == self.__curent_fmri_paradigm) and \
                 self.__image_plane_widget.GetEnabled() and not force_reload:
             #nothing to do
             return
 
+        self.__current_image = modality
         if self.__image_plane_widget is None:
             self.create_image_plane_widget()
         self.__image_plane_widget.On()
@@ -151,6 +165,7 @@ class SubjectViewer:
             lut = self.__mri_lut
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
+            self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
         elif modality == "FA":
             lut = self.reader.get("FA", self.__current_subject, lut=True)
             self.__image_plane_widget.SetLookupTable(lut)
@@ -160,7 +175,7 @@ class SubjectViewer:
             self.__image_plane_widget.SetLookupTable(lut)
             #Important:
             self.__image_plane_widget.SetResliceInterpolateToNearestNeighbour()
-        self.__current_image = modality
+        #self.__current_image = modality
         self.ren_win.Render()
 
     def change_image_orientation(self, orientation):
@@ -210,8 +225,17 @@ class SubjectViewer:
     def reset_window_level(self):
         if self.__image_plane_widget is None:
             return
-        self.__image_plane_widget.SetWindowLevel(3000,1500)
-        self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
+        if self.__current_image == "MRI":
+            self.__image_plane_widget.SetWindowLevel(3000,1500)
+            self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
+            self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
+        elif self.__current_image == "FA":
+            self.__image_plane_widget.SetWindowLevel(0.75,0.5)
+            self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
+            self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
+        else:
+            return
+
 
 
     def change_current_space(self, new_space):
