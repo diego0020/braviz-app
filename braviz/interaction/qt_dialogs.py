@@ -588,3 +588,32 @@ class InteractionSelectDialog(QtGui.QDialog):
             for i in itertools.combinations(rows, r):
                 self.full_model.add_interactor(i)
 
+class ContextVariablesPanel(QtGui.QGroupBox):
+    def __init__(self,parent,title):
+        super(ContextVariablesPanel,self).__init__(self,parent)
+        self.setTitle(title)
+        self.setToolTip("Right click to select context variables, and to make them editable")
+
+        self.layout=QtGui.QHBoxLayout()
+        self.setLayout(self.layout)
+
+        # self.context_frame = QtGui.QGroupBox(self.splitter_2)
+        # sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Maximum)
+        # sizePolicy.setHorizontalStretch(0)
+        # sizePolicy.setVerticalStretch(0)
+        # sizePolicy.setHeightForWidth(self.context_frame.sizePolicy().hasHeightForWidth())
+        # self.context_frame.setSizePolicy(sizePolicy)
+        # self.context_frame.setMaximumSize(QtCore.QSize(16777215, 56))
+        # self.context_frame.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        # self.context_frame.setObjectName(_fromUtf8("context_frame"))
+        # self.context_frame.setToolTip(_translate("subject_overview", "Right click to select context variables, and to make them editable", None))
+        # self.context_frame.setTitle(_translate("subject_overview", "Context", None))
+
+
+        #internal variables
+        self.__context_variables=[]
+        self.__labels_dict={}
+        self.__context_values=[]
+        self.__context_labels=[]
+        self.__values_widgets=[]
+

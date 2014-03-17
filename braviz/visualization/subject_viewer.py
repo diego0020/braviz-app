@@ -38,8 +38,8 @@ class SubjectViewer:
         self.__current_image = None
         self.__current_image_orientation = 0
         self.__curent_fmri_paradigm = None
-        self.__current_mri_window_level=None
-        self.__current_fa_window_level=None
+        self.__current_mri_window_level = None
+        self.__current_fa_window_level = None
 
         #internal data
         self.__image_plane_widget = None
@@ -64,12 +64,10 @@ class SubjectViewer:
         self.ren.AddActor(cone_actor)
         self.ren_win.Render()
 
-
-    def change_subject(self,new_subject_img_code):
-        self.__current_subject=new_subject_img_code
+    def change_subject(self, new_subject_img_code):
+        self.__current_subject = new_subject_img_code
         #update image
-        self.change_image_modality(self.__current_image,self.__curent_fmri_paradigm,force_reload=True)
-
+        self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
 
     def hide_image(self):
         if self.__image_plane_widget is not None:
@@ -86,7 +84,6 @@ class SubjectViewer:
         self.__mri_lut = vtk.vtkLookupTable()
         self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
 
-
         def slice_change_handler(source, event):
             new_slice = self.__image_plane_widget.GetSliceIndex()
             self.__widget.slice_change_handle(new_slice)
@@ -96,7 +93,7 @@ class SubjectViewer:
             self.__widget.window_level_change_handle(window, level)
 
         self.__image_plane_widget.AddObserver(self.__image_plane_widget.slice_change_event, slice_change_handler)
-        self.__image_plane_widget.AddObserver("WindowLevelEvent",detect_window_level_event)
+        self.__image_plane_widget.AddObserver("WindowLevelEvent", detect_window_level_event)
 
     def change_image_modality(self, modality, paradigm=None, force_reload=False):
         """Changes the modality of the current image
@@ -105,11 +102,10 @@ class SubjectViewer:
 
         modality = modality.upper()
         if self.__image_plane_widget is not None:
-            if self.__current_image=="MRI":
+            if self.__current_image == "MRI":
                 self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
-            elif self.__current_image=="FA":
+            elif self.__current_image == "FA":
                 self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
-
 
         if (modality == self.__current_image) and (paradigm == self.__curent_fmri_paradigm) and \
                 self.__image_plane_widget.GetEnabled() and not force_reload:
@@ -130,7 +126,6 @@ class SubjectViewer:
         except Exception:
             self.hide_image()
             raise
-
 
         if modality == "FMRI":
             mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)
@@ -163,7 +158,7 @@ class SubjectViewer:
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             if self.__current_mri_window_level is None:
-                self.__current_mri_window_level=[0,0]
+                self.__current_mri_window_level = [0, 0]
                 self.reset_window_level()
             self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
         elif modality == "FA":
@@ -171,7 +166,7 @@ class SubjectViewer:
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             if self.__current_fa_window_level is None:
-                self.__current_fa_window_level=[0,0]
+                self.__current_fa_window_level = [0, 0]
                 self.reset_window_level()
             self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
         elif modality == "APARC":
@@ -204,7 +199,7 @@ class SubjectViewer:
             return 0
         return self.__image_plane_widget.GetSliceIndex()
 
-    def set_image_slice(self,new_slice):
+    def set_image_slice(self, new_slice):
         if self.__image_plane_widget is None:
             return
         self.__image_plane_widget.SetSliceIndex(new_slice)
@@ -216,31 +211,29 @@ class SubjectViewer:
     def get_current_image_level(self):
         return self.__image_plane_widget.GetLevel()
 
-    def set_image_window(self,new_window):
+    def set_image_window(self, new_window):
         if self.__image_plane_widget is None:
             return
-        self.__image_plane_widget.SetWindowLevel(new_window,self.get_current_image_level())
+        self.__image_plane_widget.SetWindowLevel(new_window, self.get_current_image_level())
 
-    def set_image_level(self,new_level):
+    def set_image_level(self, new_level):
         if self.__image_plane_widget is None:
             return
-        self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(),new_level)
+        self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(), new_level)
 
     def reset_window_level(self):
         if self.__image_plane_widget is None:
             return
         if self.__current_image == "MRI":
-            self.__image_plane_widget.SetWindowLevel(3000,1500)
+            self.__image_plane_widget.SetWindowLevel(3000, 1500)
             self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
         elif self.__current_image == "FA":
-            self.__image_plane_widget.SetWindowLevel(1.20,0.6)
+            self.__image_plane_widget.SetWindowLevel(1.20, 0.6)
             self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
         else:
             return
-
-
 
     def change_current_space(self, new_space):
         if self.__current_space == new_space:
@@ -288,6 +281,7 @@ class SubjectViewer:
         print cam1.GetPosition()
         print "viewUp: ",
         print cam1.GetViewUp()
+
 
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)

@@ -64,7 +64,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="subjects_tab">
            <attribute name="title">
@@ -81,6 +81,9 @@
               </property>
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="textElideMode">
+               <enum>Qt::ElideRight</enum>
               </property>
               <property name="sortingEnabled">
                <bool>true</bool>
@@ -648,6 +651,9 @@
            </property>
            <property name="toolTip">
             <string>Right click to select context variables, and to make them editable</string>
+           </property>
+           <property name="locale">
+            <locale language="English" country="UnitedStates"/>
            </property>
            <property name="title">
             <string>Context</string>
