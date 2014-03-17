@@ -83,10 +83,6 @@ class SubjectOverviewApp(QMainWindow):
         #context view
         self.context_frame=ContextVariablesPanel(self.ui.splitter_2,"Context")
 
-
-    def add_context_variable_widgets(self):
-        pass
-
     def change_subject(self, new_subject=None):
         if isinstance(new_subject, QtCore.QModelIndex):
             selected_index = new_subject

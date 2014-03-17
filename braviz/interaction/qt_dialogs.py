@@ -18,6 +18,7 @@ from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_
 from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
 from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
 from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealog
+from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariablesDialog
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
@@ -96,14 +97,14 @@ class VariableSelectDialog(QtGui.QDialog):
         if layout is None:
             return
         for i in reversed(xrange(layout.count())):
-            item = layout.itemAt(i)
+            item = layout.takeAt(i)
             if isinstance(item, QtGui.QWidgetItem):
-                item.widget().close()
+                item.widget().deleteLater()
             elif isinstance(item, QtGui.QSpacerItem):
                 pass
             else:
                 self.clearLayout(item.layout())
-            layout.removeItem(item)
+
         layout.deleteLater()
 
     def guess_max_min(self):
@@ -455,6 +456,7 @@ class MatplotWidget(FigureCanvas):
         self.x_order = None
 
     def add_subject_points(self, x_coords, y_coords, color=None, urls=None):
+        #TODO Change to some permanent draw, No blit
         #print "adding subjects"
         self.restore_region(self.back_fig)
         if self.x_order is not None:
@@ -550,7 +552,7 @@ class RegressorSelectDialog(VariableSelectDialog):
 
         remove_action.triggered.connect(remove_item)
         menu.addAction(remove_action)
-        # selected_item = menu.exec_(global_pos)
+        selected_item = menu.exec_(global_pos)
         # print selected_item
 
     def update_plot(self, data):
@@ -595,18 +597,83 @@ class InteractionSelectDialog(QtGui.QDialog):
                 self.full_model.add_interactor(i)
 
 
+class ContextVariablesSelectDialog(VariableSelectDialog):
+    def __init__(self, variables_list=None,current_subject=None):
+        super(ContextVariablesSelectDialog, self).__init__()
+        self.current_subject=current_subject
+        self.ui = Ui_ContextVariablesDialog()
+        self.ui.setupUi(self)
+        self.vars_model = braviz_models.VarListModel(checkeable=False)
+        self.ui.tableView.setModel(self.vars_model)
+        self.finish_ui_setup()
+        self.ui.tableView.activated.connect(self.update_right_side)
+        self.ui.add_button.pressed.connect(self.add_variable)
+        self.current_variables_model = braviz_models.ContextVariablesModel(context_vars_list=variables_list)
+        self.ui.current_variables.setModel(self.current_variables_model)
+        self.ui.current_variables.customContextMenuRequested.connect(self.show_context_menu)
+        self.ui.done_button.pressed.connect(self.finish_close)
+        self.jitter=None
+        self.variable_list=variables_list
+        print "pescado"
+
+    def update_right_side(self, name=None):
+        curr_idx = self.ui.tableView.currentIndex()
+        idx2 = self.vars_model.index(curr_idx.row(), 0)
+        var_name = self.vars_model.data(idx2, QtCore.Qt.DisplayRole)
+        self.ui.add_button.setEnabled(True)
+        super(ContextVariablesSelectDialog, self).update_right_side(var_name)
+
+    def add_variable(self):
+        var_idx=get_var_idx(self.var_name)
+        self.current_variables_model.add_variable(var_idx)
+
+    def show_context_menu(self, pos):
+        global_pos = self.ui.current_variables.mapToGlobal(pos)
+        selection = self.ui.current_variables.currentIndex()
+        remove_action = QtGui.QAction("Remove", None)
+        menu = QtGui.QMenu()
+        menu.addAction(remove_action)
+
+        def remove_item(*args):
+            self.current_variables_model.removeRows(selection.row(), 1)
+
+        remove_action.triggered.connect(remove_item)
+        menu.addAction(remove_action)
+        selected_item = menu.exec_(global_pos)
+        # print selected_item
+
+    def update_plot(self, data):
+        self.jitter= np.random.random(len(data))
+        data_values=data.get_values()
+        self.matplot_widget.compute_scatter(data_values,self.jitter)
+        if self.current_subject is not None:
+            subj_index=data.index.get_loc(int(self.current_subject))
+            self.matplot_widget.add_subject_points((data_values[subj_index]), (self.jitter[subj_index],),
+                                                   urls=(self.current_subject,))
+
+
+
+    def finish_close(self):
+        new_list = self.current_variables_model.get_variables()
+        while len(self.variable_list)>0:
+            self.variable_list.pop()
+        self.variable_list.extend(new_list)
+        self.done(self.Accepted)
+
+
 class ContextVariablesPanel(QtGui.QGroupBox):
-    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initia_subject=None):
+    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initial_subject=None):
         super(ContextVariablesPanel, self).__init__(parent)
         self.setTitle(title)
         self.setToolTip("Right click to select context variables, and to make them editable")
-
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.layout = QtGui.QHBoxLayout(self)
         self.setLayout(self.layout)
-        test_button = QtGui.QPushButton()
-        test_button.setText("Hola")
-        self.layout.addWidget(test_button)
-        self.layout.setContentsMargins(2, 2, 2, 2)
+        #test_button = QtGui.QPushButton()
+        #test_button.setText("Hola")
+        #self.layout.addWidget(test_button)
+        self.layout.setContentsMargins(7, 2, 7, 2)
+        self.customContextMenuRequested.connect(self.create_context_menu)
 
         #size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Maximum)
         #size_policy.setHorizontalStretch(0)
@@ -627,6 +694,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         self.__internal_df = None
         self.__curent_subject = None
         self.set_variables(initial_variable_idxs)
+        if initial_subject is not None:
+            self.set_subject(initial_subject)
 
     def set_variables(self, variables):
         self.__context_variable_codes = list(variables)
@@ -642,7 +711,9 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         #clear layout
         for i in xrange(self.layout.count() - 1, -1, -1):
             w = self.layout.takeAt(i)
-            w.widget().deleteLater()
+            wgt = w.widget()
+            if wgt is not None:
+                wgt.deleteLater()
 
         self.__context_labels = []
         self.__values_widgets = []
@@ -671,6 +742,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             font = QtGui.QFont()
             font.setPointSize(11)
             value_widget.setFont(font)
+            value_widget.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+            value_widget.setCursor(QtCore.Qt.IBeamCursor)
             #calculate maximum width
             if is_variable_nominal(idx):
                 longest = max(self.__labels_dict[idx].itervalues(), key=len)
@@ -701,6 +774,26 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                 value_widget.setText(label)
             else:
                 value_widget.setText("%s" % value)
+        self.__curent_subject = subject_id
+
+    def create_context_menu(self,pos):
+        global_pos = self.mapToGlobal(pos)
+        change_action=QtGui.QAction("Change Variables", None)
+        menu = QtGui.QMenu()
+        menu.addAction(change_action)
+
+        def change_variables(*args):
+            print "hola"
+            context_change_dialog=ContextVariablesSelectDialog(current_subject=self.__curent_subject,
+                                                               variables_list=self.__context_variable_codes)
+            context_change_dialog.exec_()
+            self.reset_internal_widgets()
+
+        change_action.triggered.connect(change_variables)
+        menu.addAction(change_action)
+        menu.exec_(global_pos)
+
+
 
 
 

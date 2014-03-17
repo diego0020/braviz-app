@@ -35,7 +35,7 @@ class VarListModel(QAbstractListModel):
         if 0 <= idx < len(self.internal_data):
             if int_role == QtCore.Qt.DisplayRole:
                 return self.internal_data[idx]
-            elif int_role == QtCore.Qt.CheckStateRole:
+            elif (self.checkeable is True) and (int_role == QtCore.Qt.CheckStateRole):
                 if self.checks_dict.get(self.internal_data[idx], False) is True:
                     return QtCore.Qt.Checked
                 else:
@@ -499,9 +499,9 @@ class AnovaResultsModel(QAbstractTableModel):
         return result
 
 
-class sampleTree(QAbstractItemModel):
+class SampleTree(QAbstractItemModel):
     def __init__(self, columns=None):
-        super(sampleTree, self).__init__()
+        super(SampleTree, self).__init__()
         if columns is None:
             columns = ["lat", "UBIC3", "GENERO"]
         self.data_aspects = columns
@@ -734,3 +734,91 @@ class SubjectsTable(QAbstractTableModel):
                 self.__labels[i] = braviz_tab_data.get_labels_dict(columns[i-1])
         self.modelReset.emit()
 
+class ContextVariablesModel(QAbstractTableModel):
+    def __init__(self, context_vars_list=None, parent=None):
+        QAbstractTableModel.__init__(self, parent)
+        self.data_type_dict = dict()
+        self.conn = braviz_tab_data.get_connection()
+        if context_vars_list is not None:
+            self.data_frame = pd.DataFrame(
+                [(braviz_tab_data.get_var_name(idx),self.get_type(idx)) for idx in context_vars_list],
+                columns=["variable","Type"],index=context_vars_list)
+        else:
+            self.data_frame = pd.DataFrame(tuple(), columns=["variable","Type"])
+
+
+        self.headers_dict={0: "Variable", 1: "Type", 2:"Editable"}
+
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.data_frame)
+
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return 3
+
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+
+        if Qt_Orientation != QtCore.Qt.Horizontal:
+            return QtCore.QVariant()
+        if int_role == QtCore.Qt.DisplayRole:
+            return self.headers_dict.get(p_int,QtCore.QVariant())
+        return QtCore.QVariant()
+
+    def data(self, QModelIndex, int_role=None):
+        line = QModelIndex.row()
+        col = QModelIndex.column()
+        if (int_role == QtCore.Qt.CheckStateRole) and (col==2):
+            return QtCore.Qt.Unchecked
+
+        if not (int_role == QtCore.Qt.DisplayRole):
+            return QtCore.QVariant()
+
+        if (0 <= line < self.rowCount()) and (0<=col<2):
+            return self.data_frame.iloc[line,col]
+        else:
+            return QtCore.QVariant()
+
+    def sort(self, p_int, Qt_SortOrder_order=None):
+        #We will be using type2 or type3 Sums of Squares, and therefore order is not important
+        reverse = True
+        if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
+            reverse = False
+        if p_int == 0:
+            self.data_frame.sort("variable", ascending=reverse, inplace=True)
+        elif p_int == 1:
+            self.data_frame.sort("Type", ascending=reverse, inplace=True)
+        self.modelReset.emit()
+
+    def get_type(self, var_idx):
+        data_type=self.data_type_dict.get(var_idx)
+        if data_type is None:
+            if braviz_tab_data.is_variable_nominal(var_idx):
+                data_type = "Nominal"
+            else:
+                data_type = "Real"
+            self.data_type_dict[var_idx] = data_type
+        return data_type
+
+    def add_variable(self, var_idx):
+        if var_idx in self.data_frame.index:
+            #ignore duplicates
+            return
+
+        self.beginInsertRows(QtCore.QModelIndex(), len(self.data_frame), len(self.data_frame))
+        self.data_frame=self.data_frame.append(pd.DataFrame([(braviz_tab_data.get_var_name(var_idx), self.get_type(var_idx) )],
+                                                              columns=["variable","Type"],
+                                                              index=(var_idx,)))
+        self.endInsertRows()
+
+
+    def removeRows(self, row, count, QModelIndex_parent=None, *args, **kwargs):
+        #self.layoutAboutToBeChanged.emit()
+        self.beginRemoveRows(QtCore.QModelIndex(), row, row + count - 1)
+        indexes = list(self.data_frame.index)
+        for i in xrange(count):
+            self.data_frame.drop(indexes[row+i],inplace=True)
+        self.endRemoveRows()
+        self.modelReset.emit()
+
+    def get_variables(self):
+        return self.data_frame.index.tolist()

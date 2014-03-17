@@ -68,7 +68,7 @@ def get_data_frame_by_index(columns, reader=None):
 
 def is_variable_real(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT is_real FROM variables WHERE var_idx = ?", (var_idx,))
+    cur = conn.execute("SELECT is_real FROM variables WHERE var_idx = ?", (str(var_idx),))
     return False if cur.fetchone()[0] == 0 else 1
 
 
@@ -104,35 +104,35 @@ def are_variables_names_nominal(var_names):
 
 def get_labels_dict(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT label, name FROM nom_meta WHERE var_idx = ?", (var_idx,))
+    cur = conn.execute("SELECT label, name FROM nom_meta WHERE var_idx = ?", (str(var_idx),))
     ans_dict = dict(cur)
     return ans_dict
 
 
 def get_names_label_dict(var_name):
     conn = get_connection()
-    cur = conn.execute("SELECT label, name FROM nom_meta NATURAL JOIN variables WHERE var_name = ?", (var_name,))
+    cur = conn.execute("SELECT label, name FROM nom_meta NATURAL JOIN variables WHERE var_name = ?", (str(var_name),))
     ans_dict = dict(cur)
     return ans_dict
 
 
 def get_var_name(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (var_idx,))
+    cur = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (str(var_idx),))
     return cur.fetchone()[0]
 
 
 def get_var_idx(var_name):
     conn = get_connection()
-    cur = conn.execute("SELECT var_idx FROM variables WHERE var_name = ?", (var_name,))
+    cur = conn.execute("SELECT var_idx FROM variables WHERE var_name = ?", (str(var_name),))
     return cur.fetchone()[0]
 
 
 def get_maximum_value(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT max_val FROM ratio_meta WHERE var_idx = ?", (var_idx,))
+    cur = conn.execute("SELECT max_val FROM ratio_meta WHERE var_idx = ?", (str(var_idx),))
     if cur.rowcount < 1:
         q = """select MAX(value) from (select * from var_values where value != "nan")
         where var_idx = ? group by var_idx"""
-        cur = conn.execute(q, (var_idx,))
+        cur = conn.execute(q, (str(var_idx),))
     return cur.fetchone()[0]

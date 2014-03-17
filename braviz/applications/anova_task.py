@@ -33,7 +33,7 @@ class AnovaApp(QMainWindow):
         self.anova = None
         self.regressors_model = braviz_models.AnovaRegressorsModel()
         self.result_model = braviz_models.AnovaResultsModel()
-        self.sample_model = braviz_models.sampleTree()
+        self.sample_model = braviz_models.SampleTree()
         self.plot = None
         self.plot_data_frame = None
         self.plot_x_var = None
