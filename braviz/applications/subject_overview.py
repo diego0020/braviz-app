@@ -10,7 +10,7 @@ import braviz
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
 from braviz.interaction.qt_models import SubjectsTable
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
-from braviz.interaction.qt_dialogs import GenericVariableSelectDialog
+from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel
 
 
 class SubjectOverviewApp(QMainWindow):
@@ -19,6 +19,7 @@ class SubjectOverviewApp(QMainWindow):
         QMainWindow.__init__(self)
         #Internal initialization
         self.reader = braviz.readAndFilter.kmc40AutoReader()
+        self.__curent_subject = None
         if initial_vars is None:
             #GENRE Weight at birth VCIIQ
             initial_vars = (11, 17, 1)
@@ -26,18 +27,28 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget = QSuvjectViwerWidget(reader=self.reader)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
+
+        #context panel
+        self.context_frame=None
+        self.__context_variables=[11, 6, 17, 1]
+
         #Init gui
         self.ui = None
         self.setup_gui()
 
-        #load initial image
-        self.image_modality_change()
+        #select first subject
+        index=self.subjects_model.index(0,0)
+        self.__curent_subject = self.subjects_model.data(index,QtCore.Qt.DisplayRole)
+        #load initial
+        self.vtk_viewer.change_image_modality("MRI")
+        self.change_subject(self.__curent_subject)
         #self.vtk_viewer.show_cone()
 
-        #context panel
-        self.__context_variables=[11, 6, 17, 1]
-        self.__context_values
-        self.__context_labels_dict
+
+
+
+
+
 
     def setup_gui(self):
         self.ui = Ui_subject_overview()
@@ -69,6 +80,10 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
         self.ui.vtk_frame_layout.setContentsMargins(0, 0, 0, 0)
 
+        #context view
+        self.context_frame=ContextVariablesPanel(self.ui.splitter_2,"Context")
+
+
     def add_context_variable_widgets(self):
         pass
 
@@ -78,12 +93,17 @@ class SubjectOverviewApp(QMainWindow):
             subj_code_index = self.subjects_model.index(selected_index.row(), 0)
             new_subject = self.subjects_model.data(subj_code_index, QtCore.Qt.DisplayRole)
         #label
+        self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
         #image
         try:
             self.vtk_viewer.change_subject(new_subject)
         except Exception:
             self.statusBar().showMessage("Couldn't load images for subject %s" % new_subject, 5000)
+            #raise
+
+        #context
+        self.context_frame.set_subject(new_subject)
 
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())

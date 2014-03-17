@@ -33,7 +33,7 @@ class SubjectViewer:
         self.reader = reader
 
         #state
-        self.__current_subject = "093"
+        self.__current_subject = None
         self.__current_space = "world"
         self.__current_image = None
         self.__current_image_orientation = 0
@@ -65,7 +65,10 @@ class SubjectViewer:
         self.ren_win.Render()
 
     def change_subject(self, new_subject_img_code):
+        if len(new_subject_img_code)<3:
+            new_subject_img_code="0"+new_subject_img_code
         self.__current_subject = new_subject_img_code
+
         #update image
         self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
 
@@ -73,6 +76,11 @@ class SubjectViewer:
         if self.__image_plane_widget is not None:
             self.__image_plane_widget.Off()
             #self.image_plane_widget.SetVisibility(0)
+
+    def show_image(self):
+        if self.__image_plane_widget is not None:
+            self.__image_plane_widget.On()
+        self.change_image_modality(self.__current_image,self.__curent_fmri_paradigm,True)
 
     def create_image_plane_widget(self):
         if self.__image_plane_widget is not None:
@@ -101,14 +109,8 @@ class SubjectViewer:
         in the case of fMRI modality should be fMRI and paradigm the name of the paradigm"""
 
         modality = modality.upper()
-        if self.__image_plane_widget is not None:
-            if self.__current_image == "MRI":
-                self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
-            elif self.__current_image == "FA":
-                self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
-
-        if (modality == self.__current_image) and (paradigm == self.__curent_fmri_paradigm) and \
-                self.__image_plane_widget.GetEnabled() and not force_reload:
+        if (self.__current_image is not None) and (modality == self.__current_image) and (paradigm == self.__curent_fmri_paradigm) and \
+            self.__image_plane_widget.GetEnabled() and not force_reload:
             #nothing to do
             return
 
@@ -116,6 +118,17 @@ class SubjectViewer:
         if self.__image_plane_widget is None:
             self.create_image_plane_widget()
         self.__image_plane_widget.On()
+
+        if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
+            if (self.__current_image == "MRI") and (self.__current_mri_window_level is not None):
+                self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
+            elif (self.__current_image == "FA") and (self.__current_fa_window_level is not None):
+                self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
+
+        if self.__current_subject is None:
+            return
+
+
 
         #update image labels:
         try:

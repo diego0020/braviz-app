@@ -7,6 +7,12 @@ import PyQt4.QtCore as QtCore
 import numpy as np
 import itertools
 
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
+
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
 from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
@@ -14,7 +20,8 @@ from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
 from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealog
 
 import braviz.interaction.qt_models as braviz_models
-from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx
+from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
+    is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -203,7 +210,7 @@ class VariableSelectDialog(QtGui.QDialog):
                 self.conn.execute(query,
                                   (self.var_name, self.rational["min"],
                                    self.rational["max"], self.rational["opt"])
-                                  )
+                )
             except (KeyError, ValueError):
                 pass
             else:
@@ -213,7 +220,7 @@ class VariableSelectDialog(QtGui.QDialog):
 
 
 class OutcomeSelectDialog(VariableSelectDialog):
-    def __init__(self, params_dict,multiple=False):
+    def __init__(self, params_dict, multiple=False):
         super(OutcomeSelectDialog, self).__init__()
         self.ui = Ui_SelectOutcomeDialog()
         self.ui.setupUi(self)
@@ -222,7 +229,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.params_dict = params_dict
 
         self.vars_list_model = braviz_models.VarListModel(checkeable=multiple)
-        self.model=self.vars_list_model
+        self.model = self.vars_list_model
         self.ui.tableView.setModel(self.vars_list_model)
         self.ui.tableView.activated.connect(self.update_right_side)
 
@@ -245,26 +252,25 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.done(self.Accepted)
 
 
-
 class GenericVariableSelectDialog(OutcomeSelectDialog):
     """
     Derived from Outcome Select Dialog,
     """
-    def __init__(self,params,multiple=False,initial_selection=None):
-        OutcomeSelectDialog.__init__(self,params,multiple=multiple)
-        self.multiple=multiple
+
+    def __init__(self, params, multiple=False, initial_selection=None):
+        OutcomeSelectDialog.__init__(self, params, multiple=multiple)
+        self.multiple = multiple
         self.setWindowTitle("Select Variables")
         self.ui.select_button.setText("Accept Selection")
         self.ui.select_button.setEnabled(True)
         self.model.select_items(initial_selection)
+
     def select_and_return(self, *args):
         if self.multiple is True:
             selected_names = self.model.checks_dict
-            self.params_dict["checked"]=[get_var_idx(name) for name, check in
-                                         selected_names.iteritems() if check is True]
-        OutcomeSelectDialog.select_and_return(self,*args)
-
-
+            self.params_dict["checked"] = [get_var_idx(name) for name, check in
+                                           selected_names.iteritems() if check is True]
+        OutcomeSelectDialog.select_and_return(self, *args)
 
 
 class MatplotWidget(FigureCanvas):
@@ -588,32 +594,114 @@ class InteractionSelectDialog(QtGui.QDialog):
             for i in itertools.combinations(rows, r):
                 self.full_model.add_interactor(i)
 
+
 class ContextVariablesPanel(QtGui.QGroupBox):
-    def __init__(self,parent,title):
-        super(ContextVariablesPanel,self).__init__(self,parent)
+    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initia_subject=None):
+        super(ContextVariablesPanel, self).__init__(parent)
         self.setTitle(title)
         self.setToolTip("Right click to select context variables, and to make them editable")
 
-        self.layout=QtGui.QHBoxLayout()
+        self.layout = QtGui.QHBoxLayout(self)
         self.setLayout(self.layout)
+        test_button = QtGui.QPushButton()
+        test_button.setText("Hola")
+        self.layout.addWidget(test_button)
+        self.layout.setContentsMargins(2, 2, 2, 2)
 
-        # self.context_frame = QtGui.QGroupBox(self.splitter_2)
-        # sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Maximum)
-        # sizePolicy.setHorizontalStretch(0)
-        # sizePolicy.setVerticalStretch(0)
-        # sizePolicy.setHeightForWidth(self.context_frame.sizePolicy().hasHeightForWidth())
-        # self.context_frame.setSizePolicy(sizePolicy)
-        # self.context_frame.setMaximumSize(QtCore.QSize(16777215, 56))
-        # self.context_frame.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        # self.context_frame.setObjectName(_fromUtf8("context_frame"))
-        # self.context_frame.setToolTip(_translate("subject_overview", "Right click to select context variables, and to make them editable", None))
-        # self.context_frame.setTitle(_translate("subject_overview", "Context", None))
-
+        #size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Maximum)
+        #size_policy.setHorizontalStretch(0)
+        #size_policy.setVerticalStretch(0)
+        #size_policy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
+        #self.setSizePolicy(size_policy)
+        #self.setMaximumSize(QtCore.QSize(16777215, 56))
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setObjectName(_fromUtf8("context_frame"))
 
         #internal variables
-        self.__context_variables=[]
-        self.__labels_dict={}
-        self.__context_values=[]
-        self.__context_labels=[]
-        self.__values_widgets=[]
+        self.__context_variable_codes = None
+        self.__context_variable_names = None
+        self.__is_nominal = None
+        self.__labels_dict = None
+        self.__context_labels = None
+        self.__values_widgets = None
+        self.__internal_df = None
+        self.__curent_subject = None
+        self.set_variables(initial_variable_idxs)
+
+    def set_variables(self, variables):
+        self.__context_variable_codes = list(variables)
+        self.__context_variable_names = dict((idx, get_var_name(idx)) for idx in self.__context_variable_codes)
+        self.__is_nominal = dict((idx, is_variable_nominal(idx)) for idx in self.__context_variable_codes)
+        self.__labels_dict = dict((idx, get_labels_dict(idx)) for idx in self.__context_variable_codes if
+                                  self.__is_nominal[idx])
+        self.__internal_df = get_data_frame_by_index(self.__context_variable_codes)
+        self.__values_widgets = []
+        self.reset_internal_widgets()
+
+    def reset_internal_widgets(self):
+        #clear layout
+        for i in xrange(self.layout.count() - 1, -1, -1):
+            w = self.layout.takeAt(i)
+            w.widget().deleteLater()
+
+        self.__context_labels = []
+        self.__values_widgets = []
+
+        first = True
+        for idx in self.__context_variable_codes:
+            #add separator
+            if not first:
+                pass
+                self.layout.addStretch()
+            else:
+                first = False
+            #add label
+            label = QtGui.QLabel("%s : " % self.__context_variable_names[idx])
+            label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.__context_labels.append(label)
+            self.layout.addWidget(label)
+            #add value
+
+            value_widget = QtGui.QLabel("XXXXXXX")
+            value_widget.setFrameShape(QtGui.QFrame.Box)
+            value_widget.setFrameShadow(QtGui.QFrame.Raised)
+            #value_widget.setContentsMargins(7,7,7,7)
+            value_widget.setMargin(7)
+            value_widget.setAlignment(QtCore.Qt.AlignCenter)
+            font = QtGui.QFont()
+            font.setPointSize(11)
+            value_widget.setFont(font)
+            #calculate maximum width
+            if is_variable_nominal(idx):
+                longest = max(self.__labels_dict[idx].itervalues(), key=len)
+                value_widget.setText(longest)
+                longest_size = value_widget.sizeHint()
+                value_widget.setFixedWidth(longest_size.width())
+                value_widget.setFixedHeight(longest_size.height())
+            else:
+                max_value = get_maximum_value(idx)
+                value_widget.setText("%.2f" % max_value)
+                longest_size = value_widget.sizeHint()
+                value_widget.setFixedWidth(longest_size.width())
+                value_widget.setFixedHeight(longest_size.height())
+
+            self.layout.addWidget(value_widget)
+            self.__values_widgets.append(value_widget)
+
+        return
+
+    def set_subject(self, subject_id):
+        values = self.__internal_df.loc[int(subject_id)]
+        for i, idx in enumerate(self.__context_variable_codes):
+            value = values[self.__context_variable_names[idx]]
+            #print self.__context_variable_names[idx], value
+            value_widget = self.__values_widgets[i]
+            if self.__is_nominal[idx]:
+                label = self.__labels_dict[idx].get(value, "?")
+                value_widget.setText(label)
+            else:
+                value_widget.setText("%s" % value)
+
+
+
 
