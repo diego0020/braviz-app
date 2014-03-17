@@ -64,7 +64,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="subjects_tab">
            <attribute name="title">
@@ -233,6 +233,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="locale">
+               <locale language="English" country="UnitedStates"/>
+              </property>
               <property name="minimum">
                <double>-10000.000000000000000</double>
               </property>
@@ -261,6 +264,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="locale">
+               <locale language="English" country="UnitedStates"/>
               </property>
               <property name="minimum">
                <double>-10000.000000000000000</double>

@@ -85,10 +85,7 @@ class SubjectViewer:
         self.__image_plane_widget.On()
         self.__mri_lut = vtk.vtkLookupTable()
         self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
-        self.__current_mri_window_level=[0,0]
-        self.__current_fa_window_level=[0,0]
-        self.reset_window_level()
-        self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
+
 
         def slice_change_handler(source, event):
             new_slice = self.__image_plane_widget.GetSliceIndex()
@@ -165,11 +162,18 @@ class SubjectViewer:
             lut = self.__mri_lut
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
+            if self.__current_mri_window_level is None:
+                self.__current_mri_window_level=[0,0]
+                self.reset_window_level()
             self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
         elif modality == "FA":
             lut = self.reader.get("FA", self.__current_subject, lut=True)
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
+            if self.__current_fa_window_level is None:
+                self.__current_fa_window_level=[0,0]
+                self.reset_window_level()
+            self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
         elif modality == "APARC":
             lut = self.reader.get("APARC", self.__current_subject, lut=True)
             self.__image_plane_widget.SetLookupTable(lut)
@@ -230,7 +234,7 @@ class SubjectViewer:
             self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
         elif self.__current_image == "FA":
-            self.__image_plane_widget.SetWindowLevel(0.75,0.5)
+            self.__image_plane_widget.SetWindowLevel(1.20,0.6)
             self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
         else:
