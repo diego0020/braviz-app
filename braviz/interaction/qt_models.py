@@ -734,6 +734,10 @@ class SubjectsTable(QAbstractTableModel):
                 self.__labels[i] = braviz_tab_data.get_labels_dict(columns[i-1])
         self.modelReset.emit()
 
+    def get_subject_index(self,subj_id):
+        row=self.__df.index.get_loc(int(subj_id))
+        return row
+
 class ContextVariablesModel(QAbstractTableModel):
     def __init__(self, context_vars_list=None, parent=None,editable_dict=None):
         QAbstractTableModel.__init__(self, parent)

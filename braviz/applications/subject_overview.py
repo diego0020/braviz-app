@@ -63,6 +63,8 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.subjects_table.setModel(self.subjects_model)
         self.ui.select_subject_table_vars.pressed.connect(self.launch_subject_variable_select_dialog)
         self.ui.subjects_table.activated.connect(self.change_subject)
+        self.ui.next_subject.pressed.connect(self.go_to_next_subject)
+        self.ui.previus_subject.pressed.connect(self.go_to_previus_subject)
 
         #image controls
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
@@ -91,6 +93,7 @@ class SubjectOverviewApp(QMainWindow):
         #label
         self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
+        self.ui.subject_id2.setText("%s" % new_subject)
         #image
         try:
             self.vtk_viewer.change_subject(new_subject)
@@ -170,6 +173,17 @@ class SubjectOverviewApp(QMainWindow):
         self.clinical_vars = new_selection
         print "returning"
 
+    def go_to_previus_subject(self):
+        current_subj_row=self.subjects_model.get_subject_index(self.__curent_subject)
+        prev_row=(current_subj_row+self.subjects_model.rowCount()-1)%self.subjects_model.rowCount()
+        prev_index=self.subjects_model.index(prev_row,0)
+        self.change_subject(prev_index)
+
+    def go_to_next_subject(self):
+        current_subj_row=self.subjects_model.get_subject_index(self.__curent_subject)
+        next_row=(1+current_subj_row)%self.subjects_model.rowCount()
+        next_index=self.subjects_model.index(next_row,0)
+        self.change_subject(next_index)
 
 def run():
     import sys

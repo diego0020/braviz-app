@@ -22,7 +22,8 @@ from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariab
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
-    is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name
+    is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name, \
+    get_min_max_values
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -738,6 +739,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         self.__internal_df = None
         self.__curent_subject = None
         self.__editables_dict= None
+        self.__save_changes_button = None
         self.set_variables(initial_variable_idxs)
         if initial_subject is not None:
             self.set_subject(initial_subject)
@@ -758,7 +760,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
 
     def reset_internal_widgets(self):
         #clear layout
-        print self.__editables_dict
+        self.__save_changes_button = None
         for i in xrange(self.layout.count() - 1, -1, -1):
             w = self.layout.takeAt(i)
             wgt = w.widget()
@@ -769,6 +771,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         self.__values_widgets = []
 
         first = True
+        any_editable = False
         for idx in self.__context_variable_codes:
             #add separator
             if not first:
@@ -782,37 +785,64 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             self.__context_labels.append(label)
             self.layout.addWidget(label)
             #add value
-
-            value_widget = QtGui.QLabel("XXXXXXX")
-            value_widget.setFrameShape(QtGui.QFrame.Box)
-            value_widget.setFrameShadow(QtGui.QFrame.Raised)
-            #value_widget.setContentsMargins(7,7,7,7)
-            value_widget.setMargin(7)
-            value_widget.setAlignment(QtCore.Qt.AlignCenter)
-            font = QtGui.QFont()
-            font.setPointSize(11)
-            value_widget.setFont(font)
-            value_widget.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-            value_widget.setCursor(QtCore.Qt.IBeamCursor)
-            #calculate maximum width
-            if is_variable_nominal(idx):
-                longest = max(self.__labels_dict[idx].itervalues(), key=len)
-                value_widget.setText(longest)
-                longest_size = value_widget.sizeHint()
-                value_widget.setFixedWidth(longest_size.width())
-                value_widget.setFixedHeight(longest_size.height())
+            if self.__editables_dict.get(idx) is True:
+                value_widget=self.get_editable_widget(idx)
+                any_editable = True
             else:
-                max_value = get_maximum_value(idx)
-                value_widget.setText("%.2f" % max_value)
-                longest_size = value_widget.sizeHint()
-                value_widget.setFixedWidth(longest_size.width())
-                value_widget.setFixedHeight(longest_size.height())
-
+                value_widget=self.get_read_only_widget(idx)
             self.layout.addWidget(value_widget)
             self.__values_widgets.append(value_widget)
-
+        if any_editable is True:
+            self.__save_changes_button = QtGui.QPushButton("Save")
+            self.__save_changes_button.setEnabled(False)
+            self.__save_changes_button.pressed.connect(self.save_changes_into_db)
+            self.layout.addWidget(self.__save_changes_button)
         return
 
+    def get_read_only_widget(self,idx):
+        value_widget = QtGui.QLabel("XXXXXXX")
+        value_widget.setFrameShape(QtGui.QFrame.Box)
+        value_widget.setFrameShadow(QtGui.QFrame.Raised)
+        #value_widget.setContentsMargins(7,7,7,7)
+        value_widget.setMargin(7)
+        value_widget.setAlignment(QtCore.Qt.AlignCenter)
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        value_widget.setFont(font)
+        value_widget.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        value_widget.setCursor(QtCore.Qt.IBeamCursor)
+        #calculate maximum width
+        if is_variable_nominal(idx):
+            longest = max(self.__labels_dict[idx].itervalues(), key=len)
+            value_widget.setText(longest)
+            longest_size = value_widget.sizeHint()
+            value_widget.setFixedWidth(longest_size.width())
+            value_widget.setFixedHeight(longest_size.height())
+        else:
+            max_value = get_maximum_value(idx)
+            value_widget.setText("%.2f" % max_value)
+            longest_size = value_widget.sizeHint()
+            value_widget.setFixedWidth(longest_size.width())
+            value_widget.setFixedHeight(longest_size.height())
+        return value_widget
+
+    def get_editable_widget(self,idx):
+        if self.__is_nominal.get(idx) is True:
+            value_widget = QtGui.QComboBox()
+            for i,lbl in self.__labels_dict[idx].iteritems():
+                value_widget.addItem(lbl,i)
+            value_widget.currentIndexChanged.connect(self.enable_save_changes)
+        else:
+            value_widget = QtGui.QDoubleSpinBox()
+            minim,maxim=get_min_max_values(idx)
+            value_widget.setMaximum(10*maxim)
+            value_widget.setMinimum(-10*maxim)
+            value_widget.setSingleStep((maxim-minim)/20)
+            value_widget.valueChanged.connect(self.enable_save_changes)
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        value_widget.setFont(font)
+        return value_widget
     def set_subject(self, subject_id):
         values = self.__internal_df.loc[int(subject_id)]
         for i, idx in enumerate(self.__context_variable_codes):
@@ -821,10 +851,18 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             value_widget = self.__values_widgets[i]
             if self.__is_nominal[idx]:
                 label = self.__labels_dict[idx].get(value, "?")
-                value_widget.setText(label)
+                if isinstance(value_widget,QtGui.QLabel):
+                    value_widget.setText(label)
+                elif isinstance(value_widget,QtGui.QComboBox):
+                    value_widget.setCurrentText(label)
             else:
-                value_widget.setText("%s" % value)
+                if isinstance(value_widget,QtGui.QLabel):
+                    value_widget.setText("%s" % value)
+                elif isinstance(value_widget,QtGui.QDoubleSpinBox):
+                    value_widget.setValue(value)
         self.__curent_subject = subject_id
+        if self.__save_changes_button is not None:
+            self.__save_changes_button.setEnabled(False)
 
     def create_context_menu(self,pos):
         global_pos = self.mapToGlobal(pos)
@@ -845,6 +883,13 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         menu.addAction(change_action)
         menu.exec_(global_pos)
 
+    def enable_save_changes(self,*args):
+        if self.__save_changes_button is None:
+            return
+        self.__save_changes_button.setEnabled(True)
+
+    def save_changes_into_db(self):
+        print "Not yet implemented"
 
 
 
