@@ -856,3 +856,85 @@ class ContextVariablesModel(QAbstractTableModel):
 
     def get_variables(self):
         return self.data_frame.index.tolist()
+
+class SubjectDetails(QAbstractTableModel):
+    def __init__(self, initial_vars=None,initial_subject=None):
+        QAbstractTableModel.__init__(self)
+        if initial_vars is None:
+            initial_vars = tuple()
+        self.__df = None
+        self.__is_var_real=None
+        self.__labels=None
+        self.__current_subject = initial_subject
+        self.set_var_columns(initial_vars)
+        self.headers=("Variable", "Value")
+
+
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return self.__df.shape[0]
+
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return 2
+
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        if not (int_role in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole)):
+            return QtCore.QVariant()
+        if Qt_Orientation == QtCore.Qt.Vertical:
+            return QtCore.QVariant()
+        elif 0 <= p_int < len(self.headers):
+            return self.headers[p_int]
+        else:
+            return QtCore.QVariant()
+
+    def data(self, QModelIndex, int_role=None):
+        if not int_role == QtCore.Qt.DisplayRole:
+            return QtCore.QVariant()
+        line = QModelIndex.row()
+        col = QModelIndex.column()
+        if (0 <= line < len(self.__df)) and (0 <= col < self.__df.shape[1]):
+            datum = self.__df.iloc[line, col]
+            return unicode(datum)
+        else:
+            return QtCore.QVariant()
+
+    def set_var_columns(self, variable_ids):
+        vars_df = braviz_tab_data.get_subject_variables(self.__current_subject,variable_ids)
+        self.__df=vars_df
+        self.modelReset.emit()
+
+    def change_subject(self,new_subject):
+        self.__current_subject = new_subject
+        self.set_var_columns(self.__df.index)
+
+    def supportedDropActions(self):
+        return QtCore.Qt.MoveAction
+
+    def flags(self, QModelIndex):
+        idx = QModelIndex.row()
+        if (0<=QModelIndex.column()<2) and (0<=idx<len(self.__df)):
+            flag=QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+            flag |= QtCore.Qt.ItemIsDragEnabled
+            return flag
+
+        else:
+            return QtCore.Qt.ItemIsDropEnabled
+
+    def dropMimeData(self, QMimeData, Qt_DropAction, p_int, p_int_1, QModelIndex):
+        print "recivido"
+        row=p_int
+        if Qt_DropAction != QtCore.Qt.MoveAction:
+            return False
+        #only accept drops between lines
+        if QModelIndex.isValid():
+            return False
+        data_stream=QtCore.QDataStream(QMimeData.data("application/x-qabstractitemmodeldatalist"))
+        source_row=data_stream.readInt()
+        print "Moving from %d to %d"%(source_row,row)
+        index_list=list(self.__df.index)
+        source_id=index_list.pop(source_row)
+        index_list.insert(row,source_id)
+        self.__df=self.__df.loc[index_list]
+        self.modelReset.emit()
+        return True
+

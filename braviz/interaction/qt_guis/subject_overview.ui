@@ -138,6 +138,9 @@
               <property name="dragEnabled">
                <bool>true</bool>
               </property>
+              <property name="dragDropOverwriteMode">
+               <bool>false</bool>
+              </property>
               <property name="dragDropMode">
                <enum>QAbstractItemView::InternalMove</enum>
               </property>
@@ -147,12 +150,21 @@
               <property name="alternatingRowColors">
                <bool>true</bool>
               </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>
               </property>
-              <property name="sortingEnabled">
-               <bool>true</bool>
+              <property name="gridStyle">
+               <enum>Qt::SolidLine</enum>
               </property>
+              <property name="sortingEnabled">
+               <bool>false</bool>
+              </property>
+              <attribute name="horizontalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
               <attribute name="horizontalHeaderStretchLastSection">
                <bool>true</bool>
               </attribute>

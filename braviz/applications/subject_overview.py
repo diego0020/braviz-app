@@ -8,7 +8,7 @@ from PyQt4.QtGui import QMainWindow
 
 import braviz
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
-from braviz.interaction.qt_models import SubjectsTable
+from braviz.interaction.qt_models import SubjectsTable, SubjectDetails
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel
 
@@ -32,13 +32,20 @@ class SubjectOverviewApp(QMainWindow):
         self.context_frame=None
         self.__context_variables=[11, 6, 17, 1]
 
-        #Init gui
-        self.ui = None
-        self.setup_gui()
+
 
         #select first subject
         index=self.subjects_model.index(0,0)
         self.__curent_subject = self.subjects_model.data(index,QtCore.Qt.DisplayRole)
+
+        initial_details_vars=[6,11,248,249,250,251,252,253,254,255]
+        self.subject_details_model=SubjectDetails(initial_vars=initial_details_vars,
+                                                  initial_subject=self.__curent_subject)
+
+        #Init gui
+        self.ui = None
+        self.setup_gui()
+
         #load initial
         self.vtk_viewer.change_image_modality("MRI")
         self.change_subject(self.__curent_subject)
@@ -66,6 +73,8 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.next_subject.pressed.connect(self.go_to_next_subject)
         self.ui.previus_subject.pressed.connect(self.go_to_previus_subject)
 
+        #subject details
+        self.ui.subject_details_table.setModel(self.subject_details_model)
         #image controls
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
@@ -94,6 +103,8 @@ class SubjectOverviewApp(QMainWindow):
         self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
         self.ui.subject_id2.setText("%s" % new_subject)
+        #details
+        self.subject_details_model.change_subject(new_subject)
         #image
         try:
             self.vtk_viewer.change_subject(new_subject)

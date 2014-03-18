@@ -171,3 +171,29 @@ def get_min_max_values_by_name(var_name):
         cur = conn.execute(q, (str(var_name),))
         res = cur.fetchone()
     return res
+
+def get_subject_variables(subj_code, var_codes):
+    """Returns a data frame with two columns, variable_name, value... with var_codes as index,
+     the values are for the current subject, or NAN if subj is invalid
+    """
+    conn = get_connection()
+    names=[]
+    values=[]
+    for idx in var_codes:
+        cur=conn.execute("SELECT var_name, is_real FROM variables WHERE var_idx = ?",(int(idx),))
+        var_name, is_real = cur.fetchone()
+        if subj_code is None :
+            value = "Nan"
+        elif (is_real is None) or (is_real >0):
+            cur=conn.execute("SELECT value FROM var_values WHERE var_idx = ? and subject = ?",
+                             (int(idx),int(subj_code)))
+            value=cur.fetchone()[0]
+        else:
+            q="""SELECT name FROM var_values NATURAL JOIN nom_meta
+            WHERE subject = ? and var_idx = ? and var_values.value == nom_meta.label"""
+            cur=conn.execute(q,(int(subj_code),int(idx)))
+            value = cur.fetchone()[0]
+        names.append(var_name)
+        values.append(value)
+    output=pd.DataFrame({"name" : names, "value" : values},index=var_codes)
+    return output
