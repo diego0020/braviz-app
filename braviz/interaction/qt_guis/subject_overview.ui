@@ -174,7 +174,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_4">
+             <widget class="QPushButton" name="select_details_button">
               <property name="text">
                <string>Select Variables</string>
               </property>

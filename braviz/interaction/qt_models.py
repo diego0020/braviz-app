@@ -734,6 +734,8 @@ class SubjectsTable(QAbstractTableModel):
                 self.__labels[i] = braviz_tab_data.get_labels_dict(columns[i-1])
         self.modelReset.emit()
 
+    def get_current_columns(self):
+        return self.__df.columns[1:]
     def get_subject_index(self,subj_id):
         row=self.__df.index.get_loc(int(subj_id))
         return row
@@ -866,7 +868,7 @@ class SubjectDetails(QAbstractTableModel):
         self.__is_var_real=None
         self.__labels=None
         self.__current_subject = initial_subject
-        self.set_var_columns(initial_vars)
+        self.set_variables(initial_vars)
         self.headers=("Variable", "Value")
 
 
@@ -898,14 +900,14 @@ class SubjectDetails(QAbstractTableModel):
         else:
             return QtCore.QVariant()
 
-    def set_var_columns(self, variable_ids):
+    def set_variables(self, variable_ids):
         vars_df = braviz_tab_data.get_subject_variables(self.__current_subject,variable_ids)
         self.__df=vars_df
         self.modelReset.emit()
 
     def change_subject(self,new_subject):
         self.__current_subject = new_subject
-        self.set_var_columns(self.__df.index)
+        self.set_variables(self.__df.index)
 
     def supportedDropActions(self):
         return QtCore.Qt.MoveAction
@@ -938,3 +940,5 @@ class SubjectDetails(QAbstractTableModel):
         self.modelReset.emit()
         return True
 
+    def get_current_variables(self):
+        return self.__df.index

@@ -14,16 +14,15 @@ from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVa
 
 
 class SubjectOverviewApp(QMainWindow):
-    def __init__(self, initial_vars=None):
+    def __init__(self,):
         #Super init
         QMainWindow.__init__(self)
         #Internal initialization
         self.reader = braviz.readAndFilter.kmc40AutoReader()
         self.__curent_subject = None
-        if initial_vars is None:
-            #GENRE Weight at birth VCIIQ
-            initial_vars = (11, 17, 1)
-        self.clinical_vars = initial_vars
+
+        initial_vars = (11, 17, 1)
+
         self.vtk_widget = QSuvjectViwerWidget(reader=self.reader)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
@@ -75,6 +74,7 @@ class SubjectOverviewApp(QMainWindow):
 
         #subject details
         self.ui.subject_details_table.setModel(self.subject_details_model)
+        self.ui.select_details_button.pressed.connect(self.launch_details_variable_select_dialog)
         #image controls
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
@@ -177,11 +177,22 @@ class SubjectOverviewApp(QMainWindow):
 
     def launch_subject_variable_select_dialog(self):
         params = {}
-        dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection=self.clinical_vars)
+        initial_selection=self.subjects_model.get_current_columns()
+        dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_names=initial_selection)
         dialog.exec_()
         new_selection = params["checked"]
         self.subjects_model.set_var_columns(new_selection)
-        self.clinical_vars = new_selection
+
+        print "returning"
+
+    def launch_details_variable_select_dialog(self):
+        params = {}
+        initial_selection=self.subject_details_model.get_current_variables()
+        dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_idx=initial_selection)
+        dialog.exec_()
+        new_selection = params["checked"]
+        self.subject_details_model.set_variables(sorted(new_selection))
+
         print "returning"
 
     def go_to_previus_subject(self):
