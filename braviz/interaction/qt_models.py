@@ -419,36 +419,13 @@ class NominalVariablesMeta(QAbstractTableModel):
     def update_model(self, var_name):
         #print "*****loading model"
         self.var_name = var_name
-        cur = self.conn.cursor()
-        #Get labels
-        query = """
-        SELECT label2, name
-        from
-        (
-        SELECT  distinct value as label2, variables.var_idx as var_idx2
-        FROM variables natural join var_values
-        WHERE variables.var_name = ?
-        ) left outer join
-        nom_meta ON (nom_meta.label = label2 and var_idx2 = nom_meta.var_idx)
-        ORDER BY label2;
-        """
-        cur.execute(query, (self.var_name,))
-        labels = cur.fetchall()
-        self.names_dict = dict(labels)
+        self.names_dict = braviz_tab_data.get_names_label_dict(var_name)
         self.labels_list = list(self.names_dict.iterkeys())
 
     def save_into_db(self):
         #print self.names_dict
-        query = """INSERT OR REPLACE INTO nom_meta
-        VALUES (
-        (SELECT var_idx FROM variables WHERE var_name = ?),
-        ?, -- label
-        ? -- name
-        );
-        """
-        tuples = ( (self.var_name, k, v) for k, v in self.names_dict.iteritems())
-        self.conn.executemany(query, tuples)
-        self.conn.commit()
+        tuples = ( (k, v) for k, v in self.names_dict.iteritems())
+        braviz_tab_data.save_nominal_labels_by_name(self.var_name,tuples)
 
 
 class AnovaResultsModel(QAbstractTableModel):

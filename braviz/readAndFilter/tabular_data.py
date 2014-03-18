@@ -111,8 +111,19 @@ def get_labels_dict(var_idx):
 
 def get_names_label_dict(var_name):
     conn = get_connection()
-    cur = conn.execute("SELECT label, name FROM nom_meta NATURAL JOIN variables WHERE var_name = ?", (str(var_name),))
-    ans_dict = dict(cur)
+    q="""
+        SELECT label2, name
+        from
+        (
+        SELECT  distinct value as label2, variables.var_idx as var_idx2
+        FROM variables natural join var_values
+        WHERE variables.var_name = ?
+        ) left outer join
+        nom_meta ON (nom_meta.label = label2 and var_idx2 = nom_meta.var_idx)
+        ORDER BY label2;
+        """
+    cur = conn.execute(q, (str(var_name),))
+    ans_dict = dict(cur.fetchall())
     return ans_dict
 
 
@@ -139,6 +150,7 @@ def get_maximum_value(var_idx):
         res = cur.fetchone()
     return res
 
+
 def get_minumum_value(var_idx):
     conn = get_connection()
     cur = conn.execute("SELECT min_val FROM ratio_meta WHERE var_idx = ?", (str(var_idx),))
@@ -149,6 +161,7 @@ def get_minumum_value(var_idx):
         cur = conn.execute(q, (str(var_idx),))
         res = cur.fetchone()
     return res
+
 
 def get_min_max_values(var_idx):
     conn = get_connection()
@@ -161,9 +174,11 @@ def get_min_max_values(var_idx):
         res = cur.fetchone()
     return res
 
+
 def get_min_max_values_by_name(var_name):
     conn = get_connection()
-    cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?", (str(var_name),))
+    cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
+                       (str(var_name),))
     res = cur.fetchone()
     if res is None:
         q = """select MIN(value), MAX(value) from (select * from var_values where value != "nan")
@@ -172,28 +187,125 @@ def get_min_max_values_by_name(var_name):
         res = cur.fetchone()
     return res
 
+
 def get_subject_variables(subj_code, var_codes):
     """Returns a data frame with two columns, variable_name, value... with var_codes as index,
      the values are for the current subject, or NAN if subj is invalid
     """
     conn = get_connection()
-    names=[]
-    values=[]
+    names = []
+    values = []
     for idx in var_codes:
-        cur=conn.execute("SELECT var_name, is_real FROM variables WHERE var_idx = ?",(int(idx),))
+        cur = conn.execute("SELECT var_name, is_real FROM variables WHERE var_idx = ?", (int(idx),))
         var_name, is_real = cur.fetchone()
-        if subj_code is None :
+        if subj_code is None:
             value = "Nan"
-        elif (is_real is None) or (is_real >0):
-            cur=conn.execute("SELECT value FROM var_values WHERE var_idx = ? and subject = ?",
-                             (int(idx),int(subj_code)))
-            value=cur.fetchone()[0]
+        elif (is_real is None) or (is_real > 0):
+            cur = conn.execute("SELECT value FROM var_values WHERE var_idx = ? and subject = ?",
+                               (int(idx), int(subj_code)))
+            value = cur.fetchone()[0]
         else:
-            q="""SELECT name FROM var_values NATURAL JOIN nom_meta
+            q = """SELECT name FROM var_values NATURAL JOIN nom_meta
             WHERE subject = ? and var_idx = ? and var_values.value == nom_meta.label"""
-            cur=conn.execute(q,(int(subj_code),int(idx)))
+            cur = conn.execute(q, (int(subj_code), int(idx)))
             value = cur.fetchone()[0]
         names.append(var_name)
         values.append(value)
-    output=pd.DataFrame({"name" : names, "value" : values},index=var_codes)
+    output = pd.DataFrame({"name": names, "value": values}, index=var_codes)
     return output
+
+
+def get_var_description(var_idx):
+    conn = get_connection()
+    q = "SELECT description FROM var_descriptions WHERE var_idx = ?"
+    cur = conn.execute(q, (int(var_idx),))
+    res = cur.fetchone()
+    if res is None:
+        return ""
+    return res[0]
+
+
+def get_var_description_by_name(var_name):
+    conn = get_connection()
+    q = "SELECT description FROM var_descriptions NATURAL JOIN variables WHERE var_name = ?"
+    cur = conn.execute(q, (str(var_name),))
+    res = cur.fetchone()
+    if res is None:
+        return ""
+    return res[0]
+
+
+def save_is_real_by_name(var_name, is_real):
+    conn = get_connection()
+    query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
+    conn.execute(query, (is_real, str(var_name)))
+    conn.commit()
+
+
+def save_is_real(var_idx, is_real):
+    conn = get_connection()
+    query = "UPDATE variables SET is_real = ? WHERE var_idx = ?"
+    conn.execute(query, (is_real, int(var_idx)))
+    conn.commit()
+
+
+def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
+    conn = get_connection()
+    query = """INSERT OR REPLACE INTO ratio_meta
+    VALUES(
+    (SELECT var_idx FROM variables WHERE var_name = ?),
+    ? , ? , ? );
+    """
+    try:
+        conn.execute(query,
+                     (var_name, min_value,
+                      max_value, opt_value)
+        )
+    except (KeyError, ValueError):
+        pass
+    else:
+        conn.commit()
+
+def save_nominal_labels_by_name(var_name,label_name_tuples):
+    mega_tuple=( (var_name, label, name) for label, name in label_name_tuples)
+    con = get_connection()
+    query = """INSERT OR REPLACE INTO nom_meta
+    VALUES (
+    (SELECT var_idx FROM variables WHERE var_name = ?),
+    ?, -- label
+    ? -- name
+    );
+    """
+    con.executemany(query, mega_tuple)
+    con.commit()
+
+def save_nominal_labels(var_idx,label_name_tuples):
+    mega_tuple=( (var_idx, label, name) for label,name in label_name_tuples)
+    con = get_connection()
+    query = """INSERT OR REPLACE INTO nom_meta
+    VALUES (
+    ?, --idx
+    ?, -- label
+    ? -- name
+    );
+    """
+    con.executemany(query, mega_tuple)
+    con.commit()
+
+def save_var_description_by_name(var_name,description):
+    conn = get_connection()
+    query = """INSERT OR REPLACE INTO var_descriptions
+    VALUES
+    ((SELECT var_idx FROM variables WHERE var_name = ?), -- var_idx
+    ?) -- desc """
+    conn.execute(query, (var_name,description,))
+    conn.commit()
+
+def save_var_description(var_idx,description):
+    conn = get_connection()
+    query = """INSERT OR REPLACE INTO var_descriptions
+    VALUES
+    (?, -- var_idx
+    ?) -- desc"""
+    conn.execute(query, (var_idx,description,))
+    conn.commit()

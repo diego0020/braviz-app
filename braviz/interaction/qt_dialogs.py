@@ -23,7 +23,8 @@ from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariab
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
     is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name, \
-    get_min_max_values
+    get_min_max_values, is_variable_name_real, get_var_description_by_name, save_is_real_by_name,\
+    save_real_meta_by_name, save_var_description_by_name
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -59,22 +60,17 @@ class VariableSelectDialog(QtGui.QDialog):
         self.ui.var_name.setText(var_name)
         self.ui.save_button.setEnabled(True)
         self.ui.var_type_combo.setEnabled(True)
-        conn = self.conn
-        cur = conn.cursor()
-        cur.execute("SELECT is_real from variables where var_name=?", (var_name,))
-        is_real = cur.fetchone()[0]
+        is_real = is_variable_name_real(var_name)
         self.var_name = var_name
         data = get_data_frame_by_name(self.var_name)
         self.data = data
         #update scatter
         self.update_plot(data)
+        var_description = get_var_description_by_name(var_name)
+        self.ui.var_description.setPlainText(var_description)
+        self.ui.var_description.setEnabled(True)
 
         #update gui
-        if is_real is not None:
-            pass
-        else:
-            #print "unknown type, assuming real"
-            is_real = True
         if is_real:
             self.ui.var_type_combo.setCurrentIndex(0)
             self.update_details(0)
@@ -164,7 +160,7 @@ class VariableSelectDialog(QtGui.QDialog):
             self.nominal_model.update_model(var_name)
         details_ui = Ui_nominal_details_frame()
         details_ui.setupUi(self.ui.details_frame)
-        details_ui.labels_names_table.setModel(self.model)
+        details_ui.labels_names_table.setModel(self.nominal_model)
         self.details_ui = details_ui
         QtCore.QTimer.singleShot(0, self.update_limits_in_plot)
 
@@ -196,29 +192,20 @@ class VariableSelectDialog(QtGui.QDialog):
             var_type = 1  # real should be 1
 
         #save variable type
-        query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
-        self.conn.execute(query, (var_type, self.var_name))
-        self.conn.commit()
+        save_is_real_by_name(self.var_name,var_type)
+
+        #save description
+        desc_text=self.ui.var_description.toPlainText()
+        save_var_description_by_name(self.var_name,str(desc_text))
+
 
         #save other values
         if var_type == 1:
             #real
-            query = """INSERT OR REPLACE INTO ratio_meta
-            VALUES(
-            (SELECT var_idx FROM variables WHERE var_name = ?),
-            ? , ? , ? );
-            """
-            try:
-                self.conn.execute(query,
-                                  (self.var_name, self.rational["min"],
+            save_real_meta_by_name(self.var_name,self.rational["min"],
                                    self.rational["max"], self.rational["opt"])
-                )
-            except (KeyError, ValueError):
-                pass
-            else:
-                self.conn.commit()
         elif var_type == 0:
-            self.model.save_into_db()
+            self.nominal_model.save_into_db()
 
 
 class OutcomeSelectDialog(VariableSelectDialog):
@@ -231,7 +218,6 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.params_dict = params_dict
 
         self.vars_list_model = braviz_models.VarListModel(checkeable=multiple)
-        self.model = self.vars_list_model
         self.ui.tableView.setModel(self.vars_list_model)
         self.ui.tableView.activated.connect(self.update_right_side)
 
@@ -266,7 +252,7 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
         self.ui.select_button.setText("Accept Selection")
         self.ui.select_button.setEnabled(True)
         if initial_selection_idx is not None:
-            self.model.select_items(initial_selection_idx)
+            self.vars_list_model.select_items(initial_selection_idx)
         elif initial_selection_names is not None:
             self.model.select_items_by_name(initial_selection_names)
 
