@@ -36,7 +36,7 @@ def get_data_frame_by_name(columns, reader=None):
         FROM subjects NATURAL JOIN var_values
         WHERE var_idx = (SELECT var_idx FROM variables WHERE var_name = ?)
         """
-        col = sql.read_sql(query, conn, index_col="subject", params=(var,), coerce_float=True)
+        col = sql.read_sql(query, conn, index_col="subject", params=(str(var),), coerce_float=True)
         data[var] = col.astype(pd.np.float64)
 
     conn.close()
@@ -51,7 +51,7 @@ def get_data_frame_by_index(columns, reader=None):
     data = sql.read_sql("SELECT subject from SUBJECTS", conn, index_col="subject")
     col_names = []
     for i in columns:
-        name = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (i,)).fetchone()[0]
+        name = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (int(i),)).fetchone()[0]
         col_names.append(name)
 
     for var_idx, var_name in izip(columns, col_names):
@@ -59,7 +59,7 @@ def get_data_frame_by_index(columns, reader=None):
         FROM subjects NATURAL JOIN var_values
         WHERE var_idx = ?
         """
-        col = sql.read_sql(query, conn, index_col="subject", params=(var_idx,), coerce_float=True)
+        col = sql.read_sql(query, conn, index_col="subject", params=(int(var_idx),), coerce_float=True)
         data[var_name] = col.astype(pd.np.float64)
 
     conn.close()
@@ -78,7 +78,7 @@ def is_variable_nominal(var_idx):
 
 def is_variable_name_real(var_name):
     conn = get_connection()
-    cur = conn.execute("SELECT is_real FROM variables  WHERE var_name = ?", (var_name,))
+    cur = conn.execute("SELECT is_real FROM variables  WHERE var_name = ?", (str(var_name),))
     return False if cur.fetchone()[0] == 0 else 1
 
 
@@ -131,8 +131,43 @@ def get_var_idx(var_name):
 def get_maximum_value(var_idx):
     conn = get_connection()
     cur = conn.execute("SELECT max_val FROM ratio_meta WHERE var_idx = ?", (str(var_idx),))
-    if cur.rowcount < 1:
+    res = cur.fetchone()
+    if res is None:
         q = """select MAX(value) from (select * from var_values where value != "nan")
         where var_idx = ? group by var_idx"""
         cur = conn.execute(q, (str(var_idx),))
-    return cur.fetchone()[0]
+        res = cur.fetchone()
+    return res
+
+def get_minumum_value(var_idx):
+    conn = get_connection()
+    cur = conn.execute("SELECT min_val FROM ratio_meta WHERE var_idx = ?", (str(var_idx),))
+    res = cur.fetchone()
+    if res is None:
+        q = """select Min(value) from (select * from var_values where value != "nan")
+        where var_idx = ? group by var_idx"""
+        cur = conn.execute(q, (str(var_idx),))
+        res = cur.fetchone()
+    return res
+
+def get_min_max_values(var_idx):
+    conn = get_connection()
+    cur = conn.execute("SELECT min_val, max_val FROM ratio_meta WHERE var_idx = ?", (str(var_idx),))
+    res = cur.fetchone()
+    if res is None:
+        q = """select MIN(value), MAX(value) from (select * from var_values where value != "nan")
+        where var_idx = ? group by var_idx"""
+        cur = conn.execute(q, (str(var_idx),))
+        res = cur.fetchone()
+    return res
+
+def get_min_max_values_by_name(var_name):
+    conn = get_connection()
+    cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?", (str(var_name),))
+    res = cur.fetchone()
+    if res is None:
+        q = """select MIN(value), MAX(value) from (select * from var_values where value != "nan")
+        where var_idx = (SELECT var_idx FROM variables WHERE var_name = ?) group by var_idx"""
+        cur = conn.execute(q, (str(var_name),))
+        res = cur.fetchone()
+    return res

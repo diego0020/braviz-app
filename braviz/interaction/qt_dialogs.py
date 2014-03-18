@@ -1,7 +1,7 @@
 from __future__ import division
 
 __author__ = 'Diego'
-
+from functools import wraps
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 import numpy as np
@@ -22,7 +22,7 @@ from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariab
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
-    is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value
+    is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -298,6 +298,19 @@ class MatplotWidget(FigureCanvas):
         self.setMouseTracking(True)
         self.mpl_connect('motion_notify_event', self.mouse_move_event_handler)
         self.x_order = None
+        self.last_plot_function = None
+        self.last_plot_arguments = None
+        self.last_plot_kw_arguments = None
+
+    def repeatatable_plot(func):
+        @wraps(func)
+        def saved_plot_func(*args,**kwargs):
+            self = args[0]
+            self.last_plot_function = func
+            self.last_plot_arguments = args
+            self.last_plot_kw_arguments = kwargs
+            return func(*args,**kwargs)
+        return saved_plot_func
 
     def initial_text(self, message):
         if message is None:
@@ -317,12 +330,13 @@ class MatplotWidget(FigureCanvas):
         self.draw()
         self.x_order = None
 
-
-    def compute_scatter(self, data, data2=None, x_lab=None, y_lab=None, colors=None, labels=None, urls=None):
+    @repeatatable_plot
+    def compute_scatter(self, data, data2=None, x_lab=None, y_lab=None, colors=None, labels=None, urls=None, xlims=None):
         self.axes.clear()
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
         self.axes.yaxis.set_label_position("right")
         if data2 is None:
+            np.random.seed(982356032)
             data2 = np.random.rand(len(data))
             self.axes.tick_params('y', left='off', labelleft='off', labelright='off')
         if x_lab is not None:
@@ -339,10 +353,22 @@ class MatplotWidget(FigureCanvas):
             self.axes.legend(numpoints=1, fancybox=True, fontsize="small", )
             self.axes.get_legend().draggable(True, update="loc")
 
+        if xlims is not None:
+            width = xlims[1] - xlims[0]
+            xlims2=(xlims[0]-width/10,xlims[1]+width/10,)
+            self.axes.set_xlim(xlims2,auto=False)
+        else:
+            self.axes.set_xlim(auto=True)
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.xlim = self.axes.get_xlim()
         self.x_order = None
+
+    def redraw_last_plot(self):
+        if self.last_plot_function is None:
+            return
+        else:
+            self.last_plot_function(*self.last_plot_arguments,**self.last_plot_kw_arguments)
 
     def add_max_min_opt_lines(self, mini, opti, maxi):
 
@@ -359,7 +385,8 @@ class MatplotWidget(FigureCanvas):
         self.axes.draw_artist(opt_line)
         self.blit(self.axes.bbox)
 
-    def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims):
+    @repeatatable_plot
+    def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims, intercet=None):
 
         #Sort data and labels according to median
         x_permutation = range(len(data))
@@ -384,9 +411,12 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
 
         self.draw()
+        if intercet is not None:
+            self.add_intercept_line(intercet)
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.x_order = x_permutation
 
+    @repeatatable_plot
     def make_linked_box_plot(self, data, xlabel, ylabel, xticks_labels, colors, top_labels, ylims):
         self.axes.clear()
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
@@ -442,6 +472,7 @@ class MatplotWidget(FigureCanvas):
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.x_order = x_permutation
 
+    @repeatatable_plot
     def make_histogram(self, data, xlabel):
         self.axes.clear()
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
@@ -458,7 +489,8 @@ class MatplotWidget(FigureCanvas):
     def add_subject_points(self, x_coords, y_coords, color=None, urls=None):
         #TODO Change to some permanent draw, No blit
         #print "adding subjects"
-        self.restore_region(self.back_fig)
+        #self.restore_region(self.back_fig)
+        self.redraw_last_plot()
         if self.x_order is not None:
             #labels go from 1 to n; permutation is from 0 to n-1
             x_coords = map(lambda k: self.x_order.index(int(k) - 1) + 1, x_coords)
@@ -468,9 +500,9 @@ class MatplotWidget(FigureCanvas):
         collection.set_facecolor('none')
 
         self.axes.draw_artist(collection)
-        #for a in collection:
-        #    self.axes.draw_artist(a)
-        self.blit(self.axes.bbox)
+        #self.blit(self.axes.bbox)
+        self.draw()
+        self.back_fig = self.copy_from_bbox(self.axes.bbox)
 
     def add_intercept_line(self, ycoord):
         self.axes.axhline(ycoord)
@@ -598,8 +630,11 @@ class InteractionSelectDialog(QtGui.QDialog):
 
 
 class ContextVariablesSelectDialog(VariableSelectDialog):
-    def __init__(self, variables_list=None,current_subject=None):
+    def __init__(self, variables_list=None,current_subject=None,editables_dict=None):
         super(ContextVariablesSelectDialog, self).__init__()
+        if variables_list is None:
+            variables_list = []
+        self.__variable_lists_id = id(variables_list)
         self.current_subject=current_subject
         self.ui = Ui_ContextVariablesDialog()
         self.ui.setupUi(self)
@@ -608,19 +643,25 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.finish_ui_setup()
         self.ui.tableView.activated.connect(self.update_right_side)
         self.ui.add_button.pressed.connect(self.add_variable)
-        self.current_variables_model = braviz_models.ContextVariablesModel(context_vars_list=variables_list)
+        self.current_variables_model = braviz_models.ContextVariablesModel(context_vars_list=variables_list,
+                                                                           editable_dict=editables_dict)
         self.ui.current_variables.setModel(self.current_variables_model)
         self.ui.current_variables.customContextMenuRequested.connect(self.show_context_menu)
         self.ui.done_button.pressed.connect(self.finish_close)
+        self.ui.current_variables.activated.connect(self.update_right_side2)
         self.jitter=None
         self.variable_list=variables_list
         print "pescado"
 
-    def update_right_side(self, name=None):
-        curr_idx = self.ui.tableView.currentIndex()
+    def update_right_side(self, curr_idx=None):
         idx2 = self.vars_model.index(curr_idx.row(), 0)
         var_name = self.vars_model.data(idx2, QtCore.Qt.DisplayRole)
         self.ui.add_button.setEnabled(True)
+        super(ContextVariablesSelectDialog, self).update_right_side(var_name)
+
+    def update_right_side2(self,idx):
+        var_name_idx = self.current_variables_model.index(idx.row(),0)
+        var_name = self.current_variables_model.data(var_name_idx,QtCore.Qt.DisplayRole)
         super(ContextVariablesSelectDialog, self).update_right_side(var_name)
 
     def add_variable(self):
@@ -639,13 +680,14 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
 
         remove_action.triggered.connect(remove_item)
         menu.addAction(remove_action)
-        selected_item = menu.exec_(global_pos)
-        # print selected_item
+        menu.exec_(global_pos)
+
 
     def update_plot(self, data):
         self.jitter= np.random.random(len(data))
         data_values=data.get_values()
-        self.matplot_widget.compute_scatter(data_values,self.jitter)
+        xlimits=get_min_max_values_by_name(self.var_name)
+        self.matplot_widget.compute_scatter(data_values,self.jitter,x_lab=self.var_name,xlims=xlimits)
         if self.current_subject is not None:
             subj_index=data.index.get_loc(int(self.current_subject))
             self.matplot_widget.add_subject_points((data_values[subj_index]), (self.jitter[subj_index],),
@@ -658,6 +700,7 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         while len(self.variable_list)>0:
             self.variable_list.pop()
         self.variable_list.extend(new_list)
+        assert id(self.variable_list) == self.__variable_lists_id
         self.done(self.Accepted)
 
 
@@ -669,6 +712,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.layout = QtGui.QHBoxLayout(self)
         self.setLayout(self.layout)
+
         #test_button = QtGui.QPushButton()
         #test_button.setText("Hola")
         #self.layout.addWidget(test_button)
@@ -693,11 +737,12 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         self.__values_widgets = None
         self.__internal_df = None
         self.__curent_subject = None
+        self.__editables_dict= None
         self.set_variables(initial_variable_idxs)
         if initial_subject is not None:
             self.set_subject(initial_subject)
 
-    def set_variables(self, variables):
+    def set_variables(self, variables,editables=None):
         self.__context_variable_codes = list(variables)
         self.__context_variable_names = dict((idx, get_var_name(idx)) for idx in self.__context_variable_codes)
         self.__is_nominal = dict((idx, is_variable_nominal(idx)) for idx in self.__context_variable_codes)
@@ -705,10 +750,15 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                                   self.__is_nominal[idx])
         self.__internal_df = get_data_frame_by_index(self.__context_variable_codes)
         self.__values_widgets = []
+        if editables is None:
+            self.__editables_dict=dict( (idx,False) for idx in variables)
+        else:
+            self.__editables_dict = editables
         self.reset_internal_widgets()
 
     def reset_internal_widgets(self):
         #clear layout
+        print self.__editables_dict
         for i in xrange(self.layout.count() - 1, -1, -1):
             w = self.layout.takeAt(i)
             wgt = w.widget()
@@ -785,9 +835,11 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         def change_variables(*args):
             print "hola"
             context_change_dialog=ContextVariablesSelectDialog(current_subject=self.__curent_subject,
-                                                               variables_list=self.__context_variable_codes)
+                                                               variables_list=self.__context_variable_codes,
+                                                               editables_dict=self.__editables_dict)
             context_change_dialog.exec_()
-            self.reset_internal_widgets()
+            self.set_variables(self.__context_variable_codes,self.__editables_dict)
+            self.set_subject(self.__curent_subject)
 
         change_action.triggered.connect(change_variables)
         menu.addAction(change_action)

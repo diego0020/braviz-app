@@ -735,7 +735,7 @@ class SubjectsTable(QAbstractTableModel):
         self.modelReset.emit()
 
 class ContextVariablesModel(QAbstractTableModel):
-    def __init__(self, context_vars_list=None, parent=None):
+    def __init__(self, context_vars_list=None, parent=None,editable_dict=None):
         QAbstractTableModel.__init__(self, parent)
         self.data_type_dict = dict()
         self.conn = braviz_tab_data.get_connection()
@@ -746,7 +746,9 @@ class ContextVariablesModel(QAbstractTableModel):
         else:
             self.data_frame = pd.DataFrame(tuple(), columns=["variable","Type"])
 
-
+        self.editables_dict=editable_dict
+        if self.editables_dict is None:
+            self.editables_dict = dict( (idx,False) for idx in context_vars_list)
         self.headers_dict={0: "Variable", 1: "Type", 2:"Editable"}
 
 
@@ -768,7 +770,11 @@ class ContextVariablesModel(QAbstractTableModel):
         line = QModelIndex.row()
         col = QModelIndex.column()
         if (int_role == QtCore.Qt.CheckStateRole) and (col==2):
-            return QtCore.Qt.Unchecked
+            var_idx=self.data_frame.index[line]
+            if self.editables_dict.get(var_idx) is True:
+                return QtCore.Qt.Checked
+            else:
+                return QtCore.Qt.Unchecked
 
         if not (int_role == QtCore.Qt.DisplayRole):
             return QtCore.QVariant()
@@ -809,6 +815,7 @@ class ContextVariablesModel(QAbstractTableModel):
                                                               columns=["variable","Type"],
                                                               index=(var_idx,)))
         self.endInsertRows()
+        self.editables_dict[var_idx] = False
 
 
     def removeRows(self, row, count, QModelIndex_parent=None, *args, **kwargs):
@@ -816,9 +823,32 @@ class ContextVariablesModel(QAbstractTableModel):
         self.beginRemoveRows(QtCore.QModelIndex(), row, row + count - 1)
         indexes = list(self.data_frame.index)
         for i in xrange(count):
-            self.data_frame.drop(indexes[row+i],inplace=True)
+            var_idx=indexes[row+i]
+            del self.editables_dict[var_idx]
+            self.data_frame.drop(var_idx,inplace=True)
         self.endRemoveRows()
         self.modelReset.emit()
+
+    def setData(self, QModelIndex, QVariant, int_role=None):
+        if not int_role == QtCore.Qt.CheckStateRole:
+            return False
+        else:
+            row=QModelIndex.row()
+            if QModelIndex.column() != 2:
+                return False
+            self.editables_dict[self.data_frame.index[row]]=QVariant.toBool()
+            return True
+
+    def flags(self, QModelIndex):
+        row = QModelIndex.row()
+        if (0<=QModelIndex.column()<=2) and (0<=row<len(self.data_frame)):
+            flag=QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+            if QModelIndex.column()==2:
+                flag |= QtCore.Qt.ItemIsUserCheckable
+            return flag
+
+        else:
+            return QtCore.Qt.NoItemFlags
 
     def get_variables(self):
         return self.data_frame.index.tolist()
