@@ -921,7 +921,7 @@ class SubjectDetails(QAbstractTableModel):
             return QtCore.Qt.ItemIsDropEnabled
 
     def dropMimeData(self, QMimeData, Qt_DropAction, p_int, p_int_1, QModelIndex):
-        print "recivido"
+        #print "recivido"
         row=p_int
         if Qt_DropAction != QtCore.Qt.MoveAction:
             return False
@@ -930,7 +930,7 @@ class SubjectDetails(QAbstractTableModel):
             return False
         data_stream=QtCore.QDataStream(QMimeData.data("application/x-qabstractitemmodeldatalist"))
         source_row=data_stream.readInt()
-        print "Moving from %d to %d"%(source_row,row)
+        #print "Moving from %d to %d"%(source_row,row)
         index_list=list(self.__df.index)
         source_id=index_list.pop(source_row)
         index_list.insert(row,source_id)

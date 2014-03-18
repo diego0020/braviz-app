@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>next.png</file>
+    <file>previous.png</file>
+  </qresource>
+</RCC>
