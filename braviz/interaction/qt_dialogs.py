@@ -235,7 +235,8 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
 
     def select_and_return(self, *args):
-        self.save_meta_data()
+        if self.var_name is not None:
+            self.save_meta_data()
         self.params_dict["selected_outcome"] = self.var_name
         self.done(self.Accepted)
 
@@ -259,7 +260,7 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
 
     def select_and_return(self, *args):
         if self.multiple is True:
-            selected_names = self.model.checks_dict
+            selected_names = self.vars_list_model.checks_dict
             self.params_dict["checked"] = [get_var_idx(name) for name, check in
                                            selected_names.iteritems() if check is True]
         OutcomeSelectDialog.select_and_return(self, *args)

@@ -190,8 +190,9 @@ class SubjectOverviewApp(QMainWindow):
         initial_selection=self.subject_details_model.get_current_variables()
         dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_idx=initial_selection)
         dialog.exec_()
-        new_selection = params["checked"]
-        self.subject_details_model.set_variables(sorted(new_selection))
+        new_selection = params.get("checked")
+        if new_selection is not None:
+            self.subject_details_model.set_variables(sorted(new_selection))
 
         print "returning"
 

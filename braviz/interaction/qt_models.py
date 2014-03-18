@@ -40,6 +40,10 @@ class VarListModel(QAbstractListModel):
                     return QtCore.Qt.Checked
                 else:
                     return QtCore.Qt.Unchecked
+            elif int_role == QtCore.Qt.ToolTipRole:
+                name= self.internal_data[idx]
+                desc = braviz_tab_data.get_var_description_by_name(name)
+                return desc
         else:
             return QtCore.QVariant()
 
@@ -102,17 +106,19 @@ class VarAndGiniModel(QAbstractTableModel):
         return 2
 
     def data(self, QModelIndex, int_role=None):
-        if not (int_role == QtCore.Qt.DisplayRole):
-            return QtCore.QVariant()
         line = QModelIndex.row()
         col = QModelIndex.column()
         if 0 <= line < len(self.data_frame):
             if col == 0:
-                return self.data_frame["var_name"][line]
+                if int_role == QtCore.Qt.DisplayRole:
+                    return self.data_frame["var_name"][line]
+                elif int_role == QtCore.Qt.ToolTipRole:
+                    name=self.data_frame["var_name"][line]
+                    return braviz_tab_data.get_var_description_by_name(name)
             elif col == 1:
-                return str(self.data_frame["Ginni"][line])
-            else:
-                return QtCore.QVariant()
+                if int_role == QtCore.Qt.DisplayRole:
+                    return str(self.data_frame["Ginni"][line])
+        return QtCore.QVariant()
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
@@ -211,16 +217,18 @@ class AnovaRegressorsModel(QAbstractTableModel):
     def data(self, QModelIndex, int_role=None):
         line = QModelIndex.row()
         col = QModelIndex.column()
-        if not (int_role == QtCore.Qt.DisplayRole):
-            return QtCore.QVariant()
 
         if 0 <= line < self.rowCount():
             if col == 0:
-                return self.display_view["variable"].iloc[line]
+                if int_role == QtCore.Qt.DisplayRole:
+                    return self.display_view["variable"].iloc[line]
+                elif int_role == QtCore.Qt.ToolTipRole:
+                    name=self.display_view["variable"].iloc[line]
+                    return braviz_tab_data.get_var_description_by_name(name)
             elif col == 1:
-                return str(self.display_view["DF"].iloc[line])
-            else:
-                return QtCore.QVariant()
+                if int_role == QtCore.Qt.DisplayRole:
+                    return str(self.display_view["DF"].iloc[line])
+        return QtCore.QVariant()
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         #We will be using type2 or type3 Sums of Squares, and therefore order is not important
@@ -758,6 +766,9 @@ class ContextVariablesModel(QAbstractTableModel):
                 return QtCore.Qt.Checked
             else:
                 return QtCore.Qt.Unchecked
+        if (int_role == QtCore.Qt.ToolTipRole) and (col==0):
+            var_idx=self.data_frame.index[line]
+            return braviz_tab_data.get_var_description(var_idx)
 
         if not (int_role == QtCore.Qt.DisplayRole):
             return QtCore.QVariant()
@@ -862,15 +873,21 @@ class SubjectDetails(QAbstractTableModel):
         if Qt_Orientation == QtCore.Qt.Vertical:
             return QtCore.QVariant()
         elif 0 <= p_int < len(self.headers):
-            return self.headers[p_int]
+            name = self.headers[p_int]
+            desc = braviz_tab_data.get_var_description_by_name(name)
+            return "\n".join((name,desc))
         else:
             return QtCore.QVariant()
 
     def data(self, QModelIndex, int_role=None):
-        if not int_role == QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
         line = QModelIndex.row()
         col = QModelIndex.column()
+        if int_role == QtCore.Qt.ToolTipRole:
+            var_idx=self.__df.index[line]
+            desc=braviz_tab_data.get_var_description(var_idx)
+            return desc
+        if not int_role == QtCore.Qt.DisplayRole:
+            return QtCore.QVariant()
         if (0 <= line < len(self.__df)) and (0 <= col < self.__df.shape[1]):
             datum = self.__df.iloc[line, col]
             return unicode(datum)
