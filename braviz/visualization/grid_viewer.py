@@ -1,21 +1,22 @@
 """A class for displaying multiple solids organized in a grid, and related functions"""
 
 from __future__ import division
-import vtk
-import random
 import math
-import numpy as np
-from braviz.visualization import get_arrow, OutlineActor
-from braviz.visualization.vtk_charts import mini_scatter_plot
 from itertools import izip
 import gc
+
+import vtk
+import numpy as np
+
+from braviz.visualization import get_arrow, OutlineActor
+from braviz.visualization.vtk_charts import mini_scatter_plot
+
 
 __author__ = 'Diego'
 
 
 class GridView(vtk.vtkRenderWindow):
     """A class for displaying multiple solids organized in a grid
-
     All objects inside the grid have a name which is the key for all the dictionaries in the class,
     and the common way to refer to it in most functions"""
     def __init__(self,use_lod=False):

@@ -143,6 +143,21 @@ def populate_db_from_csv(csv_file, db_file):
     conn.commit()
 
 
+    #image_codes
+    query="""INSERT INTO variables (var_name, is_real) VALUES ("Images_codes",1)"""
+    conn.execute(query)
+
+    tuples= ( (s,s) for s in subjects)
+
+    query = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
+        VALUES ( (SELECT var_idx FROM variables WHERE var_name = "Images_codes"),
+        ? , ?)"""
+    conn.executemany(query,tuples)
+    manual_fixes=[(812,182)]
+    conn.executemany(query,manual_fixes)
+    conn.commit()
+
+
 
 
 

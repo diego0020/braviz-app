@@ -693,5 +693,6 @@ class fMRI_blender:
 
 
 #Easy access to GridView
+
 if __name__ == "__main__":
     test_arrow((3, 4, 5), (7, -8, -9))

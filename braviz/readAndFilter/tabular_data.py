@@ -367,3 +367,9 @@ def update_variable_values(var_idx,tuples):
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.executemany(q,super_tuples)
     conn.commit()
+
+def update_multiple_variable_values(idx_subject_value_tuples):
+    conn=get_connection()
+    q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
+    conn.executemany(q,idx_subject_value_tuples)
+    conn.commit()

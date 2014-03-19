@@ -26,7 +26,7 @@ from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_
     is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name, \
     get_min_max_values, is_variable_name_real, get_var_description_by_name, save_is_real_by_name, \
     save_real_meta_by_name, save_var_description_by_name, get_min_max_opt_values_by_name, register_new_variable,\
-    save_real_meta, save_var_description
+    save_real_meta, save_var_description,update_multiple_variable_values
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -486,6 +486,7 @@ class MatplotWidget(FigureCanvas):
         self.redraw_last_plot()
         if self.x_order is not None:
             #labels go from 1 to n; permutation is from 0 to n-1
+            assert 0 not in x_coords
             x_coords = map(lambda k: self.x_order.index(int(k) - 1) + 1, x_coords)
         if color is None:
             color = "black"
@@ -921,6 +922,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             value_widget.setFixedHeight(longest_size.height())
         else:
             max_value = get_maximum_value(idx)
+            if max_value is None:
+                max_value = 1000
             value_widget.setText("%.2f" % max_value)
             longest_size = value_widget.sizeHint()
             value_widget.setFixedWidth(longest_size.width())
@@ -991,7 +994,20 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         self.__save_changes_button.setEnabled(True)
 
     def save_changes_into_db(self):
-        print "Not yet implemented"
+
+        idx_value_tuples=[]
+        for i,idx in enumerate(self.__context_variable_codes):
+            if self.__editables_dict[idx] is True:
+                value_widget = self.__values_widgets[i]
+                if isinstance(value_widget,QtGui.QDoubleSpinBox):
+                    value = float(value_widget.value())
+                elif isinstance(value_widget,QtGui.QComboBox):
+                    value=value_widget.itemData(value_widget.currentIndex())
+                    value=int(value.toString())
+                idx_value_tuples.append((int(idx),int(self.__curent_subject),value))
+
+        print idx_value_tuples
+        update_multiple_variable_values(idx_value_tuples)
 
 
 

@@ -8,7 +8,7 @@ from PyQt4.QtGui import QMainWindow
 
 import braviz
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
-from braviz.interaction.qt_models import SubjectsTable, SubjectDetails
+from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel
 
@@ -31,8 +31,6 @@ class SubjectOverviewApp(QMainWindow):
         self.context_frame=None
         self.__context_variables=[11, 6, 17, 1]
 
-
-
         #select first subject
         index=self.subjects_model.index(0,0)
         self.__curent_subject = self.subjects_model.data(index,QtCore.Qt.DisplayRole)
@@ -40,6 +38,8 @@ class SubjectOverviewApp(QMainWindow):
         initial_details_vars=[6,11,248,249,250,251,252,253,254,255]
         self.subject_details_model=SubjectDetails(initial_vars=initial_details_vars,
                                                   initial_subject=self.__curent_subject)
+        #Structures model
+        self.structures_tree_model = StructureTreeModel(self.reader)
 
         #Init gui
         self.ui = None
@@ -84,6 +84,12 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget.image_level_changed.connect(self.ui.image_level.setValue)
         self.ui.image_window.valueChanged.connect(self.vtk_viewer.set_image_window)
         self.ui.reset_window_level.pressed.connect(self.vtk_viewer.reset_window_level)
+        #segmentation controls
+        self.ui.structures_tree.setModel(self.structures_tree_model)
+        #self.structures_tree_model.dataChanged.connect(self.test)
+        self.connect(self.structures_tree_model,QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
+                     self.ui.structures_tree.dataChanged)
+        #self.ui.export_segmentation_to_db.pressed.connect(self.test)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()

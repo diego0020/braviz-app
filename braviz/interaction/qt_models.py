@@ -80,6 +80,7 @@ class VarListModel(QAbstractListModel):
             idx=QModelIndex.row()
             self.checks_dict[self.internal_data[idx]]=QVariant.toBool()
             return True
+        return False
 
     def select_items_by_name(self,items_list):
         for i in items_list:
@@ -427,7 +428,7 @@ class NominalVariablesMeta(QAbstractTableModel):
         #print "*****loading model"
         if self.var_name is None:
             #generic labels
-            self.labels_list = range(2)
+            self.labels_list = range(1,3)
             self.names_dict = {}
             return
         self.var_name = var_name
@@ -445,7 +446,7 @@ class NominalVariablesMeta(QAbstractTableModel):
             braviz_tab_data.save_nominal_labels(var_idx,tuples)
 
     def add_label(self):
-        self.labels_list.append(len(self.labels_list))
+        self.labels_list.append(len(self.labels_list)+1)
         self.modelReset.emit()
 class AnovaResultsModel(QAbstractTableModel):
     def __init__(self, results_df=None, residuals=None, intercept=None):
@@ -1001,3 +1002,4 @@ class NewVariableValues(QAbstractTableModel):
     def save_into_db(self,var_idx):
         value_tuples=((s,self.values_dict.get(s,"nan")) for s in self.subjects_list)
         braviz_tab_data.update_variable_values(var_idx,value_tuples)
+
