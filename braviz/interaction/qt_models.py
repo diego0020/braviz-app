@@ -355,14 +355,13 @@ class NominalVariablesMeta(QAbstractTableModel):
     def __init__(self, var_name, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self.var_name = var_name
-        self.conn = braviz_tab_data.get_connection()
         self.names_dict = {}
         self.labels_list = []
         self.headers = ("label", "name")
         self.update_model(var_name)
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
-        return len(self.names_dict)
+        return len(self.labels_list)
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return 2
@@ -376,7 +375,7 @@ class NominalVariablesMeta(QAbstractTableModel):
             if col == 0:
                 return self.labels_list[line]
             elif col == 1:
-                return self.names_dict[self.labels_list[line]]
+                return self.names_dict.get(self.labels_list[line],"")
             else:
                 return QtCore.QVariant()
 
@@ -426,16 +425,28 @@ class NominalVariablesMeta(QAbstractTableModel):
 
     def update_model(self, var_name):
         #print "*****loading model"
+        if self.var_name is None:
+            #generic labels
+            self.labels_list = range(2)
+            self.names_dict = {}
+            return
         self.var_name = var_name
         self.names_dict = braviz_tab_data.get_names_label_dict(var_name)
         self.labels_list = list(self.names_dict.iterkeys())
 
-    def save_into_db(self):
+    def save_into_db(self,var_idx=None):
         #print self.names_dict
         tuples = ( (k, v) for k, v in self.names_dict.iteritems())
-        braviz_tab_data.save_nominal_labels_by_name(self.var_name,tuples)
+        if self.var_name is not None:
+            braviz_tab_data.save_nominal_labels_by_name(self.var_name,tuples)
+        else:
+            if var_idx is None:
+                raise Exception("Var_idx is required")
+            braviz_tab_data.save_nominal_labels(var_idx,tuples)
 
-
+    def add_label(self):
+        self.labels_list.append(len(self.labels_list))
+        self.modelReset.emit()
 class AnovaResultsModel(QAbstractTableModel):
     def __init__(self, results_df=None, residuals=None, intercept=None):
         if results_df is None:
@@ -936,3 +947,57 @@ class SubjectDetails(QAbstractTableModel):
 
     def get_current_variables(self):
         return self.__df.index
+
+class NewVariableValues(QAbstractTableModel):
+    def __init__(self):
+        super(NewVariableValues,self).__init__()
+        self.subjects_list = braviz_tab_data.get_subjects()
+        self.values_dict = {}
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return 2
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.subjects_list)
+    def data(self, QModelIndex, int_role=None):
+        if int_role == QtCore.Qt.DisplayRole:
+            row=QModelIndex.row()
+            col=QModelIndex.column()
+            if col == 0:
+                return self.subjects_list[row]
+            elif col==1:
+                return self.values_dict.get(self.subjects_list[row],"")
+        return QtCore.QVariant()
+    def flags(self, QModelIndex):
+        row=QModelIndex.row()
+        col=QModelIndex.column()
+        if 0<=row<len(self.subjects_list):
+            if 0<=col<2:
+                flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+            if col==1:
+                flags |= QtCore.Qt.ItemIsEditable
+            return flags
+        return QtCore.Qt.NoItemFlags
+
+
+    def setData(self, QModelIndex, QVariant, int_role=None):
+        row = QModelIndex.row()
+        col = QModelIndex.column()
+        if int_role != QtCore.Qt.EditRole:
+            return False
+        if col != 1 or row < 0 or row >= self.rowCount():
+            return False
+        try:
+            self.values_dict[self.subjects_list[row]] = float(QVariant.toString())
+        except ValueError:
+            return False
+        self.dataChanged.emit(QModelIndex, QModelIndex)
+        return True
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        if (Qt_Orientation == QtCore.Qt.Horizontal) and (int_role == QtCore.Qt.DisplayRole):
+            if p_int == 0:
+                return "Subject"
+            elif p_int == 1:
+                return "Value"
+        return QtCore.QVariant()
+    def save_into_db(self,var_idx):
+        value_tuples=((s,self.values_dict.get(s,"nan")) for s in self.subjects_list)
+        braviz_tab_data.update_variable_values(var_idx,value_tuples)

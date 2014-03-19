@@ -19,12 +19,14 @@ from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_detail
 from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
 from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealog
 from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariablesDialog
+from braviz.interaction.qt_guis.new_variable_dialog import Ui_NewVariableDialog
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
     is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name, \
-    get_min_max_values, is_variable_name_real, get_var_description_by_name, save_is_real_by_name,\
-    save_real_meta_by_name, save_var_description_by_name
+    get_min_max_values, is_variable_name_real, get_var_description_by_name, save_is_real_by_name, \
+    save_real_meta_by_name, save_var_description_by_name, get_min_max_opt_values_by_name, register_new_variable,\
+    save_real_meta, save_var_description
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -135,16 +137,13 @@ class VariableSelectDialog(QtGui.QDialog):
         self.details_ui = details_ui
         self.details_ui.optimum_val.valueChanged.connect(self.update_optimum_real_value)
         #try to read values from DB
-        query = "SELECT * FROM ratio_meta WHERE var_idx = (SELECT var_idx FROM variables WHERE var_name=?)"
-        cur = self.conn.cursor()
-        cur.execute(query, (self.var_name,))
-        db_values = cur.fetchone()
+        db_values = get_min_max_opt_values_by_name(self.var_name)
         if db_values is None:
             self.guess_max_min()
         else:
-            self.rational["min"] = db_values[1]
-            self.rational["max"] = db_values[2]
-            self.rational["opt"] = db_values[3]
+            self.rational["min"] = db_values[0]
+            self.rational["max"] = db_values[1]
+            self.rational["opt"] = db_values[2]
         self.set_real_controls()
         self.details_ui.optimum_val.valueChanged.connect(self.update_limits_in_plot)
         self.details_ui.minimum_val.valueChanged.connect(self.update_limits_in_plot)
@@ -192,17 +191,17 @@ class VariableSelectDialog(QtGui.QDialog):
             var_type = 1  # real should be 1
 
         #save variable type
-        save_is_real_by_name(self.var_name,var_type)
+        save_is_real_by_name(self.var_name, var_type)
 
         #save description
-        desc_text=self.ui.var_description.toPlainText()
-        save_var_description_by_name(self.var_name,str(desc_text))
+        desc_text = self.ui.var_description.toPlainText()
+        save_var_description_by_name(self.var_name, str(desc_text))
 
 
         #save other values
         if var_type == 1:
             #real
-            save_real_meta_by_name(self.var_name,self.rational["min"],
+            save_real_meta_by_name(self.var_name, self.rational["min"],
                                    self.rational["max"], self.rational["opt"])
         elif var_type == 0:
             self.nominal_model.save_into_db()
@@ -623,6 +622,106 @@ class InteractionSelectDialog(QtGui.QDialog):
                 self.full_model.add_interactor(i)
 
 
+class NewVariableDialog(QtGui.QDialog):
+    def __init__(self):
+        super(NewVariableDialog, self).__init__()
+        self.ui = Ui_NewVariableDialog()
+        self.ui.setupUi(self)
+        self.ui.var_type_combo.currentIndexChanged.connect(self.create_meta_data_frame)
+        self.details_ui = None
+        self.nominal_model = None
+        self.rational = {}
+        self.create_meta_data_frame(0)
+        self.values_model = braviz_models.NewVariableValues()
+        self.ui.values_table.setModel(self.values_model)
+        self.ui.var_name_input.editingFinished.connect(self.activate_save_button)
+        self.ui.save_button.pressed.connect(self.save_new_variable)
+
+    def create_meta_data_frame(self, is_nominal):
+        self.clear_details_frame()
+        if is_nominal == 0:
+            #real
+            QtCore.QTimer.singleShot(0, self.create_real_details)
+        else:
+            QtCore.QTimer.singleShot(0, self.create_nominal_details)
+
+    def create_real_details(self):
+        #print "creating real details"
+        details_ui = Ui_rational_details()
+        details_ui.setupUi(self.ui.details_frame)
+        self.details_ui = details_ui
+        self.details_ui.optimum_val.valueChanged.connect(self.update_optimum_real_value)
+        #try to read values from DB
+        self.details_ui.maximum_val.setValue(100)
+        self.details_ui.minimum_val.setValue(0)
+        self.details_ui.optimum_val.setValue(50)
+        self.update_optimum_real_value()
+
+    def create_nominal_details(self):
+        #print "creating details"
+        if self.nominal_model is None:
+            self.nominal_model = braviz_models.NominalVariablesMeta(None)
+        else:
+            self.nominal_model.update_model(None)
+        details_ui = Ui_nominal_details_frame()
+        details_ui.setupUi(self.ui.details_frame)
+        details_ui.labels_names_table.setModel(self.nominal_model)
+        add_label_button = QtGui.QPushButton("Add Label")
+        details_ui.verticalLayout.addWidget(add_label_button)
+        add_label_button.pressed.connect(self.nominal_model.add_label)
+        self.details_ui = details_ui
+
+
+    def clear_details_frame(self, layout=None):
+        if layout is None:
+            layout = self.ui.details_frame.layout()
+        if layout is None:
+            return
+        for i in reversed(xrange(layout.count())):
+            item = layout.takeAt(i)
+            if isinstance(item, QtGui.QWidgetItem):
+                item.widget().deleteLater()
+            elif isinstance(item, QtGui.QSpacerItem):
+                pass
+            else:
+                self.clearLayout(item.layout())
+
+        layout.deleteLater()
+
+    def update_optimum_real_value(self, perc_value=None):
+        maxi = self.details_ui.maximum_val.value()
+        mini = self.details_ui.minimum_val.value()
+        if perc_value is None:
+            perc_value = self.details_ui.optimum_val.value()
+        real_value = perc_value / 100 * (maxi - mini) + mini
+        self.details_ui.optimum_real_value.setNum(real_value)
+
+    def activate_save_button(self):
+        if len(str(self.ui.var_name_input.text()))>0:
+            self.ui.save_button.setEnabled(True)
+
+    def save_new_variable(self):
+        #create new variable
+        var_name = str(self.ui.var_name_input.text())
+        is_real = 1-self.ui.var_type_combo.currentIndex()
+        var_idx = register_new_variable(var_name,is_real)
+        #add meta data
+        if is_real:
+            mini=self.details_ui.minimum_val.value()
+            maxi=self.details_ui.maximum_val.value()
+            opti=self.details_ui.optimum_val.value()
+            opti = mini + opti * (maxi - mini) / 100
+            save_real_meta(var_idx,mini,maxi,opti)
+        else:
+            self.nominal_model.save_into_db(var_idx)
+        #description
+        desc=str(self.ui.var_description.toPlainText())
+        save_var_description(var_idx,desc)
+        #values
+        self.values_model.save_into_db(var_idx)
+        self.accept()
+
+
 class ContextVariablesSelectDialog(VariableSelectDialog):
     def __init__(self, variables_list=None, current_subject=None, editables_dict=None):
         super(ContextVariablesSelectDialog, self).__init__()
@@ -643,6 +742,8 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.ui.current_variables.customContextMenuRequested.connect(self.show_context_menu)
         self.ui.done_button.pressed.connect(self.finish_close)
         self.ui.current_variables.activated.connect(self.update_right_side2)
+
+        self.ui.create_varible_button.pressed.connect(self.launch_new_variable_dialog)
         self.jitter = None
         self.variable_list = variables_list
         print "pescado"
@@ -695,6 +796,14 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.variable_list.extend(new_list)
         assert id(self.variable_list) == self.__variable_lists_id
         self.done(self.Accepted)
+
+    def launch_new_variable_dialog(self):
+        new_variable_dialog = NewVariableDialog()
+        r=new_variable_dialog.exec_()
+        if r == QtGui.QDialog.Accepted:
+            self.vars_model.update_list()
+
+
 
 
 class ContextVariablesPanel(QtGui.QGroupBox):

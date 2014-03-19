@@ -187,6 +187,17 @@ def get_min_max_values_by_name(var_name):
         res = cur.fetchone()
     return res
 
+def get_min_max_opt_values_by_name(var_name):
+    conn = get_connection()
+    cur = conn.execute("SELECT min_val, max_val, optimum_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
+                       (str(var_name),))
+    res = cur.fetchone()
+    if res is None:
+        q = """select MIN(value), MAX(value), AVG(VALUE) from (select * from var_values where value != "nan")
+        where var_idx = (SELECT var_idx FROM variables WHERE var_name = ?) group by var_idx"""
+        cur = conn.execute(q, (str(var_name),))
+        res = cur.fetchone()
+    return res
 
 def get_subject_variables(subj_code, var_codes):
     """Returns a data frame with two columns, variable_name, value... with var_codes as index,
@@ -214,6 +225,11 @@ def get_subject_variables(subj_code, var_codes):
     output = pd.DataFrame({"name": names, "value": values}, index=var_codes)
     return output
 
+def get_subjects():
+    conn = get_connection()
+    cur=conn.execute("SELECT subject FROM subjects ORDER BY subject")
+    subj_list = list( t[0] for t in cur.fetchall())
+    return subj_list
 
 def get_var_description(var_idx):
     conn = get_connection()
@@ -266,6 +282,20 @@ def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
     else:
         conn.commit()
 
+def save_real_meta(var_idx, min_value, max_value, opt_value):
+    conn = get_connection()
+    query = """INSERT OR REPLACE INTO ratio_meta
+    VALUES(?, ? , ? , ? );
+    """
+    try:
+        conn.execute(query,
+                     (var_idx, min_value,
+                      max_value, opt_value)
+        )
+    except (KeyError, ValueError):
+        pass
+    else:
+        conn.commit()
 def save_nominal_labels_by_name(var_name,label_name_tuples):
     mega_tuple=( (var_name, label, name) for label, name in label_name_tuples)
     con = get_connection()
@@ -308,4 +338,32 @@ def save_var_description(var_idx,description):
     (?, -- var_idx
     ?) -- desc"""
     conn.execute(query, (var_idx,description,))
+    conn.commit()
+
+def register_new_variable(var_name,is_real=1):
+    var_name = str(var_name)
+    conn = get_connection()
+    q1 = "SELECT var_idx from VARIABLES where var_name = ?"
+    cur=conn.execute(q1,(var_name,))
+    if cur.fetchone() is not None:
+        raise Exception("Attemptint to add duplicate variable")
+    if is_real:
+        is_real = 1
+    else:
+        is_real = 0
+    q="""INSERT INTO variables (var_name, is_real)
+         Values (? , ?)"""
+    conn.execute(q,(str(var_name),is_real))
+    cur=conn.execute(q1,(var_name,))
+    var_idx = cur.fetchone()
+    if var_idx is None:
+        raise Exception("Problem adding to Data Base")
+    conn.commit()
+    return var_idx[0]
+
+def update_variable_values(var_idx,tuples):
+    conn=get_connection()
+    super_tuples=((var_idx,s,v) for s,v in tuples)
+    q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
+    conn.executemany(q,super_tuples)
     conn.commit()
