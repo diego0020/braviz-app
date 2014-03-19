@@ -86,10 +86,9 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.reset_window_level.pressed.connect(self.vtk_viewer.reset_window_level)
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
-        #self.structures_tree_model.dataChanged.connect(self.test)
         self.connect(self.structures_tree_model,QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
                      self.ui.structures_tree.dataChanged)
-        #self.ui.export_segmentation_to_db.pressed.connect(self.test)
+        self.structures_tree_model.selection_changed.connect(self.update_segmented_structures)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
@@ -124,7 +123,7 @@ class SubjectOverviewApp(QMainWindow):
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())
         if selection == "None":
-            self.vtk_viewer.hide_image()
+            self.vtk_viewer.change_image_modality(None)
             self.ui.image_orientation.setEnabled(0)
             self.ui.image_window.setEnabled(0)
             self.ui.image_level.setEnabled(0)
@@ -214,6 +213,9 @@ class SubjectOverviewApp(QMainWindow):
         next_index=self.subjects_model.index(next_row,0)
         self.change_subject(next_index)
 
+    def update_segmented_structures(self):
+        selected_structures = self.structures_tree_model.get_selected_structures()
+        self.vtk_viewer.set_structures(selected_structures)
 def run():
     import sys
 

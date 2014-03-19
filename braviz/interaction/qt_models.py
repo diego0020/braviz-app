@@ -8,7 +8,7 @@ from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 from braviz.interaction.r_functions import calculate_ginni_index
-
+from braviz.interaction.qt_structures_model import StructureTreeModel
 
 class VarListModel(QAbstractListModel):
     def __init__(self, outcome_var=None, parent=None,checkeable=False):
@@ -1003,3 +1003,5 @@ class NewVariableValues(QAbstractTableModel):
         value_tuples=((s,self.values_dict.get(s,"nan")) for s in self.subjects_list)
         braviz_tab_data.update_variable_values(var_idx,value_tuples)
 
+if __name__ == "__main__":
+    test_tree=StructureTreeModel()

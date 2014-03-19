@@ -45,6 +45,7 @@ class SubjectViewer:
         self.__image_plane_widget = None
         self.__mri_lut = None
         self.__fmri_blender = braviz.visualization.fMRI_blender()
+        self.__model_manager = ModelManager(self.reader,self.ren)
 
         #reset camera and render
         self.reset_camera(0)
@@ -71,6 +72,12 @@ class SubjectViewer:
 
         #update image
         self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
+
+        #update models
+        self.__model_manager.reload_models(subj=new_subject_img_code)
+
+        self.ren_win.Render()
+
 
     def hide_image(self):
         if self.__image_plane_widget is not None:
@@ -107,14 +114,20 @@ class SubjectViewer:
         """Changes the modality of the current image
         to hide the image call hide_image
         in the case of fMRI modality should be fMRI and paradigm the name of the paradigm"""
-
-        modality = modality.upper()
+        if modality is not None:
+            modality = modality.upper()
         if (self.__current_image is not None) and (modality == self.__current_image) and (paradigm == self.__curent_fmri_paradigm) and \
             self.__image_plane_widget.GetEnabled() and not force_reload:
             #nothing to do
             return
 
         self.__current_image = modality
+
+        if modality is None:
+            self.hide_image()
+            self.ren_win.Render()
+            return
+
         if self.__image_plane_widget is None:
             self.create_image_plane_widget()
         self.__image_plane_widget.On()
@@ -127,6 +140,8 @@ class SubjectViewer:
 
         if self.__current_subject is None:
             return
+
+
 
 
 
@@ -228,11 +243,13 @@ class SubjectViewer:
         if self.__image_plane_widget is None:
             return
         self.__image_plane_widget.SetWindowLevel(new_window, self.get_current_image_level())
+        self.ren_win.Render()
 
     def set_image_level(self, new_level):
         if self.__image_plane_widget is None:
             return
         self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(), new_level)
+        self.ren_win.Render()
 
     def reset_window_level(self):
         if self.__image_plane_widget is None:
@@ -245,8 +262,8 @@ class SubjectViewer:
             self.__image_plane_widget.SetWindowLevel(1.20, 0.6)
             self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
-        else:
-            return
+        self.ren_win.Render()
+        return
 
     def change_current_space(self, new_space):
         if self.__current_space == new_space:
@@ -254,6 +271,8 @@ class SubjectViewer:
         self.__current_space = new_space
         if self.__image_plane_widget is not None and self.__image_plane_widget.GetEnabled():
             self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
+        self.__model_manager.reload_models(space=new_space)
+        self.ren_win.Render()
 
     __camera_positions_dict = {
         0: ((-3.5, 0, 13), (157, 154, 130), (0, 0, 1)),
@@ -295,6 +314,10 @@ class SubjectViewer:
         print "viewUp: ",
         print cam1.GetViewUp()
 
+    def set_structures(self,new_structures):
+        self.__model_manager.set_models(new_structures)
+        self.ren_win.Render()
+
 
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -325,3 +348,101 @@ class QSuvjectViwerWidget(QFrame):
     def window_level_change_handle(self, window, level):
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
+
+class ModelManager:
+    def __init__(self,reader,ren,initial_subj="093",initial_space="World"):
+        self.ren = ren
+        self.__active_models_set=set()
+        self.__pd_map_act=dict()
+        self.__available_models=set()
+        self.__current_subject=initial_subj
+        self.__reader = reader
+        self.__current_space = initial_space
+        self.__actor_to_model={} # for picking
+
+        self.reload_models(subj=initial_subj,space=initial_space)
+
+    def reload_models(self,subj=None,space=None):
+        if subj is not None:
+            self.__current_subject = subj
+            self.__available_models = self.__reader.get("MODEL",subj,index=True)
+        if space is not None:
+            self.__current_space = space
+
+        if (space is not None) or (subj is not None):
+            self.__refresh_models()
+
+    def __refresh_models(self):
+        for mod_name in self.__active_models_set:
+            self.__addModel(mod_name)
+
+    def __addModel(self,model_name):
+        #if already exists make visible
+        trio = self.__pd_map_act.get(model_name)
+        if trio is not None:
+            model,mapper,actor=trio
+            if model_name in self.__available_models:
+                model=self.__reader.get('MODEL',self.__current_subject,name=model_name,space=self.__current_space)
+                mapper.SetInputData(model)
+                actor.SetVisibility(1)
+                self.__pd_map_act[model_name]=(model,mapper,actor)
+            else:
+                actor.SetVisibility(0)  # Hide
+        else:
+            #New model
+            if model_name in self.__available_models:
+                model=self.__reader.get('MODEL',self.__current_subject,name=model_name,space=self.__current_space)
+                model_color=self.__reader.get('MODEL',None,name=model_name,color='T')
+                model_mapper=vtk.vtkPolyDataMapper()
+                model_actor=vtk.vtkActor()
+                model_properties=model_actor.GetProperty()
+                model_properties.SetColor(list(model_color[0:3]))
+                model_mapper.SetInputData(model)
+                model_actor.SetMapper(model_mapper)
+                self.ren.AddActor(model_actor)
+                self.__pd_map_act[model_name]=(model,model_mapper,model_actor)
+                self.__actor_to_model[id(model_actor)]=model_name
+
+        #actor=self.__pd_map_act[model_name][2]
+        #model_volume=self.__reader.get('model',self.currSubj,name=model_name,volume=1)
+        #add_solid_balloon(balloon_widget, actor, model_name,model_volume)
+
+    def __removeModel(self,model_name):
+        """Deletes internal data structures
+        """
+        #check that it actually exists
+        trio = self.__pd_map_act.get(model_name)
+        if trio is None:
+            return
+        model, mapper, actor=trio
+        self.ren.RemoveActor(actor)
+        del self.__pd_map_act[model_name]
+        del self.__actor_to_model[id(actor)]
+        #balloon_widget.RemoveBalloon(actor)
+        del actor
+        del mapper
+        del model
+
+    def __hide_model(self,model_name):
+        trio = self.__pd_map_act.get(model_name)
+        if trio is None:
+            return
+        actor = trio[2]
+        actor.SetVisibility(0)
+
+    def set_models(self,new_model_set):
+        new_set=set(new_model_set)
+        current_models=self.__active_models_set
+
+        to_add = new_set - current_models
+        to_hide = current_models - new_set
+
+        for mod_name in to_add:
+            self.__addModel(mod_name)
+        for mod_name in to_hide:
+            self.__hide_model(mod_name)
+
+        self.__active_models_set=new_set
+
+
+
