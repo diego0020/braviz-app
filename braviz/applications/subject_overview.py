@@ -130,7 +130,6 @@ class SubjectOverviewApp(QMainWindow):
             self.ui.reset_window_level.setEnabled(0)
             self.ui.slice_spin.setEnabled(0)
             self.ui.slice_slider.setEnabled(0)
-            self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
             self.reset_image_view_controls()
             return
 
@@ -146,6 +145,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_orientation.setEnabled(1)
         self.ui.slice_spin.setEnabled(1)
         self.ui.slice_slider.setEnabled(1)
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
         self.reset_image_view_controls()
 
         window_level_control = 1 if selection in ("MRI", "FA") else 0
