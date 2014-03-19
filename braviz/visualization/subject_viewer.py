@@ -7,8 +7,8 @@ import braviz
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt4.QtGui import QFrame, QHBoxLayout
 from PyQt4.QtCore import pyqtSignal
-
-
+from braviz.interaction.structure_metrics import solve_laterality
+import braviz.readAndFilter.tabular_data
 class SubjectViewer:
     def __init__(self, render_window_interactor, reader, widget):
 
@@ -318,6 +318,12 @@ class SubjectViewer:
         self.__model_manager.set_models(new_structures)
         self.ren_win.Render()
 
+    def set_structures_opacity(self,new_opacity):
+        float_opacity = new_opacity/100
+        self.__model_manager.set_opacity(float_opacity)
+        self.ren_win.Render()
+
+
 
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -359,13 +365,24 @@ class ModelManager:
         self.__reader = reader
         self.__current_space = initial_space
         self.__actor_to_model={} # for picking
+        self.__laterality = None
+
+        #visual attributes
+        self.__opacity=1
 
         self.reload_models(subj=initial_subj,space=initial_space)
+
+    def __get_laterality(self):
+        lat_var_idx=6
+        lat_dict = {1:'r',2:'l'}
+        label=braviz.readAndFilter.tabular_data.get_var_value(lat_var_idx,self.__current_subject)
+        return lat_dict[label]
 
     def reload_models(self,subj=None,space=None):
         if subj is not None:
             self.__current_subject = subj
             self.__available_models = self.__reader.get("MODEL",subj,index=True)
+            self.__laterality = self.__get_laterality()
         if space is not None:
             self.__current_space = space
 
@@ -381,8 +398,9 @@ class ModelManager:
         trio = self.__pd_map_act.get(model_name)
         if trio is not None:
             model,mapper,actor=trio
-            if model_name in self.__available_models:
-                model=self.__reader.get('MODEL',self.__current_subject,name=model_name,space=self.__current_space)
+            rl_name=solve_laterality(self.__laterality,model_name)
+            if rl_name in self.__available_models:
+                model=self.__reader.get('MODEL',self.__current_subject,name=rl_name,space=self.__current_space)
                 mapper.SetInputData(model)
                 actor.SetVisibility(1)
                 self.__pd_map_act[model_name]=(model,mapper,actor)
@@ -390,13 +408,15 @@ class ModelManager:
                 actor.SetVisibility(0)  # Hide
         else:
             #New model
-            if model_name in self.__available_models:
-                model=self.__reader.get('MODEL',self.__current_subject,name=model_name,space=self.__current_space)
-                model_color=self.__reader.get('MODEL',None,name=model_name,color='T')
+            rl_name=solve_laterality(self.__laterality,model_name)
+            if rl_name in self.__available_models:
+                model=self.__reader.get('MODEL',self.__current_subject,name=rl_name,space=self.__current_space)
+                model_color=self.__reader.get('MODEL',None,name=rl_name,color='T')
                 model_mapper=vtk.vtkPolyDataMapper()
                 model_actor=vtk.vtkActor()
                 model_properties=model_actor.GetProperty()
                 model_properties.SetColor(list(model_color[0:3]))
+                model_properties.SetOpacity(self.__opacity)
                 model_mapper.SetInputData(model)
                 model_actor.SetMapper(model_mapper)
                 self.ren.AddActor(model_actor)
@@ -431,7 +451,7 @@ class ModelManager:
         actor.SetVisibility(0)
 
     def set_models(self,new_model_set):
-        new_set=set(new_model_set)
+        new_set = set(new_model_set)
         current_models=self.__active_models_set
 
         to_add = new_set - current_models
@@ -444,5 +464,9 @@ class ModelManager:
 
         self.__active_models_set=new_set
 
-
+    def set_opacity(self,float_opacity):
+        self.__opacity = float_opacity
+        for _,_,ac in self.__pd_map_act.itervalues():
+            prop=ac.GetProperty()
+            prop.SetOpacity(float_opacity)
 

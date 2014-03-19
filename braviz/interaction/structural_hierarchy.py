@@ -89,10 +89,10 @@ def get_structural_hierarchy_with_names(reader,subj,dom_nondom=True, right_left=
                 hierarchy_dict[hemisphere][name]['Gray Matter']=struct
                 hierarchy_dict[hemisphere]['All Gray Matter'][name]=struct
             if dom_nondom is True:
-                hierarchy_dict['Dominant Hemisphere']['All Gray Matter'][name]=struct
-                hierarchy_dict['Nondominant Hemisphere']['All Gray Matter'][name]=struct
-                hierarchy_dict['Dominant Hemisphere'][name]['Gray Matter']=struct
-                hierarchy_dict['Nondominant Hemisphere'][name]['Gray Matter']=struct
+                hierarchy_dict['Dominant Hemisphere']['All Gray Matter'][name]="ctx-dh-"+name
+                hierarchy_dict['Nondominant Hemisphere']['All Gray Matter'][name]="ctx-nh-"+name
+                hierarchy_dict['Dominant Hemisphere'][name]['Gray Matter']="ctx-dh-"+name
+                hierarchy_dict['Nondominant Hemisphere'][name]['Gray Matter']="ctx-nh-"+name
         elif struct.startswith('wm-'):
             hemisphere = 'Right Hemisphere' if struct[3] == 'r' else 'Left Hemisphere'
             name = struct[6:]
@@ -100,10 +100,10 @@ def get_structural_hierarchy_with_names(reader,subj,dom_nondom=True, right_left=
                 hierarchy_dict[hemisphere][name]['White Matter']=struct
                 hierarchy_dict[hemisphere]['All White Matter'][name]=struct
             if dom_nondom is True:
-                hierarchy_dict['Dominant Hemisphere']['All White Matter'][name]=struct
-                hierarchy_dict['Nondominant Hemisphere']['All White Matter'][name]=struct
-                hierarchy_dict['Dominant Hemisphere'][name]['White Matter']=struct
-                hierarchy_dict['Nondominant Hemisphere'][name]['White Matter']=struct
+                hierarchy_dict['Dominant Hemisphere']['All White Matter'][name]="wm-dh-"+name
+                hierarchy_dict['Nondominant Hemisphere']['All White Matter'][name]="wm-nh-"+name
+                hierarchy_dict['Dominant Hemisphere'][name]['White Matter']="wm-dh-"+name
+                hierarchy_dict['Nondominant Hemisphere'][name]['White Matter']="wm-nh-"+name
         elif struct.startswith('CC'):
             name=struct[3:]
             hierarchy_dict['Corpus Callosum'][name]=struct

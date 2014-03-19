@@ -51,11 +51,6 @@ class SubjectOverviewApp(QMainWindow):
         #self.vtk_viewer.show_cone()
 
 
-
-
-
-
-
     def setup_gui(self):
         self.ui = Ui_subject_overview()
         self.ui.setupUi(self)
@@ -89,7 +84,8 @@ class SubjectOverviewApp(QMainWindow):
         self.connect(self.structures_tree_model,QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
                      self.ui.structures_tree.dataChanged)
         self.structures_tree_model.selection_changed.connect(self.update_segmented_structures)
-
+        self.ui.struct_opacity_slider.valueChanged.connect(self.vtk_viewer.set_structures_opacity)
+        self.ui.left_right_radio.toggled.connect(self.change_left_to_non_dominant)
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
@@ -216,6 +212,14 @@ class SubjectOverviewApp(QMainWindow):
     def update_segmented_structures(self):
         selected_structures = self.structures_tree_model.get_selected_structures()
         self.vtk_viewer.set_structures(selected_structures)
+
+    def change_left_to_non_dominant(self):
+        if self.ui.left_right_radio.isChecked():
+            left_right=True
+        else:
+            left_right=False
+        self.structures_tree_model.reload_hierarchy(dominant=not left_right)
+        print "Que mas?"
 def run():
     import sys
 

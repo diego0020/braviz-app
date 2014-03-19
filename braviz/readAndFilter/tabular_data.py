@@ -373,3 +373,12 @@ def update_multiple_variable_values(idx_subject_value_tuples):
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.executemany(q,idx_subject_value_tuples)
     conn.commit()
+
+def get_var_value(var_idx,subject):
+    conn = get_connection()
+    q="SELECT value FROM var_values WHERE var_idx = ? and subject = ?"
+    cur=conn.execute(q,(var_idx,subject))
+    res=cur.fetchone()
+    if res is None:
+        raise Exception("%s not found for subject %s"%(var_idx,subject))
+    return res[0]
