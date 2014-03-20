@@ -357,6 +357,10 @@ class SubjectViewer:
         self.__tractography_manager.hide_checkpoints_bundle()
         self.ren_win.Render()
 
+    def change_tractography_color(self,new_color):
+        self.__tractography_manager.change_color(new_color)
+        self.ren_win.Render()
+
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
@@ -527,6 +531,7 @@ class TractographyManager:
         self.ren=ren
         self.__current_subject = initial_subj
         self.__current_space = initial_space
+        self.__current_color = "orient"
 
         self.__ad_hoc_pd_mp_ac=None
         self.__ad_hoc_fiber_checks=None
@@ -559,7 +564,7 @@ class TractographyManager:
             operation = "or"
         try:
             poly_data = self.reader.get("Fibers",self.__current_subject,waypoint=checkpoints,operation=operation,
-                                        space=self.__current_space)
+                                        space=self.__current_space,color=self.__current_color)
         except Exception:
             actor.SetVisibility(0)
             poly_data = None
@@ -594,8 +599,10 @@ class TractographyManager:
     def hide_database_tract(self):
         pass
 
-    def change_color(self):
-        pass
+    def change_color(self, new_color):
+        print new_color
+        self.__current_color = new_color
+        self.__reload_fibers()
 
     def __reload_fibers(self):
         #reload ad_hoc

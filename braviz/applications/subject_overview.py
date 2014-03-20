@@ -89,6 +89,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.struct_color_combo.currentIndexChanged.connect(self.select_structs_color)
         #tractography controls
         self.ui.fibers_from_segments_box.currentIndexChanged.connect(self.show_fibers_from_segment)
+        self.ui.tracto_color_combo.currentIndexChanged.connect(self.change_tractography_color)
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
@@ -253,6 +254,14 @@ class SubjectOverviewApp(QMainWindow):
                 self.vtk_viewer.show_fibers_from_checkpoints(checkpoints,throug_all)
             except Exception as e:
                 self.show_error(e.message)
+
+    def change_tractography_color(self,index):
+        color_codes = {0: "orient", 1 : "fa", 5:"rand"}
+        color_text = color_codes.get(index)
+        if color_text is not None:
+            self.vtk_viewer.change_tractography_color(color_text)
+        else:
+            self.show_error("Not yet implemented")
 
 
 
