@@ -46,6 +46,7 @@ class SubjectViewer:
         self.__mri_lut = None
         self.__fmri_blender = braviz.visualization.fMRI_blender()
         self.__model_manager = ModelManager(self.reader,self.ren)
+        self.__tractography_manager = TractographyManager(self.reader,self.ren)
 
         #reset camera and render
         self.reset_camera(0)
@@ -69,14 +70,30 @@ class SubjectViewer:
         if len(new_subject_img_code)<3:
             new_subject_img_code="0"+new_subject_img_code
         self.__current_subject = new_subject_img_code
+        errors = []
 
         #update image
-        self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
+        try:
+            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
+        except Exception:
+            errors.append("Image")
 
         #update models
-        self.__model_manager.reload_models(subj=new_subject_img_code)
+        try:
+            self.__model_manager.reload_models(subj=new_subject_img_code)
+        except Exception:
+            errors.append("Models")
+
+        #update fibers
+        try:
+            self.__tractography_manager.set_subject(new_subject_img_code)
+        except Exception:
+            errors.append("Fibers")
+
 
         self.ren_win.Render()
+        if len(errors)>0:
+            raise Exception("Couldn'n load "+", ".join(errors))
 
 
     def hide_image(self):
@@ -272,6 +289,7 @@ class SubjectViewer:
         if self.__image_plane_widget is not None and self.__image_plane_widget.GetEnabled():
             self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
         self.__model_manager.reload_models(space=new_space)
+        self.__tractography_manager.set_current_space(new_space)
         self.ren_win.Render()
 
     __camera_positions_dict = {
@@ -325,6 +343,18 @@ class SubjectViewer:
 
     def set_structures_color(self,float_new_color):
         self.__model_manager.set_color(float_new_color)
+        self.ren_win.Render()
+
+    def show_fibers_from_checkpoints(self,checkpoints,throug_all):
+        try:
+            self.__tractography_manager.set_bundle_from_checkpoints(checkpoints,throug_all)
+        except Exception:
+            raise
+        finally:
+            self.ren_win.Render()
+
+    def hide_fibers_from_checkpoints(self):
+        self.__tractography_manager.hide_checkpoints_bundle()
         self.ren_win.Render()
 
 class QSuvjectViwerWidget(QFrame):
@@ -384,7 +414,10 @@ class ModelManager:
     def reload_models(self,subj=None,space=None):
         if subj is not None:
             self.__current_subject = subj
-            self.__available_models = self.__reader.get("MODEL",subj,index=True)
+            try:
+                self.__available_models = set(self.__reader.get("MODEL",subj,index=True))
+            except Exception:
+                self.__available_models = set()
             self.__laterality = self.__get_laterality()
         if space is not None:
             self.__current_space = space
@@ -395,6 +428,8 @@ class ModelManager:
     def __refresh_models(self):
         for mod_name in self.__active_models_set:
             self.__addModel(mod_name)
+        if len(self.__available_models)==0:
+            raise Exception("No models found")
 
     def __addModel(self,model_name):
         #if already exists make visible
@@ -485,3 +520,84 @@ class ModelManager:
                 prop.SetColor(list(model_color[0:3]))
             else:
                 prop.SetColor(self.__current_color)
+
+class TractographyManager:
+    def __init__(self,reader,ren,initial_subj="093",initial_space="World"):
+        self.reader=reader
+        self.ren=ren
+        self.__current_subject = initial_subj
+        self.__current_space = initial_space
+
+        self.__ad_hoc_pd_mp_ac=None
+        self.__ad_hoc_fiber_checks=None
+        self.__ad_hoc_throug_all = True
+        self.__ad_hoc_visibility=False
+
+    def set_subject(self,subj):
+        self.__current_subject = subj
+        self.__reload_fibers()
+
+    def set_current_space(self,space):
+        self.__current_space = space
+        self.__reload_fibers()
+
+    def set_bundle_from_checkpoints(self,checkpoints,throug_all):
+        checkpoints = list(checkpoints)
+        self.__ad_hoc_fiber_checks = checkpoints
+        self.__ad_hoc_throug_all = throug_all
+        self.__ad_hoc_visibility = True
+        if self.__ad_hoc_pd_mp_ac is None:
+            mapper = vtk.vtkPolyDataMapper()
+            actor = vtk.vtkActor()
+            self.ren.AddActor(actor)
+            actor.SetMapper(mapper)
+        else:
+            _ , mapper, actor = self.__ad_hoc_pd_mp_ac
+        if throug_all is True:
+            operation = "and"
+        else:
+            operation = "or"
+        try:
+            poly_data = self.reader.get("Fibers",self.__current_subject,waypoint=checkpoints,operation=operation,
+                                        space=self.__current_space)
+        except Exception:
+            actor.SetVisibility(0)
+            poly_data = None
+            self.__ad_hoc_pd_mp_ac = (poly_data,mapper,actor)
+            raise
+        else:
+            mapper.SetInputData(poly_data)
+            actor.SetVisibility(1)
+            self.__ad_hoc_pd_mp_ac = (poly_data,mapper,actor)
+
+        return
+
+
+    def hide_checkpoints_bundle(self):
+        print "hidin"
+        if self.__ad_hoc_pd_mp_ac is None:
+            return
+        act = self.__ad_hoc_pd_mp_ac[2]
+        act.SetVisibility(0)
+        self.__ad_hoc_visibility = False
+
+
+    def add_named_tracts(self):
+        pass
+
+    def hide_named_tracts(self):
+        pass
+
+    def add_from_database(self):
+        pass
+
+    def hide_database_tract(self):
+        pass
+
+    def change_color(self):
+        pass
+
+    def __reload_fibers(self):
+        #reload ad_hoc
+        if self.__ad_hoc_visibility is True:
+            self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks,self.__ad_hoc_throug_all)

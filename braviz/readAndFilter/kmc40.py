@@ -362,14 +362,18 @@ The path containing this structure must be set."""
         if not available creates the structure and attempts to save the cache"""
         color=color.lower()
         cache_name=os.path.join(self.getDataRoot(),subj,'camino','streams_%s.vtk'%color)
-        cached=False
         if color=='orient':
+            #This one should always exist!!!!!
             cache_name=os.path.join(self.getDataRoot(),subj,'camino','streams.vtk')
+            if not os.path.isfile(cache_name):
+                raise Exception("Fibers file not found")
 
         cached=os.path.isfile(cache_name)
         if cached:
             fib_reader=vtk.vtkPolyDataReader()
             fib_reader.SetFileName(cache_name)
+            if fib_reader.IsFilePolyData()<1:
+                raise Exception("fibers polydata file not found")
             try:
                 fib_reader.Update()
             except Exception:
@@ -492,6 +496,11 @@ The path containing this structure must be set."""
                 models=kw.pop('waypoint')
                 if isinstance(models,str) or isinstance(models,unicode):
                     models=(models,)
+                if (kw.get('operation','and')=='and') and len(models)==0:
+                    #return all fibers
+                    fibers=self.get('fibers', subj,space='world',color=kw.get('color','orient'))
+                    return fibers
+
                 valid_ids=None
                 for nm,model_name in enumerate(models):
                     new_ids=self.__cached_filter_fibers(subj, model_name)

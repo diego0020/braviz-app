@@ -87,6 +87,8 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.struct_opacity_slider.valueChanged.connect(self.vtk_viewer.set_structures_opacity)
         self.ui.left_right_radio.toggled.connect(self.change_left_to_non_dominant)
         self.ui.struct_color_combo.currentIndexChanged.connect(self.select_structs_color)
+        #tractography controls
+        self.ui.fibers_from_segments_box.currentIndexChanged.connect(self.show_fibers_from_segment)
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
@@ -110,13 +112,14 @@ class SubjectOverviewApp(QMainWindow):
         #image
         try:
             self.vtk_viewer.change_subject(new_subject)
-        except Exception:
-            self.statusBar().showMessage("Couldn't load images for subject %s" % new_subject, 5000)
+        except Exception as e:
+            self.show_error(e.message)
             #raise
 
         #context
         self.context_frame.set_subject(new_subject)
-
+    def show_error(self,message):
+        self.statusBar().showMessage(message, 5000)
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())
         if selection == "None":
@@ -239,6 +242,18 @@ class SubjectOverviewApp(QMainWindow):
             self.vtk_viewer.set_structures_color(None)
             if self.ui.struct_color_combo.count() == 3:
                 self.ui.struct_color_combo.removeItem(2)
+
+    def show_fibers_from_segment(self,index):
+        if index == 0:
+            self.vtk_viewer.hide_fibers_from_checkpoints()
+        else:
+            checkpoints = self.structures_tree_model.get_selected_structures()
+            throug_all = (index == 2)
+            try:
+                self.vtk_viewer.show_fibers_from_checkpoints(checkpoints,throug_all)
+            except Exception as e:
+                self.show_error(e.message)
+
 
 
 

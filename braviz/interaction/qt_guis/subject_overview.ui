@@ -64,7 +64,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="subjects_tab">
            <attribute name="title">
@@ -101,6 +101,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="pushButton">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Select Sample</string>
               </property>
@@ -639,11 +642,6 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_4">
-           <attribute name="title">
-            <string>Surfaces</string>
-           </attribute>
-          </widget>
           <widget class="QWidget" name="tab_2">
            <attribute name="title">
             <string>Tractography</string>
@@ -691,10 +689,10 @@
                 <number>0</number>
                </property>
                <item row="0" column="1">
-                <widget class="QComboBox" name="comboBox_3">
+                <widget class="QComboBox" name="fibers_from_segments_box">
                  <item>
                   <property name="text">
-                   <string>Through All</string>
+                   <string>None</string>
                   </property>
                  </item>
                  <item>
@@ -702,16 +700,50 @@
                    <string>Through Any</string>
                   </property>
                  </item>
+                 <item>
+                  <property name="text">
+                   <string>Through All</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QComboBox" name="comboBox_2"/>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_11">
-                 <property name="text">
-                  <string>From Segemntation</string>
-                 </property>
+                <widget class="QComboBox" name="comboBox_2">
+                 <item>
+                  <property name="text">
+                   <string>Orientation</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>FA (Point)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Fa (Line)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Mean Difusivity (Point)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Mean Difusivity (Line)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>By Line</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>By Bundle</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
                <item row="1" column="0">
@@ -721,70 +753,111 @@
                  </property>
                 </widget>
                </item>
-               <item row="2" column="0">
+               <item row="4" column="0">
                 <widget class="QLabel" name="label_17">
                  <property name="text">
-                  <string>Number of fibers:</string>
+                  <string>Number:</string>
                  </property>
                 </widget>
                </item>
-               <item row="3" column="0">
+               <item row="5" column="0">
                 <widget class="QLabel" name="label_18">
                  <property name="text">
-                  <string>Mean length of fibers:</string>
+                  <string>Mean length:</string>
                  </property>
                 </widget>
                </item>
-               <item row="4" column="0">
+               <item row="6" column="0">
                 <widget class="QLabel" name="label_19">
                  <property name="text">
                   <string>Mean FA:</string>
                  </property>
                 </widget>
                </item>
-               <item row="5" column="0">
+               <item row="7" column="0">
                 <widget class="QLabel" name="label_20">
                  <property name="text">
                   <string>Mean ADC:</string>
                  </property>
                 </widget>
                </item>
-               <item row="6" column="0" colspan="2">
+               <item row="8" column="0" colspan="2">
                 <widget class="QPushButton" name="pushButton_5">
                  <property name="text">
                   <string>Export To Database</string>
                  </property>
                 </widget>
                </item>
-               <item row="2" column="1">
+               <item row="4" column="1">
                 <widget class="QLabel" name="label_21">
                  <property name="text">
                   <string>0000</string>
                  </property>
                 </widget>
                </item>
-               <item row="3" column="1">
+               <item row="5" column="1">
                 <widget class="QLabel" name="label_22">
                  <property name="text">
                   <string>0000</string>
                  </property>
                 </widget>
                </item>
-               <item row="4" column="1">
+               <item row="6" column="1">
                 <widget class="QLabel" name="label_23">
                  <property name="text">
                   <string>0000</string>
                  </property>
                 </widget>
                </item>
-               <item row="5" column="1">
+               <item row="7" column="1">
                 <widget class="QLabel" name="label_24">
                  <property name="text">
                   <string>0000</string>
                  </property>
                 </widget>
                </item>
+               <item row="2" column="0" colspan="2">
+                <widget class="QPushButton" name="pushButton_4">
+                 <property name="text">
+                  <string>Save Bundle</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_26">
+                 <property name="toolTip">
+                  <string>Add fibers based on the visible segmented structures</string>
+                 </property>
+                 <property name="text">
+                  <string>From Seg.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0" colspan="2">
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>&lt;Active Bundle&gt;</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_4">
+           <attribute name="title">
+            <string>Surfaces</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <item>
+             <widget class="QLabel" name="label_25">
+              <property name="text">
+               <string>Not yet implemented</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
            </layout>
