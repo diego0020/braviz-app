@@ -323,7 +323,9 @@ class SubjectViewer:
         self.__model_manager.set_opacity(float_opacity)
         self.ren_win.Render()
 
-
+    def set_structures_color(self,float_new_color):
+        self.__model_manager.set_color(float_new_color)
+        self.ren_win.Render()
 
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -369,6 +371,7 @@ class ModelManager:
 
         #visual attributes
         self.__opacity=1
+        self.__current_color = None
 
         self.reload_models(subj=initial_subj,space=initial_space)
 
@@ -411,11 +414,14 @@ class ModelManager:
             rl_name=solve_laterality(self.__laterality,model_name)
             if rl_name in self.__available_models:
                 model=self.__reader.get('MODEL',self.__current_subject,name=rl_name,space=self.__current_space)
-                model_color=self.__reader.get('MODEL',None,name=rl_name,color='T')
                 model_mapper=vtk.vtkPolyDataMapper()
                 model_actor=vtk.vtkActor()
                 model_properties=model_actor.GetProperty()
-                model_properties.SetColor(list(model_color[0:3]))
+                if self.__current_color is None:
+                    model_color=self.__reader.get('MODEL',None,name=rl_name,color='T')
+                    model_properties.SetColor(list(model_color[0:3]))
+                else:
+                    model_properties.SetColor(self.__current_color)
                 model_properties.SetOpacity(self.__opacity)
                 model_mapper.SetInputData(model)
                 model_actor.SetMapper(model_mapper)
@@ -469,4 +475,13 @@ class ModelManager:
         for _,_,ac in self.__pd_map_act.itervalues():
             prop=ac.GetProperty()
             prop.SetOpacity(float_opacity)
-
+    def set_color(self,float_rgb_color):
+        self.__current_color = float_rgb_color
+        for k,(_,_,ac) in self.__pd_map_act.iteritems():
+            prop=ac.GetProperty()
+            if self.__current_color is None:
+                rl_name=solve_laterality(self.__laterality,k)
+                model_color=self.__reader.get('MODEL',None,name=rl_name,color='T')
+                prop.SetColor(list(model_color[0:3]))
+            else:
+                prop.SetColor(self.__current_color)

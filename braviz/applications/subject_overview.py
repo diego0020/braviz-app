@@ -86,6 +86,7 @@ class SubjectOverviewApp(QMainWindow):
         self.structures_tree_model.selection_changed.connect(self.update_segmented_structures)
         self.ui.struct_opacity_slider.valueChanged.connect(self.vtk_viewer.set_structures_opacity)
         self.ui.left_right_radio.toggled.connect(self.change_left_to_non_dominant)
+        self.ui.struct_color_combo.currentIndexChanged.connect(self.select_structs_color)
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
@@ -220,6 +221,28 @@ class SubjectOverviewApp(QMainWindow):
             left_right=False
         self.structures_tree_model.reload_hierarchy(dominant=not left_right)
         print "Que mas?"
+
+    def select_structs_color(self,index):
+        print "mamamia"
+        if index==1:
+            print "launch choose color dialog"
+            color_dialog=QtGui.QColorDialog()
+            res=color_dialog.getColor()
+            new_color=res.getRgb()[:3]
+            new_float_color = [x/255 for x in new_color]
+            self.vtk_viewer.set_structures_color(new_float_color)
+            #print res.getRgb()
+            if self.ui.struct_color_combo.count() < 3:
+                self.ui.struct_color_combo.addItem("Custom")
+            self.ui.struct_color_combo.setCurrentIndex(2)
+        if index == 0:
+            self.vtk_viewer.set_structures_color(None)
+            if self.ui.struct_color_combo.count() == 3:
+                self.ui.struct_color_combo.removeItem(2)
+
+
+
+
 def run():
     import sys
 
