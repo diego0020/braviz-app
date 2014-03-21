@@ -7,6 +7,7 @@ from PyQt4.QtCore import QAbstractListModel
 from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
+from braviz.readAndFilter import bundles_db
 from braviz.interaction.r_functions import calculate_ginni_index
 from braviz.interaction.qt_structures_model import StructureTreeModel
 
@@ -1002,6 +1003,114 @@ class NewVariableValues(QAbstractTableModel):
     def save_into_db(self,var_idx):
         value_tuples=((s,self.values_dict.get(s,"nan")) for s in self.subjects_list)
         braviz_tab_data.update_variable_values(var_idx,value_tuples)
+
+class SimpleBundlesList(QAbstractListModel):
+    def __init__(self):
+        super(SimpleBundlesList,self).__init__()
+        self.id_list=None
+        self.names_list=None
+        self.__showing_special = False
+        self.restart_structures()
+
+
+    def restart_structures(self):
+        self.id_list=[]
+        self.names_list=[]
+        self.id_list.append(None)
+        self.names_list.append("<From Segment>")
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        if self.__showing_special:
+            return len(self.names_list)
+        else:
+            return len(self.names_list)-1
+
+    def data(self, QModelIndex, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if 0<=row<len(self.names_list):
+                if int_role == QtCore.Qt.DisplayRole:
+                    return self.names_list[row]
+        return QtCore.QVariant()
+
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        return QtCore.QVariant()
+
+    def add_bundle(self,bundle_id,name):
+        if bundle_id in self.id_list:
+            return
+        self.id_list.insert(len(self.id_list)-1,bundle_id)
+        self.names_list.insert(len(self.names_list)-1,name)
+        self.modelReset.emit()
+
+    def set_show_special(self,show_special):
+        self.__showing_special = show_special
+        self.modelReset.emit()
+
+    def get_ids(self):
+        return self.id_list[:-1]
+
+class BundlesSelectionList(QAbstractListModel):
+    def __init__(self):
+        super(BundlesSelectionList,self).__init__()
+        self.id_list=[]
+        self.names_dict={}
+        self._selected={}
+        self.refresh_model()
+
+    def refresh_model(self):
+        tuples=bundles_db.get_bundle_ids_and_names()
+        self.names_dict = dict(tuples)
+        self.id_list = sorted(self.names_dict.keys())
+
+    def select_many_ids(self,ids_it):
+        for i in ids_it:
+            self._selected[i]=True
+
+    def get_selected(self):
+        return (i for i,k in self._selected.iteritems() if k is True)
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.id_list)
+
+    def data(self, QModelIndex, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if 0<=row<len(self.id_list):
+                bid = self.id_list[row]
+                if int_role == QtCore.Qt.DisplayRole:
+                    return self.names_dict[bid]
+                if int_role == QtCore.Qt.CheckStateRole:
+                    if self._selected.get(bid,False) is True:
+                        return QtCore.Qt.Checked
+                    else:
+                        return QtCore.Qt.Unchecked
+
+
+        return QtCore.QVariant()
+
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        return QtCore.QVariant()
+
+    def flags(self, QModelIndex):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if 0<= row < len(self.id_list):
+                flag = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsUserCheckable
+                return flag
+        return QtCore.Qt.NoItemFlags
+
+    def setData(self, QModelIndex, QVariant, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if int_role == QtCore.Qt.CheckStateRole:
+                if 0<= row < len(self.id_list):
+                    value = QVariant.toBool()
+                    bid=self.id_list[row]
+                    self._selected[bid]=value
+                    return True
+        return False
+
 
 if __name__ == "__main__":
     test_tree=StructureTreeModel()

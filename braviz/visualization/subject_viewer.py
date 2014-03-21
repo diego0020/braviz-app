@@ -9,6 +9,9 @@ from PyQt4.QtGui import QFrame, QHBoxLayout
 from PyQt4.QtCore import pyqtSignal
 from braviz.interaction.structure_metrics import solve_laterality
 import braviz.readAndFilter.tabular_data
+from braviz.readAndFilter import bundles_db
+import pickle
+
 class SubjectViewer:
     def __init__(self, render_window_interactor, reader, widget):
 
@@ -361,6 +364,13 @@ class SubjectViewer:
         self.__tractography_manager.change_color(new_color)
         self.ren_win.Render()
 
+    def set_fibers_from_db(self,ids):
+
+        self.__tractography_manager.set_active_db_tracts(ids)
+        self.ren_win.Render()
+
+
+
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
@@ -538,6 +548,9 @@ class TractographyManager:
         self.__ad_hoc_throug_all = True
         self.__ad_hoc_visibility=False
 
+        self.__db_tracts=dict()
+        self.__active_db_tracts=set()
+
     def set_subject(self,subj):
         self.__current_subject = subj
         self.__reload_fibers()
@@ -586,18 +599,56 @@ class TractographyManager:
         act.SetVisibility(0)
         self.__ad_hoc_visibility = False
 
+    def add_from_database(self,b_id):
+        _, btype, data = bundles_db.get_bundle_details(b_id)
+        self.__active_db_tracts.add(b_id)
+        if b_id not in self.__db_tracts:
+            mapper= vtk.vtkPolyDataMapper()
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            self.ren.AddActor(actor)
+            self.__db_tracts[b_id]=(None,mapper,actor)
 
-    def add_named_tracts(self):
-        pass
+        _, mapper,actor = self.__db_tracts[b_id]
+        try:
+            poly_data = self.get_polydata(btype,data)
+            mapper.SetInputData(poly_data)
+        except Exception:
+            actor.SetVisibility(0)
+            raise
+        actor.SetVisibility(1)
 
-    def hide_named_tracts(self):
-        pass
 
-    def add_from_database(self):
-        pass
 
-    def hide_database_tract(self):
-        pass
+    def get_polydata(self,bundle_type,data):
+        bundle_type = int(bundle_type)
+        if bundle_type == 0:
+            #named tract
+            poly = self.reader.get("Fibers",self.__current_subject,space=self.__current_space,
+                                   color=self.__current_color, name=data)
+            return poly
+        elif bundle_type == 1:
+            checkpoints = pickle.loads(data)
+            print checkpoints
+            poly = self.reader.get("Fibers",self.__current_subject,space=self.__current_space,
+                                   color=self.__current_color, waypoint=checkpoints,operation="and")
+            return poly
+        elif bundle_type == 2:
+            checkpoints = pickle.loads(data)
+            poly = self.reader.get("Fibers",self.__current_subject,space=self.__current_space,
+                                   color=self.__current_color, waypoint=checkpoints,operation="or")
+            return poly
+        else:
+            print "Unknown data type"
+
+
+    def hide_database_tract(self,bid):
+        trio = self.__db_tracts.get(bid)
+        if trio is None:
+            return
+        actor = trio[2]
+        actor.SetVisibility(0)
+        self.__active_db_tracts.remove(bid)
 
     def change_color(self, new_color):
         print new_color
@@ -608,3 +659,23 @@ class TractographyManager:
         #reload ad_hoc
         if self.__ad_hoc_visibility is True:
             self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks,self.__ad_hoc_throug_all)
+        #reload db
+        for bid in self.__active_db_tracts:
+            self.add_from_database(bid)
+
+    def set_active_db_tracts(self,new_set):
+        new_set = set(new_set)
+        to_hide = self.__active_db_tracts - new_set
+        to_add = new_set - self.__active_db_tracts
+        errors = 0
+        for i in to_hide:
+            self.hide_database_tract(i)
+        for i in to_add:
+            try:
+                self.add_from_database(i)
+            except Exception:
+                errors+=1
+                raise
+        self.__active_db_tracts = new_set
+        if errors>0:
+            raise Exception("Couldnt load all tracts")

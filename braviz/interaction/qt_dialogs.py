@@ -20,6 +20,8 @@ from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
 from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealog
 from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariablesDialog
 from braviz.interaction.qt_guis.new_variable_dialog import Ui_NewVariableDialog
+from braviz.interaction.qt_guis.load_bundles_dialog import Ui_LoadBundles
+from braviz.interaction.qt_guis.save_fibers_bundle import Ui_SaveBundleDialog
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
@@ -28,6 +30,7 @@ from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_
     save_real_meta_by_name, save_var_description_by_name, get_min_max_opt_values_by_name, register_new_variable,\
     save_real_meta, save_var_description,update_multiple_variable_values
 
+from braviz.readAndFilter import bundles_db
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -1009,7 +1012,78 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         print idx_value_tuples
         update_multiple_variable_values(idx_value_tuples)
 
+class BundleSelectionDialog(QtGui.QDialog):
+    def __init__(self,selected,names_dict):
+        super(BundleSelectionDialog,self).__init__()
+        self.ui = None
+        self.bundles_list_model=braviz_models.BundlesSelectionList()
+        self.bundles_list_model.select_many_ids(selected)
+        self.load_ui()
+        self.selection=selected
+        self.names_dict=names_dict
 
+    def load_ui(self):
+        self.ui = Ui_LoadBundles()
+        self.ui.setupUi(self)
+        self.ui.all_bundles_list_view.setModel(self.bundles_list_model)
+        self.ui.buttonBox.accepted.connect(self.ok_handle)
+
+    def ok_handle(self):
+        new_select = set(self.bundles_list_model.get_selected())
+        self.selection.clear()
+        self.selection.update(new_select)
+        self.names_dict.update(self.bundles_list_model.names_dict)
+
+
+class SaveFibersBundleDialog(QtGui.QDialog):
+    def __init__(self,operation,checkpoints_list,operation_is_and):
+        super(SaveFibersBundleDialog,self).__init__()
+        self.ui = Ui_SaveBundleDialog()
+        self.ui.setupUi(self)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+        self.ui.lineEdit.editingFinished.connect(self.check_name)
+        self.ui.error_message.setText("")
+        self.ui.save_succesful.setText("")
+        self.ui.operation_label.setText(operation)
+        self._checkpoints = tuple(checkpoints_list)
+        self.ui.structures_list.setPlainText(", ".join(self._checkpoints))
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).pressed.connect(self.accept_save)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).pressed.connect(self.accept)
+        self._and= operation_is_and
+
+
+
+    def check_name(self):
+        name = str(self.ui.lineEdit.text())
+        if len(name)<2:
+            self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+            return
+        if bundles_db.check_if_name_exists(name) is True:
+            self.ui.error_message.setText("A bundle with this name already exists")
+            self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+        else:
+            self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(True)
+            self.ui.error_message.setText("")
+
+    def accept_save(self):
+
+        print "saving"
+        name = str(self.ui.lineEdit.text())
+        print  str(self.ui.lineEdit.text())
+        op =  "and" if self._and else "or"
+        print op
+        print self._checkpoints
+        try :
+            bundles_db.save_checkpoints_bundle(name, self._and,self._checkpoints)
+        except:
+            print "problem saving into database"
+            raise
+        self.ui.save_succesful.setText("Save succesful")
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Cancel).setEnabled(False)
+        self.ui.lineEdit.setEnabled(False)
 
 
 

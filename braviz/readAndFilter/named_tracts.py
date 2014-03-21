@@ -2,18 +2,25 @@ __author__ = 'Diego'
 # Functions to get special named tracts, All shoud have the signature tract_name(reader,subject,color)
 # they return fibers,space tuples, where space is the space of the resulting fibers.. this is used to avoid unnecessary
 # transformation of solution
-# Try not to import modules into the main namespace in orer for indexing to work
+# Functions that don't start with _ will be added to the named tracts index
+
+import os
+import functools
+
+import vtk
+
+from braviz.readAndFilter.tabular_data import get_var_value as __get_var_value
+from braviz.readAndFilter.tabular_data import LATERALITY
+from braviz.interaction.structure_metrics import get_right_or_left_hemisphere as __get_right_or_left_hemisphere
+
 
 def __cached_named_tract(name_tract_func):
-    import os
-    import functools
-    import vtk
     @functools.wraps(name_tract_func)
-    def cached_func(reader,subject,color):
-        cache_file='named_fibs_%s_%s_%s.vtk'%(name_tract_func.__name__,subject,color)
-        cache_full_path=os.path.join(reader.getDataRoot(),'pickles',cache_file)
+    def cached_func(reader, subject, color):
+        cache_file = 'named_fibs_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color)
+        cache_full_path = os.path.join(reader.getDataRoot(), 'pickles', cache_file)
         if os.path.isfile(cache_full_path):
-            fib_reader=vtk.vtkPolyDataReader()
+            fib_reader = vtk.vtkPolyDataReader()
             fib_reader.SetFileName(cache_full_path)
             try:
                 fib_reader.Update()
@@ -23,9 +30,9 @@ def __cached_named_tract(name_tract_func):
             else:
                 out_fib = fib_reader.GetOutput()
                 fib_reader.CloseVTKFile()
-                return out_fib,name_tract_func(None,None,None,get_out_space=True)
+                return out_fib, name_tract_func(None, None, None, get_out_space=True)
 
-        fibers,out_space=name_tract_func(reader,subject,color)
+        fibers, out_space = name_tract_func(reader, subject, color)
         fib_writer = vtk.vtkPolyDataWriter()
         fib_writer.SetFileName(cache_full_path)
         fib_writer.SetInputData(fibers)
@@ -38,19 +45,20 @@ def __cached_named_tract(name_tract_func):
             print 'cache write failed'
         finally:
             fib_writer.CloseVTKFile()
-        return fibers,out_space
+        return fibers, out_space
+
     return cached_func
 
 
 @__cached_named_tract
-def cortico_spinal_l(reader,subject,color,get_out_space=False):
+def cortico_spinal_l(reader, subject, color, get_out_space=False):
     if get_out_space is True:
         return 'dartel'
-    import vtk
     try:
-        tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'],color=color)
+        tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'],
+                            color=color)
     except Exception:
-        print "Tracts not found for subject %s"%subject
+        print "Tracts not found for subject %s" % subject
         raise
 
 
@@ -73,22 +81,21 @@ def cortico_spinal_l(reader,subject,color,get_out_space=False):
     extractor2.Update()
     tracts3 = extractor2.GetOutput()
 
-    return tracts3,'dartel'
+    return tracts3, 'dartel'
 
 
 @__cached_named_tract
-def cortico_spinal_r(reader,subject,color,get_out_space=False):
+def cortico_spinal_r(reader, subject, color, get_out_space=False):
     if get_out_space is True:
         return 'dartel'
-    import vtk
-    from braviz.readAndFilter import extract_poly_data_subset
     try:
-        tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-rh-precentral', 'Brain-Stem'],color=color)
+        tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-rh-precentral', 'Brain-Stem'],
+                            color=color)
     except Exception:
         print "Tracts not found for subject %s" % subject
         raise Exception("Tracts not found for subject %s" % subject)
 
-#first cut
+    #first cut
     implicit_plane = vtk.vtkPlane()
     implicit_plane.SetOrigin(-6, -61, 80)
     implicit_plane.SetNormal(1, 0, 0)
@@ -110,13 +117,48 @@ def cortico_spinal_r(reader,subject,color,get_out_space=False):
 
     #move back to world coordinates
     #tracts3 = reader.transformPointsToSpace(tracts3, 'dartel', subject, inverse=True)
-    return tracts3,'dartel'
+    return tracts3, 'dartel'
 
-def corpus_callosum(reader,subject,color,get_out_space=False):
+
+def cortico_spinal_d(reader, subject, color, get_out_space=False):
+    if get_out_space is True:
+        return 'dartel'
+    laterality = __get_var_value(LATERALITY, int(subject))
+    if laterality == 1:
+        lat = 'r'
+    else:
+        lat = 'l'
+    hemi = __get_right_or_left_hemisphere('d', lat)
+    if hemi == 'r':
+        return cortico_spinal_r(reader, subject, color)
+    elif hemi == 'l':
+        return cortico_spinal_l(reader, subject, color)
+    else:
+        raise Exception("Unknown laterality")
+
+
+def cortico_spinal_n(reader, subject, color, get_out_space=False):
+    if get_out_space is True:
+        return 'dartel'
+    laterality = __get_var_value(LATERALITY, int(subject))
+    if laterality == 1:
+        lat = 'r'
+    else:
+        lat = 'l'
+    hemi = __get_right_or_left_hemisphere('n', lat)
+    if hemi == 'r':
+        return cortico_spinal_r(reader, subject, color)
+    elif hemi == 'l':
+        return cortico_spinal_l(reader, subject, color)
+    else:
+        raise Exception("Unknown laterality")
+
+
+def corpus_callosum(reader, subject, color, get_out_space=False):
     if get_out_space is True:
         return 'world'
-    return reader.get('fibers',subject,operation = 'or',
-                waypoint = ['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior','CC_Mid_Posterior', 'CC_Posterior'],
-                color=color)   ,  'world'
+    return reader.get('fibers', subject, operation='or',
+                      waypoint=['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'],
+                      color=color), 'world'
 
 

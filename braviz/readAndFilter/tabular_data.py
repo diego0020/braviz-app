@@ -8,6 +8,8 @@ from pandas.io import sql
 import pandas as pd
 
 
+LATERALITY = 6
+
 def get_variables(reader=None):
     conn = get_connection(reader)
     data = sql.read_sql("SELECT var_name from variables;", conn)

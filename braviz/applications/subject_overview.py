@@ -8,9 +8,10 @@ from PyQt4.QtGui import QMainWindow
 
 import braviz
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
-from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel
+from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
-from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel
+from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
+    SaveFibersBundleDialog
 
 
 class SubjectOverviewApp(QMainWindow):
@@ -40,6 +41,9 @@ class SubjectOverviewApp(QMainWindow):
                                                   initial_subject=self.__curent_subject)
         #Structures model
         self.structures_tree_model = StructureTreeModel(self.reader)
+
+        #Fibers list model
+        self.fibers_list_model = SimpleBundlesList()
 
         #Init gui
         self.ui = None
@@ -90,6 +94,10 @@ class SubjectOverviewApp(QMainWindow):
         #tractography controls
         self.ui.fibers_from_segments_box.currentIndexChanged.connect(self.show_fibers_from_segment)
         self.ui.tracto_color_combo.currentIndexChanged.connect(self.change_tractography_color)
+        self.ui.bundles_list.setModel(self.fibers_list_model)
+        self.ui.add_saved_bundles.pressed.connect(self.add_saved_bundles_to_list)
+        self.ui.save_bundle_button.pressed.connect(self.save_fibers_bundle)
+
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
@@ -116,7 +124,7 @@ class SubjectOverviewApp(QMainWindow):
         except Exception as e:
             self.show_error(e.message)
             #raise
-
+        self.reset_image_view_controls()
         #context
         self.context_frame.set_subject(new_subject)
     def show_error(self,message):
@@ -247,9 +255,13 @@ class SubjectOverviewApp(QMainWindow):
     def show_fibers_from_segment(self,index):
         if index == 0:
             self.vtk_viewer.hide_fibers_from_checkpoints()
+            self.fibers_list_model.set_show_special(False)
+            self.ui.save_bundle_button.setEnabled(False)
         else:
             checkpoints = self.structures_tree_model.get_selected_structures()
+            self.fibers_list_model.set_show_special(True)
             throug_all = (index == 2)
+            self.ui.save_bundle_button.setEnabled(True)
             try:
                 self.vtk_viewer.show_fibers_from_checkpoints(checkpoints,throug_all)
             except Exception as e:
@@ -263,9 +275,24 @@ class SubjectOverviewApp(QMainWindow):
         else:
             self.show_error("Not yet implemented")
 
+    def add_saved_bundles_to_list(self):
+        selected =set(self.fibers_list_model.get_ids())
+        names_dict = {}
+        dialog = BundleSelectionDialog(selected,names_dict)
+        dialog.exec_()
+        print selected
+        self.fibers_list_model.restart_structures()
+        for b in selected:
+            self.fibers_list_model.add_bundle(b,names_dict[b])
+        self.vtk_viewer.set_fibers_from_db(selected)
 
-
-
+    def save_fibers_bundle(self):
+        checkpoints = self.structures_tree_model.get_selected_structures()
+        index = self.ui.fibers_from_segments_box.currentIndex()
+        operation = self.ui.fibers_from_segments_box.itemText(index)
+        throug_all = (index == 2)
+        dialog = SaveFibersBundleDialog(operation,checkpoints,throug_all)
+        dialog.exec_()
 
 def run():
     import sys
