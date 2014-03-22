@@ -1,11 +1,14 @@
-__author__ = 'Diego'
+from __future__ import division
 
 import numpy as np
 
 import braviz
 
+
+__author__ = 'Diego'
+
 subject = "093"
-structs = ["CC_Anterior","CC_Posterior"]
+structs = ["CC_Anterior","CC_Posterior","CC_Mid_Posterior"]
 
 reader= braviz.readAndFilter.kmc40AutoReader()
 #find label
@@ -15,7 +18,13 @@ labels = [int(reader.get("Model",subject,name=struct,label=True)) for struct in 
 aparc_img = reader.get("APARC",subject,space="world",format="nii")
 aparc_data = aparc_img.get_data()
 locations = [aparc_data == label for label in labels]
-indexes = np.where(np.logical_or(locations))
+shape=aparc_data.shape
+shape2 = shape + (1,)
+locations = [l.reshape(shape2) for l in locations]
+locations2 = np.concatenate(locations,3)
+locations3=np.any(locations2,3)
+indexes = np.where(locations3)
+n_voxels = len(indexes[0])
 #print indexes
 #find mm coordinates of voxels in aparc
 img_coords=np.vstack(indexes)
@@ -38,4 +47,5 @@ fa_coords2=splitted[0:3]
 fa_data=fa_img.get_data()
 #sample and sum
 res=np.sum(fa_data[fa_coords2])
+res /= n_voxels
 print res
