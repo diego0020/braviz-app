@@ -34,6 +34,7 @@ def get_data_frame_by_name(columns, reader=None):
     conn = get_connection(reader)
     data = sql.read_sql("SELECT subject from SUBJECTS", conn, index_col="subject")
     for var in columns:
+        # language=SQLite
         query = """SELECT subject, value
         FROM subjects NATURAL JOIN var_values
         WHERE var_idx = (SELECT var_idx FROM variables WHERE var_name = ?)

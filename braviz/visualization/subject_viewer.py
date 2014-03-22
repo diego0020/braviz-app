@@ -195,12 +195,25 @@ class SubjectViewer:
             self.__image_plane_widget.SetInputData(new_image)
             self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
-            self.ren_win.Render()
             self.__current_image = modality
             self.__curent_fmri_paradigm = paradigm
             self.__image_plane_widget.text1_value_from_img(fmri_image)
             self.ren_win.Render()
             return
+
+        if modality == "DTI":
+            dti_image= self.reader.get("DTI", self.__current_subject, format="VTK", space=self.__current_space)
+            fa_image= self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
+            self.__image_plane_widget.SetInputData(dti_image)
+            self.__image_plane_widget.GetColorMap().SetLookupTable(None)
+            self.__image_plane_widget.SetResliceInterpolateToCubic()
+            self.__current_image = modality
+            self.__image_plane_widget.text1_value_from_img(fa_image)
+            self.ren_win.Render()
+            return
+
+
+
 
         self.__image_plane_widget.text1_to_std()
         #Other images
@@ -208,7 +221,7 @@ class SubjectViewer:
 
         self.__image_plane_widget.SetInputData(new_image)
 
-        if modality == "MRI":
+        if modality == "MRI" or modality == "MD":
             lut = self.__mri_lut
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
@@ -604,7 +617,6 @@ class TractographyManager:
             self.__ad_hoc_pd_mp_ac = (poly_data, mapper, actor)
             raise
         else:
-            actor.GetProperty().LightingOn()
             actor.GetProperty().SetOpacity(self.__opacity)
             mapper.SetInputData(poly_data)
             actor.SetVisibility(1)
@@ -647,7 +659,6 @@ class TractographyManager:
             actor.SetVisibility(0)
             raise
         actor.SetVisibility(1)
-        actor.GetProperty().LightingOn()
         actor.GetProperty().SetOpacity(self.__opacity)
         if self.__current_color == "bundle":
             colors = self.get_bundle_colors()

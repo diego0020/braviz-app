@@ -14,7 +14,7 @@ from numpy.linalg import inv
 import vtk
 
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
-    readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset
+    readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, getMorphLUT, \
     surfLUT2VTK
 from braviz.readAndFilter.read_tensor import cached_readTensorImage
@@ -47,6 +47,10 @@ The path containing this structure must be set."""
                  Additionally use space='native' to ignore the nifti transform.
     
             FA:  Same options as MRI, but space also accepts 'diffusion', also accepts 'lut'
+
+            MD:  Same options as MRI, but space also accepts 'diffusion'
+
+            DTI: Same options as MRI, but space also accepts 'diffusion'
             
             APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
             
@@ -90,6 +94,10 @@ The path containing this structure must be set."""
         "Internal: decode instruction and dispatch"
         data = data.upper()
         if data == 'MRI':
+            return self.__getImg(data, subj, **kw)
+        elif data == "MD":
+            return self.__getImg(data, subj, **kw)
+        elif data == "DTI":
             return self.__getImg(data, subj, **kw)
         elif data == 'FA':
             if kw.get('lut'):
@@ -139,6 +147,18 @@ The path containing this structure must be set."""
                 filename = 'FA_masked.nii.gz'
             else:
                 filename = 'FA_mri_masked.nii.gz'
+        elif data == "MD":
+            path = os.path.join(self.__root, str(subj), 'camino')
+            if kw.get('space').startswith('diff'):
+                filename = 'MD_masked.nii.gz'
+            else:
+                filename = 'MD_mri_masked.nii.gz'
+        elif data == "DTI":
+            path = os.path.join(self.__root, str(subj), 'camino')
+            if kw.get('space','').startswith('diff'):
+                filename = 'rgb_dti_masked.nii.gz'
+            else:
+                filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
             path = os.path.join(self.__root, str(subj), 'Models')
             filename = 'aparc+aseg.nii.gz'
@@ -153,7 +173,14 @@ The path containing this structure must be set."""
             raise (Exception('File not found'))
 
         if kw.get('format', '').upper() == 'VTK':
-            vtkImg = nibNii2vtk(img)
+            if data == "MD":
+                img_data=img.get_data()
+                img_data *= 1e12
+                vtkImg = numpy2vtk_img(img_data)
+            elif data == "DTI":
+                vtkImg = nifti_rgb2vtk(img)
+            else:
+                vtkImg = nibNii2vtk(img)
             if kw.get('space', '').lower() == 'native':
                 return vtkImg
 

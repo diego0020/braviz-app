@@ -6,12 +6,13 @@ import random
 import functools
 import time
 import copy
+from collections import OrderedDict
 
 import nibabel as nib
 import vtk
 import numpy as np
-from collections import OrderedDict
 import psutil
+
 
 def nibNii2vtk(nii):
     """Transform a nifti image read by nibabel into a vtkImageData"""
@@ -52,6 +53,26 @@ def numpy2vtk_img(d):
     #return imgData
     out_img = vtk.vtkImageData()
     out_img.DeepCopy(imgData)
+    return out_img
+
+def nifti_rgb2vtk(nifti_rgb):
+    data=nifti_rgb.get_data()
+    data2=np.rollaxis(data,3,0)
+    importer = vtk.vtkImageImport()
+
+    importer.SetDataScalarTypeToUnsignedChar()
+    importer.SetNumberOfScalarComponents(3)
+    dstring = data2.flatten(order='F').tostring()
+    importer.CopyImportVoidPointer(dstring, len(dstring))
+    dshape = data.shape
+    importer.SetDataExtent(0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
+    importer.SetWholeExtent(0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
+
+    importer.Update()
+    img=importer.GetOutput()
+
+    out_img = vtk.vtkImageData()
+    out_img.DeepCopy(img)
     return out_img
 
 
@@ -344,5 +365,3 @@ def cache_function(max_cache_size):
 
 
 #Easy access to kmc readers
-from kmc40 import kmc40Reader
-from kmc40 import autoReader as kmc40AutoReader

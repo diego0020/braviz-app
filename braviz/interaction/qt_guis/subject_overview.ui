@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>855</width>
-    <height>611</height>
+    <height>615</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,7 +36,7 @@
        <property name="frameShadow">
         <enum>QFrame::Raised</enum>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+       <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -64,7 +64,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="subjects_tab">
            <attribute name="title">
@@ -209,7 +209,7 @@
             <item row="0" column="1">
              <widget class="QComboBox" name="image_mod_combo">
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <item>
                <property name="text">
@@ -224,6 +224,11 @@
               <item>
                <property name="text">
                 <string>FA</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>MD</string>
                </property>
               </item>
               <item>
