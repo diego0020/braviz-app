@@ -626,12 +626,12 @@
                  </item>
                  <item>
                   <property name="text">
-                   <string>Mean FA</string>
+                   <string>FA inside</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>Mean DC</string>
+                   <string>MD inside</string>
                   </property>
                  </item>
                 </widget>

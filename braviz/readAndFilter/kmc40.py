@@ -162,7 +162,10 @@ The path containing this structure must be set."""
                 filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
             path = os.path.join(self.__root, str(subj), 'Models')
-            filename = 'aparc+aseg.nii.gz'
+            if kw.get("wm"):
+                filename = 'wmparc.nii.gz'
+            else:
+                filename = 'aparc+aseg.nii.gz'
         else:
             raise Exception('Unknown image type %s' % data)
         wholeName = os.path.join(path, filename)

@@ -128,6 +128,7 @@ class SubjectOverviewApp(QMainWindow):
             #raise
         self.reset_image_view_controls()
         #context
+        self.update_segmentation_scalar()
         self.context_frame.set_subject(new_subject)
     def show_error(self,message):
         self.statusBar().showMessage(message, 5000)
@@ -232,7 +233,9 @@ class SubjectOverviewApp(QMainWindow):
 
     def update_segmentation_scalar(self,scalar_index=None):
         metrics_dict = {"Volume" : ("volume","mm^3"),
-                        "Area"   : ("area","mm^2")}
+                        "Area"   : ("area","mm^2"),
+                        "FA inside": ("fa_inside",""),
+                        "MD inside": ("md_inside","*1e-12")}
         if scalar_index is None:
             scalar_index = self.ui.struct_scalar_combo.currentIndex()
         scalar_text = str(self.ui.struct_scalar_combo.itemText(scalar_index))
