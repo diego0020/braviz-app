@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>855</width>
-    <height>602</height>
+    <height>611</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,7 +36,7 @@
        <property name="frameShadow">
         <enum>QFrame::Raised</enum>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
+       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
         <property name="leftMargin">
          <number>0</number>
         </property>
@@ -607,25 +607,28 @@
                  </property>
                 </widget>
                </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_6">
-                 <property name="text">
-                  <string>Volume:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLabel" name="label_8">
-                 <property name="text">
-                  <string>0000</string>
-                 </property>
-                </widget>
-               </item>
                <item row="3" column="0">
-                <widget class="QLabel" name="label_7">
-                 <property name="text">
-                  <string>Area:</string>
-                 </property>
+                <widget class="QComboBox" name="comboBox">
+                 <item>
+                  <property name="text">
+                   <string>Volume</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Area</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Mean FA</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Mean DC</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
                <item row="3" column="1">
@@ -639,6 +642,13 @@
                 <widget class="QPushButton" name="export_segmentation_to_db">
                  <property name="text">
                   <string>Export to Database</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0" colspan="2">
+                <widget class="Line" name="line">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
                  </property>
                 </widget>
                </item>
@@ -681,6 +691,9 @@
                <enum>QFrame::Raised</enum>
               </property>
               <layout class="QFormLayout" name="formLayout_3">
+               <property name="fieldGrowthPolicy">
+                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+               </property>
                <property name="leftMargin">
                 <number>0</number>
                </property>
@@ -693,6 +706,16 @@
                <property name="bottomMargin">
                 <number>0</number>
                </property>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_26">
+                 <property name="toolTip">
+                  <string>Add fibers based on the visible segmented structures</string>
+                 </property>
+                 <property name="text">
+                  <string>From Seg.</string>
+                 </property>
+                </widget>
+               </item>
                <item row="0" column="1">
                 <widget class="QComboBox" name="fibers_from_segments_box">
                  <item>
@@ -712,7 +735,24 @@
                  </item>
                 </widget>
                </item>
-               <item row="2" column="1">
+               <item row="1" column="1">
+                <widget class="QPushButton" name="save_bundle_button">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="text">
+                  <string>Save Bundle</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_16">
+                 <property name="text">
+                  <string>Color:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
                 <widget class="QComboBox" name="tracto_color_combo">
                  <item>
                   <property name="text">
@@ -751,66 +791,10 @@
                  </item>
                 </widget>
                </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_16">
+               <item row="7" column="0" colspan="2">
+                <widget class="QLabel" name="label_11">
                  <property name="text">
-                  <string>Color</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0">
-                <widget class="QLabel" name="label_17">
-                 <property name="text">
-                  <string>Number:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="0">
-                <widget class="QLabel" name="label_18">
-                 <property name="text">
-                  <string>Mean length:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="7" column="0">
-                <widget class="QLabel" name="label_19">
-                 <property name="text">
-                  <string>Mean FA:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="8" column="0">
-                <widget class="QLabel" name="label_20">
-                 <property name="text">
-                  <string>Mean ADC:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="9" column="0" colspan="2">
-                <widget class="QPushButton" name="pushButton_5">
-                 <property name="text">
-                  <string>Export To Database</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="1">
-                <widget class="QLabel" name="label_21">
-                 <property name="text">
-                  <string>0000</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="1">
-                <widget class="QLabel" name="label_22">
-                 <property name="text">
-                  <string>0000</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="7" column="1">
-                <widget class="QLabel" name="label_23">
-                 <property name="text">
-                  <string>0000</string>
+                  <string>&lt;Active Bundle&gt;</string>
                  </property>
                 </widget>
                </item>
@@ -821,30 +805,74 @@
                  </property>
                 </widget>
                </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_26">
-                 <property name="toolTip">
-                  <string>Add fibers based on the visible segmented structures</string>
-                 </property>
+               <item row="8" column="0">
+                <widget class="QComboBox" name="comboBox_2">
+                 <item>
+                  <property name="text">
+                   <string>Count</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Mean L</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Mean FA</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Mean DC</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="9" column="0" colspan="2">
+                <widget class="QPushButton" name="pushButton_5">
                  <property name="text">
-                  <string>From Seg.</string>
+                  <string>Export To Database</string>
                  </property>
                 </widget>
                </item>
-               <item row="4" column="0" colspan="2">
-                <widget class="QLabel" name="label_11">
-                 <property name="text">
-                  <string>&lt;Active Bundle&gt;</string>
+               <item row="2" column="0" colspan="2">
+                <widget class="Line" name="line_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
                  </property>
                 </widget>
                </item>
-               <item row="1" column="1">
-                <widget class="QPushButton" name="save_bundle_button">
-                 <property name="enabled">
+               <item row="6" column="0" colspan="2">
+                <widget class="Line" name="line_3">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_6">
+                 <property name="text">
+                  <string>Opacity:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QSlider" name="fibers_opacity">
+                 <property name="maximum">
+                  <number>100</number>
+                 </property>
+                 <property name="value">
+                  <number>100</number>
+                 </property>
+                 <property name="tracking">
                   <bool>false</bool>
                  </property>
-                 <property name="text">
-                  <string>Save Bundle</string>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="tickPosition">
+                  <enum>QSlider::TicksBelow</enum>
                  </property>
                 </widget>
                </item>

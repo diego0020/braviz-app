@@ -97,6 +97,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.bundles_list.setModel(self.fibers_list_model)
         self.ui.add_saved_bundles.pressed.connect(self.add_saved_bundles_to_list)
         self.ui.save_bundle_button.pressed.connect(self.save_fibers_bundle)
+        self.ui.fibers_opacity.valueChanged.connect(self.change_tractography_opacity)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
@@ -268,12 +269,17 @@ class SubjectOverviewApp(QMainWindow):
                 self.show_error(e.message)
 
     def change_tractography_color(self,index):
-        color_codes = {0: "orient", 1 : "fa", 5:"rand"}
+        color_codes = {0: "orient", 1 : "fa", 5:"rand",6:"bundle"}
         color_text = color_codes.get(index)
         if color_text is not None:
             self.vtk_viewer.change_tractography_color(color_text)
         else:
             self.show_error("Not yet implemented")
+
+    def change_tractography_opacity(self,value):
+        float_value = value/100
+        self.vtk_viewer.set_tractography_opacity(float_value)
+
 
     def add_saved_bundles_to_list(self):
         selected =set(self.fibers_list_model.get_ids())
