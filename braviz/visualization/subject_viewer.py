@@ -13,6 +13,7 @@ from braviz.readAndFilter import bundles_db
 from itertools import izip
 import pickle
 import colorbrewer
+from braviz.interaction import structure_metrics
 
 
 class SubjectViewer:
@@ -202,8 +203,8 @@ class SubjectViewer:
             return
 
         if modality == "DTI":
-            dti_image= self.reader.get("DTI", self.__current_subject, format="VTK", space=self.__current_space)
-            fa_image= self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
+            dti_image = self.reader.get("DTI", self.__current_subject, format="VTK", space=self.__current_space)
+            fa_image = self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
             self.__image_plane_widget.SetInputData(dti_image)
             self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
@@ -211,9 +212,6 @@ class SubjectViewer:
             self.__image_plane_widget.text1_value_from_img(fa_image)
             self.ren_win.Render()
             return
-
-
-
 
         self.__image_plane_widget.text1_to_std()
         #Other images
@@ -384,7 +382,7 @@ class SubjectViewer:
         self.__tractography_manager.change_color(new_color)
         self.ren_win.Render()
 
-    def set_tractography_opacity(self,float_opacity):
+    def set_tractography_opacity(self, float_opacity):
         self.__tractography_manager.set_opacity(float_opacity)
         self.ren_win.Render()
 
@@ -392,6 +390,9 @@ class SubjectViewer:
 
         self.__tractography_manager.set_active_db_tracts(ids)
         self.ren_win.Render()
+
+    def get_structures_scalar(self, scalar_name):
+        return self.__model_manager.get_scalar_metrics(scalar_name)
 
 
 class QSuvjectViwerWidget(QFrame):
@@ -560,6 +561,15 @@ class ModelManager:
                 prop.SetColor(list(model_color[0:3]))
             else:
                 prop.SetColor(self.__current_color)
+
+    def get_scalar_metrics(self, metric_name):
+        try:
+            value = structure_metrics.get_mult_struct_metric(self.__reader, self.__active_models_set,
+                                                             self.__current_subject, metric_name)
+        except Exception:
+            value = float("nan")
+            raise
+        return value
 
 
 class TractographyManager:

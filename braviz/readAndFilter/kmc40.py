@@ -61,6 +61,7 @@ The path containing this structure must be set."""
             MODEL:Use name=<model> to get the vtkPolyData. Use index='T' to get a list of the available models for a subject.
                   Use color=True to get the standard color associated to the structure
                   Use volume=True to get the volume of the structure
+                  Use label=True to get the label corresponding to the structure
     
             SURF: Use name=<surface> and hemi=<r|h> to get the vtkPolyData of a free surfer surface reconstruction, 
                   use scalars to add scalars to the data
@@ -253,22 +254,28 @@ The path containing this structure must be set."""
                 if os.path.isfile(os.path.join(spharm_path, "%sSPHARM.vtk" % val)):
                     models.append(k + '-SPHARM')
             return models
-        if kw.has_key('name'):
-            name = kw['name']
+        name = kw.get('name')
+        if name is not None:
             if kw.get('color'):
-                if hasattr(self, 'free_surfer_LUT'):
-                    colors = self.free_surfer_LUT
-                else:
-                    colors = self.__createColorDictionary()
-                    self.free_surfer_LUT = colors
+                if not hasattr(self, 'free_surfer_LUT'):
+                    self.__parse_fs_color_file()
+                colors = self.free_surfer_LUT
                 if name.endswith('-SPHARM'):
                     return colors[name[:-7]]
                 else:
                     return colors[name]
             elif kw.get('volume'):
                 if name.endswith('-SPHARM'):
+                    print "Warning, spharm structure treated as non-spharm equivalent"
                     name = name[:-7]
                 return self.__get_volume(subject, name)
+            elif kw.get('label'):
+                if name.endswith('-SPHARM'):
+                    print "Warning, spharm structure treated as non-spharm equivalent"
+                    name = name[:-7]
+                if not hasattr(self,"free_surfer_labels"):
+                    self.__parse_fs_color_file()
+                return self.free_surfer_labels.get(name)
             else:
                 available = self.__load_free_surfer_model(subject, index='T')
                 if not name in available:
@@ -321,33 +328,41 @@ The path containing this structure must be set."""
             vol = 'nan'
         return float(vol)
 
-    def __createColorDictionary(self):
+    def __parse_fs_color_file(self):
         "Creates an inernal representation of the freesurfer color LUT"
         cached = self.load_from_cache('free_surfer_color_lut_internal')
-        if cached is not None:
-            return cached
+        cached2 = self.load_from_cache('free_surfer_labels_dict_internal')
+        if (cached is not None) and (cached2 is not None):
+            self.free_surfer_LUT = cached
+            self.free_surfer_labels = cached2
+            return
         color_file_name = os.path.join(self.__root, 'FreeSurferColorLUT.txt')
 
         with open(color_file_name) as color_file:
             color_lines = color_file.readlines()
             color_file.close()
-            color_lists = (l.split() for l in color_lines if l[0] not in ['#', '\n', ' '] )
+            color_lists = [l.split() for l in color_lines if l[0] not in ('#', '\n', ' ') ]
             color_tuples = ((l[1], tuple([float(c) / 256 for c in l[2:]])) for l in color_lists)
             color_dict = dict(color_tuples)
             self.save_into_cache('free_surfer_color_lut_internal', color_dict)
-            return color_dict
+            labels_tuples = ((l[1],l[0]) for l in color_lists )
+            labels_dict=dict(labels_tuples)
+            self.save_into_cache('free_surfer_labels_dict_internal',labels_dict)
+
+        self.free_surfer_LUT = color_dict
+        self.free_surfer_labels = labels_dict
 
 
     def __loadFreeSurferSurf(self, subj, **kw):
         """Auxiliary function to read the corresponding surface file for hemi and name.
         Scalars can be added to the output surface"""
-        if kw.has_key('name') and kw.has_key('hemi'):
+        if 'name' in  kw and 'hemi' in kw:
             #Check required arguments
             name = kw['hemi'] + 'h.' + kw['name']
         else:
             print 'Name=<surface> and hemi=<l|r> are required.'
             raise Exception('Name=<surface> and hemi=<l|r> are required.')
-        if not kw.has_key('scalars'):
+        if not 'scalars' in kw:
             path = os.path.join(self.__root, str(subj), 'Surf')
             filename = path + '/' + name
             output = surface2vtkPolyData(filename)
@@ -490,7 +505,7 @@ The path containing this structure must be set."""
         the list is then used to remove unwanted polylines,
         and finally the fibers are translated to the wanted space
         """
-        if kw.has_key('progress'):
+        if 'progress' in kw:
             print "The progress argument is deprecated"
             kw['progress'].set(5)
         if kw.get('index', False):
@@ -501,7 +516,7 @@ The path containing this structure must be set."""
                                                     types.FunctionType), named_tract_funcs)
             return filter(lambda x: not x.startswith('_'), functions)
 
-        if kw.has_key('name'):
+        if 'name' in kw:
             #named tracts, special case
             import braviz.readAndFilter.named_tracts
 
@@ -520,7 +535,7 @@ The path containing this structure must be set."""
                 transformed_streams = self.__movePointsToSpace(fibers, kw['space'], subj, inverse=False)
                 return transformed_streams
             return fibers
-        if not kw.has_key('waypoint'):
+        if 'waypoint' not in kw:
             path = os.path.join(self.__root, str(subj), 'camino')
             streams = self.__cached_color_fibers(subj, kw.get('color', 'orient'))
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
@@ -555,8 +570,9 @@ The path containing this structure must be set."""
                             valid_ids.intersection_update(new_ids)
                         else:
                             valid_ids.update(new_ids)
-                    if kw.has_key('progress'):
-                        kw['progress'].set(nm / len(models) * 100)
+                    prog = kw.get('progress')
+                    if prog is not None:
+                        prog.set(nm / len(models) * 100)
                 if valid_ids is None:
                     valid_ids = set()
 
@@ -887,13 +903,14 @@ def autoReader(**kw_args):
     }
     node_id = platform.node()
 
-    if known_nodes.has_key(node_id):
-        data_root = known_nodes[node_id][0]
+    node = known_nodes.get(node_id)
+    if node is not None:
+        data_root = node[0]
         if kw_args.get('max_cache', 0) > 0:
             max_cache = kw_args.pop('max_cache')
             print "Max cache set to %.2f MB" % max_cache
         else:
-            max_cache = known_nodes[node_id][1]
+            max_cache = node[1]
         return kmc40Reader(data_root, max_cache=max_cache, **kw_args)
     else:
         print "Unknown node %s, please enter route to data" % node_id

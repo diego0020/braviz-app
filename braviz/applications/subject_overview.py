@@ -12,7 +12,7 @@ from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, Structur
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog
-
+import numpy as np
 
 class SubjectOverviewApp(QMainWindow):
     def __init__(self,):
@@ -91,6 +91,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.struct_opacity_slider.valueChanged.connect(self.vtk_viewer.set_structures_opacity)
         self.ui.left_right_radio.toggled.connect(self.change_left_to_non_dominant)
         self.ui.struct_color_combo.currentIndexChanged.connect(self.select_structs_color)
+        self.ui.struct_scalar_combo.currentIndexChanged.connect(self.update_segmentation_scalar)
         #tractography controls
         self.ui.fibers_from_segments_box.currentIndexChanged.connect(self.show_fibers_from_segment)
         self.ui.tracto_color_combo.currentIndexChanged.connect(self.change_tractography_color)
@@ -226,6 +227,28 @@ class SubjectOverviewApp(QMainWindow):
     def update_segmented_structures(self):
         selected_structures = self.structures_tree_model.get_selected_structures()
         self.vtk_viewer.set_structures(selected_structures)
+        self.update_segmentation_scalar()
+
+
+    def update_segmentation_scalar(self,scalar_index=None):
+        metrics_dict = {"Volume" : ("volume","mm^3"),
+                        "Area"   : ("area","mm^2")}
+        if scalar_index is None:
+            scalar_index = self.ui.struct_scalar_combo.currentIndex()
+        scalar_text = str(self.ui.struct_scalar_combo.itemText(scalar_index))
+        metric_params = metrics_dict.get(scalar_text)
+        print scalar_text
+        if metric_params is None:
+            self.ui.struct_scalar_value.clear()
+            self.show_error("Unknown metric %s"%scalar_text)
+            return
+        metric_code,units = metric_params
+        new_value=self.vtk_viewer.get_structures_scalar(metric_code)
+        if np.isnan(new_value):
+            self.ui.struct_scalar_value.clear()
+        else:
+            self.ui.struct_scalar_value.setValue(new_value)
+            self.ui.struct_scalar_value.setSuffix(units)
 
     def change_left_to_non_dominant(self):
         if self.ui.left_right_radio.isChecked():
