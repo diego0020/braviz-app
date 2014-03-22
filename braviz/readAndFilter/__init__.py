@@ -365,3 +365,7 @@ def cache_function(max_cache_size):
 
 
 #Easy access to kmc readers
+from braviz.readAndFilter.kmc40 import autoReader as kmc40AutoReader
+
+if __name__ == "__main__":
+    reader=kmc40AutoReader()
