@@ -5,7 +5,7 @@ import random
 import numpy as np
 
 import braviz
-
+import braviz.readAndFilter.tabular_data
 
 __author__ = 'Diego'
 
@@ -305,3 +305,40 @@ def get_locations(reader, subject, struct_name):
         aparc_img = reader.get("APARC", subject, space="world", format="nii")
     aparc_data = aparc_img.get_data()
     return aparc_data == label
+
+
+def get_scalar_from_fiber_ploydata(poly_data, scalar):
+    pd = poly_data
+    if scalar == "number":
+        return pd.GetNumberOfLines()
+    elif scalar == "mean_length":
+        desc = braviz.interaction.get_fiber_bundle_descriptors(pd)
+        n = float(desc[1])
+        return n
+    elif scalar == "mean_color":
+        desc = braviz.interaction.aggregate_fiber_scalar(pd, component=0, norm_factor=1 / 255)
+        n = float(desc[1])
+        return n
+    else:
+        raise Exception("Unknown metric %s", scalar)
+        return float("nan")
+
+
+def get_fiber_scalars_from_db(reader, subj_id, db_id, scalar):
+    color = "orient"
+    if scalar == "mean_fa":
+        color = "FA"
+        scalar = "mean_color"
+    pd = reader.get("FIBERS", subj_id, color=color, db_id=db_id)
+    return get_scalar_from_fiber_ploydata(pd, scalar)
+
+
+def get_fiber_scalars_from_waypoints(reader, subj_id, waypoints, operation, scalar):
+    color = "orient"
+    lat = braviz.readAndFilter.tabular_data.get_laterality(subj_id)
+    waypoints2 = solve_laterality(lat, waypoints)
+    if scalar == "mean_fa":
+        color = "FA"
+        scalar = "mean_color"
+    pd = reader.get("FIBERS", subj_id, color=color, waypoint=waypoints2, operation=operation)
+    return get_scalar_from_fiber_ploydata(pd, scalar)

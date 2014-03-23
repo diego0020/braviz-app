@@ -9,9 +9,7 @@ from PyQt4.QtGui import QFrame, QHBoxLayout
 from PyQt4.QtCore import pyqtSignal
 from braviz.interaction.structure_metrics import solve_laterality
 import braviz.readAndFilter.tabular_data
-from braviz.readAndFilter import bundles_db
 from itertools import izip
-import pickle
 import colorbrewer
 from braviz.interaction import structure_metrics
 
@@ -394,11 +392,11 @@ class SubjectViewer:
     def get_structures_scalar(self, scalar_name):
         return self.__model_manager.get_scalar_metrics(scalar_name)
 
-    def get_fibers_scalar_from_segmented(self,scalar_name):
+    def get_fibers_scalar_from_segmented(self, scalar_name):
         return self.__tractography_manager.get_scalar_from_structs(scalar_name)
 
-    def get_fibers_scalar_from_db(self,scalar_name,bid):
-        return self.__tractography_manager.get_scalar_from_db(scalar_name,bid)
+    def get_fibers_scalar_from_db(self, scalar_name, bid):
+        return self.__tractography_manager.get_scalar_from_db(scalar_name, bid)
 
 
 class QSuvjectViwerWidget(QFrame):
@@ -704,31 +702,15 @@ class TractographyManager:
         return colors
 
 
-    def get_polydata(self, b_id,color = None):
-        _, bundle_type, data = bundles_db.get_bundle_details(b_id)
-        bundle_type = int(bundle_type)
+    def get_polydata(self, b_id, color=None):
         if color is None:
             color = self.__current_color
         if self.__current_color == "bundle":
             color = "orient"
-        if bundle_type == 0:
-            #named tract
-            poly = self.reader.get("Fibers", self.__current_subject, space=self.__current_space,
-                                   color=color, name=data)
-            return poly
-        elif bundle_type == 1:
-            checkpoints = pickle.loads(data)
-            print checkpoints
-            poly = self.reader.get("Fibers", self.__current_subject, space=self.__current_space,
-                                   color=color, waypoint=checkpoints, operation="and")
-            return poly
-        elif bundle_type == 2:
-            checkpoints = pickle.loads(data)
-            poly = self.reader.get("Fibers", self.__current_subject, space=self.__current_space,
-                                   color=color, waypoint=checkpoints, operation="or")
-            return poly
-        else:
-            print "Unknown data type"
+        #print color
+        poly = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
+                               color=color, db_id=b_id)
+        return poly
 
 
     def hide_database_tract(self, bid):
@@ -757,10 +739,10 @@ class TractographyManager:
         to_hide = self.__active_db_tracts - new_set
         to_add = new_set - self.__active_db_tracts
         errors = 0
-        self.__active_db_tracts = new_set
         self.__bundle_labels = dict(izip(new_set, range(len(new_set) + 1)))
         for i in to_hide:
             self.hide_database_tract(i)
+        self.__active_db_tracts = new_set
         for i in to_add:
             try:
                 self.add_from_database(i)
@@ -775,39 +757,28 @@ class TractographyManager:
         self.__opacity = float_opacity
         self.__reload_fibers()
 
-    def get_scalar_from_db(self,scalar,bid):
+    def get_scalar_from_db(self, scalar, bid):
         if bid in self.__active_db_tracts:
-            if scalar == "number":
+            if scalar in ("number","mean_length"):
                 pd = self.__db_tracts[bid][0]
-                return pd.GetNumberOfLines()
-            elif scalar =="mean_length":
-                pd = self.__db_tracts[bid][0]
-                desc = braviz.interaction.get_fiber_bundle_descriptors(pd)
-                n = float(desc[1])
-                return n
-            elif scalar =="mean_fa":
-                fiber = self.get_polydata(bid,color="FA")
-                desc = braviz.interaction.aggregate_fiber_scalar(fiber, component=0, norm_factor=1 / 255)
-                n = float(desc[1])
+                return structure_metrics.get_scalar_from_fiber_ploydata(pd,scalar)
+            elif scalar == "mean_fa":
+                fiber = self.get_polydata(bid, color="FA")
+                n=structure_metrics.get_scalar_from_fiber_ploydata(fiber,"mean_color")
                 return n
         else:
             return float("nan")
 
-    def get_scalar_from_structs(self,scalar):
+    def get_scalar_from_structs(self, scalar):
         if self.__ad_hoc_visibility is False:
             return float("nan")
-        if scalar == "number":
+        if scalar in ("number","mean_length"):
             fiber = self.__ad_hoc_pd_mp_ac[0]
-            return fiber.GetNumberOfLines()
-        elif scalar =="mean_length":
-            fiber = self.__ad_hoc_pd_mp_ac[0]
-            desc = braviz.interaction.get_fiber_bundle_descriptors(fiber)
-            n = float(desc[1])
+            n=structure_metrics.get_scalar_from_fiber_ploydata(fiber,scalar)
             return n
-        elif scalar =="mean_fa":
-            fiber = self.reader.get("FIBERS",self.__current_subject,color="FA")
-            desc = braviz.interaction.aggregate_fiber_scalar(fiber, component=0, norm_factor=1 / 255)
-            n = float(desc[1])
+        elif scalar == "mean_fa":
+            fiber = self.reader.get("FIBERS", self.__current_subject, color="FA")
+            n=structure_metrics.get_scalar_from_fiber_ploydata(fiber,"mean_color")
             return n
         return float("nan")
 

@@ -7,6 +7,7 @@ import platform  # for the autoReader
 import cPickle
 import hashlib
 import types
+import pickle
 
 import nibabel as nib
 import numpy as np
@@ -21,6 +22,7 @@ from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
+from braviz.readAndFilter import bundles_db
 
 
 class kmc40Reader:
@@ -79,6 +81,8 @@ The path containing this structure must be set."""
                     Can accept color=<orient|fa|curv|y|rand> to get different color scalars
                     'Name' can be provided instead of waypoint to get custom tracts, to get a list of currently available
                     named tracts call index=True
+                    Use db_id = 'id' to read a fiber stored in the braviz data base
+
             TENSORS: Get an unstructured grid containing tensors at the points where they are available
                      and scalars representing the orientation of the main eigenvector
                      Use space=world to get output in world coordinates [experimental]
@@ -501,6 +505,30 @@ The path containing this structure must be set."""
             print "cache write failed: %s" % cache_file
         return ids
 
+    def __readFibers_from_db(self,subj,db_id,**kw):
+        try:
+            _, bundle_type, data = bundles_db.get_bundle_details(db_id)
+        except Exception:
+            raise Exception("Fiber with id=%s nor found in database"%db_id)
+
+        bundle_type = int(bundle_type)
+
+        if bundle_type == 0:
+            #named tract
+            assert "name" not in kw
+            poly = self.get("Fibers", subj, name=data, **kw)
+            return poly
+        elif (bundle_type == 1) or (bundle_type == 2):
+            assert "waypoint" not in kw
+            assert "operation" not in kw
+            operation = "and" if bundle_type == 1 else "or"
+            checkpoints = pickle.loads(data)
+            poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation)
+            return poly
+        else:
+            print "Unknown data type"
+            raise Exception("Unknown fibers")
+
     def __readFibers(self, subj, **kw):
         """Auxiliary function for reading fibers, uses all the cache available.
         First reades the correct color file,
@@ -511,13 +539,20 @@ The path containing this structure must be set."""
         if 'progress' in kw:
             print "The progress argument is deprecated"
             kw['progress'].set(5)
+
+        #named tracts index
         if kw.get('index', False):
             import braviz.readAndFilter.named_tracts
-
             named_tract_funcs = dir(braviz.readAndFilter.named_tracts)
             functions = filter(lambda x: isinstance(getattr(braviz.readAndFilter.named_tracts, x),
                                                     types.FunctionType), named_tract_funcs)
             return filter(lambda x: not x.startswith('_'), functions)
+
+        #deal with database tracts:
+        if "db_id" in kw:
+            db_id = kw.pop("db_id")
+            poly = self.__readFibers_from_db(subj,db_id,**kw)
+            return poly
 
         if 'name' in kw:
             #named tracts, special case

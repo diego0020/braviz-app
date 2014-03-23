@@ -10,6 +10,7 @@ import pandas as pd
 
 LATERALITY = 6
 
+
 def get_variables(reader=None):
     conn = get_connection(reader)
     data = sql.read_sql("SELECT var_name from variables;", conn)
@@ -25,6 +26,19 @@ def get_connection(reader=None):
     path = os.path.join(reader.getDataRoot(), "braviz_data", "tabular_data.sqlite")
     conn = sqlite3.connect(path)
     return conn
+
+
+def get_laterality(subj_id):
+    conn = get_connection()
+    subj_id = int(subj_id)
+    cur = conn.execute("SELECT value FROM var_values WHERE var_idx = ? and subject = ?",(LATERALITY,subj_id))
+    res = cur.fetchone()
+    if res is None:
+        raise Exception("Unknown laterality")
+    if res[0]==1:
+        return 'r'
+    else:
+        return 'l'
 
 
 def get_data_frame_by_name(columns, reader=None):

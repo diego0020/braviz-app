@@ -43,8 +43,6 @@ def __cached_named_tract(name_tract_func):
                 print 'cache write failed'
         except Exception:
             print 'cache write failed'
-        finally:
-            fib_writer.CloseVTKFile()
         return fibers, out_space
 
     return cached_func
