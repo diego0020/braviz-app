@@ -44,6 +44,7 @@ class SubjectOverviewApp(QMainWindow):
 
         #Fibers list model
         self.fibers_list_model = SimpleBundlesList()
+        self.current_fibers = None
 
         #Init gui
         self.ui = None
@@ -99,6 +100,8 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.add_saved_bundles.pressed.connect(self.add_saved_bundles_to_list)
         self.ui.save_bundle_button.pressed.connect(self.save_fibers_bundle)
         self.ui.fibers_opacity.valueChanged.connect(self.change_tractography_opacity)
+        self.ui.bundles_list.activated.connect(self.update_current_bundle)
+        self.ui.fibers_scalar_combo.currentIndexChanged.connect(self.update_fiber_scalars)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
@@ -129,6 +132,7 @@ class SubjectOverviewApp(QMainWindow):
         self.reset_image_view_controls()
         #context
         self.update_segmentation_scalar()
+        self.update_fiber_scalars()
         self.context_frame.set_subject(new_subject)
     def show_error(self,message):
         self.statusBar().showMessage(message, 5000)
@@ -293,6 +297,7 @@ class SubjectOverviewApp(QMainWindow):
                 self.vtk_viewer.show_fibers_from_checkpoints(checkpoints,throug_all)
             except Exception as e:
                 self.show_error(e.message)
+        self.update_current_bundle()
 
     def change_tractography_color(self,index):
         color_codes = {0: "orient", 1 : "fa", 5:"rand",6:"bundle"}
@@ -306,6 +311,51 @@ class SubjectOverviewApp(QMainWindow):
         float_value = value/100
         self.vtk_viewer.set_tractography_opacity(float_value)
 
+    def update_fibers_scalar_metric(self):
+        print "hola"
+
+    def update_current_bundle(self,index=None):
+        print "tonces?"
+        if index is None:
+            if (self.current_fibers is None) and (self.ui.fibers_from_segments_box.currentIndex()>0):
+                self.current_fibers = "<From Segmentation>"
+                self.ui.current_bundle_tag.setText("<From Segmentation>")
+            if (self.current_fibers == "<From Segmentation>") and (self.ui.fibers_from_segments_box.currentIndex()==0):
+                self.current_fibers = None
+                self.ui.current_bundle_tag.setText("<No active bundle>")
+        else:
+            name=self.fibers_list_model.data(index,QtCore.Qt.DisplayRole)
+            self.ui.current_bundle_tag.setText(name)
+            bid=self.fibers_list_model.data(index,QtCore.Qt.UserRole)
+            if bid is None:
+                self.ui.current_bundle_tag.setText("<From Segmentation>")
+                self.current_fibers = "<From Segmentation>"
+            else:
+                self.current_fibers=bid
+        self.update_fiber_scalars()
+
+    def update_fiber_scalars(self,index=None):
+        print self.current_fibers
+        if index is None:
+            index = self.ui.fibers_scalar_combo.currentIndex()
+        text=str(self.ui.fibers_scalar_combo.itemText(index))
+        metrics_dict={"Count":"number",
+                      "Mean L":"mean_length"}
+        metric=metrics_dict.get(text)
+        if metric is None:
+            self.ui.fibers_scalar_value.clear()
+            self.show_error("%s not yet implemented"%text)
+            return
+        if self.current_fibers is None:
+            value=float("nan")
+        elif type(self.current_fibers) is str:
+            value = self.vtk_viewer.get_fibers_scalar_from_segmented(metric)
+        else:
+            value = self.vtk_viewer.get_fibers_scalar_from_db(metric,self.current_fibers)
+        if np.isnan(value):
+            self.ui.fibers_scalar_value.clear()
+        else:
+            self.ui.fibers_scalar_value.setValue(value)
 
     def add_saved_bundles_to_list(self):
         selected =set(self.fibers_list_model.get_ids())

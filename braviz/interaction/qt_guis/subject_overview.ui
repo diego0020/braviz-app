@@ -64,7 +64,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="subjects_tab">
            <attribute name="title">
@@ -659,7 +659,7 @@
                   <bool>true</bool>
                  </property>
                  <property name="maximum">
-                  <double>100000.000000000000000</double>
+                  <double>9999999.000000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -803,21 +803,14 @@
                 </widget>
                </item>
                <item row="7" column="0" colspan="2">
-                <widget class="QLabel" name="label_11">
+                <widget class="QLabel" name="current_bundle_tag">
                  <property name="text">
-                  <string>&lt;Active Bundle&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="8" column="1">
-                <widget class="QLabel" name="label_24">
-                 <property name="text">
-                  <string>0000</string>
+                  <string>&lt;No active bundle&gt;</string>
                  </property>
                 </widget>
                </item>
                <item row="8" column="0">
-                <widget class="QComboBox" name="comboBox_2">
+                <widget class="QComboBox" name="fibers_scalar_combo">
                  <item>
                   <property name="text">
                    <string>Count</string>
@@ -884,6 +877,16 @@
                  </property>
                  <property name="tickPosition">
                   <enum>QSlider::TicksBelow</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="8" column="1">
+                <widget class="QDoubleSpinBox" name="fibers_scalar_value">
+                 <property name="locale">
+                  <locale language="English" country="UnitedStates"/>
+                 </property>
+                 <property name="maximum">
+                  <double>999999.000000000000000</double>
                  </property>
                 </widget>
                </item>

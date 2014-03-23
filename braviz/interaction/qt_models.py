@@ -1031,6 +1031,8 @@ class SimpleBundlesList(QAbstractListModel):
             if 0<=row<len(self.names_list):
                 if int_role == QtCore.Qt.DisplayRole:
                     return self.names_list[row]
+                if int_role == QtCore.Qt.UserRole:
+                    return self.id_list[row]
         return QtCore.QVariant()
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
@@ -1039,8 +1041,8 @@ class SimpleBundlesList(QAbstractListModel):
     def add_bundle(self,bundle_id,name):
         if bundle_id in self.id_list:
             return
-        self.id_list.insert(len(self.id_list)-1,bundle_id)
-        self.names_list.insert(len(self.names_list)-1,name)
+        self.id_list.insert(len(self.id_list)-1,       bundle_id)
+        self.names_list.insert(len(self.names_list)-1, name)
         self.modelReset.emit()
 
     def set_show_special(self,show_special):
@@ -1085,7 +1087,6 @@ class BundlesSelectionList(QAbstractListModel):
                         return QtCore.Qt.Checked
                     else:
                         return QtCore.Qt.Unchecked
-
 
         return QtCore.QVariant()
 

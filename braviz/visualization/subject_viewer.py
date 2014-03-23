@@ -394,6 +394,12 @@ class SubjectViewer:
     def get_structures_scalar(self, scalar_name):
         return self.__model_manager.get_scalar_metrics(scalar_name)
 
+    def get_fibers_scalar_from_segmented(self,scalar_name):
+        return self.__tractography_manager.get_scalar_from_structs(scalar_name)
+
+    def get_fibers_scalar_from_db(self,scalar_name,bid):
+        return self.__tractography_manager.get_scalar_from_db(scalar_name,bid)
+
 
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -668,6 +674,8 @@ class TractographyManager:
         except Exception:
             actor.SetVisibility(0)
             raise
+
+        self.__db_tracts[b_id] = (poly_data, mapper, actor)
         actor.SetVisibility(1)
         actor.GetProperty().SetOpacity(self.__opacity)
         if self.__current_color == "bundle":
@@ -764,3 +772,30 @@ class TractographyManager:
     def set_opacity(self, float_opacity):
         self.__opacity = float_opacity
         self.__reload_fibers()
+
+    def get_scalar_from_db(self,scalar,bid):
+        if bid in self.__active_db_tracts:
+            if scalar == "number":
+                pd = self.__db_tracts[bid][0]
+                return pd.GetNumberOfLines()
+            elif scalar =="mean_length":
+                pd = self.__db_tracts[bid][0]
+                desc = braviz.interaction.get_fiber_bundle_descriptors(pd)
+                n = float(desc[1])
+                return n
+        else:
+            return float("nan")
+
+    def get_scalar_from_structs(self,scalar):
+        if self.__ad_hoc_visibility is False:
+            return float("nan")
+        if scalar == "number":
+            fiber = self.__ad_hoc_pd_mp_ac[0]
+            return fiber.GetNumberOfLines()
+        elif scalar =="mean_length":
+            fiber = self.__ad_hoc_pd_mp_ac[0]
+            desc = braviz.interaction.get_fiber_bundle_descriptors(fiber)
+            n = float(desc[1])
+            return n
+
+
