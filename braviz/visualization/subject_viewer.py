@@ -658,7 +658,7 @@ class TractographyManager:
         self.__ad_hoc_visibility = False
 
     def add_from_database(self, b_id):
-        _, btype, data = bundles_db.get_bundle_details(b_id)
+
         self.__active_db_tracts.add(b_id)
         if b_id not in self.__db_tracts:
             mapper = vtk.vtkPolyDataMapper()
@@ -669,7 +669,7 @@ class TractographyManager:
 
         _, mapper, actor = self.__db_tracts[b_id]
         try:
-            poly_data = self.get_polydata(btype, data)
+            poly_data = self.get_polydata(b_id)
             mapper.SetInputData(poly_data)
         except Exception:
             actor.SetVisibility(0)
@@ -704,9 +704,11 @@ class TractographyManager:
         return colors
 
 
-    def get_polydata(self, bundle_type, data):
+    def get_polydata(self, b_id,color = None):
+        _, bundle_type, data = bundles_db.get_bundle_details(b_id)
         bundle_type = int(bundle_type)
-        color = self.__current_color
+        if color is None:
+            color = self.__current_color
         if self.__current_color == "bundle":
             color = "orient"
         if bundle_type == 0:
@@ -783,6 +785,11 @@ class TractographyManager:
                 desc = braviz.interaction.get_fiber_bundle_descriptors(pd)
                 n = float(desc[1])
                 return n
+            elif scalar =="mean_fa":
+                fiber = self.get_polydata(bid,color="FA")
+                desc = braviz.interaction.aggregate_fiber_scalar(fiber, component=0, norm_factor=1 / 255)
+                n = float(desc[1])
+                return n
         else:
             return float("nan")
 
@@ -797,5 +804,11 @@ class TractographyManager:
             desc = braviz.interaction.get_fiber_bundle_descriptors(fiber)
             n = float(desc[1])
             return n
+        elif scalar =="mean_fa":
+            fiber = self.reader.get("FIBERS",self.__current_subject,color="FA")
+            desc = braviz.interaction.aggregate_fiber_scalar(fiber, component=0, norm_factor=1 / 255)
+            n = float(desc[1])
+            return n
+        return float("nan")
 
 

@@ -340,7 +340,8 @@ class SubjectOverviewApp(QMainWindow):
             index = self.ui.fibers_scalar_combo.currentIndex()
         text=str(self.ui.fibers_scalar_combo.itemText(index))
         metrics_dict={"Count":"number",
-                      "Mean L":"mean_length"}
+                      "Mean L":"mean_length",
+                      "Mean FA":"mean_fa"}
         metric=metrics_dict.get(text)
         if metric is None:
             self.ui.fibers_scalar_value.clear()
