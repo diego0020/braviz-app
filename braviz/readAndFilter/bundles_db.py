@@ -19,6 +19,13 @@ def get_bundle_details(bundle_id):
     res = cur.fetchone()
     return res
 
+def get_bundle_name(bundle_id):
+    conn = get_connection()
+    q="SELECT bundle_name FROM fiber_bundles WHERE bundle_id = ?"
+    cur=conn.execute(q,(bundle_id,))
+    res = cur.fetchone()
+    return res[0]
+
 def check_if_name_exists(name):
     conn = get_connection()
     q="SELECT * FROM fiber_bundles WHERE bundle_name = ?"

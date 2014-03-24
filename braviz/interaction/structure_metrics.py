@@ -329,7 +329,10 @@ def get_fiber_scalars_from_db(reader, subj_id, db_id, scalar):
     if scalar == "mean_fa":
         color = "FA"
         scalar = "mean_color"
-    pd = reader.get("FIBERS", subj_id, color=color, db_id=db_id)
+    try:
+        pd = reader.get("FIBERS", subj_id, color=color, db_id=db_id)
+    except Exception:
+        return float("nan")
     return get_scalar_from_fiber_ploydata(pd, scalar)
 
 
@@ -340,5 +343,8 @@ def get_fiber_scalars_from_waypoints(reader, subj_id, waypoints, operation, scal
     if scalar == "mean_fa":
         color = "FA"
         scalar = "mean_color"
-    pd = reader.get("FIBERS", subj_id, color=color, waypoint=waypoints2, operation=operation)
+    try:
+        pd = reader.get("FIBERS", subj_id, color=color, waypoint=waypoints2, operation=operation)
+    except Exception:
+        return float("nan")
     return get_scalar_from_fiber_ploydata(pd, scalar)

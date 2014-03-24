@@ -108,6 +108,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.fibers_opacity.valueChanged.connect(self.change_tractography_opacity)
         self.ui.bundles_list.activated.connect(self.update_current_bundle)
         self.ui.fibers_scalar_combo.currentIndexChanged.connect(self.update_fiber_scalars)
+        self.ui.export_fiber_scalars_to_db.pressed.connect(self.export_fiber_scalars_to_db)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
@@ -279,7 +280,11 @@ class SubjectOverviewApp(QMainWindow):
                       "metric" : scalar_text}
         export_dialog=multiprocessing.Process(target=export_scalar_to_db.run,kwargs=export_dialog_args)
         export_dialog.start()
-        self.active_children_check_timer.start(1000)
+        self.active_children_check_timer.start(100000)
+        self.ui.export_segmentation_to_db.setEnabled(0)
+        def reactivate_button():
+            self.ui.export_segmentation_to_db.setEnabled(1)
+        QtCore.QTimer.singleShot(2000,reactivate_button)
 
 
     def check_active_children(self):
@@ -343,11 +348,9 @@ class SubjectOverviewApp(QMainWindow):
         float_value = value/100
         self.vtk_viewer.set_tractography_opacity(float_value)
 
-    def update_fibers_scalar_metric(self):
-        print "hola"
 
     def update_current_bundle(self,index=None):
-        print "tonces?"
+        self.ui.export_fiber_scalars_to_db.setEnabled(1)
         if index is None:
             if (self.current_fibers is None) and (self.ui.fibers_from_segments_box.currentIndex()>0):
                 self.current_fibers = "<From Segmentation>"
@@ -355,6 +358,7 @@ class SubjectOverviewApp(QMainWindow):
             if (self.current_fibers == "<From Segmentation>") and (self.ui.fibers_from_segments_box.currentIndex()==0):
                 self.current_fibers = None
                 self.ui.current_bundle_tag.setText("<No active bundle>")
+                self.ui.export_fiber_scalars_to_db.setEnabled(0)
         else:
             name=self.fibers_list_model.data(index,QtCore.Qt.DisplayRole)
             self.ui.current_bundle_tag.setText(name)
@@ -366,15 +370,16 @@ class SubjectOverviewApp(QMainWindow):
                 self.current_fibers=bid
         self.update_fiber_scalars()
 
+    fiber_metrics_dict={"Count":"number",
+                      "Mean L":"mean_length",
+                      "Mean FA":"mean_fa"}
     def update_fiber_scalars(self,index=None):
         print self.current_fibers
         if index is None:
             index = self.ui.fibers_scalar_combo.currentIndex()
         text=str(self.ui.fibers_scalar_combo.itemText(index))
-        metrics_dict={"Count":"number",
-                      "Mean L":"mean_length",
-                      "Mean FA":"mean_fa"}
-        metric=metrics_dict.get(text)
+
+        metric=self.fiber_metrics_dict.get(text)
         if metric is None:
             self.ui.fibers_scalar_value.clear()
             self.show_error("%s not yet implemented"%text)
@@ -389,6 +394,36 @@ class SubjectOverviewApp(QMainWindow):
             self.ui.fibers_scalar_value.clear()
         else:
             self.ui.fibers_scalar_value.setValue(value)
+
+    def export_fiber_scalars_to_db(self):
+        if self.current_fibers is None:
+            return
+        index = self.ui.fibers_scalar_combo.currentIndex()
+        scalar_text=str(self.ui.fibers_scalar_combo.itemText(index))
+        metric_params = self.fiber_metrics_dict.get(scalar_text)
+        if metric_params is None:
+            self.show_error("Unknown metric %s"%scalar_text)
+            return
+        if type(self.current_fibers) is str:
+            structs=tuple(self.structures_tree_model.get_selected_structures())
+            index = self.ui.fibers_from_segments_box.currentIndex()
+            operation="and" if  (index == 2) else "or"
+            db_id=None
+        else:
+            db_id=self.current_fibers
+            structs=None
+            operation=None
+        export_dialog_args = {"fibers" : True, "structures_list" : structs,
+                      "metric" : scalar_text, "db_id" : db_id, "operation" : operation}
+        export_dialog=multiprocessing.Process(target=export_scalar_to_db.run,kwargs=export_dialog_args)
+        export_dialog.start()
+        #to avoid zombie processes
+        self.active_children_check_timer.start(10000)
+        self.ui.export_fiber_scalars_to_db.setEnabled(0)
+        def reactivate_button():
+            self.ui.export_fiber_scalars_to_db.setEnabled(1)
+        QtCore.QTimer.singleShot(2000,reactivate_button)
+        print "launching"
 
     def add_saved_bundles_to_list(self):
         selected =set(self.fibers_list_model.get_ids())
