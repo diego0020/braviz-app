@@ -151,9 +151,15 @@ def get_var_name(var_idx):
 
 
 def get_var_idx(var_name):
+    """
+    Gets the index corresponding to the first occurrence of a given variable name, if it doesn't exist returns None
+    """
     conn = get_connection()
     cur = conn.execute("SELECT var_idx FROM variables WHERE var_name = ?", (str(var_name),))
-    return cur.fetchone()[0]
+    res = cur.fetchone()
+    if res is None:
+        return None
+    return res[0]
 
 
 def get_maximum_value(var_idx):
@@ -363,7 +369,7 @@ def register_new_variable(var_name,is_real=1):
     q1 = "SELECT var_idx from VARIABLES where var_name = ?"
     cur=conn.execute(q1,(var_name,))
     if cur.fetchone() is not None:
-        raise Exception("Attemptint to add duplicate variable")
+        raise Exception("Attempting to add duplicate variable")
     if is_real:
         is_real = 1
     else:
@@ -379,6 +385,9 @@ def register_new_variable(var_name,is_real=1):
     return var_idx[0]
 
 def update_variable_values(var_idx,tuples):
+    """
+    Tuples should be [(subj1,value1),(subj2,value2) ....]
+    """
     conn=get_connection()
     super_tuples=((var_idx,s,v) for s,v in tuples)
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
@@ -386,9 +395,21 @@ def update_variable_values(var_idx,tuples):
     conn.commit()
 
 def update_multiple_variable_values(idx_subject_value_tuples):
+    """
+    idx_subject_value_tuples is an iterable containing tuples of the form (var_idx,subj,value)
+    """
     conn=get_connection()
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.executemany(q,idx_subject_value_tuples)
+    conn.commit()
+
+def updata_variable_value(var_idx,subject,new_value):
+    """
+    Updates a single value for variable var_idx and subject
+    """
+    conn=get_connection()
+    q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
+    conn.execute(q,(int(var_idx),int(subject),new_value))
     conn.commit()
 
 def get_var_value(var_idx,subject):
