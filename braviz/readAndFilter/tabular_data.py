@@ -9,7 +9,7 @@ import pandas as pd
 
 
 LATERALITY = 6
-
+IMAGE_CODE = 273
 
 def get_variables(reader=None):
     conn = get_connection(reader)

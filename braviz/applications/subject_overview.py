@@ -7,6 +7,7 @@ import PyQt4.QtCore as QtCore
 from PyQt4.QtGui import QMainWindow
 
 import braviz
+import braviz.readAndFilter.tabular_data as braviz_tab_data
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
 from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
@@ -124,8 +125,12 @@ class SubjectOverviewApp(QMainWindow):
         #details
         self.subject_details_model.change_subject(new_subject)
         #image
+        image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE,new_subject))
+        if len(image_code)<3:
+            image_code="0"+image_code
+        print "Image Code: ", image_code
         try:
-            self.vtk_viewer.change_subject(new_subject)
+            self.vtk_viewer.change_subject(image_code)
         except Exception as e:
             self.show_error(e.message)
             #raise
