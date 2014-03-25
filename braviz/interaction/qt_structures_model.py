@@ -65,6 +65,12 @@ class StructureTreeNode:
         if self.checked != previus_state:
             self.__propagate_up()
 
+    def delete_children(self):
+        for i in self.children:
+            i.parent = None
+            i.delete_children()
+        del self.children
+
 
 class StructureTreeModel(QAbstractItemModel):
     selection_changed = QtCore.pyqtSignal()
@@ -86,6 +92,10 @@ class StructureTreeModel(QAbstractItemModel):
         # print
         self.leaf_ids=set()
         self.__id_index={}
+        if self.__root is not None:
+            self.__root.delete_children()
+        self.__root = StructureTreeNode(None, "root")
+
         if dominant is True:
             self.hierarchy = get_structural_hierarchy_with_names(self.reader, subj, True, False, False)
         else:
@@ -231,7 +241,7 @@ class StructureTreeModel(QAbstractItemModel):
         selected_leaf_names = [self.__id_index[leaf].leaf_name for leaf in self.leaf_ids if
                                self.__id_index[leaf].checked == QtCore.Qt.Checked]
         # print "selected leafs names",selected_leaf_names
-        # return selected_leaf_names
+        return selected_leaf_names
 
     def set_selected_structures(self,selected_list):
         for leaf in self.leaf_ids:

@@ -341,6 +341,16 @@ class SubjectViewer:
         self.ren.ResetCameraClippingRange()
         self.ren_win.Render()
 
+    def set_camera(self,focal_point,position,view_up):
+        cam1 = self.ren.GetActiveCamera()
+        cam1.SetFocalPoint(focal_point)
+        cam1.SetPosition(position)
+        cam1.SetViewUp(view_up)
+
+        self.ren.ResetCameraClippingRange()
+        self.ren_win.Render()
+
+
     def print_camera(self):
         cam1 = self.ren.GetActiveCamera()
         print "Camera coordinates:"

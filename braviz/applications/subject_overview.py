@@ -320,10 +320,9 @@ class SubjectOverviewApp(QMainWindow):
         else:
             left_right = False
         self.structures_tree_model.reload_hierarchy(dominant=not left_right)
-        print "Que mas?"
+
 
     def select_structs_color(self, index):
-        print "mamamia"
         if index == 1:
             print "launch choose color dialog"
             color_dialog = QtGui.QColorDialog()
@@ -456,9 +455,7 @@ class SubjectOverviewApp(QMainWindow):
         dialog = BundleSelectionDialog(selected, names_dict)
         dialog.exec_()
         print selected
-        self.fibers_list_model.restart_structures()
-        for b in selected:
-            self.fibers_list_model.add_bundle(b, names_dict[b])
+        self.fibers_list_model.set_ids(selected, names_dict)
         self.vtk_viewer.set_fibers_from_db(selected)
 
     def save_fibers_bundle(self):
@@ -591,14 +588,16 @@ class SubjectOverviewApp(QMainWindow):
             if color is not False:
                 self.__structures_color = color
                 if color is not None:
-                    self.vtk_viewer.set_structures_color(color)
                     if self.ui.struct_color_combo.count() < 3:
                         self.ui.struct_color_combo.addItem("Custom")
                     self.ui.struct_color_combo.setCurrentIndex(2)
+                    self.vtk_viewer.set_structures_color(color)
                 else:
-                    self.vtk_viewer.set_structures_color(None)
+                    self.ui.struct_color_combo.setCurrentIndex(0)
+                    #self.vtk_viewer.set_structures_color(None)
                     if self.ui.struct_color_combo.count() == 3:
                         self.ui.struct_color_combo.removeItem(2)
+
             opac = segmentation_state.get("opacity")
             if opac is not None:
                 self.ui.struct_opacity_slider.setValue(opac)
@@ -606,36 +605,72 @@ class SubjectOverviewApp(QMainWindow):
             if scal is not None:
                 ix = self.ui.struct_scalar_combo.findText(scal)
                 self.ui.struct_scalar_combo.setCurrentIndex(ix)
-                self.update_segmentation_scalar(ix)
+                #self.update_segmentation_scalar(ix)
             selected_structs=segmentation_state.get("selected_structs")
             if selected_structs is not None:
                 self.structures_tree_model.set_selected_structures(selected_structs)
-                #BUG TODO
-        return
 
         #tractography panel
         tractography_state = wanted_state.get("tractography_state")
         if tractography_state is not None:
-            tractography_state["bundles"] = tuple(self.fibers_list_model.get_ids())
-            tractography_state["from_segment"] = str(self.ui.fibers_from_segments_box.currentText())
-            tractography_state["color"] = str(self.ui.tracto_color_combo.currentText())
-            tractography_state["opacity"] = float(self.ui.fibers_opacity.value())
-            tractography_state["scalar"] = str(self.ui.fibers_scalar_combo.currentText())
-            tractography_state["active_bundle"] = self.current_fibers
+            bundles = tractography_state.get("bundles")
+            if bundles is not None:
+                self.fibers_list_model.set_ids(bundles)
+                self.vtk_viewer.set_fibers_from_db(bundles)
+            from_segment = tractography_state.get("from_segment")
+            if from_segment is not None:
+                idx = self.ui.fibers_from_segments_box.findText(from_segment)
+                self.ui.fibers_from_segments_box.setCurrentIndex(idx)
+                #self.show_fibers_from_segment(idx)
+            color = tractography_state.get("color")
+            if color is not None:
+                idx = self.ui.tracto_color_combo.findText(color)
+                self.ui.tracto_color_combo.setCurrentIndex(idx)
+                #self.change_tractography_color(idx)
+            opac = tractography_state.get("opacity")
+            if opac is not None:
+                self.ui.fibers_opacity.setValue(opac)
+            scal = tractography_state["scalar"]
+            if scal is not None:
+                idx=self.ui.fibers_scalar_combo.findText(scal)
+                self.ui.fibers_scalar_combo.setCurrentIndex(idx)
+                self.update_fiber_scalars(idx)
+            current = tractography_state.get("active_bundle",False)
+            if current is not False:
+                self.current_fibers = current
+                if current is None:
+                    self.ui.current_bundle_tag.setText("<No active bundle>")
+                elif isinstance(current,str):
+                    self.ui.current_bundle_tag.setText(current)
+                else:
+                    name = self.fibers_list_model.get_bundle_name(current)
+                    self.ui.current_bundle_tag.setText(name)
+                self.update_fiber_scalars()
 
         #camera panel
         camera_state = wanted_state.get("camera_state")
         if camera_state is not  None:
-            camera_state["space"] = str(self.ui.space_combo.currentText())
-            camera_state["cam_params"] = self.vtk_viewer.get_camera_parameters()
+            space = camera_state.get("space")
+            if space is not None:
+                idx = self.ui.space_combo.findText(space)
+                self.ui.space_combo.setCurrentIndex(idx)
+                self.space_change()
+            cam = camera_state.get("cam_params")
+            if cam is not None:
+                fp,pos,vu = cam
+                self.vtk_viewer.set_camera(fp,pos,vu)
 
         #context panel
         context_state = wanted_state.get("context_state")
         if context_state is not None:
-            context_state["variables"] = tuple(self.context_frame.get_variables())
-            context_state["editable"] = tuple(self.context_frame.get_editables())
-
-
+            variables = context_state.get("variables")
+            if variables is not None:
+                editables = context_state.get("editable")
+                if editables is not None:
+                    editables = dict(editables)
+                self.context_frame.set_variables(variables,editables)
+                self.context_frame.set_subject(self.__curent_subject)
+        return
 
 
 def run():

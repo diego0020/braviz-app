@@ -1051,7 +1051,10 @@ class SimpleBundlesList(QAbstractListModel):
             return
         self.id_list.insert(len(self.id_list)-1,       bundle_id)
         self.names_list.insert(len(self.names_list)-1, name)
-        self.modelReset.emit()
+
+    def get_bundle_name(self,bid):
+        idx = self.id_list.index(bid)
+        return self.names_list[idx]
 
     def set_show_special(self,show_special):
         self.__showing_special = show_special
@@ -1059,6 +1062,15 @@ class SimpleBundlesList(QAbstractListModel):
 
     def get_ids(self):
         return self.id_list[:-1]
+
+    def set_ids(self,id_list,names_dict=None):
+        self.restart_structures()
+        if names_dict is None:
+            names_dict=dict(bundles_db.get_bundle_ids_and_names())
+        for b in id_list:
+            self.add_bundle(b,names_dict[b])
+        self.modelReset.emit()
+
 
 class BundlesSelectionList(QAbstractListModel):
     def __init__(self):
