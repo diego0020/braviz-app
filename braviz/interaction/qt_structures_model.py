@@ -85,6 +85,7 @@ class StructureTreeModel(QAbstractItemModel):
         # print "reloading hierarchy"
         # print
         self.leaf_ids=set()
+        self.__id_index={}
         if dominant is True:
             self.hierarchy = get_structural_hierarchy_with_names(self.reader, subj, True, False, False)
         else:
