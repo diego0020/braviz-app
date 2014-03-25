@@ -82,6 +82,9 @@ class StructureTreeModel(QAbstractItemModel):
 
 
     def reload_hierarchy(self, subj="144", dominant=False):
+        # print "reloading hierarchy"
+        # print
+        self.leaf_ids=set()
         if dominant is True:
             self.hierarchy = get_structural_hierarchy_with_names(self.reader, subj, True, False, False)
         else:
@@ -224,6 +227,19 @@ class StructureTreeModel(QAbstractItemModel):
         return index
 
     def get_selected_structures(self):
-        selected_leaf_names = (self.__id_index[leaf].leaf_name for leaf in self.leaf_ids if
-                               self.__id_index[leaf].checked == QtCore.Qt.Checked)
-        return selected_leaf_names
+        selected_leaf_names = [self.__id_index[leaf].leaf_name for leaf in self.leaf_ids if
+                               self.__id_index[leaf].checked == QtCore.Qt.Checked]
+        # print "selected leafs names",selected_leaf_names
+        # return selected_leaf_names
+
+    def set_selected_structures(self,selected_list):
+        for leaf in self.leaf_ids:
+            node = self.__id_index[leaf]
+            if node.leaf_name in selected_list:
+                node.check_and_update_tree(True)
+            else:
+                node.check_and_update_tree(False)
+        self.selection_changed.emit()
+        self.modelReset.emit()
+
+

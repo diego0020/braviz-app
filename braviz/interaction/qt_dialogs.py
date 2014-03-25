@@ -6,6 +6,7 @@ import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 import numpy as np
 import itertools
+import cPickle
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -177,6 +178,7 @@ class VariableSelectDialog(QtGui.QDialog):
         target.setLayout(layout)
         self.ui.save_button.pressed.connect(self.save_meta_data)
         self.ui.var_type_combo.currentIndexChanged.connect(self.update_details)
+        self.matplot_widget.scatter_pick_signal.connect(self.show_plot_tooltip)
 
     def update_limits_in_plot(self, *args):
         if self.ui.var_type_combo.currentIndex() != 0:
@@ -212,6 +214,12 @@ class VariableSelectDialog(QtGui.QDialog):
         elif var_type == 0:
             self.nominal_model.save_into_db()
 
+    def show_plot_tooltip(self,subj,position):
+        message = "Subject: %s" % subj
+        QtGui.QToolTip.showText(self.matplot_widget.mapToGlobal(QtCore.QPoint(*position)), message, self.matplot_widget)
+        #self.last_viewed_subject = subj
+        QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
+
 
 class OutcomeSelectDialog(VariableSelectDialog):
     def __init__(self, params_dict, multiple=False):
@@ -236,7 +244,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
     def update_plot(self, data):
         self.matplot_widget.compute_scatter(data.get_values(),
-                                            x_lab=self.var_name, y_lab="jitter")
+                                            x_lab=self.var_name, y_lab="jitter",urls=data.index.get_values())
 
 
     def select_and_return(self, *args):
@@ -260,7 +268,7 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
         if initial_selection_idx is not None:
             self.vars_list_model.select_items(initial_selection_idx)
         elif initial_selection_names is not None:
-            self.model.select_items_by_name(initial_selection_names)
+            self.vars_list_model.select_items_by_name(initial_selection_names)
 
 
     def select_and_return(self, *args):
@@ -595,7 +603,7 @@ class RegressorSelectDialog(VariableSelectDialog):
                                                 x_lab=self.var_name, y_lab=self.outcome_var,
                                                 urls=data.index.get_values())
         else:
-            self.matplot_widget.compute_scatter(data.get_values())
+            self.matplot_widget.compute_scatter(data.get_values(),urls=data.index.get_values())
 
     def finish_close(self):
         self.done(self.Accepted)
@@ -1092,10 +1100,10 @@ class SaveFibersBundleDialog(QtGui.QDialog):
 
 
 class SaveScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,data):
+    def __init__(self,app_name,state):
         super(SaveScenarioDialog,self).__init__()
         self.app_name = app_name
-        self.data = data
+        self.data = cPickle.dumps(state)
         self.ui = None
         self.init_gui()
 
@@ -1145,5 +1153,7 @@ class LoadScenarioDialog(QtGui.QDialog):
     def load_data(self):
         scn_id = int(self.model.get_index(self.current_row))
         data = braviz_user_data.get_scenario_data(scn_id)
-        #TODO
+        parameters_dict=cPickle.loads(str(data))
+        self.out_dict.update(parameters_dict)
+        self.accept()
 

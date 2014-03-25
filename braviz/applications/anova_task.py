@@ -222,10 +222,8 @@ class AnovaApp(QMainWindow):
                                (self.outcome_var_name,))
             ylims = cur.fetchone()
             self.plot.make_box_plot(data_values, "(Intercept)", self.outcome_var_name,
-                                    None, ylims)
-            self.plot.add_intercept_line(self.result_model.intercept)
+                                    None, ylims,intercet=self.result_model.intercept)
 
-            pass
         else:
             if ":" in var_name:
                 factors = var_name.split(":")

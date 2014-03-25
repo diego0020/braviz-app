@@ -11,7 +11,6 @@ import multiprocessing
 import datetime
 import sys
 import platform
-import pickle
 import os
 
 import braviz
@@ -96,6 +95,7 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget.image_window_changed.connect(self.ui.image_window.setValue)
         self.vtk_widget.image_level_changed.connect(self.ui.image_level.setValue)
         self.ui.image_window.valueChanged.connect(self.vtk_viewer.set_image_window)
+        self.ui.image_level.valueChanged.connect(self.vtk_viewer.set_image_level)
         self.ui.reset_window_level.pressed.connect(self.vtk_viewer.reset_window_level)
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
@@ -531,9 +531,8 @@ class SubjectOverviewApp(QMainWindow):
         state["meta"] = meta
 
         print state
-        pickled = pickle.dumps(state)
 
-        dialog = SaveScenarioDialog(meta["application"],pickled)
+        dialog = SaveScenarioDialog(meta["application"],state)
         dialog.exec_()
 
     def load_scenario(self):
@@ -541,6 +540,102 @@ class SubjectOverviewApp(QMainWindow):
         dialog = LoadScenarioDialog(os.path.basename(__file__)[:-3],wanted_state)
         dialog.exec_()
         print wanted_state
+
+        #subject panel
+        subject_state = wanted_state.get("subject_state")
+        if subject_state is not None:
+            subject = subject_state.get("current_subject")
+            if subject is not None:
+                self.change_subject(subject)
+            model_cols = subject_state.get("model_columns")
+            if model_cols is not None:
+                self.subjects_model.set_var_columns(model_cols)
+
+
+        #details panel
+        detail_state = wanted_state.get("details_state")
+        if detail_state is not None:
+            detail_state["detail_vars"] = tuple(self.subject_details_model.get_current_variables())
+
+        #images panel
+        image_state = wanted_state.get("image_state")
+        if image_state is not None:
+            mod = image_state.get("modality")
+            if mod is not None:
+                ix=self.ui.image_mod_combo.findText(mod)
+                self.ui.image_mod_combo.setCurrentIndex(ix)
+                self.image_modality_change()
+            orient = image_state.get("orientation")
+            if orient is not None:
+                ix = self.ui.image_orientation.findText(orient)
+                self.ui.image_orientation.setCurrentIndex(ix)
+                self.image_orientation_change()
+            window= image_state.get("window")
+            if window is not None:
+                self.ui.image_window.setValue(window)
+            level= image_state.get("level")
+            if level is not None:
+                self.ui.image_level.setValue(level)
+            slice = image_state.get("slice")
+            if slice is not None:
+                self.ui.slice_spin.setValue(slice)
+
+        #segmentation panel
+        segmentation_state =wanted_state.get("segmentation_state")
+        if segmentation_state is not None:
+            left_right = segmentation_state.get("left_right")
+            if left_right is not None:
+                self.ui.left_right_radio.setChecked(left_right)
+                self.ui.dom_nondom_radio.setChecked(not left_right)
+            color = segmentation_state.get("color",False)
+            if color is not False:
+                self.__structures_color = color
+                if color is not None:
+                    self.vtk_viewer.set_structures_color(color)
+                    if self.ui.struct_color_combo.count() < 3:
+                        self.ui.struct_color_combo.addItem("Custom")
+                    self.ui.struct_color_combo.setCurrentIndex(2)
+                else:
+                    self.vtk_viewer.set_structures_color(None)
+                    if self.ui.struct_color_combo.count() == 3:
+                        self.ui.struct_color_combo.removeItem(2)
+            opac = segmentation_state.get("opacity")
+            if opac is not None:
+                self.ui.struct_opacity_slider.setValue(opac)
+            scal = segmentation_state.get("scalar")
+            if scal is not None:
+                ix = self.ui.struct_scalar_combo.findText(scal)
+                self.ui.struct_scalar_combo.setCurrentIndex(ix)
+                self.update_segmentation_scalar(ix)
+            selected_structs=segmentation_state.get("selected_structs")
+            if selected_structs is not None:
+                self.structures_tree_model.set_selected_structures(selected_structs)
+                #BUG TODO
+        return
+
+        #tractography panel
+        tractography_state = wanted_state.get("tractography_state")
+        if tractography_state is not None:
+            tractography_state["bundles"] = tuple(self.fibers_list_model.get_ids())
+            tractography_state["from_segment"] = str(self.ui.fibers_from_segments_box.currentText())
+            tractography_state["color"] = str(self.ui.tracto_color_combo.currentText())
+            tractography_state["opacity"] = float(self.ui.fibers_opacity.value())
+            tractography_state["scalar"] = str(self.ui.fibers_scalar_combo.currentText())
+            tractography_state["active_bundle"] = self.current_fibers
+
+        #camera panel
+        camera_state = wanted_state.get("camera_state")
+        if camera_state is not  None:
+            camera_state["space"] = str(self.ui.space_combo.currentText())
+            camera_state["cam_params"] = self.vtk_viewer.get_camera_parameters()
+
+        #context panel
+        context_state = wanted_state.get("context_state")
+        if context_state is not None:
+            context_state["variables"] = tuple(self.context_frame.get_variables())
+            context_state["editable"] = tuple(self.context_frame.get_editables())
+
+
 
 
 def run():

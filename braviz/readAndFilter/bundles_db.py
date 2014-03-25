@@ -1,6 +1,6 @@
 __author__ = 'Diego'
 
-import pickle
+import cPickle
 
 from braviz.readAndFilter.tabular_data import get_connection
 
@@ -40,7 +40,7 @@ def save_checkpoints_bundle(bundle_name,operation_is_and,checkpoints):
     else:
         btype=2
 
-    data = pickle.dumps(checkpoints)
+    data = cPickle.dumps(checkpoints)
     q="""INSERT OR FAIL INTO fiber_bundles (bundle_name, bundle_type, bundle_data) VALUES (?,?,?) """
     conn = get_connection()
     conn.execute(q,(bundle_name,btype,data))

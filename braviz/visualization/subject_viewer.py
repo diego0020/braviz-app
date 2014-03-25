@@ -554,6 +554,10 @@ class ModelManager:
         to_add = new_set - current_models
         to_hide = current_models - new_set
 
+        # print "act:", self.__active_models_set
+        # print "new" , new_set
+        # print "hide", to_hide
+
         for mod_name in to_add:
             self.__addModel(mod_name)
         for mod_name in to_hide:
