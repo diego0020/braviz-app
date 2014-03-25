@@ -60,3 +60,4 @@ def aggregate_fiber_scalar(fib, component=0, norm_factor=1.0 / 255):
             d.append(scalars.GetTuple(i)[component])
         d = np.dot(d, norm_factor)
     return len(d), np.mean(d), np.max(d), np.min(d), np.std(d)
+

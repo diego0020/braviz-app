@@ -736,7 +736,7 @@ class TractographyManager:
             color = self.__current_color
         if self.__current_color == "bundle":
             color = "orient"
-        #print color
+        print "----", color
         poly = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
                                color=color, db_id=b_id)
         return poly

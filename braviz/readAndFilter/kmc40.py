@@ -523,7 +523,7 @@ The path containing this structure must be set."""
             assert "operation" not in kw
             operation = "and" if bundle_type == 1 else "or"
             checkpoints = pickle.loads(data)
-            poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation)
+            poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation,**kw)
             return poly
         else:
             print "Unknown data type"

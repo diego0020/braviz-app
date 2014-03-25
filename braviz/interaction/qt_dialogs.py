@@ -342,6 +342,7 @@ class MatplotWidget(FigureCanvas):
         self.axes.clear()
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
         self.axes.yaxis.set_label_position("right")
+        #print "urls:" ,urls
         if data2 is None:
             np.random.seed(982356032)
             data2 = np.random.rand(len(data))
@@ -797,7 +798,8 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.jitter = np.random.random(len(data))
         data_values = data.get_values()
         xlimits = get_min_max_values_by_name(self.var_name)
-        self.matplot_widget.compute_scatter(data_values, self.jitter, x_lab=self.var_name, xlims=xlimits)
+        self.matplot_widget.compute_scatter(data_values, self.jitter, x_lab=self.var_name, xlims=xlimits,
+                                            urls=data.index.get_values())
         if self.current_subject is not None:
             subj_index = data.index.get_loc(int(self.current_subject))
             self.matplot_widget.add_subject_points((data_values[subj_index]), (self.jitter[subj_index],),
