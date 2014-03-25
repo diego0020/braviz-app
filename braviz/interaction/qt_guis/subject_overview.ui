@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Braviz: Subject Overview</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -1011,6 +1011,11 @@
                 </property>
                 <item>
                  <property name="text">
+                  <string>&lt;Select&gt;</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
                   <string>Default</string>
                  </property>
                 </item>
@@ -1089,7 +1094,7 @@
            <property name="sizePolicy">
             <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
              <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
+             <verstretch>100</verstretch>
             </sizepolicy>
            </property>
            <property name="minimumSize">

@@ -351,6 +351,13 @@ class SubjectViewer:
         print "viewUp: ",
         print cam1.GetViewUp()
 
+    def get_camera_parameters(self):
+        cam1 = self.ren.GetActiveCamera()
+        fp = cam1.GetFocalPoint()
+        pos = cam1.GetPosition()
+        vu = cam1.GetViewUp()
+        return fp, pos, vu
+
     def set_structures(self, new_structures):
         self.__model_manager.set_models(new_structures)
         self.ren_win.Render()
@@ -359,6 +366,11 @@ class SubjectViewer:
         float_opacity = new_opacity / 100
         self.__model_manager.set_opacity(float_opacity)
         self.ren_win.Render()
+
+    def get_structures_opacity(self):
+        current_opacity = self.__model_manager.get_opacity()
+        return current_opacity * 100
+
 
     def set_structures_color(self, float_new_color):
         self.__model_manager.set_color(float_new_color)
@@ -554,6 +566,9 @@ class ModelManager:
         for _, _, ac in self.__pd_map_act.itervalues():
             prop = ac.GetProperty()
             prop.SetOpacity(float_opacity)
+
+    def get_opacity(self):
+        return self.__opacity
 
     def set_color(self, float_rgb_color):
         self.__current_color = float_rgb_color
@@ -759,12 +774,12 @@ class TractographyManager:
 
     def get_scalar_from_db(self, scalar, bid):
         if bid in self.__active_db_tracts:
-            if scalar in ("number","mean_length"):
+            if scalar in ("number", "mean_length"):
                 pd = self.__db_tracts[bid][0]
-                return structure_metrics.get_scalar_from_fiber_ploydata(pd,scalar)
+                return structure_metrics.get_scalar_from_fiber_ploydata(pd, scalar)
             elif scalar == "mean_fa":
                 fiber = self.get_polydata(bid, color="FA")
-                n=structure_metrics.get_scalar_from_fiber_ploydata(fiber,"mean_color")
+                n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
         else:
             return float("nan")
@@ -772,13 +787,13 @@ class TractographyManager:
     def get_scalar_from_structs(self, scalar):
         if self.__ad_hoc_visibility is False:
             return float("nan")
-        if scalar in ("number","mean_length"):
+        if scalar in ("number", "mean_length"):
             fiber = self.__ad_hoc_pd_mp_ac[0]
-            n=structure_metrics.get_scalar_from_fiber_ploydata(fiber,scalar)
+            n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, scalar)
             return n
         elif scalar == "mean_fa":
             fiber = self.reader.get("FIBERS", self.__current_subject, color="FA")
-            n=structure_metrics.get_scalar_from_fiber_ploydata(fiber,"mean_color")
+            n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
             return n
         return float("nan")
 

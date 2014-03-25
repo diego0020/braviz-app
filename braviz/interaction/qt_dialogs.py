@@ -22,6 +22,8 @@ from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariab
 from braviz.interaction.qt_guis.new_variable_dialog import Ui_NewVariableDialog
 from braviz.interaction.qt_guis.load_bundles_dialog import Ui_LoadBundles
 from braviz.interaction.qt_guis.save_fibers_bundle import Ui_SaveBundleDialog
+from braviz.interaction.qt_guis.save_scenario_dialog import Ui_SaveScenarioDialog
+from braviz.interaction.qt_guis.load_scenario_dialog import Ui_LoadScenarioDialog
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
@@ -31,6 +33,7 @@ from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_
     save_real_meta, save_var_description,update_multiple_variable_values
 
 from braviz.readAndFilter import bundles_db
+import braviz.readAndFilter.user_data as braviz_user_data
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -819,17 +822,13 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         self.layout = QtGui.QHBoxLayout(self)
         self.setLayout(self.layout)
 
-        #test_button = QtGui.QPushButton()
-        #test_button.setText("Hola")
-        #self.layout.addWidget(test_button)
         self.layout.setContentsMargins(7, 2, 7, 2)
         self.customContextMenuRequested.connect(self.create_context_menu)
 
-        #size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Maximum)
+        size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Maximum)
         #size_policy.setHorizontalStretch(0)
-        #size_policy.setVerticalStretch(0)
-        #size_policy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
-        #self.setSizePolicy(size_policy)
+        size_policy.setVerticalStretch(1)
+        self.setSizePolicy(size_policy)
         #self.setMaximumSize(QtCore.QSize(16777215, 56))
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setObjectName(_fromUtf8("context_frame"))
@@ -862,6 +861,12 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         else:
             self.__editables_dict = editables
         self.reset_internal_widgets()
+
+    def get_variables(self):
+        return self.__context_variable_codes
+
+    def get_editables(self):
+        return self.__editables_dict.iteritems()
 
     def reset_internal_widgets(self):
         #clear layout
@@ -1086,4 +1091,59 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         self.ui.lineEdit.setEnabled(False)
 
 
+class SaveScenarioDialog(QtGui.QDialog):
+    def __init__(self,app_name,data):
+        super(SaveScenarioDialog,self).__init__()
+        self.app_name = app_name
+        self.data = data
+        self.ui = None
+        self.init_gui()
+
+    def init_gui(self):
+        self.ui = Ui_SaveScenarioDialog()
+        self.ui.setupUi(self)
+        self.ui.app_name.setText(self.app_name)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).pressed.connect(self.save_into_db)
+        self.ui.succesful_message.setText("")
+
+
+
+    def save_into_db(self):
+        scenario_name = str(self.ui.scenario_name.text())
+        if len(scenario_name)==0:
+            scenario_name = "<Unnamed>"
+        description = unicode(self.ui.scn_description.toPlainText())
+        braviz_user_data.save_scenario(self.app_name,scenario_name , description, self.data)
+        self.ui.succesful_message.setText("Save completed succesfully")
+        self.ui.buttonBox.clear()
+        self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Ok)
+
+
+
+class LoadScenarioDialog(QtGui.QDialog):
+    def __init__(self,app_name,out_dict):
+        super(LoadScenarioDialog,self).__init__()
+        self.out_dict = out_dict
+        self.model = braviz_models.ScenariosTableModel(app_name)
+        self.current_row = None
+        self.ui = None
+        self.init_ui()
+
+    def init_ui(self):
+        self.ui = Ui_LoadScenarioDialog()
+        self.ui.setupUi(self)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(0)
+        self.ui.scenarios_table.setModel(self.model)
+        self.ui.scenarios_table.activated.connect(self.select_model)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).pressed.connect(self.load_data)
+
+    def select_model(self,index):
+        row = index.row()
+        self.current_row = row
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(1)
+
+    def load_data(self):
+        scn_id = int(self.model.get_index(self.current_row))
+        data = braviz_user_data.get_scenario_data(scn_id)
+        #TODO
 

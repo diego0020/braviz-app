@@ -7,9 +7,11 @@ from PyQt4.QtCore import QAbstractListModel
 from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
+import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.readAndFilter import bundles_db
 from braviz.interaction.r_functions import calculate_ginni_index
 from braviz.interaction.qt_structures_model import StructureTreeModel
+
 
 class VarListModel(QAbstractListModel):
     def __init__(self, outcome_var=None, parent=None,checkeable=False):
@@ -674,7 +676,9 @@ class SubjectsTable(QAbstractTableModel):
         self.__df = None
         self.__is_var_real=None
         self.__labels=None
+        self.__col_indexes = None
         self.set_var_columns(initial_columns)
+
 
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -719,6 +723,7 @@ class SubjectsTable(QAbstractTableModel):
         self.modelReset.emit()
 
     def set_var_columns(self, columns):
+        self.__col_indexes = columns
         vars_df = braviz_tab_data.get_data_frame_by_index(columns)
         codes_df = pd.DataFrame(vars_df.index.get_values(), index=vars_df.index, columns=("Code",))
         self.__df = codes_df.join(vars_df)
@@ -734,6 +739,9 @@ class SubjectsTable(QAbstractTableModel):
 
     def get_current_columns(self):
         return self.__df.columns[1:]
+
+    def get_current_column_indexes(self):
+        return self.__col_indexes
     def get_subject_index(self,subj_id):
         row=self.__df.index.get_loc(int(subj_id))
         return row
@@ -1112,6 +1120,43 @@ class BundlesSelectionList(QAbstractListModel):
                     return True
         return False
 
+class ScenariosTableModel(QAbstractTableModel):
+    def __init__(self,app_name):
+        super(ScenariosTableModel,self).__init__()
+        self.df = braviz_user_data.get_scenarios_data_frame(app_name)
+        self.headers=("Date","Name","Description")
+        self.columns=("scn_date","scn_name","scn_desc")
+
+
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        if Qt_Orientation == QtCore.Qt.Horizontal:
+            if 0<=p_int<len(self.df):
+                if int_role == QtCore.Qt.DisplayRole:
+                    return self.headers[p_int]
+        return QtCore.QVariant()
+    def data(self, QModelIndex, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            col = QModelIndex.column()
+            if (0<=col<self.columnCount()) and (0<=row<self.rowCount()):
+                if int_role == QtCore.Qt.DisplayRole:
+                    return str(self.df[self.columns[col]].iloc[row])
+        return QtCore.QVariant()
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return self.df.shape[0]
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return self.df.shape[1]
+
+    def sort(self, p_int, Qt_SortOrder_order=None):
+        reverse = True
+        if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
+            reverse = False
+        self.df.sort(self.columns[p_int], ascending=reverse, inplace=True)
+        self.modelReset.emit()
+
+    def get_index(self,row):
+        return self.df.index[row]
 
 if __name__ == "__main__":
     test_tree=StructureTreeModel()
