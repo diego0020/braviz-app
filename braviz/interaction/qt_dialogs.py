@@ -72,6 +72,7 @@ class VariableSelectDialog(QtGui.QDialog):
         is_real = is_variable_name_real(var_name)
         self.var_name = var_name
         data = get_data_frame_by_name(self.var_name)
+        data.dropna(inplace=True)
         self.data = data
         #update scatter
         self.update_plot(data)
@@ -128,7 +129,7 @@ class VariableSelectDialog(QtGui.QDialog):
         medi = self.rational["opt"]
         self.details_ui.maximum_val.setValue(maxi)
         self.details_ui.minimum_val.setValue(mini)
-        self.details_ui.optimum_val.setValue(int((medi - mini) / (maxi - mini)))
+        self.details_ui.optimum_val.setValue(int((medi - mini) / (maxi - mini)*100))
         self.update_optimum_real_value()
 
     def update_optimum_real_value(self, perc_value=None):
@@ -217,8 +218,6 @@ class VariableSelectDialog(QtGui.QDialog):
     def show_plot_tooltip(self,subj,position):
         message = "Subject: %s" % subj
         QtGui.QToolTip.showText(self.matplot_widget.mapToGlobal(QtCore.QPoint(*position)), message, self.matplot_widget)
-        #self.last_viewed_subject = subj
-        QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
 
 
 class OutcomeSelectDialog(VariableSelectDialog):
@@ -341,12 +340,15 @@ class MatplotWidget(FigureCanvas):
                         xlims=None):
         self.axes.clear()
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
+
         self.axes.yaxis.set_label_position("right")
         #print "urls:" ,urls
         if data2 is None:
             np.random.seed(982356032)
             data2 = np.random.rand(len(data))
-            self.axes.tick_params('y', left='off', labelleft='off', labelright='off')
+            self.axes.tick_params('y', left='off', labelleft='off', labelright='off',right="off")
+        else:
+            self.axes.tick_params('y', right='on', labelright='on', left='off', labelleft='off')
         if x_lab is not None:
             self.axes.set_xlabel(x_lab)
         if y_lab is not None:
@@ -399,7 +401,7 @@ class MatplotWidget(FigureCanvas):
         #Sort data and labels according to median
         x_permutation = range(len(data))
         if xticks_labels is None:
-            xticks_labels = range(len(data))
+                xticks_labels = range(len(data))
         data_labels = zip(data, xticks_labels, x_permutation)
         data_labels.sort(key=lambda x: np.median(x[0]))
         data, xticks_labels, x_permutation = zip(*data_labels)
@@ -413,6 +415,8 @@ class MatplotWidget(FigureCanvas):
             a.set_picker(5)
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
+
+
         if xticks_labels is not None:
             self.axes.get_xaxis().set_ticklabels(xticks_labels)
         yspan = ylims[1] - ylims[0]
@@ -495,7 +499,6 @@ class MatplotWidget(FigureCanvas):
         self.x_order = None
 
     def add_subject_points(self, x_coords, y_coords, color=None, urls=None):
-        #TODO Change to some permanent draw, No blit
         #print "adding subjects"
         #self.restore_region(self.back_fig)
         self.redraw_last_plot()
@@ -600,9 +603,12 @@ class RegressorSelectDialog(VariableSelectDialog):
         regressor_data = data
         if self.outcome_var is not None:
             outcome_data = get_data_frame_by_name(self.outcome_var)
-            self.matplot_widget.compute_scatter(regressor_data.get_values(), outcome_data.get_values(),
+            both_data=regressor_data.join(outcome_data)
+            both_data.dropna(inplace=True)
+
+            self.matplot_widget.compute_scatter(both_data.iloc[:,0].get_values(), both_data.iloc[:,1].get_values(),
                                                 x_lab=self.var_name, y_lab=self.outcome_var,
-                                                urls=data.index.get_values())
+                                                urls=both_data.index.get_values())
         else:
             self.matplot_widget.compute_scatter(data.get_values(),urls=data.index.get_values())
 

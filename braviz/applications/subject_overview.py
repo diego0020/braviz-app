@@ -24,12 +24,19 @@ from braviz.applications import export_scalar_to_db
 
 
 class SubjectOverviewApp(QMainWindow):
-    def __init__(self, ):
+    def __init__(self, pipe = None):
         #Super init
         QMainWindow.__init__(self)
         #Internal initialization
         self.reader = braviz.readAndFilter.kmc40AutoReader()
         self.__curent_subject = None
+        self.__pipe = pipe
+        if pipe is not None:
+            self.__pipe_check_timer=QtCore.QTimer()
+            self.__pipe_check_timer.timeout.connect(self.poll_from_pipe)
+            self.__pipe_check_timer.start(200)
+        else:
+            self.__pipe_check_timer = None
 
         initial_vars = (11, 17, 1)
 
@@ -62,11 +69,12 @@ class SubjectOverviewApp(QMainWindow):
         self.ui = None
         self.setup_gui()
 
+    def start(self):
+        self.vtk_widget.initialize_widget()
         #load initial
         self.vtk_viewer.change_image_modality("MRI")
         self.change_subject(self.__curent_subject)
         #self.vtk_viewer.show_cone()
-
 
     def setup_gui(self):
         self.ui = Ui_subject_overview()
@@ -123,6 +131,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
         self.ui.vtk_frame_layout.setContentsMargins(0, 0, 0, 0)
+        #self.vtk_viewer.show_cone()
 
         #context view
         self.context_frame = ContextVariablesPanel(self.ui.splitter_2, "Context")
@@ -137,6 +146,9 @@ class SubjectOverviewApp(QMainWindow):
             selected_index = new_subject
             subj_code_index = self.subjects_model.index(selected_index.row(), 0)
             new_subject = self.subjects_model.data(subj_code_index, QtCore.Qt.DisplayRole)
+
+        if self.__pipe is not None:
+            self.__pipe.send({'subject': str(new_subject)})
         #label
         self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
@@ -158,6 +170,7 @@ class SubjectOverviewApp(QMainWindow):
         self.update_segmentation_scalar()
         self.update_fiber_scalars()
         self.context_frame.set_subject(new_subject)
+
 
     def show_error(self, message):
         self.statusBar().showMessage(message, 5000)
@@ -229,11 +242,11 @@ class SubjectOverviewApp(QMainWindow):
         params = {}
         initial_selection = self.subjects_model.get_current_columns()
         dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_names=initial_selection)
-        dialog.exec_()
-        new_selection = params["checked"]
-        self.subjects_model.set_var_columns(new_selection)
+        res=dialog.exec_()
+        if res == QtGui.QDialog.Accepted:
+            new_selection = params["checked"]
+            self.subjects_model.set_var_columns(new_selection)
 
-        print "returning"
 
     def launch_details_variable_select_dialog(self):
         params = {}
@@ -244,7 +257,6 @@ class SubjectOverviewApp(QMainWindow):
         if new_selection is not None:
             self.subject_details_model.set_variables(sorted(new_selection))
 
-        print "returning"
 
     def go_to_previus_subject(self):
         current_subj_row = self.subjects_model.get_subject_index(self.__curent_subject)
@@ -534,7 +546,8 @@ class SubjectOverviewApp(QMainWindow):
 
     def load_scenario(self):
         wanted_state = dict()
-        dialog = LoadScenarioDialog(os.path.basename(__file__)[:-3],wanted_state)
+        my_name = os.path.splitext(os.path.basename(__file__))[0]
+        dialog = LoadScenarioDialog(my_name,wanted_state)
         dialog.exec_()
         print wanted_state
 
@@ -672,13 +685,21 @@ class SubjectOverviewApp(QMainWindow):
                 self.context_frame.set_subject(self.__curent_subject)
         return
 
+    def poll_from_pipe(self):
+        if self.__pipe is not None:
+            if self.__pipe.poll():
+                message = self.__pipe.recv()
+                subj = message.get('subject')
+                self.change_subject(subj)
 
-def run():
+
+def run(pipe=None):
     import sys
 
     app = QtGui.QApplication(sys.argv)
-    main_window = SubjectOverviewApp()
+    main_window = SubjectOverviewApp(pipe)
     main_window.show()
+    main_window.start()
     app.exec_()
 
 

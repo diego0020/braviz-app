@@ -3,7 +3,6 @@ from __future__ import division
 __author__ = 'Diego'
 
 import vtk
-import braviz
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt4.QtGui import QFrame, QHBoxLayout
 from PyQt4.QtCore import pyqtSignal
@@ -17,12 +16,12 @@ from braviz.interaction import structure_metrics
 class SubjectViewer:
     def __init__(self, render_window_interactor, reader, widget):
 
-        render_window_interactor.Initialize()
-        render_window_interactor.Start()
+        #render_window_interactor.Initialize()
+        #render_window_interactor.Start()
         self.iren = render_window_interactor
         self.ren_win = render_window_interactor.GetRenderWindow()
         self.ren = vtk.vtkRenderer()
-        #self.ren.SetBackground((0.75,0.75,0.75))
+        self.ren.SetBackground((0.75,0.75,0.75))
         self.ren.GradientBackgroundOn()
         self.ren.SetBackground2((0.5, 0.5, 0.5))
         self.ren.SetBackground((0.2, 0.2, 0.2))
@@ -31,9 +30,11 @@ class SubjectViewer:
         self.ren_win.AlphaBitPlanesOn()
         self.ren.SetOcclusionRatio(0.1)
         self.ren_win.AddRenderer(self.ren)
+
         self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
         self.axes = braviz.visualization.OrientationAxes()
         self.axes.initialize(self.iren)
+
 
         self.light = vtk.vtkLight()
         self.ren.AddLight(self.light)
@@ -50,6 +51,7 @@ class SubjectViewer:
         self.__current_mri_window_level = None
         self.__current_fa_window_level = None
 
+
         #internal data
         self.__image_plane_widget = None
         self.__mri_lut = None
@@ -57,9 +59,10 @@ class SubjectViewer:
         self.__model_manager = ModelManager(self.reader, self.ren)
         self.__tractography_manager = TractographyManager(self.reader, self.ren)
 
+
         #reset camera and render
-        self.reset_camera(0)
-        self.ren.Render()
+        #self.reset_camera(0)
+#        self.ren.Render()
 
         #widget, signal handling
         self.__widget = widget
@@ -158,6 +161,7 @@ class SubjectViewer:
             self.create_image_plane_widget()
         self.__image_plane_widget.On()
 
+
         if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
             if (self.__current_image == "MRI") and (self.__current_mri_window_level is not None):
                 self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
@@ -197,6 +201,7 @@ class SubjectViewer:
             self.__current_image = modality
             self.__curent_fmri_paradigm = paradigm
             self.__image_plane_widget.text1_value_from_img(fmri_image)
+            self.__image_plane_widget.On()
             self.ren_win.Render()
             return
 
@@ -208,6 +213,7 @@ class SubjectViewer:
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             self.__current_image = modality
             self.__image_plane_widget.text1_value_from_img(fa_image)
+            self.__image_plane_widget.On()
             self.ren_win.Render()
             return
 
@@ -239,6 +245,7 @@ class SubjectViewer:
             #Important:
             self.__image_plane_widget.SetResliceInterpolateToNearestNeighbour()
         #self.__current_image = modality
+        self.__image_plane_widget.On()
         self.ren_win.Render()
 
     def change_image_orientation(self, orientation):
@@ -428,16 +435,25 @@ class QSuvjectViwerWidget(QFrame):
 
     def __init__(self, reader):
         QFrame.__init__(self)
-        self.__qwindow_interactor = QVTKRenderWindowInteractor()
-        self.__qwindow_interactor.Initialize()
-        self.__qwindow_interactor.Start()
+        self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
+
         self.__reader = reader
         self.__subject_viewer = SubjectViewer(self.__qwindow_interactor, self.__reader, self)
         self.__layout = QHBoxLayout()
         self.__layout.addWidget(self.__qwindow_interactor)
         self.__layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.__layout)
-        self.subject_viewer.ren_win.Render()
+
+        #self.subject_viewer.ren_win.Render()
+
+        #self.__qwindow_interactor.show()
+
+    def initialize_widget(self):
+        """call after showing the interface"""
+        self.__qwindow_interactor.Initialize()
+        self.__qwindow_interactor.Start()
+        self.subject_viewer.reset_camera(0)
+        #self.__subject_viewer.show_cone()
 
     @property
     def subject_viewer(self):
@@ -812,3 +828,14 @@ class TractographyManager:
         return float("nan")
 
 
+if __name__ == "__main__":
+    import sys
+    import PyQt4.QtGui as QtGui
+    import braviz
+    reader = braviz.readAndFilter.kmc40AutoReader()
+    app = QtGui.QApplication(sys.argv)
+    main_window = QSuvjectViwerWidget(reader)
+    main_window.show()
+    main_window.initialize_widget()
+    app.exec_()
+    print "es todo"

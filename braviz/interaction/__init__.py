@@ -61,3 +61,9 @@ def aggregate_fiber_scalar(fib, component=0, norm_factor=1.0 / 255):
         d = np.dot(d, norm_factor)
     return len(d), np.mean(d), np.max(d), np.min(d), np.std(d)
 
+from braviz.interaction.config_file import get_config
+from braviz.interaction.tk_gui import subjects_list
+
+if __name__ == "__main__":
+    test = subjects_list()
+    test2 = get_config()

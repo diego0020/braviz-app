@@ -98,7 +98,7 @@ class VarAndGiniModel(QAbstractTableModel):
     def __init__(self, outcome_var=None, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self.data_frame = braviz_tab_data.get_variables()
-        self.data_frame.index = self.data_frame["var_name"]
+        #self.data_frame["var_idx"]=self.data_frame.index
         self.data_frame["Ginni"] = "?"
         self.ginni_calculated = False
         self.outcome = outcome_var
@@ -115,13 +115,12 @@ class VarAndGiniModel(QAbstractTableModel):
         if 0 <= line < len(self.data_frame):
             if col == 0:
                 if int_role == QtCore.Qt.DisplayRole:
-                    return self.data_frame["var_name"][line]
+                    return self.data_frame.iloc[line,0]
                 elif int_role == QtCore.Qt.ToolTipRole:
-                    name=self.data_frame["var_name"][line]
-                    return braviz_tab_data.get_var_description_by_name(name)
+                    return braviz_tab_data.get_var_description(self.data_frame.index[line])
             elif col == 1:
                 if int_role == QtCore.Qt.DisplayRole:
-                    return str(self.data_frame["Ginni"][line])
+                    return str(self.data_frame.iloc[line,1])
         return QtCore.QVariant()
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
