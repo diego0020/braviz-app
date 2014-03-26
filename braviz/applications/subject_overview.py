@@ -8,7 +8,6 @@ from PyQt4.QtGui import QMainWindow
 
 import numpy as np
 import datetime
-import sys
 import platform
 import os
 
@@ -20,7 +19,7 @@ from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 import subprocess
-
+import multiprocessing.connection
 
 class SubjectOverviewApp(QMainWindow):
     def __init__(self, pipe = None):
@@ -31,6 +30,10 @@ class SubjectOverviewApp(QMainWindow):
         self.__curent_subject = None
         self.__pipe = pipe
         if pipe is not None:
+            print "Got pipe key"
+            print pipe
+            address = ("localhost",6000)
+            self.__pipe = multiprocessing.connection.Client(address,authkey=pipe)
             self.__pipe_check_timer=QtCore.QTimer()
             self.__pipe_check_timer.timeout.connect(self.poll_from_pipe)
             self.__pipe_check_timer.start(200)
@@ -689,11 +692,11 @@ class SubjectOverviewApp(QMainWindow):
                 self.change_subject(subj)
 
 
-def run(pipe=None):
-    import sys
+def run(pipe_key):
 
-    app = QtGui.QApplication(sys.argv)
-    main_window = SubjectOverviewApp(pipe)
+
+    app = QtGui.QApplication([])
+    main_window = SubjectOverviewApp(pipe_key)
     main_window.show()
     main_window.start()
     print "before exec"
@@ -701,4 +704,9 @@ def run(pipe=None):
 
 
 if __name__ == '__main__':
-    run()
+    import sys
+    if len(sys.argv)>=2:
+        key = sys.argv[1]
+    else:
+        key = None
+    run(key)
