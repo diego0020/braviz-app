@@ -837,5 +837,6 @@ if __name__ == "__main__":
     main_window = QSuvjectViwerWidget(reader)
     main_window.show()
     main_window.initialize_widget()
+
     app.exec_()
     print "es todo"

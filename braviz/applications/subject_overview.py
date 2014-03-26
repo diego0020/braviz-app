@@ -7,7 +7,6 @@ import PyQt4.QtCore as QtCore
 from PyQt4.QtGui import QMainWindow
 
 import numpy as np
-import multiprocessing
 import datetime
 import sys
 import platform
@@ -20,7 +19,7 @@ from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, Structur
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
-from braviz.applications import export_scalar_to_db
+import subprocess
 
 
 class SubjectOverviewApp(QMainWindow):
@@ -43,8 +42,6 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget = QSuvjectViwerWidget(reader=self.reader)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
-        self.active_children_check_timer = QtCore.QTimer()
-        self.active_children_check_timer.timeout.connect(self.check_active_children)
 
         #context panel
         self.context_frame = None
@@ -305,12 +302,17 @@ class SubjectOverviewApp(QMainWindow):
         if metric_params is None:
             self.show_error("Unknown metric %s" % scalar_text)
             return
-        structures = tuple(self.structures_tree_model.get_selected_structures())
-        export_dialog_args = {"fibers": False, "structures_list": structures,
-                              "metric": scalar_text}
-        export_dialog = multiprocessing.Process(target=export_scalar_to_db.run, kwargs=export_dialog_args)
-        export_dialog.start()
-        self.active_children_check_timer.start(100000)
+        structures = list(self.structures_tree_model.get_selected_structures())
+        #export_dialog_args = {"fibers": False, "structures_list": structures,
+        #                      "metric": scalar_text,"db_id": None, "operation": None}
+
+        #export_dialog_args = fibers metric structs
+        export_dialog_args = ["0", scalar_text]+list(structures)
+        print export_dialog_args
+        process_line = [sys.executable,"-m","braviz.applications.export_scalar_to_db",]
+        #print process_line
+        subprocess.Popen(process_line+export_dialog_args)
+
         self.ui.export_segmentation_to_db.setEnabled(0)
 
         def reactivate_button():
@@ -318,13 +320,6 @@ class SubjectOverviewApp(QMainWindow):
 
         QtCore.QTimer.singleShot(2000, reactivate_button)
 
-
-    def check_active_children(self):
-        sub_processes = multiprocessing.active_children()
-        print "checking kids:", sub_processes
-        if len(sub_processes) == 0:
-            self.active_children_check_timer.stop()
-            print "all sub processes finished"
 
     def change_left_to_non_dominant(self):
         if self.ui.left_right_radio.isChecked():
@@ -439,20 +434,21 @@ class SubjectOverviewApp(QMainWindow):
             self.show_error("Unknown metric %s" % scalar_text)
             return
         if type(self.current_fibers) is str:
-            structs = tuple(self.structures_tree_model.get_selected_structures())
+            structs = list(self.structures_tree_model.get_selected_structures())
             index = self.ui.fibers_from_segments_box.currentIndex()
             operation = "and" if (index == 2) else "or"
-            db_id = None
+            db_id = "0"
         else:
             db_id = self.current_fibers
-            structs = None
-            operation = None
-        export_dialog_args = {"fibers": True, "structures_list": structs,
-                              "metric": scalar_text, "db_id": db_id, "operation": operation}
-        export_dialog = multiprocessing.Process(target=export_scalar_to_db.run, kwargs=export_dialog_args)
-        export_dialog.start()
-        #to avoid zombie processes
-        self.active_children_check_timer.start(10000)
+            structs = []
+            operation = "0"
+        #export_dialog_args = {"fibers": True, "structures_list": structs,
+        #                      "metric": scalar_text, "db_id": db_id, "operation": operation}
+
+        export_args = ["1", scalar_text, operation, db_id,]+structs
+        process_line = [sys.executable,"-m","braviz.applications.export_scalar_to_db",]
+        subprocess.Popen(process_line+export_args)
+
         self.ui.export_fiber_scalars_to_db.setEnabled(0)
 
         def reactivate_button():
@@ -700,6 +696,7 @@ def run(pipe=None):
     main_window = SubjectOverviewApp(pipe)
     main_window.show()
     main_window.start()
+    print "before exec"
     app.exec_()
 
 

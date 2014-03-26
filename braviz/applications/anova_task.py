@@ -183,7 +183,7 @@ class AnovaApp(QMainWindow):
             msg.setIcon(msg.Warning)
             msg.setWindowTitle("Anova Error")
             msg.exec_()
-            #raise
+            raise
         else:
             self.result_model = braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)

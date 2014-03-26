@@ -259,7 +259,10 @@ def mean_inside(subject, structures, img2, paradigm=None):
     #find label
     #print "label:",label
     #find voxels in structure
-    aparc_img = reader.get("APARC", subject, space="world", format="nii")
+    try:
+        aparc_img = reader.get("APARC", subject, space="world", format="nii")
+    except Exception:
+        return float("nan")
     locations = [get_locations(reader, subject, name) for name in structures]
     shape = aparc_img.shape
     shape2 = shape + (1,)
