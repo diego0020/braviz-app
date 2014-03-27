@@ -110,7 +110,7 @@ class SubjectOverviewApp(QMainWindow):
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
                      self.ui.structures_tree.dataChanged)
         self.structures_tree_model.selection_changed.connect(self.update_segmented_structures)
-        self.ui.struct_opacity_slider.valueChanged.connect(self.vtk_viewer.set_structures_opacity)
+        self.ui.struct_opacity_slider.valueChanged.connect(self.vtk_viewer.models.set_opacity)
         self.ui.left_right_radio.toggled.connect(self.change_left_to_non_dominant)
         self.ui.struct_color_combo.currentIndexChanged.connect(self.select_structs_color)
         self.ui.struct_scalar_combo.currentIndexChanged.connect(self.update_segmentation_scalar)
@@ -272,7 +272,7 @@ class SubjectOverviewApp(QMainWindow):
 
     def update_segmented_structures(self):
         selected_structures = self.structures_tree_model.get_selected_structures()
-        self.vtk_viewer.set_structures(selected_structures)
+        self.vtk_viewer.models.set_models(selected_structures)
         self.update_segmentation_scalar()
 
     metrics_dict = {"Volume": ("volume", "mm^3"),
@@ -291,7 +291,7 @@ class SubjectOverviewApp(QMainWindow):
             self.show_error("Unknown metric %s" % scalar_text)
             return
         metric_code, units = metric_params
-        new_value = self.vtk_viewer.get_structures_scalar(metric_code)
+        new_value = self.vtk_viewer.models.get_scalar_metrics(metric_code)
         if np.isnan(new_value):
             self.ui.struct_scalar_value.clear()
         else:
@@ -339,14 +339,14 @@ class SubjectOverviewApp(QMainWindow):
             res = color_dialog.getColor()
             new_color = res.getRgb()[:3]
             new_float_color = [x / 255 for x in new_color]
-            self.vtk_viewer.set_structures_color(new_float_color)
+            self.vtk_viewer.models.set_color(new_float_color)
             self.__structures_color = new_float_color
             #print res.getRgb()
             if self.ui.struct_color_combo.count() < 3:
                 self.ui.struct_color_combo.addItem("Custom")
             self.ui.struct_color_combo.setCurrentIndex(2)
         if index == 0:
-            self.vtk_viewer.set_structures_color(None)
+            self.vtk_viewer.models.set_color(None)
             self.__structures_color = None
             if self.ui.struct_color_combo.count() == 3:
                 self.ui.struct_color_combo.removeItem(2)
@@ -504,7 +504,7 @@ class SubjectOverviewApp(QMainWindow):
         segmentation_state["left_right"] = self.ui.left_right_radio.isChecked()
         segmentation_state["selected_structs"] = tuple(self.structures_tree_model.get_selected_structures())
         segmentation_state["color"] = self.__structures_color
-        segmentation_state["opacity"] = float(self.vtk_viewer.get_structures_opacity())
+        segmentation_state["opacity"] = float(self.vtk_viewer.models.get_opacity())
         segmentation_state["scalar"] = str(self.ui.struct_scalar_combo.currentText())
         state["segmentation_state"] = segmentation_state
 
@@ -603,7 +603,7 @@ class SubjectOverviewApp(QMainWindow):
                     if self.ui.struct_color_combo.count() < 3:
                         self.ui.struct_color_combo.addItem("Custom")
                     self.ui.struct_color_combo.setCurrentIndex(2)
-                    self.vtk_viewer.set_structures_color(color)
+                    self.vtk_viewer.models.set_color(color)
                 else:
                     self.ui.struct_color_combo.setCurrentIndex(0)
                     #self.vtk_viewer.set_structures_color(None)

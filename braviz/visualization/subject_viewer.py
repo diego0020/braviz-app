@@ -11,7 +11,7 @@ import braviz.readAndFilter.tabular_data
 from itertools import izip
 import colorbrewer
 from braviz.interaction import structure_metrics
-
+from functools import wraps
 
 class SubjectViewer:
     def __init__(self, render_window_interactor, reader, widget):
@@ -67,6 +67,14 @@ class SubjectViewer:
         #widget, signal handling
         self.__widget = widget
 
+    @property
+    def models(self):
+        return self.__model_manager
+
+    @property
+    def tractography(self):
+        return self.__tractography_manager
+
     def show_cone(self):
         """Useful for testing"""
         cone = vtk.vtkConeSource()
@@ -92,7 +100,7 @@ class SubjectViewer:
 
         #update models
         try:
-            self.__model_manager.reload_models(subj=new_subject_img_code)
+            self.__model_manager.reload_models(subj=new_subject_img_code,skip_render=True)
         except Exception:
             errors.append("Models")
 
@@ -314,7 +322,7 @@ class SubjectViewer:
         self.__current_space = new_space
         if self.__image_plane_widget is not None and self.__image_plane_widget.GetEnabled():
             self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
-        self.__model_manager.reload_models(space=new_space)
+        self.__model_manager.reload_models(space=new_space,skip_render=True)
         self.__tractography_manager.set_current_space(new_space)
         self.ren_win.Render()
 
@@ -375,24 +383,6 @@ class SubjectViewer:
         vu = cam1.GetViewUp()
         return fp, pos, vu
 
-    def set_structures(self, new_structures):
-        self.__model_manager.set_models(new_structures)
-        self.ren_win.Render()
-
-    def set_structures_opacity(self, new_opacity):
-        float_opacity = new_opacity / 100
-        self.__model_manager.set_opacity(float_opacity)
-        self.ren_win.Render()
-
-    def get_structures_opacity(self):
-        current_opacity = self.__model_manager.get_opacity()
-        return current_opacity * 100
-
-
-    def set_structures_color(self, float_new_color):
-        self.__model_manager.set_color(float_new_color)
-        self.ren_win.Render()
-
     def show_fibers_from_checkpoints(self, checkpoints, throug_all):
         try:
             self.__tractography_manager.set_bundle_from_checkpoints(checkpoints, throug_all)
@@ -417,9 +407,6 @@ class SubjectViewer:
 
         self.__tractography_manager.set_active_db_tracts(ids)
         self.ren_win.Render()
-
-    def get_structures_scalar(self, scalar_name):
-        return self.__model_manager.get_scalar_metrics(scalar_name)
 
     def get_fibers_scalar_from_segmented(self, scalar_name):
         return self.__tractography_manager.get_scalar_from_structs(scalar_name)
@@ -484,7 +471,21 @@ class ModelManager:
         self.__opacity = 1
         self.__current_color = None
 
-        self.reload_models(subj=initial_subj, space=initial_space)
+        self.reload_models(subj=initial_subj, space=initial_space,skip_render=True)
+
+    def do_and_render(f):
+        @wraps(f)
+        def wrapped(*args,**kwargs):
+            if "skip_render" in kwargs:
+                skip = kwargs.pop("skip_render")
+            else:
+                skip = False
+            f(*args,**kwargs)
+            if not skip:
+                self = args[0]
+                rw=self.ren.GetRenderWindow()
+                rw.Render()
+        return wrapped
 
     def __get_laterality(self):
         lat_var_idx = 6
@@ -492,6 +493,7 @@ class ModelManager:
         label = braviz.readAndFilter.tabular_data.get_var_value(lat_var_idx, self.__current_subject)
         return lat_dict[label]
 
+    @do_and_render
     def reload_models(self, subj=None, space=None):
         if subj is not None:
             self.__current_subject = subj
@@ -573,6 +575,7 @@ class ModelManager:
         actor = trio[2]
         actor.SetVisibility(0)
 
+    @do_and_render
     def set_models(self, new_model_set):
         new_set = set(new_model_set)
         current_models = self.__active_models_set
@@ -591,15 +594,18 @@ class ModelManager:
 
         self.__active_models_set = new_set
 
-    def set_opacity(self, float_opacity):
+    @do_and_render
+    def set_opacity(self, int_opacity):
+        float_opacity = int_opacity/100
         self.__opacity = float_opacity
         for _, _, ac in self.__pd_map_act.itervalues():
             prop = ac.GetProperty()
             prop.SetOpacity(float_opacity)
 
     def get_opacity(self):
-        return self.__opacity
+        return self.__opacity*100
 
+    @do_and_render
     def set_color(self, float_rgb_color):
         self.__current_color = float_rgb_color
         for k, (_, _, ac) in self.__pd_map_act.iteritems():
