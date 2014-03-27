@@ -32,7 +32,7 @@ class SubjectOverviewApp(QMainWindow):
         if pipe is not None:
             print "Got pipe key"
             print pipe
-            address = ("localhost",6000)
+            address = ("localhost",6001)
             self.__pipe = multiprocessing.connection.Client(address,authkey=pipe)
             self.__pipe_check_timer=QtCore.QTimer()
             self.__pipe_check_timer.timeout.connect(self.poll_from_pipe)

@@ -403,6 +403,7 @@ class AnovaApp(QMainWindow):
         if self.mri_viewer_process is None or (self.mri_viewer_process.poll() is not None):
             #stop timer
             self.poll_timer.stop()
+            return
         if self.mri_viewer_pipe.poll():
             message = self.mri_viewer_pipe.recv()
             subj = message.get('subject')
@@ -475,7 +476,7 @@ class AnovaApp(QMainWindow):
     def launch_mri_viewer(self):
         print
         #TODO: think of better way of choicing ports
-        address = ('localhost',6000)
+        address = ('localhost',6001)
         auth_key=multiprocessing.current_process().authkey
         listener = multiprocessing.connection.Listener(address,authkey=auth_key)
 

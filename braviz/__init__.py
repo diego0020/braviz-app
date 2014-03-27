@@ -11,4 +11,11 @@ if not vtk_mayor >= 6:
     raise UserWarning("This package requires VTK version 6 or greater, please update your VTK install")
 #keep space clean
 
-del vtk
+import readAndFilter
+import visualization
+import interaction
+
+if __name__ == "__main__":
+    viewer = visualization.simpleVtkViewer()
+    reader = readAndFilter.kmc40AutoReader()
+    get_conf = interaction.get_config()
