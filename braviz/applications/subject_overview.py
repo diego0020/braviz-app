@@ -72,7 +72,7 @@ class SubjectOverviewApp(QMainWindow):
     def start(self):
         self.vtk_widget.initialize_widget()
         #load initial
-        self.vtk_viewer.change_image_modality("MRI")
+        self.vtk_viewer.image.change_image_modality("MRI")
         self.change_subject(self.__curent_subject)
         #self.vtk_viewer.show_cone()
 
@@ -99,12 +99,12 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
         self.vtk_widget.slice_changed.connect(self.ui.slice_slider.setValue)
-        self.ui.slice_slider.valueChanged.connect(self.vtk_viewer.set_image_slice)
+        self.ui.slice_slider.valueChanged.connect(self.vtk_viewer.image.set_image_slice)
         self.vtk_widget.image_window_changed.connect(self.ui.image_window.setValue)
         self.vtk_widget.image_level_changed.connect(self.ui.image_level.setValue)
-        self.ui.image_window.valueChanged.connect(self.vtk_viewer.set_image_window)
-        self.ui.image_level.valueChanged.connect(self.vtk_viewer.set_image_level)
-        self.ui.reset_window_level.pressed.connect(self.vtk_viewer.reset_window_level)
+        self.ui.image_window.valueChanged.connect(self.vtk_viewer.image.set_image_window)
+        self.ui.image_level.valueChanged.connect(self.vtk_viewer.image.set_image_level)
+        self.ui.reset_window_level.pressed.connect(self.vtk_viewer.image.reset_window_level)
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
@@ -178,7 +178,7 @@ class SubjectOverviewApp(QMainWindow):
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())
         if selection == "None":
-            self.vtk_viewer.change_image_modality(None)
+            self.vtk_viewer.image.change_image_modality(None)
             self.ui.image_orientation.setEnabled(0)
             self.ui.image_window.setEnabled(0)
             self.ui.image_level.setEnabled(0)
@@ -189,10 +189,10 @@ class SubjectOverviewApp(QMainWindow):
             return
 
         if selection in ("MRI", "FA", "APARC", "MD", "DTI"):
-            self.vtk_viewer.change_image_modality(selection)
+            self.vtk_viewer.image.change_image_modality(selection)
         else:
             try:
-                self.vtk_viewer.change_image_modality("FMRI", selection)
+                self.vtk_viewer.image.change_image_modality("FMRI", selection)
             except Exception as e:
                 print e.message
                 self.statusBar().showMessage(e.message, 5000)
@@ -200,7 +200,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_orientation.setEnabled(1)
         self.ui.slice_spin.setEnabled(1)
         self.ui.slice_slider.setEnabled(1)
-        self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
         self.reset_image_view_controls()
 
         window_level_control = 1 if selection in ("MRI", "FA", "MD") else 0
@@ -211,7 +211,7 @@ class SubjectOverviewApp(QMainWindow):
     def image_orientation_change(self):
         orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
         selection = str(self.ui.image_orientation.currentText())
-        self.vtk_viewer.change_image_orientation(orientation_dict[selection])
+        self.vtk_viewer.image.change_image_orientation(orientation_dict[selection])
         self.reset_image_view_controls()
 
     def position_camera(self):
@@ -232,11 +232,11 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_viewer.print_camera()
 
     def reset_image_view_controls(self):
-        self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
-        self.ui.slice_spin.setMaximum(self.vtk_viewer.get_number_of_image_slices())
-        self.ui.slice_slider.setValue(self.vtk_viewer.get_current_image_slice())
-        self.ui.image_level.setValue(self.vtk_viewer.get_current_image_level())
-        self.ui.image_window.setValue(self.vtk_viewer.get_current_image_window())
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
+        self.ui.slice_spin.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
+        self.ui.slice_slider.setValue(self.vtk_viewer.image.get_current_image_slice())
+        self.ui.image_level.setValue(self.vtk_viewer.image.get_current_image_level())
+        self.ui.image_window.setValue(self.vtk_viewer.image.get_current_image_window())
 
     def launch_subject_variable_select_dialog(self):
         params = {}

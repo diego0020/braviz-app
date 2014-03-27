@@ -13,6 +13,7 @@ import colorbrewer
 from braviz.interaction import structure_metrics
 from functools import wraps
 
+
 class SubjectViewer:
     def __init__(self, render_window_interactor, reader, widget):
 
@@ -21,7 +22,7 @@ class SubjectViewer:
         self.iren = render_window_interactor
         self.ren_win = render_window_interactor.GetRenderWindow()
         self.ren = vtk.vtkRenderer()
-        self.ren.SetBackground((0.75,0.75,0.75))
+        self.ren.SetBackground((0.75, 0.75, 0.75))
         self.ren.GradientBackgroundOn()
         self.ren.SetBackground2((0.5, 0.5, 0.5))
         self.ren.SetBackground((0.2, 0.2, 0.2))
@@ -35,7 +36,6 @@ class SubjectViewer:
         self.axes = braviz.visualization.OrientationAxes()
         self.axes.initialize(self.iren)
 
-
         self.light = vtk.vtkLight()
         self.ren.AddLight(self.light)
         self.light.SetLightTypeToHeadlight()
@@ -45,24 +45,16 @@ class SubjectViewer:
         #state
         self.__current_subject = None
         self.__current_space = "world"
-        self.__current_image = None
-        self.__current_image_orientation = 0
-        self.__curent_fmri_paradigm = None
-        self.__current_mri_window_level = None
-        self.__current_fa_window_level = None
-
 
         #internal data
-        self.__image_plane_widget = None
-        self.__mri_lut = None
-        self.__fmri_blender = braviz.visualization.fMRI_blender()
         self.__model_manager = ModelManager(self.reader, self.ren)
         self.__tractography_manager = TractographyManager(self.reader, self.ren)
+        self.__image_manager = ImageManager(self.reader, self.ren,widget=widget,interactor=self.iren)
 
 
         #reset camera and render
         #self.reset_camera(0)
-#        self.ren.Render()
+        #        self.ren.Render()
 
         #widget, signal handling
         self.__widget = widget
@@ -74,6 +66,10 @@ class SubjectViewer:
     @property
     def tractography(self):
         return self.__tractography_manager
+
+    @property
+    def image(self):
+        return self.__image_manager
 
     def show_cone(self):
         """Useful for testing"""
@@ -94,19 +90,19 @@ class SubjectViewer:
 
         #update image
         try:
-            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
+            self.image.change_subject(new_subject_img_code, skip_render=True)
         except Exception:
             errors.append("Image")
 
         #update models
         try:
-            self.__model_manager.reload_models(subj=new_subject_img_code,skip_render=True)
+            self.models.reload_models(subj=new_subject_img_code, skip_render=True)
         except Exception:
             errors.append("Models")
 
         #update fibers
         try:
-            self.__tractography_manager.set_subject(new_subject_img_code)
+            self.tractography.set_subject(new_subject_img_code, skip_render=True)
         except Exception:
             errors.append("Fibers")
 
@@ -115,215 +111,14 @@ class SubjectViewer:
             raise Exception("Couldn'n load " + ", ".join(errors))
 
 
-    def hide_image(self):
-        if self.__image_plane_widget is not None:
-            self.__image_plane_widget.Off()
-            #self.image_plane_widget.SetVisibility(0)
-
-    def show_image(self):
-        if self.__image_plane_widget is not None:
-            self.__image_plane_widget.On()
-        self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, True)
-
-    def create_image_plane_widget(self):
-        if self.__image_plane_widget is not None:
-            #already created
-            return
-        self.__image_plane_widget = braviz.visualization.persistentImagePlane(self.__current_image_orientation)
-        self.__image_plane_widget.SetInteractor(self.iren)
-        self.__image_plane_widget.On()
-        self.__mri_lut = vtk.vtkLookupTable()
-        self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
-
-        def slice_change_handler(source, event):
-            new_slice = self.__image_plane_widget.GetSliceIndex()
-            self.__widget.slice_change_handle(new_slice)
-
-        def detect_window_level_event(source, event):
-            window, level = self.__image_plane_widget.GetWindow(), self.__image_plane_widget.GetLevel()
-            self.__widget.window_level_change_handle(window, level)
-
-        self.__image_plane_widget.AddObserver(self.__image_plane_widget.slice_change_event, slice_change_handler)
-        self.__image_plane_widget.AddObserver("WindowLevelEvent", detect_window_level_event)
-
-    def change_image_modality(self, modality, paradigm=None, force_reload=False):
-        """Changes the modality of the current image
-        to hide the image call hide_image
-        in the case of fMRI modality should be fMRI and paradigm the name of the paradigm"""
-        if modality is not None:
-            modality = modality.upper()
-        if (self.__current_image is not None) and (modality == self.__current_image) and (
-                    paradigm == self.__curent_fmri_paradigm) and \
-                self.__image_plane_widget.GetEnabled() and not force_reload:
-            #nothing to do
-            return
-
-        self.__current_image = modality
-
-        if modality is None:
-            self.hide_image()
-            self.ren_win.Render()
-            return
-
-        if self.__image_plane_widget is None:
-            self.create_image_plane_widget()
-        self.__image_plane_widget.On()
-
-
-        if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
-            if (self.__current_image == "MRI") and (self.__current_mri_window_level is not None):
-                self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
-            elif (self.__current_image == "FA") and (self.__current_fa_window_level is not None):
-                self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
-
-        if self.__current_subject is None:
-            return
-
-
-
-
-
-        #update image labels:
-        try:
-            aparc_img = self.reader.get("APARC", self.__current_subject, format="VTK", space=self.__current_space)
-            aparc_lut = self.reader.get("APARC", self.__current_subject, lut=True)
-            self.__image_plane_widget.addLabels(aparc_img)
-            self.__image_plane_widget.setLabelsLut(aparc_lut)
-        except Exception:
-            self.hide_image()
-            raise
-
-        if modality == "FMRI":
-            mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)
-            fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
-                                         name=paradigm)
-            if fmri_image is None:
-                self.hide_image()
-                raise Exception("%s not available for subject %s" % (paradigm, self.__current_subject))
-            fmri_lut = self.reader.get("fMRI", self.__current_subject, lut=True)
-            self.__fmri_blender.set_luts(self.__mri_lut, fmri_lut)
-            new_image = self.__fmri_blender.set_images(mri_image, fmri_image)
-            self.__image_plane_widget.SetInputData(new_image)
-            self.__image_plane_widget.GetColorMap().SetLookupTable(None)
-            self.__image_plane_widget.SetResliceInterpolateToCubic()
-            self.__current_image = modality
-            self.__curent_fmri_paradigm = paradigm
-            self.__image_plane_widget.text1_value_from_img(fmri_image)
-            self.__image_plane_widget.On()
-            self.ren_win.Render()
-            return
-
-        if modality == "DTI":
-            dti_image = self.reader.get("DTI", self.__current_subject, format="VTK", space=self.__current_space)
-            fa_image = self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
-            self.__image_plane_widget.SetInputData(dti_image)
-            self.__image_plane_widget.GetColorMap().SetLookupTable(None)
-            self.__image_plane_widget.SetResliceInterpolateToCubic()
-            self.__current_image = modality
-            self.__image_plane_widget.text1_value_from_img(fa_image)
-            self.__image_plane_widget.On()
-            self.ren_win.Render()
-            return
-
-        self.__image_plane_widget.text1_to_std()
-        #Other images
-        new_image = self.reader.get(modality, self.__current_subject, space=self.__current_space, format="VTK")
-
-        self.__image_plane_widget.SetInputData(new_image)
-
-        if modality == "MRI" or modality == "MD":
-            lut = self.__mri_lut
-            self.__image_plane_widget.SetLookupTable(lut)
-            self.__image_plane_widget.SetResliceInterpolateToCubic()
-            if self.__current_mri_window_level is None:
-                self.__current_mri_window_level = [0, 0]
-                self.reset_window_level()
-            self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
-        elif modality == "FA":
-            lut = self.reader.get("FA", self.__current_subject, lut=True)
-            self.__image_plane_widget.SetLookupTable(lut)
-            self.__image_plane_widget.SetResliceInterpolateToCubic()
-            if self.__current_fa_window_level is None:
-                self.__current_fa_window_level = [0, 0]
-                self.reset_window_level()
-            self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
-        elif modality == "APARC":
-            lut = self.reader.get("APARC", self.__current_subject, lut=True)
-            self.__image_plane_widget.SetLookupTable(lut)
-            #Important:
-            self.__image_plane_widget.SetResliceInterpolateToNearestNeighbour()
-        #self.__current_image = modality
-        self.__image_plane_widget.On()
-        self.ren_win.Render()
-
-    def change_image_orientation(self, orientation):
-        """Changes the orientation of the current image
-        to hide the image call hide_image
-        orientation is a number from 0, 1 or 2 """
-        if self.__image_plane_widget is None:
-            self.create_image_plane_widget()
-        self.__image_plane_widget.set_orientation(orientation)
-        self.__current_image_orientation = orientation
-        self.ren_win.Render()
-
-    def get_number_of_image_slices(self):
-        if self.__image_plane_widget is None:
-            return 0
-        dimensions = self.__image_plane_widget.GetInput().GetDimensions()
-
-        return dimensions[self.__current_image_orientation]
-
-    def get_current_image_slice(self):
-        if self.__image_plane_widget is None:
-            return 0
-        return self.__image_plane_widget.GetSliceIndex()
-
-    def set_image_slice(self, new_slice):
-        if self.__image_plane_widget is None:
-            return
-        self.__image_plane_widget.SetSliceIndex(new_slice)
-        self.ren_win.Render()
-
-    def get_current_image_window(self):
-        return self.__image_plane_widget.GetWindow()
-
-    def get_current_image_level(self):
-        return self.__image_plane_widget.GetLevel()
-
-    def set_image_window(self, new_window):
-        if self.__image_plane_widget is None:
-            return
-        self.__image_plane_widget.SetWindowLevel(new_window, self.get_current_image_level())
-        self.ren_win.Render()
-
-    def set_image_level(self, new_level):
-        if self.__image_plane_widget is None:
-            return
-        self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(), new_level)
-        self.ren_win.Render()
-
-    def reset_window_level(self):
-        if self.__image_plane_widget is None:
-            return
-        if self.__current_image == "MRI":
-            self.__image_plane_widget.SetWindowLevel(3000, 1500)
-            self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
-            self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
-        elif self.__current_image == "FA":
-            self.__image_plane_widget.SetWindowLevel(1.20, 0.6)
-            self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
-            self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
-        self.ren_win.Render()
-        return
-
     def change_current_space(self, new_space):
         if self.__current_space == new_space:
             return
         self.__current_space = new_space
-        if self.__image_plane_widget is not None and self.__image_plane_widget.GetEnabled():
-            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
-        self.__model_manager.reload_models(space=new_space,skip_render=True)
-        self.__tractography_manager.set_current_space(new_space)
+
+        self.image.change_space(new_space,skip_render=True)
+        self.models.reload_models(space=new_space, skip_render=True)
+        self.tractography.set_current_space(new_space, skip_render=True)
         self.ren_win.Render()
 
     __camera_positions_dict = {
@@ -356,7 +151,7 @@ class SubjectViewer:
         self.ren.ResetCameraClippingRange()
         self.ren_win.Render()
 
-    def set_camera(self,focal_point,position,view_up):
+    def set_camera(self, focal_point, position, view_up):
         cam1 = self.ren.GetActiveCamera()
         cam1.SetFocalPoint(focal_point)
         cam1.SetPosition(position)
@@ -424,22 +219,256 @@ class QSuvjectViwerWidget(QFrame):
         self.image_level_changed.emit(level)
 
 
-
-
 def do_and_render(f):
     """requiers the class to have the rendered accesible as self.ren"""
+
     @wraps(f)
-    def wrapped(*args,**kwargs):
+    def wrapped(*args, **kwargs):
         if "skip_render" in kwargs:
             skip = kwargs.pop("skip_render")
         else:
             skip = False
-        f(*args,**kwargs)
-        if not skip:
-            self = args[0]
-            rw=self.ren.GetRenderWindow()
-            rw.Render()
+        try:
+            f(*args, **kwargs)
+        except Exception:
+            raise
+        finally:
+            if not skip:
+                self = args[0]
+                rw = self.ren.GetRenderWindow()
+                rw.Render()
+
     return wrapped
+
+
+class ImageManager:
+    def __init__(self, reader, ren, widget, interactor, initial_subj="093", initial_space="World"):
+        self.ren = ren
+        self.reader = reader
+        self.__current_subject = initial_subj
+        self.__current_space = initial_space
+        self.__current_image = None
+        self.__current_image_orientation = 0
+        self.__curent_fmri_paradigm = None
+        self.__current_mri_window_level = None
+        self.__current_fa_window_level = None
+        self.__image_plane_widget = None
+        self.__mri_lut = None
+        self.__fmri_blender = braviz.visualization.fMRI_blender()
+        self.__widget = widget
+        self.iren = interactor
+
+    @do_and_render
+    def hide_image(self):
+        if self.__image_plane_widget is not None:
+            self.__image_plane_widget.Off()
+            #self.image_plane_widget.SetVisibility(0)
+
+    @do_and_render
+    def show_image(self):
+        if self.__image_plane_widget is not None:
+            self.__image_plane_widget.On()
+        self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, True)
+
+    @do_and_render
+    def create_image_plane_widget(self):
+        if self.__image_plane_widget is not None:
+            #already created
+            return
+        self.__image_plane_widget = braviz.visualization.persistentImagePlane(self.__current_image_orientation)
+        self.__image_plane_widget.SetInteractor(self.iren)
+        self.__image_plane_widget.On()
+        self.__mri_lut = vtk.vtkLookupTable()
+        self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
+
+        def slice_change_handler(source, event):
+            new_slice = self.__image_plane_widget.GetSliceIndex()
+            self.__widget.slice_change_handle(new_slice)
+
+        def detect_window_level_event(source, event):
+            window, level = self.__image_plane_widget.GetWindow(), self.__image_plane_widget.GetLevel()
+            self.__widget.window_level_change_handle(window, level)
+
+        self.__image_plane_widget.AddObserver(self.__image_plane_widget.slice_change_event, slice_change_handler)
+        self.__image_plane_widget.AddObserver("WindowLevelEvent", detect_window_level_event)
+
+    @do_and_render
+    def change_subject(self,new_subject):
+        self.__current_subject = new_subject
+        self.change_image_modality(self.__current_image,self.__curent_fmri_paradigm,force_reload=True)
+
+    @do_and_render
+    def change_space(self,new_space):
+        if self.__current_space == new_space:
+            return
+        self.__current_space = new_space
+        if self.__image_plane_widget is not None and self.__image_plane_widget.GetEnabled():
+            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,skip_render=True)
+
+    @do_and_render
+    def change_image_modality(self, modality, paradigm=None, force_reload=False):
+        """Changes the modality of the current image
+        to hide the image call hide_image
+        in the case of fMRI modality should be fMRI and paradigm the name of the paradigm"""
+
+        if modality is not None:
+            modality = modality.upper()
+
+        if (self.__current_image is not None) and (modality == self.__current_image) and (
+                    paradigm == self.__curent_fmri_paradigm) and \
+                self.__image_plane_widget.GetEnabled() and not force_reload:
+            #nothing to do
+            return
+
+        self.__current_image = modality
+
+        if modality is None:
+            self.hide_image()
+            return
+
+        if self.__image_plane_widget is None:
+            self.create_image_plane_widget()
+        self.__image_plane_widget.On()
+
+        if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
+            if (self.__current_image == "MRI") and (self.__current_mri_window_level is not None):
+                self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
+            elif (self.__current_image == "FA") and (self.__current_fa_window_level is not None):
+                self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
+
+        if self.__current_subject is None:
+            return
+
+        #update image labels:
+        try:
+            aparc_img = self.reader.get("APARC", self.__current_subject, format="VTK", space=self.__current_space)
+            aparc_lut = self.reader.get("APARC", self.__current_subject, lut=True)
+            self.__image_plane_widget.addLabels(aparc_img)
+            self.__image_plane_widget.setLabelsLut(aparc_lut)
+        except Exception:
+            self.hide_image(skip_render=True)
+            raise
+
+        if modality == "FMRI":
+            mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)
+            fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
+                                         name=paradigm)
+            if fmri_image is None:
+                self.hide_image(skip_render=True)
+                raise Exception("%s not available for subject %s" % (paradigm, self.__current_subject))
+            fmri_lut = self.reader.get("fMRI", self.__current_subject, lut=True)
+            self.__fmri_blender.set_luts(self.__mri_lut, fmri_lut)
+            new_image = self.__fmri_blender.set_images(mri_image, fmri_image)
+            self.__image_plane_widget.SetInputData(new_image)
+            self.__image_plane_widget.GetColorMap().SetLookupTable(None)
+            self.__image_plane_widget.SetResliceInterpolateToCubic()
+            self.__current_image = modality
+            self.__curent_fmri_paradigm = paradigm
+            self.__image_plane_widget.text1_value_from_img(fmri_image)
+            self.__image_plane_widget.On()
+            return
+
+        if modality == "DTI":
+            dti_image = self.reader.get("DTI", self.__current_subject, format="VTK", space=self.__current_space)
+            fa_image = self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
+            self.__image_plane_widget.SetInputData(dti_image)
+            self.__image_plane_widget.GetColorMap().SetLookupTable(None)
+            self.__image_plane_widget.SetResliceInterpolateToCubic()
+            self.__current_image = modality
+            self.__image_plane_widget.text1_value_from_img(fa_image)
+            self.__image_plane_widget.On()
+            return
+
+        self.__image_plane_widget.text1_to_std()
+        #Other images
+        new_image = self.reader.get(modality, self.__current_subject, space=self.__current_space, format="VTK")
+
+        self.__image_plane_widget.SetInputData(new_image)
+
+        if modality == "MRI" or modality == "MD":
+            lut = self.__mri_lut
+            self.__image_plane_widget.SetLookupTable(lut)
+            self.__image_plane_widget.SetResliceInterpolateToCubic()
+            if self.__current_mri_window_level is None:
+                self.__current_mri_window_level = [0, 0]
+                self.reset_window_level()
+            self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
+        elif modality == "FA":
+            lut = self.reader.get("FA", self.__current_subject, lut=True)
+            self.__image_plane_widget.SetLookupTable(lut)
+            self.__image_plane_widget.SetResliceInterpolateToCubic()
+            if self.__current_fa_window_level is None:
+                self.__current_fa_window_level = [0, 0]
+                self.reset_window_level()
+            self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
+        elif modality == "APARC":
+            lut = self.reader.get("APARC", self.__current_subject, lut=True)
+            self.__image_plane_widget.SetLookupTable(lut)
+            #Important:
+            self.__image_plane_widget.SetResliceInterpolateToNearestNeighbour()
+        #self.__current_image = modality
+        self.__image_plane_widget.On()
+
+    @do_and_render
+    def change_image_orientation(self, orientation):
+        """Changes the orientation of the current image
+        to hide the image call hide_image
+        orientation is a number from 0, 1 or 2 """
+        if self.__image_plane_widget is None:
+            self.create_image_plane_widget()
+        self.__image_plane_widget.set_orientation(orientation)
+        self.__current_image_orientation = orientation
+
+    def get_number_of_image_slices(self):
+        if self.__image_plane_widget is None:
+            return 0
+        dimensions = self.__image_plane_widget.GetInput().GetDimensions()
+
+        return dimensions[self.__current_image_orientation]
+
+    def get_current_image_slice(self):
+        if self.__image_plane_widget is None:
+            return 0
+        return self.__image_plane_widget.GetSliceIndex()
+
+    @do_and_render
+    def set_image_slice(self, new_slice):
+        if self.__image_plane_widget is None:
+            return
+        self.__image_plane_widget.SetSliceIndex(new_slice)
+
+
+    def get_current_image_window(self):
+        return self.__image_plane_widget.GetWindow()
+
+    def get_current_image_level(self):
+        return self.__image_plane_widget.GetLevel()
+
+    @do_and_render
+    def set_image_window(self, new_window):
+        if self.__image_plane_widget is None:
+            return
+        self.__image_plane_widget.SetWindowLevel(new_window, self.get_current_image_level())
+
+    @do_and_render
+    def set_image_level(self, new_level):
+        if self.__image_plane_widget is None:
+            return
+        self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(), new_level)
+
+    @do_and_render
+    def reset_window_level(self):
+        if self.__image_plane_widget is None:
+            return
+        if self.__current_image == "MRI":
+            self.__image_plane_widget.SetWindowLevel(3000, 1500)
+            self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
+            self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
+        elif self.__current_image == "FA":
+            self.__image_plane_widget.SetWindowLevel(1.20, 0.6)
+            self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
+            self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
+        return
 
 
 
@@ -459,7 +488,7 @@ class ModelManager:
         self.__opacity = 1
         self.__current_color = None
 
-        self.reload_models(subj=initial_subj, space=initial_space,skip_render=True)
+        self.reload_models(subj=initial_subj, space=initial_space, skip_render=True)
 
 
     def __get_laterality(self):
@@ -571,14 +600,14 @@ class ModelManager:
 
     @do_and_render
     def set_opacity(self, int_opacity):
-        float_opacity = int_opacity/100
+        float_opacity = int_opacity / 100
         self.__opacity = float_opacity
         for _, _, ac in self.__pd_map_act.itervalues():
             prop = ac.GetProperty()
             prop.SetOpacity(float_opacity)
 
     def get_opacity(self):
-        return self.__opacity*100
+        return self.__opacity * 100
 
     @do_and_render
     def set_color(self, float_rgb_color):
@@ -822,6 +851,7 @@ if __name__ == "__main__":
     import sys
     import PyQt4.QtGui as QtGui
     import braviz
+
     reader = braviz.readAndFilter.kmc40AutoReader()
     app = QtGui.QApplication(sys.argv)
     main_window = QSuvjectViwerWidget(reader)
