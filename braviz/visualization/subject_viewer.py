@@ -49,7 +49,7 @@ class SubjectViewer:
         #internal data
         self.__model_manager = ModelManager(self.reader, self.ren)
         self.__tractography_manager = TractographyManager(self.reader, self.ren)
-        self.__image_manager = ImageManager(self.reader, self.ren,widget=widget,interactor=self.iren)
+        self.__image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren)
 
 
         #reset camera and render
@@ -110,13 +110,12 @@ class SubjectViewer:
         if len(errors) > 0:
             raise Exception("Couldn'n load " + ", ".join(errors))
 
-
     def change_current_space(self, new_space):
         if self.__current_space == new_space:
             return
         self.__current_space = new_space
 
-        self.image.change_space(new_space,skip_render=True)
+        self.image.change_space(new_space, skip_render=True)
         self.models.reload_models(space=new_space, skip_render=True)
         self.tractography.set_current_space(new_space, skip_render=True)
         self.ren_win.Render()
@@ -293,17 +292,18 @@ class ImageManager:
         self.__image_plane_widget.AddObserver("WindowLevelEvent", detect_window_level_event)
 
     @do_and_render
-    def change_subject(self,new_subject):
+    def change_subject(self, new_subject):
         self.__current_subject = new_subject
-        self.change_image_modality(self.__current_image,self.__curent_fmri_paradigm,force_reload=True)
+        self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
 
     @do_and_render
-    def change_space(self,new_space):
+    def change_space(self, new_space):
         if self.__current_space == new_space:
             return
         self.__current_space = new_space
         if self.__image_plane_widget is not None and self.__image_plane_widget.GetEnabled():
-            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,skip_render=True)
+            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
+                                       skip_render=True)
 
     @do_and_render
     def change_image_modality(self, modality, paradigm=None, force_reload=False):
@@ -469,7 +469,6 @@ class ImageManager:
             self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
         return
-
 
 
 class ModelManager:

@@ -138,7 +138,7 @@ class SubjectOverviewApp(QMainWindow):
 
         #menubar
         self.ui.actionSave_scenario.triggered.connect(self.save_state)
-        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
+        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
 
 
     def change_subject(self, new_subject=None):
@@ -543,13 +543,17 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveScenarioDialog(meta["application"],state)
         dialog.exec_()
 
-    def load_scenario(self):
+    def load_scenario_dialog(self):
         wanted_state = dict()
         my_name = os.path.splitext(os.path.basename(__file__))[0]
         dialog = LoadScenarioDialog(my_name,wanted_state)
         dialog.exec_()
         print wanted_state
+        self.load_scenario(wanted_state)
 
+    def load_scenario(self,state):
+
+        wanted_state=state
         #subject panel
         subject_state = wanted_state.get("subject_state")
         if subject_state is not None:
