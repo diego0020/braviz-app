@@ -353,7 +353,7 @@ class SubjectOverviewApp(QMainWindow):
 
     def show_fibers_from_segment(self, index):
         if index == 0:
-            self.vtk_viewer.hide_fibers_from_checkpoints()
+            self.vtk_viewer.tractography.hide_checkpoints_bundle()
             self.fibers_list_model.set_show_special(False)
             self.ui.save_bundle_button.setEnabled(False)
         else:
@@ -362,7 +362,7 @@ class SubjectOverviewApp(QMainWindow):
             throug_all = (index == 2)
             self.ui.save_bundle_button.setEnabled(True)
             try:
-                self.vtk_viewer.show_fibers_from_checkpoints(checkpoints, throug_all)
+                self.vtk_viewer.tractography.set_bundle_from_checkpoints(checkpoints, throug_all)
             except Exception as e:
                 self.show_error(e.message)
         self.update_current_bundle()
@@ -371,13 +371,13 @@ class SubjectOverviewApp(QMainWindow):
         color_codes = {0: "orient", 1: "fa", 5: "rand", 6: "bundle"}
         color_text = color_codes.get(index)
         if color_text is not None:
-            self.vtk_viewer.change_tractography_color(color_text)
+            self.vtk_viewer.tractography.change_color(color_text)
         else:
             self.show_error("Not yet implemented")
 
     def change_tractography_opacity(self, value):
         float_value = value / 100
-        self.vtk_viewer.set_tractography_opacity(float_value)
+        self.vtk_viewer.tractography.set_opacity(float_value)
 
 
     def update_current_bundle(self, index=None):
@@ -420,9 +420,9 @@ class SubjectOverviewApp(QMainWindow):
         if self.current_fibers is None:
             value = float("nan")
         elif type(self.current_fibers) is str:
-            value = self.vtk_viewer.get_fibers_scalar_from_segmented(metric)
+            value = self.vtk_viewer.tractography.get_scalar_from_structs(metric)
         else:
-            value = self.vtk_viewer.get_fibers_scalar_from_db(metric, self.current_fibers)
+            value = self.vtk_viewer.tractography.get_scalar_from_db(metric, self.current_fibers)
         if np.isnan(value):
             self.ui.fibers_scalar_value.clear()
         else:
@@ -467,7 +467,7 @@ class SubjectOverviewApp(QMainWindow):
         dialog.exec_()
         print selected
         self.fibers_list_model.set_ids(selected, names_dict)
-        self.vtk_viewer.set_fibers_from_db(selected)
+        self.vtk_viewer.tractography.set_active_db_tracts(selected)
 
     def save_fibers_bundle(self):
         checkpoints = self.structures_tree_model.get_selected_structures()
@@ -628,7 +628,7 @@ class SubjectOverviewApp(QMainWindow):
             bundles = tractography_state.get("bundles")
             if bundles is not None:
                 self.fibers_list_model.set_ids(bundles)
-                self.vtk_viewer.set_fibers_from_db(bundles)
+                self.vtk_viewer.tractography.set_active_db_tracts(bundles)
             from_segment = tractography_state.get("from_segment")
             if from_segment is not None:
                 idx = self.ui.fibers_from_segments_box.findText(from_segment)

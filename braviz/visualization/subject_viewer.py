@@ -383,37 +383,6 @@ class SubjectViewer:
         vu = cam1.GetViewUp()
         return fp, pos, vu
 
-    def show_fibers_from_checkpoints(self, checkpoints, throug_all):
-        try:
-            self.__tractography_manager.set_bundle_from_checkpoints(checkpoints, throug_all)
-        except Exception:
-            raise
-        finally:
-            self.ren_win.Render()
-
-    def hide_fibers_from_checkpoints(self):
-        self.__tractography_manager.hide_checkpoints_bundle()
-        self.ren_win.Render()
-
-    def change_tractography_color(self, new_color):
-        self.__tractography_manager.change_color(new_color)
-        self.ren_win.Render()
-
-    def set_tractography_opacity(self, float_opacity):
-        self.__tractography_manager.set_opacity(float_opacity)
-        self.ren_win.Render()
-
-    def set_fibers_from_db(self, ids):
-
-        self.__tractography_manager.set_active_db_tracts(ids)
-        self.ren_win.Render()
-
-    def get_fibers_scalar_from_segmented(self, scalar_name):
-        return self.__tractography_manager.get_scalar_from_structs(scalar_name)
-
-    def get_fibers_scalar_from_db(self, scalar_name, bid):
-        return self.__tractography_manager.get_scalar_from_db(scalar_name, bid)
-
 
 class QSuvjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -455,6 +424,25 @@ class QSuvjectViwerWidget(QFrame):
         self.image_level_changed.emit(level)
 
 
+
+
+def do_and_render(f):
+    """requiers the class to have the rendered accesible as self.ren"""
+    @wraps(f)
+    def wrapped(*args,**kwargs):
+        if "skip_render" in kwargs:
+            skip = kwargs.pop("skip_render")
+        else:
+            skip = False
+        f(*args,**kwargs)
+        if not skip:
+            self = args[0]
+            rw=self.ren.GetRenderWindow()
+            rw.Render()
+    return wrapped
+
+
+
 class ModelManager:
     def __init__(self, reader, ren, initial_subj="093", initial_space="World"):
         self.ren = ren
@@ -473,19 +461,6 @@ class ModelManager:
 
         self.reload_models(subj=initial_subj, space=initial_space,skip_render=True)
 
-    def do_and_render(f):
-        @wraps(f)
-        def wrapped(*args,**kwargs):
-            if "skip_render" in kwargs:
-                skip = kwargs.pop("skip_render")
-            else:
-                skip = False
-            f(*args,**kwargs)
-            if not skip:
-                self = args[0]
-                rw=self.ren.GetRenderWindow()
-                rw.Render()
-        return wrapped
 
     def __get_laterality(self):
         lat_var_idx = 6
@@ -646,14 +621,17 @@ class TractographyManager:
         self.__bundle_colors = None
         self.__bundle_labels = None
 
+    @do_and_render
     def set_subject(self, subj):
         self.__current_subject = subj
         self.__reload_fibers()
 
+    @do_and_render
     def set_current_space(self, space):
         self.__current_space = space
         self.__reload_fibers()
 
+    @do_and_render
     def set_bundle_from_checkpoints(self, checkpoints, throug_all):
         checkpoints = list(checkpoints)
         self.__ad_hoc_fiber_checks = checkpoints
@@ -698,6 +676,7 @@ class TractographyManager:
         return
 
 
+    @do_and_render
     def hide_checkpoints_bundle(self):
         print "hidin"
         if self.__ad_hoc_pd_mp_ac is None:
@@ -706,6 +685,7 @@ class TractographyManager:
         act.SetVisibility(0)
         self.__ad_hoc_visibility = False
 
+    @do_and_render
     def add_from_database(self, b_id):
 
         self.__active_db_tracts.add(b_id)
@@ -764,6 +744,7 @@ class TractographyManager:
         return poly
 
 
+    @do_and_render
     def hide_database_tract(self, bid):
         trio = self.__db_tracts.get(bid)
         if trio is None:
@@ -772,6 +753,7 @@ class TractographyManager:
         actor.SetVisibility(0)
         self.__active_db_tracts.remove(bid)
 
+    @do_and_render
     def change_color(self, new_color):
         print new_color
         self.__current_color = new_color
@@ -785,6 +767,7 @@ class TractographyManager:
         for bid in self.__active_db_tracts:
             self.add_from_database(bid)
 
+    @do_and_render
     def set_active_db_tracts(self, new_set):
         new_set = set(new_set)
         to_hide = self.__active_db_tracts - new_set
@@ -804,6 +787,7 @@ class TractographyManager:
         if errors > 0:
             raise Exception("Couldnt load all tracts")
 
+    @do_and_render
     def set_opacity(self, float_opacity):
         self.__opacity = float_opacity
         self.__reload_fibers()
