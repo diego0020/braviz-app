@@ -14,14 +14,15 @@ def calculate_ginni_index(outcome,data_frame):
     is_nominal=False
     conn=braviz_tab_data.get_connection()
     res=conn.execute("SELECT is_real FROM variables WHERE var_name = ?",(outcome,))
+    outcome_idx = braviz_tab_data.get_var_idx(outcome)
     is_real=res.fetchone()
     if (is_real is not None) and is_real[0]==0:
         is_nominal=True
 
-    values_data_frame=braviz_tab_data.get_data_frame_by_name(data_frame["var_name"])
+    values_data_frame=braviz_tab_data.get_data_frame_by_index(data_frame.index,col_name_index=True)
     #remove columns with many NaNs
     #df2=values_data_frame.dropna(1,thresh=40)
-    values_data_frame.dropna(1,thresh=40,inplace=True)
+    values_data_frame.dropna(1,thresh=30,inplace=True)
     #df3=df2.dropna(0,thresh=200)
     values_data_frame.dropna(0,thresh=200,inplace=True)
     #fill nas with other values
@@ -42,7 +43,7 @@ def calculate_ginni_index(outcome,data_frame):
 
     r_df=com.convert_to_r_dataframe(values_data_frame)
     #if oucome is nominal transform into factor
-    outcome_variable_index=original_column_names.get_loc(outcome)
+    outcome_variable_index=original_column_names.get_loc(outcome_idx)
     r_environment=robjects.globalenv
     r_environment["r_df"]=r_df
     if is_nominal:
@@ -84,7 +85,7 @@ def calculate_ginni_index(outcome,data_frame):
     #print imp_data_frame
     data_frame["Ginni"]=imp_data_frame
     data_frame.replace(np.nan,0,inplace=True)
-    data_frame["Ginni"][outcome]=np.inf
+    data_frame["Ginni"][outcome_idx]=np.inf
     #print self.data_frame
     return data_frame
 

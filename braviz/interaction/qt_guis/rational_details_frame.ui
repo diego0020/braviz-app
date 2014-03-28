@@ -22,6 +22,9 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="2" column="1">
     <widget class="QSpinBox" name="optimum_val">
+     <property name="suffix">
+      <string>%</string>
+     </property>
      <property name="maximum">
       <number>100</number>
      </property>
@@ -33,7 +36,7 @@
       <string>Select the optimal value for this value, the value that would be considered &quot;good&quot;</string>
      </property>
      <property name="text">
-      <string>Optimum (%)</string>
+      <string>Optimum</string>
      </property>
     </widget>
    </item>

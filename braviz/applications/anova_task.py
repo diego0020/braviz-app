@@ -14,12 +14,14 @@ import braviz.interaction.r_functions
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
+import braviz.readAndFilter.tabular_data as braviz_tab_data
 
 import colorbrewer
 
 from itertools import izip
 
 from braviz.applications import mriMultSlicer
+from braviz.applications import subject_overview
 import multiprocessing
 
 
@@ -221,7 +223,7 @@ class AnovaApp(QMainWindow):
             cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name=?",
                                (self.outcome_var_name,))
             ylims = cur.fetchone()
-            self.plot.make_box_plot(data_values, "(Intercept)", self.outcome_var_name,
+            self.plot.make_box_plot([data_values], "(Intercept)", self.outcome_var_name,
                                     None, ylims,intercet=self.result_model.intercept)
 
         else:
@@ -264,6 +266,7 @@ class AnovaApp(QMainWindow):
             self.plot_z_var = nominal_factors[0]
             #Get Data
             data = get_data_frame_by_name([real_factors[0], nominal_factors[0], self.outcome_var_name])
+            data.dropna(inplace=True)
             self.plot_data_frame = data
             datax = []
             datay = []
@@ -338,22 +341,16 @@ class AnovaApp(QMainWindow):
 
     def one_reg_plot(self, var_name):
         #find if variable is nominal
-        conn = get_connection()
-        is_reg_real = conn.execute("SELECT is_real FROM variables WHERE var_name=?", (var_name,))
-        is_reg_real = is_reg_real.fetchone()[0]
+
+        is_reg_real = braviz_tab_data.is_variable_name_real(var_name)
         #get outcome min and max values
-        cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name=?",
-                           (self.outcome_var_name,))
         #TODO This has to be updatede when implementing logistic regression
-        miny, maxy = cur.fetchone()
+        miny, maxy = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
         self.plot_x_var = var_name
         if is_reg_real == 0:
             #is nominal
             #create whisker plot
-            labels = conn.execute(
-                "SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",
-                (var_name,))
-            labels_dict = dict(labels.fetchall())
+            labels_dict = braviz_tab_data.get_names_label_dict(var_name)
             #print labels_dict
             #get data from
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
@@ -372,6 +369,7 @@ class AnovaApp(QMainWindow):
             #is real
             #create scatter plot
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
+            data.dropna(inplace=True)
             self.plot_data_frame = data
             self.plot.compute_scatter(data[var_name].get_values(),
                                       data[self.outcome_var_name].get_values(),
@@ -444,7 +442,6 @@ class AnovaApp(QMainWindow):
                 return
 
         def show_MRI(*args):
-            print "launching MRI viewer"
             self.change_subject_in_mri_viewer(subject)
 
         launch_mri_action = QtGui.QAction("Show subject %s MRI" % subject, None)
@@ -479,7 +476,8 @@ class AnovaApp(QMainWindow):
     def launch_mri_viewer(self):
         print "creating new mri viewer"
         self.mri_viewer_pipe, pipe_mri_side = multiprocessing.Pipe()
-        self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
+        #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
+        self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
         self.mri_viewer_process.start()
         self.poll_timer.start(200)
 

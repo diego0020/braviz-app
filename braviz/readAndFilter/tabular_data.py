@@ -13,7 +13,7 @@ IMAGE_CODE = 273
 
 def get_variables(reader=None):
     conn = get_connection(reader)
-    data = sql.read_sql("SELECT var_name from variables;", conn)
+    data = sql.read_sql("SELECT var_idx, var_name from variables;", conn,index_col="var_idx")
     conn.close()
     return data
 
@@ -60,7 +60,7 @@ def get_data_frame_by_name(columns, reader=None):
     return data
 
 
-def get_data_frame_by_index(columns, reader=None):
+def get_data_frame_by_index(columns, reader=None,col_name_index=False):
     if not hasattr(columns, "__iter__"):
         columns = (columns,)
 
@@ -77,7 +77,10 @@ def get_data_frame_by_index(columns, reader=None):
         WHERE var_idx = ?
         """
         col = sql.read_sql(query, conn, index_col="subject", params=(int(var_idx),), coerce_float=True)
-        data[var_name] = col.astype(pd.np.float64)
+        if col_name_index is True:
+            data[var_idx] = col.astype(pd.np.float64)
+        else:
+            data[var_name] = col.astype(pd.np.float64)
 
     conn.close()
     return data
