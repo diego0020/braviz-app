@@ -286,7 +286,8 @@ class persistentImagePlane(vtkImagePlaneWidget):
         if not self.alternative_text1:
             return
         ren = self.GetCurrentRenderer()
-        ren.RemoveActor(self.text1)
+        if ren is not None:
+            ren.RemoveActor(self.text1)
         self.SetDisplayText(1)
         self.alternative_text1 = False
         self.alternative_img = None

@@ -7,9 +7,7 @@ import PyQt4.QtCore as QtCore
 from PyQt4.QtGui import QMainWindow
 
 import numpy as np
-import multiprocessing
 import datetime
-import sys
 import platform
 import os
 
@@ -20,8 +18,8 @@ from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, Structur
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
-from braviz.applications import export_scalar_to_db
-
+import subprocess
+import multiprocessing.connection
 
 class SubjectOverviewApp(QMainWindow):
     def __init__(self, pipe = None):
@@ -32,6 +30,10 @@ class SubjectOverviewApp(QMainWindow):
         self.__curent_subject = None
         self.__pipe = pipe
         if pipe is not None:
+            print "Got pipe key"
+            print pipe
+            address = ("localhost",6001)
+            self.__pipe = multiprocessing.connection.Client(address,authkey=pipe)
             self.__pipe_check_timer=QtCore.QTimer()
             self.__pipe_check_timer.timeout.connect(self.poll_from_pipe)
             self.__pipe_check_timer.start(200)
@@ -43,8 +45,6 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget = QSuvjectViwerWidget(reader=self.reader)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
-        self.active_children_check_timer = QtCore.QTimer()
-        self.active_children_check_timer.timeout.connect(self.check_active_children)
 
         #context panel
         self.context_frame = None
@@ -69,11 +69,12 @@ class SubjectOverviewApp(QMainWindow):
         self.ui = None
         self.setup_gui()
 
+    def start(self):
+        self.vtk_widget.initialize_widget()
         #load initial
-        self.vtk_viewer.change_image_modality("MRI")
+        self.vtk_viewer.image.change_image_modality("MRI")
         self.change_subject(self.__curent_subject)
         #self.vtk_viewer.show_cone()
-
 
     def setup_gui(self):
         self.ui = Ui_subject_overview()
@@ -98,18 +99,18 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
         self.vtk_widget.slice_changed.connect(self.ui.slice_slider.setValue)
-        self.ui.slice_slider.valueChanged.connect(self.vtk_viewer.set_image_slice)
+        self.ui.slice_slider.valueChanged.connect(self.vtk_viewer.image.set_image_slice)
         self.vtk_widget.image_window_changed.connect(self.ui.image_window.setValue)
         self.vtk_widget.image_level_changed.connect(self.ui.image_level.setValue)
-        self.ui.image_window.valueChanged.connect(self.vtk_viewer.set_image_window)
-        self.ui.image_level.valueChanged.connect(self.vtk_viewer.set_image_level)
-        self.ui.reset_window_level.pressed.connect(self.vtk_viewer.reset_window_level)
+        self.ui.image_window.valueChanged.connect(self.vtk_viewer.image.set_image_window)
+        self.ui.image_level.valueChanged.connect(self.vtk_viewer.image.set_image_level)
+        self.ui.reset_window_level.pressed.connect(self.vtk_viewer.image.reset_window_level)
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
                      self.ui.structures_tree.dataChanged)
         self.structures_tree_model.selection_changed.connect(self.update_segmented_structures)
-        self.ui.struct_opacity_slider.valueChanged.connect(self.vtk_viewer.set_structures_opacity)
+        self.ui.struct_opacity_slider.valueChanged.connect(self.vtk_viewer.models.set_opacity)
         self.ui.left_right_radio.toggled.connect(self.change_left_to_non_dominant)
         self.ui.struct_color_combo.currentIndexChanged.connect(self.select_structs_color)
         self.ui.struct_scalar_combo.currentIndexChanged.connect(self.update_segmentation_scalar)
@@ -130,13 +131,14 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
         self.ui.vtk_frame_layout.setContentsMargins(0, 0, 0, 0)
+        #self.vtk_viewer.show_cone()
 
         #context view
         self.context_frame = ContextVariablesPanel(self.ui.splitter_2, "Context")
 
         #menubar
         self.ui.actionSave_scenario.triggered.connect(self.save_state)
-        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
+        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
 
 
     def change_subject(self, new_subject=None):
@@ -176,7 +178,7 @@ class SubjectOverviewApp(QMainWindow):
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())
         if selection == "None":
-            self.vtk_viewer.change_image_modality(None)
+            self.vtk_viewer.image.change_image_modality(None)
             self.ui.image_orientation.setEnabled(0)
             self.ui.image_window.setEnabled(0)
             self.ui.image_level.setEnabled(0)
@@ -187,10 +189,10 @@ class SubjectOverviewApp(QMainWindow):
             return
 
         if selection in ("MRI", "FA", "APARC", "MD", "DTI"):
-            self.vtk_viewer.change_image_modality(selection)
+            self.vtk_viewer.image.change_image_modality(selection)
         else:
             try:
-                self.vtk_viewer.change_image_modality("FMRI", selection)
+                self.vtk_viewer.image.change_image_modality("FMRI", selection)
             except Exception as e:
                 print e.message
                 self.statusBar().showMessage(e.message, 5000)
@@ -198,7 +200,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_orientation.setEnabled(1)
         self.ui.slice_spin.setEnabled(1)
         self.ui.slice_slider.setEnabled(1)
-        self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
         self.reset_image_view_controls()
 
         window_level_control = 1 if selection in ("MRI", "FA", "MD") else 0
@@ -209,7 +211,7 @@ class SubjectOverviewApp(QMainWindow):
     def image_orientation_change(self):
         orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
         selection = str(self.ui.image_orientation.currentText())
-        self.vtk_viewer.change_image_orientation(orientation_dict[selection])
+        self.vtk_viewer.image.change_image_orientation(orientation_dict[selection])
         self.reset_image_view_controls()
 
     def position_camera(self):
@@ -230,11 +232,11 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_viewer.print_camera()
 
     def reset_image_view_controls(self):
-        self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
-        self.ui.slice_spin.setMaximum(self.vtk_viewer.get_number_of_image_slices())
-        self.ui.slice_slider.setValue(self.vtk_viewer.get_current_image_slice())
-        self.ui.image_level.setValue(self.vtk_viewer.get_current_image_level())
-        self.ui.image_window.setValue(self.vtk_viewer.get_current_image_window())
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
+        self.ui.slice_spin.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
+        self.ui.slice_slider.setValue(self.vtk_viewer.image.get_current_image_slice())
+        self.ui.image_level.setValue(self.vtk_viewer.image.get_current_image_level())
+        self.ui.image_window.setValue(self.vtk_viewer.image.get_current_image_window())
 
     def launch_subject_variable_select_dialog(self):
         params = {}
@@ -270,7 +272,7 @@ class SubjectOverviewApp(QMainWindow):
 
     def update_segmented_structures(self):
         selected_structures = self.structures_tree_model.get_selected_structures()
-        self.vtk_viewer.set_structures(selected_structures)
+        self.vtk_viewer.models.set_models(selected_structures)
         self.update_segmentation_scalar()
 
     metrics_dict = {"Volume": ("volume", "mm^3"),
@@ -289,7 +291,7 @@ class SubjectOverviewApp(QMainWindow):
             self.show_error("Unknown metric %s" % scalar_text)
             return
         metric_code, units = metric_params
-        new_value = self.vtk_viewer.get_structures_scalar(metric_code)
+        new_value = self.vtk_viewer.models.get_scalar_metrics(metric_code)
         if np.isnan(new_value):
             self.ui.struct_scalar_value.clear()
         else:
@@ -303,12 +305,17 @@ class SubjectOverviewApp(QMainWindow):
         if metric_params is None:
             self.show_error("Unknown metric %s" % scalar_text)
             return
-        structures = tuple(self.structures_tree_model.get_selected_structures())
-        export_dialog_args = {"fibers": False, "structures_list": structures,
-                              "metric": scalar_text}
-        export_dialog = multiprocessing.Process(target=export_scalar_to_db.run, kwargs=export_dialog_args)
-        export_dialog.start()
-        self.active_children_check_timer.start(100000)
+        structures = list(self.structures_tree_model.get_selected_structures())
+        #export_dialog_args = {"fibers": False, "structures_list": structures,
+        #                      "metric": scalar_text,"db_id": None, "operation": None}
+
+        #export_dialog_args = fibers metric structs
+        export_dialog_args = ["0", scalar_text]+list(structures)
+        print export_dialog_args
+        process_line = [sys.executable,"-m","braviz.applications.export_scalar_to_db",]
+        #print process_line
+        subprocess.Popen(process_line+export_dialog_args)
+
         self.ui.export_segmentation_to_db.setEnabled(0)
 
         def reactivate_button():
@@ -316,13 +323,6 @@ class SubjectOverviewApp(QMainWindow):
 
         QtCore.QTimer.singleShot(2000, reactivate_button)
 
-
-    def check_active_children(self):
-        sub_processes = multiprocessing.active_children()
-        print "checking kids:", sub_processes
-        if len(sub_processes) == 0:
-            self.active_children_check_timer.stop()
-            print "all sub processes finished"
 
     def change_left_to_non_dominant(self):
         if self.ui.left_right_radio.isChecked():
@@ -339,21 +339,21 @@ class SubjectOverviewApp(QMainWindow):
             res = color_dialog.getColor()
             new_color = res.getRgb()[:3]
             new_float_color = [x / 255 for x in new_color]
-            self.vtk_viewer.set_structures_color(new_float_color)
+            self.vtk_viewer.models.set_color(new_float_color)
             self.__structures_color = new_float_color
             #print res.getRgb()
             if self.ui.struct_color_combo.count() < 3:
                 self.ui.struct_color_combo.addItem("Custom")
             self.ui.struct_color_combo.setCurrentIndex(2)
         if index == 0:
-            self.vtk_viewer.set_structures_color(None)
+            self.vtk_viewer.models.set_color(None)
             self.__structures_color = None
             if self.ui.struct_color_combo.count() == 3:
                 self.ui.struct_color_combo.removeItem(2)
 
     def show_fibers_from_segment(self, index):
         if index == 0:
-            self.vtk_viewer.hide_fibers_from_checkpoints()
+            self.vtk_viewer.tractography.hide_checkpoints_bundle()
             self.fibers_list_model.set_show_special(False)
             self.ui.save_bundle_button.setEnabled(False)
         else:
@@ -362,7 +362,7 @@ class SubjectOverviewApp(QMainWindow):
             throug_all = (index == 2)
             self.ui.save_bundle_button.setEnabled(True)
             try:
-                self.vtk_viewer.show_fibers_from_checkpoints(checkpoints, throug_all)
+                self.vtk_viewer.tractography.set_bundle_from_checkpoints(checkpoints, throug_all)
             except Exception as e:
                 self.show_error(e.message)
         self.update_current_bundle()
@@ -371,13 +371,13 @@ class SubjectOverviewApp(QMainWindow):
         color_codes = {0: "orient", 1: "fa", 5: "rand", 6: "bundle"}
         color_text = color_codes.get(index)
         if color_text is not None:
-            self.vtk_viewer.change_tractography_color(color_text)
+            self.vtk_viewer.tractography.change_color(color_text)
         else:
             self.show_error("Not yet implemented")
 
     def change_tractography_opacity(self, value):
         float_value = value / 100
-        self.vtk_viewer.set_tractography_opacity(float_value)
+        self.vtk_viewer.tractography.set_opacity(float_value)
 
 
     def update_current_bundle(self, index=None):
@@ -420,9 +420,9 @@ class SubjectOverviewApp(QMainWindow):
         if self.current_fibers is None:
             value = float("nan")
         elif type(self.current_fibers) is str:
-            value = self.vtk_viewer.get_fibers_scalar_from_segmented(metric)
+            value = self.vtk_viewer.tractography.get_scalar_from_structs(metric)
         else:
-            value = self.vtk_viewer.get_fibers_scalar_from_db(metric, self.current_fibers)
+            value = self.vtk_viewer.tractography.get_scalar_from_db(metric, self.current_fibers)
         if np.isnan(value):
             self.ui.fibers_scalar_value.clear()
         else:
@@ -437,20 +437,21 @@ class SubjectOverviewApp(QMainWindow):
             self.show_error("Unknown metric %s" % scalar_text)
             return
         if type(self.current_fibers) is str:
-            structs = tuple(self.structures_tree_model.get_selected_structures())
+            structs = list(self.structures_tree_model.get_selected_structures())
             index = self.ui.fibers_from_segments_box.currentIndex()
             operation = "and" if (index == 2) else "or"
-            db_id = None
+            db_id = "0"
         else:
             db_id = self.current_fibers
-            structs = None
-            operation = None
-        export_dialog_args = {"fibers": True, "structures_list": structs,
-                              "metric": scalar_text, "db_id": db_id, "operation": operation}
-        export_dialog = multiprocessing.Process(target=export_scalar_to_db.run, kwargs=export_dialog_args)
-        export_dialog.start()
-        #to avoid zombie processes
-        self.active_children_check_timer.start(10000)
+            structs = []
+            operation = "0"
+        #export_dialog_args = {"fibers": True, "structures_list": structs,
+        #                      "metric": scalar_text, "db_id": db_id, "operation": operation}
+
+        export_args = ["1", scalar_text, operation, db_id,]+structs
+        process_line = [sys.executable,"-m","braviz.applications.export_scalar_to_db",]
+        subprocess.Popen(process_line+export_args)
+
         self.ui.export_fiber_scalars_to_db.setEnabled(0)
 
         def reactivate_button():
@@ -466,7 +467,7 @@ class SubjectOverviewApp(QMainWindow):
         dialog.exec_()
         print selected
         self.fibers_list_model.set_ids(selected, names_dict)
-        self.vtk_viewer.set_fibers_from_db(selected)
+        self.vtk_viewer.tractography.set_active_db_tracts(selected)
 
     def save_fibers_bundle(self):
         checkpoints = self.structures_tree_model.get_selected_structures()
@@ -503,7 +504,7 @@ class SubjectOverviewApp(QMainWindow):
         segmentation_state["left_right"] = self.ui.left_right_radio.isChecked()
         segmentation_state["selected_structs"] = tuple(self.structures_tree_model.get_selected_structures())
         segmentation_state["color"] = self.__structures_color
-        segmentation_state["opacity"] = float(self.vtk_viewer.get_structures_opacity())
+        segmentation_state["opacity"] = float(self.vtk_viewer.models.get_opacity())
         segmentation_state["scalar"] = str(self.ui.struct_scalar_combo.currentText())
         state["segmentation_state"] = segmentation_state
 
@@ -542,13 +543,17 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveScenarioDialog(meta["application"],state)
         dialog.exec_()
 
-    def load_scenario(self):
+    def load_scenario_dialog(self):
         wanted_state = dict()
         my_name = os.path.splitext(os.path.basename(__file__))[0]
         dialog = LoadScenarioDialog(my_name,wanted_state)
         dialog.exec_()
         print wanted_state
+        self.load_scenario(wanted_state)
 
+    def load_scenario(self,state):
+
+        wanted_state=state
         #subject panel
         subject_state = wanted_state.get("subject_state")
         if subject_state is not None:
@@ -602,7 +607,7 @@ class SubjectOverviewApp(QMainWindow):
                     if self.ui.struct_color_combo.count() < 3:
                         self.ui.struct_color_combo.addItem("Custom")
                     self.ui.struct_color_combo.setCurrentIndex(2)
-                    self.vtk_viewer.set_structures_color(color)
+                    self.vtk_viewer.models.set_color(color)
                 else:
                     self.ui.struct_color_combo.setCurrentIndex(0)
                     #self.vtk_viewer.set_structures_color(None)
@@ -627,7 +632,7 @@ class SubjectOverviewApp(QMainWindow):
             bundles = tractography_state.get("bundles")
             if bundles is not None:
                 self.fibers_list_model.set_ids(bundles)
-                self.vtk_viewer.set_fibers_from_db(bundles)
+                self.vtk_viewer.tractography.set_active_db_tracts(bundles)
             from_segment = tractography_state.get("from_segment")
             if from_segment is not None:
                 idx = self.ui.fibers_from_segments_box.findText(from_segment)
@@ -691,14 +696,21 @@ class SubjectOverviewApp(QMainWindow):
                 self.change_subject(subj)
 
 
-def run(pipe=None):
-    import sys
+def run(pipe_key):
 
-    app = QtGui.QApplication(sys.argv)
-    main_window = SubjectOverviewApp(pipe)
+
+    app = QtGui.QApplication([])
+    main_window = SubjectOverviewApp(pipe_key)
     main_window.show()
+    main_window.start()
+    print "before exec"
     app.exec_()
 
 
 if __name__ == '__main__':
-    run()
+    import sys
+    if len(sys.argv)>=2:
+        key = sys.argv[1]
+    else:
+        key = None
+    run(key)

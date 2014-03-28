@@ -132,7 +132,10 @@ class ExportScalarToDataBase(QtGui.QDialog):
         self.reader = braviz.readAndFilter.kmc40AutoReader()
         all_subjects = braviz_tab_data.get_subjects()
         for i, subj in enumerate(all_subjects):
-            value = self.get_scalar_value(subj)
+            try:
+                value = self.get_scalar_value(subj)
+            except Exception:
+                value = float("nan")
             braviz_tab_data.updata_variable_value(self.var_idx, subj, value)
             self.progress = (i + 1) / len(all_subjects) * 100
             print "%s %s : %f"%(self.metric_code,subj,value)
@@ -170,14 +173,33 @@ class ExportScalarToDataBase(QtGui.QDialog):
 
 
 def run(fibers=False, structures_list=tuple(), metric="volume", db_id=None, operation="and"):
-    import sys
 
-    app = QtGui.QApplication(sys.argv)
+    app = QtGui.QApplication([])
     main_window = ExportScalarToDataBase(fibers, structures_list, metric, db_id, operation)
     main_window.show()
     app.exec_()
 
 
 if __name__ == "__main__":
-    test = ["CC_Anterior", "CC_Posterior"]
-    run(fibers=False, structures_list=test, metric="Volume")
+    import sys
+    args = sys.argv
+    fibers = int(args[1])
+    if fibers:
+        fibers = True
+    else:
+        fibers = False
+    metric = args[2]
+    if not fibers:
+        structs = args[3:]
+        run(fibers=fibers, structures_list=structs, metric=metric)
+    else:
+        operation = args[3]
+        db_id = args[4]
+        if db_id == "0":
+            db_id = None
+            structs = args[5:]
+        else:
+            operation = None
+            structs = None
+
+        run(fibers=fibers, structures_list=structs, metric=metric, db_id=db_id, operation=operation)

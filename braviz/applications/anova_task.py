@@ -20,11 +20,10 @@ import colorbrewer
 
 from itertools import izip
 
-from braviz.applications import mriMultSlicer
-from braviz.applications import subject_overview
 import multiprocessing
-
-
+import multiprocessing.connection
+import subprocess
+import sys
 
 #TODO: Move all database access to read and filter
 
@@ -184,7 +183,7 @@ class AnovaApp(QMainWindow):
             msg.setIcon(msg.Warning)
             msg.setWindowTitle("Anova Error")
             msg.exec_()
-            #raise
+            raise
         else:
             self.result_model = braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)
@@ -401,9 +400,10 @@ class AnovaApp(QMainWindow):
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"
-        if self.mri_viewer_process is None or (not self.mri_viewer_process.is_alive()):
+        if self.mri_viewer_process is None or (self.mri_viewer_process.poll() is not None):
             #stop timer
             self.poll_timer.stop()
+            return
         if self.mri_viewer_pipe.poll():
             message = self.mri_viewer_pipe.recv()
             subj = message.get('subject')
@@ -474,18 +474,27 @@ class AnovaApp(QMainWindow):
         self.last_viewed_subject = None
 
     def launch_mri_viewer(self):
-        print "creating new mri viewer"
-        self.mri_viewer_pipe, pipe_mri_side = multiprocessing.Pipe()
+        print
+        #TODO: think of better way of choicing ports
+        address = ('localhost',6001)
+        auth_key=multiprocessing.current_process().authkey
+        listener = multiprocessing.connection.Listener(address,authkey=auth_key)
+
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
-        self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
-        self.mri_viewer_process.start()
+        print [sys.executable,"-m","braviz.applications.subject_overview",auth_key]
+        self.mri_viewer_process = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",auth_key])
+
+        #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
+        #self.mri_viewer_process.start()
+        self.mri_viewer_pipe = listener.accept()
         self.poll_timer.start(200)
 
     def change_subject_in_mri_viewer(self, subj):
-        if (self.mri_viewer_process is None) or (not self.mri_viewer_process.is_alive()):
+        if (self.mri_viewer_process is None) or (self.mri_viewer_process.poll() is not None):
             self.launch_mri_viewer()
         if self.mri_viewer_pipe is not None:
             self.mri_viewer_pipe.send({'subject': str(subj), 'lift': True})
+            print "sending message: subj:", str(subj)
 
     def closeEvent(self, *args, **kwargs):
         if self.mri_viewer_process is not None:

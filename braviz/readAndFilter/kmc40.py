@@ -938,6 +938,7 @@ def autoReader(**kw_args):
                      'TiberioHernande': (r'E:\KAB-db', 1100),
                      'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
                      'ISIS-EML725001': (r'C:\KAB-db', 1200),
+                     'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db",4000),
     }
     node_id = platform.node()
 

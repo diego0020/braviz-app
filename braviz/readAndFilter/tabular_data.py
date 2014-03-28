@@ -3,6 +3,7 @@ __author__ = 'Diego'
 import sqlite3
 from itertools import izip
 import os
+import platform
 
 from pandas.io import sql
 import pandas as pd
@@ -19,11 +20,14 @@ def get_variables(reader=None):
 
 
 def get_connection(reader=None):
-    if reader is None:
-        from braviz.readAndFilter import kmc40AutoReader
-
-        reader = kmc40AutoReader()
-    path = os.path.join(reader.getDataRoot(), "braviz_data", "tabular_data.sqlite")
+    node = platform.node()
+    if node == "archi5":
+        path = os.path.join("/home/diego/braviz_data", "tabular_data.sqlite")
+    else:
+        if reader is None:
+            from braviz.readAndFilter import kmc40AutoReader
+            reader = kmc40AutoReader()
+        path = os.path.join(reader.getDataRoot(), "braviz_data", "tabular_data.sqlite")
     conn = sqlite3.connect(path)
     return conn
 
