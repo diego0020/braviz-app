@@ -1,8 +1,130 @@
+from __future__ import division
+
 __author__ = 'Diego'
 
+from PyQt4 import QtCore
+from PyQt4 import QtGui
+
+import matplotlib
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.axes
+
+from itertools import izip
+from mpltools import style
+
+from functools import wraps
+import numpy as np
+import pandas as pd
+import itertools
+
+style.use('ggplot')
 
 
 class MatplotWidget(FigureCanvas):
+    #These signals return the id of the point where the action occured
+    point_picked = QtCore.pyqtSignal(str)
+    context_requested = QtCore.pyqtSignal(str)
+    def __init__(self,parent=None,dpi=100,initial_message=None):
+        fig = Figure(figsize=(5, 5), dpi=dpi, tight_layout=True)
+        self.fig = fig
+        self.axes = fig.add_subplot(111)
+        FigureCanvas.__init__(self, fig)
+        self.setParent(parent)
+        FigureCanvas.setSizePolicy(self, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.updateGeometry()
+        palette = self.palette()
+        fig.set_facecolor(palette.background().color().getRgbF()[0:3])
+        self.axes.margins(0,0,tight=True)
+        #observers
+        self.setMouseTracking(True)
+        self.mpl_connect('motion_notify_event', self.mouse_move_handler)
+        self.mpl_connect("pick_event", self.show_tooltip)
+
+        #internal_data
+        self.highlighted = None
+        self.painted_plot = None
+        self.data = None
+
+    def plot_wrapper(f):
+        @wraps(f)
+        def wrapped(*args,**kwargs):
+            #clear plot
+            self = args[0]
+            self.axes.cla()
+            f(*args,**kwargs)
+            #save image for blitting
+            self.painted_plot=self.copy_from_bbox(self.axes.bbox)
+        return wrapped
+
+
+    def draw_message(self):
+        pass
+    @plot_wrapper
+    def draw_bars(self,data,ylims=None):
+        assert isinstance(self.axes, matplotlib.axes.Axes)
+        if ylims is None:
+            maxi = data.max()[0]
+            mini = data.min()[0]
+            span = maxi - mini
+            ylims=(mini-0.1*span,maxi+0.1*span)
+        self.axes.set_ylim(*ylims)
+        self.axes.tick_params('y', left='off', right='on', labelleft='off', labelright='on')
+        self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
+        self.axes.get_yaxis().set_label_position("right")
+        #sort data
+        data2 = data.dropna()
+        col0 = data2.columns[0]
+        data2.sort(col0,ascending=False,inplace=True)
+        heights = data2[col0].get_values()-ylims[0]
+        pos = np.arange(len(heights))
+
+        #main plot
+        ####################
+        patches=self.axes.bar(pos,heights,align="center",picker=5)
+        for i,p in enumerate(patches):
+            p.set_url(data2.index[i])
+        ####################
+
+        self.axes.set_xticklabels(data2.index)
+        self.axes.set_xticks(pos)
+        self.axes.set_xlim(-0.5,len(pos)-0.5)
+        self.axes.set_ylabel(col0)
+        ix_name = data2.index.name
+        if ix_name is not None:
+            self.axes.set_xlabel(ix_name)
+        self.show()
+        self.data = data2
+
+    def draw_histogram(self):
+        pass
+    def draw_scatter(self):
+        pass
+    def draw_boxplot(self):
+        pass
+    def draw_linked_boxplot(self):
+        pass
+    def draw_spider_plot(self):
+        pass
+    def highlight_id(self):
+        pass
+    def get_current_id(self):
+        pass
+    def show_tooltip(self,event):
+        ix = event.artist.get_url()
+        col_name=self.data.columns[0]
+        message = "%s\n%s: %s"%(ix,col_name,self.data[col_name][ix])
+        #print message
+        position=event.mouseevent.x, self.height() - event.mouseevent.y
+        QtGui.QToolTip.showText(self.mapToGlobal(QtCore.QPoint(*position)), message, self)
+
+    def mouse_move_handler(self,event):
+        self.pick(event)
+
+
+
+
+class OldMatplotWidget(FigureCanvas):
     box_outlier_pick_signal = QtCore.pyqtSignal(float, float, tuple)
     scatter_pick_signal = QtCore.pyqtSignal(str, tuple)
     #TODO: instead of using blit create a @wrapper to save last render command to restore after drawing subjects
@@ -281,3 +403,14 @@ class MatplotWidget(FigureCanvas):
         else:
             self.pick(event)
 
+
+if __name__ == "__main__":
+    #init widget
+    app = QtGui.QApplication([])
+    #show bar plot
+    values = np.random.rand(10)
+    data = pd.DataFrame({"test":values})
+    widget = MatplotWidget()
+    widget.show()
+    widget.draw_bars(data)
+    app.exec_()
