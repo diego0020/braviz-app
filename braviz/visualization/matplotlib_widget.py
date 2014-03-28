@@ -20,6 +20,20 @@ import itertools
 
 style.use('ggplot')
 
+def plot_wrapper(f):
+    @wraps(f)
+    def wrapped(*args,**kwargs):
+        #clear plot
+        self=args[0]
+        self.axes.cla()
+        ret=f(*args,**kwargs)
+        #save image for blitting
+        self.painted_plot=self.copy_from_bbox(self.axes.bbox)
+        self.last_plot_func = f.__name__
+        self.last_plot_rep = ret
+        return ret
+    return wrapped
+
 
 class MatplotWidget(FigureCanvas):
     #These signals return the id of the point where the action occured
@@ -40,22 +54,18 @@ class MatplotWidget(FigureCanvas):
         self.setMouseTracking(True)
         self.mpl_connect('motion_notify_event', self.mouse_move_handler)
         self.mpl_connect("pick_event", self.show_tooltip)
+        self.mpl_connect("button_press_event",self.mouse_click_handler)
 
         #internal_data
         self.highlighted = None
         self.painted_plot = None
         self.data = None
+        self.last_id = None
+        self.last_plot_func = None
+        self.last_plot_rep = None
 
-    def plot_wrapper(f):
-        @wraps(f)
-        def wrapped(*args,**kwargs):
-            #clear plot
-            self = args[0]
-            self.axes.cla()
-            f(*args,**kwargs)
-            #save image for blitting
-            self.painted_plot=self.copy_from_bbox(self.axes.bbox)
-        return wrapped
+        self.highlight_color = '#000000'
+
 
 
     def draw_message(self):
@@ -63,11 +73,12 @@ class MatplotWidget(FigureCanvas):
     @plot_wrapper
     def draw_bars(self,data,ylims=None):
         assert isinstance(self.axes, matplotlib.axes.Axes)
+        self.axes.cla()
         if ylims is None:
             maxi = data.max()[0]
-            mini = data.min()[0]
+            mini = 0
             span = maxi - mini
-            ylims=(mini-0.1*span,maxi+0.1*span)
+            ylims=(0,maxi+0.1*span)
         self.axes.set_ylim(*ylims)
         self.axes.tick_params('y', left='off', right='on', labelleft='off', labelright='on')
         self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
@@ -76,14 +87,21 @@ class MatplotWidget(FigureCanvas):
         data2 = data.dropna()
         col0 = data2.columns[0]
         data2.sort(col0,ascending=False,inplace=True)
-        heights = data2[col0].get_values()-ylims[0]
+        heights = data2[col0].get_values()
         pos = np.arange(len(heights))
 
         #main plot
         ####################
+
         patches=self.axes.bar(pos,heights,align="center",picker=5)
         for i,p in enumerate(patches):
             p.set_url(data2.index[i])
+            if data2.index[i]==self.highlighted:
+                p.set_linewidth(2)
+                p.set_ec(self.highlight_color)
+
+
+
         ####################
 
         self.axes.set_xticklabels(data2.index)
@@ -91,10 +109,13 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_xlim(-0.5,len(pos)-0.5)
         self.axes.set_ylabel(col0)
         ix_name = data2.index.name
+        self.axes.axhline(ylims[0],color=self.highlight_color)
         if ix_name is not None:
             self.axes.set_xlabel(ix_name)
-        self.show()
         self.data = data2
+        self.show()
+        self.draw()
+        return {"data":data2,"ylims":ylims}
 
     def draw_histogram(self):
         pass
@@ -106,20 +127,55 @@ class MatplotWidget(FigureCanvas):
         pass
     def draw_spider_plot(self):
         pass
-    def highlight_id(self):
-        pass
+    def highlight_id(self,hid):
+        self.highlighted=int(hid)
+        self.refresh_last_plot()
+
     def get_current_id(self):
+        return self.last_id
+    def add_subject_markers(self):
         pass
+
+    def refresh_last_plot(self):
+        #TODO: Not working
+        if self.last_plot_func is None:
+            return
+        #self.axes.cla()
+        #values = np.random.rand(10)
+        #data = pd.DataFrame({"test":values})
+        func=getattr(self,self.last_plot_func)
+        func(**self.last_plot_rep)
+
+        #self.painted_plot=self.copy_from_bbox(self.axes.bbox)
+
     def show_tooltip(self,event):
         ix = event.artist.get_url()
+        self.last_id = ix
         col_name=self.data.columns[0]
         message = "%s\n%s: %s"%(ix,col_name,self.data[col_name][ix])
         #print message
         position=event.mouseevent.x, self.height() - event.mouseevent.y
         QtGui.QToolTip.showText(self.mapToGlobal(QtCore.QPoint(*position)), message, self)
 
+
     def mouse_move_handler(self,event):
+        self.reset_last_id()
         self.pick(event)
+
+    def reset_last_id(self):
+        self.last_id = None
+
+    def mouse_click_handler(self,event):
+        button = event.button
+        if self.last_id is None:
+            return
+        if button == 1:
+            print "click"
+            self.highlight_id(self.last_id)
+            self.point_picked.emit(str(self.last_id))
+        elif button == 3:
+            print "right_click"
+            self.context_requested.emit(str(self.last_id))
 
 
 
