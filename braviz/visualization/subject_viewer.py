@@ -13,6 +13,28 @@ import colorbrewer
 from braviz.interaction import structure_metrics
 from functools import wraps
 
+def do_and_render(f):
+    """requiers the class to have the rendered accesible as self.ren"""
+
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        if "skip_render" in kwargs:
+            skip = kwargs.pop("skip_render")
+        else:
+            skip = False
+        try:
+            f(*args, **kwargs)
+        except Exception:
+            raise
+        finally:
+            if not skip:
+                self = args[0]
+                rw = self.ren.GetRenderWindow()
+                rw.Render()
+
+    return wrapped
+
+
 
 class SubjectViewer:
     def __init__(self, render_window_interactor, reader, widget):
@@ -108,8 +130,9 @@ class SubjectViewer:
 
         self.ren_win.Render()
         if len(errors) > 0:
-            raise Exception("Couldn'n load " + ", ".join(errors))
+            raise Exception("Couldn't load " + ", ".join(errors))
 
+    @do_and_render
     def change_current_space(self, new_space):
         if self.__current_space == new_space:
             return
@@ -118,7 +141,6 @@ class SubjectViewer:
         self.image.change_space(new_space, skip_render=True)
         self.models.reload_models(space=new_space, skip_render=True)
         self.tractography.set_current_space(new_space, skip_render=True)
-        self.ren_win.Render()
 
     __camera_positions_dict = {
         0: ((-3.5, 0, 13), (157, 154, 130), (0, 0, 1)),
@@ -183,8 +205,8 @@ class QSuvjectViwerWidget(QFrame):
     image_window_changed = pyqtSignal(float)
     image_level_changed = pyqtSignal(float)
 
-    def __init__(self, reader):
-        QFrame.__init__(self)
+    def __init__(self, reader,parent):
+        QFrame.__init__(self,parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
 
         self.__reader = reader
@@ -217,27 +239,6 @@ class QSuvjectViwerWidget(QFrame):
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
-
-def do_and_render(f):
-    """requiers the class to have the rendered accesible as self.ren"""
-
-    @wraps(f)
-    def wrapped(*args, **kwargs):
-        if "skip_render" in kwargs:
-            skip = kwargs.pop("skip_render")
-        else:
-            skip = False
-        try:
-            f(*args, **kwargs)
-        except Exception:
-            raise
-        finally:
-            if not skip:
-                self = args[0]
-                rw = self.ren.GetRenderWindow()
-                rw.Render()
-
-    return wrapped
 
 
 class ImageManager:
