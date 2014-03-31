@@ -294,7 +294,7 @@ class MatplotWidget(FigureCanvas):
         self.updateGeometry()
         palette = self.palette()
         self.setContentsMargins(0,0,0,0)
-        #fig.set_facecolor(palette.background().color().getRgbF()[0:3])
+        fig.set_facecolor(palette.background().color().getRgbF()[0:3])
         self.initial_text(initial_message)
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.xlim = self.axes.get_xlim()

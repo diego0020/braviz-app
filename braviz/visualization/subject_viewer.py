@@ -348,7 +348,7 @@ class ImageManager:
             self.__image_plane_widget.setLabelsLut(aparc_lut)
         except Exception:
             self.hide_image(skip_render=True)
-            raise
+            #raise
 
         if modality == "FMRI":
             mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)
@@ -370,8 +370,12 @@ class ImageManager:
             return
 
         if modality == "DTI":
-            dti_image = self.reader.get("DTI", self.__current_subject, format="VTK", space=self.__current_space)
-            fa_image = self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
+            try:
+                dti_image = self.reader.get("DTI", self.__current_subject, format="VTK", space=self.__current_space)
+                fa_image = self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
+            except Exception:
+                self.hide_image(skip_render=True)
+                raise Exception("DTI, not available")
             self.__image_plane_widget.SetInputData(dti_image)
             self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
@@ -707,7 +711,6 @@ class TractographyManager:
 
     @do_and_render
     def hide_checkpoints_bundle(self):
-        print "hidin"
         if self.__ad_hoc_pd_mp_ac is None:
             return
         act = self.__ad_hoc_pd_mp_ac[2]
@@ -767,7 +770,6 @@ class TractographyManager:
             color = self.__current_color
         if self.__current_color == "bundle":
             color = "orient"
-        print "----", color
         poly = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
                                color=color, db_id=b_id)
         return poly
@@ -784,7 +786,6 @@ class TractographyManager:
 
     @do_and_render
     def change_color(self, new_color):
-        print new_color
         self.__current_color = new_color
         self.__reload_fibers()
 
@@ -810,7 +811,6 @@ class TractographyManager:
             try:
                 self.add_from_database(i)
             except Exception:
-                errors += 1
                 raise
 
         if errors > 0:

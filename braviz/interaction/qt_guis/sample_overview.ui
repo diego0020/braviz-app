@@ -23,9 +23,15 @@
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QGridLayout" name="gridLayout">
+      <layout class="QGridLayout" name="gridLayout" columnminimumwidth="0,300">
        <item row="0" column="1">
         <widget class="QFrame" name="plot_1">
+         <property name="minimumSize">
+          <size>
+           <width>400</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -44,7 +50,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>735</width>
+            <width>345</width>
             <height>442</height>
            </rect>
           </property>

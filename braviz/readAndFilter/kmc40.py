@@ -422,7 +422,7 @@ The path containing this structure must be set."""
         if not available creates the structure and attempts to save the cache"""
         color = color.lower()
         cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams_%s.vtk' % color)
-        if color == 'orient':
+        if color.startswith('orient'):
             #This one should always exist!!!!!
             cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams.vtk')
             if not os.path.isfile(cache_name):

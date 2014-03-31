@@ -53,8 +53,8 @@ class MatplotWidget(FigureCanvas):
     def draw_message(self):
         pass
 
-    def draw_bars(self,data,ylims=None):
-        self.painted_plot = MatplotBarPlot(self.axes,data,ylims)
+    def draw_bars(self,data,ylims=None,orientation="vertical"):
+        self.painted_plot = MatplotBarPlot(self.axes,data,ylims,orientation)
         self.show()
         self.draw()
 
@@ -117,10 +117,11 @@ class MatplotWidget(FigureCanvas):
 
 
 class MatplotBarPlot():
-    def __init__(self,axes,data,ylims=None):
+    def __init__(self,axes,data,ylims=None,orientation = "vertical"):
         self.highlight_color = '#000000'
         self.highlighted = None
         self.axes = axes
+        self.orientation = orientation
 
         assert isinstance(self.axes, matplotlib.axes.Axes)
         self.axes.cla()
@@ -129,23 +130,39 @@ class MatplotBarPlot():
             mini = 0
             span = maxi - mini
             ylims=(0,maxi+0.1*span)
-        self.axes.set_ylim(*ylims)
-        self.axes.tick_params('y', left='off', right='on', labelleft='off', labelright='on')
-        self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
-        self.axes.get_yaxis().set_label_position("right")
+
+        col0 = data.columns[0]
+        ix_name = data.index.name
+        if self.orientation == "vertical":
+            self.axes.set_ylim(*ylims)
+            self.axes.tick_params('y', left='off', right='on', labelleft='off', labelright='on')
+            self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
+            self.axes.get_yaxis().set_label_position("right")
+            self.axes.set_ylabel(col0)
+            if ix_name is not None:
+                self.axes.set_xlabel(ix_name)
+        else:
+            self.axes.set_xlim(*ylims)
+            self.axes.tick_params('y', left='on', right='off', labelleft='on', labelright='off')
+            self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
+            self.axes.get_yaxis().set_label_position("left")
+            self.axes.set_xlabel(col0)
+            if ix_name is not None:
+                self.axes.set_ylabel(ix_name)
         #sort data
         data2 = data.dropna()
-        col0 = data2.columns[0]
-        data2.sort(col0,ascending=False,inplace=True)
+        if self.orientation == "vertical":
+            data2.sort(col0,ascending=False,inplace=True)
+        else:
+            data2.sort(col0,ascending=True,inplace=True)
         heights = data2[col0].get_values()
         pos = np.arange(len(heights))
 
 
-        self.axes.set_ylabel(col0)
-        ix_name = data2.index.name
+
+
         self.axes.axhline(ylims[0],color=self.highlight_color)
-        if ix_name is not None:
-            self.axes.set_xlabel(ix_name)
+
         self.data = data2
         self.pos=pos
         self.heights = heights
@@ -157,18 +174,42 @@ class MatplotBarPlot():
         #main plot
         ###################
         self.axes.cla()
-        patches=self.axes.bar(self.pos,self.heights,align="center",picker=5)
+        if self.orientation == "vertical":
+            patches=self.axes.bar(self.pos,self.heights,align="center",picker=5,)
+        else:
+            patches=self.axes.bar(left=None,bottom=self.pos,width=self.heights,align="center",picker=5,
+                              orientation=self.orientation, height=0.8)
         data2 = self.data
         for i,p in enumerate(patches):
             p.set_url(data2.index[i])
             if data2.index[i]==self.highlighted:
                 p.set_linewidth(2)
                 p.set_ec(self.highlight_color)
-        self.axes.set_xticklabels(data2.index)
-        self.axes.set_xticks(self.pos)
-        self.axes.set_xlim(-0.5,len(self.pos)-0.5)
+        if self.orientation == "vertical":
+            self.axes.set_xticklabels(data2.index)
+            self.axes.set_xticks(self.pos)
+            self.axes.set_xlim(-0.5,len(self.pos)-0.5)
+        else:
+            self.axes.set_yticklabels(data2.index)
+            self.axes.set_yticks(self.pos)
+            self.axes.set_ylim(-0.5,len(self.pos)-0.5)
 
-
+        col0 = data2.columns[0]
+        ix_name = data2.index.name
+        if self.orientation == "vertical":
+            self.axes.tick_params('y', left='off', right='on', labelleft='off', labelright='on')
+            self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
+            self.axes.get_yaxis().set_label_position("right")
+            self.axes.set_ylabel(col0)
+            if ix_name is not None:
+                self.axes.set_xlabel(ix_name)
+        else:
+            self.axes.tick_params('y', left='on', right='off', labelleft='on', labelright='off')
+            self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
+            self.axes.get_yaxis().set_label_position("left")
+            self.axes.set_xlabel(col0)
+            if ix_name is not None:
+                self.axes.set_ylabel(ix_name)
 
 
     def __draw(self):
@@ -467,5 +508,6 @@ if __name__ == "__main__":
     data = pd.DataFrame({"test":values})
     widget = MatplotWidget()
     widget.show()
-    widget.draw_bars(data)
+    widget.draw_bars(data,orientation="horizontal")
+    #widget.draw_bars(data,orientation="vertical")
     app.exec_()
