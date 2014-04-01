@@ -6,7 +6,7 @@ import pandas as pd
 import StringIO
 import os
 import sqlite3
-
+import braviz.readAndFilter.tabular_data
 
 def read_csv_file(path=None):
     if path is None:
@@ -155,6 +155,30 @@ def populate_db_from_csv(csv_file, db_file):
     conn.executemany(query,tuples)
     manual_fixes=[(812,182)]
     conn.executemany(query,manual_fixes)
+    conn.commit()
+
+
+def tms_vars_descriptions():
+    description_tuples=[
+        (258,r"Excitability (Basic level = 100% - motor threshold)"),
+        (259,r"Excitability (Basic level = 100% - motor threshold)"),
+        (260,r"Synchronization (Corticospinal efficiency, msec)"),
+        (261,r"Synchronization (Corticospinal efficiency, msec)"),
+        (248,r"Level of Inhibition (GABAa synapses = 100% - cond*100/test)"),
+        (249,r"Level of Inhibition (GABAa synapses = 100% - cond*100/test)"),
+        (250,r"Level of Facilitation (Glumatate synapses = cond*100/test - 100%)"),
+        (251,r"Level of Facilitation (Glumatate synapses = cond*100/test - 100%)"),
+        (262,r"Frequency (frequency of observation of an inhibition triggered by the other hemisphere)"),
+        (263,r"Frequency (frequency of observation of an inhibition triggered by the other hemisphere)"),
+        (252,r"Transfer time (time for the transfer of the inhibition triggered by the other hemisphere)"),
+        (253,r"Transfer time (time for the transfer of the inhibition triggered by the other hemisphere)"),
+        (254,r"Duration (duration of the inhibition triggered by the other hemisphere)"),
+        (255,r"Duration (duration of the inhibition triggered by the other hemisphere)"),
+    ]
+    conn=braviz.readAndFilter.tabular_data.get_connection()
+    q="""INSERT OR REPLACE INTO var_descriptions (var_idx,description)
+        VALUES (?,? )"""
+    conn.executemany(q,description_tuples)
     conn.commit()
 
 

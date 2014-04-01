@@ -56,6 +56,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.view.layout().setColumnStretch(1, 1)
         self.ui.progress_bar = QtGui.QProgressBar()
         self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
+        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
         self.ui.pushButton.pressed.connect(self.load_scenario)
         self.ui.pushButton.setText("load visualization scenario")
 
@@ -178,7 +179,10 @@ class SampleOverview(QtGui.QMainWindow):
         if image_state is not None:
             mod = image_state.get("modality")
             if mod is not None:
-                viewer.image.change_image_modality(mod, skip_render=True)
+                try:
+                    viewer.image.change_image_modality(mod, skip_render=True)
+                except Exception as e:
+                    print e.message
             orient = image_state.get("orientation")
             if orient is not None:
                 orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
@@ -206,22 +210,32 @@ class SampleOverview(QtGui.QMainWindow):
                 viewer.models.set_opacity(opac, skip_render=True)
             selected_structs = segmentation_state.get("selected_structs")
             if selected_structs is not None:
-                viewer.models.set_models(selected_structs, skip_render=True)
+                try:
+                    viewer.models.set_models(selected_structs, skip_render=True)
+                except Exception as e:
+                    print e.message
         QtGui.QApplication.instance().processEvents()
         #tractography panel
         tractography_state = wanted_state.get("tractography_state")
         if tractography_state is not None:
             bundles = tractography_state.get("bundles")
             if bundles is not None:
-                viewer.tractography.set_active_db_tracts(bundles, skip_render=True)
+                try:
+                    viewer.tractography.set_active_db_tracts(bundles, skip_render=True)
+                except Exception as e:
+                    print e.message
+
             from_segment = tractography_state.get("from_segment")
             if from_segment is not None:
-                if from_segment == "None":
-                    viewer.tractography.hide_checkpoints_bundle(skip_render=True)
-                elif from_segment == "Through Any":
-                    viewer.tractography.set_bundle_from_checkpoints(selected_structs, False, skip_render=True)
-                else:
-                    viewer.tractography.set_bundle_from_checkpoints(selected_structs, True, skip_render=True)
+                try:
+                    if from_segment == "None":
+                        viewer.tractography.hide_checkpoints_bundle(skip_render=True)
+                    elif from_segment == "Through Any":
+                        viewer.tractography.set_bundle_from_checkpoints(selected_structs, False, skip_render=True)
+                    else:
+                        viewer.tractography.set_bundle_from_checkpoints(selected_structs, True, skip_render=True)
+                except Exception as e:
+                    print e.message
             color = tractography_state.get("color")
             if color is not None:
                 color_codes = {"Orientation": "orient", "FA (Point)": "fa", "By Line": "rand", "By Bundle": "bundle"}
