@@ -138,9 +138,18 @@ class SubjectViewer:
             return
         self.__current_space = new_space
 
-        self.image.change_space(new_space, skip_render=True)
-        self.models.reload_models(space=new_space, skip_render=True)
-        self.tractography.set_current_space(new_space, skip_render=True)
+        try:
+            self.image.change_space(new_space, skip_render=True)
+        except Exception as e:
+            print e.message
+        try:
+            self.models.reload_models(space=new_space, skip_render=True)
+        except Exception as e:
+            print e.message
+        try:
+            self.tractography.set_current_space(new_space, skip_render=True)
+        except Exception as e:
+            print e.message
 
     __camera_positions_dict = {
         0: ((-3.5, 0, 13), (157, 154, 130), (0, 0, 1)),
@@ -420,7 +429,9 @@ class ImageManager:
         to hide the image call hide_image
         orientation is a number from 0, 1 or 2 """
         if self.__image_plane_widget is None:
-            self.create_image_plane_widget()
+            self.__current_image_orientation = orientation
+            print "Set an image first"
+            return
         self.__image_plane_widget.set_orientation(orientation)
         self.__current_image_orientation = orientation
 

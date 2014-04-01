@@ -59,8 +59,6 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.progress_bar = QtGui.QProgressBar()
         self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
-        self.ui.pushButton.pressed.connect(self.load_scenario)
-        self.ui.pushButton.setText("load visualization scenario")
 
         self.ui.progress_bar.setValue(0)
 
@@ -122,6 +120,7 @@ class SampleOverview(QtGui.QMainWindow):
                     self.load_scenario_in_viewer(viewer.subject_viewer, scenario, subj)
             except Exception as e:
                 print e.message
+                raise
             QtGui.QApplication.instance().processEvents()
         self.ui.progress_bar.setValue(100)
 
@@ -258,11 +257,18 @@ class SampleOverview(QtGui.QMainWindow):
             color = tractography_state.get("color")
             if color is not None:
                 color_codes = {"Orientation": "orient", "FA (Point)": "fa", "By Line": "rand", "By Bundle": "bundle"}
-                viewer.tractography.change_color(color_codes[color], skip_render=True)
+                try:
+                    viewer.tractography.change_color(color_codes[color], skip_render=True)
+                except Exception as e:
+                    print e.message
+
 
             opac = tractography_state.get("opacity")
             if opac is not None:
-                viewer.tractography.set_opacity(opac, skip_render=True)
+                try:
+                    viewer.tractography.set_opacity(opac, skip_render=True)
+                except Exception as e:
+                    print e.message
         QtGui.QApplication.instance().processEvents()
         #camera panel
         camera_state = wanted_state.get("camera_state")

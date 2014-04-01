@@ -297,7 +297,10 @@ class persistentImagePlane(vtkImagePlaneWidget):
         """Orientation is x:0 , y:1, z:2"""
         self.Orientation = orientation
         self.SetPlaneOrientation(self.Orientation)
-        mid_slice = self.GetInput().GetDimensions()[self.Orientation] // 2
+        image = self.GetInput()
+        if image is None:
+            return
+        mid_slice = image.GetDimensions()[self.Orientation] // 2
         self.SetSliceIndex(mid_slice)
         self.InvokeEvent(self.slice_change_event)
 
