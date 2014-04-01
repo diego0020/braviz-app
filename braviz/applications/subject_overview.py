@@ -42,7 +42,7 @@ class SubjectOverviewApp(QMainWindow):
 
         initial_vars = (11, 17, 1)
 
-        self.vtk_widget = QSuvjectViwerWidget(reader=self.reader)
+        self.vtk_widget = QSuvjectViwerWidget(reader=self.reader,parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
 
