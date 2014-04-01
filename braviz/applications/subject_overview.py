@@ -665,6 +665,7 @@ class SubjectOverviewApp(QMainWindow):
 
         #camera panel
         camera_state = wanted_state.get("camera_state")
+        print "setting camera"
         if camera_state is not  None:
             space = camera_state.get("space")
             if space is not None:

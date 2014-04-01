@@ -1052,7 +1052,10 @@ class SimpleBundlesList(QAbstractListModel):
         self.names_list.insert(len(self.names_list)-1, name)
 
     def get_bundle_name(self,bid):
-        idx = self.id_list.index(bid)
+        try:
+            idx = self.id_list.index(bid)
+        except ValueError:
+            return "<Invalid>"
         return self.names_list[idx]
 
     def set_show_special(self,show_special):

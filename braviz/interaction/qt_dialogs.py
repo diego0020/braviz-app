@@ -808,9 +808,12 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.matplot_widget.compute_scatter(data_values, self.jitter, x_lab=self.var_name, xlims=xlimits,
                                             urls=data.index.get_values())
         if self.current_subject is not None:
-            subj_index = data.index.get_loc(int(self.current_subject))
-            self.matplot_widget.add_subject_points((data_values[subj_index]), (self.jitter[subj_index],),
+            try:
+                subj_index = data.index.get_loc(int(self.current_subject))
+                self.matplot_widget.add_subject_points((data_values[subj_index]), (self.jitter[subj_index],),
                                                    urls=(self.current_subject,))
+            except KeyError:
+                pass
 
 
     def finish_close(self):
@@ -960,6 +963,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             value_widget = QtGui.QComboBox()
             for i, lbl in self.__labels_dict[idx].iteritems():
                 value_widget.addItem(lbl, i)
+            value_widget.insertSeparator(value_widget.count())
+            value_widget.addItem("<Unknown>",float("nan"))
             value_widget.currentIndexChanged.connect(self.enable_save_changes)
         else:
             value_widget = QtGui.QDoubleSpinBox()
@@ -980,7 +985,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             #print self.__context_variable_names[idx], value
             value_widget = self.__values_widgets[i]
             if self.__is_nominal[idx]:
-                label = self.__labels_dict[idx].get(value, "?")
+                label = self.__labels_dict[idx].get(value, "<Unknown>")
                 if isinstance(value_widget, QtGui.QLabel):
                     value_widget.setText(label)
                 elif isinstance(value_widget, QtGui.QComboBox):
@@ -1028,10 +1033,14 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                     value = float(value_widget.value())
                 elif isinstance(value_widget,QtGui.QComboBox):
                     value=value_widget.itemData(value_widget.currentIndex())
-                    value=int(value.toString())
+                    value=value.toDouble()[0]
+                    if np.isnan(float(value)):
+                        value = None
+                    else:
+                        value=int(value)
                 idx_value_tuples.append((int(idx),int(self.__curent_subject),value))
 
-        print idx_value_tuples
+        #print idx_value_tuples
         update_multiple_variable_values(idx_value_tuples)
 
 class BundleSelectionDialog(QtGui.QDialog):
