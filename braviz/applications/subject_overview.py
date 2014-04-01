@@ -448,7 +448,7 @@ class SubjectOverviewApp(QMainWindow):
         #export_dialog_args = {"fibers": True, "structures_list": structs,
         #                      "metric": scalar_text, "db_id": db_id, "operation": operation}
 
-        export_args = ["1", scalar_text, operation, db_id,]+structs
+        export_args = ["1", str(scalar_text), str(operation), str(db_id),]+structs
         process_line = [sys.executable,"-m","braviz.applications.export_scalar_to_db",]
         subprocess.Popen(process_line+export_args)
 

@@ -53,8 +53,8 @@ class MatplotWidget(FigureCanvas):
     def draw_message(self):
         pass
 
-    def draw_bars(self,data,ylims=None,orientation="vertical"):
-        self.painted_plot = MatplotBarPlot(self.axes,data,ylims,orientation)
+    def draw_bars(self,data,ylims=None,orientation="vertical",group_labels=None):
+        self.painted_plot = MatplotBarPlot(self.axes,data,ylims,orientation,group_labels)
         self.show()
         self.draw()
 
@@ -88,10 +88,7 @@ class MatplotWidget(FigureCanvas):
     def show_tooltip(self,event):
         ix = event.artist.get_url()
         self.last_id = ix
-        data = self.painted_plot.data
-        col_name=data.columns[0]
-        message = "%s\n%s: %s"%(ix,col_name,data[col_name][ix])
-        #print message
+        message = self.painted_plot.get_message(ix)
         position=event.mouseevent.x, self.height() - event.mouseevent.y
         QtGui.QToolTip.showText(self.mapToGlobal(QtCore.QPoint(*position)), message, self)
 
@@ -117,11 +114,14 @@ class MatplotWidget(FigureCanvas):
 
 
 class MatplotBarPlot():
-    def __init__(self,axes,data,ylims=None,orientation = "vertical"):
+    def __init__(self,axes,data,ylims=None,orientation = "vertical",group_labels=None):
         self.highlight_color = '#000000'
         self.highlighted = None
         self.axes = axes
         self.orientation = orientation
+        self.group_labels=group_labels
+
+        self.grouped = True if data.shape[1]>=2 else False
 
         assert isinstance(self.axes, matplotlib.axes.Axes)
         self.axes.cla()
@@ -132,6 +132,7 @@ class MatplotBarPlot():
             ylims=(0,maxi+0.1*span)
 
         col0 = data.columns[0]
+        self.col0=col0
         ix_name = data.index.name
         if self.orientation == "vertical":
             self.axes.set_ylim(*ylims)
@@ -157,8 +158,17 @@ class MatplotBarPlot():
             data2.sort(col0,ascending=True,inplace=True)
         heights = data2[col0].get_values()
         pos = np.arange(len(heights))
+        data2["_pos"]=pos
 
-
+        #create colors
+        # colors_list=matplotlib.rcParams['axes.color_cycle']
+        # if data2.shape[1]>=2:
+        #     groups_col = data2.columns[1]
+        #     unique_indexes = data2[groups_col].unique()
+        #     unique_map = dict(izip(unique_indexes,range(len(unique_indexes))))
+        #     colors = [colors_list[unique_map[i]] for i in data2[groups_col]]
+        # else:
+        #     colors = colors_list[0]
 
 
         self.axes.axhline(ylims[0],color=self.highlight_color)
@@ -166,6 +176,7 @@ class MatplotBarPlot():
         self.data = data2
         self.pos=pos
         self.heights = heights
+        #self.colors = colors
 
         self.redraw()
 
@@ -174,51 +185,81 @@ class MatplotBarPlot():
         #main plot
         ###################
         self.axes.cla()
-        if self.orientation == "vertical":
-            patches=self.axes.bar(self.pos,self.heights,align="center",picker=5,)
+        colors_list=matplotlib.rcParams['axes.color_cycle']
+        if self.grouped is False:
+            self.__draw_bars_and_higlight(self.data,"_nolegend_",colors_list[0])
         else:
-            patches=self.axes.bar(left=None,bottom=self.pos,width=self.heights,align="center",picker=5,
-                              orientation=self.orientation, height=0.8)
-        data2 = self.data
-        for i,p in enumerate(patches):
-            p.set_url(data2.index[i])
-            if data2.index[i]==self.highlighted:
-                p.set_linewidth(2)
-                p.set_ec(self.highlight_color)
+            groups = self.data.groupby(self.data.columns[1])
+            for i,(name,group) in enumerate(groups):
+                label = self.group_labels[name] if self.group_labels is not None else name
+                self.__draw_bars_and_higlight(group,label,colors_list[i])
+
         if self.orientation == "vertical":
-            self.axes.set_xticklabels(data2.index)
+            self.axes.set_xticklabels(self.data.index)
             self.axes.set_xticks(self.pos)
             self.axes.set_xlim(-0.5,len(self.pos)-0.5)
         else:
-            self.axes.set_yticklabels(data2.index)
+            self.axes.set_yticklabels(self.data.index)
             self.axes.set_yticks(self.pos)
             self.axes.set_ylim(-0.5,len(self.pos)-0.5)
 
-        col0 = data2.columns[0]
-        ix_name = data2.index.name
+        ix_name = self.data.index.name
         if self.orientation == "vertical":
             self.axes.tick_params('y', left='off', right='on', labelleft='off', labelright='on')
             self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
             self.axes.get_yaxis().set_label_position("right")
-            self.axes.set_ylabel(col0)
+            self.axes.set_ylabel(self.col0)
             if ix_name is not None:
                 self.axes.set_xlabel(ix_name)
         else:
             self.axes.tick_params('y', left='on', right='off', labelleft='on', labelright='off')
             self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
             self.axes.get_yaxis().set_label_position("left")
-            self.axes.set_xlabel(col0)
+            self.axes.set_xlabel(self.col0)
             if ix_name is not None:
                 self.axes.set_ylabel(ix_name)
 
+        if self.grouped is True:
+            self.axes.legend(loc="lower right")
 
-    def __draw(self):
-        pass
 
     def add_subjects(self):
         pass
+
+    def __draw_bars_and_higlight(self,data,label,color):
+        if self.orientation == "vertical":
+            patches=self.axes.bar(data["_pos"].values,data[self.col0].values,align="center",picker=5,color=color)
+        else:
+            patches=self.axes.bar(left=None,bottom=data["_pos"].values,width=data[self.col0].values,align="center",picker=5,
+                              orientation=self.orientation, height=0.8,label=label,color=color)
+        for i,p in enumerate(patches):
+            p.set_url(data.index[i])
+            if data.index[i]==self.highlighted:
+                p.set_linewidth(2)
+                p.set_ec(self.highlight_color)
+
+
     def highlight(self,subj):
         self.highlighted = subj
+
+    def get_message(self,subj):
+        data = self.data
+        col0 = data.columns[0]
+        message_rows = ["%s:"%subj]
+        #value
+        row="%s : %.2f"%(col0,data.ix[subj,col0])
+        message_rows.append(row)
+        #group?
+        if self.grouped:
+            col1 = data.columns[1]
+            label = data.ix[subj,col1]
+            if self.group_labels is not None:
+                label = self.group_labels[label]
+            row = "%s : %s"%(col1,label)
+            message_rows.append(row)
+        message = "\n".join(message_rows)
+        #print message
+        return message
 
 class OldMatplotWidget(FigureCanvas):
     box_outlier_pick_signal = QtCore.pyqtSignal(float, float, tuple)
@@ -505,9 +546,10 @@ if __name__ == "__main__":
     app = QtGui.QApplication([])
     #show bar plot
     values = np.random.rand(10)
-    data = pd.DataFrame({"test":values})
+    groups = np.random.randint(1,3,10)
+    data = pd.DataFrame({"test":values, "group":groups},columns=["test","group"])
     widget = MatplotWidget()
     widget.show()
-    widget.draw_bars(data,orientation="horizontal")
+    widget.draw_bars(data,orientation="horizontal",group_labels={1:"One",2:"Two"})
     #widget.draw_bars(data,orientation="vertical")
     app.exec_()
