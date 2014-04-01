@@ -15,7 +15,8 @@ from itertools import izip
 import numpy as np
 
 SAMPLE_SIZE = 0.3
-
+NOMINAL_VARIABLE = 11 # GENRE
+RATIONAL_VARIBLE = 1 # VCIIQ
 
 class SampleOverview(QtGui.QMainWindow):
     def __init__(self):
@@ -26,15 +27,20 @@ class SampleOverview(QtGui.QMainWindow):
         self.sample = braviz_tab_data.get_subjects()
         self.subject_viewer_widgets = []
         self.viewers_dict = {}
-        self.viewers_dict_reverse = {}
-        self.inside_layout = None
+        self.widgets_dict = {}
+
+        self.inside_layouts = dict()
+        self.row_scroll_widgets = dict()
+        self.row_widget_contents = dict()
 
         self.scalar_data = None
+        self.nominal_name = None
 
         self.current_selection = None
 
         self.ui = None
         self.setup_gui()
+
 
         self.load_scalar_data()
         QtCore.QTimer.singleShot(100, self.add_subject_viewers)
@@ -47,13 +53,9 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.plot_1_layout = QtGui.QHBoxLayout()
         self.ui.plot_1_layout.addWidget(self.plot_widget)
         self.ui.plot_1.setLayout(self.ui.plot_1_layout)
-        self.inside_layout = self.ui.scrollAreaWidgetContents.layout()
-        #print self.inside_layout
-        #self.inside_layout = QtGui.QGridLayout()
-        self.inside_layout.setContentsMargins(0, 0, 0, 0)
-        #self.ui.scrollAreaWidgetContents.setLayout(self.inside_layout)
-        self.ui.view.layout().setColumnStretch(0, 4)
-        self.ui.view.layout().setColumnStretch(1, 1)
+        self.ui.row_layout = QtGui.QVBoxLayout(self.ui.row_container)
+        self.ui.row_container.setLayout(self.ui.row_layout)
+        self.ui.row_layout.setContentsMargins(0,0,0,0)
         self.ui.progress_bar = QtGui.QProgressBar()
         self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
@@ -69,19 +71,39 @@ class SampleOverview(QtGui.QMainWindow):
         return cb
 
     def add_subject_viewers(self):
+        #create parents:
+        for level in self.scalar_data[self.nominal_name].unique():
+            scroll = QtGui.QScrollArea(self.ui.view)
+            self.row_scroll_widgets[level] = scroll
+            scroll.setWidgetResizable(True)
+            contents = QtGui.QWidget()
+            self.row_widget_contents[level]=contents
+            #contents.setGeometry(QtCore.QRect(0, 0, 345, 425))
+            inside_lay = QtGui.QGridLayout(contents)
+            inside_lay.setContentsMargins(0,0,0,0)
+            self.inside_layouts[level] = inside_lay
+            contents.setLayout(inside_lay)
+            scroll.setWidget(contents)
+            self.ui.row_layout.insertWidget(0,scroll,9)
+
         for subj in self.sample:
-            viewer = QSuvjectViwerWidget(self.reader, self.ui.scroll_1)
+            level = self.scalar_data.ix[subj,self.nominal_name]
+            contents = self.row_widget_contents[level]
+            viewer = QSuvjectViwerWidget(self.reader, contents)
             self.subject_viewer_widgets.append(viewer)
             viewer.setToolTip(str(subj))
             self.viewers_dict[subj] = viewer.subject_viewer
-            self.viewers_dict_reverse[id(viewer.subject_viewer.iren)] = subj
+            self.widgets_dict[subj] = viewer
             dummy_i = self.callback_maker(subj)
             viewer.subject_viewer.iren.AddObserver("LeftButtonPressEvent", dummy_i, 1.0)
             QtGui.QApplication.instance().processEvents()
 
-        for i, viewer in enumerate(self.subject_viewer_widgets):
-            self.inside_layout.addWidget(viewer, 0, i)
-            self.inside_layout.setColumnMinimumWidth(i, 400)
+        #add viewers to rows
+        for subj,viewer in self.widgets_dict.iteritems():
+            level = self.scalar_data.ix[subj,self.nominal_name]
+            i = self.inside_layouts[level].columnCount()
+            self.inside_layouts[level].addWidget(viewer, 0, i)
+            self.inside_layouts[level].setColumnMinimumWidth(i, 400)
 
         for viewer in self.subject_viewer_widgets:
             viewer.initialize_widget()
@@ -92,10 +114,7 @@ class SampleOverview(QtGui.QMainWindow):
     def reload_viewers(self, scenario=None):
         for i, (subj, viewer) in enumerate(izip(self.sample, self.subject_viewer_widgets)):
             self.ui.progress_bar.setValue(i / len(self.sample) * 100)
-            if viewer.subject_viewer.ren_win.GetMapped():
-                print "%d viewer is visible" % subj
-            else:
-                print "%d viewer is not visible" % subj
+            print "loading viewer %d " % subj
             try:
                 if scenario is None:
                     self.load_initial_view(subj, viewer.subject_viewer)
@@ -125,14 +144,13 @@ class SampleOverview(QtGui.QMainWindow):
     def locate_subj(self, subj):
         #restore previous
         if self.current_selection is not None:
-            i = self.sample.index(self.current_selection)
-            i_widget = self.subject_viewer_widgets[i]
+            i_widget = self.widgets_dict[self.current_selection]
             i_widget.setFrameStyle(QtGui.QFrame.NoFrame)
 
         #new selection
-        i = self.sample.index(subj)
-        i_widget = self.subject_viewer_widgets[i]
-        self.ui.scroll_1.ensureWidgetVisible(i_widget)
+        i_widget = self.widgets_dict[subj]
+        level = self.scalar_data.ix[subj,self.nominal_name]
+        self.row_scroll_widgets[level].ensureWidgetVisible(i_widget)
         i_widget.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Raised)
         i_widget.setLineWidth(3)
 
@@ -143,15 +161,16 @@ class SampleOverview(QtGui.QMainWindow):
 
 
     def load_scalar_data(self):
-        self.scalar_data = braviz_tab_data.get_data_frame_by_index((1,), self.reader)
+        self.scalar_data = braviz_tab_data.get_data_frame_by_index((RATIONAL_VARIBLE,NOMINAL_VARIABLE), self.reader)
+        self.nominal_name = self.scalar_data.columns[1]
         #Take random subsample
-
         idx = self.scalar_data.index
         idx2 = np.random.choice(idx, np.ceil(len(idx) * SAMPLE_SIZE), replace=False)
         self.scalar_data = self.scalar_data.loc[idx2]
         self.scalar_data.sort(self.scalar_data.columns[0], inplace=True, ascending=False)
         self.sample = [int(i) for i in self.scalar_data.index]
-        self.plot_widget.draw_bars(self.scalar_data, orientation="horizontal")
+        labels_dict = braviz_tab_data.get_labels_dict(NOMINAL_VARIABLE)
+        self.plot_widget.draw_bars(self.scalar_data, orientation="horizontal",group_labels=labels_dict)
 
     def select_from_bar(self, subj_id):
         print subj_id
