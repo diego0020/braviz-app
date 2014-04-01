@@ -11,7 +11,6 @@ import braviz.interaction.qt_dialogs
 from braviz.visualization.matplotlib_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 
-from itertools import izip
 import numpy as np
 
 SAMPLE_SIZE = 0.3
@@ -37,6 +36,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.nominal_name = None
 
         self.current_selection = None
+        self.current_scenario = None
 
         self.ui = None
         self.setup_gui()
@@ -57,7 +57,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.row_container.setLayout(self.ui.row_layout)
         self.ui.row_layout.setContentsMargins(0,0,0,0)
         self.ui.progress_bar = QtGui.QProgressBar()
-        self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
+        self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
 
         self.ui.progress_bar.setValue(0)
@@ -110,19 +110,23 @@ class SampleOverview(QtGui.QMainWindow):
         self.reload_viewers()
 
     def reload_viewers(self, scenario=None):
-        for i, (subj, viewer) in enumerate(izip(self.sample, self.subject_viewer_widgets)):
+        self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
+        self.ui.progress_bar.show()
+        for i, (subj, viewer) in enumerate(self.viewers_dict.iteritems()):
             self.ui.progress_bar.setValue(i / len(self.sample) * 100)
             print "loading viewer %d " % subj
             try:
                 if scenario is None:
-                    self.load_initial_view(subj, viewer.subject_viewer)
+                    self.load_initial_view(subj, viewer)
                 else:
-                    self.load_scenario_in_viewer(viewer.subject_viewer, scenario, subj)
+                    self.load_scenario_in_viewer(viewer, scenario, subj)
             except Exception as e:
                 print e.message
                 raise
             QtGui.QApplication.instance().processEvents()
         self.ui.progress_bar.setValue(100)
+        self.ui.statusbar.removeWidget(self.ui.progress_bar)
+        self.ui.statusbar.showMessage("Loading complete")
 
     def load_initial_view(self, subject, viewer):
         img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subject))
@@ -157,6 +161,7 @@ class SampleOverview(QtGui.QMainWindow):
 
         #locate in bar plot
         self.plot_widget.highlight_id(int(subj))
+        self.ui.camera_combo.setItemText(2,"Copy from %s"%self.current_selection)
 
 
     def load_scalar_data(self):
@@ -191,7 +196,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def load_scenario_in_viewer(self, viewer, scenario_dict, subj):
         wanted_state = scenario_dict
-        #TODO: add more try/catch clauses
+        self.current_scenario = wanted_state
         #images panel
         image_state = wanted_state.get("image_state")
         if image_state is not None:
@@ -271,6 +276,11 @@ class SampleOverview(QtGui.QMainWindow):
                     print e.message
         QtGui.QApplication.instance().processEvents()
         #camera panel
+        self.__load_camera_from_scenario(viewer)
+        return
+
+    def __load_camera_from_scenario(self,viewer):
+        wanted_state = self.current_scenario
         camera_state = wanted_state.get("camera_state")
         if camera_state is not None:
             space = camera_state.get("space")
@@ -281,8 +291,33 @@ class SampleOverview(QtGui.QMainWindow):
                 fp, pos, vu = cam
                 viewer.set_camera(fp, pos, vu)
         viewer.ren_win.Render()
-        return
 
+    def __set_camera_parameters(self,viewer,parameters):
+        viewer.set_camera(*parameters)
+
+    def __copy_camera_from_subject(self,subj):
+        viewer = self.viewers_dict[subj]
+        parameters = viewer.get_camera_parameters()
+        for subj2,viewer in self.viewers_dict.iteritems():
+            if subj2 != subj:
+                self.__set_camera_parameters(viewer,parameters)
+
+
+    def reset_cameras_to_scenario(self):
+        for viewer in self.viewers_dict.itervalues():
+            self.__load_camera_from_scenario(viewer)
+
+    def camera_combo_handle(self,index):
+        if index == 0:
+            return
+        if index == 1:
+            self.reset_cameras_to_scenario()
+        if index == 2:
+            self.__copy_camera_from_subject(self.current_selection)
+
+        self.ui.camera_combo.setCurrentIndex(0)
+def say_ciao():
+    print "ciao"
 
 def run():
     import sys
@@ -290,6 +325,8 @@ def run():
     app = QtGui.QApplication([])
     main_window = SampleOverview()
     main_window.show()
+    main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+    main_window.destroyed.connect(say_ciao)
     sys.exit(app.exec_())
 
 
