@@ -103,9 +103,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox">
+           <widget class="QComboBox" name="nomina_combo">
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <item>
              <property name="text">
@@ -114,7 +114,7 @@
             </item>
             <item>
              <property name="text">
-              <string>Gender</string>
+              <string>GENERO</string>
              </property>
             </item>
            </widget>
@@ -177,7 +177,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox_2">
+           <widget class="QComboBox" name="rational_combo">
             <property name="currentIndex">
              <number>1</number>
             </property>

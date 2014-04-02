@@ -10,8 +10,10 @@ from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
 from braviz.visualization.matplotlib_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
-
+from itertools import izip
 import numpy as np
+
+from collections import Counter
 
 SAMPLE_SIZE = 0.3
 NOMINAL_VARIABLE = 11 # GENRE
@@ -40,10 +42,78 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.ui = None
         self.setup_gui()
-
-
-        self.load_scalar_data()
+        self.take_random_sample()
+        self.load_scalar_data(NOMINAL_VARIABLE)
         QtCore.QTimer.singleShot(100, self.add_subject_viewers)
+
+    def change_nominal_variable(self,new_var_index):
+        self.load_scalar_data(new_var_index)
+        self.re_arrange_viewers()
+
+    def re_arrange_viewers(self):
+
+
+        #reorganize rows
+        current_rows=len(self.row_scroll_widgets)
+        unique_levels = sorted(self.scalar_data[self.nominal_name].unique())
+        needed_rows = len(unique_levels)
+
+        new_scrolls_dict=dict()
+        new_contents_dict=dict()
+        new_layouts_dict = dict()
+        old_levels = sorted(self.row_scroll_widgets.keys())
+
+        for nl,ol in izip(unique_levels,old_levels):
+            new_scrolls_dict[nl] = self.row_scroll_widgets[ol]
+            new_contents_dict[nl] = self.row_widget_contents[ol]
+            new_layouts_dict[nl] = self.inside_layouts[ol]
+
+        for nl in unique_levels[len(old_levels):]:
+            #create new rows
+            scroll = QtGui.QScrollArea(self.ui.view)
+            new_scrolls_dict[nl] = scroll
+            scroll.setWidgetResizable(True)
+            contents = QtGui.QWidget()
+            new_contents_dict[nl]=contents
+            inside_lay = QtGui.QGridLayout(contents)
+            inside_lay.setContentsMargins(0,0,0,0)
+            new_layouts_dict[nl] = inside_lay
+            contents.setLayout(inside_lay)
+            scroll.setWidget(contents)
+            self.ui.row_layout.insertWidget(0,scroll,9)
+            print "new row created"
+
+        #set to 0 column widths
+        for nl in unique_levels:
+            lay = new_layouts_dict[nl]
+            for i in xrange(lay.columnCount()):
+                lay.setColumnMinimumWidth(i, 0)
+        cnt = Counter()
+        for subj,viewer in self.widgets_dict.iteritems():
+            level = self.scalar_data.ix[subj,self.nominal_name]
+            i = cnt[level]
+            new_layouts_dict[level].addWidget(viewer, 0, i)
+            new_layouts_dict[level].setColumnMinimumWidth(i, 400)
+            cnt[level]+=1
+
+        print cnt
+        for nl in unique_levels:
+            print nl, new_layouts_dict[nl].columnCount()
+
+        #delete useless rows
+        for ol in old_levels[len(unique_levels):]:
+                print "adios row"
+                self.row_scroll_widgets[ol].deleteLater()
+
+        #set dictionaries
+        self.row_scroll_widgets = new_scrolls_dict
+        self.row_widget_contents = new_contents_dict
+        self.inside_layouts = new_layouts_dict
+
+
+    def take_random_sample(self):
+        sample = braviz_tab_data.get_subjects()
+        self.sample = np.random.choice(sample, np.ceil(len(sample) * SAMPLE_SIZE), replace=False)
 
     def setup_gui(self):
         self.ui = Ui_SampleOverview()
@@ -59,6 +129,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.progress_bar = QtGui.QProgressBar()
         self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
+        self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
 
         self.ui.progress_bar.setValue(0)
 
@@ -164,16 +235,13 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.camera_combo.setItemText(2,"Copy from %s"%self.current_selection)
 
 
-    def load_scalar_data(self):
-        self.scalar_data = braviz_tab_data.get_data_frame_by_index((RATIONAL_VARIBLE,NOMINAL_VARIABLE), self.reader)
+    def load_scalar_data(self,nominal_var_index):
+        self.scalar_data = braviz_tab_data.get_data_frame_by_index((RATIONAL_VARIBLE,nominal_var_index), self.reader)
         self.nominal_name = self.scalar_data.columns[1]
         #Take random subsample
-        idx = self.scalar_data.index
-        idx2 = np.random.choice(idx, np.ceil(len(idx) * SAMPLE_SIZE), replace=False)
-        self.scalar_data = self.scalar_data.loc[idx2]
+        self.scalar_data = self.scalar_data.loc[self.sample]
         self.scalar_data.sort(self.scalar_data.columns[0], inplace=True, ascending=False)
-        self.sample = [int(i) for i in self.scalar_data.index]
-        labels_dict = braviz_tab_data.get_labels_dict(NOMINAL_VARIABLE)
+        labels_dict = braviz_tab_data.get_labels_dict(nominal_var_index)
         self.plot_widget.draw_bars(self.scalar_data, orientation="horizontal",group_labels=labels_dict)
 
     def select_from_bar(self, subj_id):
@@ -316,6 +384,30 @@ class SampleOverview(QtGui.QMainWindow):
             self.__copy_camera_from_subject(self.current_selection)
 
         self.ui.camera_combo.setCurrentIndex(0)
+
+    def select_nominal_variable(self,index):
+        if index == 0:
+            params = {}
+            dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params,accept_nominal=True,
+                                                                               accept_real=False)
+            dialog.setWindowTitle("Select Nominal Variable")
+            dialog.exec_()
+            selected_facet_name = params.get("selected_outcome")
+            if selected_facet_name is not None:
+                #print selected_facet_name
+                selected_facet_index = braviz_tab_data.get_var_idx(selected_facet_name)
+                self.ui.nomina_combo.addItem(selected_facet_name)
+                self.ui.nomina_combo.setCurrentIndex(self.ui.nomina_combo.count()-1)
+                self.change_nominal_variable(selected_facet_index)
+        else:
+            selected_name = self.ui.nomina_combo.currentText()
+            if str(selected_name)  != self.nominal_name:
+                selected_index = braviz_tab_data.get_var_idx(str(selected_name))
+                print selected_index, selected_name
+                self.change_nominal_variable(selected_index)
+
+
+
 def say_ciao():
     print "ciao"
 

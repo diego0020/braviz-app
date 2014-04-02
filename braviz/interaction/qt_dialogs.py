@@ -241,6 +241,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.ui.select_button.setEnabled(True)
         super(OutcomeSelectDialog, self).update_right_side(var_name)
 
+
     def update_plot(self, data):
         self.matplot_widget.compute_scatter(data.get_values(),
                                             x_lab=self.var_name, y_lab="jitter",urls=data.index.get_values())
@@ -276,6 +277,29 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
             self.params_dict["checked"] = [get_var_idx(name) for name, check in
                                            selected_names.iteritems() if check is True]
         OutcomeSelectDialog.select_and_return(self, *args)
+
+
+class SelectOneVariableWithFilter(OutcomeSelectDialog):
+    """
+    Derived from Outcome Select Dialog,
+    """
+    def __init__(self, params, accept_nominal=True, accept_real=True):
+        OutcomeSelectDialog.__init__(self, params, multiple=False)
+        self.setWindowTitle("Select Variable")
+        self.accept_real = accept_real
+        self.accept_nominal = accept_nominal
+
+    def check_selecion(self):
+        is_current_variable_real=(self.ui.var_type_combo.currentIndex() == 0)
+        if (is_current_variable_real and self.accept_real) or (not is_current_variable_real and self.accept_nominal):
+            self.ui.select_button.setEnabled(True)
+        else:
+            self.ui.select_button.setEnabled(False)
+
+    def update_details(self, index):
+        super(SelectOneVariableWithFilter,self).update_details(index)
+        self.check_selecion()
+
 
 
 class MatplotWidget(FigureCanvas):
