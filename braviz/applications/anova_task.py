@@ -15,6 +15,7 @@ import braviz.interaction.r_functions
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
 import braviz.readAndFilter.tabular_data as braviz_tab_data
+import random
 
 import colorbrewer
 
@@ -478,6 +479,8 @@ class AnovaApp(QMainWindow):
         #TODO: think of better way of choicing ports
         address = ('localhost',6001)
         auth_key=multiprocessing.current_process().authkey
+        rand_char = "%c"%random.randint(0,255)
+        auth_key.replace("\x00",rand_char)
         listener = multiprocessing.connection.Listener(address,authkey=auth_key)
 
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))

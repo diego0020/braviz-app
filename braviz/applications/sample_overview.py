@@ -16,8 +16,9 @@ import numpy as np
 from collections import Counter
 
 SAMPLE_SIZE = 0.3
-NOMINAL_VARIABLE = 11 # GENRE
-RATIONAL_VARIBLE = 1 # VCIIQ
+NOMINAL_VARIABLE = 11  # GENRE
+RATIONAL_VARIBLE = 1  # VCIIQ
+
 
 class SampleOverview(QtGui.QMainWindow):
     def __init__(self):
@@ -36,6 +37,9 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.scalar_data = None
         self.nominal_name = None
+        self.nominal_index = None
+        self.rational_index = None
+        self.rational_name = None
 
         self.current_selection = None
         self.current_scenario = None
@@ -43,27 +47,27 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui = None
         self.setup_gui()
         self.take_random_sample()
-        self.load_scalar_data(NOMINAL_VARIABLE)
+        self.load_scalar_data(RATIONAL_VARIBLE, NOMINAL_VARIABLE)
         QtCore.QTimer.singleShot(100, self.add_subject_viewers)
 
-    def change_nominal_variable(self,new_var_index):
-        self.load_scalar_data(new_var_index)
+    def change_nominal_variable(self, new_var_index):
+        self.load_scalar_data(self.rational_index, new_var_index)
+        self.re_arrange_viewers()
+
+    def change_rational_variable(self, new_var_index):
+        self.load_scalar_data(new_var_index, self.nominal_index)
         self.re_arrange_viewers()
 
     def re_arrange_viewers(self):
-
-
         #reorganize rows
-        current_rows=len(self.row_scroll_widgets)
         unique_levels = sorted(self.scalar_data[self.nominal_name].unique())
-        needed_rows = len(unique_levels)
 
-        new_scrolls_dict=dict()
-        new_contents_dict=dict()
+        new_scrolls_dict = dict()
+        new_contents_dict = dict()
         new_layouts_dict = dict()
         old_levels = sorted(self.row_scroll_widgets.keys())
 
-        for nl,ol in izip(unique_levels,old_levels):
+        for nl, ol in izip(unique_levels, old_levels):
             new_scrolls_dict[nl] = self.row_scroll_widgets[ol]
             new_contents_dict[nl] = self.row_widget_contents[ol]
             new_layouts_dict[nl] = self.inside_layouts[ol]
@@ -74,13 +78,13 @@ class SampleOverview(QtGui.QMainWindow):
             new_scrolls_dict[nl] = scroll
             scroll.setWidgetResizable(True)
             contents = QtGui.QWidget()
-            new_contents_dict[nl]=contents
+            new_contents_dict[nl] = contents
             inside_lay = QtGui.QGridLayout(contents)
-            inside_lay.setContentsMargins(0,0,0,0)
+            inside_lay.setContentsMargins(0, 0, 0, 0)
             new_layouts_dict[nl] = inside_lay
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
-            self.ui.row_layout.insertWidget(0,scroll,9)
+            self.ui.row_layout.insertWidget(0, scroll, 9)
             print "new row created"
 
         #set to 0 column widths
@@ -89,12 +93,13 @@ class SampleOverview(QtGui.QMainWindow):
             for i in xrange(lay.columnCount()):
                 lay.setColumnMinimumWidth(i, 0)
         cnt = Counter()
-        for subj,viewer in self.widgets_dict.iteritems():
-            level = self.scalar_data.ix[subj,self.nominal_name]
+        for subj in self.sample:
+            viewer = self.widgets_dict[subj]
+            level = self.scalar_data.ix[subj, self.nominal_name]
             i = cnt[level]
             new_layouts_dict[level].addWidget(viewer, 0, i)
             new_layouts_dict[level].setColumnMinimumWidth(i, 400)
-            cnt[level]+=1
+            cnt[level] += 1
 
         print cnt
         for nl in unique_levels:
@@ -102,8 +107,8 @@ class SampleOverview(QtGui.QMainWindow):
 
         #delete useless rows
         for ol in old_levels[len(unique_levels):]:
-                print "adios row"
-                self.row_scroll_widgets[ol].deleteLater()
+            print "adios row"
+            self.row_scroll_widgets[ol].deleteLater()
 
         #set dictionaries
         self.row_scroll_widgets = new_scrolls_dict
@@ -113,7 +118,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def take_random_sample(self):
         sample = braviz_tab_data.get_subjects()
-        self.sample = np.random.choice(sample, np.ceil(len(sample) * SAMPLE_SIZE), replace=False)
+        self.sample = list(np.random.choice(sample, np.ceil(len(sample) * SAMPLE_SIZE), replace=False))
 
     def setup_gui(self):
         self.ui = Ui_SampleOverview()
@@ -125,11 +130,12 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.plot_1.setLayout(self.ui.plot_1_layout)
         self.ui.row_layout = QtGui.QVBoxLayout(self.ui.row_container)
         self.ui.row_container.setLayout(self.ui.row_layout)
-        self.ui.row_layout.setContentsMargins(0,0,0,0)
+        self.ui.row_layout.setContentsMargins(0, 0, 0, 0)
         self.ui.progress_bar = QtGui.QProgressBar()
         self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
         self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
+        self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
 
         self.ui.progress_bar.setValue(0)
 
@@ -146,17 +152,17 @@ class SampleOverview(QtGui.QMainWindow):
             self.row_scroll_widgets[level] = scroll
             scroll.setWidgetResizable(True)
             contents = QtGui.QWidget()
-            self.row_widget_contents[level]=contents
+            self.row_widget_contents[level] = contents
             #contents.setGeometry(QtCore.QRect(0, 0, 345, 425))
             inside_lay = QtGui.QGridLayout(contents)
-            inside_lay.setContentsMargins(0,0,0,0)
+            inside_lay.setContentsMargins(0, 0, 0, 0)
             self.inside_layouts[level] = inside_lay
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
-            self.ui.row_layout.insertWidget(0,scroll,9)
+            self.ui.row_layout.insertWidget(0, scroll, 9)
 
         for subj in self.sample:
-            level = self.scalar_data.ix[subj,self.nominal_name]
+            level = self.scalar_data.ix[subj, self.nominal_name]
             contents = self.row_widget_contents[level]
             viewer = QSuvjectViwerWidget(self.reader, contents)
             self.subject_viewer_widgets.append(viewer)
@@ -168,8 +174,9 @@ class SampleOverview(QtGui.QMainWindow):
             QtGui.QApplication.instance().processEvents()
 
         #add viewers to rows
-        for subj,viewer in self.widgets_dict.iteritems():
-            level = self.scalar_data.ix[subj,self.nominal_name]
+        for subj in self.sample:
+            viewer = self.widgets_dict[subj]
+            level = self.scalar_data.ix[subj, self.nominal_name]
             i = self.inside_layouts[level].columnCount()
             self.inside_layouts[level].addWidget(viewer, 0, i)
             self.inside_layouts[level].setColumnMinimumWidth(i, 400)
@@ -223,7 +230,7 @@ class SampleOverview(QtGui.QMainWindow):
 
         #new selection
         i_widget = self.widgets_dict[subj]
-        level = self.scalar_data.ix[subj,self.nominal_name]
+        level = self.scalar_data.ix[subj, self.nominal_name]
         self.row_scroll_widgets[level].ensureWidgetVisible(i_widget)
         i_widget.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Raised)
         i_widget.setLineWidth(3)
@@ -232,17 +239,22 @@ class SampleOverview(QtGui.QMainWindow):
 
         #locate in bar plot
         self.plot_widget.highlight_id(int(subj))
-        self.ui.camera_combo.setItemText(2,"Copy from %s"%self.current_selection)
+        self.ui.camera_combo.setItemText(2, "Copy from %s" % self.current_selection)
 
 
-    def load_scalar_data(self,nominal_var_index):
-        self.scalar_data = braviz_tab_data.get_data_frame_by_index((RATIONAL_VARIBLE,nominal_var_index), self.reader)
+    def load_scalar_data(self, rational_var_index, nominal_var_index):
+        self.rational_index = rational_var_index
+        self.nominal_index = nominal_var_index
+        self.scalar_data = braviz_tab_data.get_data_frame_by_index((rational_var_index, nominal_var_index), self.reader)
+        self.rational_name = self.scalar_data.columns[0]
         self.nominal_name = self.scalar_data.columns[1]
         #Take random subsample
         self.scalar_data = self.scalar_data.loc[self.sample]
-        self.scalar_data.sort(self.scalar_data.columns[0], inplace=True, ascending=False)
+        self.scalar_data.sort(self.rational_name, inplace=True, ascending=False)
+        self.sample.sort(key=lambda s: self.scalar_data[self.rational_name][s])
+        print self.sample
         labels_dict = braviz_tab_data.get_labels_dict(nominal_var_index)
-        self.plot_widget.draw_bars(self.scalar_data, orientation="horizontal",group_labels=labels_dict)
+        self.plot_widget.draw_bars(self.scalar_data, orientation="horizontal", group_labels=labels_dict)
 
     def select_from_bar(self, subj_id):
         print subj_id
@@ -335,7 +347,6 @@ class SampleOverview(QtGui.QMainWindow):
                 except Exception as e:
                     print e.message
 
-
             opac = tractography_state.get("opacity")
             if opac is not None:
                 try:
@@ -347,7 +358,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.__load_camera_from_scenario(viewer)
         return
 
-    def __load_camera_from_scenario(self,viewer):
+    def __load_camera_from_scenario(self, viewer):
         wanted_state = self.current_scenario
         camera_state = wanted_state.get("camera_state")
         if camera_state is not None:
@@ -360,22 +371,22 @@ class SampleOverview(QtGui.QMainWindow):
                 viewer.set_camera(fp, pos, vu)
         viewer.ren_win.Render()
 
-    def __set_camera_parameters(self,viewer,parameters):
+    def __set_camera_parameters(self, viewer, parameters):
         viewer.set_camera(*parameters)
 
-    def __copy_camera_from_subject(self,subj):
+    def __copy_camera_from_subject(self, subj):
         viewer = self.viewers_dict[subj]
         parameters = viewer.get_camera_parameters()
-        for subj2,viewer in self.viewers_dict.iteritems():
+        for subj2, viewer in self.viewers_dict.iteritems():
             if subj2 != subj:
-                self.__set_camera_parameters(viewer,parameters)
+                self.__set_camera_parameters(viewer, parameters)
 
 
     def reset_cameras_to_scenario(self):
         for viewer in self.viewers_dict.itervalues():
             self.__load_camera_from_scenario(viewer)
 
-    def camera_combo_handle(self,index):
+    def camera_combo_handle(self, index):
         if index == 0:
             return
         if index == 1:
@@ -385,10 +396,10 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.ui.camera_combo.setCurrentIndex(0)
 
-    def select_nominal_variable(self,index):
+    def select_nominal_variable(self, index):
         if index == 0:
             params = {}
-            dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params,accept_nominal=True,
+            dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=True,
                                                                                accept_real=False)
             dialog.setWindowTitle("Select Nominal Variable")
             dialog.exec_()
@@ -397,19 +408,40 @@ class SampleOverview(QtGui.QMainWindow):
                 #print selected_facet_name
                 selected_facet_index = braviz_tab_data.get_var_idx(selected_facet_name)
                 self.ui.nomina_combo.addItem(selected_facet_name)
-                self.ui.nomina_combo.setCurrentIndex(self.ui.nomina_combo.count()-1)
+                self.ui.nomina_combo.setCurrentIndex(self.ui.nomina_combo.count() - 1)
                 self.change_nominal_variable(selected_facet_index)
         else:
             selected_name = self.ui.nomina_combo.currentText()
-            if str(selected_name)  != self.nominal_name:
+            if str(selected_name) != self.nominal_name:
                 selected_index = braviz_tab_data.get_var_idx(str(selected_name))
                 print selected_index, selected_name
                 self.change_nominal_variable(selected_index)
 
+    def select_rational_variable(self, index):
+        if index == 0:
+            params = {}
+            dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=False,
+                                                                               accept_real=True)
+            dialog.setWindowTitle("Select Nominal Variable")
+            dialog.exec_()
+            selected_facet_name = params.get("selected_outcome")
+            if selected_facet_name is not None:
+                #print selected_facet_name
+                selected_facet_index = braviz_tab_data.get_var_idx(selected_facet_name)
+                self.ui.rational_combo.addItem(selected_facet_name)
+                self.ui.rational_combo.setCurrentIndex(self.ui.rational_combo.count() - 1)
+                self.change_rational_variable(selected_facet_index)
+        else:
+            selected_name = self.ui.rational_combo.currentText()
+            if str(selected_name) != self.rational_name:
+                selected_index = braviz_tab_data.get_var_idx(str(selected_name))
+                print selected_index, selected_name
+                self.change_rational_variable(selected_index)
 
 
 def say_ciao():
     print "ciao"
+
 
 def run():
     import sys
