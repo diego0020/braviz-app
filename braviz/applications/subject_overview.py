@@ -20,20 +20,23 @@ from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVa
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 import subprocess
 import multiprocessing.connection
+import binascii
 
 class SubjectOverviewApp(QMainWindow):
-    def __init__(self, pipe = None):
+    def __init__(self, pipe_key = None):
         #Super init
         QMainWindow.__init__(self)
         #Internal initialization
         self.reader = braviz.readAndFilter.kmc40AutoReader()
         self.__curent_subject = None
-        self.__pipe = pipe
-        if pipe is not None:
+        self.__pipe = pipe_key
+        if pipe_key is not None:
             print "Got pipe key"
-            print pipe
+            print pipe_key
+            pipe_key_bin = binascii.a2b_hex(pipe_key)
+
             address = ("localhost",6001)
-            self.__pipe = multiprocessing.connection.Client(address,authkey=pipe)
+            self.__pipe = multiprocessing.connection.Client(address,authkey=pipe_key_bin)
             self.__pipe_check_timer=QtCore.QTimer()
             self.__pipe_check_timer.timeout.connect(self.poll_from_pipe)
             self.__pipe_check_timer.start(200)

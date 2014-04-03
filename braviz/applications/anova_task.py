@@ -15,7 +15,6 @@ import braviz.interaction.r_functions
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
 import braviz.readAndFilter.tabular_data as braviz_tab_data
-import random
 
 import colorbrewer
 
@@ -25,6 +24,7 @@ import multiprocessing
 import multiprocessing.connection
 import subprocess
 import sys
+import binascii
 
 #TODO: Move all database access to read and filter
 
@@ -406,7 +406,14 @@ class AnovaApp(QMainWindow):
             self.poll_timer.stop()
             return
         if self.mri_viewer_pipe.poll():
-            message = self.mri_viewer_pipe.recv()
+            try:
+                message = self.mri_viewer_pipe.recv()
+            except EOFError:
+                #process should have ended
+                print "Pipe closed"
+                self.mri_viewer_process = None
+                self.mri_viewer_pipe = None
+                return
             subj = message.get('subject')
             if subj is not None:
                 print "showing subject %s"%subj
@@ -479,13 +486,12 @@ class AnovaApp(QMainWindow):
         #TODO: think of better way of choicing ports
         address = ('localhost',6001)
         auth_key=multiprocessing.current_process().authkey
-        rand_char = "%c"%random.randint(0,255)
-        auth_key.replace("\x00",rand_char)
+        auth_key_asccii = binascii.b2a_hex(auth_key)
         listener = multiprocessing.connection.Listener(address,authkey=auth_key)
 
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
-        print [sys.executable,"-m","braviz.applications.subject_overview",auth_key]
-        self.mri_viewer_process = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",auth_key])
+        print [sys.executable,"-m","braviz.applications.subject_overview",auth_key_asccii]
+        self.mri_viewer_process = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",auth_key_asccii])
 
         #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
         #self.mri_viewer_process.start()
