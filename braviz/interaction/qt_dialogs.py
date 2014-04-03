@@ -986,7 +986,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         if self.__is_nominal.get(idx) is True:
             value_widget = QtGui.QComboBox()
             for i, lbl in self.__labels_dict[idx].iteritems():
-                value_widget.addItem(lbl, i)
+                if not np.isnan(float(i)):
+                    value_widget.addItem(lbl, i)
             value_widget.insertSeparator(value_widget.count())
             value_widget.addItem("<Unknown>",float("nan"))
             value_widget.currentIndexChanged.connect(self.enable_save_changes)
@@ -1009,10 +1010,12 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             #print self.__context_variable_names[idx], value
             value_widget = self.__values_widgets[i]
             if self.__is_nominal[idx]:
-                label = self.__labels_dict[idx].get(value, "<Unknown>")
+
                 if isinstance(value_widget, QtGui.QLabel):
+                    label = self.__labels_dict[idx].get(value, "?")
                     value_widget.setText(label)
                 elif isinstance(value_widget, QtGui.QComboBox):
+                    label = self.__labels_dict[idx].get(value, "<Unknown>")
                     value_widget.setCurrentText(label)
             else:
                 if isinstance(value_widget, QtGui.QLabel):

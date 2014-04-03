@@ -29,6 +29,7 @@ class VarListModel(QAbstractListModel):
     def update_list(self):
         panda_data = braviz_tab_data.get_variables()
         self.internal_data = list(panda_data["var_name"])
+        self.modelReset.emit()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.internal_data)

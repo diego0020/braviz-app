@@ -128,7 +128,22 @@ def are_variables_names_nominal(var_names):
 
 def get_labels_dict(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT label, name FROM nom_meta WHERE var_idx = ?", (str(var_idx),))
+    q="""
+    SELECT label2, name
+    from
+    (
+    SELECT  distinct value as label2, var_idx as var_idx2
+    FROM var_values
+    WHERE var_idx = ?
+    ) left outer join
+    nom_meta ON (nom_meta.label = label2 and var_idx2 = nom_meta.var_idx)
+
+    UNION
+    SELECT label as label2, name FROM nom_meta WHERE var_idx =  ?
+
+    ORDER BY label2
+    """
+    cur = conn.execute(q, (str(var_idx),str(var_idx),))
     ans_dict = dict(cur)
     return ans_dict
 
@@ -144,9 +159,13 @@ def get_names_label_dict(var_name):
         WHERE variables.var_name = ?
         ) left outer join
         nom_meta ON (nom_meta.label = label2 and var_idx2 = nom_meta.var_idx)
-        ORDER BY label2;
+
+        UNION
+        SELECT label as label2, name FROM nom_meta WHERE var_idx =  (select var_idx from variables WHERE var_name = ?)
+
+        ORDER BY label2
         """
-    cur = conn.execute(q, (str(var_name),))
+    cur = conn.execute(q, (str(var_name),str(var_name)))
     ans_dict = dict(cur.fetchall())
     return ans_dict
 
