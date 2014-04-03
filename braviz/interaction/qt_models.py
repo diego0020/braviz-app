@@ -874,7 +874,7 @@ class SubjectDetails(QAbstractTableModel):
             initial_vars = tuple()
         self.__df = None
         self.__is_var_real=None
-        self.__labels=None
+        self.__normal_ranges=None
         self.__current_subject = initial_subject
         self.set_variables(initial_vars)
         self.headers=("Variable", "Value")
@@ -910,6 +910,14 @@ class SubjectDetails(QAbstractTableModel):
             return QtCore.QVariant()
         if (0 <= line < len(self.__df)) and (0 <= col < self.__df.shape[1]):
             datum = self.__df.iloc[line, col]
+            #TODO: add normal ranges
+            var_idx=self.__df.index[line]
+            if self.__is_var_real[var_idx] and col==1:
+                a,b = self.__normal_ranges[var_idx]
+                message = "%s\t(%s - %s)"%(datum,a,b)
+                if not (a<=datum<=b):
+                    message = "* "+message
+                return message
             return unicode(datum)
         else:
             return QtCore.QVariant()
@@ -917,6 +925,10 @@ class SubjectDetails(QAbstractTableModel):
     def set_variables(self, variable_ids):
         vars_df = braviz_tab_data.get_subject_variables(self.__current_subject,variable_ids)
         self.__df=vars_df
+        self.__is_var_real = braviz_tab_data.are_variables_real(variable_ids)
+        self.__normal_ranges = dict((int(idx),braviz_tab_data.get_variable_normal_range(int(idx)))
+                                    for idx in variable_ids if self.__is_var_real[int(idx)])
+
         self.modelReset.emit()
 
     def change_subject(self,new_subject):

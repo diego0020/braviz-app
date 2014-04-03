@@ -427,3 +427,20 @@ def get_var_value(var_idx,subject):
     if res is None:
         raise Exception("%s not found for subject %s"%(var_idx,subject))
     return res[0]
+
+def get_variable_normal_range(var_idx):
+    conn = get_connection()
+    #minimum,maximum
+    # 10 = UBIC3
+    q = """SELECT min(var_values.value), max(cast( var_values.value as numeric)) from var_values JOIN var_values as var_values2
+     WHERE var_values.subject == var_values2.subject and var_values2.var_idx == 10 and var_values2.value == 3
+     and var_values.var_idx = ?
+        """
+    c=conn.execute(q,(var_idx,))
+    values = c.fetchone()
+    if values is None:
+        return (float("nan"),float("nan"))
+    else:
+        return values
+
+
