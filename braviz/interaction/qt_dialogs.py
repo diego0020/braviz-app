@@ -7,6 +7,7 @@ import PyQt4.QtCore as QtCore
 import numpy as np
 import itertools
 import cPickle
+import vtk
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -38,6 +39,7 @@ import braviz.readAndFilter.user_data as braviz_user_data
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import os
 
 from itertools import izip
 
@@ -1145,12 +1147,15 @@ class SaveFibersBundleDialog(QtGui.QDialog):
 
 
 class SaveScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,state):
+    def __init__(self,app_name,state,ren_win,reader):
         super(SaveScenarioDialog,self).__init__()
         self.app_name = app_name
         self.data = cPickle.dumps(state)
+        self.ren_win=ren_win
+        self.reader=reader
         self.ui = None
         self.init_gui()
+
 
     def init_gui(self):
         self.ui = Ui_SaveScenarioDialog()
@@ -1166,7 +1171,19 @@ class SaveScenarioDialog(QtGui.QDialog):
         if len(scenario_name)==0:
             scenario_name = "<Unnamed>"
         description = unicode(self.ui.scn_description.toPlainText())
-        braviz_user_data.save_scenario(self.app_name,scenario_name , description, self.data)
+        scn_id=braviz_user_data.save_scenario(self.app_name,scenario_name , description, self.data)
+        print scn_id
+        #create image
+        ren2img = vtk.vtkWindowToImageFilter()
+        ren2img.SetInput(self.ren_win)
+        ren2img.Update()
+
+        writer = vtk.vtkPNGWriter()
+        file_name = "scenario_%d.png"%scn_id
+        file_path = os.path.join(self.reader.getDataRoot(), "braviz_data","scenarios",file_name)
+        writer.SetFileName(file_path)
+        writer.SetInputConnection(ren2img.GetOutputPort())
+        writer.Write()
         self.ui.succesful_message.setText("Save completed succesfully")
         self.ui.buttonBox.clear()
         self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Ok)
@@ -1174,10 +1191,11 @@ class SaveScenarioDialog(QtGui.QDialog):
 
 
 class LoadScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,out_dict):
+    def __init__(self,app_name,out_dict,reader):
         super(LoadScenarioDialog,self).__init__()
         self.out_dict = out_dict
         self.model = braviz_models.ScenariosTableModel(app_name)
+        self.reader = reader
         self.current_row = None
         self.ui = None
         self.init_ui()
@@ -1194,6 +1212,16 @@ class LoadScenarioDialog(QtGui.QDialog):
         row = index.row()
         self.current_row = row
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(1)
+        #load picture
+        index = self.model.data(index,QtCore.Qt.UserRole)
+        self.ui.screen_shot_label.setText("<No screenshot available>"%index)
+        self.ui.screen_shot_label.setScaledContents(False)
+        image_file = os.path.join(self.reader.getDataRoot(),"braviz_data","scenarios","scenario_%d.png"%index)
+        if os.path.isfile(image_file):
+            image = QtGui.QImage(image_file)
+            scaled_image = image.scaledToWidth(300,)
+            self.ui.screen_shot_label.setPixmap(QtGui.QPixmap.fromImage(scaled_image))
+
 
     def load_data(self):
         scn_id = int(self.model.get_index(self.current_row))

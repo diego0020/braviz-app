@@ -1180,8 +1180,10 @@ class ScenariosTableModel(QAbstractTableModel):
             row = QModelIndex.row()
             col = QModelIndex.column()
             if (0 <= col < self.columnCount()) and (0 <= row < self.rowCount()):
-                if int_role == QtCore.Qt.DisplayRole:
+                if (int_role == QtCore.Qt.DisplayRole) or (int_role == QtCore.Qt.ToolTipRole):
                     return str(self.df[self.columns[col]].iloc[row])
+                elif int_role == QtCore.Qt.UserRole:
+                    return self.df.index[row]
         return QtCore.QVariant()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):

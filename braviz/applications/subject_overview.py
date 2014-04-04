@@ -543,13 +543,13 @@ class SubjectOverviewApp(QMainWindow):
 
         print state
 
-        dialog = SaveScenarioDialog(meta["application"],state)
+        dialog = SaveScenarioDialog(meta["application"],state,self.vtk_viewer.ren_win,self.reader)
         dialog.exec_()
 
     def load_scenario_dialog(self):
         wanted_state = dict()
         my_name = os.path.splitext(os.path.basename(__file__))[0]
-        dialog = LoadScenarioDialog(my_name,wanted_state)
+        dialog = LoadScenarioDialog(my_name,wanted_state,self.reader)
         dialog.exec_()
         print wanted_state
         self.load_scenario(wanted_state)
