@@ -696,6 +696,15 @@ class fMRI_blender:
         return self.blend.GetOutput()
 
 
+def save_ren_win_picture(ren_win,file_name):
+        ren2img = vtk.vtkWindowToImageFilter()
+        ren2img.SetInput(ren_win)
+        ren2img.Update()
+        writer = vtk.vtkPNGWriter()
+        writer.SetFileName(file_name)
+        writer.SetInputConnection(ren2img.GetOutputPort())
+        writer.Write()
+
 #Easy access to GridView
 from braviz.visualization.grid_viewer import GridView
 if __name__ == "__main__":

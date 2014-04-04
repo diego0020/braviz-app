@@ -25,6 +25,18 @@ def save_scenario(application,scenario_name,scenario_description,scenario_data):
     res = cur.lastrowid
     return res
 
+def update_scenario(scenario_id,name=None,description=None,scenario_data=None,application=None):
+    conn = get_connection()
+    if name is not None:
+        conn.execute("UPDATE scenarios SET scn_name = ? WHERE scn_id = ?",(name,scenario_id))
+    if description is not None:
+        conn.execute("UPDATE scenarios SET scn_desc = ? WHERE scn_id = ?",(description,scenario_id))
+    if scenario_data is not None:
+        conn.execute("UPDATE scenarios SET scn_data = ? WHERE scn_id = ?",(scenario_data,scenario_id))
+    if application is not None:
+        q="UPDATE scenarios SET app_idx = (SELECT app_idx FROM applications WHERE exec_name == ?) WHERE scn_id = ?"
+        conn.execute(q,(application,scenario_id))
+    conn.commit()
 
 def get_scenarios_data_frame(app_name):
     conn = get_connection()
@@ -43,3 +55,21 @@ def get_scenario_data(scn_id):
     if res is None:
         raise Exception("scenario not found")
     return res[0]
+
+def link_var_scenario(var_idx,scn_idx):
+    conn = get_connection()
+    q = "INSERT INTO vars_scenarios VALUES (?,?)"
+    conn.execute(q,(var_idx,scn_idx))
+    conn.commit()
+
+def get_variable_scenarios(var_idx):
+    conn = get_connection()
+    q = "SELECT scn_id,scn_name FROM scenarios NATURAL JOIN vars_scenarios WHERE var_idx = ?"
+    cur = conn.execute(q,(var_idx,))
+    return dict(cur.fetchall())
+
+def count_variable_scenarios(var_idx):
+    conn = get_connection()
+    q = "SELECT count(*) FROM vars_scenarios WHERE var_idx == ?;"
+    cur = conn.execute(q,(var_idx,))
+    return cur.fetchone()[0]

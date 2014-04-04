@@ -266,7 +266,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def load_scenario(self):
         return_dict = {}
-        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict)
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict,self.reader)
         dialog.exec_()
         subj_state = return_dict.get("subject_state")
         if subj_state is not None:

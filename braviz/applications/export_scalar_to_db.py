@@ -9,12 +9,14 @@ import PyQt4.QtCore as QtCore
 
 from braviz.interaction.qt_guis.export_scalar_into_db import Ui_ExportScalar
 import braviz.readAndFilter.tabular_data as braviz_tab_data
+import braviz.readAndFilter.user_data as braviz_user_data
 import braviz.readAndFilter.bundles_db as braviz_fibers_db
 import braviz.interaction.structure_metrics as braviz_struct_metrics
 
 
 class ExportScalarToDataBase(QtGui.QDialog):
-    def __init__(self, fibers=False, structures_list=tuple(), metric="Volume", db_id=None, operation=None):
+    def __init__(self, fibers=False, structures_list=tuple(), metric="Volume", db_id=None,
+                 operation=None, scenario_id=None):
         super(ExportScalarToDataBase, self).__init__()
         if (db_id is not None) and (operation is not None):
             raise Exception("Only db_id or operation should be None")
@@ -26,6 +28,8 @@ class ExportScalarToDataBase(QtGui.QDialog):
         self.metric = metric
         self.db_id = db_id
         self.fibers_operation = operation
+        self.scenario_id = scenario_id
+        print "GOT SCENARIO ID", scenario_id
 
         #Copied from applications/subject overview
         metrics_dict = {"Volume": "volume",
@@ -104,6 +108,14 @@ class ExportScalarToDataBase(QtGui.QDialog):
         braviz_tab_data.save_var_description(new_index, desc_str)
         self.ui.tip_label.setText("Note: You can minimize this dialog and continue working")
 
+        #update scenario
+        if self.scenario_id is not None:
+            name = "<AUTO_%s>"%self.var_name
+            description = "Created automatically when recording variable %s"%self.var_name
+            braviz_user_data.update_scenario(self.scenario_id,name=name,description=description)
+            #link scenario
+            braviz_user_data.link_var_scenario(self.var_idx,self.scenario_id)
+
         #add values
         self.timer = QtCore.QTimer()
         self.timer.start(1000)
@@ -172,10 +184,10 @@ class ExportScalarToDataBase(QtGui.QDialog):
             self.ui.tip_label.setText("")
 
 
-def run(fibers=False, structures_list=tuple(), metric="volume", db_id=None, operation="and"):
+def run(fibers=False, structures_list=tuple(), metric="volume", db_id=None, operation="and",scenario_id=None):
 
     app = QtGui.QApplication([])
-    main_window = ExportScalarToDataBase(fibers, structures_list, metric, db_id, operation)
+    main_window = ExportScalarToDataBase(fibers, structures_list, metric, db_id, operation,scenario_id=scenario_id)
     main_window.show()
     app.exec_()
 
@@ -184,25 +196,28 @@ if __name__ == "__main__":
     #arguments <scn_id> <fibers=True> <metric>  <operation> <db_id=x>
     #arguments <scn_id> <fibers=True> <metric>  <operation> <db_id=0> <structs0> <struct1> ....
     #arguments <scn_id> <fibers=False> <metric> <structs0> <struct1> ....
+    #            1           2           3         4          5         6
     import sys
     args = sys.argv
-    fibers = int(args[1])
+    scenario_id = args[1]
+    fibers = int(args[2])
     if fibers:
         fibers = True
     else:
         fibers = False
-    metric = args[2]
+    metric = args[3]
     if not fibers:
-        structs = args[3:]
-        run(fibers=fibers, structures_list=structs, metric=metric)
+        structs = args[4:]
+        run(fibers=fibers, structures_list=structs, metric=metric,scenario_id=scenario_id)
     else:
-        operation = args[3]
-        db_id = args[4]
+        operation = args[4]
+        db_id = args[5]
         if db_id == "0":
             db_id = None
-            structs = args[5:]
+            structs = args[6:]
         else:
             operation = None
             structs = None
 
-        run(fibers=fibers, structures_list=structs, metric=metric, db_id=db_id, operation=operation)
+        run(fibers=fibers, structures_list=structs, metric=metric, db_id=db_id, operation=operation,
+            scenario_id=scenario_id)

@@ -13,6 +13,7 @@ import os
 
 import braviz
 import braviz.readAndFilter.tabular_data as braviz_tab_data
+import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
 from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
@@ -21,9 +22,11 @@ from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVa
 import subprocess
 import multiprocessing.connection
 import binascii
+import cPickle
+
 
 class SubjectOverviewApp(QMainWindow):
-    def __init__(self, pipe_key = None):
+    def __init__(self, pipe_key=None):
         #Super init
         QMainWindow.__init__(self)
         #Internal initialization
@@ -35,9 +38,9 @@ class SubjectOverviewApp(QMainWindow):
             print pipe_key
             pipe_key_bin = binascii.a2b_hex(pipe_key)
 
-            address = ("localhost",6001)
-            self.__pipe = multiprocessing.connection.Client(address,authkey=pipe_key_bin)
-            self.__pipe_check_timer=QtCore.QTimer()
+            address = ("localhost", 6001)
+            self.__pipe = multiprocessing.connection.Client(address, authkey=pipe_key_bin)
+            self.__pipe_check_timer = QtCore.QTimer()
             self.__pipe_check_timer.timeout.connect(self.poll_from_pipe)
             self.__pipe_check_timer.start(200)
         else:
@@ -45,7 +48,7 @@ class SubjectOverviewApp(QMainWindow):
 
         initial_vars = (11, 17, 1)
 
-        self.vtk_widget = QSuvjectViwerWidget(reader=self.reader,parent=self)
+        self.vtk_widget = QSuvjectViwerWidget(reader=self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
 
@@ -137,7 +140,7 @@ class SubjectOverviewApp(QMainWindow):
         #self.vtk_viewer.show_cone()
 
         #context view
-        self.context_frame = ContextVariablesPanel(self.ui.splitter_2, "Context")
+        self.context_frame = ContextVariablesPanel(self.ui.splitter_2, "Context",app=self)
 
         #menubar
         self.ui.actionSave_scenario.triggered.connect(self.save_state)
@@ -245,7 +248,7 @@ class SubjectOverviewApp(QMainWindow):
         params = {}
         initial_selection = self.subjects_model.get_current_columns()
         dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_names=initial_selection)
-        res=dialog.exec_()
+        res = dialog.exec_()
         if res == QtGui.QDialog.Accepted:
             new_selection = params["checked"]
             self.subjects_model.set_var_columns(new_selection)
@@ -309,15 +312,22 @@ class SubjectOverviewApp(QMainWindow):
             self.show_error("Unknown metric %s" % scalar_text)
             return
         structures = list(self.structures_tree_model.get_selected_structures())
+
+        scenario_data = self.get_state_dict()
+        app_name = scenario_data["meta"]["application"]
+        scenario_data_str = cPickle.dumps(scenario_data)
+        scn_id = braviz_user_data.save_scenario(app_name, scenario_name="<AUTO>",
+                                                scenario_description="", scenario_data=scenario_data_str)
+        self.save_screenshot(scn_id)
         #export_dialog_args = {"fibers": False, "structures_list": structures,
         #                      "metric": scalar_text,"db_id": None, "operation": None}
 
         #export_dialog_args = fibers metric structs
-        export_dialog_args = ["0", scalar_text]+list(structures)
+        export_dialog_args = ["%d" % scn_id, "0", scalar_text] + list(structures)
         print export_dialog_args
-        process_line = [sys.executable,"-m","braviz.applications.export_scalar_to_db",]
+        process_line = [sys.executable, "-m", "braviz.applications.export_scalar_to_db", ]
         #print process_line
-        subprocess.Popen(process_line+export_dialog_args)
+        subprocess.Popen(process_line + export_dialog_args)
 
         self.ui.export_segmentation_to_db.setEnabled(0)
 
@@ -450,10 +460,16 @@ class SubjectOverviewApp(QMainWindow):
             operation = "0"
         #export_dialog_args = {"fibers": True, "structures_list": structs,
         #                      "metric": scalar_text, "db_id": db_id, "operation": operation}
+        scenario_data = self.get_state_dict()
+        app_name = scenario_data["meta"]["application"]
+        scenario_data_str = cPickle.dumps(scenario_data)
+        scn_id = braviz_user_data.save_scenario(app_name, scenario_name="<AUTO>",
+                                                scenario_description="", scenario_data=scenario_data_str)
+        self.save_screenshot(scn_id)
 
-        export_args = ["1", str(scalar_text), str(operation), str(db_id),]+structs
-        process_line = [sys.executable,"-m","braviz.applications.export_scalar_to_db",]
-        subprocess.Popen(process_line+export_args)
+        export_args = ["%d" % scn_id, "1", str(scalar_text), str(operation), str(db_id), ] + structs
+        process_line = [sys.executable, "-m", "braviz.applications.export_scalar_to_db", ]
+        subprocess.Popen(process_line + export_args)
 
         self.ui.export_fiber_scalars_to_db.setEnabled(0)
 
@@ -480,7 +496,7 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveFibersBundleDialog(operation, checkpoints, throug_all)
         dialog.exec_()
 
-    def __get_state_dict(self):
+    def get_state_dict(self):
         state = dict()
         #subject panel
         subject_state = dict()
@@ -544,23 +560,29 @@ class SubjectOverviewApp(QMainWindow):
         return state
 
     def save_state(self):
-        state = self.__get_state_dict()
+        state = self.get_state_dict()
         meta = state["meta"]
 
-        dialog = SaveScenarioDialog(meta["application"],state,self.vtk_viewer.ren_win,self.reader)
+        dialog = SaveScenarioDialog(meta["application"], state, self.vtk_viewer.ren_win, self.reader)
         dialog.exec_()
+
+    def save_screenshot(self,scenario_index):
+        file_name = "scenario_%d.png"%scenario_index
+        file_path = os.path.join(self.reader.getDataRoot(), "braviz_data","scenarios",file_name)
+        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
+
 
     def load_scenario_dialog(self):
         wanted_state = dict()
         my_name = os.path.splitext(os.path.basename(__file__))[0]
-        dialog = LoadScenarioDialog(my_name,wanted_state,self.reader)
+        dialog = LoadScenarioDialog(my_name, wanted_state, self.reader)
         dialog.exec_()
         print wanted_state
         self.load_scenario(wanted_state)
 
-    def load_scenario(self,state):
+    def load_scenario(self, state):
 
-        wanted_state=state
+        wanted_state = state
         #subject panel
         subject_state = wanted_state.get("subject_state")
         if subject_state is not None:
@@ -582,7 +604,7 @@ class SubjectOverviewApp(QMainWindow):
         if image_state is not None:
             mod = image_state.get("modality")
             if mod is not None:
-                ix=self.ui.image_mod_combo.findText(mod)
+                ix = self.ui.image_mod_combo.findText(mod)
                 self.ui.image_mod_combo.setCurrentIndex(ix)
                 self.image_modality_change()
             orient = image_state.get("orientation")
@@ -590,10 +612,10 @@ class SubjectOverviewApp(QMainWindow):
                 ix = self.ui.image_orientation.findText(orient)
                 self.ui.image_orientation.setCurrentIndex(ix)
                 self.image_orientation_change()
-            window= image_state.get("window")
+            window = image_state.get("window")
             if window is not None:
                 self.ui.image_window.setValue(window)
-            level= image_state.get("level")
+            level = image_state.get("level")
             if level is not None:
                 self.ui.image_level.setValue(level)
             slice = image_state.get("slice")
@@ -601,13 +623,13 @@ class SubjectOverviewApp(QMainWindow):
                 self.ui.slice_spin.setValue(slice)
 
         #segmentation panel
-        segmentation_state =wanted_state.get("segmentation_state")
+        segmentation_state = wanted_state.get("segmentation_state")
         if segmentation_state is not None:
             left_right = segmentation_state.get("left_right")
             if left_right is not None:
                 self.ui.left_right_radio.setChecked(left_right)
                 self.ui.dom_nondom_radio.setChecked(not left_right)
-            color = segmentation_state.get("color",False)
+            color = segmentation_state.get("color", False)
             if color is not False:
                 self.__structures_color = color
                 if color is not None:
@@ -629,7 +651,7 @@ class SubjectOverviewApp(QMainWindow):
                 ix = self.ui.struct_scalar_combo.findText(scal)
                 self.ui.struct_scalar_combo.setCurrentIndex(ix)
                 #self.update_segmentation_scalar(ix)
-            selected_structs=segmentation_state.get("selected_structs")
+            selected_structs = segmentation_state.get("selected_structs")
             if selected_structs is not None:
                 self.structures_tree_model.set_selected_structures(selected_structs)
 
@@ -655,15 +677,15 @@ class SubjectOverviewApp(QMainWindow):
                 self.ui.fibers_opacity.setValue(opac)
             scal = tractography_state["scalar"]
             if scal is not None:
-                idx=self.ui.fibers_scalar_combo.findText(scal)
+                idx = self.ui.fibers_scalar_combo.findText(scal)
                 self.ui.fibers_scalar_combo.setCurrentIndex(idx)
                 self.update_fiber_scalars(idx)
-            current = tractography_state.get("active_bundle",False)
+            current = tractography_state.get("active_bundle", False)
             if current is not False:
                 self.current_fibers = current
                 if current is None:
                     self.ui.current_bundle_tag.setText("<No active bundle>")
-                elif isinstance(current,str):
+                elif isinstance(current, str):
                     self.ui.current_bundle_tag.setText(current)
                 else:
                     name = self.fibers_list_model.get_bundle_name(current)
@@ -673,7 +695,7 @@ class SubjectOverviewApp(QMainWindow):
         #camera panel
         camera_state = wanted_state.get("camera_state")
         print "setting camera"
-        if camera_state is not  None:
+        if camera_state is not None:
             space = camera_state.get("space")
             if space is not None:
                 idx = self.ui.space_combo.findText(space)
@@ -681,8 +703,8 @@ class SubjectOverviewApp(QMainWindow):
                 self.space_change()
             cam = camera_state.get("cam_params")
             if cam is not None:
-                fp,pos,vu = cam
-                self.vtk_viewer.set_camera(fp,pos,vu)
+                fp, pos, vu = cam
+                self.vtk_viewer.set_camera(fp, pos, vu)
 
         #context panel
         context_state = wanted_state.get("context_state")
@@ -692,7 +714,7 @@ class SubjectOverviewApp(QMainWindow):
                 editables = context_state.get("editable")
                 if editables is not None:
                     editables = dict(editables)
-                self.context_frame.set_variables(variables,editables)
+                self.context_frame.set_variables(variables, editables)
                 self.context_frame.set_subject(self.__curent_subject)
         return
 
@@ -705,8 +727,6 @@ class SubjectOverviewApp(QMainWindow):
 
 
 def run(pipe_key):
-
-
     app = QtGui.QApplication([])
     main_window = SubjectOverviewApp(pipe_key)
     main_window.show()
@@ -717,7 +737,8 @@ def run(pipe_key):
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv)>=2:
+
+    if len(sys.argv) >= 2:
         key = sys.argv[1]
     else:
         key = None

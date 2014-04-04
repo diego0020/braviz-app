@@ -7,7 +7,6 @@ import PyQt4.QtCore as QtCore
 import numpy as np
 import itertools
 import cPickle
-import vtk
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -15,6 +14,7 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
+import braviz
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
 from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
@@ -32,7 +32,9 @@ from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_
     is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name, \
     get_min_max_values, is_variable_name_real, get_var_description_by_name, save_is_real_by_name, \
     save_real_meta_by_name, save_var_description_by_name, get_min_max_opt_values_by_name, register_new_variable,\
-    save_real_meta, save_var_description,update_multiple_variable_values
+    save_real_meta, save_var_description
+
+import braviz.readAndFilter.tabular_data as braviz_tab_data
 
 from braviz.readAndFilter import bundles_db
 import braviz.readAndFilter.user_data as braviz_user_data
@@ -860,13 +862,14 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
 
 
 class ContextVariablesPanel(QtGui.QGroupBox):
-    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initial_subject=None):
+    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initial_subject=None,app=None):
         super(ContextVariablesPanel, self).__init__(parent)
         self.setTitle(title)
         self.setToolTip("Right click to select context variables, and to make them editable")
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.layout = QtGui.QHBoxLayout(self)
         self.setLayout(self.layout)
+        self.app = app
 
         self.layout.setContentsMargins(7, 2, 7, 2)
         self.customContextMenuRequested.connect(self.create_context_menu)
@@ -1054,7 +1057,6 @@ class ContextVariablesPanel(QtGui.QGroupBox):
 
     def save_changes_into_db(self):
 
-        idx_value_tuples=[]
         for i,idx in enumerate(self.__context_variable_codes):
             if self.__editables_dict[idx] is True:
                 value_widget = self.__values_widgets[i]
@@ -1067,10 +1069,24 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                         value = None
                     else:
                         value=int(value)
-                idx_value_tuples.append((int(idx),int(self.__curent_subject),value))
+                #update value
+                braviz_tab_data.updata_variable_value(int(idx),self.__curent_subject,value)
+                #check if scenarios exists for this variable
+                if braviz_user_data.count_variable_scenarios(int(idx)) == 0:
+                    #save scenario
+                    name = "<AUTO_%s>"%self.__context_variable_names[idx]
+                    desc = "Created automatically when saving values for variable %s"%self.__context_variable_names[idx]
+                    data = self.app.get_state_dict()
+                    app = data["meta"]["application"]
+                    data_s = cPickle.dumps(data)
+                    scn_idx=braviz_user_data.save_scenario(app,name,desc,data_s)
+                    #link
+                    braviz_user_data.link_var_scenario(int(idx),scn_idx)
+                    #save screenshot
+                    self.app.save_screenshot(scn_idx)
 
+        self.__save_changes_button.setEnabled(0)
         #print idx_value_tuples
-        update_multiple_variable_values(idx_value_tuples)
 
 class BundleSelectionDialog(QtGui.QDialog):
     def __init__(self,selected,names_dict):
@@ -1174,16 +1190,10 @@ class SaveScenarioDialog(QtGui.QDialog):
         scn_id=braviz_user_data.save_scenario(self.app_name,scenario_name , description, self.data)
         print scn_id
         #create image
-        ren2img = vtk.vtkWindowToImageFilter()
-        ren2img.SetInput(self.ren_win)
-        ren2img.Update()
-
-        writer = vtk.vtkPNGWriter()
         file_name = "scenario_%d.png"%scn_id
         file_path = os.path.join(self.reader.getDataRoot(), "braviz_data","scenarios",file_name)
-        writer.SetFileName(file_path)
-        writer.SetInputConnection(ren2img.GetOutputPort())
-        writer.Write()
+        braviz.visualization.save_ren_win_picture(self.ren_win,file_path)
+
         self.ui.succesful_message.setText("Save completed succesfully")
         self.ui.buttonBox.clear()
         self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Ok)
