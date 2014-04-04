@@ -20,16 +20,10 @@ def save_scenario(application,scenario_name,scenario_description,scenario_data):
     (app_idx,scn_name,scn_desc,scn_data)
     VALUES ( (SELECT app_idx FROM applications WHERE exec_name == ?),
     ?,?,?)"""
-    conn.execute(q,(application,scenario_name,scenario_description,scenario_data))
+    cur=conn.execute(q,(application,scenario_name,scenario_description,scenario_data))
     conn.commit()
-    q2 = """SELECT scn_id FROM scenarios WHERE
-    app_idx == (SELECT app_idx FROM applications WHERE exec_name == ?)
-    and scn_name == ? and scn_desc == ? and scn_data == ?"""
-    c = conn.execute(q2,(application,scenario_name,scenario_description,scenario_data))
-    res = c.fetchone()
-    if res is None:
-        raise Exception("Problem saving scenario")
-    return res[0]
+    res = cur.lastrowid
+    return res
 
 
 def get_scenarios_data_frame(app_name):

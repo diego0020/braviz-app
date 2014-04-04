@@ -480,7 +480,7 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveFibersBundleDialog(operation, checkpoints, throug_all)
         dialog.exec_()
 
-    def save_state(self):
+    def __get_state_dict(self):
         state = dict()
         #subject panel
         subject_state = dict()
@@ -538,10 +538,14 @@ class SubjectOverviewApp(QMainWindow):
         meta["date"] = datetime.datetime.now()
         meta["exec"] = sys.argv
         meta["machine"] = platform.node()
-        meta["application"] = os.path.basename(__file__)[:-3]  # remove .py
+        meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
         state["meta"] = meta
 
-        print state
+        return state
+
+    def save_state(self):
+        state = self.__get_state_dict()
+        meta = state["meta"]
 
         dialog = SaveScenarioDialog(meta["application"],state,self.vtk_viewer.ren_win,self.reader)
         dialog.exec_()

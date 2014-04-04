@@ -181,6 +181,9 @@ def run(fibers=False, structures_list=tuple(), metric="volume", db_id=None, oper
 
 
 if __name__ == "__main__":
+    #arguments <scn_id> <fibers=True> <metric>  <operation> <db_id=x>
+    #arguments <scn_id> <fibers=True> <metric>  <operation> <db_id=0> <structs0> <struct1> ....
+    #arguments <scn_id> <fibers=False> <metric> <structs0> <struct1> ....
     import sys
     args = sys.argv
     fibers = int(args[1])

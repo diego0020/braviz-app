@@ -35,6 +35,18 @@ def create_tables():
     conn.execute(q)
     conn.commit()
 
+    #variables and scenarios table
+    q="""
+    CREATE TABLE IF NOT EXISTS vars_scenarios (
+    var_idx INTEGER REFERENCES variables(var_idx),
+    scn_id INTEGER REFERENCES scenarios(scn_id)
+    );
+    """
+
+    conn.execute(q)
+    conn.commit()
+
+
 def add_current_applications():
     apps = ("subject_overview","anova")
     conn = get_connection()
