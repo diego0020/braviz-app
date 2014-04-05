@@ -508,8 +508,9 @@ class AnovaApp(QMainWindow):
         listener = multiprocessing.connection.Listener(address,authkey=auth_key)
 
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
-        print [sys.executable,"-m","braviz.applications.subject_overview",auth_key_asccii]
-        self.mri_viewer_process = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",auth_key_asccii])
+        print [sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii]
+        self.mri_viewer_process = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",
+                                                    "0",auth_key_asccii])
 
         #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
         #self.mri_viewer_process.start()

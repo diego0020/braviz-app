@@ -23,10 +23,10 @@ import subprocess
 import multiprocessing.connection
 import binascii
 import cPickle
-
+import functools
 
 class SubjectOverviewApp(QMainWindow):
-    def __init__(self, pipe_key=None):
+    def __init__(self, pipe_key=None,scenario=None):
         #Super init
         QMainWindow.__init__(self)
         #Internal initialization
@@ -74,6 +74,12 @@ class SubjectOverviewApp(QMainWindow):
         #Init gui
         self.ui = None
         self.setup_gui()
+
+        if scenario is not None:
+            scn_data_str=braviz_user_data.get_scenario_data(scenario)
+            scn_data = cPickle.loads(str(scn_data_str))
+            load_scn = functools.partial(self.load_scenario,scn_data)
+            QtCore.QTimer.singleShot(0,load_scn)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -735,9 +741,9 @@ class SubjectOverviewApp(QMainWindow):
                     self.load_scenario(scn_dict)
 
 
-def run(pipe_key):
+def run(pipe_key,scenario):
     app = QtGui.QApplication([])
-    main_window = SubjectOverviewApp(pipe_key)
+    main_window = SubjectOverviewApp(pipe_key,scenario)
     main_window.show()
     main_window.start()
     print "before exec"
@@ -745,10 +751,19 @@ def run(pipe_key):
 
 
 if __name__ == '__main__':
+    #args: [scenario] [pipe_key]
     import sys
+    print sys.argv
 
-    if len(sys.argv) >= 2:
-        key = sys.argv[1]
+    scenario = None
+    if len(sys.argv)>=2 :
+        maybe_scene = int(sys.argv[1])
+        if maybe_scene > 0:
+            scenario = maybe_scene
+
+
+    if len(sys.argv) >= 3:
+        key = sys.argv[2]
     else:
         key = None
-    run(key)
+    run(key,scenario)

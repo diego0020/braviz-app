@@ -40,10 +40,15 @@ def update_scenario(scenario_id,name=None,description=None,scenario_data=None,ap
 
 def get_scenarios_data_frame(app_name):
     conn = get_connection()
-    q="""
-    SELECT scn_id, datetime(scn_date,'localtime') as scn_date ,scn_name,scn_desc FROM scenarios NATURAL JOIN applications WHERE exec_name = ?
-    """
-    data = sql.read_sql(q, conn, index_col="scn_id",coerce_float=False,params=(app_name,))
+    if app_name is None:
+        q="SELECT scn_id,datetime(scn_date,'localtime') as scn_date,scn_name,scn_desc FROM scenarios"
+        data = sql.read_sql(q,conn,index_col="scn_id",coerce_float=False)
+    else:
+        q="""
+        SELECT scn_id, datetime(scn_date,'localtime') as scn_date ,scn_name,scn_desc
+        FROM scenarios NATURAL JOIN applications WHERE exec_name = ?
+        """
+        data = sql.read_sql(q, conn, index_col="scn_id",coerce_float=False,params=(app_name,))
     data["scn_date"] = pd.to_datetime(data["scn_date"],format="%Y-%m-%d %H:%M:%S")
     return data
 

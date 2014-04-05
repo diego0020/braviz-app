@@ -1,5 +1,14 @@
 <RCC>
   <qresource prefix="icons">
+    <file>metacontact_online.png</file>
+    <file>kontact_contacts.png</file>
+    <file>listview-highlight.png</file>
+    <file>gridLayout_aligntop.png</file>
+    <file>gridview-simple.png</file>
+    <file>sample_overview.PNG</file>
+    <file>some_fibers.PNG</file>
+    <file>baviz_anova.png</file>
+    <file>amygdala_spharm.PNG</file>
     <file>next.png</file>
     <file>previous.png</file>
   </qresource>

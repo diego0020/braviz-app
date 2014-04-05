@@ -254,7 +254,8 @@ class OutcomeSelectDialog(VariableSelectDialog):
     def select_and_return(self, *args):
         if self.var_name is not None:
             self.save_meta_data()
-        self.params_dict["selected_outcome"] = self.var_name
+        if self.params_dict is not None:
+            self.params_dict["selected_outcome"] = self.var_name
         self.done(self.Accepted)
 
 
@@ -1237,6 +1238,7 @@ class LoadScenarioDialog(QtGui.QDialog):
         scn_id = int(self.model.get_index(self.current_row))
         data = braviz_user_data.get_scenario_data(scn_id)
         parameters_dict=cPickle.loads(str(data))
+        parameters_dict["meta"]["scn_id"] = scn_id
         self.out_dict.update(parameters_dict)
         self.accept()
 
