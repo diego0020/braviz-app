@@ -72,6 +72,7 @@ class SampleOverview(QtGui.QMainWindow):
         new_layouts_dict = dict()
         old_levels = sorted(self.row_scroll_widgets.keys())
 
+        #reuse existing rows
         for nl, ol in izip(unique_levels, old_levels):
             new_scrolls_dict[nl] = self.row_scroll_widgets[ol]
             new_contents_dict[nl] = self.row_widget_contents[ol]
@@ -143,6 +144,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
         self.ui.action_screenshot.triggered.connect(self.take_screenshot)
         self.ui.action_save_scenario.triggered.connect(self.save_scenario)
+        self.ui.action_load_scenario.triggered.connect(self.load_scenario_dialog)
 
         self.ui.progress_bar.setValue(0)
 
@@ -273,7 +275,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def load_visualization(self):
         return_dict = {}
-        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict,self.reader)
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict, self.reader)
         dialog.exec_()
         subj_state = return_dict.get("subject_state")
         if subj_state is not None:
@@ -445,33 +447,34 @@ class SampleOverview(QtGui.QMainWindow):
                 print selected_index, selected_name
                 self.change_rational_variable(selected_index)
 
-    def take_screenshot(self,scenario_index):
-        geom=self.geometry()
-        pixmap = QtGui.QPixmap.grabWindow(QtGui.QApplication.desktop().winId(),geom.x(),geom.y(),geom.width(),geom.height())
-        file_name = "scenario_%d.png"%scenario_index
-        file_path = os.path.join(self.reader.getDataRoot(), "braviz_data","scenarios",file_name)
-        pixmap.save(file_path,"png")
+    def take_screenshot(self, scenario_index):
+        geom = self.geometry()
+        pixmap = QtGui.QPixmap.grabWindow(QtGui.QApplication.desktop().winId(), geom.x(), geom.y(), geom.width(),
+                                          geom.height())
+        file_name = "scenario_%d.png" % scenario_index
+        file_path = os.path.join(self.reader.getDataRoot(), "braviz_data", "scenarios", file_name)
+        pixmap.save(file_path, "png")
         print "Chik"
 
     def __get_state(self):
         state = {}
         #variables
-        var_state={}
+        var_state = {}
         var_state["nominal"] = self.nominal_index
         var_state["rational"] = self.rational_index
-        state["variables"]=var_state
+        state["variables"] = var_state
         #sample
-        sample_state={}
-        sample_state["ids"]=self.sample
-        state["sample"]=sample_state
+        sample_state = {}
+        sample_state["ids"] = self.sample
+        state["sample"] = sample_state
         #visualization
-        vis_state={}
-        vis_state["scenario"]=self.current_scenario
-        cameras={}
+        vis_state = {}
+        vis_state["scenario"] = self.current_scenario
+        cameras = {}
         for subj in self.sample:
-            cameras[subj]=self.viewers_dict[subj].get_camera_parameters()
-        vis_state["cameras"]=cameras
-        state["viz"]=vis_state
+            cameras[subj] = self.viewers_dict[subj].get_camera_parameters()
+        vis_state["cameras"] = cameras
+        state["viz"] = vis_state
         #meta
         meta = {}
         meta["date"] = datetime.datetime.now()
@@ -482,23 +485,29 @@ class SampleOverview(QtGui.QMainWindow):
         return state
 
     def save_scenario(self):
-        state=self.__get_state()
+        state = self.__get_state()
         app_name = state["meta"]["application"]
-        params={}
-        dialog=braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name,state,params)
-        res=dialog.exec_()
+        params = {}
+        dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name, state, params)
+        res = dialog.exec_()
         if res == QtGui.QDialog.Accepted:
             scn_id = params["scn_id"]
-            take_screen=functools.partial(self.take_screenshot,scn_id)
-            QtCore.QTimer.singleShot(500,take_screen)
+            take_screen = functools.partial(self.take_screenshot, scn_id)
+            QtCore.QTimer.singleShot(500, take_screen)
 
     def load_scenario_dialog(self):
+        new_state = {}
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("sample_overview", new_state, self.reader)
+        res = dialog.exec_()
+        if res == QtGui.QDialog.Accepted:
+            print new_state
+            self.load_scenario(new_state)
+        pass
+
+    def load_scenario(self, state):
         #TODO
         pass
 
-    def load_scenario(self,state):
-        #TODO
-        pass
 
 def say_ciao():
     print "ciao"
