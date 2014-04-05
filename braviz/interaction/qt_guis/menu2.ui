@@ -13,6 +13,15 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#centralwidget{
+background-image: url(:/icons/imagine.svg);
+background-repeat: no-repeat;
+background-position: bottom right;
+background-origin: content;
+background-left:10px;
+}</string>
+  </property>
   <property name="iconSize">
    <size>
     <width>100</width>
@@ -426,7 +435,7 @@
        <item>
         <widget class="QToolButton" name="samples">
          <property name="enabled">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="text">
           <string>Samples</string>

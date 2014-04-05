@@ -12,8 +12,13 @@ from braviz.visualization.matplotlib_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from itertools import izip
 import numpy as np
+import sys
+import platform
 
 from collections import Counter
+import os
+import datetime
+import functools
 
 SAMPLE_SIZE = 0.3
 NOMINAL_VARIABLE = 11  # GENRE
@@ -133,9 +138,11 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.row_layout.setContentsMargins(0, 0, 0, 0)
         self.ui.progress_bar = QtGui.QProgressBar()
         self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
-        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
+        self.ui.action_load_visualization.triggered.connect(self.load_visualization)
         self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
         self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
+        self.ui.action_screenshot.triggered.connect(self.take_screenshot)
+        self.ui.action_save_scenario.triggered.connect(self.save_scenario)
 
         self.ui.progress_bar.setValue(0)
 
@@ -264,7 +271,7 @@ class SampleOverview(QtGui.QMainWindow):
         print "Select from viewer %s" % subj_id
         self.locate_subj(subj_id)
 
-    def load_scenario(self):
+    def load_visualization(self):
         return_dict = {}
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict,self.reader)
         dialog.exec_()
@@ -438,6 +445,60 @@ class SampleOverview(QtGui.QMainWindow):
                 print selected_index, selected_name
                 self.change_rational_variable(selected_index)
 
+    def take_screenshot(self,scenario_index):
+        geom=self.geometry()
+        pixmap = QtGui.QPixmap.grabWindow(QtGui.QApplication.desktop().winId(),geom.x(),geom.y(),geom.width(),geom.height())
+        file_name = "scenario_%d.png"%scenario_index
+        file_path = os.path.join(self.reader.getDataRoot(), "braviz_data","scenarios",file_name)
+        pixmap.save(file_path,"png")
+        print "Chik"
+
+    def __get_state(self):
+        state = {}
+        #variables
+        var_state={}
+        var_state["nominal"] = self.nominal_index
+        var_state["rational"] = self.rational_index
+        state["variables"]=var_state
+        #sample
+        sample_state={}
+        sample_state["ids"]=self.sample
+        state["sample"]=sample_state
+        #visualization
+        vis_state={}
+        vis_state["scenario"]=self.current_scenario
+        cameras={}
+        for subj in self.sample:
+            cameras[subj]=self.viewers_dict[subj].get_camera_parameters()
+        vis_state["cameras"]=cameras
+        state["viz"]=vis_state
+        #meta
+        meta = {}
+        meta["date"] = datetime.datetime.now()
+        meta["exec"] = sys.argv
+        meta["machine"] = platform.node()
+        meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
+        state["meta"] = meta
+        return state
+
+    def save_scenario(self):
+        state=self.__get_state()
+        app_name = state["meta"]["application"]
+        params={}
+        dialog=braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name,state,params)
+        res=dialog.exec_()
+        if res == QtGui.QDialog.Accepted:
+            scn_id = params["scn_id"]
+            take_screen=functools.partial(self.take_screenshot,scn_id)
+            QtCore.QTimer.singleShot(500,take_screen)
+
+    def load_scenario_dialog(self):
+        #TODO
+        pass
+
+    def load_scenario(self,state):
+        #TODO
+        pass
 
 def say_ciao():
     print "ciao"

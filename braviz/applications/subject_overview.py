@@ -568,9 +568,13 @@ class SubjectOverviewApp(QMainWindow):
     def save_state(self):
         state = self.get_state_dict()
         meta = state["meta"]
+        params={}
+        dialog = SaveScenarioDialog(meta["application"], state,params)
+        res=dialog.exec_()
+        if res==QtGui.QDialog.Accepted:
+            scn_id = params["scn_id"]
+            self.save_screenshot(scn_id)
 
-        dialog = SaveScenarioDialog(meta["application"], state, self.vtk_viewer.ren_win, self.reader)
-        dialog.exec_()
 
     def save_screenshot(self,scenario_index):
         file_name = "scenario_%d.png"%scenario_index

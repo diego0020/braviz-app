@@ -14,7 +14,6 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
-import braviz
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
 from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
@@ -1164,12 +1163,11 @@ class SaveFibersBundleDialog(QtGui.QDialog):
 
 
 class SaveScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,state,ren_win,reader):
+    def __init__(self,app_name,state,params):
         super(SaveScenarioDialog,self).__init__()
         self.app_name = app_name
         self.data = cPickle.dumps(state)
-        self.ren_win=ren_win
-        self.reader=reader
+        self.params=params
         self.ui = None
         self.init_gui()
 
@@ -1189,12 +1187,7 @@ class SaveScenarioDialog(QtGui.QDialog):
             scenario_name = "<Unnamed>"
         description = unicode(self.ui.scn_description.toPlainText())
         scn_id=braviz_user_data.save_scenario(self.app_name,scenario_name , description, self.data)
-        print scn_id
-        #create image
-        file_name = "scenario_%d.png"%scn_id
-        file_path = os.path.join(self.reader.getDataRoot(), "braviz_data","scenarios",file_name)
-        braviz.visualization.save_ren_win_picture(self.ren_win,file_path)
-
+        self.params["scn_id"]=scn_id
         self.ui.succesful_message.setText("Save completed succesfully")
         self.ui.buttonBox.clear()
         self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Ok)

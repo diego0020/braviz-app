@@ -214,20 +214,33 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionSave_scenario"/>
-    <addaction name="actionLoad_scenario"/>
+    <addaction name="action_save_scenario"/>
+    <addaction name="action_load_scenario"/>
+    <addaction name="separator"/>
+    <addaction name="action_load_visualization"/>
+    <addaction name="action_screenshot"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionSave_scenario">
+  <action name="action_save_scenario">
    <property name="text">
     <string>Save scenario</string>
    </property>
   </action>
-  <action name="actionLoad_scenario">
+  <action name="action_load_visualization">
+   <property name="text">
+    <string>Load Visualization</string>
+   </property>
+  </action>
+  <action name="action_load_scenario">
    <property name="text">
     <string>Load scenario</string>
+   </property>
+  </action>
+  <action name="action_screenshot">
+   <property name="text">
+    <string>Save_screenshot</string>
    </property>
   </action>
  </widget>

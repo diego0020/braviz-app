@@ -48,7 +48,7 @@ def create_tables():
 
 
 def add_current_applications():
-    apps = ("subject_overview","anova")
+    apps = ("subject_overview","anova","sample_overview")
     conn = get_connection()
     q="""INSERT OR IGNORE INTO applications (exec_name) VALUES (?) """
     tuples = ( (a,) for a in apps)

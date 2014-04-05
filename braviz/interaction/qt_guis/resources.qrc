@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>imagine.svg</file>
     <file>metacontact_online.png</file>
     <file>kontact_contacts.png</file>
     <file>listview-highlight.png</file>
