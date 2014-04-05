@@ -15,6 +15,7 @@ import braviz.interaction.r_functions
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
 import braviz.readAndFilter.tabular_data as braviz_tab_data
+import braviz.readAndFilter.user_data as braviz_user_data
 
 import colorbrewer
 
@@ -442,6 +443,13 @@ class AnovaApp(QMainWindow):
         self.last_viewed_subject = subj
         QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
 
+    def create_context_action(self,subject,scenario_id,scenario_name):
+        def show_scenario():
+            self.change_subject_in_mri_viewer(subject,scenario_id)
+        action = QtGui.QAction("Show subject %s's %s" % (subject,scenario_name), None)
+        action.triggered.connect(show_scenario)
+        return action
+
     def create_view_details_context_menu(self, global_pos, subject=None):
         #TODO: Open images of a given subject
         if subject is None:
@@ -449,14 +457,24 @@ class AnovaApp(QMainWindow):
             if subject is None:
                 return
 
-        def show_MRI(*args):
-            self.change_subject_in_mri_viewer(subject)
+        scenarios = {}
+        outcome_idx = braviz_tab_data.get_var_idx(self.outcome_var_name)
+        outcome_scenarios = braviz_user_data.get_variable_scenarios(outcome_idx)
+        scenarios.update(outcome_scenarios)
+        regressors = self.regressors_model.get_regressors()
+        for reg in regressors:
+            reg_idx = braviz_tab_data.get_var_idx(reg)
+            reg_scenarios = braviz_user_data.get_variable_scenarios(reg_idx)
+            scenarios.update(reg_scenarios)
 
-        launch_mri_action = QtGui.QAction("Show subject %s MRI" % subject, None)
         menu = QtGui.QMenu("Subject %s" % subject)
+        launch_mri_action = self.create_context_action(subject,None,"MRI")
         menu.addAction(launch_mri_action)
-        launch_mri_action.triggered.connect(show_MRI)
-        menu.addAction(launch_mri_action)
+
+        for scn_id,scn_name in scenarios.iteritems():
+            action = self.create_context_action(subject,scn_id,scn_name)
+            menu.addAction(action)
+
         menu.exec_(global_pos)
 
     def subject_details_from_plot(self, pos):
@@ -498,12 +516,15 @@ class AnovaApp(QMainWindow):
         self.mri_viewer_pipe = listener.accept()
         self.poll_timer.start(200)
 
-    def change_subject_in_mri_viewer(self, subj):
+    def change_subject_in_mri_viewer(self, subj,scenario=None):
         if (self.mri_viewer_process is None) or (self.mri_viewer_process.poll() is not None):
             self.launch_mri_viewer()
         if self.mri_viewer_pipe is not None:
-            self.mri_viewer_pipe.send({'subject': str(subj), 'lift': True})
-            print "sending message: subj:", str(subj)
+            message = {'subject': str(subj)}
+            if scenario is not None:
+                message["scenario"]=scenario
+            self.mri_viewer_pipe.send(message)
+            print "sending message: subj:", message
 
     def closeEvent(self, *args, **kwargs):
         if self.mri_viewer_process is not None:

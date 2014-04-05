@@ -724,6 +724,15 @@ class SubjectOverviewApp(QMainWindow):
                 message = self.__pipe.recv()
                 subj = message.get('subject')
                 self.change_subject(subj)
+                scenario = message.get("scenario")
+                if scenario is not None:
+                    scn_str = braviz_user_data.get_scenario_data(scenario)
+                    scn_dict = cPickle.loads(str(scn_str))
+                    try:
+                        scn_dict["subject_state"].pop("current_subject")
+                    except KeyError:
+                        pass
+                    self.load_scenario(scn_dict)
 
 
 def run(pipe_key):
