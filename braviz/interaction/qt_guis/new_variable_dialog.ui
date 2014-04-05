@@ -238,7 +238,7 @@
  <connections>
   <connection>
    <sender>select_button</sender>
-   <signal>pressed()</signal>
+   <signal>clicked()</signal>
    <receiver>NewVariableDialog</receiver>
    <slot>reject()</slot>
    <hints>

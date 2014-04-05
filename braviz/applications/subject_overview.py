@@ -93,14 +93,14 @@ class SubjectOverviewApp(QMainWindow):
 
         #Subject selection
         self.ui.subjects_table.setModel(self.subjects_model)
-        self.ui.select_subject_table_vars.pressed.connect(self.launch_subject_variable_select_dialog)
+        self.ui.select_subject_table_vars.clicked.connect(self.launch_subject_variable_select_dialog)
         self.ui.subjects_table.activated.connect(self.change_subject)
-        self.ui.next_subject.pressed.connect(self.go_to_next_subject)
-        self.ui.previus_subject.pressed.connect(self.go_to_previus_subject)
+        self.ui.next_subject.clicked.connect(self.go_to_next_subject)
+        self.ui.previus_subject.clicked.connect(self.go_to_previus_subject)
 
         #subject details
         self.ui.subject_details_table.setModel(self.subject_details_model)
-        self.ui.select_details_button.pressed.connect(self.launch_details_variable_select_dialog)
+        self.ui.select_details_button.clicked.connect(self.launch_details_variable_select_dialog)
         #image controls
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
@@ -110,7 +110,7 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget.image_level_changed.connect(self.ui.image_level.setValue)
         self.ui.image_window.valueChanged.connect(self.vtk_viewer.image.set_image_window)
         self.ui.image_level.valueChanged.connect(self.vtk_viewer.image.set_image_level)
-        self.ui.reset_window_level.pressed.connect(self.vtk_viewer.image.reset_window_level)
+        self.ui.reset_window_level.clicked.connect(self.vtk_viewer.image.reset_window_level)
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
@@ -120,17 +120,17 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.left_right_radio.toggled.connect(self.change_left_to_non_dominant)
         self.ui.struct_color_combo.currentIndexChanged.connect(self.select_structs_color)
         self.ui.struct_scalar_combo.currentIndexChanged.connect(self.update_segmentation_scalar)
-        self.ui.export_segmentation_to_db.pressed.connect(self.export_segmentation_scalars_to_db)
+        self.ui.export_segmentation_to_db.clicked.connect(self.export_segmentation_scalars_to_db)
         #tractography controls
         self.ui.fibers_from_segments_box.currentIndexChanged.connect(self.show_fibers_from_segment)
         self.ui.tracto_color_combo.currentIndexChanged.connect(self.change_tractography_color)
         self.ui.bundles_list.setModel(self.fibers_list_model)
-        self.ui.add_saved_bundles.pressed.connect(self.add_saved_bundles_to_list)
-        self.ui.save_bundle_button.pressed.connect(self.save_fibers_bundle)
+        self.ui.add_saved_bundles.clicked.connect(self.add_saved_bundles_to_list)
+        self.ui.save_bundle_button.clicked.connect(self.save_fibers_bundle)
         self.ui.fibers_opacity.valueChanged.connect(self.change_tractography_opacity)
         self.ui.bundles_list.activated.connect(self.update_current_bundle)
         self.ui.fibers_scalar_combo.currentIndexChanged.connect(self.update_fiber_scalars)
-        self.ui.export_fiber_scalars_to_db.pressed.connect(self.export_fiber_scalars_to_db)
+        self.ui.export_fiber_scalars_to_db.clicked.connect(self.export_fiber_scalars_to_db)
 
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()

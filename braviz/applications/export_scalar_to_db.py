@@ -75,7 +75,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
                 self.ui.struct_name_label.setText(fib_name)
 
         self.ui.metric_label.setText(self.metric)
-        self.ui.start_button.pressed.connect(self.start_calculations)
+        self.ui.start_button.clicked.connect(self.start_calculations)
         self.ui.error_str.setText("")
         self.ui.var_name_input.textChanged.connect(self.check_name)
         self.ui.tip_label.setText("")
@@ -179,7 +179,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
         if self.progress == 100:
             self.ui.start_button.setText("Done")
             self.timer.stop()
-            self.ui.start_button.pressed.connect(self.accept)
+            self.ui.start_button.clicked.connect(self.accept)
             self.ui.start_button.setEnabled(1)
             self.ui.tip_label.setText("")
 

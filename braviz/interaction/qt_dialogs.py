@@ -181,7 +181,7 @@ class VariableSelectDialog(QtGui.QDialog):
         self.matplot_widget = MatplotWidget(initial_message="Double click on variables\nto see plots")
         layout.addWidget(self.matplot_widget)
         target.setLayout(layout)
-        self.ui.save_button.pressed.connect(self.save_meta_data)
+        self.ui.save_button.clicked.connect(self.save_meta_data)
         self.ui.var_type_combo.currentIndexChanged.connect(self.update_details)
         self.matplot_widget.scatter_pick_signal.connect(self.show_plot_tooltip)
 
@@ -237,7 +237,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.ui.tableView.setModel(self.vars_list_model)
         self.ui.tableView.activated.connect(self.update_right_side)
 
-        self.ui.select_button.pressed.connect(self.select_and_return)
+        self.ui.select_button.clicked.connect(self.select_and_return)
 
     def update_right_side(self, var_name=None):
         curr_idx = self.ui.tableView.currentIndex()
@@ -597,11 +597,11 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.ui.tableView.setModel(self.vars_model)
         self.finish_ui_setup()
         self.ui.tableView.activated.connect(self.update_right_side)
-        self.ui.add_button.pressed.connect(self.add_regressor)
+        self.ui.add_button.clicked.connect(self.add_regressor)
         self.regressors_table_model = regressors_model
         self.ui.current_regressors_table.setModel(self.regressors_table_model)
         self.ui.current_regressors_table.customContextMenuRequested.connect(self.show_context_menu)
-        self.ui.done_button.pressed.connect(self.finish_close)
+        self.ui.done_button.clicked.connect(self.finish_close)
 
     def update_right_side(self, name=None):
         curr_idx = self.ui.tableView.currentIndex()
@@ -657,8 +657,8 @@ class InteractionSelectDialog(QtGui.QDialog):
         self.ui.reg_view.setModel(self.only_regs_model)
         self.full_model.show_regressors(False)
         self.ui.full_view.setModel(self.full_model)
-        self.ui.add_single_button.pressed.connect(self.add_single_term)
-        self.ui.add_all_button.pressed.connect(self.add_all_combinations)
+        self.ui.add_single_button.clicked.connect(self.add_single_term)
+        self.ui.add_all_button.clicked.connect(self.add_all_combinations)
 
     def add_single_term(self):
         selected_indexes = self.ui.reg_view.selectedIndexes()
@@ -686,7 +686,7 @@ class NewVariableDialog(QtGui.QDialog):
         self.values_model = braviz_models.NewVariableValues()
         self.ui.values_table.setModel(self.values_model)
         self.ui.var_name_input.editingFinished.connect(self.activate_save_button)
-        self.ui.save_button.pressed.connect(self.save_new_variable)
+        self.ui.save_button.clicked.connect(self.save_new_variable)
 
     def create_meta_data_frame(self, is_nominal):
         self.clear_details_frame()
@@ -719,7 +719,7 @@ class NewVariableDialog(QtGui.QDialog):
         details_ui.labels_names_table.setModel(self.nominal_model)
         add_label_button = QtGui.QPushButton("Add Label")
         details_ui.verticalLayout.addWidget(add_label_button)
-        add_label_button.pressed.connect(self.nominal_model.add_label)
+        add_label_button.clicked.connect(self.nominal_model.add_label)
         self.details_ui = details_ui
 
 
@@ -786,15 +786,15 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.ui.tableView.setModel(self.vars_model)
         self.finish_ui_setup()
         self.ui.tableView.activated.connect(self.update_right_side)
-        self.ui.add_button.pressed.connect(self.add_variable)
+        self.ui.add_button.clicked.connect(self.add_variable)
         self.current_variables_model = braviz_models.ContextVariablesModel(context_vars_list=variables_list,
                                                                            editable_dict=editables_dict)
         self.ui.current_variables.setModel(self.current_variables_model)
         self.ui.current_variables.customContextMenuRequested.connect(self.show_context_menu)
-        self.ui.done_button.pressed.connect(self.finish_close)
+        self.ui.done_button.clicked.connect(self.finish_close)
         self.ui.current_variables.activated.connect(self.update_right_side2)
 
-        self.ui.create_varible_button.pressed.connect(self.launch_new_variable_dialog)
+        self.ui.create_varible_button.clicked.connect(self.launch_new_variable_dialog)
         self.jitter = None
         self.variable_list = variables_list
         print "pescado"
@@ -954,7 +954,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         if any_editable is True:
             self.__save_changes_button = QtGui.QPushButton("Save")
             self.__save_changes_button.setEnabled(False)
-            self.__save_changes_button.pressed.connect(self.save_changes_into_db)
+            self.__save_changes_button.clicked.connect(self.save_changes_into_db)
             self.layout.addWidget(self.__save_changes_button)
         return
 
@@ -1124,8 +1124,8 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         self.ui.operation_label.setText(operation)
         self._checkpoints = tuple(checkpoints_list)
         self.ui.structures_list.setPlainText(", ".join(self._checkpoints))
-        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).pressed.connect(self.accept_save)
-        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).pressed.connect(self.accept)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.accept_save)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.accept)
         self._and= operation_is_and
 
 
@@ -1177,7 +1177,7 @@ class SaveScenarioDialog(QtGui.QDialog):
         self.ui = Ui_SaveScenarioDialog()
         self.ui.setupUi(self)
         self.ui.app_name.setText(self.app_name)
-        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).pressed.connect(self.save_into_db)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.save_into_db)
         self.ui.succesful_message.setText("")
 
 
@@ -1216,7 +1216,7 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(0)
         self.ui.scenarios_table.setModel(self.model)
         self.ui.scenarios_table.activated.connect(self.select_model)
-        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).pressed.connect(self.load_data)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.load_data)
 
     def select_model(self,index):
         row = index.row()
