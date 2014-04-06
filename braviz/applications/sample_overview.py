@@ -21,6 +21,7 @@ import datetime
 import functools
 
 SAMPLE_SIZE = 0.3
+#SAMPLE_SIZE = 0.2
 NOMINAL_VARIABLE = 11  # GENRE
 RATIONAL_VARIBLE = 1  # VCIIQ
 
@@ -32,7 +33,6 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.plot_widget = None
         self.sample = braviz_tab_data.get_subjects()
-        self.subject_viewer_widgets = []
         self.viewers_dict = {}
         self.widgets_dict = {}
 
@@ -174,7 +174,6 @@ class SampleOverview(QtGui.QMainWindow):
             level = self.scalar_data.ix[subj, self.nominal_name]
             contents = self.row_widget_contents[level]
             viewer = QSuvjectViwerWidget(self.reader, contents)
-            self.subject_viewer_widgets.append(viewer)
             viewer.setToolTip(str(subj))
             self.viewers_dict[subj] = viewer.subject_viewer
             self.widgets_dict[subj] = viewer
@@ -190,8 +189,8 @@ class SampleOverview(QtGui.QMainWindow):
             self.inside_layouts[level].addWidget(viewer, 0, i)
             self.inside_layouts[level].setColumnMinimumWidth(i, 400)
 
-        for viewer in self.subject_viewer_widgets:
-            viewer.initialize_widget()
+        for widget in self.widgets_dict.values():
+            widget.initialize_widget()
             QtGui.QApplication.instance().processEvents()
 
         self.reload_viewers()
@@ -284,6 +283,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.reload_viewers(scenario=return_dict)
 
     def load_scenario_in_viewer(self, viewer, scenario_dict, subj):
+        img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subj))
         wanted_state = scenario_dict
         self.current_scenario = wanted_state
         #images panel
@@ -363,6 +363,11 @@ class SampleOverview(QtGui.QMainWindow):
                 except Exception as e:
                     print e.message
         QtGui.QApplication.instance().processEvents()
+        #subject
+        try:
+            viewer.change_subject(img_code)
+        except Exception as e:
+            print e.message
         #camera panel
         self.__load_camera_from_scenario(viewer)
         return
@@ -502,11 +507,64 @@ class SampleOverview(QtGui.QMainWindow):
         if res == QtGui.QDialog.Accepted:
             print new_state
             self.load_scenario(new_state)
-        pass
+
 
     def load_scenario(self, state):
-        #TODO
-        pass
+        #sample and scneario
+        sample_state = state["sample"]
+        new_sample = sample_state["ids"]
+
+        vis_state = state["viz"]
+        scn_id = vis_state["scenario"]
+
+        self.change_sample(new_sample,scn_id)
+
+        #variables
+        var_state = state["variables"]
+        self.load_scalar_data(var_state["rational"],var_state["nominal"])
+        self.re_arrange_viewers()
+
+
+        #cameras
+        cameras = vis_state["cameras"]
+        for subj in self.sample:
+            self.viewers_dict[subj].set_camera(*cameras[subj])
+
+
+
+    def change_sample(self,new_sample,scn_id=None):
+        old_sample = self.sample
+        #reuse old widgets
+        new_viewers_dict = {}
+        new_widgets_dict = {}
+        for os,ns in izip(old_sample,new_sample):
+            new_viewers_dict[ns] = self.viewers_dict[os]
+            new_widgets_dict[ns] = self.widgets_dict[os]
+
+        #delete left_over_widgets
+        for os in old_sample[len(new_sample):]:
+            widget = self.widgets_dict.pop(os)
+            level = self.scalar_data.ix[os, self.nominal_name]
+            lay = self.inside_layouts[level]
+            lay.removeWidget(widget)
+            widget.deleteLater()
+        #create new widgets
+        for ns in new_sample[len(old_sample):]:
+            print "creating widget for subject ",ns
+            viewer = QSuvjectViwerWidget(self.reader, None)
+            viewer.setToolTip(str(ns))
+            new_viewers_dict[ns] = viewer.subject_viewer
+            new_widgets_dict[ns] = viewer
+            dummy_i = self.callback_maker(ns)
+            viewer.subject_viewer.iren.AddObserver("LeftButtonPressEvent", dummy_i, 1.0)
+            viewer.initialize_widget()
+
+
+
+        self.sample = new_sample
+        self.viewers_dict=new_viewers_dict
+        self.widgets_dict=new_widgets_dict
+        self.reload_viewers(scn_id)
 
 
 def say_ciao():
