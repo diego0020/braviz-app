@@ -10,15 +10,16 @@ from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
 from braviz.visualization.matplotlib_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
+from braviz.readAndFilter import user_data as braviz_user_data
 from itertools import izip
 import numpy as np
-import sys
 import platform
 
 from collections import Counter
 import os
 import datetime
 import functools
+import cPickle
 
 SAMPLE_SIZE = 0.3
 #SAMPLE_SIZE = 0.2
@@ -27,7 +28,7 @@ RATIONAL_VARIBLE = 1  # VCIIQ
 
 
 class SampleOverview(QtGui.QMainWindow):
-    def __init__(self):
+    def __init__(self,initial_scenario=None):
         super(SampleOverview, self).__init__()
         self.reader = braviz.readAndFilter.kmc40AutoReader()
 
@@ -51,9 +52,16 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.ui = None
         self.setup_gui()
-        self.take_random_sample()
-        self.load_scalar_data(RATIONAL_VARIBLE, NOMINAL_VARIABLE)
-        QtCore.QTimer.singleShot(100, self.add_subject_viewers)
+        if initial_scenario is None:
+            self.take_random_sample()
+            self.load_scalar_data(RATIONAL_VARIBLE, NOMINAL_VARIABLE)
+            QtCore.QTimer.singleShot(100, self.add_subject_viewers)
+        else:
+            self.sample=[]
+            state_str = braviz_user_data.get_scenario_data(initial_scenario)
+            state = cPickle.loads(str(state_str))
+            load_scn_funct=functools.partial(self.load_scenario,state)
+            QtCore.QTimer.singleShot(100, load_scn_funct)
 
     def change_nominal_variable(self, new_var_index):
         self.load_scalar_data(self.rational_index, new_var_index)
@@ -571,11 +579,11 @@ def say_ciao():
     print "ciao"
 
 
-def run():
+def run(scn_id=None):
     import sys
 
     app = QtGui.QApplication([])
-    main_window = SampleOverview()
+    main_window = SampleOverview(scn_id)
     main_window.show()
     main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     main_window.destroyed.connect(say_ciao)
@@ -583,4 +591,9 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    import sys
+    scn_id=None
+    if len(sys.argv)>=2:
+        scn_id = sys.argv[1]
+
+    run(scn_id)
