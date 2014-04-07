@@ -185,6 +185,7 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict):
     intercept=model[0][0]
     residuals=np.array(model[1])
     anova=car.Anova(model,type=3)
+    fitted = np.array(model[4])
     #print anova
     # print "Intercept "+' '.join(regressors)+" Residuals"
     # print "sum of squares:"
@@ -230,6 +231,5 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict):
     output_df["Factor"]=output_df.index
     output_df=output_df[["Factor","Sum Sq","Df","F value","Pr(>F)"]]
 
-
-    return (output_df,residuals,intercept)
+    return output_df,residuals,intercept,fitted
 

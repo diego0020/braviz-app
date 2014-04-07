@@ -212,7 +212,8 @@ class AnovaApp(QMainWindow):
             return
         if var_name == "Residuals":
             residuals = self.result_model.residuals
-            self.plot.make_histogram(residuals, "Residuals")
+            fitted = self.result_model.fitted
+            self.plot.make_diagnostics(residuals,fitted)
             pass
         elif var_name == "(Intercept)":
             data = get_data_frame_by_name(self.outcome_var_name)

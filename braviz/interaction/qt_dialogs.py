@@ -315,6 +315,7 @@ class MatplotWidget(FigureCanvas):
         fig = Figure(figsize=(5, 5), dpi=dpi, tight_layout=True)
         self.fig = fig
         self.axes = fig.add_subplot(111)
+        self.axes2 = None
         #self.axes.hold(False)
         FigureCanvas.__init__(self, fig)
         self.setParent(parent)
@@ -367,8 +368,10 @@ class MatplotWidget(FigureCanvas):
     @repeatatable_plot
     def compute_scatter(self, data, data2=None, x_lab=None, y_lab=None, colors=None, labels=None, urls=None,
                         xlims=None):
+        self.fig.clear()
+        self.axes=self.fig.add_subplot(1,1,1)
         self.axes.clear()
-        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
+        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top="off")
 
         self.axes.yaxis.set_label_position("right")
         #print "urls:" ,urls
@@ -426,7 +429,8 @@ class MatplotWidget(FigureCanvas):
 
     @repeatatable_plot
     def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims, intercet=None):
-
+        self.fig.clear()
+        self.axes=self.fig.add_subplot(1,1,1)
         #Sort data and labels according to median
         x_permutation = range(len(data))
         if xticks_labels is None:
@@ -435,7 +439,7 @@ class MatplotWidget(FigureCanvas):
         data_labels.sort(key=lambda x: np.median(x[0]))
         data, xticks_labels, x_permutation = zip(*data_labels)
         self.axes.clear()
-        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
+        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off', top="off")
         self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
@@ -459,8 +463,10 @@ class MatplotWidget(FigureCanvas):
 
     @repeatatable_plot
     def make_linked_box_plot(self, data, xlabel, ylabel, xticks_labels, colors, top_labels, ylims):
+        self.fig.clear()
+        self.axes=self.fig.add_subplot(1,1,1)
         self.axes.clear()
-        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
+        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off', top="off")
         self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
@@ -514,15 +520,26 @@ class MatplotWidget(FigureCanvas):
         self.x_order = x_permutation
 
     @repeatatable_plot
-    def make_histogram(self, data, xlabel):
+    def make_diagnostics(self, residuals,fitted):
+        self.fig.clear()
+        self.axes=self.fig.add_subplot(2,1,2)
         self.axes.clear()
-        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off')
+        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
         self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
-        self.axes.set_xlabel(xlabel)
+        self.axes.set_xlabel("Residuals")
         self.axes.set_ylabel("Frequency")
-        self.axes.hist(data, color="#2ca25f", bins=20)
+        self.axes.hist(residuals, color="#2ca25f", bins=20)
+
+        self.axes2 = self.fig.add_subplot(2,1,1)
+        self.axes2.scatter(fitted,residuals,s=20,color="#2ca25f")
+        self.axes2.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
+        self.axes2.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
+        self.axes2.set_ylabel("Residuals")
+        self.axes2.set_xlabel("Fitted")
+        self.axes2.yaxis.set_label_position("right")
+        self.axes2.axhline(color='k')
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.x_order = None
