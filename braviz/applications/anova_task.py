@@ -443,10 +443,12 @@ class AnovaApp(QMainWindow):
         self.last_viewed_subject = subj
         QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
 
-    def create_context_action(self,subject,scenario_id,scenario_name):
+    def create_context_action(self,subject,scenario_id,scenario_name,show_name = None):
+        if show_name is None:
+            show_name = scenario_name
         def show_scenario():
             self.change_subject_in_mri_viewer(subject,scenario_id)
-        action = QtGui.QAction("Show subject %s's %s" % (subject,scenario_name), None)
+        action = QtGui.QAction("Show subject %s's %s" % (subject,show_name), None)
         action.triggered.connect(show_scenario)
         return action
 
@@ -460,20 +462,24 @@ class AnovaApp(QMainWindow):
         scenarios = {}
         outcome_idx = braviz_tab_data.get_var_idx(self.outcome_var_name)
         outcome_scenarios = braviz_user_data.get_variable_scenarios(outcome_idx)
-        scenarios.update(outcome_scenarios)
+        if len(outcome_scenarios)>0:
+            scenarios[self.outcome_var_name]=outcome_scenarios.items()
         regressors = self.regressors_model.get_regressors()
         for reg in regressors:
             reg_idx = braviz_tab_data.get_var_idx(reg)
             reg_scenarios = braviz_user_data.get_variable_scenarios(reg_idx)
-            scenarios.update(reg_scenarios)
+            if len(reg_scenarios):
+                scenarios[reg]=reg_scenarios.items()
 
         menu = QtGui.QMenu("Subject %s" % subject)
         launch_mri_action = self.create_context_action(subject,None,"MRI")
         menu.addAction(launch_mri_action)
 
-        for scn_id,scn_name in scenarios.iteritems():
-            action = self.create_context_action(subject,scn_id,scn_name)
-            menu.addAction(action)
+        print scenarios
+        for var,scn_lists in scenarios.iteritems():
+            for scn_id,scn_name in scn_lists:
+                action = self.create_context_action(subject,scn_id,scn_name,var)
+                menu.addAction(action)
 
         menu.exec_(global_pos)
 

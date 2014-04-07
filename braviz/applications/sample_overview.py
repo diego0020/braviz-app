@@ -20,6 +20,9 @@ import os
 import datetime
 import functools
 import cPickle
+import multiprocessing.connection
+import binascii
+import subprocess
 
 #SAMPLE_SIZE = 0.3
 SAMPLE_SIZE = 0.2
@@ -50,6 +53,9 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.current_selection = None
         self.current_scenario = None
+
+        self.mri_viewer = None
+        self.mri_pipe = None
 
         self.ui = None
         self.setup_gui()
@@ -246,8 +252,9 @@ class SampleOverview(QtGui.QMainWindow):
         i_widget = self.widgets_dict[subj]
         level = self.scalar_data.ix[subj, self.nominal_name]
         self.row_scroll_widgets[level].ensureWidgetVisible(i_widget)
-        i_widget.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Raised)
-        i_widget.setLineWidth(3)
+        i_widget.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
+        i_widget.setLineWidth(10)
+        i_widget.setMidLineWidth(1)
 
         self.current_selection = subj
 
@@ -286,12 +293,12 @@ class SampleOverview(QtGui.QMainWindow):
         if subj_state is not None:
             subj_state.pop("current_subject")
         print return_dict
+        self.current_scenario = return_dict
         self.reload_viewers(scenario=return_dict)
 
     def load_scenario_in_viewer(self, viewer, scenario_dict, subj):
         img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subj))
         wanted_state = scenario_dict
-        self.current_scenario = wanted_state
         #images panel
         image_state = wanted_state.get("image_state")
         if image_state is not None:
@@ -417,13 +424,21 @@ class SampleOverview(QtGui.QMainWindow):
         obs_id=viewer.subject_viewer.iren.AddObserver("LeftButtonPressEvent", dummy_i, 1.0)
         self.widget_observers[id(viewer)]=obs_id
         viewer.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        context_handler = self.__get_context_menu_handler(subject)
+        context_handler = self.__get_context_menu_handler(viewer,subject)
         viewer.customContextMenuRequested.connect(context_handler)
 
 
-    def __get_context_menu_handler(self, subj):
-        def context_menu_handler():
+    def __get_context_menu_handler(self, widget,subj):
+        def context_menu_handler(pos):
             print "Context for", subj
+            menu = QtGui.QMenu()
+            action = QtGui.QAction("Show %s in subject viewer"%subj,menu)
+            def show_subj_in_mri_viewer():
+                self.show_in_mri_viewer(subj)
+            action.triggered.connect(show_subj_in_mri_viewer)
+            menu.addAction(action)
+            global_pos=widget.mapToGlobal(pos)
+            menu.exec_(global_pos)
 
         return context_menu_handler
 
@@ -599,6 +614,31 @@ class SampleOverview(QtGui.QMainWindow):
         self.viewers_dict = new_viewers_dict
         self.widgets_dict = new_widgets_dict
         self.reload_viewers(scn_id)
+
+    def launch_mri_viewer(self):
+        #TODO: Move this to the subject_viewer class
+        #copied from anova_task
+        address = ('localhost',6001)
+        auth_key=multiprocessing.current_process().authkey
+        auth_key_asccii = binascii.b2a_hex(auth_key)
+        listener = multiprocessing.connection.Listener(address,authkey=auth_key)
+
+        #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
+        print [sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii]
+        self.mri_viewer = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",
+                                                    "0",auth_key_asccii])
+
+        #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
+        #self.mri_viewer_process.start()
+        self.mri_pipe = listener.accept()
+        #self.poll_timer.start(200)
+
+    def show_in_mri_viewer(self,subj):
+        print "showing subject", subj
+        if self.mri_viewer is None:
+            self.launch_mri_viewer()
+        scn_id = self.current_scenario["meta"]["scn_id"]
+        self.mri_pipe.send({"subject": subj,"scenario":scn_id})
 
 
 def say_ciao():
