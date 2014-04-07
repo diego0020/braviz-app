@@ -21,14 +21,14 @@ import datetime
 import functools
 import cPickle
 
-SAMPLE_SIZE = 0.3
-#SAMPLE_SIZE = 0.2
+#SAMPLE_SIZE = 0.3
+SAMPLE_SIZE = 0.2
 NOMINAL_VARIABLE = 11  # GENRE
 RATIONAL_VARIBLE = 1  # VCIIQ
 
 
 class SampleOverview(QtGui.QMainWindow):
-    def __init__(self,initial_scenario=None):
+    def __init__(self, initial_scenario=None):
         super(SampleOverview, self).__init__()
         self.reader = braviz.readAndFilter.kmc40AutoReader()
 
@@ -36,6 +36,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.sample = braviz_tab_data.get_subjects()
         self.viewers_dict = {}
         self.widgets_dict = {}
+        self.widget_observers = {}
 
         self.inside_layouts = dict()
         self.row_scroll_widgets = dict()
@@ -57,10 +58,10 @@ class SampleOverview(QtGui.QMainWindow):
             self.load_scalar_data(RATIONAL_VARIBLE, NOMINAL_VARIABLE)
             QtCore.QTimer.singleShot(100, self.add_subject_viewers)
         else:
-            self.sample=[]
+            self.sample = []
             state_str = braviz_user_data.get_scenario_data(initial_scenario)
             state = cPickle.loads(str(state_str))
-            load_scn_funct=functools.partial(self.load_scenario,state)
+            load_scn_funct = functools.partial(self.load_scenario, state)
             QtCore.QTimer.singleShot(100, load_scn_funct)
 
     def change_nominal_variable(self, new_var_index):
@@ -181,12 +182,9 @@ class SampleOverview(QtGui.QMainWindow):
         for subj in self.sample:
             level = self.scalar_data.ix[subj, self.nominal_name]
             contents = self.row_widget_contents[level]
-            viewer = QSuvjectViwerWidget(self.reader, contents)
-            viewer.setToolTip(str(subj))
+            viewer = self.__create_viewer(subj, contents)
             self.viewers_dict[subj] = viewer.subject_viewer
             self.widgets_dict[subj] = viewer
-            dummy_i = self.callback_maker(subj)
-            viewer.subject_viewer.iren.AddObserver("LeftButtonPressEvent", dummy_i, 1.0)
             QtGui.QApplication.instance().processEvents()
 
         #add viewers to rows
@@ -403,6 +401,31 @@ class SampleOverview(QtGui.QMainWindow):
             if subj2 != subj:
                 self.__set_camera_parameters(viewer, parameters)
 
+    def __create_viewer(self, subject, parent):
+        viewer = QSuvjectViwerWidget(self.reader, parent)
+        self.__set_viewer_subject(viewer, subject)
+        return viewer
+
+
+    def __set_viewer_subject(self, viewer, subject):
+        viewer.setToolTip(str(subject))
+        dummy_i = self.callback_maker(subject)
+        #remove old observer
+        old_observer = self.widget_observers.get(id(viewer))
+        if old_observer is not None:
+            viewer.subject_viewer.iren.RemoveObserver(old_observer)
+        obs_id=viewer.subject_viewer.iren.AddObserver("LeftButtonPressEvent", dummy_i, 1.0)
+        self.widget_observers[id(viewer)]=obs_id
+        viewer.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        context_handler = self.__get_context_menu_handler(subject)
+        viewer.customContextMenuRequested.connect(context_handler)
+
+
+    def __get_context_menu_handler(self, subj):
+        def context_menu_handler():
+            print "Context for", subj
+
+        return context_menu_handler
 
     def reset_cameras_to_scenario(self):
         for viewer in self.viewers_dict.itervalues():
@@ -525,29 +548,36 @@ class SampleOverview(QtGui.QMainWindow):
         vis_state = state["viz"]
         scn_id = vis_state["scenario"]
 
-        self.change_sample(new_sample,scn_id)
+        self.change_sample(new_sample, scn_id)
 
         #variables
         var_state = state["variables"]
-        self.load_scalar_data(var_state["rational"],var_state["nominal"])
+        self.load_scalar_data(var_state["rational"], var_state["nominal"])
         self.re_arrange_viewers()
-
 
         #cameras
         cameras = vis_state["cameras"]
         for subj in self.sample:
             self.viewers_dict[subj].set_camera(*cameras[subj])
 
+    def change_sample(self, new_sample, scn_id=None):
+        #remove selection
+        if self.current_selection is not None:
+            i_widget = self.widgets_dict[self.current_selection]
+            i_widget.setFrameStyle(QtGui.QFrame.NoFrame)
+            self.current_selection = None
 
-
-    def change_sample(self,new_sample,scn_id=None):
         old_sample = self.sample
         #reuse old widgets
         new_viewers_dict = {}
         new_widgets_dict = {}
-        for os,ns in izip(old_sample,new_sample):
+
+
+        for os, ns in izip(old_sample, new_sample):
             new_viewers_dict[ns] = self.viewers_dict[os]
             new_widgets_dict[ns] = self.widgets_dict[os]
+            #setup tooltip, and handlers
+            self.__set_viewer_subject(new_widgets_dict[ns], ns)
 
         #delete left_over_widgets
         for os in old_sample[len(new_sample):]:
@@ -558,20 +588,16 @@ class SampleOverview(QtGui.QMainWindow):
             widget.deleteLater()
         #create new widgets
         for ns in new_sample[len(old_sample):]:
-            print "creating widget for subject ",ns
-            viewer = QSuvjectViwerWidget(self.reader, None)
-            viewer.setToolTip(str(ns))
+            print "creating widget for subject ", ns
+            viewer = self.__create_viewer(ns, None)
             new_viewers_dict[ns] = viewer.subject_viewer
             new_widgets_dict[ns] = viewer
-            dummy_i = self.callback_maker(ns)
-            viewer.subject_viewer.iren.AddObserver("LeftButtonPressEvent", dummy_i, 1.0)
+            #TODO: Test in linux
             viewer.initialize_widget()
 
-
-
         self.sample = new_sample
-        self.viewers_dict=new_viewers_dict
-        self.widgets_dict=new_widgets_dict
+        self.viewers_dict = new_viewers_dict
+        self.widgets_dict = new_widgets_dict
         self.reload_viewers(scn_id)
 
 
@@ -592,8 +618,9 @@ def run(scn_id=None):
 
 if __name__ == "__main__":
     import sys
-    scn_id=None
-    if len(sys.argv)>=2:
+
+    scn_id = None
+    if len(sys.argv) >= 2:
         scn_id = sys.argv[1]
 
     run(scn_id)
