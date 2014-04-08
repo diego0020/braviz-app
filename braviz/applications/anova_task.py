@@ -89,7 +89,7 @@ class AnovaApp(QMainWindow):
         self.poll_timer.timeout.connect(self.poll_messages_from_mri_viewer)
 
         self.ui.actionSave_scneario.triggered.connect(self.save_scenario_dialog)
-
+        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
 
 
     def dispatch_outcome_select(self):
@@ -589,6 +589,39 @@ class AnovaApp(QMainWindow):
         res= dialog.exec_()
         if res==dialog.Accepted:
             print wanted_state
+            self.restore_state(wanted_state)
+
+    def restore_state(self,wanted_state):
+        #restore outcome
+        self.ui.calculate_button.setEnabled(0)
+        reg_name = wanted_state["vars"].get("outcome")
+        if reg_name is not None:
+            index = self.ui.outcome_sel.findText(reg_name)
+            if index >=0:
+                self.ui.outcome_sel.setCurrentIndex(index)
+            else:
+                self.ui.outcome_sel.insertItem(0,reg_name)
+                self.ui.outcome_sel.setCurrentIndex(0)
+        self.set_outcome_var_type(reg_name)
+        #restore regressors
+        regressors = wanted_state["vars"].get("regressors",tuple())
+        self.regressors_model.reset_data(regressors)
+        #restore interactions
+        interactions = wanted_state["vars"].get("interactions",tuple())
+        #TODO: Must find a better way to encode interactions
+        for inter in interactions:
+            tokens = inter.split("*")
+            self.regressors_model.add_interactor_by_names(tokens)
+        #calculate anova
+        self.check_if_ready()
+        if self.ui.calculate_button.isEnabled():
+            self.calculate_anova()
+        #set plot
+        plot_name = wanted_state["plot"].get("var_name")
+        if plot_name is not None:
+            self.update_main_plot(plot_name)
+
+
 
 def run():
     import sys

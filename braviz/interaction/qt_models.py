@@ -165,7 +165,6 @@ class VarAndGiniModel(QAbstractTableModel):
 class AnovaRegressorsModel(QAbstractTableModel):
     def __init__(self, regressors_list=tuple(), parent=None):
         QAbstractTableModel.__init__(self, parent)
-        self.conn = braviz_tab_data.get_connection()
         if len(regressors_list) > 0:
             initial_data = ( (r, self.get_degrees_of_freedom(r), 0) for r in regressors_list )
         else:
@@ -177,6 +176,19 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.__interactors_dict = dict()
         self.__next_index = 0
 
+
+    def reset_data(self,regressors_list):
+        if len(regressors_list) > 0:
+            initial_data = ( (r, self.get_degrees_of_freedom(r), 0) for r in regressors_list )
+        else:
+            initial_data = None
+        self.data_frame = pd.DataFrame(initial_data, columns=["variable", "DF", "Interaction"])
+        self.display_view = self.data_frame
+        self.__show_interactions = True
+        self.__show_regressors = True
+        self.__interactors_dict = dict()
+        self.__next_index = 0
+        self.modelReset.emit()
 
     def update_display_view(self):
         if self.__show_interactions and self.__show_regressors:
@@ -248,7 +260,8 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.modelReset.emit()
 
     def add_regressor(self, var_name):
-        if (self.data_frame["variable"] == var_name).sum() > 0:
+
+        if var_name in self.data_frame["variable"].values:
             #ignore duplicates
             return
 
@@ -281,13 +294,11 @@ class AnovaRegressorsModel(QAbstractTableModel):
 
 
     def get_degrees_of_freedom(self, var_name):
-        is_real_cur = self.conn.execute("SELECT is_real FROM variables WHERE var_name = ?", (var_name,))
-        is_real = is_real_cur.fetchone()[0]
+        is_real = braviz_tab_data.is_variable_name_real(var_name)
         if is_real is None or is_real == 1:
             return 1
-        query = """SELECT count(*) FROM nom_meta NATURAL JOIN variables WHERE  var_name=?"""
-        cur = self.conn.execute(query, (var_name,))
-        return cur.fetchone()[0] - 1
+        labels = braviz_tab_data.get_names_label_dict(var_name)
+        return len(labels) - 1
 
     def get_regressors(self):
         regs_col = self.data_frame["variable"][self.data_frame["Interaction"] == 0]
@@ -296,6 +307,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
     def get_interactions(self):
         regs_col = self.data_frame["variable"][self.data_frame["Interaction"] == 1]
         return regs_col.get_values()
+
 
 
     def add_interactor(self, factor_rw_indexes):
@@ -313,6 +325,11 @@ class AnovaRegressorsModel(QAbstractTableModel):
 
         #get var_names
         factor_names = self.data_frame["variable"].loc[factor_indexes]
+        self.add_interactor_by_names(factor_names)
+
+    def add_interactor_by_names(self,factor_names):
+        df = self.data_frame
+        factor_indexes = [ df.index[df["variable"]==fn].values[0] for fn in factor_names]
         #create name
         interactor_name = '*'.join(factor_names)
         print interactor_name
@@ -1171,7 +1188,7 @@ class ScenariosTableModel(QAbstractTableModel):
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation == QtCore.Qt.Horizontal:
-            if 0 <= p_int < len(self.df):
+            if 0 <= p_int < self.df.shape[1]:
                 if int_role == QtCore.Qt.DisplayRole:
                     return self.headers[p_int]
         return QtCore.QVariant()
