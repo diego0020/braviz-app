@@ -44,12 +44,14 @@ class SampleOverview(QtGui.QMainWindow):
         self.inside_layouts = dict()
         self.row_scroll_widgets = dict()
         self.row_widget_contents = dict()
+        self.row_labels=dict()
 
         self.scalar_data = None
         self.nominal_name = None
         self.nominal_index = None
         self.rational_index = None
         self.rational_name = None
+        self.labels_dict = {}
 
         self.current_selection = None
         self.current_scenario = None
@@ -85,6 +87,7 @@ class SampleOverview(QtGui.QMainWindow):
         new_scrolls_dict = dict()
         new_contents_dict = dict()
         new_layouts_dict = dict()
+        new_labels = dict()
         old_levels = sorted(self.row_scroll_widgets.keys())
 
         #reuse existing rows
@@ -92,6 +95,12 @@ class SampleOverview(QtGui.QMainWindow):
             new_scrolls_dict[nl] = self.row_scroll_widgets[ol]
             new_contents_dict[nl] = self.row_widget_contents[ol]
             new_layouts_dict[nl] = self.inside_layouts[ol]
+            new_labels[nl] = self.row_labels[ol]
+            level_name = self.labels_dict[nl]
+            if level_name is None:
+                level_name = "Level %d"%nl
+            new_labels[nl].setText(level_name)
+            new_labels[nl].set_color(self.plot_widget.colors_dict[nl])
 
         for nl in unique_levels[len(old_levels):]:
             #create new rows
@@ -106,23 +115,30 @@ class SampleOverview(QtGui.QMainWindow):
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
             self.ui.row_layout.insertWidget(0, scroll, 9)
+            level_name = self.labels_dict[nl]
+            if level_name is None:
+                level_name = "Level %d"%nl
+            label = self.get_rotated_label(scroll,level_name,self.plot_widget.colors_dict[nl])
+            new_labels[nl]=label
+            inside_lay.addWidget(label)
             print "new row created"
 
         #set to 0 column widths
         for nl in unique_levels:
             lay = new_layouts_dict[nl]
-            for i in xrange(lay.columnCount()):
+            for i in xrange(1,lay.columnCount()):
                 lay.setColumnMinimumWidth(i, 0)
         cnt = Counter()
         for subj in self.sample:
             viewer = self.widgets_dict[subj]
             level = self.scalar_data.ix[subj, self.nominal_name]
             i = cnt[level]
-            new_layouts_dict[level].addWidget(viewer, 0, i)
-            new_layouts_dict[level].setColumnMinimumWidth(i, 400)
+            #+1 to leave room for labels
+            new_layouts_dict[level].addWidget(viewer, 0, i+1)
+            new_layouts_dict[level].setColumnMinimumWidth(i+1, 400)
             cnt[level] += 1
 
-        print cnt
+        #print cnt
         for nl in unique_levels:
             print nl, new_layouts_dict[nl].columnCount()
 
@@ -130,11 +146,13 @@ class SampleOverview(QtGui.QMainWindow):
         for ol in old_levels[len(unique_levels):]:
             print "adios row"
             self.row_scroll_widgets[ol].deleteLater()
+            self.row_labels[ol].deleteLater()
 
         #set dictionaries
         self.row_scroll_widgets = new_scrolls_dict
         self.row_widget_contents = new_contents_dict
         self.inside_layouts = new_layouts_dict
+        self.row_labels = new_labels
 
 
     def take_random_sample(self):
@@ -184,6 +202,13 @@ class SampleOverview(QtGui.QMainWindow):
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
             self.ui.row_layout.insertWidget(0, scroll, 9)
+            #add label
+            level_name = self.labels_dict.get(level)
+            if level_name is None:
+                level_name = "Level %d"%level
+            label = self.get_rotated_label(scroll,level_name,self.plot_widget.colors_dict.get(level))
+            inside_lay.addWidget(label)
+            self.row_labels[level]=label
 
         for subj in self.sample:
             level = self.scalar_data.ix[subj, self.nominal_name]
@@ -206,6 +231,14 @@ class SampleOverview(QtGui.QMainWindow):
             QtGui.QApplication.instance().processEvents()
 
         self.reload_viewers()
+
+    def get_rotated_label(self,parent,text,color):
+        from braviz.interaction.qt_widgets import RotatedLabel
+        label = RotatedLabel(parent)
+        label.set_color(color)
+        label.setFixedWidth(30)
+        label.setText(text)
+        return label
 
     def reload_viewers(self, scenario=None):
         self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
@@ -275,7 +308,9 @@ class SampleOverview(QtGui.QMainWindow):
         self.sample.sort(key=lambda s: self.scalar_data[self.rational_name][s])
         print self.sample
         labels_dict = braviz_tab_data.get_labels_dict(nominal_var_index)
+        self.labels_dict = labels_dict
         self.plot_widget.draw_bars(self.scalar_data, orientation="horizontal", group_labels=labels_dict)
+
 
     def select_from_bar(self, subj_id):
         print subj_id

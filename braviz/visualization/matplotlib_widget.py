@@ -46,6 +46,7 @@ class MatplotWidget(FigureCanvas):
         self.data = None
         self.last_id = None
 
+        self.colors_dict = None
 
 
 
@@ -55,6 +56,7 @@ class MatplotWidget(FigureCanvas):
 
     def draw_bars(self,data,ylims=None,orientation="vertical",group_labels=None):
         self.painted_plot = MatplotBarPlot(self.axes,data,ylims,orientation,group_labels)
+        self.colors_dict = self.painted_plot.colors_dict
         self.show()
         self.draw()
 
@@ -178,6 +180,9 @@ class MatplotBarPlot():
         self.heights = heights
         #self.colors = colors
 
+        groups = self.data.groupby(self.data.columns[1])
+        colors_list=matplotlib.rcParams['axes.color_cycle']
+        self.colors_dict = dict((n,colors_list[i]) for i, (n,_) in enumerate(groups))
         self.redraw()
 
 
