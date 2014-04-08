@@ -347,6 +347,8 @@ class SampleOverview(QtGui.QMainWindow):
 
 
     def load_scalar_data(self, rational_var_index, nominal_var_index):
+        if (self.rational_index == rational_var_index) and (self.nominal_index == nominal_var_index):
+            return
         self.rational_index = rational_var_index
         self.nominal_index = nominal_var_index
         self.scalar_data = braviz_tab_data.get_data_frame_by_index((rational_var_index, nominal_var_index), self.reader)
