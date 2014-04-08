@@ -8,8 +8,10 @@ from PyQt4.QtGui import QMainWindow
 import numpy as np
 
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
+import braviz.interaction.qt_dialogs
 from braviz.interaction.qt_dialogs import OutcomeSelectDialog, RegressorSelectDialog, MatplotWidget,\
     InteractionSelectDialog
+
 import braviz.interaction.r_functions
 
 import braviz.interaction.qt_models as braviz_models
@@ -26,6 +28,9 @@ import multiprocessing.connection
 import subprocess
 import sys
 import binascii
+import datetime
+import os
+import platform
 
 #TODO: Move all database access to read and filter
 
@@ -42,6 +47,7 @@ class AnovaApp(QMainWindow):
         self.plot_x_var = None
         self.plot_z_var = None
         self.plot_color = None
+        self.plot_var_name = None
         self.last_viewed_subject = None
         self.mri_viewer_pipe = None
         self.mri_viewer_process = None
@@ -81,6 +87,8 @@ class AnovaApp(QMainWindow):
         self.ui.sample_tree.customContextMenuRequested.connect(self.subject_details_from_tree)
         self.poll_timer = QtCore.QTimer(self)
         self.poll_timer.timeout.connect(self.poll_messages_from_mri_viewer)
+
+        self.ui.actionSave_scneario.triggered.connect(self.save_scenario_dialog)
 
 
 
@@ -204,6 +212,7 @@ class AnovaApp(QMainWindow):
         self.update_main_plot(var_name)
 
     def update_main_plot(self, var_name):
+        self.plot_var_name = var_name
         self.plot_x_var = None
         self.plot_data_frame = None
         self.plot_z_var = None
@@ -535,9 +544,43 @@ class AnovaApp(QMainWindow):
             print "sending message: subj:", message
 
     def closeEvent(self, *args, **kwargs):
-        if self.mri_viewer_process is not None:
-            self.mri_viewer_process.terminate()
+        #if self.mri_viewer_process is not None:
+            #self.mri_viewer_process.terminate()
         print "ciao"
+
+    def get_state(self):
+        state = {}
+        vars_state = {}
+        vars_state["outcome"]=self.outcome_var_name
+        vars_state["regressors"]=self.regressors_model.get_regressors()
+        vars_state["interactions"]=self.regressors_model.get_interactions()
+        state["vars"] = vars_state
+        state["plot"] = {"var_name":self.plot_var_name}
+
+        meta = dict()
+        meta["date"] = datetime.datetime.now()
+        meta["exec"] = sys.argv
+        meta["machine"] = platform.node()
+        meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
+        state["meta"] = meta
+        return state
+
+    def save_scenario_dialog(self):
+        state = self.get_state()
+        params = {}
+        app_name = state["meta"]["application"]
+        dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name,state,params)
+        res=dialog.exec_()
+        if res == dialog.Accepted:
+            #save main plot as screenshot
+            scn_id = params["scn_id"]
+            pixmap = QtGui.QPixmap.grabWidget(self.plot)
+            file_name = "scenario_%d.png"%scn_id
+            data_root = braviz.readAndFilter.kmc40_auto_data_root()
+            file_path = os.path.join(data_root, "braviz_data","scenarios",file_name)
+            pixmap.save(file_path)
+
+        print state
 
 
 def run():

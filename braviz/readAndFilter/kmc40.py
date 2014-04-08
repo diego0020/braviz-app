@@ -925,24 +925,31 @@ The path containing this structure must be set."""
         return reader.GetOutput()
 
 
+__known_nodes = {  #
+             # Name          :  ( data root                   , cache size in MB)
+             #'IIND-EML753022': ('C:\\Users\\da.angulo39\\Documents\\Kanguro',1400), (No longer exists :( )
+             'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db', 4000),
+             'Unidelosandes': ('K:\\JohanaForero\\KAB-db', 1200),
+             'dieg8': (r'C:\Users\Diego\Documents\kmc40-db\KAB-db', 4000),
+             'TiberioHernande': (r'E:\KAB-db', 1100),
+             'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
+             'ISIS-EML725001': (r'C:\KAB-db', 1200),
+             'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db",4000),
+}
+
+
+def get_data_root():
+    node_id = platform.node()
+    node = __known_nodes.get(node_id)
+    if node is not None:
+        return node[0]
+    raise Exception("Unkown node")
+
 #===============================================================================================
 def autoReader(**kw_args):
     """Initialized a kmc40Reader based on the computer name"""
-
-    known_nodes = {  #
-                     # Name          :  ( data root                   , cache size in MB)
-                     #'IIND-EML753022': ('C:\\Users\\da.angulo39\\Documents\\Kanguro',1400), (No longer exists :( )
-                     'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db', 4000),
-                     'Unidelosandes': ('K:\\JohanaForero\\KAB-db', 1200),
-                     'dieg8': (r'C:\Users\Diego\Documents\kmc40-db\KAB-db', 4000),
-                     'TiberioHernande': (r'E:\KAB-db', 1100),
-                     'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
-                     'ISIS-EML725001': (r'C:\KAB-db', 1200),
-                     'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db",4000),
-    }
     node_id = platform.node()
-
-    node = known_nodes.get(node_id)
+    node = __known_nodes.get(node_id)
     if node is not None:
         data_root = node[0]
         if kw_args.get('max_cache', 0) > 0:

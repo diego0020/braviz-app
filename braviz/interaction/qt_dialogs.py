@@ -1193,7 +1193,10 @@ class SaveScenarioDialog(QtGui.QDialog):
         self.ui = Ui_SaveScenarioDialog()
         self.ui.setupUi(self)
         self.ui.app_name.setText(self.app_name)
-        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.save_into_db)
+        self.ui.save_button=QtGui.QPushButton("Save")
+        self.ui.save_button.clicked.connect(self.save_into_db)
+        self.ui.buttonBox.addButton(self.ui.save_button,QtGui.QDialogButtonBox.ActionRole)
+        self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Cancel)
         self.ui.succesful_message.setText("")
 
 
