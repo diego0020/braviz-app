@@ -182,7 +182,7 @@ class MatplotBarPlot():
 
         groups = self.data.groupby(self.data.columns[1])
         colors_list=matplotlib.rcParams['axes.color_cycle']
-        self.colors_dict = dict((n,colors_list[i]) for i, (n,_) in enumerate(groups))
+        self.colors_dict = dict((n,colors_list[i]) for i, (n,g) in enumerate(groups) if len(g)>0)
         self.redraw()
 
 
@@ -196,8 +196,12 @@ class MatplotBarPlot():
         else:
             groups = self.data.groupby(self.data.columns[1])
             for i,(name,group) in enumerate(groups):
-                label = self.group_labels[name] if self.group_labels is not None else name
-                self.__draw_bars_and_higlight(group,label,colors_list[i])
+                if len(group)>0:
+                    label = self.group_labels[name] if self.group_labels is not None else None
+                    if label is None or len(label)==0:
+                        label = "Level %s"%name
+                    print label
+                    self.__draw_bars_and_higlight(group,label,colors_list[i])
 
         if self.orientation == "vertical":
             self.axes.set_xticklabels(self.data.index)

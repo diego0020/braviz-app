@@ -25,7 +25,7 @@ import binascii
 import subprocess
 
 #SAMPLE_SIZE = 0.3
-SAMPLE_SIZE = 0.2
+SAMPLE_SIZE = 0.5
 NOMINAL_VARIABLE = 11  # GENRE
 RATIONAL_VARIBLE = 1  # VCIIQ
 
@@ -62,6 +62,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.mri_pipe = None
 
         self.ui = None
+        self.context_menu_opened_recently = False
         self.setup_gui()
         if initial_scenario is None:
             self.take_random_sample()
@@ -94,21 +95,26 @@ class SampleOverview(QtGui.QMainWindow):
         new_row_lays = dict()
         old_levels = sorted(self.row_scroll_widgets.keys())
 
+        print unique_levels
         #reuse existing rows
         for nl, ol in izip(unique_levels, old_levels):
+            if np.isnan(nl):
+                nl="nan"
             new_scrolls_dict[nl] = self.row_scroll_widgets[ol]
             new_contents_dict[nl] = self.row_widget_contents[ol]
             new_layouts_dict[nl] = self.inside_layouts[ol]
             new_labels[nl] = self.row_labels[ol]
-            level_name = self.labels_dict[nl]
-            if level_name is None:
-                level_name = "Level %d"%nl
+            level_name = self.labels_dict.get(nl,"<?>")
+            if level_name is None or len(level_name)==0:
+                level_name = "Level %s"%nl
             new_labels[nl].setText(level_name)
-            new_labels[nl].set_color(self.plot_widget.colors_dict[nl])
+            new_labels[nl].set_color(self.plot_widget.colors_dict.get(nl,"#EA7AE3"))
             new_row_frames[nl] = self.row_frames[ol]
             new_row_lays[nl] = self.row_frame_lays[ol]
 
         for nl in unique_levels[len(old_levels):]:
+            if np.isnan(nl):
+                nl="nan"
             #create new rows
             row_frame = QtGui.QFrame(self.ui.view)
             self.ui.row_layout.addWidget(row_frame,1)
@@ -121,7 +127,7 @@ class SampleOverview(QtGui.QMainWindow):
             #add label
             level_name = self.labels_dict.get(nl)
             if level_name is None:
-                level_name = "Level %d"%nl
+                level_name = "Level %s"%nl
             label = self.get_rotated_label(row_frame,level_name,self.plot_widget.colors_dict.get(nl))
             row_lay.addWidget(label)
             new_labels[nl]=label
@@ -140,10 +146,12 @@ class SampleOverview(QtGui.QMainWindow):
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
 
-            print "new row created"
+            print "new row created, level", nl
 
         #set to 0 column widths
         for nl in unique_levels:
+            if np.isnan(nl):
+                nl="nan"
             lay = new_layouts_dict[nl]
             for i in xrange(0,lay.columnCount()):
                 lay.setColumnMinimumWidth(i, 0)
@@ -151,6 +159,8 @@ class SampleOverview(QtGui.QMainWindow):
         for subj in self.sample:
             viewer = self.widgets_dict[subj]
             level = self.scalar_data.ix[subj, self.nominal_name]
+            if np.isnan(level):
+                level="nan"
             i = cnt[level]
             new_layouts_dict[level].addWidget(viewer, 0, i)
             new_layouts_dict[level].setColumnMinimumWidth(i, 400)
@@ -225,7 +235,7 @@ class SampleOverview(QtGui.QMainWindow):
             #add label
             level_name = self.labels_dict.get(level)
             if level_name is None:
-                level_name = "Level %d"%level
+                level_name = "Level %s"%level
             label = self.get_rotated_label(row_frame,level_name,self.plot_widget.colors_dict.get(level))
             row_lay.addWidget(label)
             self.row_labels[level]=label
@@ -322,6 +332,8 @@ class SampleOverview(QtGui.QMainWindow):
         #new selection
         i_widget = self.widgets_dict[subj]
         level = self.scalar_data.ix[subj, self.nominal_name]
+        if np.isnan(level):
+            level="nan"
         self.row_scroll_widgets[level].ensureWidgetVisible(i_widget)
         i_widget.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
         i_widget.setLineWidth(10)
@@ -502,7 +514,11 @@ class SampleOverview(QtGui.QMainWindow):
 
 
     def __get_context_menu_handler(self, widget,subj):
+        def re_enable_context():
+            self.context_menu_opened_recently = False
         def context_menu_handler(pos):
+            if self.context_menu_opened_recently:
+                return
             print "Context for", subj
             menu = QtGui.QMenu()
             action = QtGui.QAction("Show %s in subject viewer"%subj,menu)
@@ -511,7 +527,11 @@ class SampleOverview(QtGui.QMainWindow):
             action.triggered.connect(show_subj_in_mri_viewer)
             menu.addAction(action)
             global_pos=widget.mapToGlobal(pos)
-            menu.exec_(global_pos)
+            menu.popup(global_pos)
+            self.context_menu=menu
+            self.context_menu_opened_recently = True
+
+            QtCore.QTimer.singleShot(5000,re_enable_context)
 
         return context_menu_handler
 
@@ -545,6 +565,8 @@ class SampleOverview(QtGui.QMainWindow):
                 self.change_nominal_variable(selected_facet_index)
         else:
             selected_name = self.ui.nomina_combo.currentText()
+            if selected_name == self.nominal_name:
+                return
             if str(selected_name) != self.nominal_name:
                 selected_index = braviz_tab_data.get_var_idx(str(selected_name))
                 print selected_index, selected_name
