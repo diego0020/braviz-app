@@ -14,6 +14,7 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
+import braviz
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
 from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
@@ -1215,7 +1216,7 @@ class SaveScenarioDialog(QtGui.QDialog):
 
 
 class LoadScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,out_dict,reader):
+    def __init__(self,app_name,out_dict,reader=None):
         super(LoadScenarioDialog,self).__init__()
         self.out_dict = out_dict
         self.model = braviz_models.ScenariosTableModel(app_name)
@@ -1240,7 +1241,11 @@ class LoadScenarioDialog(QtGui.QDialog):
         index = self.model.data(index,QtCore.Qt.UserRole)
         self.ui.screen_shot_label.setText("<No screenshot available>"%index)
         self.ui.screen_shot_label.setScaledContents(False)
-        image_file = os.path.join(self.reader.getDataRoot(),"braviz_data","scenarios","scenario_%d.png"%index)
+        if self.reader is None:
+            data_root = braviz.readAndFilter.kmc40_auto_data_root()
+        else:
+            data_root = self.reader.getDataRoot()
+        image_file = os.path.join(data_root,"braviz_data","scenarios","scenario_%d.png"%index)
         if os.path.isfile(image_file):
             image = QtGui.QImage(image_file)
             scaled_image = image.scaledToWidth(300,)

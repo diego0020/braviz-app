@@ -582,6 +582,13 @@ class AnovaApp(QMainWindow):
 
         print state
 
+    def load_scenario_dialog(self):
+        app_name = os.path.splitext(os.path.basename(__file__))[0]
+        wanted_state = {}
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(app_name,wanted_state)
+        res= dialog.exec_()
+        if res==dialog.Accepted:
+            print wanted_state
 
 def run():
     import sys
