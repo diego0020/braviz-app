@@ -8,10 +8,12 @@ from PyQt4 import QtCore
 
 from braviz.interaction.qt_guis.menu2 import Ui_BavizMenu
 import braviz.interaction.qt_dialogs
+import braviz.interaction.qt_sample_select_dialog
 
-class BrabizMenu2(QtGui.QMainWindow):
+
+class BravizMenu2(QtGui.QMainWindow):
     def __init__(self):
-        super(BrabizMenu2,self).__init__()
+        super(BravizMenu2,self).__init__()
         self.reader = None
 
         self.ui = None
@@ -28,6 +30,7 @@ class BrabizMenu2(QtGui.QMainWindow):
                                                                                self.ui.subject_overview))
         self.ui.variables.clicked.connect(self.launch_variable_management_dialog)
         self.ui.scenarios.clicked.connect(self.launch_scenarios_dialog)
+        self.ui.samples.clicked.connect(self.launch_samples_dialog)
 
     __applications = {
         "subject_overview" : "subject_overview",
@@ -54,6 +57,10 @@ class BrabizMenu2(QtGui.QMainWindow):
         dialog.ui.select_button.setText("Done")
         dialog.exec_()
 
+    def launch_samples_dialog(self):
+        dialog = braviz.interaction.qt_sample_select_dialog.SampleSelectDilog()
+        dialog.exec_()
+
     def launch_scenarios_dialog(self):
         if self.reader is None:
             self.reader = braviz.readAndFilter.kmc40AutoReader()
@@ -73,7 +80,7 @@ class BrabizMenu2(QtGui.QMainWindow):
 def run():
     import sys
     app = QtGui.QApplication(sys.argv)
-    main_window = BrabizMenu2()
+    main_window = BravizMenu2()
     main_window.show()
     app.exec_()
 

@@ -19,7 +19,6 @@ background-image: url(:/icons/imagine.svg);
 background-repeat: no-repeat;
 background-position: bottom right;
 background-origin: content;
-background-left:10px;
 }</string>
   </property>
   <property name="iconSize">
@@ -435,7 +434,7 @@ background-left:10px;
        <item>
         <widget class="QToolButton" name="samples">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="text">
           <string>Samples</string>
