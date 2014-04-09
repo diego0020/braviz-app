@@ -174,7 +174,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.__show_interactions = True
         self.__show_regressors = True
         self.__interactors_dict = dict()
-        self.__next_index = 0
+        self.__next_index = len(regressors_list)
 
 
     def reset_data(self,regressors_list):
@@ -187,7 +187,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.__show_interactions = True
         self.__show_regressors = True
         self.__interactors_dict = dict()
-        self.__next_index = 0
+        self.__next_index = len(regressors_list)
         self.modelReset.emit()
 
     def update_display_view(self):

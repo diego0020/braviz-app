@@ -346,15 +346,14 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.camera_combo.setItemText(2, "Copy from %s" % self.current_selection)
 
 
-    def load_scalar_data(self, rational_var_index, nominal_var_index):
-        if (self.rational_index == rational_var_index) and (self.nominal_index == nominal_var_index):
+    def load_scalar_data(self, rational_var_index, nominal_var_index,force=False):
+        if not force and (self.rational_index == rational_var_index) and (self.nominal_index == nominal_var_index):
             return
         self.rational_index = rational_var_index
         self.nominal_index = nominal_var_index
         self.scalar_data = braviz_tab_data.get_data_frame_by_index((rational_var_index, nominal_var_index), self.reader)
         self.rational_name = self.scalar_data.columns[0]
         self.nominal_name = self.scalar_data.columns[1]
-        #Take random subsample
         self.scalar_data = self.scalar_data.loc[self.sample]
         self.scalar_data.sort(self.rational_name, inplace=True, ascending=False)
         self.sample.sort(key=lambda s: self.scalar_data[self.rational_name][s])
@@ -673,7 +672,7 @@ class SampleOverview(QtGui.QMainWindow):
 
         #variables
         var_state = state["variables"]
-        self.load_scalar_data(var_state["rational"], var_state["nominal"])
+        self.load_scalar_data(var_state["rational"], var_state["nominal"],force=True)
         self.re_arrange_viewers()
 
         #cameras

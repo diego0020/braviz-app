@@ -612,6 +612,8 @@ class AnovaApp(QMainWindow):
         for inter in interactions:
             tokens = inter.split("*")
             self.regressors_model.add_interactor_by_names(tokens)
+        self.regressors_model.show_interactions(True)
+        self.regressors_model.show_regressors(True)
         #calculate anova
         self.check_if_ready()
         if self.ui.calculate_button.isEnabled():
