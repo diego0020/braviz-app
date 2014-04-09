@@ -46,6 +46,18 @@ def create_tables():
     conn.execute(q)
     conn.commit()
 
+    q="""
+    CREATE TABLE IF NOT EXISTS subj_samples (
+    sample_idx INTEGER PRIMARY KEY,
+    sample_name TEXT,
+    sample_desc TEXT,
+    sample_data BLOB
+    );
+    """
+
+    conn.execute(q)
+    conn.commit()
+
 
 def add_current_applications():
     apps = ("subject_overview","anova","sample_overview")

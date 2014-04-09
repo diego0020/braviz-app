@@ -8,7 +8,8 @@ style.use('ggplot')
 from braviz.interaction.qt_guis.sample_select_dialog import Ui_SampleSelectDialog
 from braviz.interaction.qt_guis.add_filter_dialog import Ui_AddFilterDialog
 from braviz.interaction.qt_guis.rational_details_frame_filtering import Ui_rational_details
-from braviz.interaction.qt_models import SimpleSetModel
+from braviz.interaction.qt_guis.select_subsample_dialog import Ui_SelectSubsample
+from braviz.interaction.qt_models import SimpleSetModel, SamplesFilterModel
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from PyQt4 import QtGui, QtCore
 from braviz.interaction.qt_dialogs import VariableSelectDialog
@@ -23,8 +24,9 @@ class SampleSelectDilog(QtGui.QDialog):
 
         self.working_model = SimpleSetModel()
         self.output_model = SimpleSetModel()
+        self.filters_model = SamplesFilterModel()
         self.base_sample = []
-        self.filtered_sample = set()
+        self.history=[]
 
         self.ui = None
         self.setup_ui()
@@ -38,6 +40,53 @@ class SampleSelectDilog(QtGui.QDialog):
         self.ui.working_set_view.setModel(self.working_model)
         self.ui.current_view.setModel(self.output_model)
         self.ui.add_filter_button.clicked.connect(self.show_add_filter_dialog)
+        self.ui.filters.setModel(self.filters_model)
+        self.ui.add_all_button.clicked.connect(self.add_all)
+        self.ui.remove_button.clicked.connect(self.substract)
+        self.ui.intersect_button.clicked.connect(self.intersect)
+        self.ui.clear_button.clicked.connect(self.clear)
+        self.ui.undo_button.clicked.connect(self.undo_action)
+        self.ui.add_subset_button.clicked.connect(self.add_subset)
+
+    def change_output_sample(self,new_set):
+        #to make sure it is not altered afterwards
+        new_set = frozenset(new_set)
+        self.history.append(self.output_model.get_elements())
+        if len(self.history)>0:
+            self.ui.undo_button.setEnabled(1)
+        self.output_model.set_elements(new_set)
+
+    def add_all(self):
+        new_set = self.working_model.get_elements().union(self.output_model.get_elements())
+        self.change_output_sample(new_set)
+
+    def substract(self):
+        new_set = self.output_model.get_elements()-self.working_model.get_elements()
+        self.change_output_sample(new_set)
+
+    def intersect(self):
+        new_set = self.output_model.get_elements().intersection(self.working_model.get_elements())
+        self.change_output_sample(new_set)
+
+    def add_subset(self):
+        working_set = self.working_model.get_elements()
+        dialog = SubSampleSelectDialog(len(working_set))
+        ret=dialog.exec_()
+        if ret == dialog.Accepted:
+            sub_sample = np.random.choice(list(working_set),dialog.subsample_size,replace=False)
+            self.change_output_sample(set(sub_sample))
+
+
+
+    def clear(self):
+        new_set = set()
+        self.change_output_sample(new_set)
+
+    def undo_action(self):
+        last_set = self.history.pop()
+        if len(self.history)<=0:
+            self.ui.undo_button.setEnabled(0)
+        self.output_model.set_elements(last_set)
 
     def get_base_sample(self,sample_id=None):
         if sample_id is None:
@@ -48,9 +97,8 @@ class SampleSelectDilog(QtGui.QDialog):
         self.update_filters()
 
     def update_filters(self):
-        output_sample = self.base_sample
+        output_sample = self.filters_model.apply_filters(self.base_sample)
         output_set = set(output_sample)
-        self.filtered_sample = output_set
         self.working_model.set_elements(output_set)
 
     def show_add_filter_dialog(self):
@@ -58,29 +106,45 @@ class SampleSelectDilog(QtGui.QDialog):
         dialog = AddFilterDialog(params)
         ret = dialog.exec_()
         if ret == dialog.Accepted:
+            print "accepted"
             filter_name = get_filter_name(params)
-            filter_func = get_filter_function()
-            #TODO add to model
+            filter_func = get_filter_function(params)
+            self.filters_model.add_filter(filter_name,filter_func)
+            self.update_filters()
+
 
 
 def get_filter_name(params):
     if params["var_real"] is True:
         name = "%s %s %f"%(params["filter_var"],params["operation"],params["threshold"])
     else:
-        name = "%s in {%s}"%(params["filter_var"],", ".join(params["checked_names"]))
+        checked_names = params["checked_names"]
+        if len(checked_names)==0:
+            name = "%s in {}"%params["filter_var"]
+        else:
+            name = "%s in { %s }"%(params["filter_var"],", ".join(params["checked_names"]))
     return name
+
 
 def get_filter_function(params):
     if params["var_real"] is True:
         op = params["operation"]
         if op == "<":
-            return lambda x:x<params["threshold"]
+            f = lambda x:x<params["threshold"]
         elif op == ">":
-            return lambda x:x>params["threshold"]
+            f = lambda x:x>params["threshold"]
         else:
-            return lambda x:x==params["threshold"]
+            f = lambda x:x==params["threshold"]
     else:
-        return lambda x:x in params["checked_labels"]
+        f = lambda x:x in params["checked_labels"]
+    #get data
+    var_name = params["filter_var"]
+    var_idx = braviz_tab_data.get_var_idx(var_name)
+
+    def filter_func(subj):
+        x = braviz_tab_data.get_var_value(var_idx,subj)
+        return f(x)
+    return filter_func
 
 
 class AddFilterDialog(VariableSelectDialog):
@@ -207,11 +271,31 @@ class AddFilterDialog(VariableSelectDialog):
                 self.params_dict["threshold"] = self.details_ui.th_spin.value()
             else:
                 self.params_dict["checked_labels"] = self.nominal_model.get_checked()
-                self.params_dict["checked_names"] = [self.nominal_model.names_dict[l]
+                def get_name(l):
+                    label_name = self.nominal_model.names_dict.get(l)
+                    if label_name is not None:
+                        return label_name
+                    return "Level %s"%l
+                self.params_dict["checked_names"] = [get_name(l)
                                                      for l in self.params_dict["checked_labels"]]
-
         self.accept()
 
+
+class SubSampleSelectDialog(QtGui.QDialog):
+    def __init__(self, original_length):
+        super(SubSampleSelectDialog,self).__init__()
+        self.subsample_size = 0
+        dialog_ui = Ui_SelectSubsample()
+        dialog_ui.setupUi(self)
+        dialog_ui.spinBox.valueChanged.connect(self.update_value)
+        dialog_ui.spinBox.setMaximum(original_length)
+        dialog_ui.spinBox.setMinimum(0)
+        self.ui = dialog_ui
+        self.full_length = original_length
+
+    def update_value(self,value):
+        self.subsample_size=value
+        self.ui.label_2.setText("%.2f %%"%(int(value)/self.full_length*100))
 
 if __name__ == "__main__":
     app = QtGui.QApplication([])

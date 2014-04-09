@@ -1264,5 +1264,33 @@ class SimpleSetModel(QAbstractListModel):
         self.__internal_list=sorted(list(set))
         self.modelReset.emit()
 
+class SamplesFilterModel(QAbstractListModel):
+    def __init__(self):
+        super(SamplesFilterModel,self).__init__()
+        self.__filters_list = []
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.__filters_list)
+
+    def data(self, QModelIndex, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if 0 <= row < len(self.__filters_list):
+                if int_role == QtCore.Qt.DisplayRole:
+                    return str(self.__filters_list[row][0])
+        return QtCore.QVariant()
+    def add_filter(self,filter_name,filter_func):
+        new_row = len(self.__filters_list)
+        self.beginInsertRows(QtCore.QModelIndex(),new_row,new_row)
+        self.__filters_list.append((filter_name,filter_func))
+        self.endInsertRows()
+
+
+    def apply_filters(self,input_set):
+        output_set = input_set
+        for _,f in self.__filters_list:
+            output_set = filter(f,output_set)
+        return output_set
+
 if __name__ == "__main__":
     test_tree = StructureTreeModel()

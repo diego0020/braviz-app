@@ -112,7 +112,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3" stretch="9,0,1,0,0,0,0,9">
+     <layout class="QVBoxLayout" name="verticalLayout_3" stretch="9,0,1,0,0,0,0,1,0,9">
       <item>
        <spacer name="verticalSpacer">
         <property name="orientation">
@@ -128,6 +128,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="undo_button">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="toolTip">
          <string>Undo last operation</string>
         </property>
@@ -186,6 +189,26 @@
         </property>
         <property name="text">
          <string>Intersect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="clear_button">
+        <property name="text">
+         <string>Clear</string>
         </property>
        </widget>
       </item>
