@@ -381,6 +381,8 @@ class NominalVariablesMeta(QAbstractTableModel):
         self.labels_list = []
         self.headers = ("label", "name")
         self.update_model(var_name)
+        self.checkeable = False
+        self.unchecked = set()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.labels_list)
@@ -389,18 +391,21 @@ class NominalVariablesMeta(QAbstractTableModel):
         return 2
 
     def data(self, QModelIndex, int_role=None):
-        if not (int_role == QtCore.Qt.DisplayRole or int_role == QtCore.Qt.EditRole):
-            return QtCore.QVariant()
         line = QModelIndex.row()
         col = QModelIndex.column()
         if 0 <= line < len(self.labels_list):
             if col == 0:
-                return self.labels_list[line]
+                if (int_role == QtCore.Qt.DisplayRole) or (int_role == QtCore.Qt.EditRole):
+                    return self.labels_list[line]
+                if self.checkeable and (int_role == QtCore.Qt.CheckStateRole):
+                    checked = not (self.labels_list[line] in self.unchecked)
+                    return QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked
             elif col == 1:
-                return self.names_dict.get(self.labels_list[line], "")
+                if (int_role == QtCore.Qt.DisplayRole) or (int_role == QtCore.Qt.EditRole):
+                    return self.names_dict.get(self.labels_list[line], "")
             else:
                 return QtCore.QVariant()
-
+        return QtCore.QVariant()
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if int_role != QtCore.Qt.DisplayRole:
             return QtCore.QVariant()
@@ -425,13 +430,22 @@ class NominalVariablesMeta(QAbstractTableModel):
         #print "Data change requested"
         #print int_role
         #print QVariant
-        if int_role != QtCore.Qt.EditRole:
-            return False
-        if col != 1 or row < 0 or row >= self.rowCount():
-            return False
-        self.names_dict[self.labels_list[row]] = unicode(QVariant.toString())
-        self.dataChanged.emit(QModelIndex, QModelIndex)
-        return True
+        if (int_role == QtCore.Qt.EditRole) and (col == 1 and 0<=row< self.rowCount()):
+            self.names_dict[self.labels_list[row]] = unicode(QVariant.toString())
+            self.dataChanged.emit(QModelIndex, QModelIndex)
+            return True
+        elif (int_role == QtCore.Qt.CheckStateRole) and (col==0 and 0<=row< self.rowCount()):
+            state = QVariant.toInt()[0]
+            label = self.labels_list[row]
+            if state == QtCore.Qt.Checked:
+                self.unchecked.remove(label)
+            elif state == QtCore.Qt.Unchecked:
+                self.unchecked.add(label)
+            else:
+                return False
+            self.emit(QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)
+            return True
+        return False
 
 
     def flags(self, QModelIndex):
@@ -443,6 +457,8 @@ class NominalVariablesMeta(QAbstractTableModel):
             flags = flags | QtCore.Qt.ItemIsEnabled
             if col == 1:
                 flags = flags | QtCore.Qt.ItemIsEditable
+            elif col ==0 and (self.checkeable is True):
+                flags |= QtCore.Qt.ItemIsUserCheckable
         return flags
 
     def update_model(self, var_name):
@@ -470,6 +486,14 @@ class NominalVariablesMeta(QAbstractTableModel):
         self.labels_list.append(len(self.labels_list) + 1)
         self.modelReset.emit()
 
+    def set_checkeable(self,checkeable):
+        self.checkeable = bool(checkeable)
+
+    def get_unchecked(self):
+        return self.unchecked
+
+    def get_checked(self):
+        return set(self.labels_list)-self.unchecked
 
 class AnovaResultsModel(QAbstractTableModel):
     def __init__(self, results_df=None, residuals=None, intercept=None,fitted=None):
@@ -1220,6 +1244,25 @@ class ScenariosTableModel(QAbstractTableModel):
     def get_index(self, row):
         return self.df.index[row]
 
+class SimpleSetModel(QAbstractListModel):
+    def __init__(self):
+        super(SimpleSetModel,self).__init__()
+        self.__internal_list=[]
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.__internal_list)
+    def data(self, QModelIndex, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if 0 <= row < len(self.__internal_list):
+                if int_role == QtCore.Qt.DisplayRole:
+                    return str(self.__internal_list[row])
+        return QtCore.QVariant()
+    def get_elements(self):
+        return set(self.__internal_list)
+    def set_elements(self,set):
+        self.__internal_list=sorted(list(set))
+        self.modelReset.emit()
 
 if __name__ == "__main__":
     test_tree = StructureTreeModel()

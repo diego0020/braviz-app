@@ -256,7 +256,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
             self.save_meta_data()
         if self.params_dict is not None:
             self.params_dict["selected_outcome"] = self.var_name
-        self.done(self.Accepted)
+        self.accept()
 
 
 class GenericVariableSelectDialog(OutcomeSelectDialog):
@@ -403,9 +403,10 @@ class MatplotWidget(FigureCanvas):
         else:
             self.axes.set_xlim(auto=True)
         self.draw()
-        self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.xlim = self.axes.get_xlim()
         self.x_order = None
+        self.back_fig = self.copy_from_bbox(self.axes.bbox)
+
 
     def redraw_last_plot(self):
         if self.last_plot_function is None:
@@ -427,6 +428,18 @@ class MatplotWidget(FigureCanvas):
         self.axes.draw_artist(max_line)
         self.axes.draw_artist(opt_line)
         self.blit(self.axes.bbox)
+
+    def add_threshold_line(self,thr):
+        thr_line = self.axes.axvline(thr, color="#000000")
+        self.axes.draw_artist(thr_line)
+        self.blit(self.axes.bbox)
+
+    def add_grayed_scatter(self,data,data2):
+        colors = "#BBBBBB"
+        patches = self.axes.scatter(data, data2, color=colors,)
+        self.axes.draw_artist(patches)
+        self.blit(self.axes.bbox)
+
 
     @repeatatable_plot
     def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims, intercet=None):
