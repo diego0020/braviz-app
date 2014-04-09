@@ -24,8 +24,8 @@ import multiprocessing.connection
 import binascii
 import subprocess
 
-#SAMPLE_SIZE = 0.3
-SAMPLE_SIZE = 0.5
+SAMPLE_SIZE = 0.3
+#SAMPLE_SIZE = 0.5
 NOMINAL_VARIABLE = 11  # GENRE
 RATIONAL_VARIBLE = 1  # VCIIQ
 
@@ -389,22 +389,31 @@ class SampleOverview(QtGui.QMainWindow):
         #images panel
         image_state = wanted_state.get("image_state")
         if image_state is not None:
-            mod = image_state.get("modality")
-            if mod is not None:
-                try:
-                    viewer.image.change_image_modality(mod, skip_render=True)
-                except Exception as e:
-                    print e.message
-            orient = image_state.get("orientation")
-            if orient is not None:
-                orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
-                viewer.image.change_image_orientation(orientation_dict[orient], skip_render=True)
             window = image_state.get("window")
             if window is not None:
                 viewer.image.set_image_window(window, skip_render=True)
             level = image_state.get("level")
             if level is not None:
                 viewer.image.set_image_level(level, skip_render=True)
+            mod = image_state.get("modality")
+            if mod is not None:
+                if mod in ("Precision","Power"):
+                    paradigm = mod
+                    mod = "fMRI"
+                    try:
+                        viewer.image.change_image_modality("MRI", None,skip_render=True)
+                    except Exception as e:
+                        print e.message
+                else:
+                    paradigm = None
+                try:
+                    viewer.image.change_image_modality(mod, paradigm=paradigm,skip_render=True)
+                except Exception as e:
+                    print e.message
+            orient = image_state.get("orientation")
+            if orient is not None:
+                orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
+                viewer.image.change_image_orientation(orientation_dict[orient], skip_render=True)
             slice = image_state.get("slice")
             if slice is not None:
                 viewer.image.set_image_slice(int(slice), skip_render=True)

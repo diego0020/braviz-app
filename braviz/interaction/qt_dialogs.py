@@ -1109,7 +1109,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                     desc = "Created automatically when saving values for variable %s"%self.__context_variable_names[idx]
                     data = self.app.get_state_dict()
                     app = data["meta"]["application"]
-                    data_s = cPickle.dumps(data)
+                    data_s = cPickle.dumps(data,2)
                     scn_idx=braviz_user_data.save_scenario(app,name,desc,data_s)
                     #link
                     braviz_user_data.link_var_scenario(int(idx),scn_idx)
@@ -1197,7 +1197,7 @@ class SaveScenarioDialog(QtGui.QDialog):
     def __init__(self,app_name,state,params):
         super(SaveScenarioDialog,self).__init__()
         self.app_name = app_name
-        self.data = cPickle.dumps(state)
+        self.data = cPickle.dumps(state,2)
         self.params=params
         self.ui = None
         self.init_gui()

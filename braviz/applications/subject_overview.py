@@ -321,7 +321,7 @@ class SubjectOverviewApp(QMainWindow):
 
         scenario_data = self.get_state_dict()
         app_name = scenario_data["meta"]["application"]
-        scenario_data_str = cPickle.dumps(scenario_data)
+        scenario_data_str = cPickle.dumps(scenario_data,2)
         scn_id = braviz_user_data.save_scenario(app_name, scenario_name="<AUTO>",
                                                 scenario_description="", scenario_data=scenario_data_str)
         self.save_screenshot(scn_id)
@@ -468,7 +468,7 @@ class SubjectOverviewApp(QMainWindow):
         #                      "metric": scalar_text, "db_id": db_id, "operation": operation}
         scenario_data = self.get_state_dict()
         app_name = scenario_data["meta"]["application"]
-        scenario_data_str = cPickle.dumps(scenario_data)
+        scenario_data_str = cPickle.dumps(scenario_data,2)
         scn_id = braviz_user_data.save_scenario(app_name, scenario_name="<AUTO>",
                                                 scenario_description="", scenario_data=scenario_data_str)
         self.save_screenshot(scn_id)

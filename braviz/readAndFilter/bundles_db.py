@@ -40,7 +40,7 @@ def save_checkpoints_bundle(bundle_name,operation_is_and,checkpoints):
     else:
         btype=2
 
-    data = cPickle.dumps(checkpoints)
+    data = buffer(cPickle.dumps(checkpoints,2))
     q="""INSERT OR FAIL INTO fiber_bundles (bundle_name, bundle_type, bundle_data) VALUES (?,?,?) """
     conn = get_connection()
     conn.execute(q,(bundle_name,btype,data))

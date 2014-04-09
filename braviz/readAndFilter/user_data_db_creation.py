@@ -51,7 +51,8 @@ def create_tables():
     sample_idx INTEGER PRIMARY KEY,
     sample_name TEXT,
     sample_desc TEXT,
-    sample_data BLOB
+    sample_data BLOB,
+    sample_size INTEGER
     );
     """
 
