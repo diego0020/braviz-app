@@ -385,6 +385,14 @@ class SampleOverview(QtGui.QMainWindow):
     def load_scenario_in_viewer(self, viewer, scenario_dict, subj):
         img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subj))
         wanted_state = scenario_dict
+
+        #set space
+        camera_state = wanted_state.get("camera_state")
+        if camera_state is not None:
+            space = camera_state.get("space")
+            if space is not None:
+                viewer.change_current_space(space)
+
         #images panel
         image_state = wanted_state.get("image_state")
         if image_state is not None:
@@ -474,7 +482,7 @@ class SampleOverview(QtGui.QMainWindow):
             opac = tractography_state.get("opacity")
             if opac is not None:
                 try:
-                    viewer.tractography.set_opacity(opac, skip_render=True)
+                    viewer.tractography.set_opacity(opac/100, skip_render=True)
                 except Exception as e:
                     print e.message
         QtGui.QApplication.instance().processEvents()
@@ -491,9 +499,6 @@ class SampleOverview(QtGui.QMainWindow):
         wanted_state = self.current_scenario
         camera_state = wanted_state.get("camera_state")
         if camera_state is not None:
-            space = camera_state.get("space")
-            if space is not None:
-                viewer.change_current_space(space)
             cam = camera_state.get("cam_params")
             if cam is not None:
                 fp, pos, vu = cam
