@@ -265,6 +265,7 @@ class ImageManager:
         self.__mri_lut = None
         self.__fmri_blender = braviz.visualization.fMRI_blender()
         self.__widget = widget
+        self.__outline_filter = None
         self.iren = interactor
 
     @do_and_render
@@ -300,6 +301,16 @@ class ImageManager:
 
         self.__image_plane_widget.AddObserver(self.__image_plane_widget.slice_change_event, slice_change_handler)
         self.__image_plane_widget.AddObserver("WindowLevelEvent", detect_window_level_event)
+        outline = vtk.vtkOutlineFilter()
+
+        outlineMapper = vtk.vtkPolyDataMapper()
+        outlineMapper.SetInputConnection(outline.GetOutputPort())
+
+        outlineActor = vtk.vtkActor()
+        outlineActor.SetMapper(outlineMapper)
+        outlineActor.GetProperty().SetColor(0,0,0)
+        self.ren.AddActor(outlineActor)
+        self.__outline_filter = outline
 
     @do_and_render
     def change_subject(self, new_subject):
@@ -369,7 +380,10 @@ class ImageManager:
             fmri_lut = self.reader.get("fMRI", self.__current_subject, lut=True)
             self.__fmri_blender.set_luts(self.__mri_lut, fmri_lut)
             new_image = self.__fmri_blender.set_images(mri_image, fmri_image)
+
             self.__image_plane_widget.SetInputData(new_image)
+            self.__outline_filter.SetInputData(new_image)
+
             self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             self.__current_image = modality
@@ -385,7 +399,10 @@ class ImageManager:
             except Exception:
                 self.hide_image(skip_render=True)
                 raise Exception("DTI, not available")
+
             self.__image_plane_widget.SetInputData(dti_image)
+            self.__outline_filter.SetInputData(dti_image)
+
             self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             self.__current_image = modality
@@ -398,6 +415,7 @@ class ImageManager:
         new_image = self.reader.get(modality, self.__current_subject, space=self.__current_space, format="VTK")
 
         self.__image_plane_widget.SetInputData(new_image)
+        self.__outline_filter.SetInputData(new_image)
 
         if modality == "MRI" or modality == "MD":
             lut = self.__mri_lut
@@ -409,13 +427,16 @@ class ImageManager:
             else:
                 self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
         elif modality == "FA":
-            lut = self.reader.get("FA", self.__current_subject, lut=True)
+            #lut = self.reader.get("FA", self.__current_subject, lut=True)
+            #self.__image_plane_widget.SetLookupTable(lut)
+            lut = self.__mri_lut
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             if self.__current_fa_window_level is None:
                 self.__current_fa_window_level = [0, 0]
                 self.reset_window_level()
-            self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
+            else:
+                self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
         elif modality == "APARC":
             lut = self.reader.get("APARC", self.__current_subject, lut=True)
             self.__image_plane_widget.SetLookupTable(lut)
@@ -465,7 +486,6 @@ class ImageManager:
     def set_image_window(self, new_window):
         if self.__image_plane_widget is None:
             return
-        print "setted window to ",new_window
         self.__image_plane_widget.SetWindowLevel(new_window, self.get_current_image_level())
 
     @do_and_render
