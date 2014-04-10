@@ -218,7 +218,6 @@
     <addaction name="action_load_scenario"/>
     <addaction name="separator"/>
     <addaction name="action_load_visualization"/>
-    <addaction name="action_screenshot"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>

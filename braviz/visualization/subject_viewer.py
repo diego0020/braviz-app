@@ -341,7 +341,7 @@ class ImageManager:
         self.__image_plane_widget.On()
 
         if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
-            if (self.__current_image == "MRI") and (self.__current_mri_window_level is not None):
+            if (self.__current_image == "MRI" or self.__current_image == "MD") and (self.__current_mri_window_level is not None):
                 self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
             elif (self.__current_image == "FA") and (self.__current_fa_window_level is not None):
                 self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
@@ -406,7 +406,8 @@ class ImageManager:
             if self.__current_mri_window_level is None:
                 self.__current_mri_window_level = [0, 0]
                 self.reset_window_level()
-            self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
+            else:
+                self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
         elif modality == "FA":
             lut = self.reader.get("FA", self.__current_subject, lut=True)
             self.__image_plane_widget.SetLookupTable(lut)
@@ -464,6 +465,7 @@ class ImageManager:
     def set_image_window(self, new_window):
         if self.__image_plane_widget is None:
             return
+        print "setted window to ",new_window
         self.__image_plane_widget.SetWindowLevel(new_window, self.get_current_image_level())
 
     @do_and_render

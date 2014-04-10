@@ -209,7 +209,6 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.action_load_visualization.triggered.connect(self.load_visualization)
         self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
         self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
-        self.ui.action_screenshot.triggered.connect(self.take_screenshot)
         self.ui.action_save_scenario.triggered.connect(self.save_scenario)
         self.ui.action_load_scenario.triggered.connect(self.load_scenario_dialog)
 
@@ -374,13 +373,14 @@ class SampleOverview(QtGui.QMainWindow):
     def load_visualization(self):
         return_dict = {}
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict, self.reader)
-        dialog.exec_()
-        subj_state = return_dict.get("subject_state")
-        if subj_state is not None:
-            subj_state.pop("current_subject")
-        print return_dict
-        self.current_scenario = return_dict
-        self.reload_viewers(scenario=return_dict)
+        res=dialog.exec_()
+        if res == dialog.Accepted:
+            subj_state = return_dict.get("subject_state")
+            if subj_state is not None:
+                subj_state.pop("current_subject")
+            print return_dict
+            self.current_scenario = return_dict
+            self.reload_viewers(scenario=return_dict)
 
     def load_scenario_in_viewer(self, viewer, scenario_dict, subj):
         img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subj))
@@ -388,19 +388,20 @@ class SampleOverview(QtGui.QMainWindow):
         #images panel
         image_state = wanted_state.get("image_state")
         if image_state is not None:
-            window = image_state.get("window")
-            if window is not None:
-                viewer.image.set_image_window(window, skip_render=True)
-            level = image_state.get("level")
-            if level is not None:
-                viewer.image.set_image_level(level, skip_render=True)
             mod = image_state.get("modality")
             if mod is not None:
                 if mod in ("Precision","Power"):
                     paradigm = mod
                     mod = "fMRI"
                     try:
+                        #to load MRI window level
                         viewer.image.change_image_modality("MRI", None,skip_render=True)
+                        window = image_state.get("window")
+                        if window is not None:
+                            viewer.image.set_image_window(window, skip_render=True)
+                        level = image_state.get("level")
+                        if level is not None:
+                            viewer.image.set_image_level(level, skip_render=True)
                     except Exception as e:
                         print e.message
                 else:
@@ -416,6 +417,12 @@ class SampleOverview(QtGui.QMainWindow):
             slice = image_state.get("slice")
             if slice is not None:
                 viewer.image.set_image_slice(int(slice), skip_render=True)
+            window = image_state.get("window")
+            if window is not None:
+                viewer.image.set_image_window(window, skip_render=True)
+            level = image_state.get("level")
+            if level is not None:
+                viewer.image.set_image_level(level, skip_render=True)
         QtGui.QApplication.instance().processEvents()
         #segmentation panel
         segmentation_state = wanted_state.get("segmentation_state")
