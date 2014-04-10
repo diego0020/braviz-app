@@ -344,6 +344,7 @@ class SubjectOverviewApp(QMainWindow):
 
 
     def change_left_to_non_dominant(self):
+        #TODO: Must deal with currently selected structures
         if self.ui.left_right_radio.isChecked():
             left_right = True
         else:
@@ -593,6 +594,21 @@ class SubjectOverviewApp(QMainWindow):
     def load_scenario(self, state):
 
         wanted_state = state
+
+        #camera panel
+        camera_state = wanted_state.get("camera_state")
+        print "setting camera"
+        if camera_state is not None:
+            space = camera_state.get("space")
+            if space is not None:
+                idx = self.ui.space_combo.findText(space)
+                self.ui.space_combo.setCurrentIndex(idx)
+                self.space_change()
+            cam = camera_state.get("cam_params")
+            if cam is not None:
+                fp, pos, vu = cam
+                self.vtk_viewer.set_camera(fp, pos, vu)
+
         #subject panel
         subject_state = wanted_state.get("subject_state")
         if subject_state is not None:
@@ -701,20 +717,6 @@ class SubjectOverviewApp(QMainWindow):
                     name = self.fibers_list_model.get_bundle_name(current)
                     self.ui.current_bundle_tag.setText(name)
                 self.update_fiber_scalars()
-
-        #camera panel
-        camera_state = wanted_state.get("camera_state")
-        print "setting camera"
-        if camera_state is not None:
-            space = camera_state.get("space")
-            if space is not None:
-                idx = self.ui.space_combo.findText(space)
-                self.ui.space_combo.setCurrentIndex(idx)
-                self.space_change()
-            cam = camera_state.get("cam_params")
-            if cam is not None:
-                fp, pos, vu = cam
-                self.vtk_viewer.set_camera(fp, pos, vu)
 
         #context panel
         context_state = wanted_state.get("context_state")
