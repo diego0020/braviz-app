@@ -100,3 +100,20 @@ def save_sub_sample(name, elements, description):
     conn.execute(q, (name, description, str_data,size))
     conn.commit()
     pass
+
+def get_samples_df():
+    conn = get_connection()
+    q = "SELECT sample_idx, sample_name, sample_desc, sample_size FROM subj_samples"
+    data = sql.read_sql(q, conn, index_col="sample_idx", coerce_float=False)
+    return data
+
+def get_sample_data(sample_idx):
+    conn=get_connection()
+    q = "SELECT sample_data FROM subj_samples WHERE sample_idx = ?"
+    cur = conn.execute(q,(sample_idx,))
+    res = cur.fetchone()
+    if res is None:
+        raise Exception("Invalid sample index")
+    data_str = res[0]
+    data = cPickle.loads(str(data_str))
+    return data

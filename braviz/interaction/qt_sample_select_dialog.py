@@ -11,22 +11,62 @@ from braviz.interaction.qt_guis.add_filter_dialog import Ui_AddFilterDialog
 from braviz.interaction.qt_guis.rational_details_frame_filtering import Ui_rational_details
 from braviz.interaction.qt_guis.select_subsample_dialog import Ui_SelectSubsample
 from braviz.interaction.qt_guis.save_sample_dialog import Ui_SaveSample
+from braviz.interaction.qt_guis.load_sub_sample_dialog import Ui_LoadSampleDialog
 
-from braviz.interaction.qt_models import SimpleSetModel, SamplesFilterModel
+from braviz.interaction.qt_models import SimpleSetModel, SamplesFilterModel, SamplesSelectionModel
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.readAndFilter import user_data as braviz_user_data
 from PyQt4 import QtGui, QtCore
 from braviz.interaction.qt_dialogs import VariableSelectDialog
 import braviz.interaction.qt_models as braviz_models
-
+import subprocess
 
 import numpy as np
 import sys
 
 
-class SampleSelectDilog(QtGui.QMainWindow):
+class SampleLoadDialog(QtGui.QDialog):
+    def __init__(self,new_button=True):
+        super(SampleLoadDialog,self).__init__()
+        self.model = SamplesSelectionModel()
+        self.ui = Ui_LoadSampleDialog()
+        self.ui.setupUi(self)
+        self.ui.tableView.setModel(self.model)
+        self.current_sample = None
+        self.ui.tableView.activated.connect(self.load_action)
+        if new_button:
+            self.new_button = QtGui.QPushButton("New")
+            self.ui.buttonBox.addButton(self.new_button,QtGui.QDialogButtonBox.ActionRole)
+            self.new_sample_app = None
+            self.check_state_timer = None
+            self.ui.buttonBox.accepted.connect(self.load_action)
+            def refresh_list_and_re_enamble_new():
+                return_value = self.new_sample_app.poll()
+                if return_value is not None:
+                    self.new_button.setEnabled(1)
+                    self.model.reload()
+
+            def launch_new_sample_sun_process():
+                self.new_button.setEnabled(0)
+                executable = sys.executable
+                self.new_sample_app=subprocess.Popen([executable,__file__])
+                self.check_state_timer = QtCore.QTimer(self)
+                self.check_state_timer.timeout.connect(refresh_list_and_re_enamble_new)
+                self.check_state_timer.start(1000)
+            self.new_button.clicked.connect(launch_new_sample_sun_process)
+
+    def load_action(self,index=None):
+        if index is None:
+            current = self.ui.tableView.currentIndex()
+        else:
+            current = index
+        self.current_sample = self.model.get_sample(current)
+        print self.current_sample
+
+
+class SampleCreateDilog(QtGui.QMainWindow):
     def __init__(self):
-        super(SampleSelectDilog, self).__init__()
+        super(SampleCreateDilog, self).__init__()
 
         self.working_model = SimpleSetModel()
         self.output_model = SimpleSetModel()
@@ -54,6 +94,7 @@ class SampleSelectDilog(QtGui.QMainWindow):
         self.ui.undo_button.clicked.connect(self.undo_action)
         self.ui.add_subset_button.clicked.connect(self.add_subset)
         self.ui.save_button.clicked.connect(self.show_save_dialog)
+        self.ui.load_button.clicked.connect(self.show_load_sample)
 
 
     def change_output_sample(self, new_set):
@@ -133,6 +174,13 @@ class SampleSelectDilog(QtGui.QMainWindow):
 
         braviz_user_data.save_sub_sample(name, self.output_model.get_elements(), description)
 
+    def show_load_sample(self):
+        dialog = SampleLoadDialog(new_button=False)
+        res=dialog.exec_()
+        if res == dialog.Accepted:
+            loaded_sample = dialog.current_sample
+            if loaded_sample is not None:
+                self.change_output_sample(loaded_sample)
 
 def get_filter_name(params):
     if params["var_real"] is True:
@@ -339,7 +387,7 @@ class SaveSubSampleDialog(QtGui.QDialog):
 
 if __name__ == "__main__":
     app = QtGui.QApplication([])
-    main_window = SampleSelectDilog()
+    main_window = SampleCreateDilog()
     main_window.show()
     main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     sys.exit(app.exec_())

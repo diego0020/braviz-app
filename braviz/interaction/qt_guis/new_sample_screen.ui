@@ -328,5 +328,22 @@
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>cancel_button</sender>
+   <signal>clicked()</signal>
+   <receiver>NewSampleWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>818</x>
+     <y>537</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>788</x>
+     <y>570</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

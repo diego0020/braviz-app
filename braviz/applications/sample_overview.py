@@ -2,6 +2,8 @@ from __future__ import division
 
 __author__ = 'diego'
 
+
+import vtk
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 import braviz
@@ -416,6 +418,7 @@ class SampleOverview(QtGui.QMainWindow):
                     paradigm = None
                 try:
                     viewer.image.change_image_modality(mod, paradigm=paradigm,skip_render=True)
+                    viewer.image.image_plane_widget.SetInteraction(0)
                 except Exception as e:
                     print e.message
             orient = image_state.get("orientation")
@@ -532,6 +535,11 @@ class SampleOverview(QtGui.QMainWindow):
         self.widget_observers[id(viewer)]=obs_id
         viewer.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         context_handler = self.__get_context_menu_handler(viewer,subject)
+        #disconnect old handlers
+        try:
+            viewer.customContextMenuRequested.disconnect()
+        except TypeError:
+            pass
         viewer.customContextMenuRequested.connect(context_handler)
 
 
@@ -546,10 +554,12 @@ class SampleOverview(QtGui.QMainWindow):
             action = QtGui.QAction("Show %s in subject viewer"%subj,menu)
             def show_subj_in_mri_viewer():
                 self.show_in_mri_viewer(subj)
+
             action.triggered.connect(show_subj_in_mri_viewer)
             menu.addAction(action)
             global_pos=widget.mapToGlobal(pos)
-            menu.popup(global_pos)
+            menu.exec_(global_pos)
+            widget.subject_viewer.iren.InvokeEvent(vtk.vtkCommand.RightButtonReleaseEvent)
             self.context_menu=menu
             self.context_menu_opened_recently = True
 

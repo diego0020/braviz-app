@@ -518,7 +518,19 @@ class AnovaResultsModel(QAbstractTableModel):
             return QtCore.QVariant()
         line = QModelIndex.row()
         col = QModelIndex.column()
-        return str(self.__df.iloc[line, col])
+        data= self.__df.iloc[line, col]
+        if col == 0:
+            #names
+            return data
+        elif col == 2:
+            #df
+            return "%d"%data
+        elif col == 4:
+            #p
+            return "{:.1e}".format(data)
+        else:
+            return "{:.3g}".format(data)
+        return str()
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
@@ -1291,6 +1303,53 @@ class SamplesFilterModel(QAbstractListModel):
         for _,f in self.__filters_list:
             output_set = filter(f,output_set)
         return output_set
+
+
+class SamplesSelectionModel(QAbstractTableModel):
+    def __init__(self):
+        super(SamplesSelectionModel,self).__init__()
+        self.data_frame = braviz_user_data.get_samples_df()
+        self.columns = ("sample_size","sample_name","sample_desc")
+        self.headers = ("Size","Name","Description")
+
+
+
+    def reload(self):
+        self.data_frame = braviz_user_data.get_samples_df()
+        self.modelReset.emit()
+
+    def data(self, QModelIndex, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            col = QModelIndex.column()
+            if int_role == QtCore.Qt.DisplayRole  or int_role == QtCore.Qt.ToolTipRole :
+                return str(self.data_frame[self.columns[col]].iloc[row])
+        return QtCore.QVariant()
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return self.data_frame.shape[0]
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return self.data_frame.shape[1]
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        if Qt_Orientation == QtCore.Qt.Horizontal:
+            if int_role == QtCore.Qt.DisplayRole:
+                return self.headers[p_int]
+        return QtCore.QVariant()
+    def sort(self, p_int, Qt_SortOrder_order=None):
+        sort_col = self.columns[p_int]
+        ascending = True
+        if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
+            ascending = False
+        self.data_frame.sort(columns=sort_col,ascending=ascending,inplace=True)
+        self.modelReset.emit()
+
+    def get_sample(self,QModelIndex):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            sample_index = self.data_frame.index[row]
+            data = braviz_user_data.get_sample_data(int(sample_index))
+            return data
+
 
 if __name__ == "__main__":
     test_tree = StructureTreeModel()

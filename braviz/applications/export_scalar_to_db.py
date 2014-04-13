@@ -20,6 +20,9 @@ class ExportScalarToDataBase(QtGui.QDialog):
         super(ExportScalarToDataBase, self).__init__()
         if (db_id is not None) and (operation is not None):
             raise Exception("Only db_id or operation should be None")
+        flags = QtCore.Qt.Window | QtCore.Qt.MSWindowsOwnDC | QtCore.Qt.WindowSystemMenuHint | \
+                QtCore.Qt.WindowMinimizeButtonHint
+        self.setWindowFlags(flags)
         self.ui = None
         self.progress = 0
         self.timer = None
@@ -198,6 +201,8 @@ if __name__ == "__main__":
     #arguments <scn_id> <fibers=False> <metric> <structs0> <struct1> ....
     #            1           2           3         4          5         6
     import sys
+    if len(sys.argv)<6:
+        sys.argv.extend([0,0,'Volume',])
     args = sys.argv
     scenario_id = args[1]
     fibers = int(args[2])

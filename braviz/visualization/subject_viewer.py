@@ -268,6 +268,10 @@ class ImageManager:
         self.__outline_filter = None
         self.iren = interactor
 
+    @property
+    def image_plane_widget(self):
+        return self.__image_plane_widget
+
     @do_and_render
     def hide_image(self):
         if self.__image_plane_widget is not None:

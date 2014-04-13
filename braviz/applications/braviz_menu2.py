@@ -58,7 +58,7 @@ class BravizMenu2(QtGui.QMainWindow):
         dialog.exec_()
 
     def launch_samples_dialog(self):
-        dialog = braviz.interaction.qt_sample_select_dialog.SampleSelectDilog()
+        dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
         dialog.exec_()
 
     def launch_scenarios_dialog(self):
