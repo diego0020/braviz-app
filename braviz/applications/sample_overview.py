@@ -10,6 +10,7 @@ import braviz
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
+import braviz.interaction.qt_sample_select_dialog
 from braviz.visualization.matplotlib_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.readAndFilter import user_data as braviz_user_data
@@ -213,6 +214,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
         self.ui.action_save_scenario.triggered.connect(self.save_scenario)
         self.ui.action_load_scenario.triggered.connect(self.load_scenario_dialog)
+        self.ui.actionSelect_Sample.triggered.connect(self.show_select_sample_dialog)
 
         self.ui.progress_bar.setValue(0)
 
@@ -769,6 +771,15 @@ class SampleOverview(QtGui.QMainWindow):
         scn_id = self.current_scenario["meta"]["scn_id"]
         self.mri_pipe.send({"subject": subj,"scenario":scn_id})
 
+    def show_select_sample_dialog(self):
+        dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            print "new sample: ",new_sample
+            self.change_sample(list(new_sample))
+            self.load_scalar_data(self.rational_index,self.nominal_index,force=True)
+            self.re_arrange_viewers()
 
 def say_ciao():
     print "ciao"

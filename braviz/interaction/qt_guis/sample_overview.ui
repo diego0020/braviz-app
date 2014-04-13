@@ -218,6 +218,7 @@
     <addaction name="action_load_scenario"/>
     <addaction name="separator"/>
     <addaction name="action_load_visualization"/>
+    <addaction name="actionSelect_Sample"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -240,6 +241,11 @@
   <action name="action_screenshot">
    <property name="text">
     <string>Save_screenshot</string>
+   </property>
+  </action>
+  <action name="actionSelect_Sample">
+   <property name="text">
+    <string>Select Sample</string>
    </property>
   </action>
  </widget>
