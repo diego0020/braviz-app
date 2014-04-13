@@ -103,7 +103,7 @@ def is_variable_nominal(variable):
 def is_variable_real(variable):
     return not is_variable_nominal(variable)
 
-def calculate_anova(outcome,regressors_data_frame,interactions_dict):
+def calculate_anova(outcome,regressors_data_frame,interactions_dict,sample):
     #is outcome nominal?
     is_nominal=is_variable_nominal(outcome)
 
@@ -128,6 +128,7 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict):
     #construct pandas data frame
     var_names.append(outcome)
     pandas_df=braviz_tab_data.get_data_frame_by_name(var_names)
+    pandas_df=pandas_df.loc[sample]
     #print pandas_df
 
     #construct r data frame

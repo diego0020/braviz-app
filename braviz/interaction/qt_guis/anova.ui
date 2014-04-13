@@ -269,7 +269,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="modify_sample_button">
             <property name="enabled">
              <bool>false</bool>
             </property>

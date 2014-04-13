@@ -9,6 +9,7 @@ import numpy as np
 
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 import braviz.interaction.qt_dialogs
+import braviz.interaction.qt_sample_select_dialog
 from braviz.interaction.qt_dialogs import OutcomeSelectDialog, RegressorSelectDialog, MatplotWidget,\
     InteractionSelectDialog
 
@@ -52,6 +53,7 @@ class AnovaApp(QMainWindow):
         self.mri_viewer_pipe = None
         self.mri_viewer_process = None
         self.poll_timer = None
+        self.sample = braviz_tab_data.get_subjects()
         self.ui = None
         self.setup_gui()
 
@@ -85,6 +87,8 @@ class AnovaApp(QMainWindow):
         self.ui.sample_tree.activated.connect(self.add_subjects_to_plot)
         self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.sample_tree.customContextMenuRequested.connect(self.subject_details_from_tree)
+        self.ui.modify_sample_button.clicked.connect(self.load_sample)
+        self.ui.modify_sample_button.setEnabled(True)
         self.poll_timer = QtCore.QTimer(self)
         self.poll_timer.timeout.connect(self.poll_messages_from_mri_viewer)
 
@@ -186,7 +190,8 @@ class AnovaApp(QMainWindow):
         try:
             self.anova = braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
                                                                         self.regressors_model.get_data_frame(),
-                                                                        self.regressors_model.get_interactors_dict())
+                                                                        self.regressors_model.get_interactors_dict(),
+                                                                        self.sample)
         except Exception as e:
             msg = QtGui.QMessageBox()
             msg.setText(str(e.message))
@@ -226,6 +231,8 @@ class AnovaApp(QMainWindow):
             pass
         elif var_name == "(Intercept)":
             data = get_data_frame_by_name(self.outcome_var_name)
+            data = data.loc[self.sample]
+
             self.plot_data_frame = data
             data_values = data[self.outcome_var_name].get_values()
 
@@ -277,6 +284,8 @@ class AnovaApp(QMainWindow):
             self.plot_z_var = nominal_factors[0]
             #Get Data
             data = get_data_frame_by_name([real_factors[0], nominal_factors[0], self.outcome_var_name])
+            data = data.loc[self.sample]
+
             data.dropna(inplace=True)
             self.plot_data_frame = data
             datax = []
@@ -308,6 +317,8 @@ class AnovaApp(QMainWindow):
             nominal_factors.sort(key=nlevels.get, reverse=True)
             #print nominal_factors
             data = get_data_frame_by_name(nominal_factors + [self.outcome_var_name])
+            data = data.loc[self.sample]
+
             self.plot_data_frame = data
             levels_second_factor = set(data[nominal_factors[1]].get_values())
             levels_first_factor = set(data[nominal_factors[0]].get_values())
@@ -365,6 +376,8 @@ class AnovaApp(QMainWindow):
             #print labels_dict
             #get data from
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
+            data = data.loc[self.sample]
+
             self.plot_data_frame = data
             label_nums = set(data[var_name])
             data_list = []
@@ -380,6 +393,8 @@ class AnovaApp(QMainWindow):
             #is real
             #create scatter plot
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
+            data = data.loc[self.sample]
+
             data.dropna(inplace=True)
             self.plot_data_frame = data
             self.plot.compute_scatter(data[var_name].get_values(),
@@ -623,6 +638,15 @@ class AnovaApp(QMainWindow):
         if plot_name is not None:
             self.update_main_plot(plot_name)
 
+    def load_sample(self):
+        dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            print "new sample"
+            print new_sample
+            self.sample = new_sample
+            self.sample_model.set_sample(new_sample)
 
 
 def run():

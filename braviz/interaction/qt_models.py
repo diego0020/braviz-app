@@ -570,6 +570,15 @@ class SampleTree(QAbstractItemModel):
         self.__next_id = 0
         self.populate_tree_dicts()
 
+    def set_sample(self,new_sample):
+        self.__data_frame = braviz_tab_data.get_data_frame_by_name(self.data_aspects)
+        self.__data_frame = self.__data_frame.loc[new_sample]
+        self.__tree_list = []
+        self.__id_index = {}
+        self.__next_id = 0
+        self.populate_tree_dicts()
+        self.modelReset.emit()
+
     def __get_next_id(self):
         iid = self.__next_id
         self.__next_id += 1
