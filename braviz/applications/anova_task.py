@@ -571,6 +571,7 @@ class AnovaApp(QMainWindow):
         vars_state["interactions"]=self.regressors_model.get_interactions()
         state["vars"] = vars_state
         state["plot"] = {"var_name":self.plot_var_name}
+        state["sample"] = self.sample
 
         meta = dict()
         meta["date"] = datetime.datetime.now()
@@ -608,6 +609,11 @@ class AnovaApp(QMainWindow):
 
     def restore_state(self,wanted_state):
         #restore outcome
+        #sample
+        sample = wanted_state.get("sample")
+        if sample is not None:
+            self.sample = sample
+            self.sample_model.set_sample(sample)
         self.ui.calculate_button.setEnabled(0)
         reg_name = wanted_state["vars"].get("outcome")
         if reg_name is not None:
