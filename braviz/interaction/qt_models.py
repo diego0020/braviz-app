@@ -735,7 +735,7 @@ class SampleTree(QAbstractItemModel):
 
 
 class SubjectsTable(QAbstractTableModel):
-    def __init__(self, initial_columns=None):
+    def __init__(self, initial_columns=None,sample=None):
         QAbstractTableModel.__init__(self)
         if initial_columns is None:
             initial_columns = tuple()
@@ -743,6 +743,9 @@ class SubjectsTable(QAbstractTableModel):
         self.__is_var_real = None
         self.__labels = None
         self.__col_indexes = None
+        self.sample = sample
+        if sample is None:
+            self.sample = braviz_tab_data.get_subjects()
         self.set_var_columns(initial_columns)
 
 
@@ -781,9 +784,9 @@ class SubjectsTable(QAbstractTableModel):
             return QtCore.QVariant()
 
     def sort(self, p_int, Qt_SortOrder_order=None):
-        reverse = True
+        reverse = False
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
-            reverse = False
+            reverse = True
         self.__df.sort(self.__df.columns[p_int], ascending=reverse, inplace=True)
         self.modelReset.emit()
 
@@ -792,6 +795,7 @@ class SubjectsTable(QAbstractTableModel):
         vars_df = braviz_tab_data.get_data_frame_by_index(columns)
         codes_df = pd.DataFrame(vars_df.index.get_values(), index=vars_df.index, columns=("Code",))
         self.__df = codes_df.join(vars_df)
+        self.__df = self.__df.loc[self.sample]
         is_var_code_real = braviz_tab_data.are_variables_real(columns)
         #we want to use the column number as index
         self.__is_var_real = dict((i + 1, is_var_code_real[idx]) for i, idx in enumerate(columns))
@@ -801,6 +805,11 @@ class SubjectsTable(QAbstractTableModel):
                 #column 0 is reserved for the Code
                 self.__labels[i] = braviz_tab_data.get_labels_dict(columns[i - 1])
         self.modelReset.emit()
+
+    def set_sample(self,new_sample):
+        self.sample = new_sample
+        self.set_var_columns(self.__col_indexes)
+
 
     def get_current_columns(self):
         return self.__df.columns[1:]
@@ -1361,4 +1370,6 @@ class SamplesSelectionModel(QAbstractTableModel):
 
 
 if __name__ == "__main__":
-    test_tree = StructureTreeModel()
+    import braviz
+    reader = braviz.readAndFilter.kmc40AutoReader()
+    test_tree = StructureTreeModel(reader)

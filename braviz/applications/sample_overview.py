@@ -587,7 +587,7 @@ class SampleOverview(QtGui.QMainWindow):
         if index == 0:
             params = {}
             dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=True,
-                                                                               accept_real=False)
+                                                                               accept_real=False,sample=self.sample)
             dialog.setWindowTitle("Select Nominal Variable")
             dialog.exec_()
             selected_facet_name = params.get("selected_outcome")
@@ -610,7 +610,7 @@ class SampleOverview(QtGui.QMainWindow):
         if index == 0:
             params = {}
             dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=False,
-                                                                               accept_real=True)
+                                                                               accept_real=True,sample=self.sample)
             dialog.setWindowTitle("Select Nominal Variable")
             dialog.exec_()
             selected_facet_name = params.get("selected_outcome")

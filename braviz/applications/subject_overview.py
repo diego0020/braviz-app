@@ -19,6 +19,7 @@ from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, Structur
 from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
+from braviz.interaction.qt_sample_select_dialog import SampleLoadDialog
 import subprocess
 import multiprocessing.connection
 import binascii
@@ -51,6 +52,7 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget = QSuvjectViwerWidget(reader=self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
+        self.sample = braviz_tab_data.get_subjects()
 
         #context panel
         self.context_frame = None
@@ -103,6 +105,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.subjects_table.activated.connect(self.change_subject)
         self.ui.next_subject.clicked.connect(self.go_to_next_subject)
         self.ui.previus_subject.clicked.connect(self.go_to_previus_subject)
+        self.ui.select_sample_button.clicked.connect(self.show_select_sample_dialog)
 
         #subject details
         self.ui.subject_details_table.setModel(self.subject_details_model)
@@ -259,11 +262,24 @@ class SubjectOverviewApp(QMainWindow):
             new_selection = params["checked"]
             self.subjects_model.set_var_columns(new_selection)
 
+    def show_select_sample_dialog(self):
+        dialog = SampleLoadDialog()
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            print "*sample changed*"
+            self.change_sample(new_sample)
+
+    def change_sample(self,new_sample):
+        self.sample = sorted(new_sample)
+        self.subjects_model.set_sample(self.sample)
+        self.context_frame.set_sample(self.sample)
 
     def launch_details_variable_select_dialog(self):
         params = {}
         initial_selection = self.subject_details_model.get_current_variables()
-        dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_idx=initial_selection)
+        dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_idx=initial_selection,
+                                             sample=self.sample)
         dialog.exec_()
         new_selection = params.get("checked")
         if new_selection is not None:
@@ -277,7 +293,11 @@ class SubjectOverviewApp(QMainWindow):
         self.change_subject(prev_index)
 
     def go_to_next_subject(self):
-        current_subj_row = self.subjects_model.get_subject_index(self.__curent_subject)
+        try:
+            current_subj_row = self.subjects_model.get_subject_index(self.__curent_subject)
+        except KeyError:
+            current_subj_row = -1
+            #go to first subject
         next_row = (1 + current_subj_row) % self.subjects_model.rowCount()
         next_index = self.subjects_model.index(next_row, 0)
         self.change_subject(next_index)
@@ -509,6 +529,7 @@ class SubjectOverviewApp(QMainWindow):
         subject_state = dict()
         subject_state["current_subject"] = int(self.__curent_subject)
         subject_state["model_columns"] = tuple(self.subjects_model.get_current_column_indexes())
+        subject_state["sample"] = tuple(self.sample)
         state["subject_state"] = subject_state
 
         #details panel
@@ -618,7 +639,9 @@ class SubjectOverviewApp(QMainWindow):
             model_cols = subject_state.get("model_columns")
             if model_cols is not None:
                 self.subjects_model.set_var_columns(model_cols)
-
+            sample = subject_state.get("sample")
+            if sample is not None:
+                self.change_sample(sample)
 
         #details panel
         detail_state = wanted_state.get("details_state")

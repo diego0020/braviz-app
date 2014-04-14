@@ -102,7 +102,7 @@ class AnovaApp(QMainWindow):
         if self.ui.outcome_sel.currentIndex() == self.ui.outcome_sel.count() - 1:
             #print "dispatching dialog"
             params = {}
-            dialog = OutcomeSelectDialog(params)
+            dialog = OutcomeSelectDialog(params,sample=self.sample)
             selection = dialog.exec_()
             if selection > 0:
                 self.set_outcome_var_type(params["selected_outcome"])
@@ -154,7 +154,7 @@ class AnovaApp(QMainWindow):
         self.check_if_ready()
 
     def launch_add_regressor_dialog(self):
-        reg_dialog = RegressorSelectDialog(self.outcome_var_name, self.regressors_model)
+        reg_dialog = RegressorSelectDialog(self.outcome_var_name, self.regressors_model,sample=self.sample)
         result = reg_dialog.exec_()
         if self.regressors_model.rowCount() > 0:
             regn = self.regressors_model.get_regressors()[-1]

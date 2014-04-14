@@ -34,7 +34,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="2,0,0,0,0,1,0">
+     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="5,0,0,0,0,4,0">
       <property name="leftMargin">
        <number>0</number>
       </property>

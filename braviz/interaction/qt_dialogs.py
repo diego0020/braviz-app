@@ -53,7 +53,7 @@ style.use('ggplot')
 class VariableSelectDialog(QtGui.QDialog):
     """Implement common features for Oucome and Regressor Dialogs"""
 
-    def __init__(self):
+    def __init__(self,sample = None):
         """remember to call finish_ui_setup() after setting up ui"""
         super(VariableSelectDialog, self).__init__()
         self.conn = get_connection()
@@ -63,6 +63,13 @@ class VariableSelectDialog(QtGui.QDialog):
         self.matplot_widget = None
         self.data = tuple()
         self.nominal_model = None
+        if sample is None:
+            self.sample = braviz_tab_data.get_subjects()
+        else:
+            self.sample = sorted(list(sample))
+            print "**** got custom sample ****"
+            print self.sample
+
 
     def update_plot(self, data):
         pass
@@ -77,9 +84,9 @@ class VariableSelectDialog(QtGui.QDialog):
         self.var_name = var_name
         data = get_data_frame_by_name(self.var_name)
         data.dropna(inplace=True)
-        self.data = data
+        self.data = data.loc[self.sample]
         #update scatter
-        self.update_plot(data)
+        self.update_plot(self.data)
         var_description = get_var_description_by_name(var_name)
         self.ui.var_description.setPlainText(var_description)
         self.ui.var_description.setEnabled(True)
@@ -225,8 +232,8 @@ class VariableSelectDialog(QtGui.QDialog):
 
 
 class OutcomeSelectDialog(VariableSelectDialog):
-    def __init__(self, params_dict, multiple=False):
-        super(OutcomeSelectDialog, self).__init__()
+    def __init__(self, params_dict, multiple=False,sample=None):
+        super(OutcomeSelectDialog, self).__init__(sample)
         self.ui = Ui_SelectOutcomeDialog()
         self.ui.setupUi(self)
         self.finish_ui_setup()
@@ -264,8 +271,8 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
     Derived from Outcome Select Dialog,
     """
 
-    def __init__(self, params, multiple=False, initial_selection_names=None, initial_selection_idx=None):
-        OutcomeSelectDialog.__init__(self, params, multiple=multiple)
+    def __init__(self, params, multiple=False, initial_selection_names=None, initial_selection_idx=None,sample=None):
+        OutcomeSelectDialog.__init__(self, params, multiple=multiple,sample=sample)
         self.multiple = multiple
         self.setWindowTitle("Select Variables")
         self.ui.select_button.setText("Accept Selection")
@@ -288,8 +295,8 @@ class SelectOneVariableWithFilter(OutcomeSelectDialog):
     """
     Derived from Outcome Select Dialog,
     """
-    def __init__(self, params, accept_nominal=True, accept_real=True):
-        OutcomeSelectDialog.__init__(self, params, multiple=False)
+    def __init__(self, params, accept_nominal=True, accept_real=True,sample=None):
+        OutcomeSelectDialog.__init__(self, params, multiple=False,sample=sample)
         self.setWindowTitle("Select Variable")
         self.accept_real = accept_real
         self.accept_nominal = accept_nominal
@@ -398,7 +405,10 @@ class MatplotWidget(FigureCanvas):
 
         if xlims is not None:
             width = xlims[1] - xlims[0]
-            xlims2 = (xlims[0] - width / 10, xlims[1] + width / 10,)
+            if width == 0:
+                xlims2=(xlims[0]-0.5,xlims[0]+0.5)
+            else:
+                xlims2 = (xlims[0] - width / 10, xlims[1] + width / 10,)
             self.axes.set_xlim(xlims2, auto=False)
         else:
             self.axes.set_xlim(auto=True)
@@ -619,8 +629,8 @@ class MatplotWidget(FigureCanvas):
 
 
 class RegressorSelectDialog(VariableSelectDialog):
-    def __init__(self, outcome_var, regressors_model):
-        super(RegressorSelectDialog, self).__init__()
+    def __init__(self, outcome_var, regressors_model,sample=None):
+        super(RegressorSelectDialog, self).__init__(sample=sample)
         self.outcome_var = outcome_var
         self.ui = Ui_AddRegressorDialog()
         self.ui.setupUi(self)
@@ -805,8 +815,8 @@ class NewVariableDialog(QtGui.QDialog):
 
 
 class ContextVariablesSelectDialog(VariableSelectDialog):
-    def __init__(self, variables_list=None, current_subject=None, editables_dict=None):
-        super(ContextVariablesSelectDialog, self).__init__()
+    def __init__(self, variables_list=None, current_subject=None, editables_dict=None,sample=None):
+        super(ContextVariablesSelectDialog, self).__init__(sample=sample)
         if variables_list is None:
             variables_list = []
         self.__variable_lists_id = id(variables_list)
@@ -893,7 +903,8 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
 
 
 class ContextVariablesPanel(QtGui.QGroupBox):
-    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initial_subject=None,app=None):
+    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initial_subject=None,app=None,
+                 sample = None):
         super(ContextVariablesPanel, self).__init__(parent)
         self.setTitle(title)
         self.setToolTip("Right click to select context variables, and to make them editable")
@@ -901,6 +912,9 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         self.layout = QtGui.QHBoxLayout(self)
         self.setLayout(self.layout)
         self.app = app
+        self.sample = sample
+        if self.sample is None:
+            self.sample = braviz_tab_data.get_subjects()
 
         self.layout.setContentsMargins(7, 2, 7, 2)
         self.customContextMenuRequested.connect(self.create_context_menu)
@@ -1072,7 +1086,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             print "hola"
             context_change_dialog = ContextVariablesSelectDialog(current_subject=self.__curent_subject,
                                                                  variables_list=self.__context_variable_codes,
-                                                                 editables_dict=self.__editables_dict)
+                                                                 editables_dict=self.__editables_dict,
+                                                                 sample = self.sample)
             context_change_dialog.exec_()
             self.set_variables(self.__context_variable_codes, self.__editables_dict)
             self.set_subject(self.__curent_subject)
@@ -1118,6 +1133,9 @@ class ContextVariablesPanel(QtGui.QGroupBox):
 
         self.__save_changes_button.setEnabled(0)
         #print idx_value_tuples
+
+    def set_sample(self,new_sample):
+        self.sample = list(new_sample)
 
 class BundleSelectionDialog(QtGui.QDialog):
     def __init__(self,selected,names_dict):
