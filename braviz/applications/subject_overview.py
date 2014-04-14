@@ -171,7 +171,7 @@ class SubjectOverviewApp(QMainWindow):
         #details
         self.subject_details_model.change_subject(new_subject)
         #image
-        image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, new_subject))
+        image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(new_subject)))
         if len(image_code) < 3:
             image_code = "0" + image_code
         print "Image Code: ", image_code

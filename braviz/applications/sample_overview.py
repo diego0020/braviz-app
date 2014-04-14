@@ -75,7 +75,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.sample = []
             state_str = braviz_user_data.get_scenario_data(initial_scenario)
             state = cPickle.loads(str(state_str))
-            load_scn_funct = functools.partial(self.load_scenario, state)
+            load_scn_funct = functools.partial(self.load_scenario, state,False)
             QtCore.QTimer.singleShot(100, load_scn_funct)
 
     def change_nominal_variable(self, new_var_index):
@@ -224,7 +224,7 @@ class SampleOverview(QtGui.QMainWindow):
 
         return cb
 
-    def add_subject_viewers(self):
+    def add_subject_viewers(self,scenario=None):
         #create parents:
         for level in self.scalar_data[self.nominal_name].unique():
             row_frame = QtGui.QFrame(self.ui.view)
@@ -281,7 +281,7 @@ class SampleOverview(QtGui.QMainWindow):
             widget.initialize_widget()
             QtGui.QApplication.instance().processEvents()
 
-        self.reload_viewers()
+        self.reload_viewers(scenario)
 
     def get_rotated_label(self,parent,text,color):
         from braviz.interaction.qt_widgets import RotatedLabel
@@ -311,7 +311,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.statusbar.showMessage("Loading complete")
 
     def load_initial_view(self, subject, viewer):
-        img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subject))
+        img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(subject)))
         try:
             viewer.change_subject(img_code)
             #For testing
@@ -387,7 +387,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.reload_viewers(scenario=return_dict)
 
     def load_scenario_in_viewer(self, viewer, scenario_dict, subj):
-        img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subj))
+        img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(subj)))
         wanted_state = scenario_dict
 
         #set space
@@ -672,6 +672,7 @@ class SampleOverview(QtGui.QMainWindow):
         res = dialog.exec_()
         if res == QtGui.QDialog.Accepted:
             scn_id = params["scn_id"]
+            print "scenario saved with id %d"%scn_id
             take_screen = functools.partial(self.take_screenshot, scn_id)
             QtCore.QTimer.singleShot(500, take_screen)
 
@@ -684,19 +685,27 @@ class SampleOverview(QtGui.QMainWindow):
             self.load_scenario(new_state)
 
 
-    def load_scenario(self, state):
+    def load_scenario(self, state,initialized=True):
         #sample and scneario
         sample_state = state["sample"]
         new_sample = sample_state["ids"]
 
         vis_state = state["viz"]
-        scn_id = vis_state["scenario"]
+        scenario = vis_state["scenario"]
 
-        self.change_sample(new_sample, scn_id)
+        if initialized is True:
+            self.change_sample(new_sample, scenario)
+            var_state = state["variables"]
+            self.load_scalar_data(var_state["rational"], var_state["nominal"],force=True)
+        else:
+            self.sample = list(new_sample)
+            var_state = state["variables"]
+            self.load_scalar_data(var_state["rational"], var_state["nominal"],force=True)
+            self.current_scenario = scenario
+            self.add_subject_viewers(scenario)
 
         #variables
-        var_state = state["variables"]
-        self.load_scalar_data(var_state["rational"], var_state["nominal"],force=True)
+
         self.re_arrange_viewers()
 
         #cameras
@@ -737,7 +746,11 @@ class SampleOverview(QtGui.QMainWindow):
             new_viewers_dict[ns] = viewer.subject_viewer
             new_widgets_dict[ns] = viewer
             #TODO: Test in linux
+            #needs to show before initializing
+            level0 = self.scalar_data[self.nominal_name].iloc[0]
+            self.inside_layouts[level0].addWidget(viewer,0,0)
             viewer.initialize_widget()
+            QtGui.QApplication.instance().processEvents()
 
         self.sample = new_sample
         self.viewers_dict = new_viewers_dict

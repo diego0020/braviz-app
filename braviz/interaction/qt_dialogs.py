@@ -926,6 +926,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         #self.setMaximumSize(QtCore.QSize(16777215, 56))
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setObjectName(_fromUtf8("context_frame"))
+        #self.setFrameStyle(self.NoFrame)
 
         #internal variables
         self.__context_variable_codes = None
@@ -1066,7 +1067,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                     value_widget.setText(label)
                 elif isinstance(value_widget, QtGui.QComboBox):
                     label = self.__labels_dict[idx].get(value, "<Unknown>")
-                    value_widget.setCurrentText(label)
+                    index = value_widget.findText(label)
+                    value_widget.setCurrentIndex(index)
             else:
                 if isinstance(value_widget, QtGui.QLabel):
                     value_widget.setText("%s" % value)
