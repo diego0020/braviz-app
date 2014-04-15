@@ -148,7 +148,7 @@ The path containing this structure must be set."""
             filename = '%s-MRI-full.nii.gz' % str(subj)
         elif data == 'FA':
             path = os.path.join(self.__root, str(subj), 'camino')
-            if kw.get('space').startswith('diff'):
+            if kw.get('space',"").startswith('diff'):
                 filename = 'FA_masked.nii.gz'
             else:
                 filename = 'FA_mri_masked.nii.gz'
