@@ -6,6 +6,7 @@ from vtk import vtkImagePlaneWidget
 import numpy as np
 
 from braviz.interaction import compute_volume_and_area, get_fiber_bundle_descriptors
+import create_lut
 
 
 class simpleVtkViewer():
@@ -705,6 +706,7 @@ def save_ren_win_picture(ren_win,file_name):
         writer.SetInputConnection(ren2img.GetOutputPort())
         writer.Write()
 
+get_colorbrewer_lut = create_lut.get_colorbrewer_lut
 #Easy access to GridView
 from braviz.visualization.grid_viewer import GridView
 if __name__ == "__main__":

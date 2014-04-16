@@ -7,7 +7,7 @@ import colorbrewer
 __author__ = 'Diego'
 
 
-def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(1.0,0,0)):
+def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(1.0,0,0),invert=False):
     """Creates a vtkColorTransferFunction from a colorbrewer scheme
     the values will be clamped between minimum and maximum,
     the name of the scheme and number of steps must correspond to those in colorbrewer2.org
@@ -35,6 +35,8 @@ def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(
         print "this scheme is not available for %d steps"%steps
         raise
 
+    if invert is True:
+        cb_list.reverse()
     delta=(maximum-minimum)/(steps-1)
     scalar_lookup_table.RemoveAllPoints()
     for i in range(steps):
