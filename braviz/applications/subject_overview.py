@@ -408,7 +408,9 @@ class SubjectOverviewApp(QMainWindow):
         self.update_current_bundle()
 
     def change_tractography_color(self, index):
-        color_codes = {0: "orient", 1: "fa", 5: "rand", 6: "bundle"}
+        color_codes = {0: "orient", 1: "fa_p",2:"fa_l",
+                       3 : "md_p", 4: "md_l" , 5:"length",
+                       6: "rand", 7: "bundle"}
         color_text = color_codes.get(index)
         if color_text is not None:
             self.vtk_viewer.tractography.change_color(color_text)

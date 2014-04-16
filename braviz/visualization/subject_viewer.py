@@ -679,7 +679,9 @@ class TractographyManager:
         self.__current_subject = initial_subj
         self.__current_space = initial_space
         self.__current_color = "orient"
+        self.__current_color_parameters = {"color" : "orient", "scalars" : None}
         self.__opacity = 1.0
+        self.__lut = None
 
         self.__ad_hoc_pd_mp_ac = None
         self.__ad_hoc_fiber_checks = None
@@ -718,12 +720,9 @@ class TractographyManager:
             operation = "and"
         else:
             operation = "or"
-        color = self.__current_color
-        if color == "bundle":
-            color = "orient"
         try:
             poly_data = self.reader.get("Fibers", self.__current_subject, waypoint=checkpoints, operation=operation,
-                                        space=self.__current_space, color=color)
+                                        space=self.__current_space, **self.__current_color_parameters)
         except Exception:
             actor.SetVisibility(0)
             poly_data = None
@@ -802,13 +801,9 @@ class TractographyManager:
         return colors
 
 
-    def get_polydata(self, b_id, color=None):
-        if color is None:
-            color = self.__current_color
-        if self.__current_color == "bundle":
-            color = "orient"
+    def get_polydata(self, b_id):
         poly = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                               color=color, db_id=b_id)
+                                db_id=b_id, **self.__current_color_parameters)
         return poly
 
 
@@ -823,7 +818,23 @@ class TractographyManager:
 
     @do_and_render
     def change_color(self, new_color):
+        if self.__current_color == new_color:
+            return
         self.__current_color = new_color
+        self.__lut = None
+        if new_color in ("bundle","orient"):
+            self.__current_color_parameters["color"]="orient"
+            self.__current_color_parameters["scalars"]=None
+        elif new_color == "rand":
+            self.__current_color_parameters["color"]="rand"
+            self.__current_color_parameters["scalars"]=None
+        else:
+            self.__current_color_parameters["color"]=None
+            self.__current_color_parameters["scalars"]=new_color
+            self.__lut = self.reader.get("Fibers",None,scalars=new_color,lut=True)
+
+
+        print self.__current_color
         self.__reload_fibers()
 
     def __reload_fibers(self):

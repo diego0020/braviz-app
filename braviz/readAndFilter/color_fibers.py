@@ -2,7 +2,11 @@ from __future__ import division
 import random
 import math
 
+import vtk
 import numpy as np
+from scipy import ndimage
+
+import braviz
 
 
 def color_by_z(pt):
@@ -88,4 +92,106 @@ def line_curvature(line):
     color_dict[ids.GetId(line.GetNumberOfPoints()-1)]=color_dict[ids.GetId(line.GetNumberOfPoints()-2)]
     return color_dict
         
-    
+
+def scalars_from_image(fibers,nifti_image):
+
+    affine = nifti_image.get_affine()
+    iaffine = np.linalg.inv(affine)
+    data = nifti_image.get_data()
+
+    #update scalars
+    #remove colors array
+    pd = fibers.GetPointData()
+    pd.RemoveArray(0)
+
+    npoints = fibers.GetNumberOfPoints()
+    new_array = vtk.vtkDoubleArray()
+    new_array.SetNumberOfTuples(npoints)
+    new_array.SetNumberOfComponents(1)
+
+    for i in xrange(npoints):
+        coords = fibers.GetPoint(i) + (1,)
+        coords = np.dot(iaffine,coords)
+        coords = coords[:3]/coords[3]
+        coords = coords.reshape(3, 1)
+        image_val = ndimage.map_coordinates(data,coords,order=1)
+        new_array.SetComponent(i,0,image_val)
+
+    pd.SetScalars(new_array)
+
+def scalars_lines_from_image(fibers,nifti_image):
+
+    affine = nifti_image.get_affine()
+    iaffine = np.linalg.inv(affine)
+    data = nifti_image.get_data()
+
+    #update scalars
+    #remove colors array
+    pd = fibers.GetPointData()
+    pd.RemoveArray(0)
+
+    cd = fibers.GetCellData()
+    ncells = fibers.GetNumberOfCells()
+    new_array = vtk.vtkDoubleArray()
+    new_array.SetNumberOfTuples(ncells)
+    new_array.SetNumberOfComponents(1)
+    for i in xrange(ncells):
+        c = fibers.GetCell(i)
+        npts = c.GetNumberOfPoints()
+
+        point_values = np.zeros(npts)
+        for j in xrange(npts):
+            p_id = c.GetPointId(j)
+            coords = fibers.GetPoint(p_id) + (1,)
+            coords = np.dot(iaffine,coords)
+            coords = coords[:3]/coords[3]
+            coords = coords.reshape(3, 1)
+            image_val = ndimage.map_coordinates(data,coords,order=1)
+            point_values[j]=image_val
+
+        value = point_values.mean()
+        new_array.SetComponent(i,0,value)
+
+    cd.SetScalars(new_array)
+
+
+def scalars_from_length(fibers):
+
+    pd = fibers.GetPointData()
+    pd.RemoveArray(0)
+    ncells = fibers.GetNumberOfCells()
+    new_array = vtk.vtkDoubleArray()
+    new_array.SetNumberOfTuples(ncells)
+    new_array.SetNumberOfComponents(1)
+    for i in xrange(ncells):
+        c = fibers.GetCell(i)
+        npts = c.GetNumberOfPoints()
+
+        length = 0
+        last_point = None
+        for j in xrange(1,npts):
+            p_id = c.GetPointId(j)
+            coords = fibers.GetPoint(p_id)
+            if last_point is not None:
+                step = np.linalg.norm(coords-last_point)
+                length += step
+            last_point = coords
+
+        value = length
+        new_array.SetComponent(i,0,value)
+    cd = fibers.GetCellData()
+    cd.SetScalars(new_array)
+
+
+
+def get_fa_lut():
+    lut = braviz.visualization.get_colorbrewer_lut(0.35,0.82,"BuGn",9,invert=False)
+    return lut
+
+def get_md_lut():
+    lut = braviz.visualization.get_colorbrewer_lut(6e-10,11e-10,"PuBu",9,invert=False)
+    return lut
+
+def get_length_lut():
+    lut = braviz.visualization.get_colorbrewer_lut(41,125,"YlOrBr",9,invert=False)
+    return lut

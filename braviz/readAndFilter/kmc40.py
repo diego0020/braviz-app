@@ -79,6 +79,8 @@ The path containing this structure must be set."""
                     the models if the list. This can be changed by setting operation='or', to get tracts which pass through
                     any of the models.
                     Can accept color=<orient|fa|curv|y|rand> to get different color scalars
+                    Otherwise can acecpt scalars=<fa_p|fa_l|md_p|md_l|length>
+                    In this case you may use lut=T to get the corresponding LUT
                     'Name' can be provided instead of waypoint to get custom tracts, to get a list of currently available
                     named tracts call index=True
                     Use db_id = 'id' to read a fiber stored in the braviz data base
@@ -87,7 +89,6 @@ The path containing this structure must be set."""
                      and scalars representing the orientation of the main eigenvector
                      Use space=world to get output in world coordinates [experimental]
 
-            TABLE: Read variables from the csv file
             """
             #All cache moved to decorator @cache_function
             return self.__get(data, subj_id, **kw)
@@ -417,16 +418,24 @@ The path containing this structure must be set."""
                 return surfLUT2VTK(ctab, names)
             return labels
 
-    def __cached_color_fibers(self, subj, color):
+    def __cached_color_fibers(self, subj, color=None,scalars=None):
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
-        color = color.lower()
-        cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams_%s.vtk' % color)
-        if color.startswith('orient'):
-            #This one should always exist!!!!!
-            cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams.vtk')
-            if not os.path.isfile(cache_name):
-                raise Exception("Fibers file not found")
+        if (color is None) and (scalars is None):
+            color = "orient"
+
+        if color is not None:
+            color = color.lower()
+            cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams_%s.vtk' % color)
+            if color.startswith('orient'):
+                #This one should always exist!!!!!
+                cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams.vtk')
+                if not os.path.isfile(cache_name):
+                    raise Exception("Fibers file not found")
+        else:
+            scalars = scalars.lower()
+            cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams_sc_%s.vtk' % scalars)
+
 
         cached = os.path.isfile(cache_name)
         if cached:
@@ -461,6 +470,20 @@ The path containing this structure must be set."""
             elif color == 'curv':
                 color_fun = braviz.readAndFilter.color_fibers.line_curvature
                 braviz.readAndFilter.color_fibers.color_fibers_lines(fibers, color_fun)
+            elif scalars == "fa_p":
+                fa_img = self.get("FA",subj,space="world")
+                braviz.readAndFilter.color_fibers.scalars_from_image(fibers,fa_img)
+            elif scalars == "fa_l":
+                fa_img = self.get("FA",subj,space="world")
+                braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,fa_img)
+            elif scalars == "md_p":
+                md_img = self.get("MD",subj,space="world")
+                braviz.readAndFilter.color_fibers.scalars_from_image(fibers,md_img)
+            elif scalars == "md_l":
+                md_img = self.get("MD",subj,space="world")
+                braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,md_img)
+            elif scalars == "length":
+                braviz.readAndFilter.color_fibers.scalars_from_length(fibers)
             else:
                 raise Exception('Unknown coloring scheme %s' % color)
 
@@ -540,6 +563,21 @@ The path containing this structure must be set."""
             print "The progress argument is deprecated"
             kw['progress'].set(5)
 
+        if kw.get("lut",False):
+            scalars = kw.get("scalars")
+            scalars = scalars.lower()
+            if scalars is None:
+                raise Exception("This requires scalars")
+            import braviz.readAndFilter.color_fibers
+            if scalars == "length":
+                lut = braviz.readAndFilter.color_fibers.get_length_lut()
+                return lut
+            elif scalars[:2]=="fa":
+                lut = braviz.readAndFilter.color_fibers.get_fa_lut()
+                return lut
+            elif scalars[:2]=="md":
+                lut = braviz.readAndFilter.color_fibers.get_md_lut()
+                return lut
         #named tracts index
         if kw.get('index', False):
             import braviz.readAndFilter.named_tracts
@@ -575,7 +613,7 @@ The path containing this structure must be set."""
             return fibers
         if 'waypoint' not in kw:
             path = os.path.join(self.__root, str(subj), 'camino')
-            streams = self.__cached_color_fibers(subj, kw.get('color', 'orient'))
+            streams = self.__cached_color_fibers(subj, kw.get('color'),kw.get("scalars"))
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
             #move to world
@@ -595,7 +633,7 @@ The path containing this structure must be set."""
                     models = (models,)
                 if (kw.get('operation', 'and') == 'and') and len(models) == 0:
                     #return all fibers
-                    fibers = self.get('fibers', subj, space='world', color=kw.get('color', 'orient'))
+                    fibers = self.get('fibers', subj, space='world', color=kw.get('color'),scalars=kw.get("scalars"))
                     return fibers
 
                 valid_ids = None

@@ -142,7 +142,7 @@ class AppForm(QtGui.QMainWindow):
 def main():
     import sys
     image_type = "MD"
-    image_type = "FA"
+    #image_type = "FA"
     app = QtGui.QApplication(sys.argv)
     form = AppForm(image_type=image_type)
     form.show()
