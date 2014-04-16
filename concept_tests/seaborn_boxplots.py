@@ -1,3 +1,4 @@
+from __future__ import division
 __author__ = 'Diego'
 
 import seaborn as sns
@@ -6,7 +7,9 @@ import matplotlib
 import numpy as np
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
+import itertools
+from itertools import izip
+import braviz.readAndFilter.tabular_data as braviz_tab_data
 
 class MatplotWidget(FigureCanvas):
     box_outlier_pick_signal = QtCore.pyqtSignal(float, float, tuple)
@@ -52,6 +55,53 @@ class MatplotWidget(FigureCanvas):
 
         self.draw()
 
+    def make_factor_plot(self, data,x_name,z_name,outcome):
+        sns.set_style("darkgrid")
+
+        self.fig.clear()
+        self.axes=self.fig.add_subplot(1,1,1)
+        self.axes.clear()
+        data.dropna(inplace=True)
+        x_levels = data[x_name].unique()
+        z_levels = data[z_name].unique()
+        x_labels = braviz_tab_data.get_names_label_dict(x_name)
+        z_labels = braviz_tab_data.get_names_label_dict(z_name)
+
+        palette = sns.color_palette("Set1", len(z_levels))
+        palette = sns.color_palette("deep")
+        z_colors = dict(izip(z_levels,palette))
+
+        box_width = 0.75
+        box_pad = 0.15
+        group_pad = 0.5
+        group_width = len(z_levels)*box_width + box_pad*(len(z_levels)-1)
+
+        #print "levels"
+        labels = []
+        colors = []
+        values = []
+        positions = []
+
+        for ix,iz in itertools.product(xrange(len(x_levels)),xrange(len(z_levels))):
+            x = x_levels[ix]
+            z = z_levels[iz]
+            x_lab = x_labels[x]
+            z_lab = z_labels[z]
+            labels.append("\n".join((x_lab,z_lab)))
+            colors.append(z_colors[z])
+            vals = data[outcome][(data[x_name]==x) & (data[z_name]==z)]
+            values.append(vals)
+            pos = box_width/2 + (group_width+group_pad)*ix + (box_width+box_pad)*iz
+            positions.append(pos)
+
+        sns.boxplot(values,ax=self.axes,names=labels,color=colors,fliersize=10,widths=box_width,positions=positions)
+
+
+
+
+        #self.axes.legend(numpoints=1, fancybox=True, fontsize="small", )
+        #self.axes.get_legend().draggable(True, update="loc")
+        self.draw()
 
     def generate_tooltip_event(self, e):
         #print type(e.artist)
@@ -100,7 +150,9 @@ if __name__ == "__main__":
         print x,y
 
     widget.show()
-    widget.make_box_plot(data,"x","y","uno",(-4,2))
+    #widget.make_box_plot(data,"x","y","uno",(-4,2))
+    data = braviz_tab_data.get_data_frame_by_name(["GENERO","UBIC3","FSIQ"])
+    widget.make_factor_plot(data,"UBIC3","GENERO","FSIQ")
     widget.box_outlier_pick_signal.connect(handle_box_outlier_pick)
     app = QtGui.QApplication([])
     app.exec_()

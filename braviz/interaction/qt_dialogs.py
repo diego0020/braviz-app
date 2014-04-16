@@ -45,9 +45,7 @@ import os
 
 from itertools import izip
 
-from mpltools import style
-
-style.use('ggplot')
+import seaborn as sns
 
 
 class VariableSelectDialog(QtGui.QDialog):
@@ -340,9 +338,12 @@ class MatplotWidget(FigureCanvas):
         self.setMouseTracking(True)
         self.mpl_connect('motion_notify_event', self.mouse_move_event_handler)
         self.x_order = None
+        self.fliers_x_dict = None
+
         self.last_plot_function = None
         self.last_plot_arguments = None
         self.last_plot_kw_arguments = None
+
 
     def repeatatable_plot(func):
         @wraps(func)
@@ -358,6 +359,10 @@ class MatplotWidget(FigureCanvas):
     def initial_text(self, message):
         if message is None:
             message = "Welcome"
+
+        sns.set_style("dark")
+        self.fig.clear()
+        self.axes=self.fig.add_subplot(111)
         self.axes.text(0.5, 0.5, message, horizontalalignment='center',
                        verticalalignment='center', fontsize=12)
         #Remove tick marks
@@ -376,6 +381,7 @@ class MatplotWidget(FigureCanvas):
     @repeatatable_plot
     def compute_scatter(self, data, data2=None, x_lab=None, y_lab=None, colors=None, labels=None, urls=None,
                         xlims=None):
+        sns.set_style("darkgrid")
         self.fig.clear()
         self.axes=self.fig.add_subplot(1,1,1)
         self.axes.clear()
@@ -453,6 +459,7 @@ class MatplotWidget(FigureCanvas):
 
     @repeatatable_plot
     def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims, intercet=None):
+        sns.set_style("darkgrid")
         self.fig.clear()
         self.axes=self.fig.add_subplot(1,1,1)
         #Sort data and labels according to median
@@ -467,15 +474,18 @@ class MatplotWidget(FigureCanvas):
         self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
-        artists_dict = self.axes.boxplot(data, sym='gD')
-        for a in artists_dict["fliers"]:
-            a.set_picker(5)
+        #artists_dict = self.axes.boxplot(data, sym='gD')
+
+        sns.boxplot(data,ax=self.axes,fliersize=10,names=xticks_labels,color="skyblue",widths=0.5)
+        #find fliers
+        for ls in self.axes.get_lines():
+            if ls.get_markersize() == 10:
+                ls.set_picker(5)
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
-
-        if xticks_labels is not None:
-            self.axes.get_xaxis().set_ticklabels(xticks_labels)
+        #if xticks_labels is not None:
+        #    self.axes.get_xaxis().set_ticklabels(xticks_labels)
         yspan = ylims[1] - ylims[0]
         self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
 
@@ -486,65 +496,76 @@ class MatplotWidget(FigureCanvas):
         self.x_order = x_permutation
 
     @repeatatable_plot
-    def make_linked_box_plot(self, data, xlabel, ylabel, xticks_labels, colors, top_labels, ylims):
+    def make_linked_box_plot(self, data, outcome, x_name, z_name,ylims):
+        sns.set_style("darkgrid")
         self.fig.clear()
         self.axes=self.fig.add_subplot(1,1,1)
-        self.axes.clear()
-        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off', top="off")
-        self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
-        self.axes.yaxis.set_label_position("right")
-        self.axes.set_ylim(auto=True)
-        x_permutation = range(len(data[0]))
-        data_join = [list(itertools.chain.from_iterable(l)) for l in zip(*data)]
-        data_order = zip(data_join, x_permutation)
-        data_order.sort(key=lambda y: np.median(y[0]))
-        _, x_permutation = zip(*data_order)
+        #self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off', top="off")
+        #self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
+        #self.axes.yaxis.set_label_position("right")
+        #self.axes.set_ylim(auto=True)
 
-        # self.x_order=x_permutation # at the end of method for consistency
-        #sort data
-        for k, l in enumerate(data):
-            data[k] = [l[i] for i in x_permutation]
-        xticks_labels = [xticks_labels[i] for i in x_permutation]
+        x_levels = list(data[x_name].unique())
+        z_levels = list(data[z_name].unique())
+        x_labels = braviz_tab_data.get_names_label_dict(x_name)
+        z_labels = braviz_tab_data.get_names_label_dict(z_name)
 
-        for d_list, col, lbl in izip(data, colors, top_labels):
-            artists_dict = self.axes.boxplot(d_list, sym='D', patch_artist=False)
-            linex = []
-            liney = []
-            for b in artists_dict["boxes"]:
-                b.set_visible(False)
-            for m in artists_dict["medians"]:
-                x = m.get_xdata()
-                m.set_visible(False)
-                xm = np.mean(x)
-                ym = m.get_ydata()[0]
-                linex.append(xm)
-                liney.append(ym)
-            for w in artists_dict["whiskers"]:
-                w.set_alpha(0.5)
-                w.set_c(col)
-            for c in artists_dict["caps"]:
-                c.set_c(col)
-            for f in artists_dict["fliers"]:
-                f.set_c(col)
-                f.set_picker(5)
+        palette = sns.color_palette("deep")
+        z_colors = dict(izip(z_levels,palette))
 
-            #print zip(linex,liney)
-            #print col
-            self.axes.plot(linex, liney, 's-', markerfacecolor=col, color=col, label=lbl)
+        #reorder
+        x_levels.sort(reverse=False,key=lambda l:np.median(data[outcome][data[x_name]==l]))
+        z_levels.sort(reverse=False,key=lambda l:np.median(data[outcome][data[z_name]==l]))
 
-        self.axes.set_xlabel(xlabel)
-        self.axes.set_ylabel(ylabel)
-        self.axes.get_xaxis().set_ticklabels(xticks_labels)
-        self.axes.legend(numpoints=1, fancybox=True, fontsize="small", )
-        self.axes.get_legend().draggable(True, update="loc")
+        for i in x_levels:
+            print i, np.median(data[outcome][data[x_name]==i])
+
+        box_width = 0.75
+        box_pad = 0.15
+        group_pad = 0.5
+        group_width = len(z_levels)*box_width + box_pad*(len(z_levels)-1)
+
+        #print "levels"
+        labels = []
+        colors = []
+        values = []
+        positions = []
+        positions_dict={}
+        fliers_x_dict={}
+
+        for ix,iz in itertools.product(xrange(len(x_levels)),xrange(len(z_levels))):
+            x = x_levels[ix]
+            z = z_levels[iz]
+            x_lab = x_labels[x]
+            z_lab = z_labels[z]
+            labels.append("\n".join((x_lab,z_lab)))
+            colors.append(z_colors[z])
+            vals = data[outcome][(data[x_name]==x) & (data[z_name]==z)]
+            values.append(vals)
+            pos = box_width/2 + (group_width+group_pad)*ix + (box_width+box_pad)*iz
+            positions.append(pos)
+            positions_dict[(x,z)]=pos
+            fliers_x_dict[float(pos)]=(x,z)
+
+        sns.boxplot(values,ax=self.axes,names=labels,color=colors,fliersize=10,widths=box_width,positions=positions)
+
+        #find outliers
+        for ls in self.axes.get_lines():
+            if ls.get_markersize()==10:
+                ls.set_picker(5)
+
+        self.axes.set_ylabel(outcome)
         yspan = ylims[1] - ylims[0]
         self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
-        self.x_order = x_permutation
+
+        self.x_order = positions_dict
+        self.fliers_x_dict = fliers_x_dict
 
     @repeatatable_plot
     def make_diagnostics(self, residuals,fitted):
+        sns.set_style("darkgrid")
         self.fig.clear()
         self.axes=self.fig.add_subplot(2,1,2)
         self.axes.clear()
@@ -568,17 +589,20 @@ class MatplotWidget(FigureCanvas):
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.x_order = None
 
-    def add_subject_points(self, x_coords, y_coords, color=None, urls=None):
+    def add_subject_points(self, x_coords, y_coords,z_coords=None, color=None, urls=None):
         #print "adding subjects"
         #self.restore_region(self.back_fig)
         self.redraw_last_plot()
         if self.x_order is not None:
             #labels go from 1 to n; permutation is from 0 to n-1
-            assert 0 not in x_coords
-            x_coords = map(lambda k: self.x_order.index(int(k) - 1) + 1, x_coords)
+            if isinstance(self.x_order,dict):
+                x_coords = map(self.x_order.get , izip(x_coords,z_coords))
+            else:
+                assert 0 not in x_coords
+                x_coords = map(lambda k: self.x_order.index(int(k) - 1) + 1, x_coords)
         if color is None:
             color = "black"
-        collection = self.axes.scatter(x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5)
+        collection = self.axes.scatter(x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5,zorder=10)
         collection.set_facecolor('none')
 
         self.axes.draw_artist(collection)
@@ -602,7 +626,10 @@ class MatplotWidget(FigureCanvas):
             x, y = dx[ind], dy[ind]
             # correct x position from reordering
             if self.x_order is not None:
-                x = self.x_order[int(x - 1)] + 1
+                if isinstance(self.x_order,dict):
+                    x,_ = self.fliers_x_dict[x]
+                else:
+                    x = self.x_order[int(x - 1)] + 1
             self.box_outlier_pick_signal.emit(x, y, (e.mouseevent.x, self.height() - e.mouseevent.y))
         elif type(e.artist) == matplotlib.collections.PathCollection:
             if e.artist.get_urls()[0] is None:

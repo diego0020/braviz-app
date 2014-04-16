@@ -260,8 +260,7 @@ class AnovaApp(QMainWindow):
         conn = get_connection()
         #classify factors
         for f in factors_list:
-            is_real = conn.execute("SELECT is_real FROM variables WHERE var_name=?", (f,))
-            is_real = is_real.fetchone()[0]
+            is_real = braviz_tab_data.is_variable_name_real(f)
             if is_real == 0:
                 nominal_factors.append(f)
             else:
@@ -270,10 +269,7 @@ class AnovaApp(QMainWindow):
         #print real_factors
         if len(real_factors) == 1:
 
-            labels = conn.execute(
-                "SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",
-                (nominal_factors[0],))
-            top_labels_dict = dict(labels.fetchall())
+            top_labels_dict = braviz_tab_data.get_names_label_dict(nominal_factors[0])
             colors = colorbrewer.Dark2[max(len(top_labels_dict), 3)]
             #print top_labels_strings
             if len(top_labels_dict) == 2:
@@ -281,13 +277,11 @@ class AnovaApp(QMainWindow):
             colors = [map(lambda x: x / 255, c) for c in colors]
             colors_dict = dict(izip(top_labels_dict.iterkeys(), colors))
             self.plot_color = colors_dict
-            self.plot_z_var = nominal_factors[0]
             #Get Data
             data = get_data_frame_by_name([real_factors[0], nominal_factors[0], self.outcome_var_name])
             data = data.loc[self.sample]
-
-            data.dropna(inplace=True)
             self.plot_data_frame = data
+            data.dropna(inplace=True)
             datax = []
             datay = []
             colors = []
@@ -301,25 +295,29 @@ class AnovaApp(QMainWindow):
                 urls.append(data[self.outcome_var_name][data[nominal_factors[0]] == k].index.get_values())
             #print datax
             self.plot_x_var = real_factors[0]
+            self.plot_z_var = nominal_factors[0]
+
 
             self.plot.compute_scatter(datax, datay, real_factors[0], self.outcome_var_name, colors, labels, urls=urls)
 
 
         elif len(real_factors) == 2:
             print "Not yet implemented"
+            self.plot.initial_text("Not yet implemented")
         else:
+            #get data
+            data = get_data_frame_by_name(nominal_factors + [self.outcome_var_name])
             #find number of levels for nominal
             nlevels = {}
             for f in nominal_factors:
-                n = conn.execute("SELECT count(*) FROM variables NATURAL JOIN nom_meta WHERE var_name=?", (f,))
-                nlevels[f] = n.fetchone()[0]
+                nlevels[f] = len(data[f].unique())
             #print nlevels
             nominal_factors.sort(key=nlevels.get, reverse=True)
             #print nominal_factors
-            data = get_data_frame_by_name(nominal_factors + [self.outcome_var_name])
             data = data.loc[self.sample]
-
             self.plot_data_frame = data
+
+            data.dropna(inplace=True)
             levels_second_factor = set(data[nominal_factors[1]].get_values())
             levels_first_factor = set(data[nominal_factors[0]].get_values())
             data_lists_top = []
@@ -330,35 +328,16 @@ class AnovaApp(QMainWindow):
                                                            (data[nominal_factors[0]] == j)].get_values()
                     data_list.append(data_col)
                 data_lists_top.append(data_list)
-            #print data_lists_top
-            labels = conn.execute(
-                "SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",
-                (nominal_factors[0],))
-            labels_dict = dict(labels.fetchall())
-            labels_strings = [labels_dict[i] for i in levels_first_factor]
-            labels = conn.execute(
-                "SELECT nom_meta.label, nom_meta.name FROM variables NATURAL JOIN nom_meta WHERE var_name = ?",
-                (nominal_factors[1],))
-            top_labels_dict = dict(labels.fetchall())
-            top_labels_strings = [top_labels_dict[i] for i in levels_second_factor]
-            colors = colorbrewer.Dark2[max(len(levels_second_factor), 3)]
-            #print top_labels_strings
-            if len(levels_second_factor) == 2:
-                colors = colors[:2]
-            colors = [map(lambda x: x / 255, c) for c in colors]
-            self.plot_color = dict(izip(levels_second_factor, colors))
-            self.plot_z_var = nominal_factors[1]
-            #print colors
+
             #get ylims
-            cur = conn.execute("SELECT min_val , max_val FROM variables NATURAL JOIN ratio_meta WHERE var_name=?",
-                               (self.outcome_var_name,))
-            miny, maxy = cur.fetchone()
+            miny, maxy = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
             if miny is None or maxy is None:
                 raise Exception("Incosistency in DB")
 
             self.plot_x_var = nominal_factors[0]
-            self.plot.make_linked_box_plot(data_lists_top, nominal_factors[0], self.outcome_var_name, labels_strings,
-                                           colors, top_labels_strings, ylims=(miny, maxy))
+            self.plot_z_var = nominal_factors[1]
+            self.plot.make_linked_box_plot(data, self.outcome_var_name, nominal_factors[0], nominal_factors[1],
+                                           ylims=(miny, maxy))
 
 
     def one_reg_plot(self, var_name):
@@ -369,6 +348,7 @@ class AnovaApp(QMainWindow):
         #TODO This has to be updatede when implementing logistic regression
         miny, maxy = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
         self.plot_x_var = var_name
+
         if is_reg_real == 0:
             #is nominal
             #create whisker plot
@@ -395,8 +375,8 @@ class AnovaApp(QMainWindow):
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
             data = data.loc[self.sample]
 
-            data.dropna(inplace=True)
             self.plot_data_frame = data
+            data.dropna(inplace=True)
             self.plot.compute_scatter(data[var_name].get_values(),
                                       data[self.outcome_var_name].get_values(),
                                       var_name,
@@ -413,17 +393,22 @@ class AnovaApp(QMainWindow):
         #print subject_ids
         if self.plot_data_frame is None:
             return
-        y_data = self.plot_data_frame[self.outcome_var_name][subject_ids].get_values()
-        subject_ids = self.plot_data_frame[self.outcome_var_name][subject_ids].index.get_values()
+        df = self.plot_data_frame.loc[subject_ids]
+        df = df.dropna()
+        y_data = df[self.outcome_var_name].get_values()
+        subject_ids = df.index.get_values()
         if self.plot_x_var is None:
             x_data = np.ones(y_data.shape)
         else:
-            x_data = self.plot_data_frame[self.plot_x_var][subject_ids].get_values()
+            x_data = df[self.plot_x_var].get_values()
+        z_data = None
         colors = None
-        if self.plot_z_var is not None and self.plot_color is not None:
-            z_data = self.plot_data_frame[self.plot_z_var][subject_ids].get_values()
-            colors = [self.plot_color[i] for i in z_data]
-        self.plot.add_subject_points(x_data, y_data, colors, urls=subject_ids)
+        if self.plot_z_var is not None:
+            z_data = df[self.plot_z_var].get_values()
+            if self.plot_color is not None:
+                colors = [self.plot_color[i] for i in z_data]
+
+        self.plot.add_subject_points(x_data, y_data,z_data, colors,urls=subject_ids)
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"
