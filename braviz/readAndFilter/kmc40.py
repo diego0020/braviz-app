@@ -973,6 +973,8 @@ __known_nodes = {  #
              'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
              'ISIS-EML725001': (r'C:\KAB-db', 1200),
              'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db",4000),
+             'dellingr.vrac.iastate.edu' : (r"/Volumes/diegoa/KAB-db",14000),
+
 }
 
 

@@ -127,7 +127,8 @@ class SampleCreateDilog(QtGui.QMainWindow):
         ret = dialog.exec_()
         if ret == dialog.Accepted:
             sub_sample = np.random.choice(list(working_set), dialog.subsample_size, replace=False)
-            self.change_output_sample(set(sub_sample))
+            new_sample = self.output_model.get_elements().union(sub_sample)
+            self.change_output_sample(set(new_sample))
 
 
     def clear(self):
