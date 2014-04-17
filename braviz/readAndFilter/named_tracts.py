@@ -16,8 +16,11 @@ from braviz.interaction.structure_metrics import get_right_or_left_hemisphere as
 
 def __cached_named_tract(name_tract_func):
     @functools.wraps(name_tract_func)
-    def cached_func(reader, subject, color):
-        cache_file = 'named_fibs_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color)
+    def cached_func(reader, subject, color,scalars = None):
+        if scalars is None:
+            cache_file = 'named_fibs_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color)
+        else:
+            cache_file = 'named_fibs_%s_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color, scalars)
         cache_full_path = os.path.join(reader.getDataRoot(), 'pickles', cache_file)
         if os.path.isfile(cache_full_path):
             fib_reader = vtk.vtkPolyDataReader()
@@ -30,9 +33,9 @@ def __cached_named_tract(name_tract_func):
             else:
                 out_fib = fib_reader.GetOutput()
                 fib_reader.CloseVTKFile()
-                return out_fib, name_tract_func(None, None, None, get_out_space=True)
+                return out_fib, name_tract_func(None, None, None,None, get_out_space=True)
 
-        fibers, out_space = name_tract_func(reader, subject, color)
+        fibers, out_space = name_tract_func(reader, subject, color,scalars)
         fib_writer = vtk.vtkPolyDataWriter()
         fib_writer.SetFileName(cache_full_path)
         fib_writer.SetInputData(fibers)
@@ -49,12 +52,12 @@ def __cached_named_tract(name_tract_func):
 
 
 @__cached_named_tract
-def cortico_spinal_l(reader, subject, color, get_out_space=False):
+def cortico_spinal_l(reader, subject, color,scalars, get_out_space=False):
     if get_out_space is True:
         return 'dartel'
     try:
         tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'],
-                            color=color)
+                            color=color,scalars=scalars)
     except Exception:
         print "Tracts not found for subject %s" % subject
         raise
@@ -83,12 +86,12 @@ def cortico_spinal_l(reader, subject, color, get_out_space=False):
 
 
 @__cached_named_tract
-def cortico_spinal_r(reader, subject, color, get_out_space=False):
+def cortico_spinal_r(reader, subject, color ,scalars, get_out_space=False):
     if get_out_space is True:
         return 'dartel'
     try:
         tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-rh-precentral', 'Brain-Stem'],
-                            color=color)
+                            color=color,scalars=scalars)
     except Exception:
         print "Tracts not found for subject %s" % subject
         raise Exception("Tracts not found for subject %s" % subject)
@@ -118,7 +121,7 @@ def cortico_spinal_r(reader, subject, color, get_out_space=False):
     return tracts3, 'dartel'
 
 
-def cortico_spinal_d(reader, subject, color, get_out_space=False):
+def cortico_spinal_d(reader, subject, color,scalars, get_out_space=False):
     if get_out_space is True:
         return 'dartel'
     laterality = __get_var_value(LATERALITY, int(subject))
@@ -128,14 +131,14 @@ def cortico_spinal_d(reader, subject, color, get_out_space=False):
         lat = 'l'
     hemi = __get_right_or_left_hemisphere('d', lat)
     if hemi == 'r':
-        return cortico_spinal_r(reader, subject, color)
+        return cortico_spinal_r(reader, subject, color,scalars)
     elif hemi == 'l':
-        return cortico_spinal_l(reader, subject, color)
+        return cortico_spinal_l(reader, subject, color,scalars)
     else:
         raise Exception("Unknown laterality")
 
 
-def cortico_spinal_n(reader, subject, color, get_out_space=False):
+def cortico_spinal_n(reader, subject, color,scalars, get_out_space=False):
     if get_out_space is True:
         return 'dartel'
     laterality = __get_var_value(LATERALITY, int(subject))
@@ -145,18 +148,18 @@ def cortico_spinal_n(reader, subject, color, get_out_space=False):
         lat = 'l'
     hemi = __get_right_or_left_hemisphere('n', lat)
     if hemi == 'r':
-        return cortico_spinal_r(reader, subject, color)
+        return cortico_spinal_r(reader, subject, color,scalars)
     elif hemi == 'l':
-        return cortico_spinal_l(reader, subject, color)
+        return cortico_spinal_l(reader, subject, color,scalars)
     else:
         raise Exception("Unknown laterality")
 
 
-def corpus_callosum(reader, subject, color, get_out_space=False):
+def corpus_callosum(reader, subject, color,scalars, get_out_space=False):
     if get_out_space is True:
         return 'world'
     return reader.get('fibers', subject, operation='or',
                       waypoint=['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'],
-                      color=color), 'world'
+                      color=color, scalars=scalars), 'world'
 
 

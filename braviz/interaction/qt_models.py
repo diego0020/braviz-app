@@ -1322,6 +1322,12 @@ class SamplesFilterModel(QAbstractListModel):
             output_set = filter(f,output_set)
         return output_set
 
+    def remove_filter(self,index):
+        row=index.row()
+        self.beginRemoveRows(QtCore.QModelIndex(),row,row)
+        self.__filters_list.pop(row)
+        self.endRemoveRows()
+
 
 class SamplesSelectionModel(QAbstractTableModel):
     def __init__(self):

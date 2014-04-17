@@ -84,9 +84,12 @@ class SampleCreateDilog(QtGui.QMainWindow):
         self.ui = Ui_NewSampleWindow()
         self.ui.setupUi(self)
         self.ui.working_set_view.setModel(self.working_model)
+        self.ui.working_set_view.customContextMenuRequested.connect(self.get_add_one_context_menu)
         self.ui.current_view.setModel(self.output_model)
+        self.ui.current_view.customContextMenuRequested.connect(self.get_remove_one_context_menu)
         self.ui.add_filter_button.clicked.connect(self.show_add_filter_dialog)
         self.ui.filters.setModel(self.filters_model)
+        self.ui.filters.customContextMenuRequested.connect(self.remove_filter_context_menu)
         self.ui.add_all_button.clicked.connect(self.add_all)
         self.ui.remove_button.clicked.connect(self.substract)
         self.ui.intersect_button.clicked.connect(self.intersect)
@@ -95,6 +98,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
         self.ui.add_subset_button.clicked.connect(self.add_subset)
         self.ui.save_button.clicked.connect(self.show_save_dialog)
         self.ui.load_button.clicked.connect(self.show_load_sample)
+
 
 
     def change_output_sample(self, new_set):
@@ -182,6 +186,61 @@ class SampleCreateDilog(QtGui.QMainWindow):
             if loaded_sample is not None:
                 self.change_output_sample(loaded_sample)
 
+    def add_one_to_sample(self,subj):
+        print "adding ",subj
+        new_set = self.output_model.get_elements()
+        new_set.add(subj)
+        self.change_output_sample(new_set)
+
+    def get_add_one_context_menu(self,pos):
+        menu =QtGui.QMenu()
+        action = QtGui.QAction("Add to sample",menu)
+        menu.addAction(action)
+        selection = self.ui.working_set_view.currentIndex()
+        if not selection.isValid():
+            return
+        data = self.working_model.data(selection,QtCore.Qt.DisplayRole)
+        def add_to_sample():
+            self.add_one_to_sample(int(data))
+        action.triggered.connect(add_to_sample)
+        global_pos = self.ui.working_set_view.mapToGlobal(pos)
+        menu.exec_(global_pos)
+
+
+    def remove_one_from_sample(self,subj):
+        print "removing ",subj
+        new_set = self.output_model.get_elements()
+        new_set.remove(subj)
+        self.change_output_sample(new_set)
+
+    def get_remove_one_context_menu(self,pos):
+        menu =QtGui.QMenu()
+        action = QtGui.QAction("Remove from sample",menu)
+        menu.addAction(action)
+        selection = self.ui.current_view.currentIndex()
+        if not selection.isValid():
+            return
+        data = self.output_model.data(selection,QtCore.Qt.DisplayRole)
+        def remove_from_sample():
+            self.remove_one_from_sample(int(data))
+        action.triggered.connect(remove_from_sample)
+        global_pos = self.ui.current_view.mapToGlobal(pos)
+        menu.exec_(global_pos)
+
+    def remove_filter_context_menu(self,pos):
+        menu =QtGui.QMenu()
+        action = QtGui.QAction("Remove filter",menu)
+        menu.addAction(action)
+        selection = self.ui.filters.currentIndex()
+        if not selection.isValid():
+            return
+        def remove_filter():
+            self.filters_model.remove_filter(selection)
+            self.update_filters()
+        action.triggered.connect(remove_filter)
+        global_pos = self.ui.filters.mapToGlobal(pos)
+        menu.exec_(global_pos)
+
 def get_filter_name(params):
     if params["var_real"] is True:
         name = "%s %s %f" % (params["filter_var"], params["operation"], params["threshold"])
@@ -237,6 +296,7 @@ class AddFilterDialog(VariableSelectDialog):
         self.ui = Ui_AddFilterDialog()
         self.ui.setupUi(self)
         self.ui.select_button.clicked.connect(self.save_and_accept)
+        self.ui.save_button.setText("Save Meta")
 
     def update_right_side(self, var_name=None):
         curr_idx = self.ui.tableView.currentIndex()

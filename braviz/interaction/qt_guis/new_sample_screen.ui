@@ -83,6 +83,9 @@
        </item>
        <item>
         <widget class="QListView" name="filters">
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
          <property name="toolTip">
           <string>Right click to remove filters</string>
          </property>
@@ -97,6 +100,9 @@
        </item>
        <item>
         <widget class="QListView" name="working_set_view">
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
          <property name="toolTip">
           <string>Right click to add subjects to current sample</string>
          </property>
@@ -247,6 +253,9 @@
        </item>
        <item>
         <widget class="QListView" name="current_view">
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
          <property name="toolTip">
           <string>Right click to remove subjects</string>
          </property>

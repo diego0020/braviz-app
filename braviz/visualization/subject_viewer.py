@@ -757,7 +757,7 @@ class TractographyManager:
             mapper.SetScalarVisibility(0)
             return
         mapper.SetScalarVisibility(1)
-        print "setting lut"
+        #print "setting lut"
         if self.__lut is None:
             mapper.SetColorModeToDefault()
         else:
@@ -846,7 +846,7 @@ class TractographyManager:
             self.__lut = self.reader.get("Fibers",None,scalars=new_color,lut=True)
 
 
-        print self.__current_color
+        #print self.__current_color
         self.__reload_fibers()
 
     def __reload_fibers(self):

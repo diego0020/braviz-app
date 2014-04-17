@@ -478,7 +478,10 @@ class SampleOverview(QtGui.QMainWindow):
                     print e.message
             color = tractography_state.get("color")
             if color is not None:
-                color_codes = {"Orientation": "orient", "FA (Point)": "fa", "By Line": "rand", "By Bundle": "bundle"}
+                color_codes = {"Orientation": "orient", "FA (Point)": "fa_p", "FA (Line)": "fa_l",
+                               "MD (Point)": "fa_p", "MD (Line)": "fa_l",
+                               "Length" : "length",
+                               "By Line": "rand", "By Bundle": "bundle"}
                 try:
                     viewer.tractography.change_color(color_codes[color], skip_render=True)
                 except Exception as e:

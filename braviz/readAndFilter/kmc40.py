@@ -600,7 +600,7 @@ The path containing this structure must be set."""
                 named_tract_func = getattr(braviz.readAndFilter.named_tracts, kw['name'])
             except AttributeError:
                 raise Exception("unknown tract name %s" % kw['name'])
-            fibers, result_space = named_tract_func(self, subj, color=kw.get('color', 'orient'))
+            fibers, result_space = named_tract_func(self, subj, color=kw.get('color'),scalars=kw.get("scalars"))
             #this are in result_splace coordinates, check if we need to change them
             target_space = kw.get('space', 'world').lower()
             if target_space == result_space:
@@ -653,7 +653,7 @@ The path containing this structure must be set."""
                     valid_ids = set()
 
                 #Take advantage of buffer
-                fibers = self.get('fibers', subj, space='world', color=kw.get('color', 'orient'))
+                fibers = self.get('fibers', subj, space='world', color=kw.get('color'),scalars=kw.get("scalars"))
                 fibers2 = extract_poly_data_subset(fibers, valid_ids)
                 return fibers2
             else:
