@@ -731,15 +731,14 @@ class TractographyManager:
         else:
             actor.GetProperty().SetOpacity(self.__opacity)
             mapper.SetInputData(poly_data)
+
             actor.SetVisibility(1)
             if self.__current_color == "bundle":
                 colors = self.get_bundle_colors()
                 c = colors[-1]
                 actor.GetProperty().SetColor(*c)
-                mapper.SetScalarVisibility(0)
+            self.__set_lut_in_maper(mapper)
 
-            else:
-                mapper.SetScalarVisibility(1)
 
             self.__ad_hoc_pd_mp_ac = (poly_data, mapper, actor)
         return
@@ -752,6 +751,21 @@ class TractographyManager:
         act = self.__ad_hoc_pd_mp_ac[2]
         act.SetVisibility(0)
         self.__ad_hoc_visibility = False
+
+    def __set_lut_in_maper(self,mapper):
+        if self.__current_color == "bundle":
+            mapper.SetScalarVisibility(0)
+            return
+        mapper.SetScalarVisibility(1)
+        print "setting lut"
+        if self.__lut is None:
+            mapper.SetColorModeToDefault()
+        else:
+            mapper.SetScalarVisibility(1)
+            mapper.UseLookupTableScalarRangeOn()
+            mapper.SetColorModeToMapScalars()
+            mapper.SetLookupTable(self.__lut)
+
 
     @do_and_render
     def add_from_database(self, b_id):
@@ -779,10 +793,8 @@ class TractographyManager:
             colors = self.get_bundle_colors()
             c = colors[self.__bundle_labels[b_id]]
             actor.GetProperty().SetColor(*c)
-            mapper.SetScalarVisibility(0)
+        self.__set_lut_in_maper(mapper)
 
-        else:
-            mapper.SetScalarVisibility(1)
 
 
     def get_bundle_colors(self):

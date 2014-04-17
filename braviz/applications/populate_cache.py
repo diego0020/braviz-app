@@ -116,6 +116,12 @@ def populate_cache(subj):
     reader2.get('fibers',subj,color='orient')
     reader2.get('fibers',subj,color='curv')
     reader2.get('fibers',subj,color='y')
+    reader2.get('fibers',subj,scalars="fa_p")
+    reader2.get('fibers',subj,scalars="fa_l")
+    reader2.get('fibers',subj,scalars="md_l")
+    reader2.get('fibers',subj,scalars="md_p")
+    reader2.get('fibers',subj,scalars="length")
+
     waypoints=( 'Brain-Stem','CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior','CC_Posterior',
                 'Left-Cerebellum-Cortex', 'Left-Cerebellum-White-Matter', 'Left-Cerebral-White-Matter',
                 'Right-Cerebellum-Cortex', 'Right-Cerebellum-White-Matter', 'Right-Cerebral-White-Matter',

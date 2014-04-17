@@ -171,7 +171,7 @@ def scalars_from_length(fibers):
         last_point = None
         for j in xrange(1,npts):
             p_id = c.GetPointId(j)
-            coords = fibers.GetPoint(p_id)
+            coords = np.array(fibers.GetPoint(p_id))
             if last_point is not None:
                 step = np.linalg.norm(coords-last_point)
                 length += step
