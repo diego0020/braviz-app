@@ -499,7 +499,8 @@ class ImageManager:
         self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(), new_level)
 
     @do_and_render
-    def reset_window_level(self):
+    def reset_window_level(self,button=None):
+        #print button
         if self.__image_plane_widget is None:
             return
         if self.__current_image == "MRI":

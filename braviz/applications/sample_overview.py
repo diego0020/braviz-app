@@ -30,7 +30,7 @@ import subprocess
 SAMPLE_SIZE = 0.3
 #SAMPLE_SIZE = 0.5
 NOMINAL_VARIABLE = 11  # GENRE
-RATIONAL_VARIBLE = 1  # VCIIQ
+RATIONAL_VARIBLE = 5  # FSIQ
 
 
 class SampleOverview(QtGui.QMainWindow):
@@ -402,10 +402,10 @@ class SampleOverview(QtGui.QMainWindow):
         if image_state is not None:
             mod = image_state.get("modality")
             if mod is not None:
-                if mod in ("Precision","Power"):
-                    paradigm = mod
-                    mod = "fMRI"
-                    try:
+                try:
+                    if mod in ("Precision","Power"):
+                        paradigm = mod
+                        mod = "fMRI"
                         #to load MRI window level
                         viewer.image.change_image_modality("MRI", None,skip_render=True)
                         window = image_state.get("window")
@@ -414,28 +414,26 @@ class SampleOverview(QtGui.QMainWindow):
                         level = image_state.get("level")
                         if level is not None:
                             viewer.image.set_image_level(level, skip_render=True)
-                    except Exception as e:
-                        print e.message
-                else:
-                    paradigm = None
-                try:
+                    else:
+                        paradigm = None
                     viewer.image.change_image_modality(mod, paradigm=paradigm,skip_render=True)
                     viewer.image.image_plane_widget.SetInteraction(0)
+                    orient = image_state.get("orientation")
+                    if orient is not None:
+                        orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
+                        viewer.image.change_image_orientation(orientation_dict[orient], skip_render=True)
+                    slice = image_state.get("slice")
+                    if slice is not None:
+                        viewer.image.set_image_slice(int(slice), skip_render=True)
+                    window = image_state.get("window")
+                    if window is not None:
+                        viewer.image.set_image_window(window, skip_render=True)
+                    level = image_state.get("level")
+                    if level is not None:
+                        viewer.image.set_image_level(level, skip_render=True)
                 except Exception as e:
                     print e.message
-            orient = image_state.get("orientation")
-            if orient is not None:
-                orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
-                viewer.image.change_image_orientation(orientation_dict[orient], skip_render=True)
-            slice = image_state.get("slice")
-            if slice is not None:
-                viewer.image.set_image_slice(int(slice), skip_render=True)
-            window = image_state.get("window")
-            if window is not None:
-                viewer.image.set_image_window(window, skip_render=True)
-            level = image_state.get("level")
-            if level is not None:
-                viewer.image.set_image_level(level, skip_render=True)
+                    viewer.image.change_image_modality(None, paradigm=None,skip_render=True)
         QtGui.QApplication.instance().processEvents()
         #segmentation panel
         segmentation_state = wanted_state.get("segmentation_state")
@@ -784,8 +782,10 @@ class SampleOverview(QtGui.QMainWindow):
         print "showing subject", subj
         if self.mri_viewer is None:
             self.launch_mri_viewer()
-        scn_id = self.current_scenario["meta"]["scn_id"]
-        self.mri_pipe.send({"subject": subj,"scenario":scn_id})
+            scn_id = self.current_scenario["meta"]["scn_id"]
+            self.mri_pipe.send({"subject": subj,"scenario":scn_id})
+        else:
+            self.mri_pipe.send({"subject": subj})
 
     def show_select_sample_dialog(self):
         dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()

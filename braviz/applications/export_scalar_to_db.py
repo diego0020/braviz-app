@@ -27,6 +27,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
         self.progress = 0
         self.timer = None
         self.structs = structures_list
+        print structures_list
         self.fibers_mode = fibers
         self.metric = metric
         self.db_id = db_id
@@ -201,20 +202,24 @@ if __name__ == "__main__":
     #arguments <scn_id> <fibers=False> <metric> <structs0> <struct1> ....
     #            1           2           3         4          5         6
     import sys
-    if len(sys.argv)<6:
-        sys.argv.extend([0,0,'Volume',])
+    print sys.argv
+    if len(sys.argv)<4:
+        raise Exception("Not enough arguments")
     args = sys.argv
     scenario_id = args[1]
     fibers = int(args[2])
-    if fibers:
+    if fibers>0:
         fibers = True
     else:
         fibers = False
     metric = args[3]
     if not fibers:
+        print args
         structs = args[4:]
+        print structs
         run(fibers=fibers, structures_list=structs, metric=metric,scenario_id=scenario_id)
     else:
+        #Fibers
         operation = args[4]
         db_id = args[5]
         if db_id == "0":

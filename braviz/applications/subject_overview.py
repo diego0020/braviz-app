@@ -218,7 +218,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.slice_slider.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
         self.reset_image_view_controls()
 
-        window_level_control = 1 if selection in ("MRI", "FA", "MD") else 0
+        window_level_control = 1 if selection in ("MRI", "FA", "MD","Precision","Power") else 0
         self.ui.image_window.setEnabled(window_level_control)
         self.ui.image_level.setEnabled(window_level_control)
         self.ui.reset_window_level.setEnabled(window_level_control)
