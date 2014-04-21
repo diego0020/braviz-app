@@ -133,6 +133,7 @@ class SubjectOverviewApp(QMainWindow):
         #tractography controls
         self.ui.fibers_from_segments_box.currentIndexChanged.connect(self.show_fibers_from_segment)
         self.ui.tracto_color_combo.currentIndexChanged.connect(self.change_tractography_color)
+        self.ui.show_color_bar_check.toggled.connect(self.toggle_tractography_color_bar)
         self.ui.bundles_list.setModel(self.fibers_list_model)
         self.ui.add_saved_bundles.clicked.connect(self.add_saved_bundles_to_list)
         self.ui.save_bundle_button.clicked.connect(self.save_fibers_bundle)
@@ -417,6 +418,16 @@ class SubjectOverviewApp(QMainWindow):
         else:
             self.show_error("Not yet implemented")
 
+    def toggle_tractography_color_bar(self,value):
+        if isinstance(value,bool):
+            self.vtk_viewer.tractography.set_show_color_bar(value)
+            return
+        else:
+            if value == QtCore.Qt.Checked:
+                self.vtk_viewer.tractography.set_show_color_bar(True)
+            else:
+                self.vtk_viewer.tractography.set_show_color_bar(False)
+
     def change_tractography_opacity(self, value):
         float_value = value / 100
         self.vtk_viewer.tractography.set_opacity(float_value)
@@ -562,6 +573,7 @@ class SubjectOverviewApp(QMainWindow):
         tractography_state["bundles"] = tuple(self.fibers_list_model.get_ids())
         tractography_state["from_segment"] = str(self.ui.fibers_from_segments_box.currentText())
         tractography_state["color"] = str(self.ui.tracto_color_combo.currentText())
+        tractography_state["visible_color_bar"] = self.vtk_viewer.tractography.get_show_color_bar()
         tractography_state["opacity"] = float(self.ui.fibers_opacity.value())
         tractography_state["scalar"] = str(self.ui.fibers_scalar_combo.currentText())
         tractography_state["active_bundle"] = self.current_fibers
@@ -723,6 +735,9 @@ class SubjectOverviewApp(QMainWindow):
                 idx = self.ui.tracto_color_combo.findText(color)
                 self.ui.tracto_color_combo.setCurrentIndex(idx)
                 #self.change_tractography_color(idx)
+            visible_color_bar = tractography_state.get("visible_color_bar")
+            if visible_color_bar is not None:
+                self.vtk_viewer.tractography.set_show_color_bar(visible_color_bar)
             opac = tractography_state.get("opacity")
             if opac is not None:
                 self.ui.fibers_opacity.setValue(opac)

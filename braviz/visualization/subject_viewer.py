@@ -683,6 +683,7 @@ class TractographyManager:
         self.__current_color_parameters = {"color" : "orient", "scalars" : None}
         self.__opacity = 1.0
         self.__lut = None
+        self.__show_color_bar = False
 
         self.__ad_hoc_pd_mp_ac = None
         self.__ad_hoc_fiber_checks = None
@@ -693,6 +694,8 @@ class TractographyManager:
         self.__active_db_tracts = set()
         self.__bundle_colors = None
         self.__bundle_labels = None
+
+        self.__color_bar_actor = None
 
     @do_and_render
     def set_subject(self, subj):
@@ -768,6 +771,7 @@ class TractographyManager:
             mapper.SetLookupTable(self.__lut)
 
 
+
     @do_and_render
     def add_from_database(self, b_id):
 
@@ -813,6 +817,13 @@ class TractographyManager:
         #print colors
         return colors
 
+    @do_and_render
+    def set_show_color_bar(self,value):
+        self.__show_color_bar = bool(value)
+        self.__set_color_bar()
+
+    def get_show_color_bar(self):
+        return self.__show_color_bar
 
     def get_polydata(self, b_id):
         poly = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
@@ -848,7 +859,57 @@ class TractographyManager:
 
 
         #print self.__current_color
+        self.__set_color_bar()
         self.__reload_fibers()
+
+
+    def __set_color_bar(self):
+        scalars = self.__current_color_parameters.get("scalars")
+        if (not self.__show_color_bar) or (scalars is None):
+            if self.__color_bar_actor is None:
+                return
+            else:
+                self.__color_bar_actor.SetVisibility(0)
+        else:
+            if self.__color_bar_actor is None:
+
+                self.__color_bar_actor = vtk.vtkScalarBarActor()
+                self.__color_bar_actor.SetNumberOfLabels(4)
+                #self.__color_bar_actor.SetMaximumWidthInPixels(100)
+                self.__color_bar_actor.GetTitleTextProperty().SetFontSize(10)
+                self.__color_bar_actor.GetLabelTextProperty().SetFontSize(10)
+                #self.__color_bar_actor.GetTitleTextProperty().SetColor(1,0,0)
+                #self.__color_bar_actor.GetLabelTextProperty().SetColor(1,0,0)
+
+
+                self.__color_bar_wiget = vtk.vtkScalarBarWidget()
+                self.__color_bar_wiget.SetScalarBarActor(self.__color_bar_actor)
+                self.__color_bar_wiget.RepositionableOn()
+                iren = self.ren.GetRenderWindow().GetInteractor()
+                self.__color_bar_wiget.SetInteractor(iren)
+                self.__color_bar_wiget.On()
+
+                rep = self.__color_bar_wiget.GetRepresentation()
+                coord1 = rep.GetPositionCoordinate()
+                coord2 = rep.GetPosition2Coordinate()
+                #coord1.SetCoordinateSystemToViewport()
+                #coord2.SetCoordinateSystemToViewport()
+                width, height = self.ren.GetRenderWindow().GetSize()
+                #print width, height
+                coord1.SetValue(0.89,0.05)
+                #coord1.SetValue(width-110,50)
+                coord2.SetValue(0.1,0.9)
+                #coord2.SetValue(width-10,height-50)
+
+                #self.ren.AddActor2D(self.__color_bar_actor)
+
+
+            self.__color_bar_actor.SetVisibility(1)
+            self.__color_bar_actor.SetLookupTable(self.__lut)
+            #self.__color_bar_actor.SetTitle(scalars[:2].upper())
+            self.__color_bar_actor.SetTitle("")
+
+
 
     def __reload_fibers(self):
         #reload ad_hoc

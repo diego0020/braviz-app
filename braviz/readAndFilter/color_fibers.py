@@ -185,11 +185,11 @@ def scalars_from_length(fibers):
 
 
 def get_fa_lut():
-    lut = braviz.visualization.get_colorbrewer_lut(0.35,0.82,"BuGn",9,invert=False)
+    lut = braviz.visualization.get_colorbrewer_lut(0.35,0.82,"YlGn",9,invert=True,continuous=True,skip=1)
     return lut
 
 def get_md_lut():
-    lut = braviz.visualization.get_colorbrewer_lut(6e-10,11e-10,"PuBu",9,invert=False)
+    lut = braviz.visualization.get_colorbrewer_lut(6e-10,11e-10,"YlGnBu",9,invert=False)
     return lut
 
 def get_length_lut():

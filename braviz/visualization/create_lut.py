@@ -7,7 +7,7 @@ import colorbrewer
 __author__ = 'Diego'
 
 
-def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(1.0,0,0),invert=False):
+def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(1.0,0,0),invert=False,skip=0):
     """Creates a vtkColorTransferFunction from a colorbrewer scheme
     the values will be clamped between minimum and maximum,
     the name of the scheme and number of steps must correspond to those in colorbrewer2.org
@@ -18,6 +18,7 @@ def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(
 
     scalar_lookup_table.ClampingOn()
     scalar_lookup_table.SetColorSpaceToLab()
+    #scalar_lookup_table.SetColorSpaceToHSV()
     assert steps>1
     sharpness=1
     if continuous is True:
@@ -35,15 +36,18 @@ def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(
         print "this scheme is not available for %d steps"%steps
         raise
 
+    cb_list = cb_list[skip:]
+    steps = steps-skip
     if invert is True:
         cb_list.reverse()
     delta=(maximum-minimum)/(steps-1)
     scalar_lookup_table.RemoveAllPoints()
     for i in range(steps):
         c_int = cb_list[i]
-        c=map(lambda x:x/256.0 , c_int)
+        c=map(lambda x:x/255.0 , c_int)
         #                                    x            ,r   ,g   , b, midpoint, sharpness
         scalar_lookup_table.AddRGBPoint(minimum+delta*i,c[0],c[1],c[2], 0.5,  sharpness)
+        print minimum+delta*i, c_int
     scalar_lookup_table.SetNanColor(nan_color)
     #scalar_lookup_table.AdjustRange((minimum2, maximum2))
     scalar_lookup_table.SetClamping(1)

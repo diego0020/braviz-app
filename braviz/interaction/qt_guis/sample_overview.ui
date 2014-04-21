@@ -161,6 +161,44 @@
         </widget>
        </item>
        <item>
+        <widget class="QFrame" name="frame_4">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Coordinates</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="space_combo">
+            <item>
+             <property name="text">
+              <string>World</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Talairach</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Dartel</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QFrame" name="frame_2">
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
