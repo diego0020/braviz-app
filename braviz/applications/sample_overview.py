@@ -43,6 +43,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.viewers_dict = {}
         self.widgets_dict = {}
         self.widget_observers = {}
+        self.current_space = "World"
 
         self.inside_layouts = dict()
         self.row_scroll_widgets = dict()
@@ -77,6 +78,30 @@ class SampleOverview(QtGui.QMainWindow):
             state = cPickle.loads(str(state_str))
             load_scn_funct = functools.partial(self.load_scenario, state,False)
             QtCore.QTimer.singleShot(100, load_scn_funct)
+
+    def setup_gui(self):
+        self.ui = Ui_SampleOverview()
+        self.ui.setupUi(self)
+        self.plot_widget = MatplotWidget(self.ui.plot_1)
+        self.plot_widget.point_picked.connect(self.select_from_bar)
+        self.ui.plot_1_layout = QtGui.QHBoxLayout()
+        self.ui.plot_1_layout.addWidget(self.plot_widget)
+        self.ui.plot_1.setLayout(self.ui.plot_1_layout)
+        self.ui.row_layout = QtGui.QVBoxLayout(self.ui.row_container)
+        self.ui.row_container.setLayout(self.ui.row_layout)
+        self.ui.row_layout.setContentsMargins(0, 0, 0, 0)
+        self.ui.row_layout.setSpacing(0)
+        self.ui.progress_bar = QtGui.QProgressBar()
+        self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
+        self.ui.space_combo.currentTextChanged.connect(self.set_space_from_menu)
+        self.ui.action_load_visualization.triggered.connect(self.load_visualization)
+        self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
+        self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
+        self.ui.action_save_scenario.triggered.connect(self.save_scenario)
+        self.ui.action_load_scenario.triggered.connect(self.load_scenario_dialog)
+        self.ui.actionSelect_Sample.triggered.connect(self.show_select_sample_dialog)
+
+        self.ui.progress_bar.setValue(0)
 
     def change_nominal_variable(self, new_var_index):
         self.load_scalar_data(self.rational_index, new_var_index)
@@ -194,29 +219,6 @@ class SampleOverview(QtGui.QMainWindow):
     def take_random_sample(self):
         sample = braviz_tab_data.get_subjects()
         self.sample = list(np.random.choice(sample, np.ceil(len(sample) * SAMPLE_SIZE), replace=False))
-
-    def setup_gui(self):
-        self.ui = Ui_SampleOverview()
-        self.ui.setupUi(self)
-        self.plot_widget = MatplotWidget(self.ui.plot_1)
-        self.plot_widget.point_picked.connect(self.select_from_bar)
-        self.ui.plot_1_layout = QtGui.QHBoxLayout()
-        self.ui.plot_1_layout.addWidget(self.plot_widget)
-        self.ui.plot_1.setLayout(self.ui.plot_1_layout)
-        self.ui.row_layout = QtGui.QVBoxLayout(self.ui.row_container)
-        self.ui.row_container.setLayout(self.ui.row_layout)
-        self.ui.row_layout.setContentsMargins(0, 0, 0, 0)
-        self.ui.row_layout.setSpacing(0)
-        self.ui.progress_bar = QtGui.QProgressBar()
-        self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
-        self.ui.action_load_visualization.triggered.connect(self.load_visualization)
-        self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
-        self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
-        self.ui.action_save_scenario.triggered.connect(self.save_scenario)
-        self.ui.action_load_scenario.triggered.connect(self.load_scenario_dialog)
-        self.ui.actionSelect_Sample.triggered.connect(self.show_select_sample_dialog)
-
-        self.ui.progress_bar.setValue(0)
 
     def callback_maker(self, subj):
         def cb(obj, event):
@@ -383,6 +385,16 @@ class SampleOverview(QtGui.QMainWindow):
             if subj_state is not None:
                 subj_state.pop("current_subject")
             print return_dict
+            try:
+                space =return_dict["camera_state"].pop("space")
+            except KeyError:
+                pass
+                print "no space found"
+            else:
+                self.current_space = space
+                index = self.ui.space_combo.findText(space)
+                self.ui.space_combo.setCurrentIndex(index)
+
             self.current_scenario = return_dict
             self.reload_viewers(scenario=return_dict)
 
@@ -391,11 +403,8 @@ class SampleOverview(QtGui.QMainWindow):
         wanted_state = scenario_dict
 
         #set space
-        camera_state = wanted_state.get("camera_state")
-        if camera_state is not None:
-            space = camera_state.get("space")
-            if space is not None:
-                viewer.change_current_space(space)
+        viewer.change_current_space(self.current_space)
+
 
         #images panel
         image_state = wanted_state.get("image_state")
@@ -584,6 +593,29 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.ui.camera_combo.setCurrentIndex(0)
 
+    def set_space_from_menu(self,text):
+        print "space changed to ",text
+        text = str(text)
+        if self.current_space == text:
+            return
+        self.current_space = text
+        self.__change_space_in_viewers()
+
+    def __change_space_in_viewers(self):
+        self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
+        self.ui.progress_bar.show()
+        for i,v in enumerate(self.viewers_dict.itervalues()):
+            self.ui.progress_bar.setValue(i / len(self.sample) * 100)
+            try:
+                v.change_current_space(self.current_space)
+            except Exception as e:
+                print e.message
+            QtGui.QApplication.instance().processEvents()
+        self.ui.progress_bar.setValue(100)
+        self.ui.statusbar.removeWidget(self.ui.progress_bar)
+        self.ui.statusbar.showMessage("Loading complete")
+
+
     def select_nominal_variable(self, index):
         if index == 0:
             params = {}
@@ -655,6 +687,7 @@ class SampleOverview(QtGui.QMainWindow):
         for subj in self.sample:
             cameras[subj] = self.viewers_dict[subj].get_camera_parameters()
         vis_state["cameras"] = cameras
+        vis_state["space"] = self.current_space
         state["viz"] = vis_state
         #meta
         meta = {}
@@ -693,6 +726,21 @@ class SampleOverview(QtGui.QMainWindow):
 
         vis_state = state["viz"]
         scenario = vis_state["scenario"]
+        subj_state = scenario.get("subject_state")
+        if subj_state is not None:
+            try:
+                subj_state.pop("current_subject")
+            except KeyError:
+                pass
+        try:
+            space =scenario["camera_state"].pop("space")
+        except KeyError:
+            print "no space found"
+        else:
+            self.current_space = space
+            index = self.ui.space_combo.findText(space)
+            self.ui.space_combo.setCurrentIndex(index)
+
 
         if initialized is True:
             self.change_sample(new_sample, scenario)

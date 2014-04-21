@@ -47,7 +47,7 @@ def get_colorbrewer_lut(minimum,maximum,scheme,steps,continuous=True,nan_color=(
         c=map(lambda x:x/255.0 , c_int)
         #                                    x            ,r   ,g   , b, midpoint, sharpness
         scalar_lookup_table.AddRGBPoint(minimum+delta*i,c[0],c[1],c[2], 0.5,  sharpness)
-        print minimum+delta*i, c_int
+        #print minimum+delta*i, c_int
     scalar_lookup_table.SetNanColor(nan_color)
     #scalar_lookup_table.AdjustRange((minimum2, maximum2))
     scalar_lookup_table.SetClamping(1)
