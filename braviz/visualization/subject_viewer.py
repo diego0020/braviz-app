@@ -1019,13 +1019,19 @@ class SurfaceManager:
         self.__color_bar_widget = None
 
         #for interaction
-        self.__picking_dict = dict()
-        self.__cone_trio = None
-        self.__locators = dict()
-        self.__active_picking=False
-        self.__setup_picking()
+        if self.picker is not None:
+            self.__picking_dict = dict()
+            self.__cone_trio = None
+            self.__locators = dict()
+            self.__active_picking=False
+            self.__picking_events = dict()
+            self.__picking_text = None
+            self.__create_pick_cone()
+            self.__create_pick_text()
+            self.__setup_picking()
 
-        self.__create_pick_cone()
+
+
         self.__update_lut()
 
 
@@ -1050,6 +1056,19 @@ class SurfaceManager:
         self.ren.AddActor(redCone)
         self.__cone_trio = coneSource,coneMapper,redCone
 
+    def __create_pick_text(self):
+        text2=vtk.vtkTextActor()
+        cor=text2.GetPositionCoordinate()
+        cor.SetCoordinateSystemToNormalizedDisplay()
+        text2.SetPosition([0.99,0.01])
+        text2.SetInput('probando')
+        tprop=text2.GetTextProperty()
+        tprop.SetJustificationToRight()
+        tprop.SetFontSize(18)
+        self.ren.AddActor(text2)
+        text2.SetVisibility(0)
+        self.__picking_text = text2
+
     def __point_cone(self,nx,ny,nz):
         actor = self.__cone_trio[2]
         actor.SetOrientation(0.0, 0.0, 0.0)
@@ -1060,10 +1079,58 @@ class SurfaceManager:
         actor.RotateWXYZ(180, (nx+n)*0.5, ny*0.5, nz*0.5)
 
     def __setup_picking(self):
-        pass
-        def yayay(self,source,event):
-            print id(source)
-            print 'yayay'
+        def get_message(picker):
+            hemi=self.__picking_dict[id(picker.GetProp3D())]
+            pd = self.__surf_trios[hemi][0]
+            ptId=picker.GetPointId()
+            point_data=pd.GetPointData()
+            scalars=point_data.GetScalars()
+            scalar = self.__current_scalars
+            t=scalars.GetTuple(ptId)
+            annotations=['aparc','aparc.a2009s','BA']
+            if scalar in annotations:
+                label=self.__lut.GetAnnotation(int(t[0]))
+                return "%s-Label: %s"%(scalar,label)
+            return "%s = %f"%(scalar,t[0])
+
+        def picking(caller,event):
+            active_picking = self.__active_picking
+            if event=='MouseMoveEvent' and not active_picking:
+                return
+            if event=='LeftButtonReleaseEvent':
+                self.__active_picking=False
+                self.__cone_trio[2].SetVisibility(0)
+                self.__picking_text.SetVisibility(0)
+                print "done picking"
+                return
+            x,y=caller.GetEventPosition()
+            picked=self.picker.Pick(x,y,0,self.ren)
+            p=self.picker.GetPickPosition()
+            n=self.picker.GetPickNormal()
+            picked_prop=self.picker.GetProp3D()
+            if picked and (id(picked_prop) in self.__picking_dict) :
+                self.__active_picking=True
+                redCone = self.__cone_trio[2]
+                redCone.SetPosition(p)
+                self.__point_cone(*n)
+                self.__picking_text.SetVisibility(1)
+                redCone.SetVisibility(1)
+                message=get_message(self.picker)
+                self.__picking_text.SetInput(message)
+                event_id = self.__picking_events[event]
+                command=caller.GetCommand(event_id)
+                command.SetAbortFlag(1)
+                self.iren.Render()
+            else:
+                self.__active_picking = False
+                self.__cone_trio[2].SetVisibility(0)
+                self.__picking_text.SetVisibility(0)
+            return
+        iren = self.iren
+        self.__picking_events["LeftButtonPressEvent"]=iren.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,picking,10)
+        iren.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent,picking,10)
+        self.__picking_events["MouseMoveEvent"]=iren.AddObserver(vtk.vtkCommand.MouseMoveEvent,picking,10)
+
 
     def __update_hemisphere(self,h):
         print "updating hemisphere ",h

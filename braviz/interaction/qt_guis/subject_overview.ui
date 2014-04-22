@@ -978,11 +978,6 @@
               </item>
               <item>
                <property name="text">
-                <string>Area</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
                 <string>Thickness</string>
                </property>
               </item>

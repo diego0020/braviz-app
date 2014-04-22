@@ -545,8 +545,8 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveFibersBundleDialog(operation, checkpoints, throug_all)
         dialog.exec_()
 
-    __surfaces_scalars_dict={0 : "curv", 1 : "avg_curv", 2: "area", 3: "thickness",
-                             4: "sulc", 5: "aparc", 6: "aparc.a2009s", 7: "BA"}
+    __surfaces_scalars_dict={0 : "curv", 1 : "avg_curv", 2: "thickness",
+                             3: "sulc", 4: "aparc", 5: "aparc.a2009s", 6: "BA"}
     def update_surfaces_from_gui(self,event=None):
         left_active = self.ui.surface_left_check.isChecked()
         right_active = self.ui.surface_right_check.isChecked()
