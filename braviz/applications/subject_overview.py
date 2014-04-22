@@ -73,6 +73,9 @@ class SubjectOverviewApp(QMainWindow):
         self.fibers_list_model = SimpleBundlesList()
         self.current_fibers = None
 
+        #surfaces_state
+        self.surfaces_state = dict()
+
         #Init gui
         self.ui = None
         self.setup_gui()
@@ -141,7 +144,13 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.bundles_list.activated.connect(self.update_current_bundle)
         self.ui.fibers_scalar_combo.currentIndexChanged.connect(self.update_fiber_scalars)
         self.ui.export_fiber_scalars_to_db.clicked.connect(self.export_fiber_scalars_to_db)
-
+        #surface panel
+        self.ui.surface_left_check.toggled.connect(self.update_surfaces_from_gui)
+        self.ui.surface_right_check.toggled.connect(self.update_surfaces_from_gui)
+        self.ui.surface_select_combo.currentIndexChanged.connect(self.update_surfaces_from_gui)
+        self.ui.surface_scalars_combo.currentIndexChanged.connect(self.update_surfaces_from_gui)
+        self.ui.surface_color_bar_check.toggled.connect(self.update_surfaces_from_gui)
+        self.ui.surf_opacity_slider.valueChanged.connect(self.update_surfaces_from_gui)
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
@@ -536,6 +545,51 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveFibersBundleDialog(operation, checkpoints, throug_all)
         dialog.exec_()
 
+    __surfaces_scalars_dict={0 : "curv", 1 : "avg_curv", 2: "area", 3: "thickness",
+                             4: "sulc", 5: "aparc", 6: "aparc.a2009s", 7: "BA"}
+    def update_surfaces_from_gui(self,event=None):
+        left_active = self.ui.surface_left_check.isChecked()
+        right_active = self.ui.surface_right_check.isChecked()
+        surface = str(self.ui.surface_select_combo.currentText())
+        scalars = self.__surfaces_scalars_dict[self.ui.surface_scalars_combo.currentIndex()]
+        color_bar = self.ui.surface_color_bar_check.isChecked()
+        opacity  = int(self.ui.surf_opacity_slider.value())
+        # print "========="
+        # print "left", left_active
+        # print "right", right_active
+        # print "surface", surface
+        # print "scalars", scalars
+        print "color bar", color_bar
+        #print "opacity = ", opacity
+
+
+
+        self.surfaces_state["left"] = left_active
+        self.surfaces_state["right"] = right_active
+        self.surfaces_state["surf"] = surface
+        self.surfaces_state["scalar"] = scalars
+        self.surfaces_state["color_bar"] = color_bar
+        self.surfaces_state["opacity"] = opacity
+
+        self.__update_surfaces()
+
+    def __update_surfaces(self):
+        left_active = self.surfaces_state["left"]
+        right_active = self.surfaces_state["right"]
+        surface = self.surfaces_state["surf"]
+        scalars = self.surfaces_state["scalar"]
+        color_bar = self.surfaces_state["color_bar"]
+        opacity = self.surfaces_state["opacity"]
+
+        self.vtk_viewer.surface.set_hemispheres(left_active,right_active,skip_render=True)
+        self.vtk_viewer.surface.set_surface(surface,skip_render=True)
+        self.vtk_viewer.surface.set_scalars(scalars,skip_render=True)
+        self.vtk_viewer.surface.set_opacity(opacity,skip_render=True)
+        self.vtk_viewer.surface.show_color_bar(color_bar,skip_render=True)
+        self.vtk_viewer.ren_win.Render()
+
+
+
     def get_state_dict(self):
         state = dict()
         #subject panel
@@ -578,6 +632,9 @@ class SubjectOverviewApp(QMainWindow):
         tractography_state["scalar"] = str(self.ui.fibers_scalar_combo.currentText())
         tractography_state["active_bundle"] = self.current_fibers
         state["tractography_state"] = tractography_state
+
+        #surface panel
+        pass
 
         #camera panel
         camera_state = dict()

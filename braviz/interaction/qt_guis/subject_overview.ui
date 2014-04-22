@@ -64,7 +64,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>5</number>
           </property>
           <widget class="QWidget" name="subjects_tab">
            <attribute name="title">
@@ -911,14 +911,136 @@
            <attribute name="title">
             <string>Surfaces</string>
            </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_9">
-            <item>
-             <widget class="QLabel" name="label_25">
+           <layout class="QFormLayout" name="formLayout_5">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_7">
               <property name="text">
-               <string>Not yet implemented</string>
+               <string>Hemispheres:</string>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>Surface:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="surface_left_check">
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="text">
+               <string>Left</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="surface_right_check">
+              <property name="text">
+               <string>Right</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Scalars:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="surface_select_combo">
+              <item>
+               <property name="text">
+                <string>White</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Pial</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QComboBox" name="surface_scalars_combo">
+              <item>
+               <property name="text">
+                <string>Curv</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Avg. curv</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Area</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Thickness</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Sulc</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Parcellation</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Parcellation 2009</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Broadman area</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QCheckBox" name="surface_color_bar_check">
+              <property name="text">
+               <string>Show color bar</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>Opacity: </string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QSlider" name="surf_opacity_slider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>100</number>
+              </property>
+              <property name="tracking">
+               <bool>false</bool>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="tickPosition">
+               <enum>QSlider::TicksBelow</enum>
+              </property>
+              <property name="tickInterval">
+               <number>10</number>
               </property>
              </widget>
             </item>

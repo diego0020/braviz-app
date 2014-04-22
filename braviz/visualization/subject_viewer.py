@@ -12,6 +12,7 @@ from itertools import izip
 import colorbrewer
 from braviz.interaction import structure_metrics
 from functools import wraps
+import numpy as np
 
 def do_and_render(f):
     """requiers the class to have the rendered accesible as self.ren"""
@@ -68,10 +69,16 @@ class SubjectViewer:
         self.__current_subject = None
         self.__current_space = "world"
 
+        self.picker = vtk.vtkCellPicker()
+        self.picker.SetTolerance(0.0005)
+        self.iren.SetPicker(self.picker)
+
         #internal data
         self.__model_manager = ModelManager(self.reader, self.ren)
         self.__tractography_manager = TractographyManager(self.reader, self.ren)
-        self.__image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren)
+        self.__image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
+                                            picker=self.picker)
+        self.__surface_manager = SurfaceManager(self.reader, self.ren,self.iren, picker=self.picker)
 
 
         #reset camera and render
@@ -92,6 +99,10 @@ class SubjectViewer:
     @property
     def image(self):
         return self.__image_manager
+
+    @property
+    def surface(self):
+        return self.__surface_manager
 
     def show_cone(self):
         """Useful for testing"""
@@ -128,6 +139,12 @@ class SubjectViewer:
         except Exception:
             errors.append("Fibers")
 
+        #update surfaces
+        try:
+            self.surface.set_subject(new_subject_img_code, skip_render=True)
+        except Exception:
+            errors.append("Surfaces")
+
         self.ren_win.Render()
         if len(errors) > 0:
             raise Exception("Couldn't load " + ", ".join(errors))
@@ -148,6 +165,10 @@ class SubjectViewer:
             print e.message
         try:
             self.tractography.set_current_space(new_space, skip_render=True)
+        except Exception as e:
+            print e.message
+        try:
+            self.surface.set_space(new_space, skip_render=True)
         except Exception as e:
             print e.message
 
@@ -251,7 +272,7 @@ class QSuvjectViwerWidget(QFrame):
 
 
 class ImageManager:
-    def __init__(self, reader, ren, widget, interactor, initial_subj="093", initial_space="World"):
+    def __init__(self, reader, ren, widget, interactor, initial_subj="093", initial_space="World",picker=None):
         self.ren = ren
         self.reader = reader
         self.__current_subject = initial_subj
@@ -266,6 +287,7 @@ class ImageManager:
         self.__fmri_blender = braviz.visualization.fMRI_blender()
         self.__widget = widget
         self.__outline_filter = None
+        self.__picker = picker
         self.iren = interactor
 
     @property
@@ -295,6 +317,7 @@ class ImageManager:
         self.__mri_lut = vtk.vtkLookupTable()
         self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
 
+
         def slice_change_handler(source, event):
             new_slice = self.__image_plane_widget.GetSliceIndex()
             self.__widget.slice_change_handle(new_slice)
@@ -305,6 +328,10 @@ class ImageManager:
 
         self.__image_plane_widget.AddObserver(self.__image_plane_widget.slice_change_event, slice_change_handler)
         self.__image_plane_widget.AddObserver("WindowLevelEvent", detect_window_level_event)
+
+        if self.__picker is not None:
+            self.__image_plane_widget.SetPicker(self.__picker)
+
         outline = vtk.vtkOutlineFilter()
 
         outlineMapper = vtk.vtkPolyDataMapper()
@@ -882,14 +909,14 @@ class TractographyManager:
                 #self.__color_bar_actor.GetLabelTextProperty().SetColor(1,0,0)
 
 
-                self.__color_bar_wiget = vtk.vtkScalarBarWidget()
-                self.__color_bar_wiget.SetScalarBarActor(self.__color_bar_actor)
-                self.__color_bar_wiget.RepositionableOn()
+                self.__color_bar_widget = vtk.vtkScalarBarWidget()
+                self.__color_bar_widget.SetScalarBarActor(self.__color_bar_actor)
+                self.__color_bar_widget.RepositionableOn()
                 iren = self.ren.GetRenderWindow().GetInteractor()
-                self.__color_bar_wiget.SetInteractor(iren)
-                self.__color_bar_wiget.On()
+                self.__color_bar_widget.SetInteractor(iren)
+                self.__color_bar_widget.On()
 
-                rep = self.__color_bar_wiget.GetRepresentation()
+                rep = self.__color_bar_widget.GetRepresentation()
                 coord1 = rep.GetPositionCoordinate()
                 coord2 = rep.GetPosition2Coordinate()
                 #coord1.SetCoordinateSystemToViewport()
@@ -967,6 +994,211 @@ class TractographyManager:
             n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
             return n
         return float("nan")
+
+
+class SurfaceManager:
+    def __init__(self, reader, ren, iren,initial_subj="093", initial_space="World", picker=None):
+        self.ren = ren
+        self.reader = reader
+        self.picker = picker
+        self.iren = iren
+
+        self.__left_active = False
+        self.__right_active = False
+        self.__current_surface = "white"
+        self.__current_scalars = "curv"
+        self.__lut = None
+        self.__surf_trios = {}
+
+        self.__current_space = initial_space
+        self.__subject = initial_subj
+        self.__opacity=100
+
+        self.__active_color_bar = False
+        self.__color_bar_actor = None
+        self.__color_bar_widget = None
+
+        #for interaction
+        self.__picking_dict = dict()
+        self.__cone_trio = None
+        self.__locators = dict()
+        self.__active_picking=False
+        self.__setup_picking()
+
+        self.__create_pick_cone()
+        self.__update_lut()
+
+
+    def __create_pick_cone(self):
+        coneSource = vtk.vtkConeSource()
+        coneSource.CappingOn()
+        coneSource.SetHeight(12)
+        coneSource.SetRadius(5)
+        coneSource.SetResolution(31)
+        coneSource.SetCenter(6,0,0)
+        coneSource.SetDirection(-1,0,0)
+
+        coneMapper = vtk.vtkDataSetMapper()
+        coneMapper.SetInputConnection(coneSource.GetOutputPort())
+
+        redCone = vtk.vtkActor()
+        redCone.PickableOff()
+        redCone.SetMapper(coneMapper)
+        redCone.GetProperty().SetColor(1,0,0)
+        redCone.SetVisibility(0)
+
+        self.ren.AddActor(redCone)
+        self.__cone_trio = coneSource,coneMapper,redCone
+
+    def __point_cone(self,nx,ny,nz):
+        actor = self.__cone_trio[2]
+        actor.SetOrientation(0.0, 0.0, 0.0)
+        n = np.sqrt(nx**2 + ny**2 + nz**2)
+        if (nx < 0.0):
+            actor.RotateWXYZ(180, 0, 1, 0)
+            n = -n
+        actor.RotateWXYZ(180, (nx+n)*0.5, ny*0.5, nz*0.5)
+
+    def __setup_picking(self):
+        pass
+        def yayay(self,source,event):
+            print id(source)
+            print 'yayay'
+
+    def __update_hemisphere(self,h):
+        print "updating hemisphere ",h
+        if h == "l":
+            active = self.__left_active
+        elif h == "r":
+            active = self.__right_active
+        else:
+            raise Exception("Unknown hemisphere %s"%h)
+
+        trio = self.__surf_trios.get(h)
+        if not active:
+            if trio is None:
+                return
+            ac = trio[2]
+            ac.SetVisibility(0)
+            return
+        if trio is None:
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetLookupTable(self.__lut)
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            self.ren.AddActor(actor)
+            self.__picking_dict[id(actor)]=h
+            locator = vtk.vtkCellTreeLocator()
+            locator.LazyEvaluationOn()
+            self.__locators[h] = locator
+            if self.picker is not None:
+                self.picker.AddLocator(locator)
+                self.picker.AddPickList(actor)
+        else:
+            surf ,mapper,actor = trio
+
+        surf = self.reader.get("surf",self.__subject,name=self.__current_surface,hemi=h,scalars=self.__current_scalars,
+                               space = self.__current_space)
+        mapper.SetInputData(surf)
+        actor.SetVisibility(1)
+        actor.GetProperty().SetOpacity(self.__opacity/100)
+        trio = surf,mapper,actor
+        self.__locators[h].SetDataSet(surf)
+        self.__surf_trios[h] = trio
+
+    def __update_lut(self):
+        lut = self.reader.get("SURF_SCALAR","144",scalars=self.__current_scalars,lut=True,hemi="l")
+        for trio in self.__surf_trios.itervalues():
+            mapper = trio[1]
+            mapper.SetLookupTable(lut)
+        self.__lut = lut
+        if (self.__color_bar_actor is not None) and (self.__active_color_bar):
+            self.__color_bar_actor.SetLookupTable(lut)
+
+
+    def __update_both(self):
+        self.__update_hemisphere("r")
+        self.__update_hemisphere("l")
+
+    @do_and_render
+    def set_hemispheres(self,left=None,right=None):
+
+        if left is not None:
+            left = bool(left)
+            if left != self.__left_active:
+                self.__left_active = left
+                self.__update_hemisphere("l")
+
+        if right is not None:
+            right = bool(right)
+            if right != self.__right_active:
+                self.__right_active = right
+                self.__update_hemisphere("r")
+
+    @do_and_render
+    def set_scalars(self,scalars):
+        scalars = scalars.lower()
+        if scalars == self.__current_scalars:
+            return
+        self.__current_scalars = scalars
+        self.__update_both()
+        self.__update_lut()
+
+    @do_and_render
+    def set_surface(self,surface):
+        surface = surface.lower()
+        if surface == self.__current_surface:
+            return
+        self.__current_surface = surface
+        self.__update_both()
+
+    @do_and_render
+    def show_color_bar(self,show):
+        if show == self.__active_color_bar:
+            return
+        self.__active_color_bar = show
+        if not show:
+            if self.__color_bar_actor is None:
+                return
+            self.__color_bar_actor.SetVisibility(0)
+            return
+        if self.__color_bar_actor is None:
+            self.__color_bar_actor = vtk.vtkScalarBarActor()
+            self.__color_bar_actor.SetNumberOfLabels(4)
+            self.__color_bar_widget = vtk.vtkScalarBarWidget()
+            self.__color_bar_widget.SetScalarBarActor(self.__color_bar_actor)
+            self.__color_bar_widget.RepositionableOn()
+            iren = self.iren
+            self.__color_bar_widget.SetInteractor(iren)
+            self.__color_bar_widget.On()
+            rep = self.__color_bar_widget.GetRepresentation()
+            coord1 = rep.GetPositionCoordinate()
+            coord2 = rep.GetPosition2Coordinate()
+            coord1.SetValue(0.01,0.05)
+            coord2.SetValue(0.1,0.9)
+        self.__color_bar_actor.SetVisibility(1)
+        self.__color_bar_actor.SetLookupTable(self.__lut)
+        self.__color_bar_actor.SetTitle("")
+
+    @do_and_render
+    def set_subject(self,new_subject):
+        self.__subject = new_subject
+        self.__update_both()
+
+    @do_and_render
+    def set_space(self,new_space):
+        self.__current_space = new_space
+        self.__update_both()
+
+    @do_and_render
+    def set_opacity(self,new_opacity):
+        if new_opacity == self.__opacity:
+            return
+        self.__opacity = new_opacity
+        for trio in self.__surf_trios.itervalues():
+            ac = trio[2]
+            ac.GetProperty().SetOpacity(self.__opacity/100)
+
 
 
 if __name__ == "__main__":
