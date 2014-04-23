@@ -634,7 +634,8 @@ class SubjectOverviewApp(QMainWindow):
         state["tractography_state"] = tractography_state
 
         #surface panel
-        pass
+        surfaces_state = self.surfaces_state
+        state["surf_state"] = surfaces_state
 
         #camera panel
         camera_state = dict()
@@ -814,6 +815,27 @@ class SubjectOverviewApp(QMainWindow):
                     name = self.fibers_list_model.get_bundle_name(current)
                     self.ui.current_bundle_tag.setText(name)
                 self.update_fiber_scalars()
+
+        #surface panel
+        surface_state = wanted_state.get("surf_state")
+        if surface_state is not None:
+            self.surfaces_state = surface_state
+            self.__update_surfaces()
+            #update gui
+            left_active = self.surfaces_state["left"]
+            self.ui.surface_left_check.setChecked(left_active)
+            right_active = self.surfaces_state["right"]
+            self.ui.surface_left_check.setChecked(right_active)
+            surface = self.surfaces_state["surf"]
+            index = self.ui.surface_select_combo.findText(surface)
+            self.ui.surface_select_combo.setCurrentIndex(index)
+            scalars = self.surfaces_state["scalar"]
+            index = self.ui.surface_scalars_combo.findText(scalars)
+            self.ui.surface_scalars_combo.setCurrentIndex(index)
+            color_bar = self.surfaces_state["color_bar"]
+            self.ui.surface_color_bar_check.setChecked(color_bar)
+            opacity = self.surfaces_state["opacity"]
+            self.ui.surf_opacity_slider.setValue(opacity)
 
         #context panel
         context_state = wanted_state.get("context_state")

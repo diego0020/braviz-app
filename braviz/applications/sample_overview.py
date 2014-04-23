@@ -500,6 +500,30 @@ class SampleOverview(QtGui.QMainWindow):
                     viewer.tractography.set_opacity(opac/100, skip_render=True)
                 except Exception as e:
                     print e.message
+        #surfaces panel
+        surf_state = wanted_state.get("surf_state")
+        try:
+            left_active = surf_state["left"]
+            right_active = surf_state["right"]
+            viewer.surface.set_hemispheres(left_active,right_active,skip_render=True)
+        except Exception as e:
+            print e.message
+        try:
+            surface = surf_state["surf"]
+            viewer.surface.set_surface(surface,skip_render=True)
+        except Exception as e:
+            print e.message
+        try:
+            scalars = surf_state["scalar"]
+            viewer.surface.set_scalars(scalars,skip_render=True)
+        except Exception as e:
+            print e.message
+        try:
+            opacity = surf_state["opacity"]
+            viewer.surface.set_opacity(opacity,skip_render=True)
+        except Exception as e:
+            print e.message
+
         QtGui.QApplication.instance().processEvents()
         #subject
         try:
