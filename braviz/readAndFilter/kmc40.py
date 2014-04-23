@@ -16,7 +16,7 @@ import vtk
 
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
     readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk
-from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, getMorphLUT, \
+from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
     surfLUT2VTK
 from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
@@ -406,7 +406,7 @@ The path containing this structure must be set."""
         path = os.path.join(self.__root, str(subj), 'Surf')
         if scalar_name in morph:
             if kw.get('lut'):
-                return getMorphLUT(scalar_name)
+                return get_free_surfer_lut(scalar_name)
             scalar_filename = path + '/' + hemisphere + 'h.' + scalar_name
             scalar_array = read_morph_data(scalar_filename)
             return scalar_array

@@ -1,9 +1,13 @@
 # Based on the io.py file from the pySurfer library
 # http://pysurfer.github.io
 from __future__ import division
+import os
+
 import numpy as np
 import vtk
-import os
+
+from braviz.visualization import get_colorbrewer_lut
+
 
 def _fread3(fobj):
     """Read a 3-byte int from an open binary file object."""
@@ -266,6 +270,22 @@ def getMorphLUT(name):
                   }
     try:
         out_lut=getColorTransferLUT(*parameters_d[name])
+    except KeyError:
+        print 'Unkown scalar type'
+        raise (Exception('unknown scalar type'))
+    return out_lut
+
+def get_free_surfer_lut(name):
+    parameters_d={'curv' : (-0.5 ,0.5 , "RdYlGn", 11,True),
+              'avg_curv' : (-0.5 ,0.5 , "RdYlGn", 11,True),
+              'area' : (0 ,2 , "PuBuGn", 9 ),
+              'thickness': (0 ,5 , "RdYlGn", 11),
+              'volume' : (0 ,5,    "PuBuGn", 9 ),
+              'sulc' : (-2 ,2 , "RdYlGn",11,True),
+              }
+    try:
+        params = parameters_d[name]
+        out_lut = get_colorbrewer_lut(*params)
     except KeyError:
         print 'Unkown scalar type'
         raise (Exception('unknown scalar type'))
