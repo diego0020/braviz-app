@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name = "PyTanic",
-    version = "0.0.6",
+    version = "2.0.1",
     author = "Imagine",
     author_email = "da.angulo39@uniandes.edu.co",
     description = "A framework for interactive analysis of brain data",

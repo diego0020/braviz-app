@@ -33,6 +33,7 @@ import datetime
 import os
 import platform
 
+import logging
 #TODO: Move all database access to read and filter
 
 class AnovaApp(QMainWindow):
@@ -125,6 +126,7 @@ class AnovaApp(QMainWindow):
             self.update_main_plot(ints[-1])
 
     def set_outcome_var_type(self, new_bar):
+        log = logging.getLogger(__name__)
         if new_bar is None:
             var_type_text = "Type"
             self.ui.outcome_type.setText(var_type_text)
@@ -134,7 +136,7 @@ class AnovaApp(QMainWindow):
         new_bar = unicode(new_bar)
         if new_bar == self.outcome_var_name:
             return
-        print "succesfully selected %s" % new_bar
+        log.debug("succesfully selected %s" % new_bar)
         index = self.ui.outcome_sel.findText(new_bar)
         if index < 0:
             self.ui.outcome_sel.setCurrentIndex(index)
@@ -181,12 +183,9 @@ class AnovaApp(QMainWindow):
         menu.addAction(remove_action)
         selected_item = menu.exec_(global_pos)
 
-    def update_sample_info(self):
-        #TODO: Allow choosing different sub-samples
-        pass
 
     def calculate_anova(self):
-
+        log = logging.getLogger(__name__)
         try:
             self.anova = braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
                                                                         self.regressors_model.get_data_frame(),
@@ -197,6 +196,8 @@ class AnovaApp(QMainWindow):
             msg.setText(str(e.message))
             msg.setIcon(msg.Warning)
             msg.setWindowTitle("Anova Error")
+            log.warning("Anova Error")
+            log.exception(e)
             msg.exec_()
             raise
         else:
@@ -236,11 +237,7 @@ class AnovaApp(QMainWindow):
             self.plot_data_frame = data
             data_values = data[self.outcome_var_name].get_values()
 
-            conn = get_connection()
-            #get outcome min and max values
-            cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name=?",
-                               (self.outcome_var_name,))
-            ylims = cur.fetchone()
+            ylims = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
             self.plot.make_box_plot([data_values], "(Intercept)", self.outcome_var_name,
                                     None, ylims,intercet=self.result_model.intercept)
 
@@ -257,7 +254,6 @@ class AnovaApp(QMainWindow):
     def two_factors_plot(self, factors_list):
         nominal_factors = []
         real_factors = []
-        conn = get_connection()
         #classify factors
         for f in factors_list:
             is_real = braviz_tab_data.is_variable_name_real(f)
@@ -302,7 +298,8 @@ class AnovaApp(QMainWindow):
 
 
         elif len(real_factors) == 2:
-            print "Not yet implemented"
+            log = logging.getLogger(__name__)
+            log.warning("Not yet implemented")
             self.plot.initial_text("Not yet implemented")
         else:
             #get data
@@ -332,6 +329,8 @@ class AnovaApp(QMainWindow):
             #get ylims
             miny, maxy = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
             if miny is None or maxy is None:
+                log = logging.getLogger(__name__)
+                log.critical("Incosistency in DB")
                 raise Exception("Incosistency in DB")
 
             self.plot_x_var = nominal_factors[0]
@@ -412,6 +411,7 @@ class AnovaApp(QMainWindow):
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"
+        log = logging.getLogger(__name__)
         if self.mri_viewer_process is None or (self.mri_viewer_process.poll() is not None):
             #stop timer
             self.poll_timer.stop()
@@ -421,13 +421,14 @@ class AnovaApp(QMainWindow):
                 message = self.mri_viewer_pipe.recv()
             except EOFError:
                 #process should have ended
-                print "Pipe closed"
+
+                log.info("Pipe closed")
                 self.mri_viewer_process = None
                 self.mri_viewer_pipe = None
                 return
             subj = message.get('subject')
             if subj is not None:
-                print "showing subject %s"%subj
+                log.info("showing subject %s"%subj)
                 self.add_subjects_to_plot(subject_ids=[int(subj)])
 
 
@@ -485,7 +486,8 @@ class AnovaApp(QMainWindow):
         launch_mri_action = self.create_context_action(subject,None,"MRI")
         menu.addAction(launch_mri_action)
 
-        print scenarios
+        log = logging.getLogger(__name__)
+        log.debug(scenarios)
         for var,scn_lists in scenarios.iteritems():
             for scn_id,scn_name in scn_lists:
                 action = self.create_context_action(subject,scn_id,scn_name,var)
@@ -516,7 +518,7 @@ class AnovaApp(QMainWindow):
         self.last_viewed_subject = None
 
     def launch_mri_viewer(self):
-        print
+        log = logging.getLogger(__name__)
         #TODO: think of better way of choicing ports
         address = ('localhost',6001)
         auth_key=multiprocessing.current_process().authkey
@@ -524,7 +526,8 @@ class AnovaApp(QMainWindow):
         listener = multiprocessing.connection.Listener(address,authkey=auth_key)
 
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
-        print [sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii]
+        log.info("launching viewer")
+        log.info([sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii])
         self.mri_viewer_process = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",
                                                     "0",auth_key_asccii])
 
@@ -534,6 +537,7 @@ class AnovaApp(QMainWindow):
         self.poll_timer.start(200)
 
     def change_subject_in_mri_viewer(self, subj,scenario=None):
+        log = logging.getLogger(__name__)
         if (self.mri_viewer_process is None) or (self.mri_viewer_process.poll() is not None):
             self.launch_mri_viewer()
         if self.mri_viewer_pipe is not None:
@@ -541,12 +545,13 @@ class AnovaApp(QMainWindow):
             if scenario is not None:
                 message["scenario"]=scenario
             self.mri_viewer_pipe.send(message)
-            print "sending message: subj:", message
+            log.info("sending message: subj: %s", message)
 
     def closeEvent(self, *args, **kwargs):
         #if self.mri_viewer_process is not None:
             #self.mri_viewer_process.terminate()
-        print "ciao"
+        log = logging.getLogger(__name__)
+        log.info("Finishing")
 
     def get_state(self):
         state = {}
@@ -572,6 +577,7 @@ class AnovaApp(QMainWindow):
         app_name = state["meta"]["application"]
         dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name,state,params)
         res=dialog.exec_()
+        log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             #save main plot as screenshot
             scn_id = params["scn_id"]
@@ -579,18 +585,20 @@ class AnovaApp(QMainWindow):
             file_name = "scenario_%d.png"%scn_id
             data_root = braviz.readAndFilter.kmc40_auto_data_root()
             file_path = os.path.join(data_root, "braviz_data","scenarios",file_name)
-            print file_path
+            log.info(file_path)
             pixmap.save(file_path)
 
-        print state
+        log.info(state)
 
     def load_scenario_dialog(self):
         app_name = os.path.splitext(os.path.basename(__file__))[0]
         wanted_state = {}
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(app_name,wanted_state)
         res= dialog.exec_()
+        log = logging.getLogger(__name__)
         if res==dialog.Accepted:
-            print wanted_state
+            log.info("Loading state")
+            log.info(wanted_state)
             self.restore_state(wanted_state)
 
     def restore_state(self,wanted_state):
@@ -633,20 +641,29 @@ class AnovaApp(QMainWindow):
     def load_sample(self):
         dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
         res = dialog.exec_()
+        log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
-            print "new sample"
-            print new_sample
+            log.info("new sample")
+            log.info(new_sample)
             self.sample = new_sample
             self.sample_model.set_sample(new_sample)
 
 
 def run():
     import sys
+    from braviz.utilities import configure_logger
+    configure_logger("anova_app")
     app = QtGui.QApplication(sys.argv)
+    log = logging.getLogger(__name__)
+    log.info("started")
     main_window = AnovaApp()
     main_window.show()
-    app.exec_()
+    try:
+        app.exec_()
+    except Exception as e:
+        log.exception(e)
+        raise
 
 if __name__ == '__main__':
     run()

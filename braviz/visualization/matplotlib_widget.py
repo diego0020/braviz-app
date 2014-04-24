@@ -18,6 +18,8 @@ import numpy as np
 import pandas as pd
 import itertools
 
+import logging
+
 style.use('ggplot')
 
 class MatplotWidget(FigureCanvas):
@@ -104,14 +106,15 @@ class MatplotWidget(FigureCanvas):
 
     def mouse_click_handler(self,event):
         button = event.button
+        log = logging.getLogger(__name__)
         if self.last_id is None:
             return
         if button == 1:
-            print "click"
+            log.debug("click")
             self.highlight_id(self.last_id)
             self.point_picked.emit(str(self.last_id))
         elif button == 3:
-            print "right_click"
+            log.debug("right_click")
             self.context_requested.emit(str(self.last_id))
 
 
@@ -190,6 +193,7 @@ class MatplotBarPlot():
         #main plot
         ###################
         self.axes.cla()
+        log = logging.getLogger(__name__)
         colors_list=matplotlib.rcParams['axes.color_cycle']
         if self.grouped is False:
             self.__draw_bars_and_higlight(self.data,"_nolegend_",colors_list[0])
@@ -200,7 +204,7 @@ class MatplotBarPlot():
                     label = self.group_labels[name] if self.group_labels is not None else None
                     if label is None or len(label)==0:
                         label = "Level %s"%name
-                    print label
+                    log.debug(label)
                     self.__draw_bars_and_higlight(group,label,colors_list[i])
 
         if self.orientation == "vertical":

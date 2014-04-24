@@ -1133,7 +1133,7 @@ class SurfaceManager:
 
 
     def __update_hemisphere(self,h):
-        print "updating hemisphere ",h
+        #print "updating hemisphere ",h
         if h == "l":
             active = self.__left_active
         elif h == "r":
