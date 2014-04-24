@@ -48,9 +48,9 @@ class SampleOverview(QtGui.QMainWindow):
         self.inside_layouts = dict()
         self.row_scroll_widgets = dict()
         self.row_widget_contents = dict()
-        self.row_labels=dict()
+        self.row_labels = dict()
         self.row_frames = dict()
-        self.row_frame_lays=dict()
+        self.row_frame_lays = dict()
 
         self.scalar_data = None
         self.nominal_name = None
@@ -76,7 +76,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.sample = []
             state_str = braviz_user_data.get_scenario_data(initial_scenario)
             state = cPickle.loads(str(state_str))
-            load_scn_funct = functools.partial(self.load_scenario, state,False)
+            load_scn_funct = functools.partial(self.load_scenario, state, False)
             QtCore.QTimer.singleShot(100, load_scn_funct)
 
     def setup_gui(self):
@@ -128,43 +128,43 @@ class SampleOverview(QtGui.QMainWindow):
         #reuse existing rows
         for nl, ol in izip(unique_levels, old_levels):
             if np.isnan(nl):
-                nl="nan"
+                nl = "nan"
             new_scrolls_dict[nl] = self.row_scroll_widgets[ol]
             new_contents_dict[nl] = self.row_widget_contents[ol]
             new_layouts_dict[nl] = self.inside_layouts[ol]
             new_labels[nl] = self.row_labels[ol]
-            level_name = self.labels_dict.get(nl,"<?>")
-            if level_name is None or len(level_name)==0:
-                level_name = "Level %s"%nl
+            level_name = self.labels_dict.get(nl, "<?>")
+            if level_name is None or len(level_name) == 0:
+                level_name = "Level %s" % nl
             new_labels[nl].setText(level_name)
-            new_labels[nl].set_color(self.plot_widget.colors_dict.get(nl,"#EA7AE3"))
+            new_labels[nl].set_color(self.plot_widget.colors_dict.get(nl, "#EA7AE3"))
             new_row_frames[nl] = self.row_frames[ol]
             new_row_lays[nl] = self.row_frame_lays[ol]
 
         for nl in unique_levels[len(old_levels):]:
             if np.isnan(nl):
-                nl="nan"
+                nl = "nan"
             #create new rows
             row_frame = QtGui.QFrame(self.ui.view)
-            self.ui.row_layout.addWidget(row_frame,1)
+            self.ui.row_layout.addWidget(row_frame, 1)
             row_lay = QtGui.QHBoxLayout()
-            row_lay.setContentsMargins(0,0,0,0)
-            row_frame.setContentsMargins(0,0,0,0)
+            row_lay.setContentsMargins(0, 0, 0, 0)
+            row_frame.setContentsMargins(0, 0, 0, 0)
             row_frame.setLayout(row_lay)
             row_frame.setLineWidth(0)
             row_frame.setMidLineWidth(0)
             #add label
             level_name = self.labels_dict.get(nl)
             if level_name is None:
-                level_name = "Level %s"%nl
-            label = self.get_rotated_label(row_frame,level_name,self.plot_widget.colors_dict.get(nl))
+                level_name = "Level %s" % nl
+            label = self.get_rotated_label(row_frame, level_name, self.plot_widget.colors_dict.get(nl))
             row_lay.addWidget(label)
-            new_labels[nl]=label
-            new_row_frames[nl]=row_frame
-            new_row_lays[nl]=row_lay
+            new_labels[nl] = label
+            new_row_frames[nl] = row_frame
+            new_row_lays[nl] = row_lay
 
             scroll = QtGui.QScrollArea(row_frame)
-            row_lay.addWidget(scroll,1)
+            row_lay.addWidget(scroll, 1)
             new_scrolls_dict[nl] = scroll
             scroll.setWidgetResizable(True)
             contents = QtGui.QWidget()
@@ -175,21 +175,21 @@ class SampleOverview(QtGui.QMainWindow):
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
 
-            log.debug("new row created, level %s"%nl)
+            log.debug("new row created, level %s" % nl)
 
         #set to 0 column widths
         for nl in unique_levels:
             if np.isnan(nl):
-                nl="nan"
+                nl = "nan"
             lay = new_layouts_dict[nl]
-            for i in xrange(0,lay.columnCount()):
+            for i in xrange(0, lay.columnCount()):
                 lay.setColumnMinimumWidth(i, 0)
         cnt = Counter()
         for subj in self.sample:
             viewer = self.widgets_dict[subj]
             level = self.scalar_data.ix[subj, self.nominal_name]
             if np.isnan(level):
-                level="nan"
+                level = "nan"
             i = cnt[level]
             new_layouts_dict[level].addWidget(viewer, 0, i)
             new_layouts_dict[level].setColumnMinimumWidth(i, 400)
@@ -201,7 +201,7 @@ class SampleOverview(QtGui.QMainWindow):
 
         #delete useless rows
         for ol in old_levels[len(unique_levels):]:
-            log.debug("adios row %s"%ol)
+            log.debug("adios row %s" % ol)
             self.row_frames[ol].deleteLater()
             self.row_frame_lays[ol].deleteLater()
             self.inside_layouts[ol].deleteLater()
@@ -227,29 +227,29 @@ class SampleOverview(QtGui.QMainWindow):
 
         return cb
 
-    def add_subject_viewers(self,scenario=None):
+    def add_subject_viewers(self, scenario=None):
         #create parents:
         for level in self.scalar_data[self.nominal_name].unique():
             row_frame = QtGui.QFrame(self.ui.view)
-            self.ui.row_layout.addWidget(row_frame,1)
+            self.ui.row_layout.addWidget(row_frame, 1)
             row_lay = QtGui.QHBoxLayout()
-            row_lay.setContentsMargins(0,0,0,0)
-            row_frame.setContentsMargins(0,0,0,0)
+            row_lay.setContentsMargins(0, 0, 0, 0)
+            row_frame.setContentsMargins(0, 0, 0, 0)
             row_frame.setLayout(row_lay)
             row_frame.setLineWidth(0)
             row_frame.setMidLineWidth(0)
             #add label
             level_name = self.labels_dict.get(level)
             if level_name is None:
-                level_name = "Level %s"%level
-            label = self.get_rotated_label(row_frame,level_name,self.plot_widget.colors_dict.get(level))
+                level_name = "Level %s" % level
+            label = self.get_rotated_label(row_frame, level_name, self.plot_widget.colors_dict.get(level))
             row_lay.addWidget(label)
-            self.row_labels[level]=label
-            self.row_frames[level]=row_frame
-            self.row_frame_lays[level]=row_lay
+            self.row_labels[level] = label
+            self.row_frames[level] = row_frame
+            self.row_frame_lays[level] = row_lay
 
             scroll = QtGui.QScrollArea(row_frame)
-            row_lay.addWidget(scroll,1)
+            row_lay.addWidget(scroll, 1)
             self.row_scroll_widgets[level] = scroll
             scroll.setWidgetResizable(True)
             contents = QtGui.QWidget()
@@ -260,9 +260,6 @@ class SampleOverview(QtGui.QMainWindow):
             self.inside_layouts[level] = inside_lay
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
-
-
-
 
         for subj in self.sample:
             level = self.scalar_data.ix[subj, self.nominal_name]
@@ -286,8 +283,9 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.reload_viewers(scenario)
 
-    def get_rotated_label(self,parent,text,color):
+    def get_rotated_label(self, parent, text, color):
         from braviz.interaction.qt_widgets import RotatedLabel
+
         label = RotatedLabel(parent)
         label.set_color(color)
         label.setFixedWidth(30)
@@ -341,7 +339,7 @@ class SampleOverview(QtGui.QMainWindow):
         i_widget = self.widgets_dict[subj]
         level = self.scalar_data.ix[subj, self.nominal_name]
         if np.isnan(level):
-            level="nan"
+            level = "nan"
         self.row_scroll_widgets[level].ensureWidgetVisible(i_widget)
         i_widget.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
         i_widget.setLineWidth(10)
@@ -354,7 +352,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.camera_combo.setItemText(2, "Copy from %s" % self.current_selection)
 
 
-    def load_scalar_data(self, rational_var_index, nominal_var_index,force=False):
+    def load_scalar_data(self, rational_var_index, nominal_var_index, force=False):
         if not force and (self.rational_index == rational_var_index) and (self.nominal_index == nominal_var_index):
             return
         log = logging.getLogger(__name__)
@@ -375,7 +373,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def select_from_bar(self, subj_id):
         log = logging.getLogger(__name__)
-        log.debug("selecting subject %s"%subj_id)
+        log.debug("selecting subject %s" % subj_id)
         self.locate_subj(int(subj_id))
 
     def select_from_viewer(self, subj_id):
@@ -386,7 +384,7 @@ class SampleOverview(QtGui.QMainWindow):
     def load_visualization(self):
         return_dict = {}
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict, self.reader)
-        res=dialog.exec_()
+        res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             subj_state = return_dict.get("subject_state")
@@ -395,7 +393,7 @@ class SampleOverview(QtGui.QMainWindow):
             log.info("loading dict")
             log.info(return_dict)
             try:
-                space =return_dict["camera_state"].pop("space")
+                space = return_dict["camera_state"].pop("space")
             except KeyError:
                 pass
                 log.info("No space found")
@@ -421,11 +419,11 @@ class SampleOverview(QtGui.QMainWindow):
             mod = image_state.get("modality")
             if mod is not None:
                 try:
-                    if mod in ("Precision","Power"):
+                    if mod in ("Precision", "Power"):
                         paradigm = mod
                         mod = "fMRI"
                         #to load MRI window level
-                        viewer.image.change_image_modality("MRI", None,skip_render=True)
+                        viewer.image.change_image_modality("MRI", None, skip_render=True)
                         window = image_state.get("window")
                         if window is not None:
                             viewer.image.set_image_window(window, skip_render=True)
@@ -434,7 +432,7 @@ class SampleOverview(QtGui.QMainWindow):
                             viewer.image.set_image_level(level, skip_render=True)
                     else:
                         paradigm = None
-                    viewer.image.change_image_modality(mod, paradigm=paradigm,skip_render=True)
+                    viewer.image.change_image_modality(mod, paradigm=paradigm, skip_render=True)
                     viewer.image.image_plane_widget.SetInteraction(0)
                     orient = image_state.get("orientation")
                     if orient is not None:
@@ -451,7 +449,7 @@ class SampleOverview(QtGui.QMainWindow):
                         viewer.image.set_image_level(level, skip_render=True)
                 except Exception as e:
                     log.warning(e.message)
-                    viewer.image.change_image_modality(None, paradigm=None,skip_render=True)
+                    viewer.image.change_image_modality(None, paradigm=None, skip_render=True)
         QtGui.QApplication.instance().processEvents()
         #segmentation panel
         segmentation_state = wanted_state.get("segmentation_state")
@@ -496,7 +494,7 @@ class SampleOverview(QtGui.QMainWindow):
             if color is not None:
                 color_codes = {"Orientation": "orient", "FA (Point)": "fa_p", "FA (Line)": "fa_l",
                                "MD (Point)": "fa_p", "MD (Line)": "fa_l",
-                               "Length" : "length",
+                               "Length": "length",
                                "By Line": "rand", "By Bundle": "bundle"}
                 try:
                     viewer.tractography.change_color(color_codes[color], skip_render=True)
@@ -506,7 +504,7 @@ class SampleOverview(QtGui.QMainWindow):
             opac = tractography_state.get("opacity")
             if opac is not None:
                 try:
-                    viewer.tractography.set_opacity(opac/100, skip_render=True)
+                    viewer.tractography.set_opacity(opac / 100, skip_render=True)
                 except Exception as e:
                     log.warning(e.message)
         #surfaces panel
@@ -515,22 +513,22 @@ class SampleOverview(QtGui.QMainWindow):
             try:
                 left_active = surf_state["left"]
                 right_active = surf_state["right"]
-                viewer.surface.set_hemispheres(left_active,right_active,skip_render=True)
+                viewer.surface.set_hemispheres(left_active, right_active, skip_render=True)
             except Exception as e:
                 log.warning(e.message)
             try:
                 surface = surf_state["surf"]
-                viewer.surface.set_surface(surface,skip_render=True)
+                viewer.surface.set_surface(surface, skip_render=True)
             except Exception as e:
                 log.warning(e.message)
             try:
                 scalars = surf_state["scalar"]
-                viewer.surface.set_scalars(scalars,skip_render=True)
+                viewer.surface.set_scalars(scalars, skip_render=True)
             except Exception as e:
                 log.warning(e.message)
             try:
                 opacity = surf_state["opacity"]
-                viewer.surface.set_opacity(opacity,skip_render=True)
+                viewer.surface.set_opacity(opacity, skip_render=True)
             except Exception as e:
                 log.warning(e.message)
 
@@ -577,10 +575,10 @@ class SampleOverview(QtGui.QMainWindow):
         old_observer = self.widget_observers.get(id(viewer))
         if old_observer is not None:
             viewer.subject_viewer.iren.RemoveObserver(old_observer)
-        obs_id=viewer.subject_viewer.iren.AddObserver("LeftButtonPressEvent", dummy_i, 1.0)
-        self.widget_observers[id(viewer)]=obs_id
+        obs_id = viewer.subject_viewer.iren.AddObserver("LeftButtonPressEvent", dummy_i, 1.0)
+        self.widget_observers[id(viewer)] = obs_id
         viewer.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        context_handler = self.__get_context_menu_handler(viewer,subject)
+        context_handler = self.__get_context_menu_handler(viewer, subject)
         #disconnect old handlers
         try:
             viewer.customContextMenuRequested.disconnect()
@@ -589,28 +587,30 @@ class SampleOverview(QtGui.QMainWindow):
         viewer.customContextMenuRequested.connect(context_handler)
 
 
-    def __get_context_menu_handler(self, widget,subj):
+    def __get_context_menu_handler(self, widget, subj):
         def re_enable_context():
             self.context_menu_opened_recently = False
+
         def context_menu_handler(pos):
             log = logging.getLogger(__name__)
             if self.context_menu_opened_recently:
                 return
             log.info("Context for %s", subj)
             menu = QtGui.QMenu()
-            action = QtGui.QAction("Show %s in subject viewer"%subj,menu)
+            action = QtGui.QAction("Show %s in subject viewer" % subj, menu)
+
             def show_subj_in_mri_viewer():
                 self.show_in_mri_viewer(subj)
 
             action.triggered.connect(show_subj_in_mri_viewer)
             menu.addAction(action)
-            global_pos=widget.mapToGlobal(pos)
+            global_pos = widget.mapToGlobal(pos)
             menu.exec_(global_pos)
             widget.subject_viewer.iren.InvokeEvent(vtk.vtkCommand.RightButtonReleaseEvent)
-            self.context_menu=menu
+            self.context_menu = menu
             self.context_menu_opened_recently = True
 
-            QtCore.QTimer.singleShot(5000,re_enable_context)
+            QtCore.QTimer.singleShot(5000, re_enable_context)
 
         return context_menu_handler
 
@@ -628,9 +628,9 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.ui.camera_combo.setCurrentIndex(0)
 
-    def set_space_from_menu(self,text):
+    def set_space_from_menu(self, text):
         log = logging.getLogger(__name__)
-        log.info("space changed to %s",text)
+        log.info("space changed to %s", text)
         text = str(text)
         if self.current_space == text:
             return
@@ -641,7 +641,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
         self.ui.progress_bar.show()
         log = logging.getLogger(__name__)
-        for i,v in enumerate(self.viewers_dict.itervalues()):
+        for i, v in enumerate(self.viewers_dict.itervalues()):
             self.ui.progress_bar.setValue(i / len(self.sample) * 100)
             try:
                 v.change_current_space(self.current_space)
@@ -658,7 +658,7 @@ class SampleOverview(QtGui.QMainWindow):
         if index == 0:
             params = {}
             dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=True,
-                                                                               accept_real=False,sample=self.sample)
+                                                                               accept_real=False, sample=self.sample)
             dialog.setWindowTitle("Select Nominal Variable")
             dialog.exec_()
             selected_facet_name = params.get("selected_outcome")
@@ -676,7 +676,7 @@ class SampleOverview(QtGui.QMainWindow):
             if str(selected_name) != self.nominal_name:
                 selected_index = braviz_tab_data.get_var_idx(str(selected_name))
 
-                log.info("%s, %s"%(selected_index, selected_name))
+                log.info("%s, %s" % (selected_index, selected_name))
                 self.change_nominal_variable(selected_index)
 
     def select_rational_variable(self, index):
@@ -684,7 +684,7 @@ class SampleOverview(QtGui.QMainWindow):
         if index == 0:
             params = {}
             dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=False,
-                                                                               accept_real=True,sample=self.sample)
+                                                                               accept_real=True, sample=self.sample)
             dialog.setWindowTitle("Select Nominal Variable")
             dialog.exec_()
             selected_facet_name = params.get("selected_outcome")
@@ -700,7 +700,7 @@ class SampleOverview(QtGui.QMainWindow):
             if str(selected_name) != self.rational_name:
                 selected_index = braviz_tab_data.get_var_idx(str(selected_name))
                 log = logging.getLogger(__name__)
-                log.info("%s, %s"%(selected_index, selected_name))
+                log.info("%s, %s" % (selected_index, selected_name))
                 self.change_rational_variable(selected_index)
 
     def take_screenshot(self, scenario_index):
@@ -711,22 +711,18 @@ class SampleOverview(QtGui.QMainWindow):
         file_path = os.path.join(self.reader.getDataRoot(), "braviz_data", "scenarios", file_name)
         pixmap.save(file_path, "png")
         log = logging.getLogger(__name__)
-        log.info("chick %s"%file_path)
+        log.info("chick %s" % file_path)
 
     def __get_state(self):
         state = {}
         #variables
-        var_state = {}
-        var_state["nominal"] = self.nominal_index
-        var_state["rational"] = self.rational_index
+        var_state = {"nominal": self.nominal_index, "rational": self.rational_index}
         state["variables"] = var_state
         #sample
-        sample_state = {}
-        sample_state["ids"] = self.sample
+        sample_state = {"ids": self.sample}
         state["sample"] = sample_state
         #visualization
-        vis_state = {}
-        vis_state["scenario"] = self.current_scenario
+        vis_state = {"scenario": self.current_scenario}
         cameras = {}
         for subj in self.sample:
             cameras[subj] = self.viewers_dict[subj].get_camera_parameters()
@@ -734,11 +730,8 @@ class SampleOverview(QtGui.QMainWindow):
         vis_state["space"] = self.current_space
         state["viz"] = vis_state
         #meta
-        meta = {}
-        meta["date"] = datetime.datetime.now()
-        meta["exec"] = sys.argv
-        meta["machine"] = platform.node()
-        meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
+        meta = {"date": datetime.datetime.now(), "exec": sys.argv, "machine": platform.node(),
+                "application": os.path.splitext(os.path.basename(__file__))[0]}
         state["meta"] = meta
         return state
 
@@ -751,7 +744,7 @@ class SampleOverview(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         if res == QtGui.QDialog.Accepted:
             scn_id = params["scn_id"]
-            log.info("scenario saved with id %d"%scn_id)
+            log.info("scenario saved with id %d" % scn_id)
             take_screen = functools.partial(self.take_screenshot, scn_id)
             QtCore.QTimer.singleShot(500, take_screen)
 
@@ -766,7 +759,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.load_scenario(new_state)
 
 
-    def load_scenario(self, state,initialized=True):
+    def load_scenario(self, state, initialized=True):
         #sample and scneario
         sample_state = state["sample"]
         new_sample = sample_state["ids"]
@@ -781,7 +774,7 @@ class SampleOverview(QtGui.QMainWindow):
             except KeyError:
                 pass
         try:
-            space =scenario["camera_state"].pop("space")
+            space = scenario["camera_state"].pop("space")
         except KeyError:
             log.info("no space found")
         else:
@@ -789,15 +782,14 @@ class SampleOverview(QtGui.QMainWindow):
             index = self.ui.space_combo.findText(space)
             self.ui.space_combo.setCurrentIndex(index)
 
-
         if initialized is True:
             self.change_sample(new_sample, scenario)
             var_state = state["variables"]
-            self.load_scalar_data(var_state["rational"], var_state["nominal"],force=True)
+            self.load_scalar_data(var_state["rational"], var_state["nominal"], force=True)
         else:
             self.sample = list(new_sample)
             var_state = state["variables"]
-            self.load_scalar_data(var_state["rational"], var_state["nominal"],force=True)
+            self.load_scalar_data(var_state["rational"], var_state["nominal"], force=True)
             self.current_scenario = scenario
             self.add_subject_viewers(scenario)
 
@@ -822,7 +814,6 @@ class SampleOverview(QtGui.QMainWindow):
         new_viewers_dict = {}
         new_widgets_dict = {}
 
-
         for os, ns in izip(old_sample, new_sample):
             new_viewers_dict[ns] = self.viewers_dict[os]
             new_widgets_dict[ns] = self.widgets_dict[os]
@@ -845,7 +836,7 @@ class SampleOverview(QtGui.QMainWindow):
             new_widgets_dict[ns] = viewer
             #needs to show before initializing
             level0 = self.scalar_data[self.nominal_name].iloc[0]
-            self.inside_layouts[level0].addWidget(viewer,0,0)
+            self.inside_layouts[level0].addWidget(viewer, 0, 0)
             viewer.initialize_widget()
             QtGui.QApplication.instance().processEvents()
 
@@ -860,30 +851,30 @@ class SampleOverview(QtGui.QMainWindow):
     def launch_mri_viewer(self):
         #TODO: Move this to the subject_viewer class
         #copied from anova_task
-        address = ('localhost',6001)
-        auth_key=multiprocessing.current_process().authkey
+        address = ('localhost', 6001)
+        auth_key = multiprocessing.current_process().authkey
         auth_key_asccii = binascii.b2a_hex(auth_key)
-        listener = multiprocessing.connection.Listener(address,authkey=auth_key)
+        listener = multiprocessing.connection.Listener(address, authkey=auth_key)
         log = logging.getLogger(__name__)
 
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
         log.info("Excecuting command ")
-        log.info([sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii])
-        self.mri_viewer = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",
-                                                    "0",auth_key_asccii])
+        log.info([sys.executable, "-m", "braviz.applications.subject_overview", "0", auth_key_asccii])
+        self.mri_viewer = subprocess.Popen([sys.executable, "-m", "braviz.applications.subject_overview",
+                                            "0", auth_key_asccii])
 
         #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
         #self.mri_viewer_process.start()
         self.mri_pipe = listener.accept()
         #self.poll_timer.start(200)
 
-    def show_in_mri_viewer(self,subj):
+    def show_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
-        log.info("showing subject %s"%subj)
+        log.info("showing subject %s" % subj)
         if self.mri_viewer is None:
             self.launch_mri_viewer()
             scn_id = self.current_scenario["meta"]["scn_id"]
-            self.mri_pipe.send({"subject": subj,"scenario":scn_id})
+            self.mri_pipe.send({"subject": subj, "scenario": scn_id})
         else:
             self.mri_pipe.send({"subject": subj})
 
@@ -893,10 +884,11 @@ class SampleOverview(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
-            log.info("new sample: %s"%new_sample)
+            log.info("new sample: %s" % new_sample)
             self.change_sample(list(new_sample))
-            self.load_scalar_data(self.rational_index,self.nominal_index,force=True)
+            self.load_scalar_data(self.rational_index, self.nominal_index, force=True)
             self.re_arrange_viewers()
+
 
 def say_ciao():
     log = logging.getLogger(__name__)
@@ -906,14 +898,19 @@ def say_ciao():
 def run(scn_id=None):
     import sys
     from braviz.utilities import configure_logger
-    configure_logger("sample_overview")
 
+    configure_logger("sample_overview")
+    log = logging.getLogger(__name__)
     app = QtGui.QApplication([])
     main_window = SampleOverview(scn_id)
     main_window.show()
     main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     main_window.destroyed.connect(say_ciao)
-    sys.exit(app.exec_())
+    try:
+        sys.exit(app.exec_())
+    except Exception as e:
+        log.exception(e)
+        raise
 
 
 if __name__ == "__main__":

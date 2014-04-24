@@ -25,6 +25,9 @@ import multiprocessing.connection
 import binascii
 import cPickle
 import functools
+import logging
+
+#TODO only load scalar metrics if visible
 
 class SubjectOverviewApp(QMainWindow):
     def __init__(self, pipe_key=None,scenario=None):
@@ -34,9 +37,10 @@ class SubjectOverviewApp(QMainWindow):
         self.reader = braviz.readAndFilter.kmc40AutoReader()
         self.__curent_subject = None
         self.__pipe = pipe_key
+        log = logging.getLogger(__name__)
         if pipe_key is not None:
-            print "Got pipe key"
-            print pipe_key
+            log.info("Got pipe key")
+            log.info(pipe_key)
             pipe_key_bin = binascii.a2b_hex(pipe_key)
 
             address = ("localhost", 6001)
@@ -184,11 +188,13 @@ class SubjectOverviewApp(QMainWindow):
         image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(new_subject)))
         if len(image_code) < 3:
             image_code = "0" + image_code
-        print "Image Code: ", image_code
+        log = logging.getLogger(__name__)
+        log.info("Image Code: %s", image_code)
         try:
             self.vtk_viewer.change_subject(image_code)
         except Exception as e:
             self.show_error(e.message)
+            log.warning(e.message)
             #raise
         self.reset_image_view_controls()
         #context
@@ -202,6 +208,7 @@ class SubjectOverviewApp(QMainWindow):
 
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())
+        log = logging.getLogger(__name__)
         if selection == "None":
             self.vtk_viewer.image.change_image_modality(None)
             self.ui.image_orientation.setEnabled(0)
@@ -219,7 +226,7 @@ class SubjectOverviewApp(QMainWindow):
             try:
                 self.vtk_viewer.image.change_image_modality("FMRI", selection)
             except Exception as e:
-                print e.message
+                log.warning(e.message)
                 self.statusBar().showMessage(e.message, 5000)
 
         self.ui.image_orientation.setEnabled(1)
@@ -251,7 +258,8 @@ class SubjectOverviewApp(QMainWindow):
     def space_change(self):
         new_space = str(self.ui.space_combo.currentText())
         self.vtk_viewer.change_current_space(new_space)
-        print new_space
+        log = logging.getLogger(__name__)
+        log.info(new_space)
 
     def print_vtk_camera(self):
         self.vtk_viewer.print_camera()
@@ -275,9 +283,10 @@ class SubjectOverviewApp(QMainWindow):
     def show_select_sample_dialog(self):
         dialog = SampleLoadDialog()
         res = dialog.exec_()
+        log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
-            print "*sample changed*"
+            log.info("*sample changed*")
             self.change_sample(new_sample)
 
     def change_sample(self,new_sample):
@@ -331,6 +340,8 @@ class SubjectOverviewApp(QMainWindow):
         if metric_params is None:
             self.ui.struct_scalar_value.clear()
             self.show_error("Unknown metric %s" % scalar_text)
+            log = logging.getLogger(__name__)
+            log.error("Unknown metric %s" % scalar_text)
             return
         metric_code, units = metric_params
         new_value = self.vtk_viewer.models.get_scalar_metrics(metric_code)
@@ -346,6 +357,8 @@ class SubjectOverviewApp(QMainWindow):
         metric_params = self.metrics_dict.get(scalar_text)
         if metric_params is None:
             self.show_error("Unknown metric %s" % scalar_text)
+            log = logging.getLogger(__name__)
+            log.error("Unknown metric %s" % scalar_text)
             return
         structures = list(self.structures_tree_model.get_selected_structures())
 
@@ -360,7 +373,8 @@ class SubjectOverviewApp(QMainWindow):
 
         #export_dialog_args = fibers metric structs
         export_dialog_args = ["%d" % scn_id, "0", scalar_text] + list(structures)
-        print export_dialog_args
+        log = logging.getLogger(__name__)
+        log.info(export_dialog_args)
         process_line = [sys.executable, "-m", "braviz.applications.export_scalar_to_db", ]
         #print process_line
         subprocess.Popen(process_line + export_dialog_args)
@@ -383,8 +397,9 @@ class SubjectOverviewApp(QMainWindow):
 
 
     def select_structs_color(self, index):
+        log = logging.getLogger(__name__)
         if index == 1:
-            print "launch choose color dialog"
+            log.info("launch choose color dialog")
             color_dialog = QtGui.QColorDialog()
             res = color_dialog.getColor()
             new_color = res.getRgb()[:3]
@@ -414,6 +429,8 @@ class SubjectOverviewApp(QMainWindow):
             try:
                 self.vtk_viewer.tractography.set_bundle_from_checkpoints(checkpoints, throug_all)
             except Exception as e:
+                log = logging.getLogger(__name__)
+                log.warning(e.message)
                 self.show_error(e.message)
         self.update_current_bundle()
 
@@ -469,7 +486,8 @@ class SubjectOverviewApp(QMainWindow):
                           "Mean FA": "mean_fa"}
 
     def update_fiber_scalars(self, index=None):
-        print self.current_fibers
+        log = logging.getLogger(__name__)
+        log.info(self.current_fibers)
         if index is None:
             index = self.ui.fibers_scalar_combo.currentIndex()
         text = str(self.ui.fibers_scalar_combo.itemText(index))
@@ -478,6 +496,8 @@ class SubjectOverviewApp(QMainWindow):
         if metric is None:
             self.ui.fibers_scalar_value.clear()
             self.show_error("%s not yet implemented" % text)
+            log = logging.getLogger(__name__)
+            log.error("%s not yet implemented" % text)
             return
         if self.current_fibers is None:
             value = float("nan")
@@ -497,6 +517,8 @@ class SubjectOverviewApp(QMainWindow):
         metric_params = self.fiber_metrics_dict.get(scalar_text)
         if metric_params is None:
             self.show_error("Unknown metric %s" % scalar_text)
+            log = logging.getLogger(__name__)
+            log.error("Unknown metric %s" % scalar_text)
             return
         if type(self.current_fibers) is str:
             structs = list(self.structures_tree_model.get_selected_structures())
@@ -526,14 +548,16 @@ class SubjectOverviewApp(QMainWindow):
             self.ui.export_fiber_scalars_to_db.setEnabled(1)
 
         QtCore.QTimer.singleShot(2000, reactivate_button)
-        print "launching"
+        log = logging.getLogger(__name__)
+        log.info("launching")
 
     def add_saved_bundles_to_list(self):
         selected = set(self.fibers_list_model.get_ids())
         names_dict = {}
         dialog = BundleSelectionDialog(selected, names_dict)
         dialog.exec_()
-        print selected
+        log = logging.getLogger(__name__)
+        log.info(selected)
         self.fibers_list_model.set_ids(selected, names_dict)
         self.vtk_viewer.tractography.set_active_db_tracts(selected)
 
@@ -559,8 +583,8 @@ class SubjectOverviewApp(QMainWindow):
         # print "right", right_active
         # print "surface", surface
         # print "scalars", scalars
-        print "color bar", color_bar
-        #print "opacity = ", opacity
+        # print "color bar", color_bar
+        # print "opacity = ", opacity
 
 
 
@@ -570,7 +594,8 @@ class SubjectOverviewApp(QMainWindow):
         self.surfaces_state["scalar"] = scalars
         self.surfaces_state["color_bar"] = color_bar
         self.surfaces_state["opacity"] = opacity
-
+        log = logging.getLogger(__name__)
+        log.debug(self.surfaces_state)
         self.__update_surfaces()
 
     def __update_surfaces(self):
@@ -673,6 +698,8 @@ class SubjectOverviewApp(QMainWindow):
     def save_screenshot(self,scenario_index):
         file_name = "scenario_%d.png"%scenario_index
         file_path = os.path.join(self.reader.getDataRoot(), "braviz_data","scenarios",file_name)
+        log = logging.getLogger(__name__)
+        log.info(file_path)
         braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
 
 
@@ -681,7 +708,9 @@ class SubjectOverviewApp(QMainWindow):
         my_name = os.path.splitext(os.path.basename(__file__))[0]
         dialog = LoadScenarioDialog(my_name, wanted_state, self.reader)
         dialog.exec_()
-        print wanted_state
+        log = logging.getLogger(__name__)
+        log.info(wanted_state)
+
         self.load_scenario(wanted_state)
 
     def load_scenario(self, state):
@@ -690,7 +719,8 @@ class SubjectOverviewApp(QMainWindow):
 
         #camera panel
         camera_state = wanted_state.get("camera_state")
-        print "setting camera"
+        log = logging.getLogger(__name__)
+        log.info("setting camera")
         if camera_state is not None:
             space = camera_state.get("space")
             if space is not None:
@@ -871,15 +901,23 @@ def run(pipe_key,scenario):
     main_window = SubjectOverviewApp(pipe_key,scenario)
     main_window.show()
     main_window.start()
-    print "before exec"
-    app.exec_()
+    log = logging.getLogger(__name__)
+    log.info("before exec")
+    try:
+        app.exec_()
+    except Exception as e:
+        log.exception(e)
+        raise
 
 
 if __name__ == '__main__':
     #args: [scenario] [pipe_key]
     import sys
-    print sys.argv
 
+    from braviz.utilities import configure_logger
+    configure_logger("subject_overview")
+    log = logging.getLogger(__name__)
+    log.info(sys.argv)
     scenario = None
     if len(sys.argv)>=2 :
         maybe_scene = int(sys.argv[1])
