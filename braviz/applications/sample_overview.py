@@ -522,7 +522,9 @@ class SampleOverview(QtGui.QMainWindow):
             except Exception as e:
                 log.warning(e.message)
             try:
-                scalars = surf_state["scalar"]
+                scalar_index = surf_state["scalar_idx"]
+                from braviz.applications.subject_overview import surfaces_scalars_dict
+                scalars = surfaces_scalars_dict[scalar_index]
                 viewer.surface.set_scalars(scalars, skip_render=True)
             except Exception as e:
                 log.warning(e.message)

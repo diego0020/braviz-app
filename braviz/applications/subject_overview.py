@@ -29,6 +29,9 @@ import logging
 
 #TODO only load scalar metrics if visible
 
+surfaces_scalars_dict={0 : "curv", 1 : "avg_curv", 2: "thickness",
+                         3: "sulc", 4: "aparc", 5: "aparc.a2009s", 6: "BA"}
+
 class SubjectOverviewApp(QMainWindow):
     def __init__(self, pipe_key=None,scenario=None):
         #Super init
@@ -569,13 +572,11 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveFibersBundleDialog(operation, checkpoints, throug_all)
         dialog.exec_()
 
-    __surfaces_scalars_dict={0 : "curv", 1 : "avg_curv", 2: "thickness",
-                             3: "sulc", 4: "aparc", 5: "aparc.a2009s", 6: "BA"}
     def update_surfaces_from_gui(self,event=None):
         left_active = self.ui.surface_left_check.isChecked()
         right_active = self.ui.surface_right_check.isChecked()
         surface = str(self.ui.surface_select_combo.currentText())
-        scalars = self.__surfaces_scalars_dict[self.ui.surface_scalars_combo.currentIndex()]
+        scalars_index = self.ui.surface_scalars_combo.currentIndex()
         color_bar = self.ui.surface_color_bar_check.isChecked()
         opacity  = int(self.ui.surf_opacity_slider.value())
         # print "========="
@@ -591,7 +592,7 @@ class SubjectOverviewApp(QMainWindow):
         self.surfaces_state["left"] = left_active
         self.surfaces_state["right"] = right_active
         self.surfaces_state["surf"] = surface
-        self.surfaces_state["scalar"] = scalars
+        self.surfaces_state["scalar_idx"] = scalars_index
         self.surfaces_state["color_bar"] = color_bar
         self.surfaces_state["opacity"] = opacity
         log = logging.getLogger(__name__)
@@ -602,7 +603,8 @@ class SubjectOverviewApp(QMainWindow):
         left_active = self.surfaces_state["left"]
         right_active = self.surfaces_state["right"]
         surface = self.surfaces_state["surf"]
-        scalars = self.surfaces_state["scalar"]
+        scalars_index = self.surfaces_state["scalar_idx"]
+        scalars = surfaces_scalars_dict[scalars_index]
         color_bar = self.surfaces_state["color_bar"]
         opacity = self.surfaces_state["opacity"]
 
@@ -850,22 +852,22 @@ class SubjectOverviewApp(QMainWindow):
         surface_state = wanted_state.get("surf_state")
         if surface_state is not None:
             self.surfaces_state = surface_state
-            self.__update_surfaces()
+
             #update gui
             left_active = self.surfaces_state["left"]
             self.ui.surface_left_check.setChecked(left_active)
             right_active = self.surfaces_state["right"]
-            self.ui.surface_left_check.setChecked(right_active)
+            self.ui.surface_right_check.setChecked(right_active)
             surface = self.surfaces_state["surf"]
             index = self.ui.surface_select_combo.findText(surface)
             self.ui.surface_select_combo.setCurrentIndex(index)
-            scalars = self.surfaces_state["scalar"]
-            index = self.ui.surface_scalars_combo.findText(scalars)
-            self.ui.surface_scalars_combo.setCurrentIndex(index)
+            scalar_index = self.surfaces_state["scalar_idx"]
+            self.ui.surface_scalars_combo.setCurrentIndex(scalar_index)
             color_bar = self.surfaces_state["color_bar"]
             self.ui.surface_color_bar_check.setChecked(color_bar)
             opacity = self.surfaces_state["opacity"]
             self.ui.surf_opacity_slider.setValue(opacity)
+            self.__update_surfaces()
 
         #context panel
         context_state = wanted_state.get("context_state")
