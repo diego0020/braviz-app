@@ -2,6 +2,7 @@ __author__ = 'Diego'
 
 import subprocess
 import sys
+import logging
 
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -72,7 +73,8 @@ class BravizMenu2(QtGui.QMainWindow):
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(None,params,self.reader)
         ret = dialog.exec_()
         if ret==QtGui.QDialog.Accepted:
-            print params
+            log = logging.getLogger(__name__)
+            log.info(params)
             app = params["meta"]["application"]
             scn_id = params["meta"]["scn_id"]
             interpreter = sys.executable
@@ -84,10 +86,17 @@ class BravizMenu2(QtGui.QMainWindow):
 
 def run():
     import sys
+    from braviz.utilities import configure_logger
+    configure_logger("menu2")
+    log = logging.getLogger(__name__)
     app = QtGui.QApplication(sys.argv)
     main_window = BravizMenu2()
     main_window.show()
-    app.exec_()
+    try:
+        app.exec_()
+    except Exception as e:
+        log.exception(e)
+        raise
 
 if __name__ == '__main__':
     run()

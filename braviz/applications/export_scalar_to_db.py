@@ -12,7 +12,7 @@ import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 import braviz.readAndFilter.bundles_db as braviz_fibers_db
 import braviz.interaction.structure_metrics as braviz_struct_metrics
-
+import logging
 
 class ExportScalarToDataBase(QtGui.QDialog):
     def __init__(self, fibers=False, structures_list=tuple(), metric="Volume", db_id=None,
@@ -27,13 +27,14 @@ class ExportScalarToDataBase(QtGui.QDialog):
         self.progress = 0
         self.timer = None
         self.structs = structures_list
-        print structures_list
+        log = logging.getLogger(__name__)
+        log.info(structures_list)
         self.fibers_mode = fibers
         self.metric = metric
         self.db_id = db_id
         self.fibers_operation = operation
         self.scenario_id = scenario_id
-        print "GOT SCENARIO ID", scenario_id
+        log.info("GOT SCENARIO ID %s", scenario_id)
 
         #Copied from applications/subject overview
         metrics_dict = {"Volume": "volume",
@@ -52,7 +53,8 @@ class ExportScalarToDataBase(QtGui.QDialog):
             self.metric_code = fiber_metrics_dict.get(self.metric)
 
         if self.metric_code is None:
-            raise Exception("Unknown metric")
+            log.error("Unknown metric %s",self.metric)
+            raise Exception("Unknown metric %s",self.metric)
 
         self.progress_thread = None
         self.reader = None
@@ -154,7 +156,8 @@ class ExportScalarToDataBase(QtGui.QDialog):
                 value = float("nan")
             braviz_tab_data.updata_variable_value(self.var_idx, subj, value)
             self.progress = (i + 1) / len(all_subjects) * 100
-            print "%s %s : %f"%(self.metric_code,subj,value)
+            log = logging.getLogger(__name__)
+            log.debug("%s %s : %f"%(self.metric_code,subj,value))
         self.progress = 100
 
     def get_scalar_value(self, subj):
@@ -174,6 +177,8 @@ class ExportScalarToDataBase(QtGui.QDialog):
                                                                              self.structs, self.fibers_operation,
                                                                              self.metric_code)
                 return val
+        log = logging.getLogger(__name__)
+        log.error("Couldn't determine structure type")
         raise Exception("Couldn't determine structure type")
 
 
@@ -193,7 +198,12 @@ def run(fibers=False, structures_list=tuple(), metric="volume", db_id=None, oper
     app = QtGui.QApplication([])
     main_window = ExportScalarToDataBase(fibers, structures_list, metric, db_id, operation,scenario_id=scenario_id)
     main_window.show()
-    app.exec_()
+    log = logging.getLogger(__name__)
+    try:
+        app.exec_()
+    except Exception as e:
+        log.exception(e)
+        raise
 
 
 if __name__ == "__main__":
@@ -202,8 +212,12 @@ if __name__ == "__main__":
     #arguments <scn_id> <fibers=False> <metric> <structs0> <struct1> ....
     #            1           2           3         4          5         6
     import sys
-    print sys.argv
+    from braviz.utilities import configure_logger
+    configure_logger("export_scalars_to_db")
+    log = logging.getLogger(__name__)
+    log.info(sys.argv)
     if len(sys.argv)<4:
+        log.error("Non enough arguments")
         raise Exception("Not enough arguments")
     args = sys.argv
     scenario_id = args[1]
@@ -214,9 +228,9 @@ if __name__ == "__main__":
         fibers = False
     metric = args[3]
     if not fibers:
-        print args
+        log.info(args)
         structs = args[4:]
-        print structs
+        log.info(structs)
         run(fibers=fibers, structures_list=structs, metric=metric,scenario_id=scenario_id)
     else:
         #Fibers
