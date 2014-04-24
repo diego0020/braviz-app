@@ -5,6 +5,9 @@ from collections import defaultdict
 
 
 def configure_logger(app_name):
+    """
+    Helper function to configure loggers in similar ways from all the applications
+    """
     import logging
     import datetime
     from braviz.readAndFilter.kmc40 import get_data_root
