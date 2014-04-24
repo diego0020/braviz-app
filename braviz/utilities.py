@@ -8,7 +8,7 @@ def configure_logger(app_name):
     import logging
     from braviz.readAndFilter.kmc40 import get_data_root
     log_file = os.path.join(get_data_root(),"logs","log_%s.txt"%app_name)
-    format_str = "%(asctime)s-%(levelname)s-%(name)s-%(funcName)s ( %(lineno)d ) : %(message) s"
+    format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
     logging.basicConfig(filename=log_file,level=logging.INFO,format=format_str)
 
 @contextlib.contextmanager

@@ -1,14 +1,15 @@
 import os
+import logging
 
 from kernel.RDFDBManagerClass import RDFDBManager
 from braviz.utilities import working_directory, recursive_default_dict
-
 __author__ = 'Diego'
 
 
 def get_free_surfer_pretty_names_dict():
     yoyis_dir = os.path.abspath(os.path.dirname(__file__))
     yoyis_dir = os.path.join(yoyis_dir, '..', '..', 'braint')
+    log = logging.getLogger(__name__)
     with working_directory(yoyis_dir):
         if not os.path.isfile('File/rdfqueries/FreeNames'):
             manager = RDFDBManager('pythonBD',
@@ -16,7 +17,7 @@ def get_free_surfer_pretty_names_dict():
                                    'http://guitaca.uniandes.edu.co:8080')
 
             manager.loadPre_FreeNames('File/PreferredFreeCodeNames')
-        print os.getcwd()
+        log.info(os.getcwd())
         with open('File/rdfqueries/FreeNames') as rdf_names:
             out_dict = {}
             for l in rdf_names.readlines():
