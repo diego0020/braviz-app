@@ -3,6 +3,7 @@ __author__ = 'Diego'
 import braviz
 from braviz.readAndFilter.tabular_data import get_connection
 
+
 def __create_bundles_table():
     """Tract bundle types:
     0 : Named tracts, refer to python functions and are accessed via the reader.get interface, data contains 'name' argument
@@ -30,3 +31,5 @@ def __add_named_bundes_to_table():
     conn.executemany(q,tuples)
     conn.commit()
 
+if __name__ == "__main__":
+    print "This module should never be excecuted"

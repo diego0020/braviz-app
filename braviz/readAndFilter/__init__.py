@@ -7,6 +7,7 @@ import functools
 import time
 import copy
 from collections import OrderedDict
+import logging
 
 import nibabel as nib
 import vtk
@@ -103,10 +104,12 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
     elif isinstance(transform, vtk.vtkAbstractTransform):
         vtkTrans = transform
         if None == spacing2 or None == origin2:
-            print "spacing2 and origin2 are required when using a general transform"
+            log = logging.getLogger(__name__)
+            log.error("spacing2 and origin2 are required when using a general transform")
             raise Exception("spacing2 and origin2 are required when using a general transform")
     else:
-        print "Method not implemented for %s transform" % type(transform)
+        log = logging.getLogger(__name__)
+        log.error("Method not implemented for %s transform" % type(transform))
         raise Exception("Method not implemented for %s transform" % type(transform))
     if None == dimension2:
         dimension2 = img.GetDimensions()
@@ -180,11 +183,12 @@ def transformGeneralData(data, transform):
         if isinstance(vtkTrans,vtk.vtkGridTransform):
             vtkTrans.SetInterpolationModeToCubic()
     else:
-        print "Method not implemented for %s transform" % type(transform)
+        log = logging.getLogger(__name__)
+        log.error("Method not implemented for %s transform" % type(transform))
         raise Exception("Method not implemented for %s transform" % type(transform))
     if isinstance(data, vtk.vtkPolyData):
         transFilter = vtk.vtkTransformPolyDataFilter()
-    if isinstance(data,vtk.vtkDataSet):
+    elif isinstance(data,vtk.vtkDataSet):
         transFilter = vtk.vtkTransformFilter()
     else:
         return vtkTrans.TransformPoint(data)
@@ -206,12 +210,14 @@ def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
     valid_fibers = set()
     invalid_fibers = set()
     if progress:
-        print "use of this progress argument is deprecated"
+        log = logging.getLogger(__name__)
+        log.warning("use of this progress argument is deprecated")
         progress.set(10)
     n = fibers.GetNumberOfCells()
     l = fibers.GetNumberOfLines()
     if n != l:
-        print "Input must be a polydata containing only lines"
+        log = logging.getLogger(__name__)
+        log.error("Input must be a polydata containing only lines")
         raise Exception("Input must be a polydata containing only lines")
 
     def test_Polyline(cellId):
@@ -298,7 +304,8 @@ def readFreeSurferTransform(filename):
             np.array(trans_f)
             nar = np.array(trans_f)
     except IOError:
-        print "couldn't open %s" % filename
+        log = logging.getLogger(__name__)
+        log.error("couldn't open %s" % filename)
         raise Exception("couldn't open %s" % filename)
 
     return nar
@@ -333,7 +340,8 @@ def cache_function(max_cache_size):
                     process_id=psutil.Process(os.getpid())
                     mem=process_id.get_memory_info()[0]/(2**20)
                     if mem >= max_cache:
-                        print "freeing cache"
+                        log = logging.getLogger(__name__)
+                        log.info("freeing cache")
                         try:
                             while mem > 0.9*max_cache:
                                 for i in xrange(len(cache)//10+1):
@@ -341,7 +349,8 @@ def cache_function(max_cache_size):
                                     #print "removing %s with access time= %s"%(rem_key,val[1])
                                 mem = process_id.get_memory_info()[0] / (2 ** 20)
                         except KeyError:
-                            print "Cache is empty and memory still too high! check your program for memory leaks"
+                            log = logging.getLogger(__name__)
+                            log.warning("Cache is empty and memory still too high! check your program for memory leaks")
                     cache[key] = (output, time.time())
             else:
                 output, _ = cache[key]
