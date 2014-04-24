@@ -2,7 +2,7 @@ from __future__ import division
 
 __author__ = 'diego'
 
-
+import logging
 import vtk
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -122,8 +122,9 @@ class SampleOverview(QtGui.QMainWindow):
         new_row_frames = dict()
         new_row_lays = dict()
         old_levels = sorted(self.row_scroll_widgets.keys())
-
-        print unique_levels
+        log = logging.getLogger(__name__)
+        log.debug("Unique nominal levels:")
+        log.debug(unique_levels)
         #reuse existing rows
         for nl, ol in izip(unique_levels, old_levels):
             if np.isnan(nl):
@@ -174,7 +175,7 @@ class SampleOverview(QtGui.QMainWindow):
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
 
-            print "new row created, level", nl
+            log.debug("new row created, level %s"%nl)
 
         #set to 0 column widths
         for nl in unique_levels:
@@ -194,13 +195,13 @@ class SampleOverview(QtGui.QMainWindow):
             new_layouts_dict[level].setColumnMinimumWidth(i, 400)
             cnt[level] += 1
 
-        #print cnt
+        #log.debug(cnt)
         #for nl in unique_levels:
-        #    print nl, new_layouts_dict[nl].columnCount()
+        #    log.debug("%s %s"%(nl, new_layouts_dict[nl].columnCount()))
 
         #delete useless rows
         for ol in old_levels[len(unique_levels):]:
-            print "adios row"
+            log.debug("adios row %s"%ol)
             self.row_frames[ol].deleteLater()
             self.row_frame_lays[ol].deleteLater()
             self.inside_layouts[ol].deleteLater()
@@ -296,16 +297,17 @@ class SampleOverview(QtGui.QMainWindow):
     def reload_viewers(self, scenario=None):
         self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
         self.ui.progress_bar.show()
+        log = logging.getLogger(__name__)
         for i, (subj, viewer) in enumerate(self.viewers_dict.iteritems()):
             self.ui.progress_bar.setValue(i / len(self.sample) * 100)
-            print "loading viewer %d " % subj
+            log.info("loading viewer %d " % subj)
             try:
                 if scenario is None:
                     self.load_initial_view(subj, viewer)
                 else:
                     self.load_scenario_in_viewer(viewer, scenario, subj)
             except Exception as e:
-                print e.message
+                log.exception(e)
                 raise
             QtGui.QApplication.instance().processEvents()
         self.ui.progress_bar.setValue(100)
@@ -313,6 +315,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.statusbar.showMessage("Loading complete")
 
     def load_initial_view(self, subject, viewer):
+        log = logging.getLogger(__name__)
         img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(subject)))
         try:
             viewer.change_subject(img_code)
@@ -324,7 +327,7 @@ class SampleOverview(QtGui.QMainWindow):
                                       'CC_Mid_Posterior', 'CC_Posterior'], skip_render=True)
             viewer.reset_camera(1)
         except Exception as e:
-            print e.message
+            log.warning(e.message)
         QtGui.QApplication.instance().processEvents()
 
 
@@ -354,6 +357,7 @@ class SampleOverview(QtGui.QMainWindow):
     def load_scalar_data(self, rational_var_index, nominal_var_index,force=False):
         if not force and (self.rational_index == rational_var_index) and (self.nominal_index == nominal_var_index):
             return
+        log = logging.getLogger(__name__)
         self.rational_index = rational_var_index
         self.nominal_index = nominal_var_index
         self.scalar_data = braviz_tab_data.get_data_frame_by_index((rational_var_index, nominal_var_index), self.reader)
@@ -362,34 +366,39 @@ class SampleOverview(QtGui.QMainWindow):
         self.scalar_data = self.scalar_data.loc[self.sample]
         self.scalar_data.sort(self.rational_name, inplace=True, ascending=False)
         self.sample.sort(key=lambda s: self.scalar_data[self.rational_name][s])
-        print self.sample
+        log.debug("sample: ")
+        log.debug(self.sample)
         labels_dict = braviz_tab_data.get_labels_dict(nominal_var_index)
         self.labels_dict = labels_dict
         self.plot_widget.draw_bars(self.scalar_data, orientation="horizontal", group_labels=labels_dict)
 
 
     def select_from_bar(self, subj_id):
-        print subj_id
+        log = logging.getLogger(__name__)
+        log.debug("selecting subject %s"%subj_id)
         self.locate_subj(int(subj_id))
 
     def select_from_viewer(self, subj_id):
-        print "Select from viewer %s" % subj_id
+        log = logging.getLogger(__name__)
+        log.debug("Select from viewer %s" % subj_id)
         self.locate_subj(subj_id)
 
     def load_visualization(self):
         return_dict = {}
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict, self.reader)
         res=dialog.exec_()
+        log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             subj_state = return_dict.get("subject_state")
             if subj_state is not None:
                 subj_state.pop("current_subject")
-            print return_dict
+            log.info("loading dict")
+            log.info(return_dict)
             try:
                 space =return_dict["camera_state"].pop("space")
             except KeyError:
                 pass
-                print "no space found"
+                log.info("No space found")
             else:
                 self.current_space = space
                 index = self.ui.space_combo.findText(space)
@@ -405,7 +414,7 @@ class SampleOverview(QtGui.QMainWindow):
         #set space
         viewer.change_current_space(self.current_space)
 
-
+        log = logging.getLogger(__name__)
         #images panel
         image_state = wanted_state.get("image_state")
         if image_state is not None:
@@ -441,7 +450,7 @@ class SampleOverview(QtGui.QMainWindow):
                     if level is not None:
                         viewer.image.set_image_level(level, skip_render=True)
                 except Exception as e:
-                    print e.message
+                    log.warning(e.message)
                     viewer.image.change_image_modality(None, paradigm=None,skip_render=True)
         QtGui.QApplication.instance().processEvents()
         #segmentation panel
@@ -460,7 +469,7 @@ class SampleOverview(QtGui.QMainWindow):
                 try:
                     viewer.models.set_models(selected_structs, skip_render=True)
                 except Exception as e:
-                    print e.message
+                    log.warning(e.message)
         QtGui.QApplication.instance().processEvents()
         #tractography panel
         tractography_state = wanted_state.get("tractography_state")
@@ -470,7 +479,7 @@ class SampleOverview(QtGui.QMainWindow):
                 try:
                     viewer.tractography.set_active_db_tracts(bundles, skip_render=True)
                 except Exception as e:
-                    print e.message
+                    log.warning(e.message)
 
             from_segment = tractography_state.get("from_segment")
             if from_segment is not None:
@@ -482,7 +491,7 @@ class SampleOverview(QtGui.QMainWindow):
                     else:
                         viewer.tractography.set_bundle_from_checkpoints(selected_structs, True, skip_render=True)
                 except Exception as e:
-                    print e.message
+                    log.warning(e.message)
             color = tractography_state.get("color")
             if color is not None:
                 color_codes = {"Orientation": "orient", "FA (Point)": "fa_p", "FA (Line)": "fa_l",
@@ -492,44 +501,45 @@ class SampleOverview(QtGui.QMainWindow):
                 try:
                     viewer.tractography.change_color(color_codes[color], skip_render=True)
                 except Exception as e:
-                    print e.message
+                    log.warning(e.message)
 
             opac = tractography_state.get("opacity")
             if opac is not None:
                 try:
                     viewer.tractography.set_opacity(opac/100, skip_render=True)
                 except Exception as e:
-                    print e.message
+                    log.warning(e.message)
         #surfaces panel
         surf_state = wanted_state.get("surf_state")
-        try:
-            left_active = surf_state["left"]
-            right_active = surf_state["right"]
-            viewer.surface.set_hemispheres(left_active,right_active,skip_render=True)
-        except Exception as e:
-            print e.message
-        try:
-            surface = surf_state["surf"]
-            viewer.surface.set_surface(surface,skip_render=True)
-        except Exception as e:
-            print e.message
-        try:
-            scalars = surf_state["scalar"]
-            viewer.surface.set_scalars(scalars,skip_render=True)
-        except Exception as e:
-            print e.message
-        try:
-            opacity = surf_state["opacity"]
-            viewer.surface.set_opacity(opacity,skip_render=True)
-        except Exception as e:
-            print e.message
+        if surf_state is not None:
+            try:
+                left_active = surf_state["left"]
+                right_active = surf_state["right"]
+                viewer.surface.set_hemispheres(left_active,right_active,skip_render=True)
+            except Exception as e:
+                log.warning(e.message)
+            try:
+                surface = surf_state["surf"]
+                viewer.surface.set_surface(surface,skip_render=True)
+            except Exception as e:
+                log.warning(e.message)
+            try:
+                scalars = surf_state["scalar"]
+                viewer.surface.set_scalars(scalars,skip_render=True)
+            except Exception as e:
+                log.warning(e.message)
+            try:
+                opacity = surf_state["opacity"]
+                viewer.surface.set_opacity(opacity,skip_render=True)
+            except Exception as e:
+                log.warning(e.message)
 
         QtGui.QApplication.instance().processEvents()
         #subject
         try:
             viewer.change_subject(img_code)
         except Exception as e:
-            print e.message
+            log.warning(e.message)
         #camera panel
         self.__load_camera_from_scenario(viewer)
         return
@@ -583,9 +593,10 @@ class SampleOverview(QtGui.QMainWindow):
         def re_enable_context():
             self.context_menu_opened_recently = False
         def context_menu_handler(pos):
+            log = logging.getLogger(__name__)
             if self.context_menu_opened_recently:
                 return
-            print "Context for", subj
+            log.info("Context for %s", subj)
             menu = QtGui.QMenu()
             action = QtGui.QAction("Show %s in subject viewer"%subj,menu)
             def show_subj_in_mri_viewer():
@@ -618,7 +629,8 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.camera_combo.setCurrentIndex(0)
 
     def set_space_from_menu(self,text):
-        print "space changed to ",text
+        log = logging.getLogger(__name__)
+        log.info("space changed to %s",text)
         text = str(text)
         if self.current_space == text:
             return
@@ -628,12 +640,13 @@ class SampleOverview(QtGui.QMainWindow):
     def __change_space_in_viewers(self):
         self.ui.statusbar.addPermanentWidget(self.ui.progress_bar)
         self.ui.progress_bar.show()
+        log = logging.getLogger(__name__)
         for i,v in enumerate(self.viewers_dict.itervalues()):
             self.ui.progress_bar.setValue(i / len(self.sample) * 100)
             try:
                 v.change_current_space(self.current_space)
             except Exception as e:
-                print e.message
+                log.warning(e.message)
             QtGui.QApplication.instance().processEvents()
         self.ui.progress_bar.setValue(100)
         self.ui.statusbar.removeWidget(self.ui.progress_bar)
@@ -641,6 +654,7 @@ class SampleOverview(QtGui.QMainWindow):
 
 
     def select_nominal_variable(self, index):
+        log = logging.getLogger(__name__)
         if index == 0:
             params = {}
             dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=True,
@@ -649,7 +663,8 @@ class SampleOverview(QtGui.QMainWindow):
             dialog.exec_()
             selected_facet_name = params.get("selected_outcome")
             if selected_facet_name is not None:
-                #print selected_facet_name
+                log.info("selected facet:")
+                log.info(selected_facet_name)
                 selected_facet_index = braviz_tab_data.get_var_idx(selected_facet_name)
                 self.ui.nomina_combo.addItem(selected_facet_name)
                 self.ui.nomina_combo.setCurrentIndex(self.ui.nomina_combo.count() - 1)
@@ -660,10 +675,12 @@ class SampleOverview(QtGui.QMainWindow):
                 return
             if str(selected_name) != self.nominal_name:
                 selected_index = braviz_tab_data.get_var_idx(str(selected_name))
-                print selected_index, selected_name
+
+                log.info("%s, %s"%(selected_index, selected_name))
                 self.change_nominal_variable(selected_index)
 
     def select_rational_variable(self, index):
+        log = logging.getLogger(__name__)
         if index == 0:
             params = {}
             dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=False,
@@ -672,7 +689,8 @@ class SampleOverview(QtGui.QMainWindow):
             dialog.exec_()
             selected_facet_name = params.get("selected_outcome")
             if selected_facet_name is not None:
-                #print selected_facet_name
+                log.info("selected facet: ")
+                log.info(selected_facet_name)
                 selected_facet_index = braviz_tab_data.get_var_idx(selected_facet_name)
                 self.ui.rational_combo.addItem(selected_facet_name)
                 self.ui.rational_combo.setCurrentIndex(self.ui.rational_combo.count() - 1)
@@ -681,7 +699,8 @@ class SampleOverview(QtGui.QMainWindow):
             selected_name = self.ui.rational_combo.currentText()
             if str(selected_name) != self.rational_name:
                 selected_index = braviz_tab_data.get_var_idx(str(selected_name))
-                print selected_index, selected_name
+                log = logging.getLogger(__name__)
+                log.info("%s, %s"%(selected_index, selected_name))
                 self.change_rational_variable(selected_index)
 
     def take_screenshot(self, scenario_index):
@@ -691,7 +710,8 @@ class SampleOverview(QtGui.QMainWindow):
         file_name = "scenario_%d.png" % scenario_index
         file_path = os.path.join(self.reader.getDataRoot(), "braviz_data", "scenarios", file_name)
         pixmap.save(file_path, "png")
-        print "Chik"
+        log = logging.getLogger(__name__)
+        log.info("chick %s"%file_path)
 
     def __get_state(self):
         state = {}
@@ -728,9 +748,10 @@ class SampleOverview(QtGui.QMainWindow):
         params = {}
         dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name, state, params)
         res = dialog.exec_()
+        log = logging.getLogger(__name__)
         if res == QtGui.QDialog.Accepted:
             scn_id = params["scn_id"]
-            print "scenario saved with id %d"%scn_id
+            log.info("scenario saved with id %d"%scn_id)
             take_screen = functools.partial(self.take_screenshot, scn_id)
             QtCore.QTimer.singleShot(500, take_screen)
 
@@ -738,8 +759,10 @@ class SampleOverview(QtGui.QMainWindow):
         new_state = {}
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("sample_overview", new_state, self.reader)
         res = dialog.exec_()
+        log = logging.getLogger(__name__)
         if res == QtGui.QDialog.Accepted:
-            print new_state
+            log.info("New state : ")
+            log.info(new_state)
             self.load_scenario(new_state)
 
 
@@ -751,6 +774,7 @@ class SampleOverview(QtGui.QMainWindow):
         vis_state = state["viz"]
         scenario = vis_state["scenario"]
         subj_state = scenario.get("subject_state")
+        log = logging.getLogger(__name__)
         if subj_state is not None:
             try:
                 subj_state.pop("current_subject")
@@ -759,7 +783,7 @@ class SampleOverview(QtGui.QMainWindow):
         try:
             space =scenario["camera_state"].pop("space")
         except KeyError:
-            print "no space found"
+            log.info("no space found")
         else:
             self.current_space = space
             index = self.ui.space_combo.findText(space)
@@ -813,12 +837,12 @@ class SampleOverview(QtGui.QMainWindow):
             lay.removeWidget(widget)
             widget.deleteLater()
         #create new widgets
+        log = logging.getLogger(__name__)
         for ns in new_sample[len(old_sample):]:
-            print "creating widget for subject ", ns
+            log.info("creating widget for subject %s" % ns)
             viewer = self.__create_viewer(ns, None)
             new_viewers_dict[ns] = viewer.subject_viewer
             new_widgets_dict[ns] = viewer
-            #TODO: Test in linux
             #needs to show before initializing
             level0 = self.scalar_data[self.nominal_name].iloc[0]
             self.inside_layouts[level0].addWidget(viewer,0,0)
@@ -828,7 +852,8 @@ class SampleOverview(QtGui.QMainWindow):
         self.sample = new_sample
         self.viewers_dict = new_viewers_dict
         self.widgets_dict = new_widgets_dict
-        print visualization_dict
+        log.info("loading visualization dict:")
+        log.info(visualization_dict)
         self.current_scenario = visualization_dict
         self.reload_viewers(visualization_dict)
 
@@ -839,9 +864,11 @@ class SampleOverview(QtGui.QMainWindow):
         auth_key=multiprocessing.current_process().authkey
         auth_key_asccii = binascii.b2a_hex(auth_key)
         listener = multiprocessing.connection.Listener(address,authkey=auth_key)
+        log = logging.getLogger(__name__)
 
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
-        print [sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii]
+        log.info("Excecuting command ")
+        log.info([sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii])
         self.mri_viewer = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",
                                                     "0",auth_key_asccii])
 
@@ -851,7 +878,8 @@ class SampleOverview(QtGui.QMainWindow):
         #self.poll_timer.start(200)
 
     def show_in_mri_viewer(self,subj):
-        print "showing subject", subj
+        log = logging.getLogger(__name__)
+        log.info("showing subject %s"%subj)
         if self.mri_viewer is None:
             self.launch_mri_viewer()
             scn_id = self.current_scenario["meta"]["scn_id"]
@@ -862,19 +890,23 @@ class SampleOverview(QtGui.QMainWindow):
     def show_select_sample_dialog(self):
         dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
         res = dialog.exec_()
+        log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
-            print "new sample: ",new_sample
+            log.info("new sample: %s"%new_sample)
             self.change_sample(list(new_sample))
             self.load_scalar_data(self.rational_index,self.nominal_index,force=True)
             self.re_arrange_viewers()
 
 def say_ciao():
-    print "ciao"
+    log = logging.getLogger(__name__)
+    log.info("Exiting sample overview")
 
 
 def run(scn_id=None):
     import sys
+    from braviz.utilities import configure_logger
+    configure_logger("sample_overview")
 
     app = QtGui.QApplication([])
     main_window = SampleOverview(scn_id)

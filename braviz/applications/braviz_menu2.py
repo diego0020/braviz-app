@@ -28,26 +28,30 @@ class BravizMenu2(QtGui.QMainWindow):
                                                                               self.ui.sample_overview))
         self.ui.subject_overview.clicked.connect(self.make_application_launcher("subject_overview",
                                                                                self.ui.subject_overview))
+        self.ui.braviz_menu_classic.clicked.connect(self.make_application_launcher("braviz_menu_classic",
+                                                                                   self.ui.braviz_menu_classic))
         self.ui.variables.clicked.connect(self.launch_variable_management_dialog)
         self.ui.scenarios.clicked.connect(self.launch_scenarios_dialog)
         self.ui.samples.clicked.connect(self.launch_samples_dialog)
 
+
     __applications = {
         "subject_overview" : "subject_overview",
         "sample_overview" : "sample_overview",
-        "anova" : "anova_task"
+        "anova" : "anova_task",
+        "braviz_menu_classic" : "braviz_menu"
     }
 
-    def make_application_launcher(self,app,icon):
+    def make_application_launcher(self,app,button):
         interpreter = sys.executable
         module = self.__applications[app]
         args = [interpreter,"-m","braviz.applications.%s"%module]
         def restore_icon():
-            icon.setEnabled(True)
+            button.setEnabled(True)
 
         def launch_app():
             subprocess.Popen(args)
-            icon.setEnabled(False)
+            button.setEnabled(False)
             QtCore.QTimer.singleShot(3000,restore_icon)
         return launch_app
 
@@ -74,6 +78,7 @@ class BravizMenu2(QtGui.QMainWindow):
             interpreter = sys.executable
             args = [interpreter,"-m","braviz.applications.%s"%app,str(scn_id)]
             subprocess.Popen(args)
+
 
 
 
