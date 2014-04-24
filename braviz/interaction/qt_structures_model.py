@@ -6,7 +6,7 @@ import PyQt4.QtCore as QtCore
 from PyQt4.QtCore import QAbstractItemModel
 from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy_with_names
-
+import logging
 
 class StructureTreeNode:
     def __init__(self, parent=None, name="", son_number=0):
@@ -88,8 +88,8 @@ class StructureTreeModel(QAbstractItemModel):
 
 
     def reload_hierarchy(self, subj="144", dominant=False):
-        # print "reloading hierarchy"
-        # print
+        log = logging.getLogger(__name__)
+        log.debug("reloading hierarchy")
         self.leaf_ids=set()
         self.__id_index={}
         if self.__root is not None:

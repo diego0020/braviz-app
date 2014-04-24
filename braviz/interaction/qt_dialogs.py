@@ -7,6 +7,7 @@ import PyQt4.QtCore as QtCore
 import numpy as np
 import itertools
 import cPickle
+import logging
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -28,7 +29,7 @@ from braviz.interaction.qt_guis.save_scenario_dialog import Ui_SaveScenarioDialo
 from braviz.interaction.qt_guis.load_scenario_dialog import Ui_LoadScenarioDialog
 
 import braviz.interaction.qt_models as braviz_models
-from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name, get_var_idx, get_var_name, \
+from braviz.readAndFilter.tabular_data import get_data_frame_by_name, get_var_idx, get_var_name, \
     is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name, \
     get_min_max_values, is_variable_name_real, get_var_description_by_name, save_is_real_by_name, \
     save_real_meta_by_name, save_var_description_by_name, get_min_max_opt_values_by_name, register_new_variable,\
@@ -54,7 +55,6 @@ class VariableSelectDialog(QtGui.QDialog):
     def __init__(self,sample = None):
         """remember to call finish_ui_setup() after setting up ui"""
         super(VariableSelectDialog, self).__init__()
-        self.conn = get_connection()
         self.var_name = None
         self.details_ui = None
         self.rational = {}
@@ -65,8 +65,9 @@ class VariableSelectDialog(QtGui.QDialog):
             self.sample = braviz_tab_data.get_subjects()
         else:
             self.sample = sorted(list(sample))
-            print "**** got custom sample ****"
-            print self.sample
+            log = logging.getLogger(__name__)
+            log.info("got custom sample")
+            log.info(self.sample)
 
 
     def update_plot(self, data):
@@ -74,7 +75,6 @@ class VariableSelectDialog(QtGui.QDialog):
 
     def update_right_side(self, var_name):
 
-        #print "lalalalala: %s"%var_name
         self.ui.var_name.setText(var_name)
         self.ui.save_button.setEnabled(True)
         self.ui.var_type_combo.setEnabled(True)
@@ -148,7 +148,8 @@ class VariableSelectDialog(QtGui.QDialog):
         self.details_ui.optimum_real_value.setNum(real_value)
 
     def create_real_details(self):
-        #print "creating real details"
+        log = logging.getLogger(__name__)
+        log.info("creating real details")
         details_ui = Ui_rational_details()
         details_ui.setupUi(self.ui.details_frame)
         self.details_ui = details_ui
@@ -169,7 +170,8 @@ class VariableSelectDialog(QtGui.QDialog):
 
     def create_nominal_details(self):
         var_name = self.var_name
-        #print "creating details"
+        log = logging.getLogger(__name__)
+        log.info("creating nominal details")
         if self.nominal_model is None:
             self.nominal_model = braviz_models.NominalVariablesMeta(var_name)
         else:
@@ -517,8 +519,10 @@ class MatplotWidget(FigureCanvas):
         x_levels.sort(reverse=False,key=lambda l:np.median(data[outcome][data[x_name]==l]))
         z_levels.sort(reverse=False,key=lambda l:np.median(data[outcome][data[z_name]==l]))
 
-        for i in x_levels:
-            print i, np.median(data[outcome][data[x_name]==i])
+        log = logging.getLogger(__name__)
+        if log.isEnabledFor(logging.DEBUG):
+            for i in x_levels:
+                log.debug("%s %s",i, np.median(data[outcome][data[x_name]==i]))
 
         box_width = 0.75
         box_pad = 0.15
@@ -733,7 +737,8 @@ class InteractionSelectDialog(QtGui.QDialog):
     def add_single_term(self):
         selected_indexes = self.ui.reg_view.selectedIndexes()
         selected_row_numbers = set(i.row() for i in selected_indexes)
-        print selected_row_numbers
+        log = logging.getLogger(__name__)
+        log.info(selected_row_numbers)
         self.full_model.add_interactor(selected_row_numbers)
 
     def add_all_combinations(self):
@@ -867,7 +872,7 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.ui.create_varible_button.clicked.connect(self.launch_new_variable_dialog)
         self.jitter = None
         self.variable_list = variables_list
-        print "pescado"
+
 
     def update_right_side(self, curr_idx=None):
         idx2 = self.vars_model.index(curr_idx.row(), 0)
@@ -1009,7 +1014,6 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         for idx in self.__context_variable_codes:
             #add separator
             if not first:
-                pass
                 self.layout.addStretch()
             else:
                 first = False
@@ -1114,7 +1118,6 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         menu.addAction(change_action)
 
         def change_variables(*args):
-            print "hola"
             context_change_dialog = ContextVariablesSelectDialog(current_subject=self.__curent_subject,
                                                                  variables_list=self.__context_variable_codes,
                                                                  editables_dict=self.__editables_dict,
@@ -1223,17 +1226,17 @@ class SaveFibersBundleDialog(QtGui.QDialog):
             self.ui.error_message.setText("")
 
     def accept_save(self):
-
-        print "saving"
+        log = logging.getLogger(__name__)
+        log.info("saving")
         name = str(self.ui.lineEdit.text())
-        print  str(self.ui.lineEdit.text())
+        log.info(str(self.ui.lineEdit.text()))
         op =  "and" if self._and else "or"
-        print op
-        print self._checkpoints
+        log.info(op)
+        log.info(self._checkpoints)
         try :
             bundles_db.save_checkpoints_bundle(name, self._and,self._checkpoints)
         except:
-            print "problem saving into database"
+            log.error("problem saving into database")
             raise
         self.ui.save_succesful.setText("Save succesful")
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)

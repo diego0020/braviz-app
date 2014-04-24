@@ -1,12 +1,12 @@
 """Functions for calculating or reading structure metrics"""
 from __future__ import division
 import random
+import logging
 
 import numpy as np
 
 import braviz
 import braviz.readAndFilter.tabular_data
-
 __author__ = 'Diego'
 
 
@@ -42,6 +42,8 @@ def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
             result = mean_inside(code, struct_names, img2)
             result *= 1e12
     else:
+        log = logging.getLogger(__name__)
+        log.error("Unknown metric")
         raise Exception('Unknown metric')
     return result
 
@@ -68,7 +70,8 @@ def get_struct_metric(reader, struct_name, code, metric='volume'):
         try:
             model = reader.get('model', code, name=struct_name)
         except Exception:
-            print "%s not found for subject %s" % (struct_name, code)
+            log = logging.getLogger(__name__)
+            log.warning("%s not found for subject %s" % (struct_name, code))
             return float('nan')
     if metric == 'area':
         area, volume = braviz.interaction.compute_volume_and_area(model)
@@ -123,7 +126,8 @@ def get_fibers_metric(reader, struct_name, code, metric='number', ):
         del fibers
         n = float(desc[1])
     else:
-        print 'unknowm fiber metric %s' % metric
+        log = logging.getLogger(__name__)
+        log.error('unknowm fiber metric %s' % metric)
         return float('nan')
     return n
 
@@ -170,18 +174,20 @@ def cached_get_struct_metric_col(reader, codes, struct_name, metric,
         if cached is not None:
             cache_codes, struct_metrics_col, = zip(*cached)
             if np.sum(np.isnan(struct_metrics_col)) / len(cache_codes) > 0.5:
-                print "Cache looks wrong, recalculating"
+                log = logging.getLogger(__name__)
+                log.warning("Cache looks wrong, recalculating")
             elif list(cache_codes) == list(codes):
                 state_variables['output'] = struct_metrics_col
                 state_variables['working'] = False
                 state_variables['number_calculated'] = 0
             return struct_metrics_col
-    print "Calculating %s for structure %s" % (metric, struct_name)
+    log = logging.getLogger(__name__)
+    log.info("Calculating %s for structure %s" % (metric, struct_name))
     temp_struct_metrics_col = []
     for code in codes:
         cancel_calculation_flag = state_variables.get('cancel', False)
         if cancel_calculation_flag is True:
-            print "cancel flag received"
+            log.info("cancel flag received")
             state_variables['working'] = False
             return
         struct_name2 = solve_laterality(laterality_dict.get(code, 'unknown'), struct_name)
@@ -323,6 +329,8 @@ def get_scalar_from_fiber_ploydata(poly_data, scalar):
         n = float(desc[1])
         return n
     else:
+        log = logging.getLogger(__name__)
+        log.error("Unknown metric %s", scalar)
         raise Exception("Unknown metric %s", scalar)
         return float("nan")
 

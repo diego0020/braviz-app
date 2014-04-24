@@ -1,5 +1,7 @@
 __author__ = 'Diego'
 
+import logging
+
 import pandas as pd
 import pandas.rpy.common as com
 from rpy2 import robjects
@@ -111,11 +113,13 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict,sample):
     conn=braviz_tab_data.get_connection()
     is_binary=False
     if is_nominal:
-        res=conn.execute("SELECT count(*) FROM nom_meta NATURAL JOIN variables WHERE var_name = ?",(outcome,))
-        if res.fetchone()[0]==2:
-            is_binary=True
-        else:
-            is_binary=False
+        # res=conn.execute("SELECT count(*) FROM nom_meta NATURAL JOIN variables WHERE var_name = ?",(outcome,))
+        # if res.fetchone()[0]==2:
+        #     is_binary=True
+        # else:
+        #     is_binary=False
+        log = logging.getLogger(__name__)
+        log.error("Logistic and multinomial ANOVA not yet implemented, choose a real outcome")
         raise Exception("Logistic and multinomial ANOVA not yet implemented, choose a real outcome")
 
     #are regressors nominal?

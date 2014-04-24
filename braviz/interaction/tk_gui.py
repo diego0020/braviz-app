@@ -3,7 +3,11 @@
 import Tkinter as tk
 from Tkinter import LabelFrame
 import ast
+import logging
+
 from braviz.interaction.tk_tooltip import ToolTip
+
+
 class subjects_list(LabelFrame):
     """A subjects list  tkMegaWidget. It gets the available subjects from a braviz reader and calls a function when changed
     The get method can be used to query the currently selected subject
@@ -143,7 +147,8 @@ class structureList(LabelFrame):
         new_set=model_idx-self.previous_selection
         if new_set:
             if len(new_set)>1:
-                print "WARNING: this shouldn't happen, model_idx changed by more than one"
+                log = logging.getLogger(__name__)
+                log.warning("WARNING: this shouldn't happen, model_idx changed by more than one")
             new_name=self.model_list.get(new_set.pop())
             chosen_models.add(new_name)
             if self.command is not None:
@@ -153,7 +158,7 @@ class structureList(LabelFrame):
         removed_set=self.previous_selection-model_idx
         if removed_set:
             if len(removed_set)>1:
-                print "WARNING: this shouldn't happen, model_idx changed by more than one"
+                log.warning("WARNING: this shouldn't happen, model_idx changed by more than one")
             remove_name=self.model_list.get(removed_set.pop())
             chosen_models.remove(remove_name)
             if self.command is not None:

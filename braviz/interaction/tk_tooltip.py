@@ -3,6 +3,7 @@
 # modification : don't show if message is an empty string
 from Tkinter import *
 from time import time, localtime, strftime
+import logging
 
 class ToolTip( Toplevel ):
     """
@@ -81,8 +82,9 @@ class ToolTip( Toplevel ):
                 self.hide()
                 self.spawn()
         except Exception as e:
-            print "exeption %s in message function"%type(e)
-            print e
+            log = logging.getLogger(__name__)
+            log.error("exeption %s in message function"%type(e))
+            log.exception(e)
         self.after( int( self.delay * 1000 ), self.show )
             
     def hide( self, event=None ):

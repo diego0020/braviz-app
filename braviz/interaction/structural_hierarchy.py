@@ -1,6 +1,7 @@
 """Creating hierarchies from free surfer names"""
 import braviz
 from braviz.utilities import recursive_default_dict
+
 __author__ = 'Diego'
 
 

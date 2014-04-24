@@ -23,11 +23,12 @@ import subprocess
 
 import numpy as np
 import sys
+import logging
 
 
 class SampleLoadDialog(QtGui.QDialog):
-    def __init__(self,new_button=True):
-        super(SampleLoadDialog,self).__init__()
+    def __init__(self, new_button=True):
+        super(SampleLoadDialog, self).__init__()
         self.model = SamplesSelectionModel()
         self.ui = Ui_LoadSampleDialog()
         self.ui.setupUi(self)
@@ -36,10 +37,11 @@ class SampleLoadDialog(QtGui.QDialog):
         self.ui.tableView.activated.connect(self.load_action)
         if new_button:
             self.new_button = QtGui.QPushButton("New")
-            self.ui.buttonBox.addButton(self.new_button,QtGui.QDialogButtonBox.ActionRole)
+            self.ui.buttonBox.addButton(self.new_button, QtGui.QDialogButtonBox.ActionRole)
             self.new_sample_app = None
             self.check_state_timer = None
             self.ui.buttonBox.accepted.connect(self.load_action)
+
             def refresh_list_and_re_enamble_new():
                 return_value = self.new_sample_app.poll()
                 if return_value is not None:
@@ -49,19 +51,21 @@ class SampleLoadDialog(QtGui.QDialog):
             def launch_new_sample_sun_process():
                 self.new_button.setEnabled(0)
                 executable = sys.executable
-                self.new_sample_app=subprocess.Popen([executable,__file__])
+                self.new_sample_app = subprocess.Popen([executable, __file__])
                 self.check_state_timer = QtCore.QTimer(self)
                 self.check_state_timer.timeout.connect(refresh_list_and_re_enamble_new)
                 self.check_state_timer.start(1000)
+
             self.new_button.clicked.connect(launch_new_sample_sun_process)
 
-    def load_action(self,index=None):
+    def load_action(self, index=None):
         if index is None:
             current = self.ui.tableView.currentIndex()
         else:
             current = index
         self.current_sample = self.model.get_sample(current)
-        print self.current_sample
+        log = logging.getLogger(__name__)
+        log.info(self.current_sample)
 
 
 class SampleCreateDilog(QtGui.QMainWindow):
@@ -98,7 +102,6 @@ class SampleCreateDilog(QtGui.QMainWindow):
         self.ui.add_subset_button.clicked.connect(self.add_subset)
         self.ui.save_button.clicked.connect(self.show_save_dialog)
         self.ui.load_button.clicked.connect(self.show_load_sample)
-
 
 
     def change_output_sample(self, new_set):
@@ -159,7 +162,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
         dialog = AddFilterDialog(params)
         ret = dialog.exec_()
         if ret == dialog.Accepted:
-            print "accepted"
+            log.debug("accepted")
             filter_name = get_filter_name(params)
             filter_func = get_filter_function(params)
             self.filters_model.add_filter(filter_name, filter_func)
@@ -169,11 +172,11 @@ class SampleCreateDilog(QtGui.QMainWindow):
         dialog = SaveSubSampleDialog(self.output_model.get_elements(), self.ui.description.toPlainText())
         ret = dialog.exec_()
         if ret == dialog.Accepted:
-            print "saving with name ", dialog.name
-            print self.output_model.get_elements()
-            print dialog.description
+            log.info("saving with name ", dialog.name)
+            log.info(self.output_model.get_elements())
+            log.info(dialog.description)
             self.save_sample(dialog.name, dialog.description)
-            self.ui.statusbar.showMessage("Succesfully saved %s"%dialog.name,10000)
+            self.ui.statusbar.showMessage("Succesfully saved %s" % dialog.name, 10000)
 
     def save_sample(self, name, description):
 
@@ -181,66 +184,75 @@ class SampleCreateDilog(QtGui.QMainWindow):
 
     def show_load_sample(self):
         dialog = SampleLoadDialog(new_button=False)
-        res=dialog.exec_()
+        res = dialog.exec_()
         if res == dialog.Accepted:
             loaded_sample = dialog.current_sample
             if loaded_sample is not None:
                 self.change_output_sample(loaded_sample)
 
-    def add_one_to_sample(self,subj):
-        print "adding ",subj
+    def add_one_to_sample(self, subj):
+        log = logging.getLogger(__name__)
+        log.info("adding ", subj)
         new_set = self.output_model.get_elements()
         new_set.add(subj)
         self.change_output_sample(new_set)
 
-    def get_add_one_context_menu(self,pos):
-        menu =QtGui.QMenu()
-        action = QtGui.QAction("Add to sample",menu)
+    def get_add_one_context_menu(self, pos):
+        menu = QtGui.QMenu()
+        action = QtGui.QAction("Add to sample", menu)
         menu.addAction(action)
         selection = self.ui.working_set_view.currentIndex()
         if not selection.isValid():
             return
-        data = self.working_model.data(selection,QtCore.Qt.DisplayRole)
+        data = self.working_model.data(selection, QtCore.Qt.DisplayRole)
+
         def add_to_sample():
             self.add_one_to_sample(int(data))
+
         action.triggered.connect(add_to_sample)
         global_pos = self.ui.working_set_view.mapToGlobal(pos)
         menu.exec_(global_pos)
 
 
-    def remove_one_from_sample(self,subj):
-        print "removing ",subj
+    def remove_one_from_sample(self, subj):
+        log = logging.getLogger(__name__)
+        log.info("removing ", subj)
         new_set = self.output_model.get_elements()
         new_set.remove(subj)
         self.change_output_sample(new_set)
 
-    def get_remove_one_context_menu(self,pos):
-        menu =QtGui.QMenu()
-        action = QtGui.QAction("Remove from sample",menu)
+    def get_remove_one_context_menu(self, pos):
+        menu = QtGui.QMenu()
+        action = QtGui.QAction("Remove from sample", menu)
         menu.addAction(action)
         selection = self.ui.current_view.currentIndex()
         if not selection.isValid():
             return
-        data = self.output_model.data(selection,QtCore.Qt.DisplayRole)
+        data = self.output_model.data(selection, QtCore.Qt.DisplayRole)
+
         def remove_from_sample():
             self.remove_one_from_sample(int(data))
+
         action.triggered.connect(remove_from_sample)
         global_pos = self.ui.current_view.mapToGlobal(pos)
         menu.exec_(global_pos)
 
-    def remove_filter_context_menu(self,pos):
-        menu =QtGui.QMenu()
-        action = QtGui.QAction("Remove filter",menu)
+    def remove_filter_context_menu(self, pos):
+        menu = QtGui.QMenu()
+        action = QtGui.QAction("Remove filter", menu)
         menu.addAction(action)
         selection = self.ui.filters.currentIndex()
         if not selection.isValid():
             return
+
         def remove_filter():
             self.filters_model.remove_filter(selection)
             self.update_filters()
+
         action.triggered.connect(remove_filter)
         global_pos = self.ui.filters.mapToGlobal(pos)
         menu.exec_(global_pos)
+
 
 def get_filter_name(params):
     if params["var_real"] is True:
@@ -447,8 +459,15 @@ class SaveSubSampleDialog(QtGui.QDialog):
 
 
 if __name__ == "__main__":
+    from braviz.utilities import configure_logger
+
+    configure_logger("sample_creation")
     app = QtGui.QApplication([])
     main_window = SampleCreateDilog()
     main_window.show()
     main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-    sys.exit(app.exec_())
+    try:
+        sys.exit(app.exec_())
+    except Exception as e:
+        log = logging.getLogger(__name__)
+        log.exception(e)

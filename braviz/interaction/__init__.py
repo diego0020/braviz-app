@@ -1,6 +1,8 @@
 """This module provides access to common operations on data and common interaction components"""
 
 from __future__ import division
+import logging
+
 import vtk
 import numpy as np
 
@@ -20,7 +22,8 @@ def compute_volume_and_area(struct):
 def compute_fiber_lengths(fib):
     """Returns a dictionary mapping line ids to line lengths"""
     if not fib.GetNumberOfLines() == fib.GetNumberOfCells():
-        print "Error, fib must contain only lines"
+        log = logging.getLogger(__name__)
+        log.error("Error, fib must contain only lines")
         raise Exception("Error, fib must contain only lines")
     lengths = {}
 

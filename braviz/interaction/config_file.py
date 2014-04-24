@@ -1,8 +1,11 @@
 """A class and methods for manipulating a configuration file"""
 
 import os
-import vtk
 from ConfigParser import RawConfigParser
+import logging
+
+import vtk
+
 __author__ = 'Diego'
 
 class braviz_config(RawConfigParser):
@@ -22,7 +25,8 @@ class braviz_config(RawConfigParser):
         try:
             idx=upper_vtk_attrs.index(interaction_style.upper())
         except ValueError:
-            print 'Erroneous interactor_style value %s'%custom_interactor_style
+            log = logging.getLogger(__name__)
+            log.error('Erroneous interactor_style value %s'%custom_interactor_style)
             raise Exception('Erroneous interactor_style value %s'%custom_interactor_style)
         style=vtk_attrs[idx]
         return style
@@ -54,12 +58,14 @@ def make_default_config():
     braviz_conf.add_section('VTK')
     braviz_conf.set('VTK','Background','0.1 0.1 0.2')
     braviz_conf.set('VTK','Interaction_Style','TrackballCamera')
+    log = logging.getLogger(__name__)
     try:
         with open(default_config_name,'w') as config_file:
             braviz_conf.write(config_file)
-        print "default configuration file created in %s"%default_config_name
+
+        log.info("default configuration file created in %s"%default_config_name)
     except IOError:
-        print "couldn't create default configuration file in %s"%default_config_name
+        log.error("couldn't create default configuration file in %s"%default_config_name)
 
     return braviz_conf
 
