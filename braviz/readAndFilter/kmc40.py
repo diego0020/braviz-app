@@ -8,6 +8,7 @@ import cPickle
 import hashlib
 import types
 import pickle
+import logging
 
 import nibabel as nib
 import numpy as np
@@ -31,9 +32,8 @@ A read and filter class designed to work with the file structure and data from t
 Data is organized into folders, and path and names for the different files can be derived from data type and id.
 The path containing this structure must be set."""
 
-    def __init__(self, path, max_cache=500):
+    def __init__(self, path, max_cache=2000):
         "The path pointing to the __root of the file structure must be set here"
-        global max_cache_size
         self.__root = os.path.normcase(path)
         #Remove trailing slashes
         self.__root = self.__root.rstrip('/\\')
@@ -138,7 +138,8 @@ The path containing this structure must be set."""
         elif data == 'BOLD':
             return self.__read_bold(subj, kw['name'])
         else:
-            print "Data type not available"
+            log = logging.getLogger(__name__)
+            log.error("Data type not available")
             raise (Exception("Data type not available"))
 
     def __getImg(self, data, subj, **kw):
@@ -172,13 +173,16 @@ The path containing this structure must be set."""
             else:
                 filename = 'aparc+aseg.nii.gz'
         else:
+            log = logging.getLogger(__name__)
+            log.error('Unknown image type %s' % data)
             raise Exception('Unknown image type %s' % data)
         wholeName = os.path.join(path, filename)
         try:
             img = nib.load(wholeName)
         except IOError as e:
-            print e
-            print "File %s not found" % wholeName
+            log = logging.getLogger(__name__)
+            log.error(e.message)
+            log.error("File %s not found" % wholeName)
             raise (Exception('File not found'))
 
         if kw.get('format', '').upper() == 'VTK':
@@ -230,6 +234,8 @@ The path containing this structure must be set."""
                                   interpolate=interpolate)
             return img3
         else:
+            log = logging.getLogger(__name__)
+            log.error('Unknown space %s' % space)
             raise Exception('Unknown space %s' % space)
 
     def __getIds(self):
@@ -253,6 +259,7 @@ The path containing this structure must be set."""
         #path=self.__root+'/'+str(subject)+'/Models2'
         path = os.path.join(self.__root, str(subject), 'Models3')
         spharm_path = os.path.join(self.__root, str(subject), 'spharm')
+        log = logging.getLogger(__name__)
         if kw.get('index', False):
             contents = os.listdir(path)
             pattern = re.compile(r'.*\.vtk$')
@@ -274,12 +281,12 @@ The path containing this structure must be set."""
                     return colors[name]
             elif kw.get('volume'):
                 if name.endswith('-SPHARM'):
-                    print "Warning, spharm structure treated as non-spharm equivalent"
+                    log.warning("Warning, spharm structure treated as non-spharm equivalent")
                     name = name[:-7]
                 return self.__get_volume(subject, name)
             elif kw.get('label'):
                 if name.endswith('-SPHARM'):
-                    print "Warning, spharm structure treated as non-spharm equivalent"
+                    log.warning("Warning, spharm structure treated as non-spharm equivalent")
                     name = name[:-7]
                 if not hasattr(self,"free_surfer_labels"):
                     self.__parse_fs_color_file()
@@ -287,7 +294,7 @@ The path containing this structure must be set."""
             else:
                 available = self.__load_free_surfer_model(subject, index='T')
                 if not name in available:
-                    print 'Model %s not available' % name
+                    log.warning( 'Model %s not available' % name)
                     raise Exception('Model %s not available' % name)
                 if name.endswith('-SPHARM'):
                     spharm_name = self.__spharm_models[name[:-7]]
@@ -308,7 +315,7 @@ The path containing this structure must be set."""
                 else:
                     return self.__movePointsToSpace(output, kw.get('space', 'world'), subject)
         else:
-            print 'Either "index" or "name" is required.'
+            log.error('Either "index" or "name" is required.')
             raise (Exception('Either "index" or "name" is required.'))
 
     def __get_volume(self, subject, model_name):
@@ -387,11 +394,12 @@ The path containing this structure must be set."""
         "Auxiliary function to read free surfer scalars"
         morph = {'area', 'curv', 'avg_curv', 'thickness', 'volume', 'sulc'}
         path = os.path.join(self.__root, str(subj), 'Surf')
+        log = logging.getLogger(__name__)
         try:
             hemisphere = kw['hemi']
             hs = hemisphere + 'h'
         except KeyError:
-            print "hemi is required"
+            log.error("hemi is required")
             raise (Exception("hemi is required"))
         if kw.get('index'):
             contents = os.listdir(path)
@@ -402,6 +410,7 @@ The path containing this structure must be set."""
         try:
             scalar_name = kw['scalars']
         except KeyError:
+            log.error(Exception('scalars is required'))
             raise (Exception('scalars is required'))
         path = os.path.join(self.__root, str(subj), 'Surf')
         if scalar_name in morph:
@@ -421,6 +430,7 @@ The path containing this structure must be set."""
     def __cached_color_fibers(self, subj, color=None,scalars=None):
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
+        log = logging.getLogger(__name__)
         if (color is None) and (scalars is None):
             color = "orient"
 
@@ -442,11 +452,12 @@ The path containing this structure must be set."""
             fib_reader = vtk.vtkPolyDataReader()
             fib_reader.SetFileName(cache_name)
             if fib_reader.IsFilePolyData() < 1:
+                log.error("fibers polydata file not found")
                 raise Exception("fibers polydata file not found")
             try:
                 fib_reader.Update()
             except Exception:
-                print "problems reading %s" % cache_name
+                log.error("problems reading %s" % cache_name)
                 raise
             else:
                 out = fib_reader.GetOutput()
@@ -485,6 +496,7 @@ The path containing this structure must be set."""
             elif scalars == "length":
                 braviz.readAndFilter.color_fibers.scalars_from_length(fibers)
             else:
+                log.error('Unknown coloring scheme %s' % color)
                 raise Exception('Unknown coloring scheme %s' % color)
 
             #Cache write
@@ -495,9 +507,9 @@ The path containing this structure must be set."""
             try:
                 fib_writer.Update()
                 if fib_writer.GetErrorCode() != 0:
-                    print 'cache write failed'
+                    log.warning('cache write failed')
             except Exception:
-                print 'cache write failed'
+                log.warning('cache write failed')
             return fibers
 
     def __cached_filter_fibers(self, subj, waypoint):
@@ -505,6 +517,7 @@ The path containing this structure must be set."""
         #print "filtering for model "+waypoint
         pickles_dir = os.path.join(self.getDataRoot(), 'pickles')
         pickle_name = 'fibers_%s_%s.pickle' % (subj, waypoint)
+        log = logging.getLogger(__name__)
         try:
             with open(os.path.join(pickles_dir, pickle_name), 'rb') as cache_file:
                 ids = cPickle.Unpickler(cache_file).load()
@@ -512,7 +525,7 @@ The path containing this structure must be set."""
                 #print "read from cache"
                 return ids
         except IOError:
-            print "cache not found"
+            log.info("cache not found")
         fibers = self.get('fibers', subj, space='world')
         model = self.get('model', subj, name=waypoint, space='world')
         if model:
@@ -522,16 +535,19 @@ The path containing this structure must be set."""
 
         try:
             with open(os.path.join(pickles_dir, pickle_name), 'wb') as cache_file:
+                log.info("writing cache to %s",pickle_name)
                 cPickle.Pickler(cache_file, 2).dump(ids)
                 cache_file.close()
         except IOError:
-            print "cache write failed: %s" % cache_file
+            log.error("cache write failed")
         return ids
 
     def __readFibers_from_db(self,subj,db_id,**kw):
+        log = logging.getLogger(__name__)
         try:
             _, bundle_type, data = bundles_db.get_bundle_details(db_id)
         except Exception:
+            log.error("Fiber with id=%s nor found in database"%db_id)
             raise Exception("Fiber with id=%s nor found in database"%db_id)
 
         bundle_type = int(bundle_type)
@@ -549,7 +565,7 @@ The path containing this structure must be set."""
             poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation,**kw)
             return poly
         else:
-            print "Unknown data type"
+            log.error("Unknown data type")
             raise Exception("Unknown fibers")
 
     def __readFibers(self, subj, **kw):
@@ -559,14 +575,16 @@ The path containing this structure must be set."""
         the list is then used to remove unwanted polylines,
         and finally the fibers are translated to the wanted space
         """
+        log = logging.getLogger(__name__)
         if 'progress' in kw:
-            print "The progress argument is deprecated"
+            log.warning("The progress argument is deprecated")
             kw['progress'].set(5)
 
         if kw.get("lut",False):
             scalars = kw.get("scalars")
             scalars = scalars.lower()
             if scalars is None:
+                log.error("This requires scalars")
                 raise Exception("This requires scalars")
             import braviz.readAndFilter.color_fibers
             if scalars == "length":
@@ -720,7 +738,8 @@ The path containing this structure must be set."""
             return transformPolyData(point_set, m3)
 
         else:
-            print 'Unknown Space %s' % space
+            log = logging.getLogger(__name__)
+            log.error('Unknown Space %s' % space)
             raise Exception('Unknown Space %s' % space)
 
     def __create_surfer_lut(self):
@@ -737,7 +756,8 @@ The path containing this structure must be set."""
             try:
                 color_file = open(color_file_name)
             except IOError as e:
-                print e
+                log = logging.getLogger(__name__)
+                log.error(e)
                 raise
             color_lines = color_file.readlines()
             color_file.close()
@@ -833,15 +853,17 @@ The path containing this structure must be set."""
 
     def __read_func(self, subject, **kw):
         "Internal function to read functional images, deals with the SPM transforms"
+        log = logging.getLogger(__name__)
         try:
             name = kw['name']
         except KeyError:
+            log.error('Paradigm name is required')
             raise Exception('Paradigm name is required')
         space = kw.get('space', 'world')
         name = name.upper()
         space = space.lower()
         if name not in ('PRECISION', 'POWERGRIP'):
-            print " functional paradigm %s not available" % name
+            log.warning(" functional paradigm %s not available" % name)
             return None
         path = os.path.join(self.getDataRoot(), subject, 'spm')
         z_map = os.path.join(path, name, 'spmT_0001.hdr')
@@ -888,7 +910,7 @@ The path containing this structure must be set."""
         else:
             ilegal = ['<', '>', ':', '"', '/', "\\", '|', '?', '*']
             for il in ilegal:
-                key = key.replace('il', '_')
+                key = key.replace(il, '_')
         return key
 
 
@@ -926,7 +948,8 @@ The path containing this structure must be set."""
                     except cPickle.PicklingError:
                         return False
             except OSError:
-                print "couldn't open file %s" % cache_file
+                log = logging.getLogger(__name__)
+                log.error("couldn't open file %s" % cache_file)
                 return False
             return True
 
@@ -940,12 +963,13 @@ The path containing this structure must be set."""
         key = self.__process_key(key)
         cache_dir = os.path.join(self.getDataRoot(), '.braviz_cache')
         cache_file = os.path.join(cache_dir, "%s.pickle" % key)
+        log = logging.getLogger(__name__)
         try:
             with open(cache_file, 'rb') as cache_descriptor:
                 try:
                     ans = cPickle.load(cache_descriptor)
                 except cPickle.UnpicklingError:
-                    print "File %s is corrupted " % cache_file
+                    log.error("File %s is corrupted " % cache_file)
                     return None
                 else:
                     return ans
@@ -963,38 +987,40 @@ The path containing this structure must be set."""
         return reader.GetOutput()
 
 
-__known_nodes = {  #
-             # Name          :  ( data root                   , cache size in MB)
-             #'IIND-EML753022': ('C:\\Users\\da.angulo39\\Documents\\Kanguro',1400), (No longer exists :( )
-             'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db', 4000),
-             'Unidelosandes': ('K:\\JohanaForero\\KAB-db', 1200),
-             'dieg8': (r'C:\Users\Diego\Documents\kmc40-db\KAB-db', 4000),
-             'TiberioHernande': (r'E:\KAB-db', 1100),
-             'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
-             'ISIS-EML725001': (r'C:\KAB-db', 1200),
-             'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db",4000),
-             'dellingr.vrac.iastate.edu' : (r"/Volumes/diegoa/KAB-db",14000),
-
+known_nodes = {  #
+    # Name          :  ( data root                   , cache size in MB)
+    'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db', 4000),
+    'Unidelosandes': ('K:\\JohanaForero\\KAB-db', 1200),
+    'dieg8': (r'C:\Users\Diego\Documents\kmc40-db\KAB-db', 4000),
+    'TiberioHernande': (r'E:\KAB-db', 1100),
+    'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
+    'ISIS-EML725001': (r'C:\KAB-db', 1200),
+    'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db",4000),
+    'dellingr.vrac.iastate.edu' : (r"/Volumes/diegoa/KAB-db",14000),
 }
 
 
 def get_data_root():
     node_id = platform.node()
-    node = __known_nodes.get(node_id)
+    node = known_nodes.get(node_id)
     if node is not None:
         return node[0]
+    log = logging.getLogger(__name__)
+    log.error("Unknown node")
     raise Exception("Unkown node")
 
 #===============================================================================================
 def autoReader(**kw_args):
     """Initialized a kmc40Reader based on the computer name"""
     node_id = platform.node()
-    node = __known_nodes.get(node_id)
+    node = known_nodes.get(node_id)
+    log = logging.getLogger(__name__)
     if node is not None:
         data_root = node[0]
         if kw_args.get('max_cache', 0) > 0:
             max_cache = kw_args.pop('max_cache')
-            print "Max cache set to %.2f MB" % max_cache
+
+            log.info("Max cache set to %.2f MB" % max_cache)
         else:
             max_cache = node[1]
         return kmc40Reader(data_root, max_cache=max_cache, **kw_args)
