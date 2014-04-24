@@ -1,19 +1,22 @@
 from __future__ import division
-import vtk
-import numpy as np
 from collections import namedtuple
+import logging
+
+import vtk
+
 
 __author__ = 'Diego'
 
 
 def get_column(file_name, name, numeric=False,nan_value=float('nan')):
+    log = logging.getLogger(__name__)
     try:
         with open(file_name) as csv_file:
             headers = csv_file.readline()
             headers = headers.rstrip('\n')
             headers = headers.split(';')
             if name not in headers:
-                print "column %s not found in file" % name
+                log.error("column %s not found in file" % name)
                 return None
             idx = headers.index(name)
             column = []
@@ -34,7 +37,7 @@ def get_column(file_name, name, numeric=False,nan_value=float('nan')):
                     item = num
                 column.append(item)
     except IOError:
-        print "couldn't open file " + file_name
+        log.error("couldn't open file " + file_name)
         raise
     return column
 
@@ -56,6 +59,8 @@ def get_tuples_dict(file_name,key_col,columns,numeric=False,nan_value=float('nan
                     col_idx = [headers.index(name) for name in columns ]
                     row_tuple = namedtuple('row_tuple', columns)
             except ValueError as ve:
+                log = logging.getLogger(__name__)
+                log.error("%s , headers of file %s" % (ve.message,file_name))
                 raise Exception("%s , headers of file %s" % (ve.message,file_name))
 
             for l in iter(csv_file.readline, ''):
@@ -80,7 +85,8 @@ def get_tuples_dict(file_name,key_col,columns,numeric=False,nan_value=float('nan
                     row_list.append(item)
                 output_dict[key]=row_tuple(*row_list)
     except IOError:
-        print "couldn't open file " + file_name
+        log = logging.getLogger(__name__)
+        log.error("couldn't open file " + file_name)
         raise
     return output_dict
 
@@ -91,7 +97,8 @@ def get_headers(file_name):
             headers = headers.rstrip('\n')
             headers = headers.split(';')
     except IOError:
-        print "couldn't open file " + file_name
+        log = logging.getLogger(__name__)
+        log.error("couldn't open file " + file_name)
         raise
     return headers
 
@@ -115,6 +122,7 @@ def read_free_surfer_csv_file(file_name, row, search_col=None, col=None):
     Otherwise: a single row will be selected based on the row value and the search_col value.
     The function will return the row where the value under column with header search_col matches row
     if col is given, only the value under the column with this header will be returned"""
+    log = logging.getLogger(__name__)
     try:
         with open(file_name) as fs_file:
             col_headers = None
@@ -135,15 +143,15 @@ def read_free_surfer_csv_file(file_name, row, search_col=None, col=None):
                             try:
                                 search_col_index = col_headers.index(search_col)
                             except ValueError:
-                                print "column %s not found" % search_col
-                                print "avaiable columns are %s" % col_headers
+                                log.error("column %s not found" % search_col)
+                                log.info("avaiable columns are %s" % col_headers)
                                 raise
                             if col is not None:
                                 try:
                                     result_col_index = col_headers.index(col)
                                 except ValueError:
-                                    print "column %s not found" % search_col
-                                    print "avaiable columns are %s" % col_headers
+                                    log.error("column %s not found" % search_col)
+                                    log.info("avaiable columns are %s" % col_headers)
                                     raise
 
                 else:
@@ -159,7 +167,7 @@ def read_free_surfer_csv_file(file_name, row, search_col=None, col=None):
                             return l2[result_col_index]
 
     except IOError:
-        print "couldn't open file " + file_name
+        log.error("couldn't open file " + file_name)
         raise
 
 

@@ -5,7 +5,7 @@ __author__ = 'Diego'
 from pandas.io import sql
 import pandas as pd
 import cPickle
-
+import logging
 from braviz.readAndFilter.tabular_data import get_connection
 
 
@@ -64,6 +64,8 @@ def get_scenario_data(scn_id):
     res = conn.execute(q, (scn_id,))
     res = res.fetchone()
     if res is None:
+        log = logging.getLogger(__name__)
+        log.error("scenario not found")
         raise Exception("scenario not found")
     return res[0]
 

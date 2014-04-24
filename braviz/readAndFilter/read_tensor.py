@@ -1,13 +1,14 @@
 from __future__ import division
 import itertools
+import os
+import logging
+from itertools import izip
 
 import vtk
 import nibabel as nib
 import numpy as np
-import os
 
 from braviz.readAndFilter import numpy2vtkMatrix
-from itertools import izip
 def tensorFromImgData(img_data):
     "Returns a function which generates tensors for each coordinate in img_data"
     #print img_data.shape
@@ -124,15 +125,16 @@ def cached_readTensorImage(tensor_file,fa_file=None, min_fa=0.3):
         cache_file += '_%f' % min_fa
     cache_file += '.vtk'
     vtkFile=cache_file
+    log = logging.getLogger(__name__)
     if os.path.isfile(vtkFile):
-        print 'reading from vtk-file'
+        log.info('reading from vtk-file')
         vtkreader=vtk.vtkUnstructuredGridReader()
         vtkreader.SetFileName(cache_file)
         vtkreader.Update()
         return vtkreader.GetOutput()
     #=============END CACHE READ=====================
     out=readTensorImage(tensor_file,fa_file, min_fa)
-    print 'attempting to write cache to: %s'%cache_file
+    log.info('attempting to write cache to: %s'%cache_file)
     try:
         vtkWriter=vtk.vtkUnstructuredGridWriter()
         vtkWriter.SetInputData(out)
@@ -140,8 +142,8 @@ def cached_readTensorImage(tensor_file,fa_file=None, min_fa=0.3):
         vtkWriter.SetFileTypeToBinary()
         vtkWriter.Update()
         if vtkWriter.GetErrorCode() != 0:
-            print 'cache write failed'
+            log.warning('cache write failed')
     except Exception:
-        print 'cache write failed'
+        log.warning('cache write failed')
     return out
     

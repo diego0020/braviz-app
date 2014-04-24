@@ -375,7 +375,8 @@ The path containing this structure must be set."""
             #Check required arguments
             name = kw['hemi'] + 'h.' + kw['name']
         else:
-            print 'Name=<surface> and hemi=<l|r> are required.'
+            log = logging.getLogger(__name__)
+            log.error('Name=<surface> and hemi=<l|r> are required.')
             raise Exception('Name=<surface> and hemi=<l|r> are required.')
         if not 'scalars' in kw:
             path = os.path.join(self.__root, str(subj), 'Surf')

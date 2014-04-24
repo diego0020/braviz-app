@@ -3,7 +3,6 @@ import os
 from kernel.RDFDBManagerClass import RDFDBManager
 from braviz.utilities import working_directory, recursive_default_dict
 
-
 __author__ = 'Diego'
 
 

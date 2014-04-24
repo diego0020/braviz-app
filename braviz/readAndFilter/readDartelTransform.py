@@ -1,16 +1,18 @@
 from __future__ import division
 import itertools
+import os
+import logging
 
 import vtk
 import nibabel as nib
 import numpy as np
-import os
-from braviz.readAndFilter import numpy2vtkMatrix
 
+from braviz.readAndFilter import numpy2vtkMatrix
 
 def dartel2GridTransform(y_file,assume_bad_matrix=False):
     """reads a dartel nifti file from disk and returns a vtkTransform, this function is very slow"""
-    print "importing dartel warp field... this will take a while"
+    log = logging.getLogger(__name__)
+    log.info("importing dartel warp field... this will take a while")
     img=nib.load(y_file)
     data=img.get_data()
     matrix=img.get_affine()
@@ -67,15 +69,17 @@ def dartel2GridTransform(y_file,assume_bad_matrix=False):
    
 def check_matrix(m):
     "check that the affine matrix contains only spacing and translation"
+    log = logging.getLogger(__name__)
     for i in range(4):
         for j in range(3): # don't look at last column
             if i!=j: # don't look at diagonal
                 if abs(m[i,j]>0.0001):
-                    print "WARNING: Matrix contains rotations or shears, this is not tested"
+                    log.warning("WARNING: Matrix contains rotations or shears, this is not tested")
                     return False
     return True
 def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
     "Cached version of dartel2GridTransform"
+    log = logging.getLogger(__name__)
     if y_file[-2:]=='gz':
         base_name=y_file[:-7] # remove .nii.gz
     else:
@@ -83,7 +87,7 @@ def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
     cache_name=base_name+'.vtk'
     cache=os.path.isfile(cache_name)
     if not cache:
-        print "importing dartel warp field... this will take a while"
+        log.info("importing dartel warp field... this will take a while")
         trans=dartel2GridTransform(y_file,assume_bad_matrix)
         if isinstance(trans, vtk.vtkGridTransform):
             g=trans.GetDisplacementGrid()
@@ -104,6 +108,7 @@ def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
             #Encode matrix in field data of grid
             g.GetFieldData().AddArray(matrix_array)
         else:
+            log.error('Unknown transform type')
             raise Exception('Unknown transform type')
         writer=vtk.vtkDataSetWriter()
         writer.SetFileTypeToBinary()
@@ -112,9 +117,9 @@ def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
         try:
             writer.Update()
             if writer.GetErrorCode()!=0:
-                print 'cache write failed'
+                log.warning('cache write failed')
         except Exception:
-            print "Cache write failed"
+            log.warning("Cache write failed")
         return trans
     else:
         reader=vtk.vtkDataSetReader()

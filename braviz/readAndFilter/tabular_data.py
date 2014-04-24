@@ -4,6 +4,7 @@ import sqlite3
 from itertools import izip
 import os
 import platform
+import logging
 
 from pandas.io import sql
 import pandas as pd
@@ -406,6 +407,8 @@ def register_new_variable(var_name,is_real=1):
     cur=conn.execute(q1,(var_name,))
     var_idx = cur.fetchone()
     if var_idx is None:
+        log = logging.getLogger(__name__)
+        log.error("Problem adding to Data Base")
         raise Exception("Problem adding to Data Base")
     conn.commit()
     return var_idx[0]
@@ -444,6 +447,8 @@ def get_var_value(var_idx,subject):
     cur=conn.execute(q,(var_idx,subject))
     res=cur.fetchone()
     if res is None:
+        log = logging.getLogger(__name__)
+        log.error("%s not found for subject %s"%(var_idx,subject))
         raise Exception("%s not found for subject %s"%(var_idx,subject))
     return res[0]
 

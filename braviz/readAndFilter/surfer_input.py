@@ -2,12 +2,12 @@
 # http://pysurfer.github.io
 from __future__ import division
 import os
+import logging
 
 import numpy as np
 import vtk
 
 from braviz.visualization import get_colorbrewer_lut
-
 
 def _fread3(fobj):
     """Read a 3-byte int from an open binary file object."""
@@ -26,7 +26,8 @@ def read_surface(filepath):
     with open(filepath,'rb') as fobj:
         magic = _fread3(fobj)
         if magic != 16777214 :
-            print "Invalid file %s"%filepath
+            log = logging.getLogger(__name__)
+            log.error("Invalid file %s"%filepath)
             fobj.close()
             raise(Exception('Invalid file'))
         create_stamp = fobj.readline()
@@ -195,6 +196,7 @@ def surface2vtkPolyData(surf_file):
     coords2=apply_offset(coords,geom['cras'])
     poly=create_polydata(coords2,faces)
     #try to write to cache
+    log = logging.getLogger(__name__)
     try:
         vtkWriter=vtk.vtkPolyDataWriter()
         vtkWriter.SetInputData(poly)
@@ -202,15 +204,16 @@ def surface2vtkPolyData(surf_file):
         vtkWriter.SetFileTypeToBinary()
         vtkWriter.Update()
     except Exception:
-        print 'cache write failed'
+        log.warning('cache write failed')
     if vtkWriter.GetErrorCode() != 0:
-        print 'cache write failed'
+        log.warning('cache write failed')
     return poly
 def addScalars(surf_polydata,scalars):
     "Scalaras are expected as a numpy array"
     surf=surf_polydata
+    log = logging.getLogger(__name__)
     if not len(scalars)==surf.GetNumberOfPoints():
-        print "scalars don't match with input polydata"
+        log.error("scalars don't match with input polydata")
         raise(Exception("scalars don't match with input polydata"))
     if scalars.dtype.kind=='f':
         vtk_scalars=vtk.vtkFloatArray()
@@ -271,7 +274,8 @@ def getMorphLUT(name):
     try:
         out_lut=getColorTransferLUT(*parameters_d[name])
     except KeyError:
-        print 'Unkown scalar type'
+        log = logging.getLogger(__name__)
+        log.error('Unkown scalar type')
         raise (Exception('unknown scalar type'))
     return out_lut
 
@@ -287,6 +291,7 @@ def get_free_surfer_lut(name):
         params = parameters_d[name]
         out_lut = get_colorbrewer_lut(*params)
     except KeyError:
-        print 'Unkown scalar type'
+        log = logging.getLogger(__name__)
+        log.error('Unkown scalar type')
         raise (Exception('unknown scalar type'))
     return out_lut

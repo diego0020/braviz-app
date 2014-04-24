@@ -4,7 +4,6 @@ import sys
 
 from braviz.readAndFilter.tabular_data import get_connection
 
-
 if __name__ == "__main__":
     print "This file is not meant to be executed"
     sys.exit(0)

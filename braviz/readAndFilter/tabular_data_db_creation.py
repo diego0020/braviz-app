@@ -182,7 +182,8 @@ def tms_vars_descriptions():
     conn.commit()
 
 
-
+if __name__ == "__main__":
+    print "This module shouldn't be excecuted"
 
 
 

@@ -6,6 +6,7 @@ __author__ = 'Diego'
 
 import os
 import functools
+import logging
 
 import vtk
 
@@ -17,6 +18,7 @@ from braviz.interaction.structure_metrics import get_right_or_left_hemisphere as
 def __cached_named_tract(name_tract_func):
     @functools.wraps(name_tract_func)
     def cached_func(reader, subject, color,scalars = None):
+        log = logging.getLogger(__name__)
         if scalars is None:
             cache_file = 'named_fibs_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color)
         else:
@@ -28,7 +30,7 @@ def __cached_named_tract(name_tract_func):
             try:
                 fib_reader.Update()
             except Exception:
-                print "problems reading %s" % cache_full_path
+                log.error("problems reading %s" % cache_full_path)
                 raise
             else:
                 out_fib = fib_reader.GetOutput()
@@ -43,9 +45,9 @@ def __cached_named_tract(name_tract_func):
         try:
             fib_writer.Update()
             if fib_writer.GetErrorCode() != 0:
-                print 'cache write failed'
+                log.warning('cache write failed')
         except Exception:
-            print 'cache write failed'
+            log.warning('cache write failed')
         return fibers, out_space
 
     return cached_func
@@ -53,13 +55,14 @@ def __cached_named_tract(name_tract_func):
 
 @__cached_named_tract
 def cortico_spinal_l(reader, subject, color,scalars, get_out_space=False):
+    log = logging.getLogger(__name__)
     if get_out_space is True:
         return 'dartel'
     try:
         tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'],
                             color=color,scalars=scalars)
     except Exception:
-        print "Tracts not found for subject %s" % subject
+        log.warning("Tracts not found for subject %s" % subject)
         raise
 
 
@@ -87,13 +90,14 @@ def cortico_spinal_l(reader, subject, color,scalars, get_out_space=False):
 
 @__cached_named_tract
 def cortico_spinal_r(reader, subject, color ,scalars, get_out_space=False):
+    log = logging.getLogger(__name__)
     if get_out_space is True:
         return 'dartel'
     try:
         tracts = reader.get('fibers', subject, space='dartel', waypoint=['ctx-rh-precentral', 'Brain-Stem'],
                             color=color,scalars=scalars)
     except Exception:
-        print "Tracts not found for subject %s" % subject
+        log.warning("Tracts not found for subject %s" % subject)
         raise Exception("Tracts not found for subject %s" % subject)
 
     #first cut
