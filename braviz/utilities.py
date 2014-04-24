@@ -6,10 +6,14 @@ from collections import defaultdict
 
 def configure_logger(app_name):
     import logging
+    import datetime
     from braviz.readAndFilter.kmc40 import get_data_root
-    log_file = os.path.join(get_data_root(),"logs","log_%s.txt"%app_name)
+    now = datetime.datetime.now()
+    time_str = now.strftime("%d_%m_%y-%Hh%Mm%Ss")
+    log_file = os.path.join(get_data_root(),"logs","%s_%s.txt"%(app_name,time_str))
     format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
     logging.basicConfig(filename=log_file,level=logging.INFO,format=format_str)
+    logging.captureWarnings(True)
 
 @contextlib.contextmanager
 def working_directory(path):

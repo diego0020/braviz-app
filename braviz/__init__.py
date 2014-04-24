@@ -2,12 +2,13 @@
 The readAndFilter module contains several functions for reading different brain data formats and tabular data
 The visualization module contains functions for displaying physical structures and charts of scalar values in the screen
 The interaction module contains functions for performing common interactions with the data"""
-print 'braviz v2.01'
+#'braviz v2.01'
 
 import platform
 import logging
 
 import vtk
+
 
 vtk_mayor=int(vtk.VTK_VERSION.split('.')[0])
 if not vtk_mayor >= 6:
