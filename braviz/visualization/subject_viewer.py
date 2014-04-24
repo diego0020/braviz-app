@@ -13,6 +13,7 @@ import colorbrewer
 from braviz.interaction import structure_metrics
 from functools import wraps
 import numpy as np
+import logging
 
 def do_and_render(f):
     """requiers the class to have the rendered accesible as self.ren"""
@@ -34,7 +35,6 @@ def do_and_render(f):
                 rw.Render()
 
     return wrapped
-
 
 
 class SubjectViewer:
@@ -78,7 +78,7 @@ class SubjectViewer:
         self.__tractography_manager = TractographyManager(self.reader, self.ren)
         self.__image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                             picker=self.picker)
-        self.__surface_manager = SurfaceManager(self.reader, self.ren,self.iren, picker=self.picker)
+        self.__surface_manager = SurfaceManager(self.reader, self.ren, self.iren, picker=self.picker)
 
 
         #reset camera and render
@@ -106,6 +106,8 @@ class SubjectViewer:
 
     def show_cone(self):
         """Useful for testing"""
+        log = logging.getLogger(__name__)
+        log.warning("Showing cone... this should only happen during testing")
         cone = vtk.vtkConeSource()
         cone.SetResolution(8)
         cone_mapper = vtk.vtkPolyDataMapper()
@@ -120,33 +122,38 @@ class SubjectViewer:
             new_subject_img_code = "0" + new_subject_img_code
         self.__current_subject = new_subject_img_code
         errors = []
-
+        log = logging.getLogger(__name__)
         #update image
         try:
             self.image.change_subject(new_subject_img_code, skip_render=True)
-        except Exception:
+        except Exception as e:
+            log.error(e)
             errors.append("Image")
 
         #update models
         try:
             self.models.reload_models(subj=new_subject_img_code, skip_render=True)
-        except Exception:
+        except Exception as e:
+            log.error(e)
             errors.append("Models")
 
         #update fibers
         try:
             self.tractography.set_subject(new_subject_img_code, skip_render=True)
-        except Exception:
+        except Exception as e:
+            log.error(e)
             errors.append("Fibers")
 
         #update surfaces
         try:
             self.surface.set_subject(new_subject_img_code, skip_render=True)
-        except Exception:
+        except Exception as e:
+            log.error(e)
             errors.append("Surfaces")
 
         self.ren_win.Render()
         if len(errors) > 0:
+            log.error("Couldn't load " + ", ".join(errors))
             raise Exception("Couldn't load " + ", ".join(errors))
 
     @do_and_render
@@ -154,23 +161,23 @@ class SubjectViewer:
         if self.__current_space == new_space:
             return
         self.__current_space = new_space
-
+        log = logging.getLogger(__name__)
         try:
             self.image.change_space(new_space, skip_render=True)
         except Exception as e:
-            print e.message
+            log.error(e)
         try:
             self.models.reload_models(space=new_space, skip_render=True)
         except Exception as e:
-            print e.message
+            log.error(e)
         try:
             self.tractography.set_current_space(new_space, skip_render=True)
         except Exception as e:
-            print e.message
+            log.error(e)
         try:
             self.surface.set_space(new_space, skip_render=True)
         except Exception as e:
-            print e.message
+            log.error(e)
 
     __camera_positions_dict = {
         0: ((-3.5, 0, 13), (157, 154, 130), (0, 0, 1)),
@@ -214,13 +221,14 @@ class SubjectViewer:
 
     def print_camera(self):
         cam1 = self.ren.GetActiveCamera()
-        print "Camera coordinates:"
-        print "focal: ",
-        print cam1.GetFocalPoint()
-        print "position: ",
-        print cam1.GetPosition()
-        print "viewUp: ",
-        print cam1.GetViewUp()
+        log = logging.getLogger(__name__)
+        log.info("Camera coordinates:")
+        log.info("focal: ")
+        log.info(cam1.GetFocalPoint())
+        log.info("position: ")
+        log.info(cam1.GetPosition())
+        log.info("viewUp: ")
+        log.info(cam1.GetViewUp())
 
     def get_camera_parameters(self):
         cam1 = self.ren.GetActiveCamera()
@@ -235,8 +243,8 @@ class QSuvjectViwerWidget(QFrame):
     image_window_changed = pyqtSignal(float)
     image_level_changed = pyqtSignal(float)
 
-    def __init__(self, reader,parent):
-        QFrame.__init__(self,parent)
+    def __init__(self, reader, parent):
+        QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
 
         self.__reader = reader
@@ -270,9 +278,8 @@ class QSuvjectViwerWidget(QFrame):
         self.image_level_changed.emit(level)
 
 
-
 class ImageManager:
-    def __init__(self, reader, ren, widget, interactor, initial_subj="093", initial_space="World",picker=None):
+    def __init__(self, reader, ren, widget, interactor, initial_subj="093", initial_space="World", picker=None):
         self.ren = ren
         self.reader = reader
         self.__current_subject = initial_subj
@@ -339,7 +346,7 @@ class ImageManager:
 
         outlineActor = vtk.vtkActor()
         outlineActor.SetMapper(outlineMapper)
-        outlineActor.GetProperty().SetColor(0,0,0)
+        outlineActor.GetProperty().SetColor(0, 0, 0)
         self.ren.AddActor(outlineActor)
         self.__outline_filter = outline
 
@@ -383,7 +390,8 @@ class ImageManager:
         self.__image_plane_widget.On()
 
         if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
-            if (self.__current_image == "MRI" or self.__current_image == "MD") and (self.__current_mri_window_level is not None):
+            if (self.__current_image == "MRI" or self.__current_image == "MD") and (
+                        self.__current_mri_window_level is not None):
                 self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
             elif (self.__current_image == "FA") and (self.__current_fa_window_level is not None):
                 self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
@@ -392,12 +400,14 @@ class ImageManager:
             return
 
         #update image labels:
+        log = logging.getLogger(__name__)
         try:
             aparc_img = self.reader.get("APARC", self.__current_subject, format="VTK", space=self.__current_space)
             aparc_lut = self.reader.get("APARC", self.__current_subject, lut=True)
             self.__image_plane_widget.addLabels(aparc_img)
             self.__image_plane_widget.setLabelsLut(aparc_lut)
-        except Exception:
+        except Exception as e:
+            log.warning(e)
             self.hide_image(skip_render=True)
             #raise
 
@@ -429,6 +439,7 @@ class ImageManager:
                 fa_image = self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
             except Exception:
                 self.hide_image(skip_render=True)
+                log.warning("DTI, not available")
                 raise Exception("DTI, not available")
 
             self.__image_plane_widget.SetInputData(dti_image)
@@ -471,8 +482,10 @@ class ImageManager:
         elif modality == "APARC":
             lut = self.reader.get("APARC", self.__current_subject, lut=True)
             self.__image_plane_widget.SetLookupTable(lut)
+
             #Important:
             self.__image_plane_widget.SetResliceInterpolateToNearestNeighbour()
+
         #self.__current_image = modality
         self.__image_plane_widget.On()
 
@@ -481,9 +494,10 @@ class ImageManager:
         """Changes the orientation of the current image
         to hide the image call hide_image
         orientation is a number from 0, 1 or 2 """
+        log = logging.getLogger(__name__)
         if self.__image_plane_widget is None:
             self.__current_image_orientation = orientation
-            print "Set an image first"
+            log.warning( "Set an image first")
             return
         self.__image_plane_widget.set_orientation(orientation)
         self.__current_image_orientation = orientation
@@ -526,7 +540,7 @@ class ImageManager:
         self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(), new_level)
 
     @do_and_render
-    def reset_window_level(self,button=None):
+    def reset_window_level(self, button=None):
         #print button
         if self.__image_plane_widget is None:
             return
@@ -585,6 +599,8 @@ class ModelManager:
         for mod_name in self.__active_models_set:
             self.__addModel(mod_name)
         if len(self.__available_models) == 0:
+            log = logging.getLogger(__name__)
+            log.warning("No models found")
             raise Exception("No models found")
 
     def __addModel(self, model_name):
@@ -694,7 +710,9 @@ class ModelManager:
         try:
             value = structure_metrics.get_mult_struct_metric(self.__reader, self.__active_models_set,
                                                              self.__current_subject, metric_name)
-        except Exception:
+        except Exception as e:
+            log = logging.getLogger(__name__)
+            log.error(e)
             value = float("nan")
             raise
         return value
@@ -707,7 +725,7 @@ class TractographyManager:
         self.__current_subject = initial_subj
         self.__current_space = initial_space
         self.__current_color = "orient"
-        self.__current_color_parameters = {"color" : "orient", "scalars" : None}
+        self.__current_color_parameters = {"color": "orient", "scalars": None}
         self.__opacity = 1.0
         self.__lut = None
         self.__show_color_bar = False
@@ -758,6 +776,8 @@ class TractographyManager:
             actor.SetVisibility(0)
             poly_data = None
             self.__ad_hoc_pd_mp_ac = (poly_data, mapper, actor)
+            log = logging.getLogger(__name__)
+            log.warning("Fibers not found")
             raise
         else:
             actor.GetProperty().SetOpacity(self.__opacity)
@@ -769,7 +789,6 @@ class TractographyManager:
                 c = colors[-1]
                 actor.GetProperty().SetColor(*c)
             self.__set_lut_in_maper(mapper)
-
 
             self.__ad_hoc_pd_mp_ac = (poly_data, mapper, actor)
         return
@@ -783,7 +802,7 @@ class TractographyManager:
         act.SetVisibility(0)
         self.__ad_hoc_visibility = False
 
-    def __set_lut_in_maper(self,mapper):
+    def __set_lut_in_maper(self, mapper):
         if self.__current_color == "bundle":
             mapper.SetScalarVisibility(0)
             return
@@ -796,7 +815,6 @@ class TractographyManager:
             mapper.UseLookupTableScalarRangeOn()
             mapper.SetColorModeToMapScalars()
             mapper.SetLookupTable(self.__lut)
-
 
 
     @do_and_render
@@ -815,6 +833,8 @@ class TractographyManager:
             poly_data = self.get_polydata(b_id)
             mapper.SetInputData(poly_data)
         except Exception:
+            log = logging.getLogger(__name__)
+            log.warning("Couldn't load fibers from db")
             actor.SetVisibility(0)
             raise
 
@@ -826,7 +846,6 @@ class TractographyManager:
             c = colors[self.__bundle_labels[b_id]]
             actor.GetProperty().SetColor(*c)
         self.__set_lut_in_maper(mapper)
-
 
 
     def get_bundle_colors(self):
@@ -845,7 +864,7 @@ class TractographyManager:
         return colors
 
     @do_and_render
-    def set_show_color_bar(self,value):
+    def set_show_color_bar(self, value):
         self.__show_color_bar = bool(value)
         self.__set_color_bar()
 
@@ -854,7 +873,7 @@ class TractographyManager:
 
     def get_polydata(self, b_id):
         poly = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                                db_id=b_id, **self.__current_color_parameters)
+                               db_id=b_id, **self.__current_color_parameters)
         return poly
 
 
@@ -873,16 +892,16 @@ class TractographyManager:
             return
         self.__current_color = new_color
         self.__lut = None
-        if new_color in ("bundle","orient"):
-            self.__current_color_parameters["color"]="orient"
-            self.__current_color_parameters["scalars"]=None
+        if new_color in ("bundle", "orient"):
+            self.__current_color_parameters["color"] = "orient"
+            self.__current_color_parameters["scalars"] = None
         elif new_color == "rand":
-            self.__current_color_parameters["color"]="rand"
-            self.__current_color_parameters["scalars"]=None
+            self.__current_color_parameters["color"] = "rand"
+            self.__current_color_parameters["scalars"] = None
         else:
-            self.__current_color_parameters["color"]=None
-            self.__current_color_parameters["scalars"]=new_color
-            self.__lut = self.reader.get("Fibers",None,scalars=new_color,lut=True)
+            self.__current_color_parameters["color"] = None
+            self.__current_color_parameters["scalars"] = new_color
+            self.__lut = self.reader.get("Fibers", None, scalars=new_color, lut=True)
 
 
         #print self.__current_color
@@ -899,7 +918,6 @@ class TractographyManager:
                 self.__color_bar_actor.SetVisibility(0)
         else:
             if self.__color_bar_actor is None:
-
                 self.__color_bar_actor = vtk.vtkScalarBarActor()
                 self.__color_bar_actor.SetNumberOfLabels(4)
                 #self.__color_bar_actor.SetMaximumWidthInPixels(100)
@@ -923,19 +941,17 @@ class TractographyManager:
                 #coord2.SetCoordinateSystemToViewport()
                 width, height = self.ren.GetRenderWindow().GetSize()
                 #print width, height
-                coord1.SetValue(0.89,0.05)
+                coord1.SetValue(0.89, 0.05)
                 #coord1.SetValue(width-110,50)
-                coord2.SetValue(0.1,0.9)
+                coord2.SetValue(0.1, 0.9)
                 #coord2.SetValue(width-10,height-50)
 
                 #self.ren.AddActor2D(self.__color_bar_actor)
-
 
             self.__color_bar_actor.SetVisibility(1)
             self.__color_bar_actor.SetLookupTable(self.__lut)
             #self.__color_bar_actor.SetTitle(scalars[:2].upper())
             self.__color_bar_actor.SetTitle("")
-
 
 
     def __reload_fibers(self):
@@ -959,11 +975,15 @@ class TractographyManager:
         for i in to_add:
             try:
                 self.add_from_database(i)
-            except Exception:
+            except Exception as e:
+                log = logging.getLogger(__name__)
+                log.error(e)
                 raise
 
         if errors > 0:
-            raise Exception("Couldnt load all tracts")
+            log = logging.getLogger(__name__)
+            log.warning("Couldn't load all tracts")
+            raise Exception("Couldn't load all tracts")
 
     @do_and_render
     def set_opacity(self, float_opacity):
@@ -997,7 +1017,7 @@ class TractographyManager:
 
 
 class SurfaceManager:
-    def __init__(self, reader, ren, iren,initial_subj="093", initial_space="World", picker=None):
+    def __init__(self, reader, ren, iren, initial_subj="093", initial_space="World", picker=None):
         self.ren = ren
         self.reader = reader
         self.picker = picker
@@ -1012,7 +1032,7 @@ class SurfaceManager:
 
         self.__current_space = initial_space
         self.__subject = initial_subj
-        self.__opacity=100
+        self.__opacity = 100
 
         self.__active_color_bar = False
         self.__color_bar_actor = None
@@ -1023,14 +1043,12 @@ class SurfaceManager:
             self.__picking_dict = dict()
             self.__cone_trio = None
             self.__locators = dict()
-            self.__active_picking=False
+            self.__active_picking = False
             self.__picking_events = dict()
             self.__picking_text = None
             self.__create_pick_cone()
             self.__create_pick_text()
             self.__setup_picking()
-
-
 
         self.__update_lut()
 
@@ -1041,8 +1059,8 @@ class SurfaceManager:
         coneSource.SetHeight(12)
         coneSource.SetRadius(5)
         coneSource.SetResolution(31)
-        coneSource.SetCenter(6,0,0)
-        coneSource.SetDirection(-1,0,0)
+        coneSource.SetCenter(6, 0, 0)
+        coneSource.SetDirection(-1, 0, 0)
 
         coneMapper = vtk.vtkDataSetMapper()
         coneMapper.SetInputConnection(coneSource.GetOutputPort())
@@ -1050,75 +1068,76 @@ class SurfaceManager:
         redCone = vtk.vtkActor()
         redCone.PickableOff()
         redCone.SetMapper(coneMapper)
-        redCone.GetProperty().SetColor(1,0,0)
+        redCone.GetProperty().SetColor(1, 0, 0)
         redCone.SetVisibility(0)
 
         self.ren.AddActor(redCone)
-        self.__cone_trio = coneSource,coneMapper,redCone
+        self.__cone_trio = coneSource, coneMapper, redCone
 
     def __create_pick_text(self):
-        text2=vtk.vtkTextActor()
-        cor=text2.GetPositionCoordinate()
+        text2 = vtk.vtkTextActor()
+        cor = text2.GetPositionCoordinate()
         cor.SetCoordinateSystemToNormalizedDisplay()
-        text2.SetPosition([0.99,0.01])
+        text2.SetPosition([0.99, 0.01])
         text2.SetInput('probando')
-        tprop=text2.GetTextProperty()
+        tprop = text2.GetTextProperty()
         tprop.SetJustificationToRight()
         tprop.SetFontSize(18)
         self.ren.AddActor(text2)
         text2.SetVisibility(0)
         self.__picking_text = text2
 
-    def __point_cone(self,nx,ny,nz):
+    def __point_cone(self, nx, ny, nz):
         actor = self.__cone_trio[2]
         actor.SetOrientation(0.0, 0.0, 0.0)
-        n = np.sqrt(nx**2 + ny**2 + nz**2)
+        n = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
         if (nx < 0.0):
             actor.RotateWXYZ(180, 0, 1, 0)
             n = -n
-        actor.RotateWXYZ(180, (nx+n)*0.5, ny*0.5, nz*0.5)
+        actor.RotateWXYZ(180, (nx + n) * 0.5, ny * 0.5, nz * 0.5)
 
     def __setup_picking(self):
+        log = logging.getLogger(__name__)
         def get_message(picker):
-            hemi=self.__picking_dict[id(picker.GetProp3D())]
+            hemi = self.__picking_dict[id(picker.GetProp3D())]
             pd = self.__surf_trios[hemi][0]
-            ptId=picker.GetPointId()
-            point_data=pd.GetPointData()
-            scalars=point_data.GetScalars()
+            ptId = picker.GetPointId()
+            point_data = pd.GetPointData()
+            scalars = point_data.GetScalars()
             scalar = self.__current_scalars
-            t=scalars.GetTuple(ptId)
-            annotations=['aparc','aparc.a2009s','BA']
+            t = scalars.GetTuple(ptId)
+            annotations = ['aparc', 'aparc.a2009s', 'BA']
             if scalar in annotations:
-                label=self.__lut.GetAnnotation(int(t[0]))
-                return "%s-Label: %s"%(scalar,label)
-            return "%s = %f"%(scalar,t[0])
+                label = self.__lut.GetAnnotation(int(t[0]))
+                return "%s-Label: %s" % (scalar, label)
+            return "%s = %f" % (scalar, t[0])
 
-        def picking(caller,event):
+        def picking(caller, event):
             active_picking = self.__active_picking
-            if event=='MouseMoveEvent' and not active_picking:
+            if event == 'MouseMoveEvent' and not active_picking:
                 return
-            if event=='LeftButtonReleaseEvent':
-                self.__active_picking=False
+            if event == 'LeftButtonReleaseEvent':
+                self.__active_picking = False
                 self.__cone_trio[2].SetVisibility(0)
                 self.__picking_text.SetVisibility(0)
-                print "done picking"
+                log.debug("done picking")
                 return
-            x,y=caller.GetEventPosition()
-            picked=self.picker.Pick(x,y,0,self.ren)
-            p=self.picker.GetPickPosition()
-            n=self.picker.GetPickNormal()
-            picked_prop=self.picker.GetProp3D()
-            if picked and (id(picked_prop) in self.__picking_dict) :
-                self.__active_picking=True
+            x, y = caller.GetEventPosition()
+            picked = self.picker.Pick(x, y, 0, self.ren)
+            p = self.picker.GetPickPosition()
+            n = self.picker.GetPickNormal()
+            picked_prop = self.picker.GetProp3D()
+            if picked and (id(picked_prop) in self.__picking_dict):
+                self.__active_picking = True
                 redCone = self.__cone_trio[2]
                 redCone.SetPosition(p)
                 self.__point_cone(*n)
                 self.__picking_text.SetVisibility(1)
                 redCone.SetVisibility(1)
-                message=get_message(self.picker)
+                message = get_message(self.picker)
                 self.__picking_text.SetInput(message)
                 event_id = self.__picking_events[event]
-                command=caller.GetCommand(event_id)
+                command = caller.GetCommand(event_id)
                 command.SetAbortFlag(1)
                 self.iren.Render()
             else:
@@ -1126,20 +1145,24 @@ class SurfaceManager:
                 self.__cone_trio[2].SetVisibility(0)
                 self.__picking_text.SetVisibility(0)
             return
+
         iren = self.iren
-        self.__picking_events["LeftButtonPressEvent"]=iren.AddObserver(vtk.vtkCommand.LeftButtonPressEvent,picking,10)
-        iren.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent,picking,10)
-        self.__picking_events["MouseMoveEvent"]=iren.AddObserver(vtk.vtkCommand.MouseMoveEvent,picking,10)
+        self.__picking_events["LeftButtonPressEvent"] = iren.AddObserver(vtk.vtkCommand.LeftButtonPressEvent, picking,
+                                                                         10)
+        iren.AddObserver(vtk.vtkCommand.LeftButtonReleaseEvent, picking, 10)
+        self.__picking_events["MouseMoveEvent"] = iren.AddObserver(vtk.vtkCommand.MouseMoveEvent, picking, 10)
 
 
-    def __update_hemisphere(self,h):
+    def __update_hemisphere(self, h):
         #print "updating hemisphere ",h
         if h == "l":
             active = self.__left_active
         elif h == "r":
             active = self.__right_active
         else:
-            raise Exception("Unknown hemisphere %s"%h)
+            log = logging.getLogger(__name__)
+            log.error("Unknown hemisphere %s" % h)
+            raise Exception("Unknown hemisphere %s" % h)
 
         trio = self.__surf_trios.get(h)
         if not active:
@@ -1154,7 +1177,7 @@ class SurfaceManager:
             actor = vtk.vtkActor()
             actor.SetMapper(mapper)
             self.ren.AddActor(actor)
-            self.__picking_dict[id(actor)]=h
+            self.__picking_dict[id(actor)] = h
             locator = vtk.vtkCellTreeLocator()
             locator.LazyEvaluationOn()
             self.__locators[h] = locator
@@ -1162,19 +1185,20 @@ class SurfaceManager:
                 self.picker.AddLocator(locator)
                 self.picker.AddPickList(actor)
         else:
-            surf ,mapper,actor = trio
+            surf, mapper, actor = trio
 
-        surf = self.reader.get("surf",self.__subject,name=self.__current_surface,hemi=h,scalars=self.__current_scalars,
-                               space = self.__current_space)
+        surf = self.reader.get("surf", self.__subject, name=self.__current_surface, hemi=h,
+                               scalars=self.__current_scalars,
+                               space=self.__current_space)
         mapper.SetInputData(surf)
         actor.SetVisibility(1)
-        actor.GetProperty().SetOpacity(self.__opacity/100)
-        trio = surf,mapper,actor
+        actor.GetProperty().SetOpacity(self.__opacity / 100)
+        trio = surf, mapper, actor
         self.__locators[h].SetDataSet(surf)
         self.__surf_trios[h] = trio
 
     def __update_lut(self):
-        lut = self.reader.get("SURF_SCALAR","144",scalars=self.__current_scalars,lut=True,hemi="l")
+        lut = self.reader.get("SURF_SCALAR", "144", scalars=self.__current_scalars, lut=True, hemi="l")
         for trio in self.__surf_trios.itervalues():
             mapper = trio[1]
             mapper.SetLookupTable(lut)
@@ -1188,7 +1212,7 @@ class SurfaceManager:
         self.__update_hemisphere("l")
 
     @do_and_render
-    def set_hemispheres(self,left=None,right=None):
+    def set_hemispheres(self, left=None, right=None):
 
         if left is not None:
             left = bool(left)
@@ -1203,7 +1227,7 @@ class SurfaceManager:
                 self.__update_hemisphere("r")
 
     @do_and_render
-    def set_scalars(self,scalars):
+    def set_scalars(self, scalars):
         scalars = scalars.lower()
         if scalars == self.__current_scalars:
             return
@@ -1212,7 +1236,7 @@ class SurfaceManager:
         self.__update_lut()
 
     @do_and_render
-    def set_surface(self,surface):
+    def set_surface(self, surface):
         surface = surface.lower()
         if surface == self.__current_surface:
             return
@@ -1220,7 +1244,7 @@ class SurfaceManager:
         self.__update_both()
 
     @do_and_render
-    def show_color_bar(self,show):
+    def show_color_bar(self, show):
         if show == self.__active_color_bar:
             return
         self.__active_color_bar = show
@@ -1241,31 +1265,30 @@ class SurfaceManager:
             rep = self.__color_bar_widget.GetRepresentation()
             coord1 = rep.GetPositionCoordinate()
             coord2 = rep.GetPosition2Coordinate()
-            coord1.SetValue(0.01,0.05)
-            coord2.SetValue(0.1,0.9)
+            coord1.SetValue(0.01, 0.05)
+            coord2.SetValue(0.1, 0.9)
         self.__color_bar_actor.SetVisibility(1)
         self.__color_bar_actor.SetLookupTable(self.__lut)
         self.__color_bar_actor.SetTitle("")
 
     @do_and_render
-    def set_subject(self,new_subject):
+    def set_subject(self, new_subject):
         self.__subject = new_subject
         self.__update_both()
 
     @do_and_render
-    def set_space(self,new_space):
+    def set_space(self, new_space):
         self.__current_space = new_space
         self.__update_both()
 
     @do_and_render
-    def set_opacity(self,new_opacity):
+    def set_opacity(self, new_opacity):
         if new_opacity == self.__opacity:
             return
         self.__opacity = new_opacity
         for trio in self.__surf_trios.itervalues():
             ac = trio[2]
-            ac.GetProperty().SetOpacity(self.__opacity/100)
-
+            ac.GetProperty().SetOpacity(self.__opacity / 100)
 
 
 if __name__ == "__main__":
@@ -1280,4 +1303,5 @@ if __name__ == "__main__":
     main_window.initialize_widget()
 
     app.exec_()
-    print "es todo"
+    log = logging.getLogger(__name__)
+    log.info( "es todo")

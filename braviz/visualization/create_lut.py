@@ -1,5 +1,7 @@
 """Contains functions for transforming ColorBrewer schemes into lookuptables"""
 from __future__ import division
+import logging
+
 import vtk
 import colorbrewer
 
@@ -21,19 +23,20 @@ def get_colorbrewer_lut(minimum,maximum,scheme,steps,invert=False,continuous=Tru
     #scalar_lookup_table.SetColorSpaceToHSV()
     assert steps>1
     sharpness=1
+    log = logging.getLogger(__name__)
     if continuous is True:
         sharpness=0
     #load colorbrewer scheme
     try:
         cb_list=getattr(colorbrewer,scheme)
     except AttributeError:
-        print "Unknown scheme %s, please look at http://colorbrewer2.org/ for available schemes"%scheme
+        log.error("Unknown scheme %s, please look at http://colorbrewer2.org/ for available schemes"%scheme)
         raise
 
     try:
         cb_list=cb_list[steps]
     except KeyError:
-        print "this scheme is not available for %d steps"%steps
+        log.error("this scheme is not available for %d steps"%steps)
         raise
 
     cb_list = cb_list[skip:]

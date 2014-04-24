@@ -1,8 +1,10 @@
 """Contains utilities for displaying fMRI images"""
 
 from __future__ import division
-import vtk
 import functools
+
+import vtk
+
 __author__ = 'Diego'
 
 def memoize(obj):
@@ -52,6 +54,7 @@ class blend_fmri_and_mri(vtk.vtkImageBlend):
         self.fmri_lut=fmri_lut
         self.fmri_mapper=fmri_mapper
         self.mri_mapper=mri_mapper
+        self.mri_lut = mri_lut
         self.alfa=alfa
 
     def change_imgs(self,mri_img,fmri_img):

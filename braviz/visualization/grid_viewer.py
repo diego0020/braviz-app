@@ -4,6 +4,7 @@ from __future__ import division
 import math
 from itertools import izip
 import gc
+import logging
 
 import vtk
 import numpy as np
@@ -624,7 +625,8 @@ class GridView(vtk.vtkRenderWindow):
             try:
                 center_point=self.__actors_dict[key].GetPosition()
             except:
-                print "%s actor not found"%key
+                log = logging.getLogger(__name__)
+                log.error("%s actor not found"%key)
                 continue
             caption=vtk.vtkTextActor()
             self.__captions_dict[key]=caption

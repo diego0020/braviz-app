@@ -1,7 +1,5 @@
 """Maptplotlib widgets which represent scalars in several charts"""
 from __future__ import division
-import matplotlib
-matplotlib.use('TkAgg')
 
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg

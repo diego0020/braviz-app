@@ -62,6 +62,8 @@ class simpleVtkViewer():
     def start(self, reset=True):
         """Call this method to start the interaction, interaction can be stopped by pressing 'q' on the main window"""
         print "press 'Q' on viewer window to stop"
+        import sys
+        sys.stdout.flush()
         if reset is True:
             self.ren.ResetCameraClippingRange()
             self.ren.ResetCamera()
@@ -369,7 +371,7 @@ class cursors(vtk.vtkPropAssembly):
         """The perpendicular axis is x:0 , y:1, z:2
         Notice that for the cursor to work properly the spacing, dimensions and origin
         of the underlying image must be set"""
-        actor_delta = 1.0  #Space within the cursor and the image, notice there are cursors on both sides
+        actor_delta = 1.0  # Space within the cursor and the image, notice there are cursors on both sides
         cursor_x = vtk.vtkLineSource()
         cursor_x_mapper = vtk.vtkPolyDataMapper()
         cursor_x_mapper.SetInputConnection(cursor_x.GetOutputPort())
@@ -555,7 +557,6 @@ def remove_nan_from_grid(grid):
     out.SetLines(lines)
     return out
 
-    return grid
 
 
 def get_arrow(head, tail):

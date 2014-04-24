@@ -1,7 +1,10 @@
 """Visualizations based on vtkCharts"""
 from __future__ import division
+import logging
+
 import vtk
 import numpy as np
+
 #line plot
 class LinePlot(vtk.vtkContextActor):
     """A vtk line plot"""
@@ -68,7 +71,8 @@ class LinePlot(vtk.vtkContextActor):
                 for i in xrange(len(values[0])):
                     table.SetValue(i,c,float(column[i]) )
         except IndexError:
-            print "All arrays in values must have the same length"
+            log = logging.getLogger(__name__)
+            log.error("All arrays in values must have the same length")
             raise Exception("All arrays in values must have the same length")
         #create line plots
         self.chart.ClearPlots()
@@ -373,14 +377,16 @@ class multi_bar_plot(vtk.vtkContextView):
             self.width=width
             return True
         else:
-            print "width must be smaller than %f"%self.get_maximum_width()
+            log = logging.getLogger(__name__)
+            log.error("width must be smaller than %f"%self.get_maximum_width())
             return False
     def set_start(self,graph_start):
         if graph_start<self.get_minimum_start():
             self.start=graph_start
             return True
         else:
-            print "start must be larger than %f"%self.get_minimum_start()
+            log = logging.getLogger(__name__)
+            log.error("start must be larger than %f"%self.get_minimum_start())
             return False
     def set_n_elements(self,n_elements):
         n_elements_low_limit=2*self.start/self.width
@@ -388,7 +394,8 @@ class multi_bar_plot(vtk.vtkContextView):
             self.max_elements=n_elements
             return True
         else:
-            print "the number of elements must be larger than %f"%n_elements_low_limit
+            log = logging.getLogger(__name__)
+            log.error("the number of elements must be larger than %f"%n_elements_low_limit)
             return False
     def set_all(self,n_elements,width,start):
         s=start
@@ -400,7 +407,8 @@ class multi_bar_plot(vtk.vtkContextView):
             self.max_elements=n
             return True
         else:
-            print "2*s > w*n must hold!"
+            log = logging.getLogger(__name__)
+            log.error( "2*s > w*n must hold!")
             return False
     def __add_bar2(self,position,value,code,color_fun=None,enphasize=False):
         vtk_table = vtk.vtkTable()
