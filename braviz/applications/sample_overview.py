@@ -105,10 +105,14 @@ class SampleOverview(QtGui.QMainWindow):
 
     def change_nominal_variable(self, new_var_index):
         self.load_scalar_data(self.rational_index, new_var_index)
+        logger = logging.getLogger(__name__)
+        logger.info("Changed nominal variable to %s"%new_var_index)
         self.re_arrange_viewers()
 
     def change_rational_variable(self, new_var_index):
         self.load_scalar_data(new_var_index, self.nominal_index)
+        logger = logging.getLogger(__name__)
+        logger.info("Changed rational variable to %s"%new_var_index)
         self.re_arrange_viewers()
 
     def re_arrange_viewers(self):
@@ -560,6 +564,8 @@ class SampleOverview(QtGui.QMainWindow):
     def __copy_camera_from_subject(self, subj):
         viewer = self.viewers_dict[subj]
         parameters = viewer.get_camera_parameters()
+        logger = logging.getLogger(__name__)
+        logger.info("copying camera")
         for subj2, viewer in self.viewers_dict.iteritems():
             if subj2 != subj:
                 self.__set_camera_parameters(viewer, parameters)
@@ -617,6 +623,8 @@ class SampleOverview(QtGui.QMainWindow):
         return context_menu_handler
 
     def reset_cameras_to_scenario(self):
+        logger = logging.getLogger(__name__)
+        logger.info("resetting camera to scenario")
         for viewer in self.viewers_dict.itervalues():
             self.__load_camera_from_scenario(viewer)
 
@@ -770,6 +778,7 @@ class SampleOverview(QtGui.QMainWindow):
         scenario = vis_state["scenario"]
         subj_state = scenario.get("subject_state")
         log = logging.getLogger(__name__)
+        log.info("new scenario: %s"%scenario)
         if subj_state is not None:
             try:
                 subj_state.pop("current_subject")
@@ -806,6 +815,8 @@ class SampleOverview(QtGui.QMainWindow):
 
     def change_sample(self, new_sample, visualization_dict=None):
         #remove selection
+        logger = logging.getLogger(__name__)
+        logger.info("new sample: %s",new_sample)
         if self.current_selection is not None:
             i_widget = self.widgets_dict[self.current_selection]
             i_widget.setFrameStyle(QtGui.QFrame.NoFrame)

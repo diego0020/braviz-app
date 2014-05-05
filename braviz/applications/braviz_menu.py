@@ -5,6 +5,10 @@ import os.path as os_path
 import subprocess
 import sys
 import tkFont
+import logging
+
+from braviz.utilities import configure_logger
+
 __author__ = 'Diego'
 
 class MenuButton(tkFrame):
@@ -12,12 +16,14 @@ class MenuButton(tkFrame):
         tkFrame.__init__(self,parent,**kw)
         self.pack_propagate(0)
         self.img=tk.PhotoImage(file=os_path.join("icons",image))
+        log = logging.getLogger("classuc_menu")
 
         button=tk.Button(self,text=name,image=self.img,compound=tk.TOP)
         def reset(event=None):
             button['state']='normal'
             button['relief']='raised'
         def launch_program(event=None):
+            log.info("launching %s >> %s",name,program)
             subprocess.Popen((sys.executable,program))
             button['state']='disabled'
             button['relief']='sunken'
@@ -43,6 +49,9 @@ applications_dict={
 
 
 if __name__=="__main__":
+    configure_logger("classic_menu")
+    log = logging.getLogger("classuc_menu")
+    log.info("Launching classic menu")
     root=tk.Tk()
     root.title("Braviz-Menu")
     os.chdir(os_path.dirname(os_path.realpath(__file__)))

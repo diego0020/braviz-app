@@ -182,6 +182,8 @@ class SubjectOverviewApp(QMainWindow):
         if self.__pipe is not None:
             self.__pipe.send({'subject': str(new_subject)})
         #label
+        logger = logging.getLogger(__name__)
+        logger.info("Changing subject to %s"%new_subject)
         self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
         self.ui.subject_id2.setText("%s" % new_subject)
@@ -207,11 +209,14 @@ class SubjectOverviewApp(QMainWindow):
 
 
     def show_error(self, message):
+        logger = logging.getLogger(__name__)
+        logger.warning(message)
         self.statusBar().showMessage(message, 5000)
 
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())
         log = logging.getLogger(__name__)
+        log.info("changing image mod to %s"%selection)
         if selection == "None":
             self.vtk_viewer.image.change_image_modality(None)
             self.ui.image_orientation.setEnabled(0)
@@ -245,7 +250,9 @@ class SubjectOverviewApp(QMainWindow):
 
     def image_orientation_change(self):
         orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
+        logger = logging.getLogger(__name__)
         selection = str(self.ui.image_orientation.currentText())
+        logger.info("Changing orientation to %s"%selection)
         self.vtk_viewer.image.change_image_orientation(orientation_dict[selection])
         self.reset_image_view_controls()
 
@@ -255,6 +262,8 @@ class SubjectOverviewApp(QMainWindow):
         self.print_vtk_camera()
         selection = str(self.ui.camera_pos.currentText())
         camera_pos_dict = {"Default": 0, "Left": 1, "Right": 2, "Front": 3, "Back": 4, "Top": 5, "Bottom": 6}
+        logger = logging.getLogger(__name__)
+        logger.info("Changing camera to %s"%selection)
         self.vtk_viewer.reset_camera(camera_pos_dict[selection])
         self.ui.camera_pos.setCurrentIndex(0)
 
@@ -266,6 +275,7 @@ class SubjectOverviewApp(QMainWindow):
 
     def print_vtk_camera(self):
         self.vtk_viewer.print_camera()
+
 
     def reset_image_view_controls(self):
         self.ui.slice_slider.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
@@ -282,6 +292,8 @@ class SubjectOverviewApp(QMainWindow):
         if res == QtGui.QDialog.Accepted:
             new_selection = params["checked"]
             self.subjects_model.set_var_columns(new_selection)
+            logger = logging.getLogger(__name__)
+            logger.info("new models %s"%new_selection)
 
     def show_select_sample_dialog(self):
         dialog = SampleLoadDialog()
@@ -291,6 +303,8 @@ class SubjectOverviewApp(QMainWindow):
             new_sample = dialog.current_sample
             log.info("*sample changed*")
             self.change_sample(new_sample)
+            logger = logging.getLogger(__name__)
+            logger.info("new sample: %s"%new_sample)
 
     def change_sample(self,new_sample):
         self.sample = sorted(new_sample)
@@ -306,6 +320,8 @@ class SubjectOverviewApp(QMainWindow):
         new_selection = params.get("checked")
         if new_selection is not None:
             self.subject_details_model.set_variables(sorted(new_selection))
+            logger = logging.getLogger(__name__)
+            logger.info("new detail variables %s"%new_selection)
 
 
     def go_to_previus_subject(self):
@@ -328,6 +344,7 @@ class SubjectOverviewApp(QMainWindow):
         selected_structures = self.structures_tree_model.get_selected_structures()
         self.vtk_viewer.models.set_models(selected_structures)
         self.update_segmentation_scalar()
+        self.show_fibers_from_segment(self.ui.fibers_from_segments_box.currentIndex())
 
     metrics_dict = {"Volume": ("volume", "mm^3"),
                     "Area": ("area", "mm^2"),
@@ -396,6 +413,7 @@ class SubjectOverviewApp(QMainWindow):
             left_right = True
         else:
             left_right = False
+        self.vtk_viewer.models.set_models(tuple())
         self.structures_tree_model.reload_hierarchy(dominant=not left_right)
 
 
@@ -442,12 +460,16 @@ class SubjectOverviewApp(QMainWindow):
                        3 : "md_p", 4: "md_l" , 5:"length",
                        6: "rand", 7: "bundle"}
         color_text = color_codes.get(index)
+        logger = logging.getLogger(__name__)
+        logger.info("tractography color changed to: %s"%color_text)
         if color_text is not None:
             self.vtk_viewer.tractography.change_color(color_text)
         else:
             self.show_error("Not yet implemented")
 
     def toggle_tractography_color_bar(self,value):
+        logger = logging.getLogger(__name__)
+        logger.info("tractography color bar: %s"%value)
         if isinstance(value,bool):
             self.vtk_viewer.tractography.set_show_color_bar(value)
             return
@@ -569,10 +591,14 @@ class SubjectOverviewApp(QMainWindow):
         index = self.ui.fibers_from_segments_box.currentIndex()
         operation = self.ui.fibers_from_segments_box.itemText(index)
         throug_all = (index == 2)
+        logger = logging.getLogger(__name__)
+        logger.info("saving bundles")
         dialog = SaveFibersBundleDialog(operation, checkpoints, throug_all)
         dialog.exec_()
 
     def update_surfaces_from_gui(self,event=None):
+        logger = logging.getLogger(__name__)
+        logger.info("updating surfaces")
         left_active = self.ui.surface_left_check.isChecked()
         right_active = self.ui.surface_right_check.isChecked()
         surface = str(self.ui.surface_select_combo.currentText())
@@ -683,7 +709,8 @@ class SubjectOverviewApp(QMainWindow):
         meta["machine"] = platform.node()
         meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
         state["meta"] = meta
-
+        logger = logging.getLogger(__name__)
+        logger.info("Current state %s"%state)
         return state
 
     def save_state(self):

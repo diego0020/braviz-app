@@ -105,6 +105,8 @@ class AnovaApp(QMainWindow):
             params = {}
             dialog = OutcomeSelectDialog(params,sample=self.sample)
             selection = dialog.exec_()
+            logger = logging.getLogger(__name__)
+            logger.info("Outcome selection %s",params)
             if selection > 0:
                 self.set_outcome_var_type(params["selected_outcome"])
             else:
@@ -186,6 +188,7 @@ class AnovaApp(QMainWindow):
 
     def calculate_anova(self):
         log = logging.getLogger(__name__)
+        log.info("calculating anova")
         try:
             self.anova = braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
                                                                         self.regressors_model.get_data_frame(),
@@ -587,7 +590,7 @@ class AnovaApp(QMainWindow):
             file_path = os.path.join(data_root, "braviz_data","scenarios",file_name)
             log.info(file_path)
             pixmap.save(file_path)
-
+        log.info("saving")
         log.info(state)
 
     def load_scenario_dialog(self):
@@ -604,6 +607,8 @@ class AnovaApp(QMainWindow):
     def restore_state(self,wanted_state):
         #restore outcome
         #sample
+        logger = logging.getLogger(__name__)
+        logger.info("loading state %s",wanted_state)
         sample = wanted_state.get("sample")
         if sample is not None:
             self.sample = sample
