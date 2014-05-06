@@ -4,12 +4,23 @@ import logging
 
 import pandas as pd
 import pandas.rpy.common as com
+import rpy2.rinterface
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 import numpy as np
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 
+
+def import_or_install(lib_name):
+    try:
+        lib=importr(lib_name)
+    except rpy2.rinterface.RRuntimeError:
+        print "please install %s from R"%lib_name
+        log = logging.getLogger(__name__)
+        log.error("Couldn't load R package %s",lib_name)
+        raise
+    return lib
 
 def calculate_ginni_index(outcome,data_frame):
     #construct data frame
@@ -59,7 +70,8 @@ def calculate_ginni_index(outcome,data_frame):
     #    print "%d \t %s"%(i,n)
     #print r_df
     #import randomForest
-    randomForest=importr("randomForest")
+    randomForest=import_or_install("randomForest")
+
     #use correct variable in formula
     form=robjects.Formula("c%d~."%outcome_variable_index)
     #robjects.r("table(complete.cases(r_df))")
@@ -172,7 +184,7 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict,sample):
     form=robjects.Formula(formula_str)
 
     #construct constrasts list
-    stats=importr("stats")
+    stats=import_or_install("stats")
     contrasts_dict={}
     for i,var in enumerate(var_names[:-1]):
         if factors_nominal[var]:
@@ -181,7 +193,8 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict,sample):
 
 
     #run anova
-    car=importr("car")
+    car=import_or_install("car")
+
     if len(contrasts_dict)>0:
         contrasts_list=robjects.ListVector(contrasts_dict)
         model=stats.lm(form,data=r_df,contrasts=contrasts_list)
