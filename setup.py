@@ -24,4 +24,5 @@ setup(
     install_requires=['nibabel','colorbrewer','numpy',
                       'scipy','rdflib','httplib2','psutil',
                       'matplotlib','PyQt4','sip','pandas', 'mpltools', 'seaborn','rpy2'],
+    r_libraries=["car","randomforest"],
 )
