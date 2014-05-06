@@ -29,8 +29,8 @@ class BravizMenu2(QtGui.QMainWindow):
                                                                               self.ui.sample_overview))
         self.ui.subject_overview.clicked.connect(self.make_application_launcher("subject_overview",
                                                                                self.ui.subject_overview))
-        self.ui.braviz_menu_classic.clicked.connect(self.make_application_launcher("braviz_menu_classic",
-                                                                                   self.ui.braviz_menu_classic))
+        #self.ui.braviz_menu_classic.clicked.connect(self.make_application_launcher("braviz_menu_classic",
+        #                                                                           self.ui.braviz_menu_classic))
         self.ui.variables.clicked.connect(self.launch_variable_management_dialog)
         self.ui.scenarios.clicked.connect(self.launch_scenarios_dialog)
         self.ui.samples.clicked.connect(self.launch_samples_dialog)
