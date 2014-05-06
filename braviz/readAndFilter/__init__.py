@@ -25,7 +25,7 @@ def numpy2vtk_img(d):
     """Transform a 3d numpy array into a vtk image data object"""
     data_type = d.dtype
     importer = vtk.vtkImageImport()
-    dstring = d.flatten(order='F').tostring()
+    assert isinstance(d,np.ndarray)
     importer.SetDataScalarTypeToShort() # default
     if data_type.type == np.float64:
         importer.SetDataScalarTypeToDouble()
@@ -37,7 +37,13 @@ def numpy2vtk_img(d):
         importer.SetDataScalarTypeToShort()
     elif data_type.type == np.uint8:
         importer.SetDataScalarTypeToUnsignedChar()
+    else:
+        log = logging.getLogger(__name__)
+        log.warning("casting to float64")
+        importer.SetDataScalarTypeToDouble()
+        d=d.astype(np.float64)
         #======================================
+    dstring = d.flatten(order='F').tostring()
     if data_type.byteorder == '>':
         #Fix byte order
         dflat_l = d.flatten(order='F').tolist()
