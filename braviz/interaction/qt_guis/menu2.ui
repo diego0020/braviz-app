@@ -524,36 +524,6 @@ background-origin: content;
      </item>
     </layout>
    </widget>
-   <widget class="QToolButton" name="braviz_menu_classic">
-    <property name="geometry">
-     <rect>
-      <x>734</x>
-      <y>10</y>
-      <width>57</width>
-      <height>56</height>
-     </rect>
-    </property>
-    <property name="autoFillBackground">
-     <bool>false</bool>
-    </property>
-    <property name="text">
-     <string>Classic</string>
-    </property>
-    <property name="icon">
-     <iconset>
-      <normalon>:/icons/tcllogo.gif</normalon>
-     </iconset>
-    </property>
-    <property name="iconSize">
-     <size>
-      <width>50</width>
-      <height>30</height>
-     </size>
-    </property>
-    <property name="toolButtonStyle">
-     <enum>Qt::ToolButtonTextUnderIcon</enum>
-    </property>
-   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

@@ -4,10 +4,8 @@ __author__ = 'Diego'
 
 import os
 import nibabel as nib
-import numpy as np
 from scipy import ndimage
 import braviz
-from skimage import morphology
 
 os.chdir(r"C:\Users\Diego\Documents\prueba_free_surf_400")
 

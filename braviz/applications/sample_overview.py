@@ -93,7 +93,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.row_layout.setSpacing(0)
         self.ui.progress_bar = QtGui.QProgressBar()
         self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
-        self.ui.space_combo.currentTextChanged.connect(self.set_space_from_menu)
+        self.ui.space_combo.currentIndexChanged.connect(self.set_space_from_menu)
         self.ui.action_load_visualization.triggered.connect(self.load_visualization)
         self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
         self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
@@ -638,7 +638,8 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.ui.camera_combo.setCurrentIndex(0)
 
-    def set_space_from_menu(self, text):
+    def set_space_from_menu(self, index):
+        text = self.ui.space_combo.currentText()
         log = logging.getLogger(__name__)
         log.info("space changed to %s", text)
         text = str(text)
