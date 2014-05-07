@@ -162,6 +162,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
         dialog = AddFilterDialog(params)
         ret = dialog.exec_()
         if ret == dialog.Accepted:
+            log = logging.getLogger(__name__)
             log.debug("accepted")
             filter_name = get_filter_name(params)
             filter_func = get_filter_function(params)
@@ -172,7 +173,8 @@ class SampleCreateDilog(QtGui.QMainWindow):
         dialog = SaveSubSampleDialog(self.output_model.get_elements(), self.ui.description.toPlainText())
         ret = dialog.exec_()
         if ret == dialog.Accepted:
-            log.info("saving with name ", dialog.name)
+            log = logging.getLogger(__name__)
+            log.info("saving with name %s", dialog.name)
             log.info(self.output_model.get_elements())
             log.info(dialog.description)
             self.save_sample(dialog.name, dialog.description)
@@ -192,7 +194,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
 
     def add_one_to_sample(self, subj):
         log = logging.getLogger(__name__)
-        log.info("adding ", subj)
+        log.info("adding %d", subj)
         new_set = self.output_model.get_elements()
         new_set.add(subj)
         self.change_output_sample(new_set)
@@ -216,7 +218,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
 
     def remove_one_from_sample(self, subj):
         log = logging.getLogger(__name__)
-        log.info("removing ", subj)
+        log.info("removing %d", subj)
         new_set = self.output_model.get_elements()
         new_set.remove(subj)
         self.change_output_sample(new_set)

@@ -13,6 +13,7 @@ from braviz.readAndFilter import bundles_db
 from braviz.interaction.r_functions import calculate_ginni_index
 from braviz.interaction.qt_structures_model import StructureTreeModel
 
+
 class VarListModel(QAbstractListModel):
     def __init__(self, outcome_var=None, parent=None, checkeable=False):
         QAbstractListModel.__init__(self, parent)
@@ -573,7 +574,7 @@ class SampleTree(QAbstractItemModel):
 
     def set_sample(self, new_sample):
         self.__data_frame = braviz_tab_data.get_data_frame_by_name(self.data_aspects)
-        self.__data_frame = self.__data_frame.loc[new_sample]
+        self.__data_frame = self.__data_frame.loc[sorted(new_sample)]
         self.__tree_list = []
         self.__id_index = {}
         self.__next_id = 0

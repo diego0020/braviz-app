@@ -605,7 +605,7 @@ class MatplotWidget(FigureCanvas):
                 x_coords = map(self.x_order.get , izip(x_coords,z_coords))
             else:
                 assert 0 not in x_coords
-                x_coords = map(lambda k: self.x_order.index(int(k) - 1) + 1, x_coords)
+                x_coords = map(lambda k: self.x_order.index(int(k - 1)) + 1, x_coords)
         if color is None:
             color = "black"
         collection = self.axes.scatter(x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5,zorder=10)

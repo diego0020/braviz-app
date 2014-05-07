@@ -358,10 +358,11 @@ class AnovaApp(QMainWindow):
             #print labels_dict
             #get data from
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
+            label_nums = set(data[var_name])
             data = data.loc[self.sample]
 
             self.plot_data_frame = data
-            label_nums = set(data[var_name])
+
             data_list = []
             ticks = []
             for i in label_nums:
@@ -653,6 +654,7 @@ class AnovaApp(QMainWindow):
             log.info(new_sample)
             self.sample = new_sample
             self.sample_model.set_sample(new_sample)
+            self.update_main_plot(self.plot_var_name)
 
 
 def run():
