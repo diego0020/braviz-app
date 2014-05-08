@@ -95,6 +95,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
         self.ui.space_combo.currentIndexChanged.connect(self.set_space_from_menu)
         self.ui.action_load_visualization.triggered.connect(self.load_visualization)
+        self.ui.nomina_combo.setCurrentIndex(1)
         self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
         self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
         self.ui.action_save_scenario.triggered.connect(self.save_scenario)
@@ -497,7 +498,7 @@ class SampleOverview(QtGui.QMainWindow):
             color = tractography_state.get("color")
             if color is not None:
                 color_codes = {"Orientation": "orient", "FA (Point)": "fa_p", "FA (Line)": "fa_l",
-                               "MD (Point)": "fa_p", "MD (Line)": "fa_l",
+                               "MD (Point)": "md_p", "MD (Line)": "md_l",
                                "Length": "length",
                                "By Line": "rand", "By Bundle": "bundle"}
                 try:
