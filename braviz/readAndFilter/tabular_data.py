@@ -73,8 +73,13 @@ def get_data_frame_by_index(columns, reader=None,col_name_index=False):
     data = sql.read_sql("SELECT subject from SUBJECTS", conn, index_col="subject")
     col_names = []
     for i in columns:
-        name = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (int(i),)).fetchone()[0]
-        col_names.append(name)
+        name = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (int(i),))
+        name1 = name.fetchone()
+        if name1 is not None:
+            name = name1[0]
+            col_names.append(name)
+        else:
+            col_names.append("Var_%d"%i)
 
     for var_idx, var_name in izip(columns, col_names):
         query = """SELECT subject, value
