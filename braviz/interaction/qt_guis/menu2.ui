@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>748</height>
+    <height>750</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -323,16 +323,16 @@ background-origin: content;
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="toolButton_7">
+           <widget class="QToolButton" name="correlations">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="text">
-             <string>?</string>
+             <string>Correlations</string>
             </property>
             <property name="icon">
              <iconset>
-              <normalon>:/icons/amygdala_spharm.PNG</normalon>
+              <normalon>:/icons/correlations_app.png</normalon>
              </iconset>
             </property>
             <property name="iconSize">

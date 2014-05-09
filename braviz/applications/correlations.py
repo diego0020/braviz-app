@@ -55,7 +55,7 @@ class CorrelationMatrixFigure(FigureCanvas):
         self.draw()
 
     def set_variables(self, vars_list):
-        print vars_list
+        #print vars_list
         if len(vars_list) < 2:
             self.df = None
             self.corr = None
@@ -95,6 +95,9 @@ class RegFigure(FigureCanvas):
         palette = self.palette()
         self.f.set_facecolor(palette.background().color().getRgbF()[0:3])
         self.draw_initial_message()
+        self.mpl_connect("motion_notify_event",self.motion_to_pick)
+        self.mpl_connect("pick_event",self.draw_tooltip)
+        self.df = None
 
 
     def draw_initial_message(self):
@@ -113,7 +116,9 @@ class RegFigure(FigureCanvas):
         x_vals=df[x_name].get_values()
         y_vals=df[y_name].get_values()
         plt.sca(self.ax)
-        sns.regplot(y_name,x_name,df,ax=self.ax)
+        df = df.dropna()
+        self.df = df.copy()
+        sns.regplot(y_name,x_name,df,ax=self.ax,scatter_kws={"picker":5,})
         mat = np.column_stack((x_vals,y_vals))
         mat = mat[np.all(np.isfinite(mat),1),]
         m,b,r,p,e = scipy.stats.linregress(mat)
@@ -122,6 +127,24 @@ class RegFigure(FigureCanvas):
         self.ax.set_title(plot_title)
         plt.tight_layout()
         self.draw()
+
+    def motion_to_pick(self,event):
+        self.ax.pick(event)
+
+    def draw_tooltip(self,event):
+        QtGui.QToolTip.hideText()
+        if isinstance(event.artist,matplotlib.collections.PathCollection):
+            index = event.ind
+            datum = self.df.iloc[index]
+            message = "Subject %s\n%s : %g\n%s : %g"%\
+                      (datum.index[0],
+                       datum.columns[0],datum.iloc[0,0],
+                       datum.columns[1],datum.iloc[0,1],)
+            _,height = self.get_width_height()
+            point = QtCore.QPoint(event.mouseevent.x,height-event.mouseevent.y)
+            g_point = self.mapToGlobal(point)
+            QtGui.QToolTip.showText(g_point,message)
+
 
 class CorrelationsApp(QtGui.QMainWindow):
     def __init__(self):

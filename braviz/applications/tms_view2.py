@@ -1,19 +1,21 @@
 from __future__ import division
 import Tkinter as tk
 import ttk
-import numpy as np
 import math
-from braviz.readAndFilter.read_csv import get_column
-from braviz.visualization.mathplotlib_charts import BarPlot
 import os
+from itertools import izip
+import thread
+
+import numpy as np
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
-from braviz.interaction.tk_tooltip import ToolTip
 
+from braviz.readAndFilter.read_csv import get_column
+from braviz.visualization.mathplotlib_charts import BarPlot
+from braviz.interaction.tk_tooltip import ToolTip
 import braviz
-from itertools import izip
-import thread
+
 __author__ = 'Diego'
 reader = braviz.readAndFilter.kmc40AutoReader()
 
@@ -542,7 +544,7 @@ def select_data2(event=None):
 data_selection_tree.tag_bind('leaf', '<1>', select_data)
 
 
-#--------------tooltips------------
+#--------------motion_to_pick------------
 
 long_messages_dict = {
     'motor_brain': 'Tms tests',

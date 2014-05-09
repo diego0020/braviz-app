@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>correlations_app.png</file>
     <file>tcllogo.gif</file>
     <file>imagine.svg</file>
     <file>metacontact_online.png</file>
