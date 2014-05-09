@@ -285,9 +285,8 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
 
     def select_and_return(self, *args):
         if self.multiple is True:
-            selected_names = self.vars_list_model.checks_dict
-            self.params_dict["checked"] = [get_var_idx(name) for name, check in
-                                           selected_names.iteritems() if check is True]
+            selected_names = self.vars_list_model.checked_set
+            self.params_dict["checked"] = [get_var_idx(name) for name in selected_names]
         OutcomeSelectDialog.select_and_return(self, *args)
 
 

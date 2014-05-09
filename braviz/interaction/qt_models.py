@@ -15,6 +15,7 @@ from braviz.interaction.qt_structures_model import StructureTreeModel
 
 
 class VarListModel(QAbstractListModel):
+    CheckedChanged = QtCore.pyqtSignal(list)
     def __init__(self, outcome_var=None, parent=None, checkeable=False):
         QAbstractListModel.__init__(self, parent)
         self.internal_data = []
@@ -22,9 +23,9 @@ class VarListModel(QAbstractListModel):
         self.update_list()
         self.outcome = outcome_var
         self.checkeable = checkeable
-        self.checks_dict = None
+        self.checked_set = None
         if checkeable:
-            self.checks_dict = {}
+            self.checked_set = set()
 
 
     def update_list(self):
@@ -41,7 +42,7 @@ class VarListModel(QAbstractListModel):
             if int_role == QtCore.Qt.DisplayRole:
                 return self.internal_data[idx]
             elif (self.checkeable is True) and (int_role == QtCore.Qt.CheckStateRole):
-                if self.checks_dict.get(self.internal_data[idx], False) is True:
+                if self.internal_data[idx] in self.checked_set:
                     return QtCore.Qt.Checked
                 else:
                     return QtCore.Qt.Unchecked
@@ -83,18 +84,22 @@ class VarListModel(QAbstractListModel):
             return False
         else:
             idx = QModelIndex.row()
-            self.checks_dict[self.internal_data[idx]] = QVariant.toBool()
+            if QVariant.toBool() is True:
+                self.checked_set.add(self.internal_data[idx])
+            else:
+                self.checked_set.remove(self.internal_data[idx])
+            self.CheckedChanged.emit(sorted(self.checked_set))
             return True
 
 
     def select_items_by_name(self, items_list):
         for i in items_list:
-            self.checks_dict[i] = True
+            self.checked_set.add(i)
 
     def select_items(self, items_list):
         for i in items_list:
             name = braviz_tab_data.get_var_name(i)
-            self.checks_dict[name] = True
+            self.checked_set.add(name)
 
 
 class VarAndGiniModel(QAbstractTableModel):

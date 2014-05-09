@@ -87,15 +87,16 @@ def draw_scatter(x_name,y_name):
     ax2.clear()
     x_vals=df[x_name].get_values()
     y_vals=df[y_name].get_values()
-    ax2.scatter(x_vals,y_vals)
-    ax2.set_xlabel(x_name)
-    ax2.set_ylabel(y_name)
+    df2 = df[[x_name,y_name]]
+    plt.sca(ax2)
+    sns.regplot(y_name,x_name,df2,ax=ax2)
     mat = np.column_stack((x_vals,y_vals))
     mat = mat[np.all(np.isfinite(mat),1),]
     m,b,r,p,e = scipy.stats.linregress(mat)
     print e
     plot_title = "r=%.2f\np=%.5g"%(r,p)
     ax2.set_title(plot_title)
+
     canvas2.draw()
 
 
