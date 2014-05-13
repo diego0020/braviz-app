@@ -12,6 +12,7 @@ import numpy as np
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 
+
 def import_or_install(lib_name):
     try:
         lib=importr(lib_name)
@@ -254,7 +255,7 @@ def calculate_normalized_linear_regression(outcome,regressors_data_frame,interac
             mean_sigma[var] = (m,std)
 
     #variable names can be strange (unicode) ... we are going to change them to more abstract names like in anova
-    standard_var_names = ["var_%d"%i for i in xrange(len(all_variables))]
+    standard_var_names = ["var_%d_R"%i for i in xrange(len(all_variables))]
     #now create a data frame with the new names
     data_frame_std = data_frame.copy()
     assert all(data_frame_std.columns == all_variables)
@@ -280,7 +281,54 @@ def calculate_normalized_linear_regression(outcome,regressors_data_frame,interac
             std_name=standard_var_names[f_index]
             factors.append(std_name)
         coefficients.append("*".join(factors))
-    formula_str = "var_0 ~ "+"+".join(coefficients[1:])
-    print formula_str
+    formula_str = "var_0_R ~ "+"+".join(coefficients[1:])
+    #calculate the linear model
+    robjects.r("r_lm <- lm(%s,data=r_df)"%formula_str)
+    #standardize
+    robjects.r("library('arm')")
+    robjects.r("s_lm_r <- standardize(r_lm)")
+    standardized_model = r_environment["s_lm_r"]
 
-    return None
+    #now we have to extract the results
+    print standardized_model
+    r_coeffs = standardized_model.rx2("coefficients")
+    coef_dict_std = dict(izip(r_coeffs.names,r_coeffs))
+    residuals = list(standardized_model.rx2("residuals"))
+    fitted = list(standardized_model.rx2("fitted.values"))
+
+    intercept = coef_dict_std.pop("(Intercept)")
+    coef_dicts = dict()
+    for std_name,val in coef_dict_std.iteritems():
+        if ":" in std_name:
+            #interactions
+            factors=std_name.split(":")
+        else:
+            factors = [std_name]
+        orig_factors = []
+        for f in factors:
+            dummy_level = None
+            if f[1] == ".":
+                f = f[2:]
+            if f[-1] != "R":
+                r_pos = f.rfind("R")
+                dummy_level = f[r_pos+1:]
+                f = f[:r_pos+1]
+            index = standard_var_names.index(f)
+            orig_name = all_variables[index]
+            if dummy_level is not None:
+                orig_name+="_%s"%dummy_level
+            orig_factors.append(orig_name)
+        if len(orig_factors) == 1:
+            coef_dicts[orig_factors[0]]=val
+        else:
+            coef_dicts[frozenset(orig_factors)]=val
+
+    #print coef_dicts
+    #recover original names in the coef_dict
+    out_dict = {
+        "coefficients" : coef_dicts,
+        "residuals" : residuals,
+        "fitted" : fitted,
+        "intercept" : intercept,
+    }
+    return out_dict

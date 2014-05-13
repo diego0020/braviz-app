@@ -193,6 +193,7 @@ class LnearModelApp(QMainWindow):
             msg.exec_()
             raise
         else:
+            print res
             return
             self.result_model = braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)
