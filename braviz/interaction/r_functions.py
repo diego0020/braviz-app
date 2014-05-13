@@ -1,6 +1,7 @@
 __author__ = 'Diego'
 
 import logging
+from itertools import izip
 
 import pandas as pd
 import pandas.rpy.common as com
@@ -10,7 +11,6 @@ from rpy2.robjects.packages import importr
 import numpy as np
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
-
 
 def import_or_install(lib_name):
     try:
@@ -103,26 +103,11 @@ def calculate_ginni_index(outcome,data_frame):
     #print self.data_frame
     return data_frame
 
-def is_variable_nominal(variable):
-    is_nominal=False
-
-    conn=braviz_tab_data.get_connection()
-    res=conn.execute("SELECT is_real FROM variables WHERE var_name = ?",(variable,))
-    is_real=res.fetchone()
-    if (is_real is not None) and is_real[0]==0:
-        is_nominal=True
-    conn.close()
-    return is_nominal
-
-def is_variable_real(variable):
-    return not is_variable_nominal(variable)
-
 def calculate_anova(outcome,regressors_data_frame,interactions_dict,sample):
     #is outcome nominal?
-    is_nominal=is_variable_nominal(outcome)
+    is_nominal=braviz_tab_data.is_variable_name_nominal(outcome)
 
     #is outcome binary?
-    conn=braviz_tab_data.get_connection()
     is_binary=False
     if is_nominal:
         # res=conn.execute("SELECT count(*) FROM nom_meta NATURAL JOIN variables WHERE var_name = ?",(outcome,))
@@ -138,7 +123,7 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict,sample):
     factors_nominal=dict()
     var_names=regressors_data_frame[regressors_data_frame["Interaction"]==0]["variable"].tolist()
     for var in var_names:
-        factors_nominal[var]=is_variable_nominal(var)
+        factors_nominal[var]=braviz_tab_data.is_variable_name_nominal(var)
     #print factors_nominal
 
     #construct pandas data frame
@@ -204,24 +189,6 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict,sample):
     residuals=np.array(model[1])
     anova=car.Anova(model,type=3)
     fitted = np.array(model[4])
-    #print anova
-    # print "Intercept "+' '.join(regressors)+" Residuals"
-    # print "sum of squares:"
-    # print anova[0]
-    # print "DF:"
-    # print anova[1]
-    # print "F-value"
-    # print anova[2]
-    # print "P-value"
-    # print anova[3]
-
-    #create output data_frame
-
-    # sum_sq=list(anova.rx(True,1))
-    # r_dfs=list(anova.rx(True,2))
-    # f_values=list(anova.rx(True,3))
-    # p_values=list(anova.rx(True,4))
-
     row_names=list(anova.rownames)
     column_names=list(anova.names)
 
@@ -251,3 +218,69 @@ def calculate_anova(outcome,regressors_data_frame,interactions_dict,sample):
 
     return output_df,residuals,intercept,fitted
 
+def calculate_normalized_linear_regression(outcome,regressors_data_frame,interactions_dict,sample):
+    if not braviz_tab_data.is_variable_name_real(outcome):
+        raise NotImplementedError("Logistic regression not yet implemented, please select a rational outcome")
+    regressor_names=regressors_data_frame[regressors_data_frame["Interaction"]==0]["variable"].tolist()
+    all_variables = [outcome]+regressor_names
+    data_frame = braviz_tab_data.get_data_frame_by_name(all_variables)
+    data_frame = data_frame.loc[sample].copy()
+    data_frame.dropna(inplace=True)
+    #we have to classify variables in real, binary, and other nominals
+    var_type = dict()
+    for var in regressor_names:
+        if braviz_tab_data.is_variable_name_real(var):
+            var_type[var]='r'
+        else:
+            #is it binary?
+            levels = len(np.unique(data_frame[var]))
+            if levels == 2:
+                var_type[var]='b'
+            else:
+                var_type[var]='n'
+    #for binary and real variables we need the mean, for real variables we also need the std_dev to de-standardize
+    mean_sigma = dict()
+    for var,t in var_type.iteritems():
+        if t == "r":
+            m = np.mean(data_frame[var])
+            std = np.std(data_frame[var])
+            mean_sigma[var] = (m,std)
+        elif t == "b":
+            m = np.mean(data_frame[var])
+            # we are going to use center in arm.standardize:
+            # "center" (rescale so that the mean of the data is 0 and the difference between the two categories is 1),
+            # in the real case we divide by 2$\sigma$, so the final sd is 0.5
+            std = 0.5
+            mean_sigma[var] = (m,std)
+
+    #variable names can be strange (unicode) ... we are going to change them to more abstract names like in anova
+    standard_var_names = ["var_%d"%i for i in xrange(len(all_variables))]
+    #now create a data frame with the new names
+    data_frame_std = data_frame.copy()
+    assert all(data_frame_std.columns == all_variables)
+    data_frame_std.columns = standard_var_names
+
+    #now we are ready to go into the R world
+    r_data_frame = com.convert_to_r_dataframe(data_frame_std)
+    # create factor variables
+    r_environment=robjects.globalenv
+    r_environment["r_df"]=r_data_frame
+    for var,s_name in izip(all_variables,standard_var_names):
+        t = var_type.get(var,"r")
+        if t != "r":
+            robjects.r('r_df["%s"] <- factor( r_df[["%s"]])'%(s_name,s_name))
+    r_data_frame=r_environment["r_df"]
+    #construct the formula
+    coefficients = standard_var_names
+    for products in interactions_dict.itervalues():
+        factors=[]
+        for f in products:
+            f_name=regressors_data_frame["variable"][f]
+            f_index=all_variables.index(f_name)
+            std_name=standard_var_names[f_index]
+            factors.append(std_name)
+        coefficients.append("*".join(factors))
+    formula_str = "var_0 ~ "+"+".join(coefficients[1:])
+    print formula_str
+
+    return None

@@ -98,7 +98,7 @@ def get_data_frame_by_index(columns, reader=None,col_name_index=False):
 
 def is_variable_real(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT is_real FROM variables WHERE var_idx = ?", (str(var_idx),))
+    cur = conn.execute("SELECT is_real FROM variables WHERE var_idx = ?", (int(var_idx),))
     return False if cur.fetchone()[0] == 0 else 1
 
 
@@ -108,7 +108,7 @@ def is_variable_nominal(var_idx):
 
 def is_variable_name_real(var_name):
     conn = get_connection()
-    cur = conn.execute("SELECT is_real FROM variables  WHERE var_name = ?", (str(var_name),))
+    cur = conn.execute("SELECT is_real FROM variables  WHERE var_name = ?", (unicode(var_name),))
     return False if cur.fetchone()[0] == 0 else 1
 
 
@@ -149,7 +149,7 @@ def get_labels_dict(var_idx):
 
     ORDER BY label2
     """
-    cur = conn.execute(q, (str(var_idx),str(var_idx),))
+    cur = conn.execute(q, (int(var_idx),int(var_idx),))
     ans_dict = dict(cur)
     return ans_dict
 
@@ -171,14 +171,14 @@ def get_names_label_dict(var_name):
 
         ORDER BY label2
         """
-    cur = conn.execute(q, (str(var_name),str(var_name)))
+    cur = conn.execute(q, (unicode(var_name),unicode(var_name)))
     ans_dict = dict(cur.fetchall())
     return ans_dict
 
 
 def get_var_name(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (str(var_idx),))
+    cur = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (int(var_idx),))
     return cur.fetchone()[0]
 
 
@@ -187,7 +187,7 @@ def get_var_idx(var_name):
     Gets the index corresponding to the first occurrence of a given variable name, if it doesn't exist returns None
     """
     conn = get_connection()
-    cur = conn.execute("SELECT var_idx FROM variables WHERE var_name = ?", (str(var_name),))
+    cur = conn.execute("SELECT var_idx FROM variables WHERE var_name = ?", (unicode(var_name),))
     res = cur.fetchone()
     if res is None:
         return None
@@ -196,36 +196,36 @@ def get_var_idx(var_name):
 
 def get_maximum_value(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT max_val FROM ratio_meta WHERE var_idx = ?", (str(var_idx),))
+    cur = conn.execute("SELECT max_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
     if res is None:
         q = """select MAX(value) from (select * from var_values where value != "nan")
         where var_idx = ? group by var_idx"""
-        cur = conn.execute(q, (str(var_idx),))
+        cur = conn.execute(q, (int(var_idx),))
         res = cur.fetchone()
     return res
 
 
 def get_minumum_value(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT min_val FROM ratio_meta WHERE var_idx = ?", (str(var_idx),))
+    cur = conn.execute("SELECT min_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
     if res is None:
         q = """select Min(value) from (select * from var_values where value != "nan")
         where var_idx = ? group by var_idx"""
-        cur = conn.execute(q, (str(var_idx),))
+        cur = conn.execute(q, (int(var_idx),))
         res = cur.fetchone()
     return res
 
 
 def get_min_max_values(var_idx):
     conn = get_connection()
-    cur = conn.execute("SELECT min_val, max_val FROM ratio_meta WHERE var_idx = ?", (str(var_idx),))
+    cur = conn.execute("SELECT min_val, max_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
     if res is None:
         q = """select MIN(value), MAX(value) from (select * from var_values where value != "nan")
         where var_idx = ? group by var_idx"""
-        cur = conn.execute(q, (str(var_idx),))
+        cur = conn.execute(q, (int(var_idx),))
         res = cur.fetchone()
     return res
 
@@ -233,24 +233,24 @@ def get_min_max_values(var_idx):
 def get_min_max_values_by_name(var_name):
     conn = get_connection()
     cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
-                       (str(var_name),))
+                       (unicode(var_name),))
     res = cur.fetchone()
     if res is None:
         q = """select MIN(value), MAX(value) from (select * from var_values where value != "nan")
         where var_idx = (SELECT var_idx FROM variables WHERE var_name = ?) group by var_idx"""
-        cur = conn.execute(q, (str(var_name),))
+        cur = conn.execute(q, (unicode(var_name),))
         res = cur.fetchone()
     return res
 
 def get_min_max_opt_values_by_name(var_name):
     conn = get_connection()
     cur = conn.execute("SELECT min_val, max_val, optimum_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
-                       (str(var_name),))
+                       (unicode(var_name),))
     res = cur.fetchone()
     if res is None:
         q = """select MIN(value), MAX(value), AVG(VALUE) from (select * from var_values where value != "nan")
         where var_idx = (SELECT var_idx FROM variables WHERE var_name = ?) group by var_idx"""
-        cur = conn.execute(q, (str(var_name),))
+        cur = conn.execute(q, (unicode(var_name),))
         res = cur.fetchone()
     return res
 
@@ -299,7 +299,7 @@ def get_var_description(var_idx):
 def get_var_description_by_name(var_name):
     conn = get_connection()
     q = "SELECT description FROM var_descriptions NATURAL JOIN variables WHERE var_name = ?"
-    cur = conn.execute(q, (str(var_name),))
+    cur = conn.execute(q, (unicode(var_name),))
     res = cur.fetchone()
     if res is None:
         return ""
@@ -309,7 +309,7 @@ def get_var_description_by_name(var_name):
 def save_is_real_by_name(var_name, is_real):
     conn = get_connection()
     query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
-    conn.execute(query, (is_real, str(var_name)))
+    conn.execute(query, (is_real, unicode(var_name)))
     conn.commit()
 
 
@@ -396,7 +396,7 @@ def save_var_description(var_idx,description):
     conn.commit()
 
 def register_new_variable(var_name,is_real=1):
-    var_name = str(var_name)
+    var_name = unicode(var_name)
     conn = get_connection()
     q1 = "SELECT var_idx from VARIABLES where var_name = ?"
     cur=conn.execute(q1,(var_name,))
@@ -408,7 +408,7 @@ def register_new_variable(var_name,is_real=1):
         is_real = 0
     q="""INSERT INTO variables (var_name, is_real)
          Values (? , ?)"""
-    conn.execute(q,(str(var_name),is_real))
+    conn.execute(q,(unicode(var_name),is_real))
     cur=conn.execute(q1,(var_name,))
     var_idx = cur.fetchone()
     if var_idx is None:

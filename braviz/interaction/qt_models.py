@@ -286,7 +286,10 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.beginRemoveRows(QtCore.QModelIndex(), row, row + count - 1)
         indexes = list(self.data_frame.index)
         for i in xrange(count):
-            indexes.pop(row)
+            r=indexes.pop(row)
+            print r
+            if r in self.__interactors_dict:
+                del self.__interactors_dict[r]
         if len(indexes) == 0:
             self.data_frame = pd.DataFrame(columns=["variable", "DF", "Interaction"])
         else:

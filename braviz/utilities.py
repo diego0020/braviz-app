@@ -18,6 +18,15 @@ def configure_logger(app_name):
     logging.basicConfig(filename=log_file,level=logging.INFO,format=format_str)
     logging.captureWarnings(True)
 
+def configure_console_logger(app_name):
+    """
+    Helper function to configure loggers to console for using while implementing/debugging
+    """
+    import logging
+    format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
+    logging.basicConfig(level=logging.INFO,format=format_str)
+    logging.captureWarnings(True)
+
 @contextlib.contextmanager
 def working_directory(path):
     """A context manager which changes the working directory to the given
