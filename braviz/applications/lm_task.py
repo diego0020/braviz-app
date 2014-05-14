@@ -28,15 +28,19 @@ import os
 import platform
 
 import logging
+import numpy as np
+import pandas as pd
 
-
-class LnearModelApp(QMainWindow):
+class LinearModelApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.outcome_var_name = None
         self.model = None
         self.regressors_model = braviz_models.AnovaRegressorsModel()
-        self.result_model = braviz_models.AnovaResultsModel()
+        self.__table_cols = ["Slope","T Value","P Value"]
+        empty_df = pd.DataFrame(columns=self.__table_cols)
+        empty_df.index.name = "Coefficient"
+        self.result_model = braviz_models.DataFrameModel(empty_df,self.__table_cols)
         self.sample_model = braviz_models.SampleTree()
         self.plot = None
         self.plot_data_frame = None
@@ -194,6 +198,12 @@ class LnearModelApp(QMainWindow):
             raise
         else:
             print res
+            self.ui.r_squared_label.setText("R<sup>2</sup> = %.2f"%res.get("adj_r2",np.nan))
+            f_nom,f_dem = res.get("f_stat_df",(0,0))
+            self.ui.f_value_label.setText("F(%d,%d) = %.2f"%(f_nom,f_dem,res.get("f_stats_val",np.nan)))
+            self.ui.p_value_label.setText("P = %g"%res.get("f_pval",np.nan))
+            coeffs_df = res["coefficients_df"]
+            self.result_model.set_df(coeffs_df)
             return
             self.result_model = braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)
@@ -451,7 +461,7 @@ def run():
     app = QtGui.QApplication(sys.argv)
     log = logging.getLogger(__name__)
     log.info("started")
-    main_window = LnearModelApp()
+    main_window = LinearModelApp()
     #ic = main_window.windowIcon()
     main_window.show()
     try:

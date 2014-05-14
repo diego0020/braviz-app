@@ -566,6 +566,73 @@ class AnovaResultsModel(QAbstractTableModel):
         return result
 
 
+class DataFrameModel(QAbstractTableModel):
+    """
+    This model is used for displaying data frames in a QT table view
+    """
+    def __init__(self, data_frame, columns=None):
+        if not isinstance(data_frame,pd.DataFrame):
+            raise ValueError("A pandas data frame is required")
+        if columns is None:
+            columns = data_frame.columns
+        self.__df = data_frame
+        self.__cols = columns
+        super(DataFrameModel, self).__init__()
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.__df)
+
+    def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.__cols)+1
+
+    def data(self, QModelIndex, int_role=None):
+        if not (int_role == QtCore.Qt.DisplayRole):
+            return QtCore.QVariant()
+        line = QModelIndex.row()
+        col = QModelIndex.column()
+        if col == 0:
+            return unicode(self.__df.index[line])
+        else:
+            col_name = self.__cols[col-1]
+            data = self.__df[col_name].iloc[line]
+            return "%.4g"%data
+
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        if Qt_Orientation != QtCore.Qt.Horizontal:
+            return QtCore.QVariant()
+        if int_role == QtCore.Qt.DisplayRole:
+            if p_int == 0:
+                return unicode(self.__df.index.name)
+            else:
+                return self.__cols[p_int-1]
+        return QtCore.QVariant()
+
+    def sort(self, p_int, Qt_SortOrder_order=None):
+        reverse = True
+        if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
+            reverse = False
+        if p_int == 0:
+            i_name = self.__df.index.name
+            i_l = list(self.__df.index)
+            i_l.sort(reverse=reverse)
+            self.__df=self.__df.loc[i_l].copy()
+            self.__df.index.name = i_name
+        else:
+            self.__df.sort(self.__df.columns[p_int-1], ascending=reverse, inplace=True)
+        self.modelReset.emit()
+
+    def flags(self, QModelIndex):
+        line = QModelIndex.row()
+        # col = QModelIndex.column()
+        result = QtCore.Qt.NoItemFlags
+        if 0 <= line <= self.rowCount() and 0 <= line <= self.rowCount():
+            result |= QtCore.Qt.ItemIsSelectable
+            result |= QtCore.Qt.ItemIsEnabled
+        return result
+    def set_df(self,new_df):
+        self.__df = new_df.copy()
+        self.modelReset.emit()
+
 class SampleTree(QAbstractItemModel):
     def __init__(self, columns=None):
         super(SampleTree, self).__init__()

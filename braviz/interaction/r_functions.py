@@ -305,6 +305,8 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     robjects.r("lm_ci_r <- confint(s_lm_r)")
     conf_intervals = r_environment["lm_ci_r"]
     ses_r = fit_summary.rx2("coefficients").rx[True, 2]
+    cof_t_r = fit_summary.rx2("coefficients").rx[True, 3]
+    cof_p_r = fit_summary.rx2("coefficients").rx[True, 4]
     conf_95_std = dict((k,(l,h)) for k,l,h in izip(conf_intervals.rx[True,1].names,conf_intervals.rx[True,1],conf_intervals.rx[True,2])  )
 
     #now we have to extract the results
@@ -312,13 +314,15 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     r_coeffs = standardized_model.rx2("coefficients")
     coef_dict_std = dict(izip(r_coeffs.names, r_coeffs))
     std_errors_std = dict(izip(ses_r.names, ses_r))
+    t_stats_std = dict(izip(cof_t_r.names, cof_t_r))
+    coefs_p_std = dict(izip(cof_p_r.names, cof_p_r))
     residuals = list(standardized_model.rx2("residuals"))
 
     fitted = list(standardized_model.rx2("fitted.values"))
     intercept = "(Intercept)"
     std_names2orig_names = dict()
     for std_name in coef_dict_std.iterkeys():
-        if std_name == "(Intercept)":
+        if std_name == intercept:
             #handle special case
             std_names2orig_names[std_name] = std_name
             continue
@@ -331,6 +335,9 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
         for f in factors:
             dummy_level = None
             if f[1] == ".":
+                if f[0] == "c":
+                    #sentinel value
+                    dummy_level = 1
                 f = f[2:]
             if f[-1] != "R":
                 r_pos = f.rfind("R")
@@ -339,37 +346,55 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             index = standard_var_names.index(f)
             orig_name = all_variables[index]
             if dummy_level is not None:
-                label = labels_dicts[orig_name][int(dummy_level)]
+                if dummy_level == 1:
+                    ls = labels_dicts[orig_name].items()
+                    ls.sort(key=lambda x:x[0])
+                    lst = tuple(l[1] for l in ls )
+                    label = "%s-%s"%lst
+                else:
+                    label = labels_dicts[orig_name][int(dummy_level)]
                 orig_name += "_%s" % label
             orig_factors.append(orig_name)
         if len(orig_factors) == 1:
             std_names2orig_names[std_name] = orig_factors[0]
             #coef_dicts[orig_factors[0]]=val
         else:
-            std_names2orig_names[std_name] = frozenset(orig_factors)
+            std_names2orig_names[std_name] = "*".join(sorted(orig_factors))
             #coef_dicts[frozenset(orig_factors)]=val
 
     coef_dicts = dict((std_names2orig_names[k], v) for k, v in coef_dict_std.iteritems())
     std_errors = dict((std_names2orig_names[k], v) for k, v in std_errors_std.iteritems())
+    coef_t = dict((std_names2orig_names[k], v) for k, v in t_stats_std.iteritems())
+    coef_p = dict((std_names2orig_names[k], v) for k, v in coefs_p_std.iteritems())
     conf_95 = dict((std_names2orig_names[k], v) for k, v in conf_95_std.iteritems())
+    #combine all this into a data frame
+    coefs_df = pd.DataFrame(pd.Series(coef_dicts,name="Slope"))
+    coefs_df["T Value"]=pd.Series(coef_t)
+    coefs_df["P Value"]=pd.Series(coef_p)
+    coefs_df["Std_error"]=pd.Series(std_errors)
+    coefs_df["CI_95"]=pd.Series(conf_95)
+    coefs_df.index.name = "Coefficient"
+
+    print coefs_df
+
+
     adjusted_r_squared = fit_summary.rx2("adj.r.squared")[0]
     fit_p_val = r_environment["f_pval_r"][0]
     f_statistic = fit_summary.rx2("fstatistic").rx2("value")[0]
     f_statistic_nom_df = fit_summary.rx2("fstatistic").rx2("numdf")[0]
     f_statistic_denom_df = fit_summary.rx2("fstatistic").rx2("dendf")[0]
 
+
     print std_errors
     #print coef_dicts
     #recover original names in the coef_dict
     out_dict = {
-        "coefficients": coef_dicts,
+        "coefficients_df": coefs_df,
         "residuals": residuals,
         "fitted": fitted,
         "adj_r2": adjusted_r_squared,
         "f_pval": fit_p_val,
         "f_stats_val": f_statistic,
         "f_stat_df": (int(f_statistic_nom_df),int(f_statistic_denom_df)),
-        "std_errors" : std_errors,
-        "ci_95" : conf_95,
     }
     return out_dict
