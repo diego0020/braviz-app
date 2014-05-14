@@ -287,7 +287,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
         indexes = list(self.data_frame.index)
         for i in xrange(count):
             r=indexes.pop(row)
-            print r
+            #print r
             if r in self.__interactors_dict:
                 del self.__interactors_dict[r]
         if len(indexes) == 0:
