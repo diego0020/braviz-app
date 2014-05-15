@@ -101,4 +101,6 @@ def run():
         raise
 
 if __name__ == '__main__':
+    import braviz.interaction.generate_qt_guis
+    braviz.interaction.generate_qt_guis.update_guis()
     run()

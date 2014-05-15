@@ -396,5 +396,6 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
         "f_pval": fit_p_val,
         "f_stats_val": f_statistic,
         "f_stat_df": (int(f_statistic_nom_df),int(f_statistic_denom_df)),
+        "data_points" : list(data_frame.index),
     }
     return out_dict

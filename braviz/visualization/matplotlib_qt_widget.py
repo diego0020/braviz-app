@@ -9,16 +9,16 @@ import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.axes
+import matplotlib.gridspec as gridspec
 
 from itertools import izip
-from mpltools import style
 
 import numpy as np
 import pandas as pd
 
 import logging
 
-style.use('ggplot')
+import seaborn as sns
 
 
 class _AbstractPlot():
@@ -30,6 +30,8 @@ class _AbstractPlot():
         return None
     def get_tooltip(self,event):
         return ""
+    def get_last_id(self):
+        return None
 
 
 class MatplotWidget(FigureCanvas):
@@ -56,46 +58,59 @@ class MatplotWidget(FigureCanvas):
         #internal_data
         self.painted_plot = None
         self.data = None
-        self.last_id = None
 
         self.colors_dict = None
 
 
+    def __get_one_axis(self):
+        n_axis = len(self.fig.get_axes())
+        if n_axis == 1:
+            self.axes.clear()
+        else:
+            self.fig.clear()
+            self.axes = self.fig.add_subplot(111)
+            self.axes.margins(0,0,tight=True)
+        return self.axes
 
 
     def draw_message(self,message):
-        self.axes.clear()
-        self.axes.set_ylim(0,1)
-        self.axes.set_xlim(0,1)
-        self.axes.text(0.5, 0.5, message, horizontalalignment='center',
-                       verticalalignment='center', fontsize=16)
+        self.__get_one_axis()
+        self.painted_plot=MessagePlot(self.axes,message)
         self.draw()
 
     def draw_bars(self,data,ylims=None,orientation="vertical",group_labels=None):
+        self.__get_one_axis()
         self.painted_plot = MatplotBarPlot(self.axes,data,ylims,orientation,group_labels)
         self.colors_dict = self.painted_plot.colors_dict
         self.draw()
 
     def draw_coefficients_plot(self,coefficients_df,draw_intecept = False):
+        self.__get_one_axis()
         self.painted_plot = CoefficientsPlot(self.axes,coefficients_df,draw_intecept)
         self.draw()
 
     def draw_histogram(self):
         pass
-    def draw_scatter(self):
-        pass
+    def draw_scatter(self,x,y,xlabel=None,ylabel=None,names=None,reg_line=True,):
+        self.__get_one_axis()
+        self.painted_plot = ScatterPlot(self.axes,x,y,xlabel,ylabel,names,reg_line)
+        self.draw()
     def draw_boxplot(self):
-        pass
-    def draw_linked_boxplot(self):
         pass
     def draw_spider_plot(self):
         pass
+    def draw_residuals(self,residuals,fitted,names=None):
+        #this will create two access
+        self.painted_plot = ResidualsDiagnosticPlot(self.fig,residuals,fitted,names)
+        self.draw()
+
     def highlight_id(self,hid):
         self.painted_plot.highlight(hid)
         self.refresh_last_plot()
 
     def get_current_id(self):
-        return self.last_id
+        return self.painted_plot.get_last_id()
+
     def add_subject_markers(self):
         pass
 
@@ -127,19 +142,21 @@ class MatplotWidget(FigureCanvas):
     def mouse_click_handler(self,event):
         button = event.button
         log = logging.getLogger(__name__)
-        if self.last_id is None:
+        last_id = self.painted_plot.get_last_id()
+        if last_id is None:
             return
         if button == 1:
             log.debug("click")
-            self.highlight_id(self.last_id)
-            self.point_picked.emit(str(self.last_id))
+            self.highlight_id(last_id)
+            self.point_picked.emit(str(last_id))
         elif button == 3:
             log.debug("right_click")
-            self.context_requested.emit(str(self.last_id))
+            self.context_requested.emit(str(last_id))
 
 
 class MatplotBarPlot(_AbstractPlot):
     def __init__(self,axes,data,ylims=None,orientation = "vertical",group_labels=None):
+        sns.set_style("darkgrid")
         self.highlight_color = '#000000'
         self.highlighted = None
         self.axes = axes
@@ -206,6 +223,7 @@ class MatplotBarPlot(_AbstractPlot):
         groups = self.data.groupby(self.data.columns[1])
         colors_list=matplotlib.rcParams['axes.color_cycle']
         self.colors_dict = dict((n,colors_list[i]) for i, (n,g) in enumerate(groups) if len(g)>0)
+        self.last_id = None
         self.redraw()
 
 
@@ -256,9 +274,6 @@ class MatplotBarPlot(_AbstractPlot):
             self.axes.legend(loc="lower right")
 
 
-    def add_subjects(self):
-        pass
-
     def __draw_bars_and_higlight(self,data,label,color):
         if self.orientation == "vertical":
             patches=self.axes.bar(data["_pos"].values,data[self.col0].values,align="center",picker=5,color=color)
@@ -277,6 +292,7 @@ class MatplotBarPlot(_AbstractPlot):
 
     def get_tooltip(self,event):
         subj = event.artist.get_url()
+        self.last_id = subj
         data = self.data
         col0 = data.columns[0]
         message_rows = ["%s:"%subj]
@@ -295,8 +311,13 @@ class MatplotBarPlot(_AbstractPlot):
         #print message
         return message
 
+    def get_last_id(self):
+        return self.last_id
+
+
 class CoefficientsPlot(_AbstractPlot):
     def __init__(self,axes,coefs_df,draw_intercept=False):
+        sns.set_style("darkgrid")
         self.axes = axes
         if draw_intercept is False:
             self._df = coefs_df.iloc[1:].copy()
@@ -311,7 +332,10 @@ class CoefficientsPlot(_AbstractPlot):
         self.names = list(self._df.index)
         self.n_coefs = len(self._df)
         self.pos = range(self.n_coefs)
-        self.color =matplotlib.rcParams['axes.color_cycle'][1]
+        self.color = matplotlib.rcParams['axes.color_cycle'][1]
+        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
+        self.axes.tick_params('y', left='on', labelleft='off', labelright='off', right="off")
+        self.axes.yaxis.set_label_position("right")
         self.redraw()
     def redraw(self):
         self.axes.clear()
@@ -346,6 +370,107 @@ class CoefficientsPlot(_AbstractPlot):
             return message
         except IndexError:
             return ""
+
+class ResidualsDiagnosticPlot(_AbstractPlot):
+    def __init__(self,figure,residuals,fitted,names=None):
+
+        sns.set_style("darkgrid")
+        self.names = names
+        figure.clear()
+        self.fig = figure
+        gs = gridspec.GridSpec(1,2,width_ratios=(2,1))
+        self.axes=self.fig.add_subplot(gs[1])
+        self.axes.clear()
+        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
+        self.axes.tick_params('y', left='off', labelleft='off', labelright='off', right="off")
+        self.axes.yaxis.set_label_position("right")
+        self.axes.set_ylim(auto=True)
+        #self.axes.set_ylabel("Residuals")
+        self.axes.set_xlabel("Frequency")
+        self.axes2 = self.fig.add_subplot(gs[0],sharey=self.axes)
+
+        self.axes2.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
+        self.axes2.tick_params('y', left='on', labelleft='on', labelright='off', right="off")
+        self.axes2.set_ylabel("Residuals")
+        self.axes2.set_xlabel("Fitted")
+        self.axes2.yaxis.set_label_position("left")
+        self.axes2.axhline(color='k')
+
+        self.residuals = residuals
+        self.fitted = fitted
+        self.redraw()
+
+    def get_tooltip(self, event):
+        if self.names is None:
+            return ""
+        if event.mouseevent.inaxes == self.axes2:
+            ind = event.ind
+            names = ["%s"%self.names[i] for i in ind]
+            return "\n".join(names)
+
+    def redraw(self):
+        residuals, fitted = self.residuals, self.fitted
+        self.axes.hist(residuals, color="#2ca25f", bins=20,orientation = "horizontal")
+        self.axes2.scatter(fitted,residuals,s=20,color="#2ca25f",picker=0.5)
+
+
+class MessagePlot(_AbstractPlot):
+    def __init__(self,axes,message):
+        sns.set_style("darkgrid")
+        self.axes = axes
+        self.axes.set_ylim(0,1)
+        self.axes.set_xlim(0,1)
+
+        self.message = message
+        self.axes.tick_params('x', bottom='off', labelbottom='off', labeltop='off',top='off')
+        self.axes.tick_params('y', left='off', labelleft='off', labelright='off', right="off")
+        self.axes.yaxis.set_label_position("right")
+        self.redraw()
+    def redraw(self):
+        message = self.message
+        self.axes.text(0.5, 0.5, message, horizontalalignment='center',
+                    verticalalignment='center', fontsize=16)
+
+
+class ScatterPlot(_AbstractPlot):
+    def __init__(self,axes,x,y,xlabel=None,ylabel=None,names=None,reg_line=True):
+        sns.set_style("darkgrid")
+        self.x=x
+        self.y=y
+        self.names = names
+        self.axes = axes
+        self.reg_line = reg_line
+        self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
+        self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
+        self.axes.yaxis.set_label_position("right")
+        self.axes.set_ylabel(ylabel)
+        self.axes.set_xlabel(xlabel)
+        self.axes.set_xlim(auto=True)
+        self.axes.set_ylim(auto=True)
+        self.color = matplotlib.rcParams['axes.color_cycle'][1]
+        self.redraw()
+
+    def redraw(self):
+        self.axes.clear()
+        sns.regplot(self.x,self.y,fit_reg=self.reg_line,scatter_kws={"picker":0.5},ax=self.axes,
+                    color=self.color)
+
+    def add_subjects(self, subjs):
+        _AbstractPlot.add_subjects(self, subjs)
+
+    def highlight(self, subj):
+        _AbstractPlot.highlight(self, subj)
+
+    def get_tooltip(self, event):
+        if self.names is None:
+            return ""
+        if event.mouseevent.inaxes == self.axes:
+            ind = event.ind
+            names = ["%s"%self.names[i] for i in ind]
+            return "\n".join(names)
+
+
+
 
 if __name__ == "__main__":
     #init widget

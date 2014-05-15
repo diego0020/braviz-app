@@ -50,6 +50,7 @@ class LinearModelApp(QMainWindow):
         self.poll_timer = None
         self.sample = braviz_tab_data.get_subjects()
         self.coefs_df = None
+        self.regression_results = None
         self.ui = None
         self.setup_gui()
 
@@ -75,6 +76,9 @@ class LinearModelApp(QMainWindow):
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
         self.ui.results_table.activated.connect(self.update_main_plot_from_results)
         self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
+
+        self.ui.factor_plot_button.clicked.connect(self.draw_coefficints_plot)
+        self.ui.residuals_plot_button.clicked.connect(self.draw_residuals_plot)
 
         self.ui.sample_tree.setModel(self.sample_model)
         self.ui.sample_tree.activated.connect(self.add_subjects_to_plot)
@@ -114,10 +118,7 @@ class LinearModelApp(QMainWindow):
             ints = self.regressors_model.get_interactions()[-1]
         except (KeyError, IndexError):
             return
-        if type(ints) == str or type(ints) == unicode:
-            self.update_main_plot(ints)
-        elif len(ints) > 0:
-            self.update_main_plot(ints[-1])
+
 
     def set_outcome_var_type(self, new_var):
         log = logging.getLogger(__name__)
@@ -151,10 +152,11 @@ class LinearModelApp(QMainWindow):
     def launch_add_regressor_dialog(self):
         reg_dialog = RegressorSelectDialog(self.outcome_var_name, self.regressors_model,sample=self.sample)
         result = reg_dialog.exec_()
-        if self.regressors_model.rowCount() > 0:
-            regn = self.regressors_model.get_regressors()[-1]
-            self.update_main_plot(regn)
-        self.check_if_ready()
+        if result == reg_dialog.Accepted:
+            if self.regressors_model.rowCount() > 0:
+                index = self.regressors_model.index(self.regressors_model.rowCount()-1,0)
+                self.update_main_plot_from_regressors(index)
+            self.check_if_ready()
 
     def check_if_ready(self):
         if (self.outcome_var_name is not None) and (self.regressors_model.rowCount() > 0):
@@ -195,8 +197,10 @@ class LinearModelApp(QMainWindow):
             log.exception(e)
             msg.exec_()
             self.ui.calculate_button.setEnabled(1)
+            self.coefs_df = None
+            self.regression_results = None
         else:
-            print res
+            #print res
             self.ui.r_squared_label.setText("R<sup>2</sup> = %.2f"%res.get("adj_r2",np.nan))
             f_nom,f_dem = res.get("f_stat_df",(0,0))
             self.ui.f_value_label.setText("F(%d,%d) = %.2f"%(f_nom,f_dem,res.get("f_stats_val",np.nan)))
@@ -204,6 +208,7 @@ class LinearModelApp(QMainWindow):
             coeffs_df = res["coefficients_df"]
             self.result_model.set_df(coeffs_df)
             self.coefs_df = coeffs_df
+            self.regression_results = res
             self.draw_coefficints_plot()
             self.ui.calculate_button.setEnabled(1)
             return
@@ -215,11 +220,14 @@ class LinearModelApp(QMainWindow):
 
 
     def update_main_plot_from_regressors(self, index):
-        print "not yet implemented"
-        return
-
-    def update_main_plot(self, var_name):
-        print "not yet implemented"
+        row = index.row()
+        var_name_index = self.regressors_model.index(row, 0)
+        var_name = unicode(self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
+        if "*" in var_name:
+            print "not yet implemented"
+            return
+        else:
+            self.draw_simple_scatter_plot(var_name)
         return
 
 
@@ -232,6 +240,23 @@ class LinearModelApp(QMainWindow):
         if self.coefs_df is not None:
             self.plot.draw_coefficients_plot(self.coefs_df)
         return
+
+    def draw_residuals_plot(self):
+        if self.regression_results is None:
+            return
+        residuals = self.regression_results["residuals"]
+        fitted = self.regression_results["fitted"]
+        names = self.regression_results["data_points"]
+        assert isinstance(names,list)
+        self.plot.draw_residuals(residuals,fitted,names)
+
+    def draw_simple_scatter_plot(self,regressor_name):
+        df = braviz_tab_data.get_data_frame_by_name([self.outcome_var_name,regressor_name])
+        df.dropna(inplace=True)
+        x_data = df[regressor_name]
+        y_data = df[self.outcome_var_name]
+        self.plot.draw_scatter(x_data,y_data,regressor_name,self.outcome_var_name,
+                               list(df.index),reg_line=True)
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"
