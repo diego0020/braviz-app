@@ -296,7 +296,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     robjects.r("r_lm <- lm(%s,data=r_df)" % formula_str)
     #standardize
     robjects.r("library('arm')")
-    robjects.r("s_lm_r <- standardize(r_lm)")
+    robjects.r("s_lm_r <- standardize(r_lm,standardize.y=T)")
     standardized_model = r_environment["s_lm_r"]
 
     robjects.r("sum_r <- summary(s_lm_r)")

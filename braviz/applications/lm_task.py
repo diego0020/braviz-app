@@ -9,9 +9,10 @@ from PyQt4.QtGui import QMainWindow
 from braviz.interaction.qt_guis.linear_reg import Ui_LinearModel
 import braviz.interaction.qt_dialogs
 import braviz.interaction.qt_sample_select_dialog
-from braviz.interaction.qt_dialogs import OutcomeSelectDialog, RegressorSelectDialog, MatplotWidget,\
-    InteractionSelectDialog
+from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectDialog,
+    InteractionSelectDialog)
 
+from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 import braviz.interaction.r_functions
 
 import braviz.interaction.qt_models as braviz_models
@@ -43,16 +44,12 @@ class LinearModelApp(QMainWindow):
         self.result_model = braviz_models.DataFrameModel(empty_df,self.__table_cols)
         self.sample_model = braviz_models.SampleTree()
         self.plot = None
-        self.plot_data_frame = None
-        self.plot_x_var = None
-        self.plot_z_var = None
-        self.plot_color = None
-        self.plot_var_name = None
         self.last_viewed_subject = None
         self.mri_viewer_pipe = None
         self.mri_viewer_process = None
         self.poll_timer = None
         self.sample = braviz_tab_data.get_subjects()
+        self.coefs_df = None
         self.ui = None
         self.setup_gui()
 
@@ -72,7 +69,8 @@ class LinearModelApp(QMainWindow):
         self.ui.results_table.setModel(self.result_model)
 
         self.ui.matplot_layout = QtGui.QVBoxLayout()
-        self.plot = MatplotWidget(initial_message="Welcome\n\nSelect Outcome and add Regressors to start")
+        self.plot = MatplotWidget()
+        self.plot.draw_message("Welcome\n\nSelect Outcome and add Regressors to start")
         self.ui.matplot_layout.addWidget(self.plot)
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
         self.ui.results_table.activated.connect(self.update_main_plot_from_results)
@@ -204,10 +202,10 @@ class LinearModelApp(QMainWindow):
             self.ui.p_value_label.setText("P = %g"%res.get("f_pval",np.nan))
             coeffs_df = res["coefficients_df"]
             self.result_model.set_df(coeffs_df)
+            self.coefs_df = coeffs_df
+            self.draw_coefficints_plot()
             return
-            self.result_model = braviz_models.AnovaResultsModel(*self.anova)
-            self.ui.results_table.setModel(self.result_model)
-            self.update_main_plot("Residuals")
+
 
     def update_main_plot_from_results(self, index):
         print "not yet implemented"
@@ -228,6 +226,10 @@ class LinearModelApp(QMainWindow):
         print "not yet implemented"
         return
 
+    def draw_coefficints_plot(self):
+        if self.coefs_df is not None:
+            self.plot.draw_coefficients_plot(self.coefs_df)
+        return
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"

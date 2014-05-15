@@ -11,7 +11,7 @@ from braviz.visualization.subject_viewer import QSuvjectViwerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
 import braviz.interaction.qt_sample_select_dialog
-from braviz.visualization.matplotlib_widget import MatplotWidget
+from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.readAndFilter import user_data as braviz_user_data
 from itertools import izip
