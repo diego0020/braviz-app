@@ -183,6 +183,7 @@ class LinearModelApp(QMainWindow):
         try:
             regressors = self.regressors_model.get_data_frame()
             interactions = self.regressors_model.get_interactors_dict()
+            self.ui.calculate_button.setEnabled(0)
             res = braviz.interaction.r_functions.calculate_normalized_linear_regression(self.outcome_var_name,
                                                                                   regressors,interactions,self.sample)
         except Exception as e:
@@ -193,7 +194,7 @@ class LinearModelApp(QMainWindow):
             log.warning("lm Error")
             log.exception(e)
             msg.exec_()
-            raise
+            self.ui.calculate_button.setEnabled(1)
         else:
             print res
             self.ui.r_squared_label.setText("R<sup>2</sup> = %.2f"%res.get("adj_r2",np.nan))
@@ -204,6 +205,7 @@ class LinearModelApp(QMainWindow):
             self.result_model.set_df(coeffs_df)
             self.coefs_df = coeffs_df
             self.draw_coefficints_plot()
+            self.ui.calculate_button.setEnabled(1)
             return
 
 

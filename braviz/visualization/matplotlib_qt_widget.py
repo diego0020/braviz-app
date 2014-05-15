@@ -316,7 +316,7 @@ class CoefficientsPlot(_AbstractPlot):
     def redraw(self):
         self.axes.clear()
         self.axes.set_ylim(-0.5,self.n_coefs-0.5,auto=False)
-        self.axes.set_xlim(auto=True)
+        self.axes.set_xlim(-1,1,auto=True)
         self.axes.axvline(0,ls="--",c="k")
         self.axes.minorticks_off()
 
@@ -328,13 +328,24 @@ class CoefficientsPlot(_AbstractPlot):
             self.axes.plot([l,h],[p,p],c=self.color,solid_capstyle="round", lw=2.5,zorder=5)
         #draw 95
         for p,l,h in izip(self.pos,self.l95,self.h95):
-            self.axes.plot([l,h],[p,p],c=self.color,solid_capstyle="round", lw=1,zorder=1)
+            self.axes.plot([l,h],[p,p],c=self.color,solid_capstyle="round", lw=1,zorder=1,picker=0.5)
 
         #ticks
         self.axes.set_yticks(self.pos)
         self.axes.set_yticklabels(self.names)
 
         self.axes.set_xlabel("Standardized coefficients")
+
+    def get_tooltip(self, event):
+        y_coord = event.mouseevent.ydata
+        i = int(round(y_coord))
+        try:
+            name = self.names[i]
+            slope = self.centers[i]
+            message = "%s: %.2g"%(name,slope)
+            return message
+        except IndexError:
+            return ""
 
 if __name__ == "__main__":
     #init widget
