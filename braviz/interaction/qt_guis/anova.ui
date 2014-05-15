@@ -74,6 +74,9 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="toolTip">
+                <string>Dependent Variable</string>
+               </property>
                <property name="text">
                 <string>&amp;Outcome: </string>
                </property>
@@ -156,6 +159,9 @@
           </item>
           <item>
            <widget class="QLabel" name="label_2">
+            <property name="toolTip">
+             <string>Independent Variable</string>
+            </property>
             <property name="text">
              <string>Regressors</string>
             </property>
@@ -386,7 +392,7 @@
      <x>0</x>
      <y>0</y>
      <width>899</width>
-     <height>27</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

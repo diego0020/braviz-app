@@ -16,6 +16,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
+from braviz.interaction import qt_sample_select_dialog
 
 import numpy as np
 import seaborn as sns
@@ -33,6 +34,7 @@ class CorrelationMatrixFigure(FigureCanvas):
         self.f.set_facecolor(palette.background().color().getRgbF()[0:3])
         self.df = None
         self.corr = None
+        self.sample = tab_data.get_subjects()
         self.cmap = sns.blend_palette(["#00008B", "#6A5ACD", "#F0F8FF",
                                        "#FFE6F8", "#C71585", "#8B0000"], as_cmap=True)
         self.mpl_connect("motion_notify_event", self.get_tooltip_message)
@@ -61,6 +63,7 @@ class CorrelationMatrixFigure(FigureCanvas):
             self.corr = None
         else:
             self.df = tab_data.get_data_frame_by_name(vars_list)
+            self.df = self.df.loc[self.sample].copy()
             self.corr = self.df.corr()
         self.on_draw()
 
@@ -87,6 +90,11 @@ class CorrelationMatrixFigure(FigureCanvas):
             x_name,y_name = self.df.columns[x_int],self.df.columns[y_int]
             df2 = self.df[[x_name,y_name]]
             self.SquareSelected.emit(df2)
+    def set_sample(self,new_sample):
+        self.sample = list(new_sample)
+        self.df = self.df.loc[self.sample].copy()
+        self.on_draw()
+
 
 class RegFigure(FigureCanvas):
     def __init__(self):
@@ -101,9 +109,12 @@ class RegFigure(FigureCanvas):
 
 
     def draw_initial_message(self):
+        self.ax.clear()
         message = "Click in the correlation matrix"
         self.ax.text(0.5, 0.5, message, horizontalalignment='center',
                      verticalalignment='center', fontsize=16)
+        self.ax.set_xlim(0,1)
+        self.ax.set_ylim(0,1)
         plt.sca(self.ax)
         plt.tight_layout()
         self.draw()
@@ -169,9 +180,27 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.ui.reg_frame.setLayout(self.ui.reg_layout)
         self.ui.reg_layout.addWidget(self.reg_plot)
 
+        self.ui.actionChange_Sample.triggered.connect(self.set_sample)
+        self.ui.actionSave_Matrix.triggered.connect(self.save_matrix)
+        self.ui.actionSave_Scatter.triggered.connect(self.save_reg)
         self.cor_mat.SquareSelected.connect(self.reg_plot.draw_reg)
 
+    def set_sample(self):
+        dialog = qt_sample_select_dialog.SampleLoadDialog()
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            self.cor_mat.set_sample(new_sample)
+            self.reg_plot.draw_initial_message()
 
+    def save_matrix(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
+                                                             "Save Matrix",".","PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
+        self.cor_mat.f.savefig(filename)
+    def save_reg(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
+                                                             "Save Scatter",".","PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
+        self.reg_plot.f.savefig(filename)
 
 if __name__ == "__main__":
     app = QtGui.QApplication([])
