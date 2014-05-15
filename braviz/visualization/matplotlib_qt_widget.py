@@ -334,14 +334,14 @@ class CoefficientsPlot(_AbstractPlot):
         self.pos = range(self.n_coefs)
         self.color = matplotlib.rcParams['axes.color_cycle'][1]
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
-        self.axes.tick_params('y', left='on', labelleft='off', labelright='off', right="off")
+        self.axes.tick_params('y', left='on', labelleft='on', labelright='off', right="off")
         self.axes.yaxis.set_label_position("right")
         self.redraw()
     def redraw(self):
         self.axes.clear()
         self.axes.set_ylim(-0.5,self.n_coefs-0.5,auto=False)
         self.axes.set_xlim(-1,1,auto=True)
-        self.axes.axvline(0,ls="--",c="k")
+        self.axes.axvline(0,ls="--",c=(0.4,0.4,0.4))
         self.axes.minorticks_off()
 
         #draw centers

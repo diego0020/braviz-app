@@ -26,6 +26,7 @@ class BravizMenu2(QtGui.QMainWindow):
         self.ui.setupUi(self)
         self.ui.anova.clicked.connect(self.make_application_launcher("anova",self.ui.anova))
         self.ui.correlations.clicked.connect(self.make_application_launcher("correlations",self.ui.correlations))
+        self.ui.linear_model.clicked.connect(self.make_application_launcher("linear_model",self.ui.linear_model))
         self.ui.sample_overview.clicked.connect(self.make_application_launcher("sample_overview",
                                                                               self.ui.sample_overview))
         self.ui.subject_overview.clicked.connect(self.make_application_launcher("subject_overview",
@@ -43,6 +44,7 @@ class BravizMenu2(QtGui.QMainWindow):
         "anova" : "anova_task",
         "braviz_menu_classic" : "braviz_menu",
         "correlations":"correlations",
+        "linear_model": "lm_task",
     }
 
     def make_application_launcher(self,app,button):

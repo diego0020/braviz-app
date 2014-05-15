@@ -347,17 +347,16 @@ background-origin: content;
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="toolButton_8">
+           <widget class="QToolButton" name="linear_model">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="text">
-             <string>?</string>
+             <string>Linear Model</string>
             </property>
             <property name="icon">
-             <iconset>
-              <normalon>:/icons/amygdala_spharm.PNG</normalon>
-             </iconset>
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/linear.png</normaloff>:/icons/linear.png</iconset>
             </property>
             <property name="iconSize">
              <size>
