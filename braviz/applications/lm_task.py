@@ -216,7 +216,25 @@ class LinearModelApp(QMainWindow):
 
 
     def update_main_plot_from_results(self, index):
-        print "not yet implemented"
+        row = index.row()
+        var_name_index = self.result_model.index(row, 0)
+        var_name = unicode(self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
+        if var_name == "(Intercept)":
+            df2 = braviz_tab_data.get_data_frame_by_name(self.outcome_var_name)
+            df2["Jitter"]=np.random.random(len(df2))
+            df2.dropna(inplace=True)
+            self.plot.draw_scatter(df2,"Jitter",self.outcome_var_name,reg_line=False)
+            b = np.mean(df2[self.outcome_var_name])
+            self.plot.axes.axhline(b,ls="--",c=(0.3,0.3,0.3))
+            self.plot.draw()
+        elif "*" in var_name:
+            print "not implemented"
+        else:
+            if "_" in var_name:
+                levels = var_name.rfind("_")
+                var_name=var_name[:levels]
+            df2 = self.isolate_one(var_name)
+            self.plot.draw_scatter(df2,var_name,self.outcome_var_name,reg_line=True)
         return
 
 
@@ -284,7 +302,6 @@ class LinearModelApp(QMainWindow):
             labels = dict( (i+1,"%s > %.3f"%(regressor2,dmin+i*delta)) for i in xrange(N_PIECES) )
         else:
             labels = braviz_tab_data.get_names_label_dict(hue_var)
-
 
         self.plot.draw_scatter(df,x_var,outcome,hue_var=hue_var,hue_labels=labels)
 
@@ -510,6 +527,33 @@ class LinearModelApp(QMainWindow):
             self.sample = new_sample
             self.sample_model.set_sample(new_sample)
             self.update_main_plot(self.plot_var_name)
+
+    def isolate_one(self,factor,un_standardize=True):
+        df2 = self.regression_results["standardized_model"]
+        coefs = self.coefs_df
+        df3=pd.DataFrame(df2[coefs.loc[factor,"r_name"]])
+        df3.columns = [factor]
+        res = self.regression_results["residuals"]
+        INTERCEPT = "(Intercept)"
+        beta_0 = coefs.loc[INTERCEPT,"Slope"]
+        beta_1 = 0
+        for var in coefs.index:
+            if var == INTERCEPT:
+                continue
+            if "*" in var:
+                #TODO interaction terms
+                continue
+            row = coefs.loc[var]
+            r_name = row["r_name"]
+            data = df2[r_name]
+            beta_j = row["Slope"]
+            #should we add it to beta 1?
+            if var == factor:
+                beta_1 += beta_j
+            #TODO factor not real
+        print "beta1",beta_1
+        df3[self.outcome_var_name]=beta_0+beta_1*df3[factor].values.squeeze()+res
+        return df3
 
 
 def run():

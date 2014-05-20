@@ -317,6 +317,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     t_stats_std = dict(izip(cof_t_r.names, cof_t_r))
     coefs_p_std = dict(izip(cof_p_r.names, cof_p_r))
     residuals = list(standardized_model.rx2("residuals"))
+    std_model = com.convert_robj(standardized_model.rx2("model"))
 
     fitted = list(standardized_model.rx2("fitted.values"))
     intercept = "(Intercept)"
@@ -367,12 +368,14 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     coef_t = dict((std_names2orig_names[k], v) for k, v in t_stats_std.iteritems())
     coef_p = dict((std_names2orig_names[k], v) for k, v in coefs_p_std.iteritems())
     conf_95 = dict((std_names2orig_names[k], v) for k, v in conf_95_std.iteritems())
+    r_names = dict((v,k) for k,v in std_names2orig_names.iteritems())
     #combine all this into a data frame
     coefs_df = pd.DataFrame(pd.Series(coef_dicts,name="Slope"))
     coefs_df["T Value"]=pd.Series(coef_t)
     coefs_df["P Value"]=pd.Series(coef_p)
     coefs_df["Std_error"]=pd.Series(std_errors)
     coefs_df["CI_95"]=pd.Series(conf_95)
+    coefs_df["r_name"]=pd.Series(r_names)
     coefs_df.index.name = "Coefficient"
 
     print coefs_df
@@ -397,5 +400,8 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
         "f_stats_val": f_statistic,
         "f_stat_df": (int(f_statistic_nom_df),int(f_statistic_denom_df)),
         "data_points" : list(data_frame.index),
+        "standardized_model" : std_model,
+        "data":data_frame,
+        "mean_sigma":mean_sigma,
     }
     return out_dict

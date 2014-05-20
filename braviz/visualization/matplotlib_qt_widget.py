@@ -477,7 +477,7 @@ class ScatterPlot(_AbstractPlot):
                     label = "?"
                 url = df2.index
                 sns.regplot(self.x_name,self.y_name,data=df2,fit_reg=self.reg_line,
-                            scatter_kws={"picker":0.5,"url":url,"label":label},ax=self.axes,
+                            scatter_kws={"picker":0.5,"url":url},label=label,ax=self.axes,
                     color=c)
             self.add_legend()
 
