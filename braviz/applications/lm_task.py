@@ -1,4 +1,5 @@
 from __future__ import division
+import random
 
 __author__ = 'Diego'
 
@@ -224,8 +225,10 @@ class LinearModelApp(QMainWindow):
         var_name_index = self.regressors_model.index(row, 0)
         var_name = unicode(self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
         if "*" in var_name:
-            print "not yet implemented"
-            return
+            factors = var_name.split("*")
+            if len(factors)>2:
+                factors = random.sample(factors,2)
+            self.draw_two_vars_scatter_plot(factors[0],factors[1])
         else:
             self.draw_simple_scatter_plot(var_name)
         return
@@ -253,10 +256,37 @@ class LinearModelApp(QMainWindow):
     def draw_simple_scatter_plot(self,regressor_name):
         df = braviz_tab_data.get_data_frame_by_name([self.outcome_var_name,regressor_name])
         df.dropna(inplace=True)
-        x_data = df[regressor_name]
-        y_data = df[self.outcome_var_name]
-        self.plot.draw_scatter(x_data,y_data,regressor_name,self.outcome_var_name,
-                               list(df.index),reg_line=True)
+        self.plot.draw_scatter(df,regressor_name,self.outcome_var_name,reg_line=True)
+
+    def draw_two_vars_scatter_plot(self,regressor1,regressor2):
+        var_1_real = braviz_tab_data.is_variable_name_real(regressor1)
+        var_2_real = braviz_tab_data.is_variable_name_real(regressor2)
+        outcome = self.outcome_var_name
+
+        hue_var = regressor2
+        x_var = regressor1
+        df = braviz_tab_data.get_data_frame_by_name([regressor1,regressor2,outcome])
+        df.dropna(inplace=True)
+        if var_2_real and not var_1_real:
+            hue_var = regressor1
+            x_var = regressor2
+            labels = braviz_tab_data.get_names_label_dict(hue_var)
+        elif var_2_real and var_1_real:
+            #cut var2
+            real_data = df.pop(regressor2)
+            dmin,dmax = np.min(real_data),np.max(real_data)
+            N_PIECES = 3
+            delta = (dmax-dmin)/N_PIECES
+            nom_data=(real_data-dmin)*N_PIECES//(dmax-dmin)+1
+            nom_data = np.minimum(nom_data,N_PIECES)
+            nom_data = nom_data.astype(np.int)
+            df[regressor2] = nom_data
+            labels = dict( (i+1,"%s > %.3f"%(regressor2,dmin+i*delta)) for i in xrange(N_PIECES) )
+        else:
+            labels = braviz_tab_data.get_names_label_dict(hue_var)
+
+
+        self.plot.draw_scatter(df,x_var,outcome,hue_var=hue_var,hue_labels=labels)
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"

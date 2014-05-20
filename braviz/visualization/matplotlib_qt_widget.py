@@ -91,9 +91,10 @@ class MatplotWidget(FigureCanvas):
 
     def draw_histogram(self):
         pass
-    def draw_scatter(self,x,y,xlabel=None,ylabel=None,names=None,reg_line=True,):
+    def draw_scatter(self,data,x_name,y_name,xlabel=None,ylabel=None,reg_line=True,hue_var=None,hue_labels = None):
         self.__get_one_axis()
-        self.painted_plot = ScatterPlot(self.axes,x,y,xlabel,ylabel,names,reg_line)
+        self.painted_plot = ScatterPlot(self.axes,data,x_name,y_name,xlabel,ylabel,reg_line,hue_var=hue_var,
+                                        hue_labels=hue_labels)
         self.draw()
     def draw_boxplot(self):
         pass
@@ -433,11 +434,16 @@ class MessagePlot(_AbstractPlot):
 
 
 class ScatterPlot(_AbstractPlot):
-    def __init__(self,axes,x,y,xlabel=None,ylabel=None,names=None,reg_line=True):
+    def __init__(self,axes,data,x_var,y_var,xlabel=None,ylabel=None,reg_line=True,hue_var = None, hue_labels = None):
         sns.set_style("darkgrid")
-        self.x=x
-        self.y=y
-        self.names = names
+        self.x_name=x_var
+        self.y_name=y_var
+        self.z_name = hue_var
+        if xlabel is None:
+            xlabel = x_var
+        if ylabel is None:
+            ylabel = y_var
+        self.df = data.copy()
         self.axes = axes
         self.reg_line = reg_line
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
@@ -448,12 +454,32 @@ class ScatterPlot(_AbstractPlot):
         self.axes.set_xlim(auto=True)
         self.axes.set_ylim(auto=True)
         self.color = matplotlib.rcParams['axes.color_cycle'][1]
+        self.hue_labels = hue_labels
         self.redraw()
 
     def redraw(self):
         self.axes.clear()
-        sns.regplot(self.x,self.y,fit_reg=self.reg_line,scatter_kws={"picker":0.5},ax=self.axes,
+        if self.z_name is None:
+            url = self.df.index
+            sns.regplot(self.x_name,self.y_name,data=self.df,fit_reg=self.reg_line,
+                        scatter_kws={"picker":0.5,"url":url},ax=self.axes,
                     color=self.color)
+        else:
+            self.artists_dict=dict()
+            unique_levels = np.unique(self.df[self.z_name])
+            n_levels=len(unique_levels)
+            colors = sns.color_palette("Dark2",n_levels)
+            for c,l in izip(colors,unique_levels):
+                df2 = self.df[self.df[self.z_name] == l]
+                if self.hue_labels is not None:
+                    label = self.hue_labels.get(l,"?")
+                else:
+                    label = "?"
+                url = df2.index
+                sns.regplot(self.x_name,self.y_name,data=df2,fit_reg=self.reg_line,
+                            scatter_kws={"picker":0.5,"url":url,"label":label},ax=self.axes,
+                    color=c)
+            self.add_legend()
 
     def add_subjects(self, subjs):
         _AbstractPlot.add_subjects(self, subjs)
@@ -462,14 +488,17 @@ class ScatterPlot(_AbstractPlot):
         _AbstractPlot.highlight(self, subj)
 
     def get_tooltip(self, event):
-        if self.names is None:
-            return ""
         if event.mouseevent.inaxes == self.axes:
             ind = event.ind
-            names = ["%s"%self.names[i] for i in ind]
+            urls = event.artist.get_url()
+            names = ["%s"%urls[i] for i in ind]
+            #names = ["%s"%self.names[i] for i in ind]
             return "\n".join(names)
 
-
+    def add_legend(self):
+        if self.hue_labels is None:
+            return
+        self.axes.legend()
 
 
 if __name__ == "__main__":
