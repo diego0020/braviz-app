@@ -91,10 +91,11 @@ class MatplotWidget(FigureCanvas):
 
     def draw_histogram(self):
         pass
-    def draw_scatter(self,data,x_name,y_name,xlabel=None,ylabel=None,reg_line=True,hue_var=None,hue_labels = None):
+    def draw_scatter(self,data,x_name,y_name,xlabel=None,ylabel=None,reg_line=True,hue_var=None,hue_labels = None,
+                     qualitative_map = True):
         self.__get_one_axis()
         self.painted_plot = ScatterPlot(self.axes,data,x_name,y_name,xlabel,ylabel,reg_line,hue_var=hue_var,
-                                        hue_labels=hue_labels)
+                                        hue_labels=hue_labels,qualitative_map = qualitative_map)
         self.draw()
     def draw_boxplot(self):
         pass
@@ -434,7 +435,8 @@ class MessagePlot(_AbstractPlot):
 
 
 class ScatterPlot(_AbstractPlot):
-    def __init__(self,axes,data,x_var,y_var,xlabel=None,ylabel=None,reg_line=True,hue_var = None, hue_labels = None):
+    def __init__(self,axes,data,x_var,y_var,xlabel=None,ylabel=None,reg_line=True,hue_var = None, hue_labels = None,
+                 qualitative_map = True):
         sns.set_style("darkgrid")
         self.x_name=x_var
         self.y_name=y_var
@@ -455,6 +457,7 @@ class ScatterPlot(_AbstractPlot):
         self.axes.set_ylim(auto=True)
         self.color = matplotlib.rcParams['axes.color_cycle'][1]
         self.hue_labels = hue_labels
+        self.qualitative_map = qualitative_map
         self.redraw()
 
     def redraw(self):
@@ -468,7 +471,11 @@ class ScatterPlot(_AbstractPlot):
             self.artists_dict=dict()
             unique_levels = np.unique(self.df[self.z_name])
             n_levels=len(unique_levels)
-            colors = sns.color_palette("Dark2",n_levels)
+            if self.qualitative_map:
+                colors = sns.color_palette("Dark2",n_levels)
+            else:
+                #first one is too light
+                colors = sns.color_palette("YlOrRd",n_levels+1)[1:]
             for c,l in izip(colors,unique_levels):
                 df2 = self.df[self.df[self.z_name] == l]
                 if self.hue_labels is not None:

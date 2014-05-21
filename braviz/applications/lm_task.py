@@ -285,6 +285,7 @@ class LinearModelApp(QMainWindow):
         x_var = regressor1
         df = braviz_tab_data.get_data_frame_by_name([regressor1,regressor2,outcome])
         df.dropna(inplace=True)
+        qualitative_map = True
         if var_2_real and not var_1_real:
             hue_var = regressor1
             x_var = regressor2
@@ -299,11 +300,12 @@ class LinearModelApp(QMainWindow):
             nom_data = np.minimum(nom_data,N_PIECES)
             nom_data = nom_data.astype(np.int)
             df[regressor2] = nom_data
-            labels = dict( (i+1,"%s > %.3f"%(regressor2,dmin+i*delta)) for i in xrange(N_PIECES) )
+            labels = dict( (i+1,"%s $\\geq$ %.3f"%(regressor2,dmin+i*delta)) for i in xrange(N_PIECES) )
+            qualitative_map = False
         else:
             labels = braviz_tab_data.get_names_label_dict(hue_var)
 
-        self.plot.draw_scatter(df,x_var,outcome,hue_var=hue_var,hue_labels=labels)
+        self.plot.draw_scatter(df,x_var,outcome,hue_var=hue_var,hue_labels=labels,qualitative_map = qualitative_map)
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"
