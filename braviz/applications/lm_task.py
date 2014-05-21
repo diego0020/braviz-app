@@ -230,9 +230,11 @@ class LinearModelApp(QMainWindow):
         elif "*" in var_name:
             print "not implemented"
         else:
-            if "_" in var_name:
-                levels = var_name.rfind("_")
-                var_name=var_name[:levels]
+            if not var_name in self.regression_results["data"]:
+                #maybe there is a level
+                if "_" in var_name:
+                    levels = var_name.rfind("_")
+                    var_name=var_name[:levels]
             df2 = self.isolate_one(var_name)
             self.plot.draw_scatter(df2,var_name,self.outcome_var_name,reg_line=True)
         return
@@ -274,7 +276,11 @@ class LinearModelApp(QMainWindow):
     def draw_simple_scatter_plot(self,regressor_name):
         df = braviz_tab_data.get_data_frame_by_name([self.outcome_var_name,regressor_name])
         df.dropna(inplace=True)
-        self.plot.draw_scatter(df,regressor_name,self.outcome_var_name,reg_line=True)
+        if braviz_tab_data.is_variable_name_real(regressor_name):
+            reg_line = True
+        else:
+            reg_line = False
+        self.plot.draw_scatter(df,regressor_name,self.outcome_var_name,reg_line=reg_line)
 
     def draw_two_vars_scatter_plot(self,regressor1,regressor2):
         var_1_real = braviz_tab_data.is_variable_name_real(regressor1)
@@ -547,6 +553,9 @@ class LinearModelApp(QMainWindow):
                 continue
             row = coefs.loc[var]
             r_name = row["r_name"]
+            level_pos=r_name.rfind("R")+1
+            level = r_name[level_pos:]
+            r_name = r_name[:level_pos]
             data = df2[r_name]
             beta_j = row["Slope"]
             #should we add it to beta 1?
