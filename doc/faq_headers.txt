@@ -1,2 +1,3 @@
 <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="pytanic_css.css">
+<script src="pytanic_faq_js.js"></script>

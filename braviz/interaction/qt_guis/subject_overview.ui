@@ -608,6 +608,9 @@
                  <property name="readOnly">
                   <bool>true</bool>
                  </property>
+                 <property name="buttonSymbols">
+                  <enum>QAbstractSpinBox::NoButtons</enum>
+                 </property>
                  <property name="maximum">
                   <double>9999999.000000000000000</double>
                  </property>
@@ -839,6 +842,12 @@
                 <widget class="QDoubleSpinBox" name="fibers_scalar_value">
                  <property name="locale">
                   <locale language="English" country="UnitedStates"/>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="buttonSymbols">
+                  <enum>QAbstractSpinBox::NoButtons</enum>
                  </property>
                  <property name="maximum">
                   <double>999999.000000000000000</double>

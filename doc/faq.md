@@ -1,6 +1,6 @@
 #Braviz Frequenty Asked Questions
 
-<hr>
+--------------------------------------------
 
 ## Subject Overview
 
@@ -67,25 +67,71 @@ Most image manipulation tasks are carried out using the image tab of the left fr
 
 ### Segmented Structures
 
+Most of the tasks in this list are accomplished using the Segmentation tab of the left panel.
+
 #### How do I display structures?
+
+> Use the list in the Segmentation tab to *check* the structures you want to see.
 
 #### How do I change the *color* of the structures?
 
+> Use the color box below the list in the Segmentation tab. Selecting Free Surfer will use the free surfer color table, selecting custom will allow you to select a color.
+
 #### How can I display areas of the *dominant* cortex?
+
+> By default the list displays the right and left cortex as two separate sub-trees. If you prefer to work with dominant and non-dominant cortexes, use the radio button on top of the list.
 
 #### How can I *calculate* metrics from the structures?
 
+> At the bottom of the tab there is a button which allows you to select among different metrics. Currently these are
+>
+> * Volume: The total volume of the structures (always in world coordinates)
+> * Area: The surface area of the displayed structures. In case that more than one structure is showed, their values are added together.
+> * FA Inside: The mean FA value of the voxels inside the displayed structures 
+> * MD Inside: The mean MD value of the voxels inside the displayed structures 
+>
+> The calculated value will be displayed next to the box. The button labeled "Export to database" will open a dialog that will allow you to repeat the calculation for all subjects and save the results into the database.
+
 ### Tractography
+
+> Most of the tasks in this list are accomplished using the Segmentation tab of the left panel.
 
 #### How can I see the *full* tractography?
 
-#### How can I *filter* the current fibers?
+> Click on the "Select Saved Bundles" button and select the bundle called All near the top of the list.
+
+#### How can I *filter* fibers?
+
+> It is possible to filter the tractography using segmented structures. For these look at the box labeled "From Seg." There will be two options
+>
+> * Through Any: Display fibers that cross any of the displayed structures
+> * Through All: Display fibers that pass through all the displayed structures
+>
+> Fiber bundles defined in this way can be *saved* using the "Save Bundle" button, and will be afterwards available in the Select Saved Bundle dialog.
+> Most complex fiber selection operations will be available in a future tool.
 
 #### How can I change the *color* of the current fibers ?
 
+> The box labeled color has several options for coloring the fibers:
+>
+> * Orientation: Segments going from left to right will be colored red, segments from top to buttom will be blue and segments from back to front will be green
+> * FA (Point): The colors of each point are determined by the FA value at the corresponding voxel. A color bar is available with the convention.
+> * FA (Line): The colors of each line are determined by the mean FA value across the complete line. A color bar is available with the convention.
+> * MD (Point): The colors of each point are determined by the MD value at the corresponding voxel. A color bar is available with the convention.
+> * MD (Line): The colors of each line are determined by the mean MD value across the complete line. A color bar is available with the convention.
+> * Length: The colors of each line are determined according to its length. A color bar is available.
+> * By Line: A random color is assigned to each line, this makes it easy to follow a single line.
+> * By Bundle: Each bundle (loaded through the "select saved bundles button") is assigned a different color
+
 #### How can I view multiple *bundles* ?
 
+> The "Select Saved Bundles" button can be used to add bundles to the current display.
+
 #### How can I *calculate* metrics of the current fibers?
+
+> First you have to select a bundle by double clicking it in the Bundles list. The selected bundle is shown at the end of the Tractography tab. 
+> There is a box towards the bottom of the tab that can be used to select among different metrics, the value will be shown in the box next to it.
+> The "Export to Database" button can be used to calculate this values for all subjects and save the results into the database.
 
 ### Context Panel
 

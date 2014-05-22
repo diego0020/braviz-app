@@ -11,6 +11,7 @@
   <![endif]-->
   <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="pytanic_css.css">
+  <script src="pytanic_faq_js.js"></script>
 </head>
 <body>
 <nav id="TOC">
@@ -31,8 +32,7 @@
 </ul>
 </nav>
 <h1 id="braviz-frequenty-asked-questions">Braviz Frequenty Asked Questions</h1>
-<hr>
-
+<hr />
 <h2 id="subject-overview">Subject Overview</h2>
 <h4 id="where-do-i-start">Where do I start?</h4>
 <blockquote>
@@ -84,16 +84,69 @@
 <p>Use the Orientation box in the image tab. Notice the camera will not move when changing the orientation, so you will probably have to move it in order to get a good view of the new image.</p>
 </blockquote>
 <h3 id="segmented-structures">Segmented Structures</h3>
+<p>Most of the tasks in this list are accomplished using the Segmentation tab of the left panel.</p>
 <h4 id="how-do-i-display-structures">How do I display structures?</h4>
+<blockquote>
+<p>Use the list in the Segmentation tab to <em>check</em> the structures you want to see.</p>
+</blockquote>
 <h4 id="how-do-i-change-the-color-of-the-structures">How do I change the <em>color</em> of the structures?</h4>
+<blockquote>
+<p>Use the color box below the list in the Segmentation tab. Selecting Free Surfer will use the free surfer color table, selecting custom will allow you to select a color.</p>
+</blockquote>
 <h4 id="how-can-i-display-areas-of-the-dominant-cortex">How can I display areas of the <em>dominant</em> cortex?</h4>
+<blockquote>
+<p>By default the list displays the right and left cortex as two separate sub-trees. If you prefer to work with dominant and non-dominant cortexes, use the radio button on top of the list.</p>
+</blockquote>
 <h4 id="how-can-i-calculate-metrics-from-the-structures">How can I <em>calculate</em> metrics from the structures?</h4>
+<blockquote>
+<p>At the bottom of the tab there is a button which allows you to select among different metrics. Currently these are</p>
+<ul>
+<li>Volume: The total volume of the structures (always in world coordinates)</li>
+<li>Area: The surface area of the displayed structures. In case that more than one structure is showed, their values are added together.</li>
+<li>FA Inside: The mean FA value of the voxels inside the displayed structures</li>
+<li>MD Inside: The mean MD value of the voxels inside the displayed structures</li>
+</ul>
+<p>The calculated value will be displayed next to the box. The button labeled &quot;Export to database&quot; will open a dialog that will allow you to repeat the calculation for all subjects and save the results into the database.</p>
+</blockquote>
 <h3 id="tractography">Tractography</h3>
+<blockquote>
+<p>Most of the tasks in this list are accomplished using the Segmentation tab of the left panel.</p>
+</blockquote>
 <h4 id="how-can-i-see-the-full-tractography">How can I see the <em>full</em> tractography?</h4>
-<h4 id="how-can-i-filter-the-current-fibers">How can I <em>filter</em> the current fibers?</h4>
+<blockquote>
+<p>Click on the &quot;Select Saved Bundles&quot; button and select the bundle called All near the top of the list.</p>
+</blockquote>
+<h4 id="how-can-i-filter-fibers">How can I <em>filter</em> fibers?</h4>
+<blockquote>
+<p>It is possible to filter the tractography using segmented structures. For these look at the box labeled &quot;From Seg.&quot; There will be two options</p>
+<ul>
+<li>Through Any: Display fibers that cross any of the displayed structures</li>
+<li>Through All: Display fibers that pass through all the displayed structures</li>
+</ul>
+<p>Fiber bundles defined in this way can be <em>saved</em> using the &quot;Save Bundle&quot; button, and will be afterwards available in the Select Saved Bundle dialog. Most complex fiber selection operations will be available in a future tool.</p>
+</blockquote>
 <h4 id="how-can-i-change-the-color-of-the-current-fibers">How can I change the <em>color</em> of the current fibers ?</h4>
+<blockquote>
+<p>The box labeled color has several options for coloring the fibers:</p>
+<ul>
+<li>Orientation: Segments going from left to right will be colored red, segments from top to buttom will be blue and segments from back to front will be green</li>
+<li>FA (Point): The colors of each point are determined by the FA value at the corresponding voxel. A color bar is available with the convention.</li>
+<li>FA (Line): The colors of each line are determined by the mean FA value across the complete line. A color bar is available with the convention.</li>
+<li>MD (Point): The colors of each point are determined by the MD value at the corresponding voxel. A color bar is available with the convention.</li>
+<li>MD (Line): The colors of each line are determined by the mean MD value across the complete line. A color bar is available with the convention.</li>
+<li>Length: The colors of each line are determined according to its length. A color bar is available.</li>
+<li>By Line: A random color is assigned to each line, this makes it easy to follow a single line.</li>
+<li>By Bundle: Each bundle (loaded through the &quot;select saved bundles button&quot;) is assigned a different color</li>
+</ul>
+</blockquote>
 <h4 id="how-can-i-view-multiple-bundles">How can I view multiple <em>bundles</em> ?</h4>
+<blockquote>
+<p>The &quot;Select Saved Bundles&quot; button can be used to add bundles to the current display.</p>
+</blockquote>
 <h4 id="how-can-i-calculate-metrics-of-the-current-fibers">How can I <em>calculate</em> metrics of the current fibers?</h4>
+<blockquote>
+<p>First you have to select a bundle by double clicking it in the Bundles list. The selected bundle is shown at the end of the Tractography tab. There is a box towards the bottom of the tab that can be used to select among different metrics, the value will be shown in the box next to it. The &quot;Export to Database&quot; button can be used to calculate this values for all subjects and save the results into the database.</p>
+</blockquote>
 <h3 id="context-panel">Context Panel</h3>
 <h4 id="how-can-i-change-the-displayed-variables">How can I change the displayed variables?</h4>
 <h4 id="how-can-i-define-a-new-variable">How can I define a new variable?</h4>
