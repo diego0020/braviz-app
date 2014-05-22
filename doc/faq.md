@@ -26,13 +26,22 @@
 
 #### How do I reset the camera?
 
-
+> In the bottom-left you will find a box labeled "camera to:", which will allow you to reset the camera to some useful predefined positions.
 
 #### How do I change subject?
 
+> Use the arrows under the main view. Alternatively, go to the subjects tab of the left panel and double click a subject in the list.
+
 #### How do I change the current *coordinate* system ?
 
+> In the bottom-left you will find a box labeled "Coordinates", which will allow you to choose a coordinate system for the viewer.
+
 #### What *coordinate* systems are available?
+
+> Currently there are three coordinate systems available:
+> * World: This correspond to real world coordinates in *mm*. 
+> * Talairach: Individuals are mapped to a talairach standard brain using an affine transform. This means that all objects are rotated and scaled in order to match the template. Relative distances are preserved.
+> * Dartel: A non linear transformation is applied to map subjects to a Dartel template. Here each area of the brain is distorted in a different way, resulting in a very close match, but significant overall distortion. This is useful for comparing values at approximately similar locations across different subjects.
 
 ### Images
 
