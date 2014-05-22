@@ -1,5 +1,7 @@
 #Braviz Frequenty Asked Questions
 
+<hr>
+
 ## Subject Overview
 
 #### Where do I start?
@@ -45,17 +47,23 @@
 
 ### Images
 
+Most image manipulation tasks are carried out using the image tab of the left frame.
+
 #### How do I change the Image *slice*
 
-> Use the slice box or the slider in the image tab. Alternatively hold the middle mouse button over the image and move the mouse.
+> Use the slice box or the slider in the Image tab. Alternatively hold the middle mouse button over the image and move the mouse.
 
 #### How do I change the current Image?
 
->
+> Use the modality box in the Image tab.
 
 #### How do I *hide* the Image?
 
+> Select None in the modality box of the image tab.
+
 #### How do I change the *orientation* of the Image ?
+
+> Use the Orientation box in the image tab. Notice the camera will not move when changing the orientation, so you will probably have to move it in order to get a good view of the new image.
 
 ### Segmented Structures
 
