@@ -1,0 +1,2 @@
+<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="pytanic_css.css">

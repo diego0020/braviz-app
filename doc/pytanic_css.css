@@ -1,0 +1,13 @@
+body{
+ max-width: 600px;
+ margin-left:350px;
+ margin-right:auto
+ }
+nav {
+position: fixed;
+margin-left: -300px;
+max-width: 300px;
+}
+em {
+color: cadetblue;
+}
