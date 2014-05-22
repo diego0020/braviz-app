@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="icons">
+    <file>help-browser.png</file>
+    <file>info.png</file>
     <file>linear.png</file>
     <file>correlations_app.png</file>
     <file>tcllogo.gif</file>

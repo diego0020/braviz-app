@@ -7,7 +7,7 @@ import logging
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
-from braviz.interaction.qt_guis.menu2 import Ui_BavizMenu
+from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
 import braviz.interaction.qt_dialogs
 import braviz.interaction.qt_sample_select_dialog
 
@@ -36,6 +36,7 @@ class BravizMenu2(QtGui.QMainWindow):
         self.ui.variables.clicked.connect(self.launch_variable_management_dialog)
         self.ui.scenarios.clicked.connect(self.launch_scenarios_dialog)
         self.ui.samples.clicked.connect(self.launch_samples_dialog)
+        self.ui.help_button.clicked.connect(self.open_help)
 
 
     __applications = {
@@ -85,8 +86,14 @@ class BravizMenu2(QtGui.QMainWindow):
             args = [interpreter,"-m","braviz.applications.%s"%app,str(scn_id)]
             subprocess.Popen(args)
 
-
-
+    def open_help(self):
+        import webbrowser
+        import os
+        my_path = os.path.dirname(__file__)
+        doc_path = os.path.join(my_path,"..","..","doc")
+        help_file = os.path.join(doc_path,"faq.html")
+        url = "file://%s"%help_file
+        webbrowser.open(url,2)
 
 def run():
     import sys

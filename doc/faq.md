@@ -47,7 +47,11 @@
 
 #### How do I change the Image *slice*
 
+> Use the slice box or the slider in the image tab. Alternatively hold the middle mouse button over the image and move the mouse.
+
 #### How do I change the current Image?
+
+>
 
 #### How do I *hide* the Image?
 
