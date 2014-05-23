@@ -137,7 +137,7 @@ Most of the tasks in this list are accomplished using the Segmentation tab of th
 
 #### How can I change the displayed variables?
 
-> Right click on anywhere in the context panel, and click on "Change Variables" in the context menu. A dialog will appear. To add a variable,
+> Right click anywhere in the context panel, and click on "Change Variables" in the context menu. A dialog will appear. To add a variable,
 > double click on its name in the top list, review metadata, and then click on "Save and Add". The variable should now appear on the bottom list.
 > To remove a variable, right click on its name in the bottom list, and click on "remove".
 

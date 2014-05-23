@@ -11,7 +11,7 @@ from braviz.interaction.qt_guis.linear_reg import Ui_LinearModel
 import braviz.interaction.qt_dialogs
 import braviz.interaction.qt_sample_select_dialog
 from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectDialog,
-    InteractionSelectDialog)
+                                           InteractionSelectDialog)
 
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 import braviz.interaction.r_functions
@@ -33,16 +33,17 @@ import logging
 import numpy as np
 import pandas as pd
 
+
 class LinearModelApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.outcome_var_name = None
         self.model = None
         self.regressors_model = braviz_models.AnovaRegressorsModel()
-        self.__table_cols = ["Slope","T Value","P Value"]
+        self.__table_cols = ["Slope", "T Value", "P Value"]
         empty_df = pd.DataFrame(columns=self.__table_cols)
         empty_df.index.name = "Coefficient"
-        self.result_model = braviz_models.DataFrameModel(empty_df,self.__table_cols)
+        self.result_model = braviz_models.DataFrameModel(empty_df, self.__table_cols)
         self.sample_model = braviz_models.SampleTree()
         self.plot = None
         self.last_viewed_subject = None
@@ -59,8 +60,8 @@ class LinearModelApp(QMainWindow):
     def setup_gui(self):
         self.ui = Ui_LinearModel()
         self.ui.setupUi(self)
-        self.ui.outcome_sel.insertSeparator(self.ui.outcome_sel.count()-1)
-        self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count()-1)
+        self.ui.outcome_sel.insertSeparator(self.ui.outcome_sel.count() - 1)
+        self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count() - 1)
         #self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
         self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
         self.ui.add_regressor_button.clicked.connect(self.launch_add_regressor_dialog)
@@ -100,10 +101,10 @@ class LinearModelApp(QMainWindow):
         if self.ui.outcome_sel.currentIndex() == self.ui.outcome_sel.count() - 1:
             #print "dispatching dialog"
             params = {}
-            dialog = OutcomeSelectDialog(params,sample=self.sample)
+            dialog = OutcomeSelectDialog(params, sample=self.sample)
             selection = dialog.exec_()
             logger = logging.getLogger(__name__)
-            logger.info("Outcome selection %s",params)
+            logger.info("Outcome selection %s", params)
             if selection > 0:
                 self.set_outcome_var_type(params["selected_outcome"])
             else:
@@ -151,11 +152,11 @@ class LinearModelApp(QMainWindow):
         self.check_if_ready()
 
     def launch_add_regressor_dialog(self):
-        reg_dialog = RegressorSelectDialog(self.outcome_var_name, self.regressors_model,sample=self.sample)
+        reg_dialog = RegressorSelectDialog(self.outcome_var_name, self.regressors_model, sample=self.sample)
         result = reg_dialog.exec_()
         if result == reg_dialog.Accepted:
             if self.regressors_model.rowCount() > 0:
-                index = self.regressors_model.index(self.regressors_model.rowCount()-1,0)
+                index = self.regressors_model.index(self.regressors_model.rowCount() - 1, 0)
                 self.update_main_plot_from_regressors(index)
             self.check_if_ready()
 
@@ -188,7 +189,8 @@ class LinearModelApp(QMainWindow):
             interactions = self.regressors_model.get_interactors_dict()
             self.ui.calculate_button.setEnabled(0)
             res = braviz.interaction.r_functions.calculate_normalized_linear_regression(self.outcome_var_name,
-                                                                                  regressors,interactions,self.sample)
+                                                                                        regressors, interactions,
+                                                                                        self.sample)
         except Exception as e:
             msg = QtGui.QMessageBox()
             msg.setText(str(e.message))
@@ -202,10 +204,10 @@ class LinearModelApp(QMainWindow):
             self.regression_results = None
         else:
             #print res
-            self.ui.r_squared_label.setText("R<sup>2</sup> = %.2f"%res.get("adj_r2",np.nan))
-            f_nom,f_dem = res.get("f_stat_df",(0,0))
-            self.ui.f_value_label.setText("F(%d,%d) = %.2f"%(f_nom,f_dem,res.get("f_stats_val",np.nan)))
-            self.ui.p_value_label.setText("P = %g"%res.get("f_pval",np.nan))
+            self.ui.r_squared_label.setText("R<sup>2</sup> = %.2f" % res.get("adj_r2", np.nan))
+            f_nom, f_dem = res.get("f_stat_df", (0, 0))
+            self.ui.f_value_label.setText("F(%d,%d) = %.2f" % (f_nom, f_dem, res.get("f_stats_val", np.nan)))
+            self.ui.p_value_label.setText("P = %g" % res.get("f_pval", np.nan))
             coeffs_df = res["coefficients_df"]
             self.result_model.set_df(coeffs_df)
             self.coefs_df = coeffs_df
@@ -221,22 +223,23 @@ class LinearModelApp(QMainWindow):
         var_name = unicode(self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
         if var_name == "(Intercept)":
             df2 = braviz_tab_data.get_data_frame_by_name(self.outcome_var_name)
-            df2["Jitter"]=np.random.random(len(df2))
+            df2["Jitter"] = np.random.random(len(df2))
             df2.dropna(inplace=True)
-            self.plot.draw_scatter(df2,"Jitter",self.outcome_var_name,reg_line=False)
+            self.plot.draw_scatter(df2, "Jitter", self.outcome_var_name, reg_line=False)
             b = np.mean(df2[self.outcome_var_name])
-            self.plot.axes.axhline(b,ls="--",c=(0.3,0.3,0.3))
+            self.plot.axes.axhline(b, ls="--", c=(0.3, 0.3, 0.3))
             self.plot.draw()
-        elif "*" in var_name:
-            print "not implemented"
         else:
-            if not var_name in self.regression_results["data"]:
-                #maybe there is a level
-                if "_" in var_name:
-                    levels = var_name.rfind("_")
-                    var_name=var_name[:levels]
-            df2 = self.isolate_one(var_name)
-            self.plot.draw_scatter(df2,var_name,self.outcome_var_name,reg_line=True)
+            #get components
+            components = self.coefs_df.loc[var_name,"components"]
+            if len(components) > 1:
+                #interaction term
+                print "not yet implemented"
+            else:
+                target_var = components[0]
+                df2 = self.isolate_one(target_var)
+                self.plot.draw_scatter(df2, var_name, self.outcome_var_name, reg_line=True)
+                self.plot.set_figure_title("Mean effect of %s"%target_var)
         return
 
 
@@ -246,15 +249,15 @@ class LinearModelApp(QMainWindow):
         var_name = unicode(self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
         if "*" in var_name:
             factors = var_name.split("*")
-            if len(factors)>2:
-                factors = random.sample(factors,2)
-            self.draw_two_vars_scatter_plot(factors[0],factors[1])
+            if len(factors) > 2:
+                factors = random.sample(factors, 2)
+            self.draw_two_vars_scatter_plot(factors[0], factors[1])
         else:
             self.draw_simple_scatter_plot(var_name)
         return
 
 
-    def add_subjects_to_plot(self, index=None,subject_ids=None):
+    def add_subjects_to_plot(self, index=None, subject_ids=None):
         #find selected subjects
         print "not yet implemented"
         return
@@ -270,26 +273,26 @@ class LinearModelApp(QMainWindow):
         residuals = self.regression_results["residuals"]
         fitted = self.regression_results["fitted"]
         names = self.regression_results["data_points"]
-        assert isinstance(names,list)
-        self.plot.draw_residuals(residuals,fitted,names)
+        assert isinstance(names, list)
+        self.plot.draw_residuals(residuals, fitted, names)
 
-    def draw_simple_scatter_plot(self,regressor_name):
-        df = braviz_tab_data.get_data_frame_by_name([self.outcome_var_name,regressor_name])
+    def draw_simple_scatter_plot(self, regressor_name):
+        df = braviz_tab_data.get_data_frame_by_name([self.outcome_var_name, regressor_name])
         df.dropna(inplace=True)
         if braviz_tab_data.is_variable_name_real(regressor_name):
             reg_line = True
         else:
             reg_line = False
-        self.plot.draw_scatter(df,regressor_name,self.outcome_var_name,reg_line=reg_line)
+        self.plot.draw_scatter(df, regressor_name, self.outcome_var_name, reg_line=reg_line)
 
-    def draw_two_vars_scatter_plot(self,regressor1,regressor2):
+    def draw_two_vars_scatter_plot(self, regressor1, regressor2):
         var_1_real = braviz_tab_data.is_variable_name_real(regressor1)
         var_2_real = braviz_tab_data.is_variable_name_real(regressor2)
         outcome = self.outcome_var_name
 
         hue_var = regressor2
         x_var = regressor1
-        df = braviz_tab_data.get_data_frame_by_name([regressor1,regressor2,outcome])
+        df = braviz_tab_data.get_data_frame_by_name([regressor1, regressor2, outcome])
         df.dropna(inplace=True)
         qualitative_map = True
         if var_2_real and not var_1_real:
@@ -299,19 +302,19 @@ class LinearModelApp(QMainWindow):
         elif var_2_real and var_1_real:
             #cut var2
             real_data = df.pop(regressor2)
-            dmin,dmax = np.min(real_data),np.max(real_data)
+            dmin, dmax = np.min(real_data), np.max(real_data)
             N_PIECES = 3
-            delta = (dmax-dmin)/N_PIECES
-            nom_data=(real_data-dmin)*N_PIECES//(dmax-dmin)+1
-            nom_data = np.minimum(nom_data,N_PIECES)
+            delta = (dmax - dmin) / N_PIECES
+            nom_data = (real_data - dmin) * N_PIECES // (dmax - dmin) + 1
+            nom_data = np.minimum(nom_data, N_PIECES)
             nom_data = nom_data.astype(np.int)
             df[regressor2] = nom_data
-            labels = dict( (i+1,"%s $\\geq$ %.3f"%(regressor2,dmin+i*delta)) for i in xrange(N_PIECES) )
+            labels = dict((i + 1, "%s $\\geq$ %.3f" % (regressor2, dmin + i * delta)) for i in xrange(N_PIECES))
             qualitative_map = False
         else:
             labels = braviz_tab_data.get_names_label_dict(hue_var)
 
-        self.plot.draw_scatter(df,x_var,outcome,hue_var=hue_var,hue_labels=labels,qualitative_map = qualitative_map)
+        self.plot.draw_scatter(df, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map)
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"
@@ -332,16 +335,18 @@ class LinearModelApp(QMainWindow):
                 return
             subj = message.get('subject')
             if subj is not None:
-                log.info("showing subject %s"%subj)
+                log.info("showing subject %s" % subj)
                 self.add_subjects_to_plot(subject_ids=[int(subj)])
 
 
-    def create_context_action(self,subject,scenario_id,scenario_name,show_name = None):
+    def create_context_action(self, subject, scenario_id, scenario_name, show_name=None):
         if show_name is None:
             show_name = scenario_name
+
         def show_scenario():
-            self.change_subject_in_mri_viewer(subject,scenario_id)
-        action = QtGui.QAction("Show subject %s's %s" % (subject,show_name), None)
+            self.change_subject_in_mri_viewer(subject, scenario_id)
+
+        action = QtGui.QAction("Show subject %s's %s" % (subject, show_name), None)
         action.triggered.connect(show_scenario)
         return action
 
@@ -355,24 +360,24 @@ class LinearModelApp(QMainWindow):
         scenarios = {}
         outcome_idx = braviz_tab_data.get_var_idx(self.outcome_var_name)
         outcome_scenarios = braviz_user_data.get_variable_scenarios(outcome_idx)
-        if len(outcome_scenarios)>0:
-            scenarios[self.outcome_var_name]=outcome_scenarios.items()
+        if len(outcome_scenarios) > 0:
+            scenarios[self.outcome_var_name] = outcome_scenarios.items()
         regressors = self.regressors_model.get_regressors()
         for reg in regressors:
             reg_idx = braviz_tab_data.get_var_idx(reg)
             reg_scenarios = braviz_user_data.get_variable_scenarios(reg_idx)
             if len(reg_scenarios):
-                scenarios[reg]=reg_scenarios.items()
+                scenarios[reg] = reg_scenarios.items()
 
         menu = QtGui.QMenu("Subject %s" % subject)
-        launch_mri_action = self.create_context_action(subject,None,"MRI")
+        launch_mri_action = self.create_context_action(subject, None, "MRI")
         menu.addAction(launch_mri_action)
 
         log = logging.getLogger(__name__)
         log.debug(scenarios)
-        for var,scn_lists in scenarios.iteritems():
-            for scn_id,scn_name in scn_lists:
-                action = self.create_context_action(subject,scn_id,scn_name,var)
+        for var, scn_lists in scenarios.iteritems():
+            for scn_id, scn_name in scn_lists:
+                action = self.create_context_action(subject, scn_id, scn_name, var)
                 menu.addAction(action)
 
         menu.exec_(global_pos)
@@ -404,47 +409,47 @@ class LinearModelApp(QMainWindow):
     def launch_mri_viewer(self):
         log = logging.getLogger(__name__)
         #TODO: think of better way of choicing ports
-        address = ('localhost',6001)
-        auth_key=multiprocessing.current_process().authkey
+        address = ('localhost', 6001)
+        auth_key = multiprocessing.current_process().authkey
         auth_key_asccii = binascii.b2a_hex(auth_key)
-        listener = multiprocessing.connection.Listener(address,authkey=auth_key)
+        listener = multiprocessing.connection.Listener(address, authkey=auth_key)
 
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
         log.info("launching viewer")
-        log.info([sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii])
-        self.mri_viewer_process = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",
-                                                    "0",auth_key_asccii])
+        log.info([sys.executable, "-m", "braviz.applications.subject_overview", "0", auth_key_asccii])
+        self.mri_viewer_process = subprocess.Popen([sys.executable, "-m", "braviz.applications.subject_overview",
+                                                    "0", auth_key_asccii])
 
         #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
         #self.mri_viewer_process.start()
         self.mri_viewer_pipe = listener.accept()
         self.poll_timer.start(200)
 
-    def change_subject_in_mri_viewer(self, subj,scenario=None):
+    def change_subject_in_mri_viewer(self, subj, scenario=None):
         log = logging.getLogger(__name__)
         if (self.mri_viewer_process is None) or (self.mri_viewer_process.poll() is not None):
             self.launch_mri_viewer()
         if self.mri_viewer_pipe is not None:
             message = {'subject': str(subj)}
             if scenario is not None:
-                message["scenario"]=scenario
+                message["scenario"] = scenario
             self.mri_viewer_pipe.send(message)
             log.info("sending message: subj: %s", message)
 
     def closeEvent(self, *args, **kwargs):
         #if self.mri_viewer_process is not None:
-            #self.mri_viewer_process.terminate()
+        #self.mri_viewer_process.terminate()
         log = logging.getLogger(__name__)
         log.info("Finishing")
 
     def get_state(self):
         state = {}
         vars_state = {}
-        vars_state["outcome"]=self.outcome_var_name
-        vars_state["regressors"]=self.regressors_model.get_regressors()
-        vars_state["interactions"]=self.regressors_model.get_interactions()
+        vars_state["outcome"] = self.outcome_var_name
+        vars_state["regressors"] = self.regressors_model.get_regressors()
+        vars_state["interactions"] = self.regressors_model.get_interactions()
         state["vars"] = vars_state
-        state["plot"] = {"var_name":self.plot_var_name}
+        state["plot"] = {"var_name": self.plot_var_name}
         state["sample"] = self.sample
 
         meta = dict()
@@ -459,16 +464,16 @@ class LinearModelApp(QMainWindow):
         state = self.get_state()
         params = {}
         app_name = state["meta"]["application"]
-        dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name,state,params)
-        res=dialog.exec_()
+        dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name, state, params)
+        res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             #save main plot as screenshot
             scn_id = params["scn_id"]
             pixmap = QtGui.QPixmap.grabWidget(self.plot)
-            file_name = "scenario_%d.png"%scn_id
+            file_name = "scenario_%d.png" % scn_id
             data_root = braviz.readAndFilter.kmc40_auto_data_root()
-            file_path = os.path.join(data_root, "braviz_data","scenarios",file_name)
+            file_path = os.path.join(data_root, "braviz_data", "scenarios", file_name)
             log.info(file_path)
             pixmap.save(file_path)
         log.info("saving")
@@ -477,19 +482,19 @@ class LinearModelApp(QMainWindow):
     def load_scenario_dialog(self):
         app_name = os.path.splitext(os.path.basename(__file__))[0]
         wanted_state = {}
-        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(app_name,wanted_state)
-        res= dialog.exec_()
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(app_name, wanted_state)
+        res = dialog.exec_()
         log = logging.getLogger(__name__)
-        if res==dialog.Accepted:
+        if res == dialog.Accepted:
             log.info("Loading state")
             log.info(wanted_state)
             self.restore_state(wanted_state)
 
-    def restore_state(self,wanted_state):
+    def restore_state(self, wanted_state):
         #restore outcome
         #sample
         logger = logging.getLogger(__name__)
-        logger.info("loading state %s",wanted_state)
+        logger.info("loading state %s", wanted_state)
         sample = wanted_state.get("sample")
         if sample is not None:
             self.sample = sample
@@ -498,17 +503,17 @@ class LinearModelApp(QMainWindow):
         reg_name = wanted_state["vars"].get("outcome")
         if reg_name is not None:
             index = self.ui.outcome_sel.findText(reg_name)
-            if index >=0:
+            if index >= 0:
                 self.ui.outcome_sel.setCurrentIndex(index)
             else:
-                self.ui.outcome_sel.insertItem(0,reg_name)
+                self.ui.outcome_sel.insertItem(0, reg_name)
                 self.ui.outcome_sel.setCurrentIndex(0)
         self.set_outcome_var_type(reg_name)
         #restore regressors
-        regressors = wanted_state["vars"].get("regressors",tuple())
+        regressors = wanted_state["vars"].get("regressors", tuple())
         self.regressors_model.reset_data(regressors)
         #restore interactions
-        interactions = wanted_state["vars"].get("interactions",tuple())
+        interactions = wanted_state["vars"].get("interactions", tuple())
         #TODO: Must find a better way to encode interactions
         for inter in interactions:
             tokens = inter.split("*")
@@ -536,34 +541,47 @@ class LinearModelApp(QMainWindow):
             self.sample_model.set_sample(new_sample)
             self.update_main_plot(self.plot_var_name)
 
-    def isolate_one(self,factor,un_standardize=True):
-        df2 = self.regression_results["standardized_model"]
+    def isolate_one(self, factor, un_standardize=True):
+        standarized_data = self.regression_results["standardized_model"]
         coefs = self.coefs_df
-        df3=pd.DataFrame(df2[coefs.loc[factor,"r_name"]])
-        df3.columns = [factor]
         res = self.regression_results["residuals"]
         INTERCEPT = "(Intercept)"
-        beta_0 = coefs.loc[INTERCEPT,"Slope"]
+        beta_0 = coefs.loc[INTERCEPT, "Slope"]
         beta_1 = 0
         for var in coefs.index:
             if var == INTERCEPT:
                 continue
-            if "*" in var:
-                #TODO interaction terms
-                continue
             row = coefs.loc[var]
-            r_name = row["r_name"]
-            level_pos=r_name.rfind("R")+1
-            level = r_name[level_pos:]
-            r_name = r_name[:level_pos]
-            data = df2[r_name]
-            beta_j = row["Slope"]
-            #should we add it to beta 1?
-            if var == factor:
-                beta_1 += beta_j
-            #TODO factor not real
-        print "beta1",beta_1
-        df3[self.outcome_var_name]=beta_0+beta_1*df3[factor].values.squeeze()+res
+            components = row["components"]
+            if len(components)>1:
+                #interaction
+                pass
+                print "not yet implemented"
+            else:
+                var = components[0]
+                data = standarized_data[var]
+                beta_j = row["Slope"]
+                #should we add it to beta 1?
+                if var == factor:
+                    beta_1 += beta_j
+                    #TODO factor not real
+        print "beta1", beta_1
+        df3 = pd.DataFrame(standarized_data[factor])
+        df3[self.outcome_var_name] = beta_0 + beta_1 * df3[factor].values.squeeze() + res
+        if un_standardize is False:
+            return df3
+        #fix outcome var
+        outcome_data = df3[self.outcome_var_name]
+        m,s = self.regression_results["mean_sigma"][self.outcome_var_name]
+        us_outcome = 2*s*outcome_data+m
+        df3[self.outcome_var_name] = us_outcome
+        #fix x_var
+        type = self.regression_results["var_types"][factor]
+        x_data = df3[factor]
+        if type == "r":
+            m,s = self.regression_results["mean_sigma"][factor]
+            us_x_data =  2*s*x_data+m
+            df3[factor] = us_x_data
         return df3
 
 
@@ -583,6 +601,7 @@ def run():
     except Exception as e:
         log.exception(e)
         raise
+
 
 if __name__ == '__main__':
     run()

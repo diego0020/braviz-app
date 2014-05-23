@@ -263,13 +263,14 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             labels_dicts[var] = labels
         else:
             assert False
-
+    mean_sigma[outcome]=(np.mean(data_frame[outcome]),np.std(data_frame[outcome]))
     #variable names can be strange (unicode) ... we are going to change them to more abstract names like in anova
     standard_var_names = ["var_%d_R" % i for i in xrange(len(all_variables))]
     #now create a data frame with the new names
     data_frame_std = data_frame.copy()
     assert all(data_frame_std.columns == all_variables)
     data_frame_std.columns = standard_var_names
+
 
     #now we are ready to go into the R world
     r_data_frame = com.convert_to_r_dataframe(data_frame_std)
@@ -319,19 +320,22 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     residuals = list(standardized_model.rx2("residuals"))
     std_model = com.convert_robj(standardized_model.rx2("model"))
 
+
     fitted = list(standardized_model.rx2("fitted.values"))
     intercept = "(Intercept)"
-    std_names2orig_names = dict()
+    std_names2orig_names_labels = dict()
+    orig_names_labels2orig_vars = dict()
     for std_name in coef_dict_std.iterkeys():
         if std_name == intercept:
             #handle special case
-            std_names2orig_names[std_name] = std_name
+            std_names2orig_names_labels[std_name] = std_name
             continue
         if ":" in std_name:
             #interactions
             factors = std_name.split(":")
         else:
             factors = [std_name]
+        orig_factors_levels = []
         orig_factors = []
         for f in factors:
             dummy_level = None
@@ -354,21 +358,26 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
                     label = "%s-%s"%lst
                 else:
                     label = labels_dicts[orig_name][int(dummy_level)]
-                orig_name += "_%s" % label
+                orig_name_label = orig_name + "_%s" % label
+            else:
+                orig_name_label = orig_name[:]
+            orig_factors_levels.append(orig_name_label)
             orig_factors.append(orig_name)
-        if len(orig_factors) == 1:
-            std_names2orig_names[std_name] = orig_factors[0]
+        if len(orig_factors_levels) == 1:
+            orig_name_flat = orig_factors_levels[0]
             #coef_dicts[orig_factors[0]]=val
         else:
-            std_names2orig_names[std_name] = "*".join(sorted(orig_factors))
+            orig_name_flat = "*".join(sorted(orig_factors_levels))
             #coef_dicts[frozenset(orig_factors)]=val
+        std_names2orig_names_labels[std_name] = orig_name_flat
+        orig_names_labels2orig_vars[orig_name_flat]=tuple(orig_factors)
 
-    coef_dicts = dict((std_names2orig_names[k], v) for k, v in coef_dict_std.iteritems())
-    std_errors = dict((std_names2orig_names[k], v) for k, v in std_errors_std.iteritems())
-    coef_t = dict((std_names2orig_names[k], v) for k, v in t_stats_std.iteritems())
-    coef_p = dict((std_names2orig_names[k], v) for k, v in coefs_p_std.iteritems())
-    conf_95 = dict((std_names2orig_names[k], v) for k, v in conf_95_std.iteritems())
-    r_names = dict((v,k) for k,v in std_names2orig_names.iteritems())
+    coef_dicts = dict((std_names2orig_names_labels[k], v) for k, v in coef_dict_std.iteritems())
+    std_errors = dict((std_names2orig_names_labels[k], v) for k, v in std_errors_std.iteritems())
+    coef_t = dict((std_names2orig_names_labels[k], v) for k, v in t_stats_std.iteritems())
+    coef_p = dict((std_names2orig_names_labels[k], v) for k, v in coefs_p_std.iteritems())
+    conf_95 = dict((std_names2orig_names_labels[k], v) for k, v in conf_95_std.iteritems())
+    r_names = dict((v,k) for k,v in std_names2orig_names_labels.iteritems())
     #combine all this into a data frame
     coefs_df = pd.DataFrame(pd.Series(coef_dicts,name="Slope"))
     coefs_df["T Value"]=pd.Series(coef_t)
@@ -376,10 +385,26 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     coefs_df["Std_error"]=pd.Series(std_errors)
     coefs_df["CI_95"]=pd.Series(conf_95)
     coefs_df["r_name"]=pd.Series(r_names)
+    coefs_df["components"]=pd.Series(orig_names_labels2orig_vars)
     coefs_df.index.name = "Coefficient"
 
-    print coefs_df
+    #print coefs_df
 
+    #translate columns to standard names
+    std_names2orig_names = dict()
+    for var,r_var in izip(all_variables,standard_var_names):
+        t = var_type.get(var,"r")
+        if t=="r":
+            std_names2orig_names["z."+r_var]=var
+        elif t=="b":
+            std_names2orig_names["c."+r_var]=var
+        elif t=="n":
+            std_names2orig_names[r_var]=var
+        else:
+            pass
+            assert False
+
+    std_model.columns = [std_names2orig_names[c] for c in std_model.columns]
 
     adjusted_r_squared = fit_summary.rx2("adj.r.squared")[0]
     fit_p_val = r_environment["f_pval_r"][0]
@@ -387,10 +412,6 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     f_statistic_nom_df = fit_summary.rx2("fstatistic").rx2("numdf")[0]
     f_statistic_denom_df = fit_summary.rx2("fstatistic").rx2("dendf")[0]
 
-
-    print std_errors
-    #print coef_dicts
-    #recover original names in the coef_dict
     out_dict = {
         "coefficients_df": coefs_df,
         "residuals": residuals,
@@ -403,5 +424,6 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
         "standardized_model" : std_model,
         "data":data_frame,
         "mean_sigma":mean_sigma,
+        "var_types":var_type,
     }
     return out_dict

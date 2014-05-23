@@ -60,6 +60,7 @@ class MatplotWidget(FigureCanvas):
         self.data = None
 
         self.colors_dict = None
+        self.__title = None
 
 
     def __get_one_axis(self):
@@ -155,6 +156,11 @@ class MatplotWidget(FigureCanvas):
             log.debug("right_click")
             self.context_requested.emit(str(last_id))
 
+    def set_figure_title(self,title):
+        #if self.__title is not None:
+        #    self.__title.remove()
+        self.__title = self.axes.set_title(title)
+        self.draw()
 
 class MatplotBarPlot(_AbstractPlot):
     def __init__(self,axes,data,ylims=None,orientation = "vertical",group_labels=None):
