@@ -27,7 +27,7 @@
 <li><a href="#anova-analysis">Anova Analysis</a></li>
 <li><a href="#linear-regression">Linear Regression</a></li>
 <li><a href="#scenarios">Scenarios</a></li>
-<li><a href="#samples">Samples</a></li>
+<li><a href="#subsamples">Subsamples</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -61,9 +61,17 @@
 <blockquote>
 <p>In the bottom-left you will find a box labeled &quot;Coordinates&quot;, which will allow you to choose a coordinate system for the viewer.</p>
 </blockquote>
-<h4 id="what-coordinate-systems-are-available">What <em>coordinate</em> systems are available?</h4>
+<h4 id="coordinates">What <em>coordinate</em> systems are available?</h4>
 <blockquote>
 <p>Currently there are three coordinate systems available: * World: This correspond to real world coordinates in <em>mm</em>. * Talairach: Individuals are mapped to a talairach standard brain using an affine transform. This means that all objects are rotated and scaled in order to match the template. Relative distances are preserved. * Dartel: A non linear transformation is applied to map subjects to a Dartel template. Here each area of the brain is distorted in a different way, resulting in a very close match, but significant overall distortion. This is useful for comparing values at approximately similar locations across different subjects.</p>
+</blockquote>
+<h4 id="how-can-i-save-my-work">How can I <em>Save</em> my work?</h4>
+<blockquote>
+<p>Click in the &quot;file&quot; menu and afterwards in &quot;save scenario&quot;. You will be given the option to write a description that could be helpful in the future to identify this scenario.</p>
+</blockquote>
+<h4 id="how-can-i-load-a-previous-state">How can I <em>Load</em> a previous state?</h4>
+<blockquote>
+<p>Click in the &quot;file&quot; menu and afterwards in &quot;load scenario&quot;. A dialog will appear where you can select among all the scenarios you have saved.</p>
 </blockquote>
 <h3 id="images">Images</h3>
 <p>Most image manipulation tasks are carried out using the image tab of the left frame.</p>
@@ -150,7 +158,7 @@
 <h3 id="context-panel">Context Panel</h3>
 <h4 id="how-can-i-change-the-displayed-variables">How can I change the displayed variables?</h4>
 <blockquote>
-<p>Right click on anywhere in the context panel, and click on &quot;Change Variables&quot; in the context menu. A dialog will appear. To add a variable, double click on its name in the top list, review metadata, and then click on &quot;Save and Add&quot;. The variable should now appear on the bottom list. To remove a variable, right click on its name in the bottom list, and click on &quot;remove&quot;.</p>
+<p>Right click anywhere in the context panel, and click on &quot;Change Variables&quot; in the context menu. A dialog will appear. To add a variable, double click on its name in the top list, review metadata, and then click on &quot;Save and Add&quot;. The variable should now appear on the bottom list. To remove a variable, right click on its name in the bottom list, and click on &quot;remove&quot;.</p>
 </blockquote>
 <h4 id="how-can-i-define-a-new-variable">How can I define a new variable?</h4>
 <blockquote>
@@ -158,10 +166,23 @@
 </blockquote>
 <h2 id="samples-overview">Samples Overview</h2>
 <h4 id="what-am-i-looking-at">What am I looking at?</h4>
+<blockquote>
+<p>This tool shows you data from several subjects at the same time. 3d data is organized in groups and sorted from left to right. The data inside each of the views is loaded from a scenario defined in the <em>Subject</em> <em>overview</em> tool. In order to load a view, click in the &quot;file&quot; menu and then in &quot;load visualization&quot;. A dialog will appear where you can access all of your saved scenarios.</p>
+</blockquote>
 <h4 id="how-do-i-change-the-current-camera">How do I change the current camera?</h4>
+<blockquote>
+<p>You can click in an empty space in any of the 3d viewers and navigate as if you were in the subject overview application. Afterwards you may use the &quot;Camera&quot; box in order to copy the camera to all the viewers or to reload the original camera.</p>
+</blockquote>
 <h4 id="how-do-i-change-the-grouping-variable">How do I change the <em>grouping</em> variable?</h4>
+<blockquote>
+<p>Use the &quot;Facet Variable&quot; box. Notice that only <em>nominal</em> variables can be selected for this role.</p>
+</blockquote>
 <h4 id="how-do-i-change-the-sorting-variable">How do I change the <em>sorting</em> variable?</h4>
+<blockquote>
+<p>Use the &quot;Sort Variable&quot; box. Notice that only <em>rational</em> variables can be selected for this role.</p>
+</blockquote>
 <h4 id="how-do-i-change-the-current-coordinates">How do I change the current <em>coordinates</em>?</h4>
+<p>Use the coordinates box. For an overview of the available coordinates look at <a href="#coordinates">coordinates</a></p>
 <h2 id="anova-analysis">Anova Analysis</h2>
 <h4 id="how-do-i-perform-an-anova-analysis">How do I perform an Anova analysis?</h4>
 <h4 id="what-is-an-outcome-variable">What is an <em>outcome</em> variable?</h4>
@@ -170,7 +191,14 @@
 <h4 id="what-is-the-coefficients-plot">What is the <em>coefficients</em> plot?</h4>
 <h2 id="scenarios">Scenarios</h2>
 <h4 id="what-are-scenarios">What are scenarios?</h4>
-<h2 id="samples">Samples</h2>
+<h2 id="subsamples">Subsamples</h2>
 <h4 id="what-are-samples">What are samples?</h4>
+<blockquote>
+<p>Samples allow you to run all kinds of analyses in a subset of the population. You may define for example a sample for only female participants and run specific tests in this smaller population. Most of the tools in the braviz toolkit have an option to select a subsample.</p>
+</blockquote>
+<h4 id="how-do-i-define-a-new-subsample">How do I define a new subsample?</h4>
+<blockquote>
+<p>When clicking in &quot;new&quot; in the subsamples dialog a dialog will appear. The left panel provides a working space, and the right panel provides a view of the current sample. In the middle there are buttons which allow you to move data between the two panels. You may hover the mouse over them to get a better idea of what they do. You may also right click in a single subject in the left panel to show a context menu with the option of adding him manually to the sample. In the same way you can right click in individual subjects in the right panel in order to remove them from the sample (for example outliers or erroneus data).</p>
+</blockquote>
 </body>
 </html>

@@ -38,12 +38,20 @@
 
 > In the bottom-left you will find a box labeled "Coordinates", which will allow you to choose a coordinate system for the viewer.
 
-#### What *coordinate* systems are available?
+#### What *coordinate* systems are available?{#coordinates}
 
 > Currently there are three coordinate systems available:
 > * World: This correspond to real world coordinates in *mm*. 
 > * Talairach: Individuals are mapped to a talairach standard brain using an affine transform. This means that all objects are rotated and scaled in order to match the template. Relative distances are preserved.
 > * Dartel: A non linear transformation is applied to map subjects to a Dartel template. Here each area of the brain is distorted in a different way, resulting in a very close match, but significant overall distortion. This is useful for comparing values at approximately similar locations across different subjects.
+
+#### How can I *Save* my work?
+
+> Click in the "file" menu and afterwards in "save scenario". You will be given the option to write a description that could be helpful in the future to identify this scenario.
+
+#### How can I *Load* a previous state?
+
+> Click in the "file" menu and afterwards in "load scenario". A dialog will appear where you can select among all the scenarios you have saved.
 
 ### Images
 
@@ -151,13 +159,24 @@ Most of the tasks in this list are accomplished using the Segmentation tab of th
 
 #### What am I looking at?
 
+> This tool shows you data from several subjects at the same time. 3d data is organized in groups and sorted from left to right. The data inside each of the views is loaded from a scenario defined in the *Subject* *overview* tool. 
+> In order to load a view, click in the "file" menu and then in "load visualization". A dialog will appear where you can access all of your saved scenarios.
+
 #### How do I change the current camera?
+
+> You can click in an empty space in any of the 3d viewers and navigate as if you were in the subject overview application. Afterwards you may use the "Camera" box in order to copy the camera to all the viewers or to reload the original camera.
 
 #### How do I change the *grouping* variable?
 
+> Use the "Facet Variable" box. Notice that only *nominal* variables can be selected for this role.
+
 #### How do I change the *sorting* variable?
 
+> Use the "Sort Variable" box. Notice that only *rational* variables can be selected for this role.
+
 #### How do I change the current *coordinates*?
+
+> Use the coordinates box. For an overview of the available coordinates look at [What coordinates systems are available?](#coordinates)
 
 ## Anova Analysis
 
@@ -175,6 +194,22 @@ Most of the tasks in this list are accomplished using the Segmentation tab of th
 
 #### What are scenarios?
 
-## Samples
+## Subsamples
 
 #### What are samples?
+
+> Samples allow you to run all kinds of analyses in a subset of the population.
+> You may define for example a sample for only female participants and run specific
+> tests in this smaller population. Most of the tools in the braviz toolkit have an option
+> to select a subsample.
+
+#### How do I define a new subsample?
+
+> When clicking in "new" in the subsamples dialog a dialog will appear. The left panel provides
+> a working space, and the right panel provides a view of the current sample. In the middle there are
+> buttons which allow you to move data between the two panels. You may hover the mouse over them
+> to get a better idea of what they do.
+> You may also right click in a single subject in the left panel to show a context menu with the
+> option of adding him manually to the sample. In the same way you can right click in individual subjects in the right
+> panel in order to remove them from the sample (for example outliers or erroneus data).
+
