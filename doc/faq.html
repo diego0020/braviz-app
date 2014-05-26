@@ -182,15 +182,49 @@
 <p>Use the &quot;Sort Variable&quot; box. Notice that only <em>rational</em> variables can be selected for this role.</p>
 </blockquote>
 <h4 id="how-do-i-change-the-current-coordinates">How do I change the current <em>coordinates</em>?</h4>
-<p>Use the coordinates box. For an overview of the available coordinates look at <a href="#coordinates">coordinates</a></p>
+<blockquote>
+<p>Use the coordinates box. For an overview of the available coordinates look at <a href="#coordinates">What coordinates systems are available?</a></p>
+</blockquote>
 <h2 id="anova-analysis">Anova Analysis</h2>
 <h4 id="how-do-i-perform-an-anova-analysis">How do I perform an Anova analysis?</h4>
-<h4 id="what-is-an-outcome-variable">What is an <em>outcome</em> variable?</h4>
+<h4 id="what-is-an-outcome-variable-dependent-variable">What is an <em>outcome</em> variable (Dependent variable)?</h4>
+<blockquote>
+<p>This is the variable that is affected by a change in the other variables. Also called response, dependent variable or <span class="math"><em>y</em></span>. This could also be a variable we are interested in predict based on the other variables (regressors).</p>
+</blockquote>
+<h4 id="how-do-i-add-regressors-or-independent-variables">How do I add regressors or independent variables?</h4>
+<blockquote>
+<p>To add independent variables click on the &quot;add regressor&quot; button. A dialog where you can select variables will be shown. Select a variable by double clicking on its name, review the meta data information at the middle of the dialog, and afterwards click on &quot;save and add&quot; in the left.</p>
+</blockquote>
+<h4 id="how-do-i-add-interactions">How do I add interactions?</h4>
+<blockquote>
+<p>Click in the &quot;add interaction&quot; button. A dialog with the current regressors on top and the current interactions in the button will be shown. To add a single interaction term, select the factors in the top list (by hodling ctrl and clicking on their names) and then click on add single term. If you want to add all the possible interactions between the variables click in add all combinations. When you are done close the dialog by clicking on the close button at the top of the window.</p>
+</blockquote>
+<h4 id="how-do-i-remove-a-regressor-or-interaction">How do I remove a regressor or interaction ?</h4>
+<blockquote>
+<p>Right click on its name in the regressors list, and select remove.</p>
+</blockquote>
 <h4 id="what-is-the-residuals-plot">What is the <em>residuals</em> plot ?</h4>
+<blockquote>
+<p>The residuals plot show the distribution of the residuals after fitting the model. If the Anova's pre conditions are met, these residuals should be distributed in a normal distribution, and they should be independent from the outcome variable. If you notice that the residuals histogram is skewed or that the variance changes with the outcome variable, you should rethink your model. Maybe you are missing a variable, or maybe variables should be transformed.</p>
+</blockquote>
+<h4 id="what-type-of-sum-of-squares-is-being-used-for-the-calculation">What type of sum of squares is being used for the calculation?</h4>
+<blockquote>
+<p>We are using a type 3 sum of squares, as defined in the <a href="http://cran.r-project.org/web/packages/car/">car</a> anova function. We chose this type of sum because that is the default in many of the statistical software used in the domain.</p>
+</blockquote>
 <h2 id="linear-regression">Linear Regression</h2>
+<h4 id="are-variables-in-the-linear-model-centered">Are variables in the linear model centered?</h4>
+<blockquote>
+<p>Yes, all rational variables are standardized by substracting the mean and dividing by 2 standard deviations. All nominal variables with two levels are standardized in such a way that the mean is zero, and the standard deviation is 1. Nominal variables with more than two levels are left as they are. The outcome variable is also standardized. All of this is accomplished using the &quot;Standardize&quot; function in the <a href="http://cran.r-project.org/web/packages/arm/index.html">ARM</a> package.</p>
+</blockquote>
 <h4 id="what-is-the-coefficients-plot">What is the <em>coefficients</em> plot?</h4>
+<blockquote>
+<p>The coefficients plot gives a quick indication of which coefficients are important for the model. The thick line corresponds to 1 standard deviation, and the thin line to the 95% confidence interval. If any of these lines cross the zero line, then that coefficient is not significantly different from zero. Also, the further away the coefficients are from the zero, the largest the effect size.</p>
+</blockquote>
 <h2 id="scenarios">Scenarios</h2>
 <h4 id="what-are-scenarios">What are scenarios?</h4>
+<blockquote>
+<p>Scenarios inside braviz correspond to states of the different tools. These include the selected variables, cameras for 3d views, selected structures in views, etc. The idea is to keep track of your exploration, to enable you to go back to a previous state, and to re visit interesting visializations.</p>
+</blockquote>
 <h2 id="subsamples">Subsamples</h2>
 <h4 id="what-are-samples">What are samples?</h4>
 <blockquote>

@@ -182,17 +182,53 @@ Most of the tasks in this list are accomplished using the Segmentation tab of th
 
 #### How do I perform an Anova analysis?
 
-#### What is an *outcome* variable?
+#### What is an *outcome* variable (Dependent variable)?
+
+> This is the variable that is affected by a change in the other variables. Also called response, dependent variable or $y$.
+> This could also be a variable we are interested in predict based on the other variables (regressors).
+
+#### How do I add regressors or independent variables?
+
+> To add independent variables click on the "add regressor" button. A dialog where you can select variables will be shown. Select a variable by double clicking on its name, review the meta data information at the middle of the dialog, and afterwards click on "save and add" in the left.
+
+#### How do I add interactions?
+
+> Click in the "add interaction" button. A dialog with the current regressors on top and the current interactions in the button will be shown.
+> To add a single interaction term, select the factors in the top list (by hodling ctrl and clicking on their names) and then click on add single term. If you want to add all the possible interactions between the variables click in add all combinations. When you are done close the dialog by clicking on the close button at the top of the window.
+
+#### How do I remove a regressor or interaction ?
+
+> Right click on its name in the regressors list, and select remove.
 
 #### What is the *residuals* plot ?
 
+> The residuals plot show the distribution of the residuals after fitting the model. If the Anova's pre conditions are met, these residuals should be distributed in a normal distribution, and they should be independent from the outcome variable. 
+> If you notice that the residuals histogram is skewed or that the variance changes with the outcome variable, you should rethink your model. Maybe you are missing a variable, or maybe variables should be transformed.
+
+#### What type of sum of squares is being used for the calculation?
+
+> We are using a type 3 sum of squares, as defined in the [car](http://cran.r-project.org/web/packages/car/) anova function. We chose this type of sum because
+> that is the default in many of the statistical software used in the domain.
+
 ## Linear Regression
 
+#### Are variables in the linear model centered?
+
+> Yes, all rational variables are standardized by substracting the mean and dividing by 2 standard deviations. 
+> All nominal variables with two levels are standardized in such a way that the mean is zero, and the standard deviation is 1. 
+> Nominal variables with more than two levels are left as they are.
+> The outcome variable is also standardized. All of this is accomplished using the 
+> "Standardize" function in the [ARM](http://cran.r-project.org/web/packages/arm/index.html) package.
+
 #### What is the *coefficients* plot?
+
+> The coefficients plot gives a quick indication of which coefficients are important for the model. The thick line corresponds to 1 standard deviation, and the thin line to the 95% confidence interval. If any of these lines cross the zero line, then that coefficient is not significantly different from zero. Also, the further away the coefficients are from the zero, the largest the effect size.
 
 ## Scenarios
 
 #### What are scenarios?
+
+> Scenarios inside braviz correspond to states of the different tools. These include the selected variables, cameras for 3d views, selected structures in views, etc. The idea is to keep track of your exploration, to enable you to go back to a previous state, and to re visit interesting visializations.
 
 ## Subsamples
 
