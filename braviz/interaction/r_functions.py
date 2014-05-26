@@ -254,7 +254,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             # we are going to use center in arm.standardize:
             # "center" (rescale so that the mean of the data is 0 and the difference between the two categories is 1),
             # in the real case we divide by 2$\sigma$, so the final sd is 0.5
-            std = 0.5
+            std = np.max(data_frame[var])-np.min(data_frame[var])
             mean_sigma[var] = (m, std)
             labels = braviz_tab_data.get_names_label_dict(var)
             labels_dicts[var] = labels

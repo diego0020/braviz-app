@@ -223,12 +223,13 @@ class LinearModelApp(QMainWindow):
         var_name = unicode(self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
         if var_name == "(Intercept)":
             df2 = braviz_tab_data.get_data_frame_by_name(self.outcome_var_name)
-            df2["Jitter"] = np.random.random(len(df2))
-            df2.dropna(inplace=True)
-            self.plot.draw_scatter(df2, "Jitter", self.outcome_var_name, reg_line=False)
-            b = np.mean(df2[self.outcome_var_name])
-            self.plot.axes.axhline(b, ls="--", c=(0.3, 0.3, 0.3))
-            self.plot.draw()
+            #df2["Jitter"] = np.random.random(len(df2))
+            #df2.dropna(inplace=True)
+            #self.plot.draw_scatter(df2, "Jitter", self.outcome_var_name, reg_line=False)
+            #b = np.mean(df2[self.outcome_var_name])
+            #self.plot.axes.axhline(b, ls="--", c=(0.3, 0.3, 0.3))
+            self.plot.draw_intercept(df2,self.outcome_var_name)
+            #self.plot.draw()
         else:
             #get components
             components = self.coefs_df.loc[var_name,"components"]
@@ -237,8 +238,13 @@ class LinearModelApp(QMainWindow):
                 print "not yet implemented"
             else:
                 target_var = components[0]
-                df2 = self.isolate_one(target_var)
-                self.plot.draw_scatter(df2, var_name, self.outcome_var_name, reg_line=True)
+                target_type = self.regression_results["var_types"][target_var]
+                if target_type == "n":
+                    self.plot_nominal_intercepts(target_var)
+                else:
+                    df2 = self.isolate_one(target_var)
+                    var_clean_name = df2.columns[0]
+                    self.plot.draw_scatter(df2, var_clean_name, self.outcome_var_name, reg_line=True)
                 self.plot.set_figure_title("Mean effect of %s"%target_var)
         return
 
@@ -553,16 +559,19 @@ class LinearModelApp(QMainWindow):
                 continue
             row = coefs.loc[var]
             components = row["components"]
+            beta_j = row["Slope"]
+
             if len(components)>1:
                 #interaction
                 pass
                 print "not yet implemented"
             else:
                 var = components[0]
-                data = standarized_data[var]
-                beta_j = row["Slope"]
+                #data = standarized_data[var]
                 #should we add it to beta 1?
                 if var == factor:
+                    var_t = self.regression_results["var_types"][var]
+                    assert var_t != "n"
                     beta_1 += beta_j
                     #TODO factor not real
         print "beta1", beta_1
@@ -582,8 +591,14 @@ class LinearModelApp(QMainWindow):
             m,s = self.regression_results["mean_sigma"][factor]
             us_x_data =  2*s*x_data+m
             df3[factor] = us_x_data
+        elif type == "b":
+            m,s = self.regression_results["mean_sigma"][factor]
+            us_x_data =  s*x_data+m
+            df3[factor] = us_x_data
         return df3
 
+    def plot_nominal_intercepts(self,var_name):
+        self.plot.draw_intercept()
 
 def run():
     import sys

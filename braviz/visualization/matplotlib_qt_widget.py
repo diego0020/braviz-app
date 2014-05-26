@@ -98,6 +98,10 @@ class MatplotWidget(FigureCanvas):
         self.painted_plot = ScatterPlot(self.axes,data,x_name,y_name,xlabel,ylabel,reg_line,hue_var=hue_var,
                                         hue_labels=hue_labels,qualitative_map = qualitative_map)
         self.draw()
+    def draw_intercept(self,data,y_name,groups=None,ylabel = None, ci_plot = True,color=None):
+        self.__get_one_axis()
+        self.painted_plot = InterceptPlot(self.axes,data,y_name,groups,ylabel,ci_plot,color)
+        self.draw()
     def draw_boxplot(self):
         pass
     def draw_spider_plot(self):
@@ -513,6 +517,67 @@ class ScatterPlot(_AbstractPlot):
             return
         self.axes.legend()
 
+class InterceptPlot(_AbstractPlot):
+    def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None):
+        sns.set_style("darkgrid")
+        self.y_name=y_var
+        if y_label is None:
+            y_label = y_var
+        self.df = data.copy()
+        self.axes = axes
+        self.ci_plot = ci_plot
+        self.axes.tick_params('x', bottom='off', labelbottom='off', labeltop='off',top='off')
+        self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
+        self.axes.yaxis.set_label_position("right")
+        self.axes.set_ylabel(y_label)
+        self.axes.set_xlabel("")
+        self.axes.set_ylim(auto=True)
+        if color is None:
+            self.color = matplotlib.rcParams['axes.color_cycle'][1]
+        else:
+            self.color= color
+        #calculate mean and confidence intervals
+        if groups is None:
+            arrays = [data[y_var]]
+            urls = [data.index]
+        else:
+            raise NotImplementedError
+        if self.ci_plot is True:
+            self.ci = [get_ci(a) for a in arrays]
+        self.x_data = [np.random.random(len(a)) for a in arrays]
+        self.means = [np.mean(a) for a in arrays]
+        self.arrays = arrays
+        self.urls = urls
+        self.redraw()
+
+    def get_tooltip(self, event):
+        return _AbstractPlot.get_tooltip(self, event)
+
+    def redraw(self):
+        self.axes.clear()
+        ax = self.axes
+        c = self.color
+        for i in xrange(len(self.arrays)):
+            y_data = self.arrays[i]
+            x_data = self.x_data[i]
+            m = self.means[i]
+            url = self.urls[i]
+            l,h = self.ci[i]
+            #scatter
+            ax.scatter(x_data,y_data,color=c,url=url,picker=0.5,zorder=10)
+            #line
+            ax.hlines(m,i,i+1,c,zorder=5)
+            #error
+            if self.ci_plot is True:
+                ax.fill_between((i,i+1),(l,l),(h,h),zorder=4,color=c,alpha=0.2)
+        ax.set_xlim(0,len(self.arrays),auto=False)
+
+
+
+def get_ci(array):
+    bootstrap = sns.algo.bootstrap(array,func=np.mean)
+    ci = tuple(sns.utils.ci(bootstrap))
+    return ci
 
 if __name__ == "__main__":
     #init widget

@@ -215,7 +215,7 @@ Most of the tasks in this list are accomplished using the Segmentation tab of th
 #### Are variables in the linear model centered?
 
 > Yes, all rational variables are standardized by substracting the mean and dividing by 2 standard deviations. 
-> All nominal variables with two levels are standardized in such a way that the mean is zero, and the standard deviation is 1. 
+> All nominal variables with two levels are standardized in such a way that the mean is zero, and the difference between levels is 1.
 > Nominal variables with more than two levels are left as they are.
 > The outcome variable is also standardized. All of this is accomplished using the 
 > "Standardize" function in the [ARM](http://cran.r-project.org/web/packages/arm/index.html) package.
