@@ -396,6 +396,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
            <widget class="QLabel" name="r_squared_label">
+            <property name="cursor">
+             <cursorShape>IBeamCursor</cursorShape>
+            </property>
             <property name="text">
              <string>R&lt;sup&gt;2&lt;/sup&gt; = </string>
             </property>
@@ -406,6 +409,9 @@
           </item>
           <item>
            <widget class="QLabel" name="f_value_label">
+            <property name="cursor">
+             <cursorShape>IBeamCursor</cursorShape>
+            </property>
             <property name="text">
              <string>F =</string>
             </property>
@@ -416,6 +422,9 @@
           </item>
           <item>
            <widget class="QLabel" name="p_value_label">
+            <property name="cursor">
+             <cursorShape>IBeamCursor</cursorShape>
+            </property>
             <property name="text">
              <string>P =</string>
             </property>

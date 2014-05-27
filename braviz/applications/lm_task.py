@@ -32,7 +32,7 @@ import platform
 import logging
 import numpy as np
 import pandas as pd
-
+from itertools import izip
 
 class LinearModelApp(QMainWindow):
     def __init__(self):
@@ -557,20 +557,49 @@ class LinearModelApp(QMainWindow):
             self.sample_model.set_sample(new_sample)
             self.update_main_plot(self.plot_var_name)
 
-    def isolate_one(self, factor, un_standardize=True):
+    def isolate_one(self, isolating_factor, un_standardize=True):
         standarized_data = self.regression_results["standardized_model"]
         coefs = self.coefs_df
         res = self.regression_results["residuals"]
         INTERCEPT = "(Intercept)"
         #data = self.regression_results["data"]
 
-        df3 = pd.DataFrame(standarized_data[factor])
+        df3 = pd.DataFrame(standarized_data[isolating_factor])
         df3[self.outcome_var_name] = np.nan
         levels = (df3.index,)
-        if self.regression_results["var_types"][factor] == "n":
-            ls = np.unique(standarized_data[factor])
-            levels = [df3.index[df3[factor] == l] for l in ls]
-        for l in levels:
+        ls = (None,)
+        results_var_types_ = self.regression_results["var_types"]
+        factor_t = results_var_types_[isolating_factor]
+
+        def calculate_beta_hat(a_isolating,a_components,a_factor_terms,a_beta_j):
+            _other_components = set(a_components)
+            _other_components.remove(a_isolating)
+            _var_types = map(results_var_types_.get,_other_components)
+            if "b" in _var_types or "r" in _var_types:
+                return 0
+            else:
+                _indicator_vec = np.ones(len(standarized_data))
+                for _base_var in _other_components:
+                    #find level associated with current factor in other terms
+                    for _cand in a_factor_terms:
+                        if _cand.startswith(_base_var):
+                            _level = _cand[len(_base_var)+1:]
+                            _l_dict = braviz_tab_data.get_names_label_dict(_base_var)
+                            _i_l_dict=dict((v,k) for k,v in _l_dict.iteritems())
+                            _li = int(_i_l_dict[_level])
+                            _col = standarized_data[_base_var].get_values().astype(np.int)
+                            _matches = (_col == _li).astype(np.int)
+                            _indicator_vec *= _matches
+                _indicator_mean = np.mean(_indicator_vec)
+                _beta_j_hat = _indicator_mean*a_beta_j
+                return _beta_j_hat
+
+        if results_var_types_[isolating_factor] == "n":
+            ls = np.unique(standarized_data[isolating_factor])
+            levels = [df3.index[df3[isolating_factor] == l] for l in ls]
+            labels_dict = braviz_tab_data.get_names_label_dict(isolating_factor)
+            i_labels_dict=dict((v,k) for k,v in labels_dict.iteritems())
+        for l,l_id in izip(levels,ls):
             beta_0 = coefs.loc[INTERCEPT, "Slope"]
             beta_1 = 0
             for var in coefs.index:
@@ -580,25 +609,41 @@ class LinearModelApp(QMainWindow):
                 components = row["components"]
                 beta_j = row["Slope"]
 
-                if len(components) > 1:
-                    #interaction
-                    pass
-                    print "not yet implemented"
+                if factor_t == "n":
+                    if len(components) == 1:
+                        base_var = components[0]
+                        if base_var == isolating_factor:
+                            sub_level = var[len(base_var)+1 :]
+                            sub_level_id = i_labels_dict[sub_level]
+                            if int(sub_level_id) == int(l_id):
+                                # it is really an intercept term
+                                beta_0 += beta_j
+                    else:
+                        #first need to find if I am at correct level
+                        interaction_terms = var.split("*")
+                        for cand in interaction_terms:
+                            if cand.startswith(isolating_factor):
+                                sub_level = cand[len(base_var)+1 :]
+                                sub_level_id = i_labels_dict[sub_level]
+                                if int(sub_level_id) == int(l_id):
+                                    beta_j_hat = calculate_beta_hat(isolating_factor,components,
+                                                                    interaction_terms,beta_j)
+                                    if np.isfinite(beta_j_hat):
+                                        beta_0 += beta_j_hat
                 else:
-                    var = components[0]
-                    #data = standarized_data[var]
-                    #should we add it to beta 1?
-                    if var == factor:
-                        var_t = self.regression_results["var_types"][var]
-                        #TODO nominal factor
-                        if var_t == "n":
-                            #TODO nominal factor
-                            raise NotImplementedError
-                        beta_1 += beta_j
+                    if len(components) == 1:
+                        base_var = components[0]
+                        if base_var == isolating_factor:
+                            beta_1 += beta_j
+                    else:
+                        interaction_terms = var.split("*")
+                        beta_j_hat = calculate_beta_hat(isolating_factor,components,interaction_terms,beta_j)
+                        if np.isfinite(beta_j_hat):
+                            beta_1 += beta_j_hat
 
             print "beta1", beta_1
-
-            df3[self.outcome_var_name][l] = beta_0 + beta_1 * df3[factor][l].values.squeeze()
+            print "beta0", beta_0
+            df3[self.outcome_var_name][l] = beta_0 + beta_1 * df3[isolating_factor][l].values.squeeze().astype(np.int)
         df3[self.outcome_var_name] += res
         if un_standardize is False:
             return df3
@@ -608,22 +653,26 @@ class LinearModelApp(QMainWindow):
         us_outcome = 2 * s * outcome_data + m
         df3[self.outcome_var_name] = us_outcome
         #fix x_var
-        type = self.regression_results["var_types"][factor]
-        x_data = df3[factor]
+        type = results_var_types_[isolating_factor]
+        x_data = df3[isolating_factor]
         if type == "r":
-            m, s = self.regression_results["mean_sigma"][factor]
+            m, s = self.regression_results["mean_sigma"][isolating_factor]
             us_x_data = 2 * s * x_data + m
-            df3[factor] = us_x_data
+            df3[isolating_factor] = us_x_data
         elif type == "b":
-            m, s = self.regression_results["mean_sigma"][factor]
+            m, s = self.regression_results["mean_sigma"][isolating_factor]
             us_x_data = s * x_data + m
-            df3[factor] = us_x_data
+            df3[isolating_factor] = us_x_data
         return df3
 
     def plot_nominal_intercepts(self, df, var_name):
         # df = braviz_tab_data.get_data_frame_by_name((self.outcome_var_name,var_name))
         group_labels = braviz_tab_data.get_names_label_dict(var_name)
+        df[var_name]=df[var_name].astype(np.int)
         self.plot.draw_intercept(df, self.outcome_var_name, var_name, group_labels=group_labels)
+
+    def calculate_beta_hat(self,components,factors,beta_i):
+        pass
 
 
 def run():
