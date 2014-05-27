@@ -222,30 +222,29 @@ class LinearModelApp(QMainWindow):
         var_name_index = self.result_model.index(row, 0)
         var_name = unicode(self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
         if var_name == "(Intercept)":
-            df2 = braviz_tab_data.get_data_frame_by_name(self.outcome_var_name)
+            df2 = self.regression_results["data"]
             #df2["Jitter"] = np.random.random(len(df2))
             #df2.dropna(inplace=True)
             #self.plot.draw_scatter(df2, "Jitter", self.outcome_var_name, reg_line=False)
             #b = np.mean(df2[self.outcome_var_name])
             #self.plot.axes.axhline(b, ls="--", c=(0.3, 0.3, 0.3))
-            self.plot.draw_intercept(df2,self.outcome_var_name)
+            self.plot.draw_intercept(df2, self.outcome_var_name)
             #self.plot.draw()
         else:
             #get components
-            components = self.coefs_df.loc[var_name,"components"]
+            components = self.coefs_df.loc[var_name, "components"]
             if len(components) > 1:
                 #interaction term
                 print "not yet implemented"
             else:
                 target_var = components[0]
                 target_type = self.regression_results["var_types"][target_var]
+                df2 = self.isolate_one(target_var)
                 if target_type == "n":
-                    self.plot_nominal_intercepts(target_var)
+                    self.plot_nominal_intercepts(df2, target_var)
                 else:
-                    df2 = self.isolate_one(target_var)
-                    var_clean_name = df2.columns[0]
-                    self.plot.draw_scatter(df2, var_clean_name, self.outcome_var_name, reg_line=True)
-                self.plot.set_figure_title("Mean effect of %s"%target_var)
+                    self.plot.draw_scatter(df2, target_var, self.outcome_var_name, reg_line=True)
+                self.plot.set_figure_title("Mean effect of %s" % target_var)
         return
 
 
@@ -287,9 +286,15 @@ class LinearModelApp(QMainWindow):
         df.dropna(inplace=True)
         if braviz_tab_data.is_variable_name_real(regressor_name):
             reg_line = True
+            labels_dict = None
+            self.plot.draw_scatter(df, regressor_name, self.outcome_var_name, reg_line=reg_line, x_labels=labels_dict)
         else:
-            reg_line = False
-        self.plot.draw_scatter(df, regressor_name, self.outcome_var_name, reg_line=reg_line)
+            labels_dict = braviz_tab_data.get_names_label_dict(regressor_name)
+            if len(labels_dict) == 2:
+                self.plot.draw_scatter(df, regressor_name, self.outcome_var_name, reg_line=True, x_labels=labels_dict)
+            else:
+                self.plot.draw_intercept(df, self.outcome_var_name, regressor_name, group_labels=labels_dict)
+
 
     def draw_two_vars_scatter_plot(self, regressor1, regressor2):
         var_1_real = braviz_tab_data.is_variable_name_real(regressor1)
@@ -301,6 +306,7 @@ class LinearModelApp(QMainWindow):
         df = braviz_tab_data.get_data_frame_by_name([regressor1, regressor2, outcome])
         df.dropna(inplace=True)
         qualitative_map = True
+        x_labels = None
         if var_2_real and not var_1_real:
             hue_var = regressor1
             x_var = regressor2
@@ -319,8 +325,12 @@ class LinearModelApp(QMainWindow):
             qualitative_map = False
         else:
             labels = braviz_tab_data.get_names_label_dict(hue_var)
+            assert x_var == regressor1
+            if not var_1_real:
+                x_labels = braviz_tab_data.get_names_label_dict(x_var)
 
-        self.plot.draw_scatter(df, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map)
+        self.plot.draw_scatter(df, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map,
+                               x_labels=x_labels)
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"
@@ -552,53 +562,66 @@ class LinearModelApp(QMainWindow):
         coefs = self.coefs_df
         res = self.regression_results["residuals"]
         INTERCEPT = "(Intercept)"
-        beta_0 = coefs.loc[INTERCEPT, "Slope"]
-        beta_1 = 0
-        for var in coefs.index:
-            if var == INTERCEPT:
-                continue
-            row = coefs.loc[var]
-            components = row["components"]
-            beta_j = row["Slope"]
+        #data = self.regression_results["data"]
 
-            if len(components)>1:
-                #interaction
-                pass
-                print "not yet implemented"
-            else:
-                var = components[0]
-                #data = standarized_data[var]
-                #should we add it to beta 1?
-                if var == factor:
-                    var_t = self.regression_results["var_types"][var]
-                    assert var_t != "n"
-                    beta_1 += beta_j
-                    #TODO factor not real
-        print "beta1", beta_1
         df3 = pd.DataFrame(standarized_data[factor])
-        df3[self.outcome_var_name] = beta_0 + beta_1 * df3[factor].values.squeeze() + res
+        df3[self.outcome_var_name] = np.nan
+        levels = (df3.index,)
+        if self.regression_results["var_types"][factor] == "n":
+            ls = np.unique(standarized_data[factor])
+            levels = [df3.index[df3[factor] == l] for l in ls]
+        for l in levels:
+            beta_0 = coefs.loc[INTERCEPT, "Slope"]
+            beta_1 = 0
+            for var in coefs.index:
+                if var == INTERCEPT:
+                    continue
+                row = coefs.loc[var]
+                components = row["components"]
+                beta_j = row["Slope"]
+
+                if len(components) > 1:
+                    #interaction
+                    pass
+                    print "not yet implemented"
+                else:
+                    var = components[0]
+                    #data = standarized_data[var]
+                    #should we add it to beta 1?
+                    if var == factor:
+                        var_t = self.regression_results["var_types"][var]
+                        assert var_t != "n"
+                        beta_1 += beta_j
+                        #TODO factor not real
+            print "beta1", beta_1
+
+            df3[self.outcome_var_name][l] = beta_0 + beta_1 * df3[factor][l].values.squeeze()
+        df3[self.outcome_var_name] += res
         if un_standardize is False:
             return df3
         #fix outcome var
         outcome_data = df3[self.outcome_var_name]
-        m,s = self.regression_results["mean_sigma"][self.outcome_var_name]
-        us_outcome = 2*s*outcome_data+m
+        m, s = self.regression_results["mean_sigma"][self.outcome_var_name]
+        us_outcome = 2 * s * outcome_data + m
         df3[self.outcome_var_name] = us_outcome
         #fix x_var
         type = self.regression_results["var_types"][factor]
         x_data = df3[factor]
         if type == "r":
-            m,s = self.regression_results["mean_sigma"][factor]
-            us_x_data =  2*s*x_data+m
+            m, s = self.regression_results["mean_sigma"][factor]
+            us_x_data = 2 * s * x_data + m
             df3[factor] = us_x_data
         elif type == "b":
-            m,s = self.regression_results["mean_sigma"][factor]
-            us_x_data =  s*x_data+m
+            m, s = self.regression_results["mean_sigma"][factor]
+            us_x_data = s * x_data + m
             df3[factor] = us_x_data
         return df3
 
-    def plot_nominal_intercepts(self,var_name):
-        self.plot.draw_intercept()
+    def plot_nominal_intercepts(self, df, var_name):
+        # df = braviz_tab_data.get_data_frame_by_name((self.outcome_var_name,var_name))
+        group_labels = braviz_tab_data.get_names_label_dict(var_name)
+        self.plot.draw_intercept(df, self.outcome_var_name, var_name, group_labels=group_labels)
+
 
 def run():
     import sys

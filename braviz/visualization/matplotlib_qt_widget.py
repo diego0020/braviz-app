@@ -93,14 +93,14 @@ class MatplotWidget(FigureCanvas):
     def draw_histogram(self):
         pass
     def draw_scatter(self,data,x_name,y_name,xlabel=None,ylabel=None,reg_line=True,hue_var=None,hue_labels = None,
-                     qualitative_map = True):
+                     qualitative_map = True, x_labels=None):
         self.__get_one_axis()
         self.painted_plot = ScatterPlot(self.axes,data,x_name,y_name,xlabel,ylabel,reg_line,hue_var=hue_var,
-                                        hue_labels=hue_labels,qualitative_map = qualitative_map)
+                                        hue_labels=hue_labels,qualitative_map = qualitative_map, x_ticks=x_labels)
         self.draw()
-    def draw_intercept(self,data,y_name,groups=None,ylabel = None, ci_plot = True,color=None):
+    def draw_intercept(self,data,y_name,groups=None,ylabel = None, ci_plot = True,color=None, group_labels=None):
         self.__get_one_axis()
-        self.painted_plot = InterceptPlot(self.axes,data,y_name,groups,ylabel,ci_plot,color)
+        self.painted_plot = InterceptPlot(self.axes,data,y_name,groups,ylabel,ci_plot,color, group_labels=group_labels)
         self.draw()
     def draw_boxplot(self):
         pass
@@ -446,7 +446,7 @@ class MessagePlot(_AbstractPlot):
 
 class ScatterPlot(_AbstractPlot):
     def __init__(self,axes,data,x_var,y_var,xlabel=None,ylabel=None,reg_line=True,hue_var = None, hue_labels = None,
-                 qualitative_map = True):
+                 qualitative_map = True,x_ticks=None):
         sns.set_style("darkgrid")
         self.x_name=x_var
         self.y_name=y_var
@@ -468,6 +468,7 @@ class ScatterPlot(_AbstractPlot):
         self.color = matplotlib.rcParams['axes.color_cycle'][1]
         self.hue_labels = hue_labels
         self.qualitative_map = qualitative_map
+        self.x_ticks = x_ticks
         self.redraw()
 
     def redraw(self):
@@ -497,6 +498,11 @@ class ScatterPlot(_AbstractPlot):
                             scatter_kws={"picker":0.5,"url":url},label=label,ax=self.axes,
                     color=c)
             self.add_legend()
+        print self.x_ticks
+        if self.x_ticks is not None:
+            keys,labels = zip(*self.x_ticks.iteritems())
+            self.axes.set_xticks(keys)
+            self.axes.set_xticklabels(labels)
 
     def add_subjects(self, subjs):
         _AbstractPlot.add_subjects(self, subjs)
@@ -518,7 +524,7 @@ class ScatterPlot(_AbstractPlot):
         self.axes.legend()
 
 class InterceptPlot(_AbstractPlot):
-    def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None):
+    def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None,group_labels=None):
         sns.set_style("darkgrid")
         self.y_name=y_var
         if y_label is None:
@@ -537,14 +543,19 @@ class InterceptPlot(_AbstractPlot):
         else:
             self.color= color
         #calculate mean and confidence intervals
+        self.x_ticks = None
         if groups is None:
             arrays = [data[y_var]]
             urls = [data.index]
         else:
-            raise NotImplementedError
+            g_i = np.unique(data[groups])
+            arrays = [data[y_var][data[groups] == g].get_values() for g in g_i]
+            if group_labels is not None:
+                self.x_ticks = [group_labels.get(g,"?") for g in g_i]
+            urls = [data.index[data[groups] == g] for g in g_i]
         if self.ci_plot is True:
             self.ci = [get_ci(a) for a in arrays]
-        self.x_data = [np.random.random(len(a)) for a in arrays]
+        self.x_data = [i+0.3+0.4*np.random.random(len(a)) for i,a in enumerate(arrays)]
         self.means = [np.mean(a) for a in arrays]
         self.arrays = arrays
         self.urls = urls
@@ -564,15 +575,17 @@ class InterceptPlot(_AbstractPlot):
             url = self.urls[i]
             l,h = self.ci[i]
             #scatter
-            ax.scatter(x_data,y_data,color=c,url=url,picker=0.5,zorder=10)
+            ax.scatter(x_data,y_data,color=c,url=url,picker=0.5,zorder=10,alpha=0.9)
             #line
             ax.hlines(m,i,i+1,c,zorder=5)
             #error
             if self.ci_plot is True:
                 ax.fill_between((i,i+1),(l,l),(h,h),zorder=4,color=c,alpha=0.2)
         ax.set_xlim(0,len(self.arrays),auto=False)
-
-
+        if self.x_ticks is not None:
+            ax.set_xticks(np.arange(0.5,len(self.arrays),1))
+            ax.set_xticklabels(self.x_ticks)
+            self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
 
 def get_ci(array):
     bootstrap = sns.algo.bootstrap(array,func=np.mean)
