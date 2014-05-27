@@ -590,9 +590,12 @@ class LinearModelApp(QMainWindow):
                     #should we add it to beta 1?
                     if var == factor:
                         var_t = self.regression_results["var_types"][var]
-                        assert var_t != "n"
+                        #TODO nominal factor
+                        if var_t == "n":
+                            #TODO nominal factor
+                            raise NotImplementedError
                         beta_1 += beta_j
-                        #TODO factor not real
+
             print "beta1", beta_1
 
             df3[self.outcome_var_name][l] = beta_0 + beta_1 * df3[factor][l].values.squeeze()
