@@ -631,7 +631,7 @@ class LinearModelApp(QMainWindow):
                         interaction_terms = var.split("*")
                         for cand in interaction_terms:
                             if cand.startswith(isolating_factor):
-                                sub_level = cand[len(base_var)+1 :]
+                                sub_level = cand[len(isolating_factor)+1 :]
                                 sub_level_id = i_labels_dict[sub_level]
                                 if int(sub_level_id) == int(l_id):
                                     beta_j_hat = calculate_beta_hat(isolating_factor,components,
@@ -689,10 +689,39 @@ class LinearModelApp(QMainWindow):
         print df
         print groups_series
         print "==============="
-        #isolate one factor inside the group
-        self.plot.draw_scatter(df, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map,
-                               x_labels=x_labels)
+        df2 = self.isolate_in_groups(x_var,outcome,hue_var,groups_series)
+        #df2[outcome]+=self.regression_results["residuals"]
+        #df2[outcome]+=df2[hue_var]
+        #un standardize yvar
+        #self.plot.draw_scatter(df2, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map,
+        #                       x_labels=x_labels)
+        self.plot.draw_scatter(df2,x_var,outcome,hue_var=hue_var,reg_line = False)
 
+    def isolate_in_groups(self,x_var,y_var,z_var,groups):
+        work_df = self.regression_results["standardized_model"]
+        fitted = self.evaluate_linear_model(work_df)
+        df_ans = self.regression_results["data"][[x_var]].copy()
+        df_ans[z_var]=groups
+        df_ans[y_var]=fitted
+        return df_ans
+    def evaluate_linear_model(self,variables_df):
+        coefs_df = self.coefs_df
+        var_types = self.regression_results["var_types"]
+
+        fitted = np.zeros(len(variables_df))
+        for coef in coefs_df.index:
+            if coef == "(Intercept)":
+                fitted+=coefs_df["Slope"][coef]
+            else:
+                comps = coefs_df["components"][coef]
+                c_df = variables_df[list(comps)]
+                for c in comps:
+                    if var_types[c] == "n":
+                        pass
+                prod=c_df.product(axis=1)
+                prod*=coefs_df["Slope"][coef]
+                fitted+=prod
+        return fitted
 
 def run():
     import sys
