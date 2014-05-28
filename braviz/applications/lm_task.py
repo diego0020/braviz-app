@@ -235,7 +235,11 @@ class LinearModelApp(QMainWindow):
             components = self.coefs_df.loc[var_name, "components"]
             if len(components) > 1:
                 #interaction term
-                print "not yet implemented"
+                if len(components)==2:
+                    self.draw_interaction_plot(components[0],components[1])
+                else:
+                    components2 = np.random.choice(components,2,replace=False)
+                    self.draw_interaction_plot(components2[0],components2[1])
             else:
                 target_var = components[0]
                 target_type = self.regression_results["var_types"][target_var]
@@ -296,17 +300,15 @@ class LinearModelApp(QMainWindow):
                 self.plot.draw_intercept(df, self.outcome_var_name, regressor_name, group_labels=labels_dict)
 
 
-    def draw_two_vars_scatter_plot(self, regressor1, regressor2):
+    def cut_and_sort(self, regressor1, regressor2,df):
         var_1_real = braviz_tab_data.is_variable_name_real(regressor1)
         var_2_real = braviz_tab_data.is_variable_name_real(regressor2)
         outcome = self.outcome_var_name
-
         hue_var = regressor2
         x_var = regressor1
-        df = braviz_tab_data.get_data_frame_by_name([regressor1, regressor2, outcome])
-        df.dropna(inplace=True)
         qualitative_map = True
         x_labels = None
+
         if var_2_real and not var_1_real:
             hue_var = regressor1
             x_var = regressor2
@@ -329,6 +331,12 @@ class LinearModelApp(QMainWindow):
             if not var_1_real:
                 x_labels = braviz_tab_data.get_names_label_dict(x_var)
 
+        return df,x_var,hue_var,outcome,labels,qualitative_map,x_labels
+
+    def draw_two_vars_scatter_plot(self, regressor1, regressor2):
+        df = braviz_tab_data.get_data_frame_by_name([regressor1, regressor2, self.outcome_var_name])
+        df.dropna(inplace=True)
+        df,x_var,hue_var,outcome,labels,qualitative_map,x_labels = self.cut_and_sort(regressor1,regressor2,df)
         self.plot.draw_scatter(df, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map,
                                x_labels=x_labels)
 
@@ -671,8 +679,19 @@ class LinearModelApp(QMainWindow):
         df[var_name]=df[var_name].astype(np.int)
         self.plot.draw_intercept(df, self.outcome_var_name, var_name, group_labels=group_labels)
 
-    def calculate_beta_hat(self,components,factors,beta_i):
-        pass
+    def draw_interaction_plot(self,reg1,reg2):
+
+        df = self.regression_results["standardized_model"]
+        df2,x_var,hue_var,outcome,labels,qualitative_map,x_labels = self.cut_and_sort(reg1,reg2,df.copy())
+        groups_series=df2[hue_var]
+        print "testing %s %s"%(reg1,reg2)
+        print "==============="
+        print df
+        print groups_series
+        print "==============="
+        #isolate one factor inside the group
+        self.plot.draw_scatter(df, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map,
+                               x_labels=x_labels)
 
 
 def run():

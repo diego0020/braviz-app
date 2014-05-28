@@ -1,17 +1,14 @@
 from __future__ import division
-__author__ = 'Diego'
 
 import seaborn as sns
-from PyQt4 import QtGui,QtCore
+from PyQt4 import QtGui
 import numpy as np
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-import braviz.readAndFilter.tabular_data as braviz_tab_data
+import pandas as pd
 
 from matplotlib import pyplot as plt
 
 class MatplotWidget1(FigureCanvas):
-    box_outlier_pick_signal = QtCore.pyqtSignal(float, float, tuple)
-    scatter_pick_signal = QtCore.pyqtSignal(str, tuple)
 
     def __init__(self, parent=None, dpi=100, initial_message=None):
         fig,ax = plt.subplots()
@@ -33,13 +30,10 @@ class MatplotWidget1(FigureCanvas):
 
         plt.sca(self.axes)
         plt.clf()
-        ax = plt.axes()
         pg=sns.lmplot(x_name,outcome,data,hue=z_name)
 
-
-
-
-        #self.axes.legend(numpoints=1, fancybox=True, fontsize="small", )
+        #ax = plt.gca()
+        #ax.legend(numpoints=1, fancybox=True, fontsize="small", )
         #self.axes.get_legend().draggable(True, update="loc")
         fig = pg.fig
         fig.set_canvas(self)
@@ -54,17 +48,18 @@ class MatplotWidget1(FigureCanvas):
         self.draw()
 
 
-
-
 if __name__ == "__main__":
-    data = np.random.rand(500)
-    #add outlier
-    data[0]=-3
-    widget = MatplotWidget1()
 
+    widget = MatplotWidget1()
     widget.show()
-    #widget.make_box_plot(data,"x","y","uno",(-4,2))
-    data = braviz_tab_data.get_data_frame_by_name(["GENERO","UBIC3","FSIQ"])
-    widget.make_plot(data,"UBIC3","GENERO","FSIQ")
+    #create fake data
+    n_subjects = 40
+    d = {
+        "Group1" : np.random.randint(1,4,n_subjects),
+        "Group2" : np.random.randint(1,3,n_subjects),
+        "Outcome": np.random.random(n_subjects)
+    }
+    data = pd.DataFrame(d)
+    widget.make_plot(data,"Group1","Group2","Outcome")
     app = QtGui.QApplication([])
     app.exec_()
