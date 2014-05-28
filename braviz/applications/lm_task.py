@@ -701,6 +701,7 @@ class LinearModelApp(QMainWindow):
         work_df = self.regression_results["standardized_model"]
         fitted = self.evaluate_linear_model(work_df)
         df_ans = self.regression_results["data"][[x_var]].copy()
+        #TODO: find mean of confounders
         df_ans[z_var]=groups
         df_ans[y_var]=fitted
         return df_ans
@@ -717,6 +718,7 @@ class LinearModelApp(QMainWindow):
                 c_df = variables_df[list(comps)]
                 for c in comps:
                     if var_types[c] == "n":
+                        #TODO: find mean of indicator in the level
                         pass
                 prod=c_df.product(axis=1)
                 prod*=coefs_df["Slope"][coef]
