@@ -118,8 +118,11 @@ class MatplotWidget(FigureCanvas):
     def get_current_id(self):
         return self.painted_plot.get_last_id()
 
-    def add_subject_markers(self):
-        pass
+    def add_subject_markers(self,ids):
+        print "attempting to add subjects %s"%ids
+        self.painted_plot.add_subjects(ids)
+        self.draw()
+
 
     def refresh_last_plot(self):
         self.painted_plot.redraw()
@@ -407,6 +410,7 @@ class ResidualsDiagnosticPlot(_AbstractPlot):
         self.axes2.set_xlabel("Fitted")
         self.axes2.yaxis.set_label_position("left")
         self.axes2.axhline(color='k')
+        self.subject_markers = None
 
         self.residuals = residuals
         self.fitted = fitted
@@ -469,6 +473,7 @@ class ScatterPlot(_AbstractPlot):
         self.hue_labels = hue_labels
         self.qualitative_map = qualitative_map
         self.x_ticks = x_ticks
+        self.subject_markers = None
         self.redraw()
 
     def redraw(self):
@@ -505,7 +510,15 @@ class ScatterPlot(_AbstractPlot):
             self.axes.set_xticklabels(labels)
 
     def add_subjects(self, subjs):
-        _AbstractPlot.add_subjects(self, subjs)
+        if self.subject_markers is not None:
+            self.subject_markers.remove()
+        subjs_df = self.df.loc[subjs]
+        x_coords = subjs_df[self.x_name]
+        y_coords = subjs_df[self.y_name]
+        self.subject_markers =self.axes.scatter(x_coords,y_coords,marker="o",s=120,edgecolors="k",alpha=0.80,zorder=40,
+                                                linewidths=2)
+        self.subject_markers.set_facecolor('none')
+
 
     def highlight(self, subj):
         _AbstractPlot.highlight(self, subj)
@@ -538,6 +551,9 @@ class InterceptPlot(_AbstractPlot):
         self.axes.set_ylabel(y_label)
         self.axes.set_xlabel("")
         self.axes.set_ylim(auto=True)
+        self.internal_df=self.df[[y_var]]
+        self.subject_markers = None
+        self.internal_df.columns=["y_data"]
         if color is None:
             self.color = matplotlib.rcParams['axes.color_cycle'][1]
         else:
@@ -547,15 +563,23 @@ class InterceptPlot(_AbstractPlot):
         if groups is None:
             arrays = [data[y_var]]
             urls = [data.index]
+            self.x_data = [i+0.3+0.4*np.random.random(len(a)) for i,a in enumerate(arrays)]
+            self.internal_df["x_data"]=self.x_data[0]
         else:
             g_i = np.unique(data[groups])
             arrays = [data[y_var][data[groups] == g].get_values() for g in g_i]
             if group_labels is not None:
                 self.x_ticks = [group_labels.get(g,"?") for g in g_i]
             urls = [data.index[data[groups] == g] for g in g_i]
+            self.x_data = [i+0.3+0.4*np.random.random(len(a)) for i,a in enumerate(arrays)]
+            x_ser = pd.Series(index=self.internal_df.index)
+            for xd,ix in izip(self.x_data,urls):
+                x_ser[ix]=xd
+            self.internal_df["x_data"] = x_ser
         if self.ci_plot is True:
             self.ci = [get_ci(a) for a in arrays]
-        self.x_data = [i+0.3+0.4*np.random.random(len(a)) for i,a in enumerate(arrays)]
+
+
         self.means = [np.mean(a) for a in arrays]
         self.arrays = arrays
         self.urls = urls
@@ -586,6 +610,17 @@ class InterceptPlot(_AbstractPlot):
             ax.set_xticks(np.arange(0.5,len(self.arrays),1))
             ax.set_xticklabels(self.x_ticks)
             self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top='off')
+
+    def add_subjects(self, subjs):
+        if self.subject_markers is not None:
+            self.subject_markers.remove()
+        subjs_df = self.internal_df.loc[subjs]
+        x_coords = subjs_df["x_data"]
+        y_coords = subjs_df["y_data"]
+        self.subject_markers = self.axes.scatter(x_coords,y_coords,marker="o",s=120,edgecolors="k",alpha=0.80,zorder=40,
+                                                linewidths=2)
+        self.subject_markers.set_facecolor('none')
+
 
 def get_ci(array):
     bootstrap = sns.algo.bootstrap(array,func=np.mean)

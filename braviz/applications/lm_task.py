@@ -272,8 +272,11 @@ class LinearModelApp(QMainWindow):
 
 
     def add_subjects_to_plot(self, index=None, subject_ids=None):
-        #find selected subjects
-        print "not yet implemented"
+        if subject_ids is None:
+            selection = self.ui.sample_tree.currentIndex()
+            leafs = self.sample_model.get_leafs(selection)
+            subject_ids = map(int, leafs)
+        self.plot.add_subject_markers(subject_ids)
         return
 
     def draw_coefficints_plot(self):
@@ -583,7 +586,18 @@ class LinearModelApp(QMainWindow):
         #set plot
         plot_name = wanted_state["plot"].get("var_name")
         if plot_name is not None:
-            self.update_main_plot(plot_name)
+            plot_type, args = plot_name
+            if plot_type == 1:
+                self.update_main_plot_from_regressors(args)
+            elif plot_type == 2:
+                self.update_main_plot_from_results(args)
+            elif plot_type == 3:
+                self.draw_coefficints_plot()
+            elif plot_type == 4:
+                self.draw_residuals_plot()
+            else:
+                logger.error("Unknown plot type %s",plot_type)
+
 
     def load_sample(self):
         dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
