@@ -28,6 +28,7 @@ import braviz.interaction.qt_models as braviz_models
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 
+
 __author__ = 'Diego'
 
 class LinearModelApp(QMainWindow):
@@ -308,27 +309,46 @@ class LinearModelApp(QMainWindow):
         qualitative_map = True
         x_labels = None
 
-        if var_2_real and not var_1_real:
-            hue_var = regressor1
-            x_var = regressor2
-            labels = braviz_tab_data.get_names_label_dict(hue_var)
-        elif var_2_real and var_1_real:
-            #cut var2
-            real_data = df.pop(regressor2)
-            dmin, dmax = np.min(real_data), np.max(real_data)
-            N_PIECES = 3
-            delta = (dmax - dmin) / N_PIECES
-            nom_data = (real_data - dmin) * N_PIECES // (dmax - dmin) + 1
-            nom_data = np.minimum(nom_data, N_PIECES)
-            nom_data = nom_data.astype(np.int)
-            df[regressor2] = nom_data
-            labels = dict((i + 1, (dmin + i * delta,dmin + (i+1 )* delta)) for i in xrange(N_PIECES))
-            qualitative_map = False
-        else:
-            labels = braviz_tab_data.get_names_label_dict(hue_var)
-            assert x_var == regressor1
+
+        if var_2_real:
             if not var_1_real:
-                x_labels = braviz_tab_data.get_names_label_dict(x_var)
+                #var 1 is nominal
+                hue_var = regressor1
+                x_var = regressor2
+                labels = braviz_tab_data.get_names_label_dict(hue_var)
+            else:
+                #both are real
+                #cut var2
+                real_data = df.pop(regressor2)
+                dmin, dmax = np.min(real_data), np.max(real_data)
+                N_PIECES = 3
+                delta = (dmax - dmin) / N_PIECES
+                nom_data = (real_data - dmin) * N_PIECES // (dmax - dmin) + 1
+                nom_data = np.minimum(nom_data, N_PIECES)
+                nom_data = nom_data.astype(np.int)
+                df[regressor2] = nom_data
+                labels = dict((i + 1, (dmin + i * delta,dmin + (i+1 )* delta)) for i in xrange(N_PIECES))
+                qualitative_map = False
+        else:
+            if not var_1_real:
+                #both are nominal
+                labels_1 = braviz_tab_data.get_names_label_dict(regressor1)
+                labels_2 = braviz_tab_data.get_names_label_dict(regressor2)
+                if len(labels_1)<len(labels_2):
+                    x_var=regressor1
+                    x_labels=labels_1
+                    labels = labels_2
+                    hue_var=regressor2
+                else:
+                    x_var=regressor2
+                    x_labels=labels_2
+                    labels = labels_1
+                    hue_var=regressor1
+            else:
+                #var2 nominal and var1 real
+                hue_var = regressor2
+                x_var = regressor1
+                labels = None
 
         return df,x_var,hue_var,outcome,labels,qualitative_map,x_labels
 
@@ -735,6 +755,7 @@ class LinearModelApp(QMainWindow):
                 #find mean in each group
                 #only necessary if the groups variable is real
                 if groups_r is True:
+                    pass
                     group_vals = np.unique(groups)
                     #group_means
                     averaged_group_col = np.zeros(len(work_df))
