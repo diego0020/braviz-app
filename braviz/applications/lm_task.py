@@ -592,12 +592,11 @@ class LinearModelApp(QMainWindow):
                     for _cand in a_factor_terms:
                         if _cand.startswith(_base_var):
                             _level = _cand[len(_base_var)+1:]
-                            _l_dict = braviz_tab_data.get_names_label_dict(_base_var)
-                            _i_l_dict=dict((v,k) for k,v in _l_dict.iteritems())
-                            _li = int(_i_l_dict[_level])
+                            _li  = self.regression_results["dummy_levels"][_base_var][_level]
                             _col = standarized_data[_base_var].get_values().astype(np.int)
                             _matches = (_col == _li).astype(np.int)
                             _indicator_vec *= _matches
+                            break
                 _indicator_mean = np.mean(_indicator_vec)
                 _beta_j_hat = _indicator_mean*a_beta_j
                 return _beta_j_hat
@@ -605,8 +604,6 @@ class LinearModelApp(QMainWindow):
         if results_var_types_[isolating_factor] == "n":
             ls = np.unique(standarized_data[isolating_factor])
             levels = [df3.index[df3[isolating_factor] == l] for l in ls]
-            labels_dict = braviz_tab_data.get_names_label_dict(isolating_factor)
-            i_labels_dict=dict((v,k) for k,v in labels_dict.iteritems())
         for l,l_id in izip(levels,ls):
             beta_0 = coefs.loc[INTERCEPT, "Slope"]
             beta_1 = 0
@@ -622,7 +619,7 @@ class LinearModelApp(QMainWindow):
                         base_var = components[0]
                         if base_var == isolating_factor:
                             sub_level = var[len(base_var)+1 :]
-                            sub_level_id = i_labels_dict[sub_level]
+                            sub_level_id = self.regression_results["dummy_levels"][base_var][sub_level]
                             if int(sub_level_id) == int(l_id):
                                 # it is really an intercept term
                                 beta_0 += beta_j
@@ -632,7 +629,7 @@ class LinearModelApp(QMainWindow):
                         for cand in interaction_terms:
                             if cand.startswith(isolating_factor):
                                 sub_level = cand[len(isolating_factor)+1 :]
-                                sub_level_id = i_labels_dict[sub_level]
+                                sub_level_id =  self.regression_results["dummy_levels"][isolating_factor][sub_level]
                                 if int(sub_level_id) == int(l_id):
                                     beta_j_hat = calculate_beta_hat(isolating_factor,components,
                                                                     interaction_terms,beta_j)
@@ -645,9 +642,10 @@ class LinearModelApp(QMainWindow):
                             beta_1 += beta_j
                     else:
                         interaction_terms = var.split("*")
-                        beta_j_hat = calculate_beta_hat(isolating_factor,components,interaction_terms,beta_j)
-                        if np.isfinite(beta_j_hat):
-                            beta_1 += beta_j_hat
+                        if isolating_factor in interaction_terms:
+                            beta_j_hat = calculate_beta_hat(isolating_factor,components,interaction_terms,beta_j)
+                            if np.isfinite(beta_j_hat):
+                                beta_1 += beta_j_hat
 
             print "beta1", beta_1
             print "beta0", beta_0
@@ -682,6 +680,7 @@ class LinearModelApp(QMainWindow):
     def draw_interaction_plot(self,reg1,reg2):
 
         df = self.regression_results["standardized_model"]
+        #TODO: Fix labels
         df2,x_var,hue_var,outcome,labels,qualitative_map,x_labels = self.cut_and_sort(reg1,reg2,df.copy())
         groups_series=df2[hue_var]
         print "testing %s %s"%(reg1,reg2)
@@ -692,20 +691,55 @@ class LinearModelApp(QMainWindow):
         df2 = self.isolate_in_groups(x_var,outcome,hue_var,groups_series)
         #df2[outcome]+=self.regression_results["residuals"]
         #df2[outcome]+=df2[hue_var]
-        #un standardize yvar
+        #TODO un standardize yvar
         #self.plot.draw_scatter(df2, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map,
         #                       x_labels=x_labels)
         self.plot.draw_scatter(df2,x_var,outcome,hue_var=hue_var,reg_line = False)
 
     def isolate_in_groups(self,x_var,y_var,z_var,groups):
-        work_df = self.regression_results["standardized_model"]
-        fitted = self.evaluate_linear_model(work_df)
+        #dont mess with the good copy of data
+        work_df = self.regression_results["standardized_model"].copy()
+        var_types = self.regression_results["var_types"]
+        groups_r = (var_types[z_var] == "r")
+        dummy_columns=pd.DataFrame(index=work_df.index)
+        #make a copy, because maybe will add new columns
+        for var in work_df:
+            if (var == x_var) or (var == y_var):
+                #leave alone
+                pass
+            elif var == z_var:
+                #find mean in each group
+                #only necessary if the groups variable is real
+                if groups_r is True:
+                    group_vals = np.unique(groups)
+                    #group_means
+                    averaged_group_col = np.zeros(len(work_df))
+                    for val in group_vals:
+                        g_i = (groups == val)
+                        g_m = np.mean(work_df[z_var][g_i])
+                        averaged_group_col[g_i.get_values()]=g_m
+                    work_df[z_var]=averaged_group_col
+
+            else:
+                #find mean, remember dataframe is standardized
+                if var_types[var]=="n":
+                    #we will create new columns for each dummy level
+                    possible_levels = np.unique(work_df[var])
+                    for l in possible_levels:
+                        dummy_name = "%s_%s"%(var,l)
+                        indicator = (work_df[var]==l).astype(np.float)
+                        avg_i = np.mean(indicator)
+                        dummy_columns[dummy_name]=avg_i
+                    pass
+                else:
+                    work_df[var]=0
+
+        fitted = self.evaluate_linear_model(work_df,dummy_columns)
         df_ans = self.regression_results["data"][[x_var]].copy()
-        #TODO: find mean of confounders
         df_ans[z_var]=groups
         df_ans[y_var]=fitted
         return df_ans
-    def evaluate_linear_model(self,variables_df):
+    def evaluate_linear_model(self,variables_df,dummy_columns):
         coefs_df = self.coefs_df
         var_types = self.regression_results["var_types"]
 
@@ -715,11 +749,18 @@ class LinearModelApp(QMainWindow):
                 fitted+=coefs_df["Slope"][coef]
             else:
                 comps = coefs_df["components"][coef]
-                c_df = variables_df[list(comps)]
+                c_df = variables_df[list(comps)].copy()
                 for c in comps:
                     if var_types[c] == "n":
-                        #TODO: find mean of indicator in the level
-                        pass
+                        #find original factor
+                        for fact in coef.split("*"):
+                            if fact.startswith(c):
+                                label = fact[len(c)+1:]
+                                label_i = self.regression_results["dummy_levels"][c][label]
+                                #find dummy column
+                                dummy_name="%s_%s"%(c,label_i)
+                                dummy_col = dummy_columns[dummy_name]
+                                c_df[c]=dummy_col
                 prod=c_df.product(axis=1)
                 prod*=coefs_df["Slope"][coef]
                 fitted+=prod

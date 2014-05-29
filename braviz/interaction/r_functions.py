@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 __author__ = 'Diego'
 
 import logging
@@ -325,6 +327,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     intercept = "(Intercept)"
     std_names2orig_names_labels = dict()
     orig_names_labels2orig_vars = dict()
+    dummy_vars_levels = defaultdict(dict)
     for std_name in coef_dict_std.iterkeys():
         if std_name == intercept:
             #handle special case
@@ -342,7 +345,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             if f[1] == ".":
                 if f[0] == "c":
                     #sentinel value
-                    dummy_level = 1
+                    dummy_level = -1
                 f = f[2:]
             if f[-1] != "R":
                 r_pos = f.rfind("R")
@@ -351,13 +354,16 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             index = standard_var_names.index(f)
             orig_name = all_variables[index]
             if dummy_level is not None:
-                if dummy_level == 1:
+                #sentinel from above
+                if dummy_level == -1:
                     ls = labels_dicts[orig_name].items()
                     ls.sort(key=lambda x:x[0])
                     lst = tuple(l[1] for l in ls )
                     label = "%s-%s"%lst
                 else:
                     label = labels_dicts[orig_name][int(dummy_level)]
+                    dummy_vars_levels[orig_name][label]=int(dummy_level)
+
                 orig_name_label = orig_name + "_%s" % label
             else:
                 orig_name_label = orig_name[:]
@@ -425,5 +431,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
         "data":data_frame,
         "mean_sigma":mean_sigma,
         "var_types":var_type,
+        "dummy_levels":dummy_vars_levels,
     }
+    print dummy_vars_levels
     return out_dict
