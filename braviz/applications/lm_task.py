@@ -1,25 +1,5 @@
 from __future__ import division
 import random
-
-__author__ = 'Diego'
-
-import PyQt4.QtGui as QtGui
-import PyQt4.QtCore as QtCore
-from PyQt4.QtGui import QMainWindow
-
-from braviz.interaction.qt_guis.linear_reg import Ui_LinearModel
-import braviz.interaction.qt_dialogs
-import braviz.interaction.qt_sample_select_dialog
-from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectDialog,
-                                           InteractionSelectDialog)
-
-from braviz.visualization.matplotlib_qt_widget import MatplotWidget
-import braviz.interaction.r_functions
-
-import braviz.interaction.qt_models as braviz_models
-import braviz.readAndFilter.tabular_data as braviz_tab_data
-import braviz.readAndFilter.user_data as braviz_user_data
-
 import multiprocessing
 import multiprocessing.connection
 import subprocess
@@ -28,11 +8,27 @@ import binascii
 import datetime
 import os
 import platform
-
 import logging
+from itertools import izip
+
+import PyQt4.QtGui as QtGui
+import PyQt4.QtCore as QtCore
+from PyQt4.QtGui import QMainWindow
 import numpy as np
 import pandas as pd
-from itertools import izip
+
+from braviz.interaction.qt_guis.linear_reg import Ui_LinearModel
+import braviz.interaction.qt_dialogs
+import braviz.interaction.qt_sample_select_dialog
+from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectDialog,
+                                           InteractionSelectDialog)
+from braviz.visualization.matplotlib_qt_widget import MatplotWidget
+import braviz.interaction.r_functions
+import braviz.interaction.qt_models as braviz_models
+import braviz.readAndFilter.tabular_data as braviz_tab_data
+import braviz.readAndFilter.user_data as braviz_user_data
+
+__author__ = 'Diego'
 
 class LinearModelApp(QMainWindow):
     def __init__(self):
@@ -246,8 +242,11 @@ class LinearModelApp(QMainWindow):
                 df2 = self.isolate_one(target_var)
                 if target_type == "n":
                     self.plot_nominal_intercepts(df2, target_var)
-                else:
+                elif target_type == "r":
                     self.plot.draw_scatter(df2, target_var, self.outcome_var_name, reg_line=True)
+                else:
+                    x_labels = braviz_tab_data.get_names_label_dict(target_var)
+                    self.plot.draw_scatter(df2, target_var, self.outcome_var_name, reg_line=True,x_labels=x_labels)
                 self.plot.set_figure_title("Mean effect of %s" % target_var)
         return
 
@@ -263,7 +262,7 @@ class LinearModelApp(QMainWindow):
             self.draw_two_vars_scatter_plot(factors[0], factors[1])
         else:
             self.draw_simple_scatter_plot(var_name)
-        return
+
 
 
     def add_subjects_to_plot(self, index=None, subject_ids=None):
@@ -298,7 +297,7 @@ class LinearModelApp(QMainWindow):
                 self.plot.draw_scatter(df, regressor_name, self.outcome_var_name, reg_line=True, x_labels=labels_dict)
             else:
                 self.plot.draw_intercept(df, self.outcome_var_name, regressor_name, group_labels=labels_dict)
-
+        self.plot.set_figure_title("RAW effect of %s"%regressor_name)
 
     def cut_and_sort(self, regressor1, regressor2,df):
         var_1_real = braviz_tab_data.is_variable_name_real(regressor1)
@@ -323,7 +322,7 @@ class LinearModelApp(QMainWindow):
             nom_data = np.minimum(nom_data, N_PIECES)
             nom_data = nom_data.astype(np.int)
             df[regressor2] = nom_data
-            labels = dict((i + 1, "%s $\\geq$ %.3f" % (regressor2, dmin + i * delta)) for i in xrange(N_PIECES))
+            labels = dict((i + 1, (dmin + i * delta,dmin + (i+1 )* delta)) for i in xrange(N_PIECES))
             qualitative_map = False
         else:
             labels = braviz_tab_data.get_names_label_dict(hue_var)
@@ -337,8 +336,14 @@ class LinearModelApp(QMainWindow):
         df = braviz_tab_data.get_data_frame_by_name([regressor1, regressor2, self.outcome_var_name])
         df.dropna(inplace=True)
         df,x_var,hue_var,outcome,labels,qualitative_map,x_labels = self.cut_and_sort(regressor1,regressor2,df)
-        self.plot.draw_scatter(df, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map,
+        if qualitative_map is False:
+            #build string labels
+            labels2=dict( (k,"%.3g - %.3g"%(l,h)) for k,(l,h) in labels.iteritems() )
+        else:
+            labels2 = labels
+        self.plot.draw_scatter(df, x_var, outcome, hue_var=hue_var, hue_labels=labels2, qualitative_map=qualitative_map,
                                x_labels=x_labels)
+        self.plot.set_figure_title("RAW interaction of %s and %s"%(regressor1,regressor2))
 
     def poll_messages_from_mri_viewer(self):
         #print "polling"
@@ -680,8 +685,20 @@ class LinearModelApp(QMainWindow):
     def draw_interaction_plot(self,reg1,reg2):
 
         df = self.regression_results["standardized_model"]
-        #TODO: Fix labels
         df2,x_var,hue_var,outcome,labels,qualitative_map,x_labels = self.cut_and_sort(reg1,reg2,df.copy())
+        #Fix labels
+        var_types = self.regression_results["var_types"]
+        hue_t = var_types[hue_var]
+        if  hue_t == "r":
+            hue_mean,hue_sigma = self.regression_results["mean_sigma"][hue_var]
+            labels2=dict()
+            for k, (l,h) in labels.iteritems():
+                l2 = 2*hue_sigma*l+hue_mean
+                h2 = 2*hue_sigma*h+hue_mean
+                labels2[k] = "%.3g - %.3g"%(l2,h2)
+        else:
+            labels2=labels
+
         groups_series=df2[hue_var]
         print "testing %s %s"%(reg1,reg2)
         print "==============="
@@ -689,12 +706,19 @@ class LinearModelApp(QMainWindow):
         print groups_series
         print "==============="
         df2 = self.isolate_in_groups(x_var,outcome,hue_var,groups_series)
-        #df2[outcome]+=self.regression_results["residuals"]
-        #df2[outcome]+=df2[hue_var]
-        #TODO un standardize yvar
-        #self.plot.draw_scatter(df2, x_var, outcome, hue_var=hue_var, hue_labels=labels, qualitative_map=qualitative_map,
-        #                       x_labels=x_labels)
-        self.plot.draw_scatter(df2,x_var,outcome,hue_var=hue_var,reg_line = False)
+        df2[outcome]+=self.regression_results["residuals"]
+        #un standardize yvar
+        y_m,y_s = self.regression_results["mean_sigma"][outcome]
+        df2[outcome]=2*y_s*df2[outcome]+y_m
+
+        if hue_t == "b":
+            ks = sorted(labels.keys())
+            pos = df2[hue_var] >= 0
+            df2[hue_var][pos]=ks[1]
+            df2[hue_var][np.logical_not(pos)]=ks[0]
+        self.plot.draw_scatter(df2,x_var,outcome,hue_var=hue_var,reg_line = True,hue_labels = labels2,
+                               qualitative_map=qualitative_map,x_labels=x_labels)
+        self.plot.set_figure_title("Mean Interaction between %s and %s"%(x_var,hue_var))
 
     def isolate_in_groups(self,x_var,y_var,z_var,groups):
         #dont mess with the good copy of data
@@ -719,7 +743,14 @@ class LinearModelApp(QMainWindow):
                         g_m = np.mean(work_df[z_var][g_i])
                         averaged_group_col[g_i.get_values()]=g_m
                     work_df[z_var]=averaged_group_col
-
+                elif var_types[z_var]=="n":
+                    #we need to generate dummy columns
+                    possible_levels = np.unique(work_df[var])
+                    for l in possible_levels:
+                        dummy_name = "%s_%s"%(var,l)
+                        indicator = (work_df[var]==l).astype(np.float)
+                        #inside each level it will be constant, so no need of averaging
+                        dummy_columns[dummy_name]=indicator
             else:
                 #find mean, remember dataframe is standardized
                 if var_types[var]=="n":
@@ -748,6 +779,9 @@ class LinearModelApp(QMainWindow):
             if coef == "(Intercept)":
                 fitted+=coefs_df["Slope"][coef]
             else:
+                slope = coefs_df["Slope"][coef]
+                if not np.isfinite(slope):
+                    continue
                 comps = coefs_df["components"][coef]
                 c_df = variables_df[list(comps)].copy()
                 for c in comps:
@@ -762,8 +796,10 @@ class LinearModelApp(QMainWindow):
                                 dummy_col = dummy_columns[dummy_name]
                                 c_df[c]=dummy_col
                 prod=c_df.product(axis=1)
-                prod*=coefs_df["Slope"][coef]
-                fitted+=prod
+
+                if not np.all(prod==0) and np.isfinite(slope):
+                    prod*=slope
+                    fitted+=prod
         return fitted
 
 def run():

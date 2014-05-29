@@ -345,7 +345,8 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             if f[1] == ".":
                 if f[0] == "c":
                     #sentinel value
-                    dummy_level = -1
+                    #dummy_level = -1
+                    pass
                 f = f[2:]
             if f[-1] != "R":
                 r_pos = f.rfind("R")
@@ -356,10 +357,12 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             if dummy_level is not None:
                 #sentinel from above
                 if dummy_level == -1:
+
                     ls = labels_dicts[orig_name].items()
                     ls.sort(key=lambda x:x[0])
                     lst = tuple(l[1] for l in ls )
                     label = "%s-%s"%lst
+
                 else:
                     label = labels_dicts[orig_name][int(dummy_level)]
                     dummy_vars_levels[orig_name][label]=int(dummy_level)

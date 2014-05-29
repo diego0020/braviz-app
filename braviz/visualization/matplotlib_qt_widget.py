@@ -490,7 +490,7 @@ class ScatterPlot(_AbstractPlot):
             for c,l in izip(colors,unique_levels):
                 df2 = self.df[self.df[self.z_name] == l]
                 if self.hue_labels is not None:
-                    label = self.hue_labels.get(l,"?")
+                    label = self.hue_labels.get(int(l),"?")
                 else:
                     label = "?"
                 url = df2.index
@@ -521,7 +521,7 @@ class ScatterPlot(_AbstractPlot):
     def add_legend(self):
         if self.hue_labels is None:
             return
-        self.axes.legend()
+        self.axes.legend(title=self.z_name)
 
 class InterceptPlot(_AbstractPlot):
     def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None,group_labels=None):
