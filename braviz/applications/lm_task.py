@@ -43,6 +43,7 @@ class LinearModelApp(QMainWindow):
         self.result_model = braviz_models.DataFrameModel(empty_df, self.__table_cols)
         self.sample_model = braviz_models.SampleTree()
         self.plot = None
+        self.plot_name = None
         self.last_viewed_subject = None
         self.mri_viewer_pipe = None
         self.mri_viewer_process = None
@@ -214,10 +215,12 @@ class LinearModelApp(QMainWindow):
             return
 
 
-    def update_main_plot_from_results(self, index):
-        row = index.row()
-        var_name_index = self.result_model.index(row, 0)
-        var_name = unicode(self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
+    def update_main_plot_from_results(self, index,var_name=None):
+        if var_name is None:
+            row = index.row()
+            var_name_index = self.result_model.index(row, 0)
+            var_name = unicode(self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
+        self.plot_name=(1,var_name)
         if var_name == "(Intercept)":
             df2 = self.regression_results["data"]
             #df2["Jitter"] = np.random.random(len(df2))
@@ -252,10 +255,12 @@ class LinearModelApp(QMainWindow):
         return
 
 
-    def update_main_plot_from_regressors(self, index):
-        row = index.row()
-        var_name_index = self.regressors_model.index(row, 0)
-        var_name = unicode(self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
+    def update_main_plot_from_regressors(self, index,var_name=None):
+        if var_name is None:
+            row = index.row()
+            var_name_index = self.regressors_model.index(row, 0)
+            var_name = unicode(self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
+        self.plot_name=(2,var_name)
         if "*" in var_name:
             factors = var_name.split("*")
             if len(factors) > 2:
@@ -272,11 +277,13 @@ class LinearModelApp(QMainWindow):
         return
 
     def draw_coefficints_plot(self):
+        self.plot_name=(3,None)
         if self.coefs_df is not None:
             self.plot.draw_coefficients_plot(self.coefs_df)
         return
 
     def draw_residuals_plot(self):
+        self.plot_name=(4,None)
         if self.regression_results is None:
             return
         residuals = self.regression_results["residuals"]
@@ -498,7 +505,7 @@ class LinearModelApp(QMainWindow):
         vars_state["regressors"] = self.regressors_model.get_regressors()
         vars_state["interactions"] = self.regressors_model.get_interactions()
         state["vars"] = vars_state
-        state["plot"] = {"var_name": self.plot_var_name}
+        state["plot"] = {"var_name": self.plot_name}
         state["sample"] = self.sample
 
         meta = dict()
