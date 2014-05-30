@@ -146,28 +146,31 @@ The path containing this structure must be set."""
         "Auxiliary function to read nifti images"
         #path=self.__root+'/'+str(subj)+'/MRI'
         if data == 'MRI':
-            path = os.path.join(self.__root, str(subj), 'MRI')
-            filename = '%s-MRI-full.nii.gz' % str(subj)
+            path = os.path.join(self.__root, "nii",str(subj))
+            filename = 'MPRAGEmodifiedSENSE.nii.gz'
         elif data == 'FA':
+            raise Exception("Not yet available")
             path = os.path.join(self.__root, str(subj), 'camino')
             if kw.get('space',"").startswith('diff'):
                 filename = 'FA_masked.nii.gz'
             else:
                 filename = 'FA_mri_masked.nii.gz'
         elif data == "MD":
+            raise Exception("Not yet available")
             path = os.path.join(self.__root, str(subj), 'camino')
             if kw.get('space',"").startswith('diff'):
                 filename = 'MD_masked.nii.gz'
             else:
                 filename = 'MD_mri_masked.nii.gz'
         elif data == "DTI":
+            raise Exception("Not yet available")
             path = os.path.join(self.__root, str(subj), 'camino')
             if kw.get('space','').startswith('diff'):
                 filename = 'rgb_dti_masked.nii.gz'
             else:
                 filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
-            path = os.path.join(self.__root, str(subj), 'Models')
+            path = os.path.join(self.__root, "slicer_models",str(subj))
             if kw.get("wm"):
                 filename = 'wmparc.nii.gz'
             else:
@@ -212,6 +215,7 @@ The path containing this structure must be set."""
         if space == 'world':
             return img2
         elif space in ('template', 'dartel'):
+            raise Exception("Not yet available")
             dartel_yfile = os.path.join(self.__root, 'Dartel', "y_%s-back.nii.gz" % subj)
             dartel_warp = dartel2GridTransform(dartel_yfile)
             img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
@@ -219,7 +223,7 @@ The path containing this structure must be set."""
             #origin, dimension and spacing come from template 
             return img3
         elif space[:2].lower() == 'ta':
-            talairach_file = os.path.join(self.__root, str(subj), 'Surf', 'talairach.xfm')
+            talairach_file = os.path.join(self.__root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
             transform = readFreeSurferTransform(talairach_file)
             img3 = applyTransform(img2, inv(transform), (-100, -120, -110), (190, 230, 230), (1, 1, 1),
                                   interpolate=interpolate)
@@ -240,7 +244,7 @@ The path containing this structure must be set."""
 
     def __getIds(self):
         "Auxiliary function to get the available ids"
-        contents = os.listdir(self.__root)
+        contents = os.listdir(os.path.join(self.__root,"nii"))
         numbers = re.compile('[0-9]+$')
         ids = [c for c in contents if numbers.match(c) is not None]
         ids.sort(key=int)
@@ -257,8 +261,9 @@ The path containing this structure must be set."""
         """Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"""
         #path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
         #path=self.__root+'/'+str(subject)+'/Models2'
-        path = os.path.join(self.__root, str(subject), 'Models3')
-        spharm_path = os.path.join(self.__root, str(subject), 'spharm')
+        path = os.path.join(self.__root, 'slicer_models',subject)
+        #todo
+        spharm_path = path
         log = logging.getLogger(__name__)
         if kw.get('index', False):
             contents = os.listdir(path)
@@ -320,7 +325,7 @@ The path containing this structure must be set."""
 
     def __get_volume(self, subject, model_name):
         data_root = self.getDataRoot()
-        data_dir = os.path.join(data_root, subject, 'Models', 'stats')
+        data_dir = os.path.join(data_root, 'freeSurfer_Tracula',subject, 'stats')
         if model_name[:2] == 'wm':
             #we are dealing with white matter
             file_name = 'wmparc.stats'
@@ -351,7 +356,7 @@ The path containing this structure must be set."""
             self.free_surfer_LUT = cached
             self.free_surfer_labels = cached2
             return
-        color_file_name = os.path.join(self.__root, 'FreeSurferColorLUT.txt')
+        color_file_name = os.path.join(self.__root,"freeSurfer_Tracula", 'FreeSurferColorLUT.txt')
 
         with open(color_file_name) as color_file:
             color_lines = color_file.readlines()
@@ -379,8 +384,8 @@ The path containing this structure must be set."""
             log.error('Name=<surface> and hemi=<l|r> are required.')
             raise Exception('Name=<surface> and hemi=<l|r> are required.')
         if not 'scalars' in kw:
-            path = os.path.join(self.__root, str(subj), 'Surf')
-            filename = path + '/' + name
+            path = os.path.join(self.__root, "freeSurfer_Tracula",str(subj), 'surf')
+            filename = os.path.join(path,name)
             output = surface2vtkPolyData(filename)
             return self.__movePointsToSpace(output, kw.get('space', 'world'), subj)
         else:
@@ -394,7 +399,7 @@ The path containing this structure must be set."""
     def __loadFreeSurferScalar(self, subj, **kw):
         "Auxiliary function to read free surfer scalars"
         morph = {'area', 'curv', 'avg_curv', 'thickness', 'volume', 'sulc'}
-        path = os.path.join(self.__root, str(subj), 'Surf')
+        path = os.path.join(self.__root, "freeSurfer_Tracula",str(subj), 'surf')
         log = logging.getLogger(__name__)
         try:
             hemisphere = kw['hemi']
@@ -413,16 +418,15 @@ The path containing this structure must be set."""
         except KeyError:
             log.error(Exception('scalars is required'))
             raise (Exception('scalars is required'))
-        path = os.path.join(self.__root, str(subj), 'Surf')
         if scalar_name in morph:
             if kw.get('lut'):
                 return get_free_surfer_lut(scalar_name)
-            scalar_filename = path + '/' + hemisphere + 'h.' + scalar_name
+            scalar_filename = os.path.join(path,hemisphere + 'h.' + scalar_name)
             scalar_array = read_morph_data(scalar_filename)
             return scalar_array
         else:
             #It should be an annotation
-            annot_filename = path + '/' + hemisphere + 'h.' + scalar_name + '.annot'
+            annot_filename = os.path.join(path , hemisphere + 'h.' + scalar_name + '.annot')
             labels, ctab, names = read_annot(annot_filename)
             if kw.get('lut'):
                 return surfLUT2VTK(ctab, names)
@@ -431,6 +435,9 @@ The path containing this structure must be set."""
     def __cached_color_fibers(self, subj, color=None,scalars=None):
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
+        #todo
+        raise NotImplementedError
+
         log = logging.getLogger(__name__)
         if (color is None) and (scalars is None):
             color = "orient"
@@ -515,8 +522,11 @@ The path containing this structure must be set."""
 
     def __cached_filter_fibers(self, subj, waypoint):
         "Only one waypoint, returns a set"
+        raise NotImplementedError
         #print "filtering for model "+waypoint
-        pickles_dir = os.path.join(self.getDataRoot(), 'pickles')
+        pickles_dir = os.path.join(self.getDataRoot(), '.pickles')
+        if not os.path.isdir(pickles_dir):
+            os.mkdir(pickles_dir)
         pickle_name = 'fibers_%s_%s.pickle' % (subj, waypoint)
         log = logging.getLogger(__name__)
         try:
@@ -545,6 +555,7 @@ The path containing this structure must be set."""
 
     def __readFibers_from_db(self,subj,db_id,**kw):
         log = logging.getLogger(__name__)
+        raise NotImplementedError
         try:
             _, bundle_type, data = bundles_db.get_bundle_details(db_id)
         except Exception:
@@ -576,6 +587,7 @@ The path containing this structure must be set."""
         the list is then used to remove unwanted polylines,
         and finally the fibers are translated to the wanted space
         """
+        raise NotImplementedError
         log = logging.getLogger(__name__)
         if 'progress' in kw:
             log.warning("The progress argument is deprecated")
@@ -686,6 +698,7 @@ The path containing this structure must be set."""
 
     def __readTensors(self, subj, **kw):
         "Internal function to read a tensor file"
+        raise NotImplementedError
         path = os.path.join(self.__root, str(subj), 'camino')
         tensor_file = os.path.join(path, 'camino_dt.nii.gz')
         if kw.get('space') == 'world':
@@ -706,12 +719,14 @@ The path containing this structure must be set."""
         if space.lower()[:2] == 'wo':
             return point_set
         elif space.lower()[:2] == 'ta':
-            talairach_file = os.path.join(self.__root, str(subj), 'Surf', 'talairach.xfm')
+            talairach_file = os.path.join(self.__root, "freeSurfer_Tracula",str(subj), 'mri',"transforms",
+                                          'talairach.xfm')
             transform = readFreeSurferTransform(talairach_file)
             if inverse:
                 transform = inv(transform)
             return transformPolyData(point_set, transform)
         elif space.lower() in ('template', 'dartel'):
+            raise NotImplementedError
             dartel_yfile = os.path.join(self.__root, 'Dartel', "y_%s-forw.nii.gz" % subj)
             if inverse:
                 dartel_yfile = os.path.join(self.__root, 'Dartel', "y_%s-back.nii.gz" % subj)
@@ -808,8 +823,11 @@ The path containing this structure must be set."""
 
     def __read_func_transform(self, subject, paradigm, inverse=False):
         "reads the transform from world to functional space"
+        raise NotImplementedError
         name = paradigm.upper()
-        path = os.path.join(self.getDataRoot(), subject, 'spm')
+        if name=="MIEDOSOFTONESENSE":
+            name = "MIEDOSofToneSENSE"
+        path = os.path.join(self.getDataRoot(), 'spm',subject )
         if inverse is False:
             dartel_warp = os.path.join(path, name, 'y_seg_forw.nii.gz')
             T1_func = os.path.join(path, name, 'T1.nii.gz')
@@ -854,6 +872,7 @@ The path containing this structure must be set."""
 
     def __read_func(self, subject, **kw):
         "Internal function to read functional images, deals with the SPM transforms"
+        raise NotImplementedError
         log = logging.getLogger(__name__)
         try:
             name = kw['name']
@@ -888,8 +907,9 @@ The path containing this structure must be set."""
         return self.__move_img_from_world(subject, world_z_map, True, kw.get('space', 'world'))
 
     def __read_bold(self, subj, paradigm):
+        raise NotImplementedError
         paradigm = paradigm.upper()
-        route = os.path.join(self.getDataRoot(), subj, 'spm', paradigm, 'smoothed.nii.gz')
+        route = os.path.join(self.getDataRoot(), 'spm',subj, paradigm, 'smoothed.nii.gz')
         img_4d = nib.load(route)
         return img_4d
 
