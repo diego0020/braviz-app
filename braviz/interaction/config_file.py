@@ -6,6 +6,7 @@ import logging
 
 import vtk
 
+
 __author__ = 'Diego'
 
 class braviz_config(RawConfigParser):
@@ -58,6 +59,8 @@ def make_default_config():
     braviz_conf.add_section('VTK')
     braviz_conf.set('VTK','Background','0.1 0.1 0.2')
     braviz_conf.set('VTK','Interaction_Style','TrackballCamera')
+    braviz_conf.add_section('Braviz')
+    braviz_conf.set('Braviz','project','kmc40')
     log = logging.getLogger(__name__)
     try:
         with open(default_config_name,'w') as config_file:

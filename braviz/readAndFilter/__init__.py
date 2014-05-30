@@ -14,6 +14,8 @@ import vtk
 import numpy as np
 import psutil
 
+from braviz.interaction.config_file import get_config as __get_config
+
 
 def nibNii2vtk(nii):
     """Transform a nifti image read by nibabel into a vtkImageData"""
@@ -380,9 +382,19 @@ def cache_function(max_cache_size):
 
 
 #Easy access to kmc readers
-from braviz.readAndFilter.kmc40 import autoReader as kmc40AutoReader
-from braviz.readAndFilter.kmc40 import get_data_root as kmc40_auto_data_root
+
+#read configuration file and decide which project to expose
+__config = __get_config(os.path.join(os.path.dirname(__file__),"..","applications"))
+PROJECT = __config.get("Braviz","project")
+if PROJECT == "kmc400":
+    import kmc400p as project_reader
+else:
+    import kmc40 as project_reader
+
+kmc40AutoReader = project_reader.autoReader
+kmc40_auto_data_root = project_reader.get_data_root
 
 if __name__ == "__main__":
     root = kmc40_auto_data_root()
     reader=kmc40AutoReader()
+    print root
