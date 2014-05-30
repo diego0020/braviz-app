@@ -396,6 +396,10 @@ else:
 BravizAutoReader = project_reader.autoReader
 braviz_auto_data_root = project_reader.get_data_root
 
+#for back compatibility
+from kmc40 import autoReader as _kmc40AutoReader
+kmc40AutoReader = _kmc40AutoReader
+
 if __name__ == "__main__":
     root = braviz_auto_data_root()
     reader=BravizAutoReader()
