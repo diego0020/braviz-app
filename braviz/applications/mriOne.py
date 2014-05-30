@@ -11,7 +11,9 @@ import braviz
 
 
 reader = braviz.readAndFilter.BravizAutoReader()
-img = reader.get('MRI', '093', format='VTK')
+initial_subject = reader.get("ids")[0]
+
+img = reader.get('MRI', initial_subject, format='VTK')
 
 config = braviz.interaction.get_config(__file__)
 background = config.get_background()

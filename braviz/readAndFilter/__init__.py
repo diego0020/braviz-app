@@ -307,6 +307,8 @@ def readFreeSurferTransform(filename):
             trans = lines[-3:]
             trans = [l.split() for l in trans]
             trans = [l[0:4] for l in trans]
+            #possible semicolomg in the last term
+            trans[2][3]=trans[2][3].rstrip(";")
             trans_f = [map(float, l) for l in trans]
             trans_f.append([0] * 3 + [1])
             np.array(trans_f)

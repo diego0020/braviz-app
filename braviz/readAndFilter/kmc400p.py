@@ -760,15 +760,15 @@ The path containing this structure must be set."""
 
     def __create_surfer_lut(self):
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
-        #Based on subject 143
+        #Based on subject 119
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
         if color_dict is None:
-            aparc_img = self.get('APARC', '143')
+            aparc_img = self.get('APARC', '119')
             aparc_data = aparc_img.get_data()
             aparc_values = set()
             for v in aparc_data.flat:
                 aparc_values.add(v)
-            color_file_name = os.path.join(self.getDataRoot(), 'FreeSurferColorLUT.txt')
+            color_file_name = os.path.join(self.getDataRoot(),"freeSurfer_Tracula", 'FreeSurferColorLUT.txt')
             try:
                 color_file = open(color_file_name)
             except IOError as e:
