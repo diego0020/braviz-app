@@ -3,3 +3,5 @@ syntax: glob
 *.pyc
 braviz/vtkError.log
 braviz/interaction/qt_guis/*.py
+braviz/applications/braviz.cfg
+*/Thumbs.db
