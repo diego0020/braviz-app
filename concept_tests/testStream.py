@@ -1,9 +1,12 @@
-import braviz
-import nibabel as nib
-import vtk
 import os
 
-kmc_40_reader=braviz.readAndFilter.kmc40AutoReader()
+import nibabel as nib
+import vtk
+
+import braviz
+
+
+kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
 root_path=kmc_40_reader.getDataRoot()
 
 

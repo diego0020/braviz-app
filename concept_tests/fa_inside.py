@@ -10,7 +10,7 @@ __author__ = 'Diego'
 subject = "093"
 structs = ["CC_Anterior","CC_Posterior","CC_Mid_Posterior"]
 
-reader= braviz.readAndFilter.kmc40AutoReader()
+reader= braviz.readAndFilter.BravizAutoReader()
 #find label
 labels = [int(reader.get("Model",subject,name=struct,label=True)) for struct in structs]
 #print "label:",label

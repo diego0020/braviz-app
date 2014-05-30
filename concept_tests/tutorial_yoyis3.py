@@ -1,8 +1,10 @@
 #Para correr desde la consola de windows
 # C:\Python27_32\python.exe tutorial_yoyis.py [subject] [espacio] 
 
-import braviz
 import sys
+
+import braviz
+
 
 subject='093'
 #print sys.argv
@@ -24,7 +26,7 @@ if len(sys.argv) >2:
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(reader'C:\Users\da.angulo39\Documents\Kanguro')
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(reader'K:\JohanaForero\KAB-db')
 #reader=reader=braviz.readAndFilter.kmc40AutoReader()
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 
 
 #crear visualizador

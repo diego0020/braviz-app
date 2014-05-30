@@ -1,13 +1,14 @@
 from __future__ import division
-import braviz
-import vtk
 import Tkinter as tk
 
+import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
+import braviz
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+
+reader=braviz.readAndFilter.BravizAutoReader()
 
 
 #crear visualizador

@@ -17,7 +17,7 @@ class MriMultSlicerApp():
         chosen_models= {'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'}
         self.currSpace='world'
 
-        reader=braviz.readAndFilter.kmc40AutoReader()
+        reader=braviz.readAndFilter.BravizAutoReader()
         self.img=reader.get('MRI',self.currSubj,format='VTK',space=self.currSpace)
         aparc=reader.get('aparc',self.currSubj,format='vtk',space=self.currSpace)
 

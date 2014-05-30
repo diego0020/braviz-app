@@ -32,6 +32,7 @@ from braviz.visualization.grid_viewer import GridView
 from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.structure_metrics import solve_laterality
 
+
 __author__ = 'Diego'
 
 
@@ -997,7 +998,7 @@ class MultipleVariablesApp():
         self.root = tk.Tk()
         self.root.title('Braviz-Multiple Variables')
 
-        self.reader2 = braviz.readAndFilter.kmc40AutoReader()
+        self.reader2 = braviz.readAndFilter.BravizAutoReader()
         #reader2=braviz.readAndFilter.kmc40AutoReader()
 
         self.panned_window = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)

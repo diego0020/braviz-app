@@ -10,7 +10,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz
 
 
-reader = braviz.readAndFilter.kmc40AutoReader()
+reader = braviz.readAndFilter.BravizAutoReader()
 img = reader.get('MRI', '093', format='VTK')
 
 config = braviz.interaction.get_config(__file__)

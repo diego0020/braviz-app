@@ -1,17 +1,19 @@
 from __future__ import division
-import braviz
-from braviz.visualization.create_lut import get_colorbrewer_lut
-import vtk
-import random
 import math
 from os.path import join as path_join
-import numpy as np
 from itertools import izip
+
+import vtk
+import numpy as np
+
+import braviz
+from braviz.visualization.create_lut import get_colorbrewer_lut
+
 __author__ = 'Diego'
 
 scalar_column='WMIIQ'
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 viewer=braviz.visualization.simpleVtkViewer()
 
 subj_ids=reader.get('ids')

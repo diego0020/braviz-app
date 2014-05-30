@@ -32,7 +32,7 @@ importer.Update()
 img=importer.GetOutput()
 img2=braviz.readAndFilter.applyTransform(img,np.linalg.inv(nimage.get_affine()))
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 
 img2=reader.get("DTI","093",format="VTK")
 

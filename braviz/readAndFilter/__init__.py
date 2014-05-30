@@ -391,10 +391,10 @@ if PROJECT == "kmc400":
 else:
     import kmc40 as project_reader
 
-kmc40AutoReader = project_reader.autoReader
-kmc40_auto_data_root = project_reader.get_data_root
+BravizAutoReader = project_reader.autoReader
+braviz_auto_data_root = project_reader.get_data_root
 
 if __name__ == "__main__":
-    root = kmc40_auto_data_root()
-    reader=kmc40AutoReader()
+    root = braviz_auto_data_root()
+    reader=BravizAutoReader()
     print root

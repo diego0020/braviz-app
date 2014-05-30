@@ -5,20 +5,21 @@ import ttk
 from os.path import join as path_join
 import thread
 
-
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import  vtkTkRenderWindowInteractor
 import numpy as np
+
 from braviz.readAndFilter.read_csv import get_headers,get_tuples_dict
 from braviz.visualization.create_lut import get_colorbrewer_lut
 import braviz
+
 
 
 #============globals=======================
 __author__ = 'Diego'
 root = tk.Tk()
 root.withdraw()
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small.csv')
 id_list=reader.get('ids')

@@ -3,7 +3,7 @@ import braviz
 subject='093'
 
 #Crear lector
-r=braviz.readAndFilter.kmc40AutoReader()
+r=braviz.readAndFilter.BravizAutoReader()
 
 
 #crear visualizador

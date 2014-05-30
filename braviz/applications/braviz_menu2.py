@@ -80,7 +80,7 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def launch_scenarios_dialog(self):
         if self.reader is None:
-            self.reader = braviz.readAndFilter.kmc40AutoReader()
+            self.reader = braviz.readAndFilter.BravizAutoReader()
         params = {}
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(None,params,self.reader)
         ret = dialog.exec_()

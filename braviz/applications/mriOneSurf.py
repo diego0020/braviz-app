@@ -11,6 +11,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 
 import braviz.readAndFilter
 
+
 #TODO Use vtkSelectPolyData to select a sub region
 root = tk.Tk()
 root.withdraw()
@@ -36,7 +37,7 @@ processing_lock=threading.Lock()
 lut_dict={}
 
 currSubj='093'
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 img=reader.get('MRI',currSubj,format='VTK',space='world')
 
 picker = vtk.vtkCellPicker()

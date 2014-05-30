@@ -8,7 +8,7 @@ from braviz.readAndFilter.kmc40 import kmc40Reader
 
 class ignoring_reader(kmc40Reader):
     def __init__(self,max_cache=500):
-        auto_reader=braviz.readAndFilter.kmc40AutoReader(max_cache=1)
+        auto_reader=braviz.readAndFilter.BravizAutoReader(max_cache=1)
         path=auto_reader.getDataRoot()
         del auto_reader
         kmc40Reader.__init__(self, path, max_cache)
@@ -29,7 +29,7 @@ class ignoring_reader(kmc40Reader):
 #TODO: This should be inside the readAndFilter module
 def clear_pickles():
     #pickles
-    reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500) #small cache
+    reader=braviz.readAndFilter.BravizAutoReader(max_cache=500) #small cache
     data_root=reader.getDataRoot()
     del reader
     pickles_dir=os.path.join(data_root,'pickles')
@@ -41,7 +41,7 @@ def clear_pickles():
     
 def clear_cache(subj):
         
-    reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500) #small cache
+    reader=braviz.readAndFilter.BravizAutoReader(max_cache=500) #small cache
     data_root=reader.getDataRoot()
     del reader
     #Dartel Transform
@@ -89,7 +89,7 @@ def clear_cache(subj):
     print " %s: Done Removing "%subj
 
 def clear_all():
-    reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
+    reader=braviz.readAndFilter.BravizAutoReader(max_cache=500)
     ids=reader.get('ids')
     for i in ids:
         clear_cache(i)
@@ -144,7 +144,7 @@ def populate_cache(subj):
 
 
 def populate_all(processes=1):
-    reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
+    reader=braviz.readAndFilter.BravizAutoReader(max_cache=500)
     ids=reader.get('ids')
     del(reader)
     if processes<=1:

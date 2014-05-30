@@ -1,24 +1,26 @@
 from __future__ import division
 import Tkinter as tk
 import ttk
-import numpy as np
-from braviz.readAndFilter.read_csv import get_column
-from braviz.visualization.vtk_charts import multi_bar_plot
 import os
+import math
+
+import numpy as np
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
+
+from braviz.readAndFilter.read_csv import get_column
 from braviz.interaction.tk_tooltip import ToolTip
-import math
 import braviz
 from braviz.visualization.mathplotlib_charts import BarPlot
+
 __author__ = 'Diego'
 
 
 print "DEPRECATED"
 print "Use tms_view2 with view all"
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 
 
 #=======global variables=======

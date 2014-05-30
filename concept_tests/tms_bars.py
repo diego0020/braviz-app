@@ -1,10 +1,12 @@
 from __future__ import division
-import braviz
-from braviz.readAndFilter.read_csv import get_column, column_to_vtk_array
 import os
+
 import numpy as np
 import vtk
-import random
+
+import braviz
+from braviz.readAndFilter.read_csv import get_column
+
 __author__ = 'Diego'
 
 #parameters
@@ -17,7 +19,7 @@ tms_column='ICId'
 invert_data=True #perform 100 - tms_data
 genre='1' #1=girls, 2=boys
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 csv_file=os.path.join(reader.getDataRoot(),'baseFinal_TMS.csv')
 codes=get_column(csv_file,'CODE')
 genres=get_column(csv_file,'GENDE')

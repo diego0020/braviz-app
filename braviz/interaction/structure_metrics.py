@@ -7,6 +7,7 @@ import numpy as np
 
 import braviz
 import braviz.readAndFilter.tabular_data
+
 __author__ = 'Diego'
 
 
@@ -261,7 +262,7 @@ def mean_inside(subject, structures, img2, paradigm=None):
     """
     if len(structures) == 0:
         return float("nan")
-    reader = braviz.readAndFilter.kmc40AutoReader()
+    reader = braviz.readAndFilter.BravizAutoReader()
     #find label
     #print "label:",label
     #find voxels in structure

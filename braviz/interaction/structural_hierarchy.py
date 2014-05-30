@@ -125,6 +125,6 @@ def get_structural_hierarchy_with_names(reader,subj,dom_nondom=True, right_left=
 
 
 if __name__=='__main__':
-    reader2=braviz.readAndFilter.kmc40AutoReader()
+    reader2=braviz.readAndFilter.BravizAutoReader()
     hier=get_structural_hierarchy(reader2,'144')
     print hier

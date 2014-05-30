@@ -1,13 +1,16 @@
 from __future__ import division
-import braviz
+
 import vtk
+
+import braviz
+
 
 __author__ = 'Diego'
 left=True
 subj='207'
 if left is True:
 
-    reader = braviz.readAndFilter.kmc40AutoReader()
+    reader = braviz.readAndFilter.BravizAutoReader()
     viewer = braviz.visualization.simpleVtkViewer()
 
     tracts = reader.get('fibers', subj, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'])
@@ -78,7 +81,7 @@ if left is True:
     viewer.iren.Start()
 #======================================================
 else:
-    reader=braviz.readAndFilter.kmc40AutoReader()
+    reader=braviz.readAndFilter.BravizAutoReader()
     viewer=braviz.visualization.simpleVtkViewer()
 
     tracts=reader.get('fibers',subj,space='dartel',waypoint=['ctx-rh-precentral','Brain-Stem'])

@@ -10,7 +10,7 @@ from braviz.readAndFilter.read_csv import get_tuples_dict
 from braviz.visualization.radar_chart import radar_factory
 
 
-reader = braviz.readAndFilter.kmc40AutoReader()
+reader = braviz.readAndFilter.BravizAutoReader()
 csv_file = os.path.join(reader.getDataRoot(), 'baseFinal_TMS.csv')
 #pow_wanted_cols = ('IHIlatd',  'IHIdurd',  'MEPlatd', 'freq_duration_d')
 pow_wanted_cols = ('IHIlatd',  'freq_duration_nd',  'IHIlatnd','freq_duration_d')

@@ -2,14 +2,15 @@ from __future__ import division
 import Tkinter as tk
 import tkFont
 import ttk
+from itertools import izip
 
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz
-from itertools import izip
-reader=braviz.readAndFilter.kmc40AutoReader()
+
+reader=braviz.readAndFilter.BravizAutoReader()
 
 
 

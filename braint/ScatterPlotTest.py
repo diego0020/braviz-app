@@ -3,11 +3,13 @@ Created on 5/10/2013
 
 @author: imagine
 '''
+from os.path import join as path_join
+
 from ScatterPlotClass import ScatterPlotClass
 import braviz
-from os.path import join as path_join 
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+
+reader=braviz.readAndFilter.BravizAutoReader()
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small2.csv')
 #file_name = 'File\\testPacientes.csv'

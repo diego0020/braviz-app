@@ -36,7 +36,7 @@ RATIONAL_VARIBLE = 5  # FSIQ
 class SampleOverview(QtGui.QMainWindow):
     def __init__(self, initial_scenario=None):
         super(SampleOverview, self).__init__()
-        self.reader = braviz.readAndFilter.kmc40AutoReader()
+        self.reader = braviz.readAndFilter.BravizAutoReader()
 
         self.plot_widget = None
         self.sample = braviz_tab_data.get_subjects()

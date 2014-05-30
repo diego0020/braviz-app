@@ -1296,7 +1296,7 @@ if __name__ == "__main__":
     import PyQt4.QtGui as QtGui
     import braviz
 
-    reader = braviz.readAndFilter.kmc40AutoReader()
+    reader = braviz.readAndFilter.BravizAutoReader()
     app = QtGui.QApplication(sys.argv)
     main_window = QSuvjectViwerWidget(reader)
     main_window.show()

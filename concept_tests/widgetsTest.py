@@ -4,14 +4,16 @@ Created on 22/08/2013
 @author: da.angulo39
 '''
 import vtk
+
 import braviz
+
 
 #test='sphere'
 #test='measure'
 test='measure'
 
 v=braviz.visualization.simpleVtkViewer()
-r=braviz.readAndFilter.kmc40AutoReader()
+r=braviz.readAndFilter.BravizAutoReader()
 struct=r.get('Model','093',name='Left-Caudate')
 v.addPolyData(struct)
 

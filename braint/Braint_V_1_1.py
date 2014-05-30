@@ -1,19 +1,18 @@
 from Tkinter import *
-import BraintProperties
 from tkFileDialog import askopenfile
-import os
-import Tkinter as tk
 import ttk
+from os.path import join as path_join
+
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-import kernel
-from kernel.RDFDBManagerClass import  RDFDBManager
 
+import BraintProperties
+from kernel.RDFDBManagerClass import  RDFDBManager
 from ScatterPlotClass import ScatterPlotClass
 from VolumeRendererClass import VolumeRendererClass
 import braviz
-from os.path import join as path_join 
+
 
 class MainFrame(Frame):
     def __init__(self, rootTk):
@@ -34,7 +33,7 @@ class MainFrame(Frame):
         #display the menu
         self.main_frame_root.config(menu=menubar)
         
-        self.reader=braviz.readAndFilter.kmc40AutoReader()
+        self.reader=braviz.readAndFilter.BravizAutoReader()
         
         #self.topFrame.pack(side = TOP, fill=BOTH, expand = YES)
         
@@ -421,7 +420,7 @@ class MainFrame(Frame):
         self.scatterPlot.add_axes_complete(self.my_new_testlist, 'wmi', volumes_minus_one, 'volume', self.my_new_codelist, 'code', self.current_subject_score, current_volume_one) 
         
     def create_plot_test_minus_one(self):
-        self.reader=braviz.readAndFilter.kmc40AutoReader()
+        self.reader=braviz.readAndFilter.BravizAutoReader()
         data_root=self.reader.getDataRoot()
         self.file_name=path_join(data_root,'test_small2.csv')
         

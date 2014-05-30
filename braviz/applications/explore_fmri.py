@@ -2,18 +2,18 @@
 from __future__ import division
 import Tkinter as tk
 import ttk
+from math import ceil,floor
+from functools import partial
+
 import numpy as np
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
-
 import braviz
 import braviz.visualization.fmri_view
 import braviz.visualization.vtk_charts
 
-from math import ceil,floor
-from functools import partial
 
 __author__ = 'Diego'
 
@@ -28,7 +28,7 @@ current_mode='space' #time or space
 #===============================================
 
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 t_stat_img=reader.get('fMRI',subject,format='VTK',space='func',name='precision')
 origin=t_stat_img.GetOrigin()
 spacing=t_stat_img.GetSpacing()

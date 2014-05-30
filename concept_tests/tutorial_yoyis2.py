@@ -1,8 +1,10 @@
 #Para correr desde la consola de windows
 # C:\Python27_32\python.exe tutorial_yoyis.py [subject] [espacio] 
 
-import braviz
 import sys
+
+import braviz
+
 
 subject='093'
 #print sys.argv
@@ -24,7 +26,7 @@ if len(sys.argv) >2:
 #r=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
 #r=braviz.readAndFilter.kmc40.kmc40Reader(r'K:\JohanaForero\KAB-db')
 #r=r=braviz.readAndFilter.kmc40AutoReader()
-r=braviz.readAndFilter.kmc40AutoReader()
+r=braviz.readAndFilter.BravizAutoReader()
 
 # Sacar lista de pacientes
 subjects_list=r.get('ids')

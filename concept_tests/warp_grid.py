@@ -1,12 +1,15 @@
 from __future__ import division
-import braviz
+
 import vtk
 import numpy as np
+
+import braviz
+
 
 __author__ = 'Diego'
 subject='143'
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 viewer=braviz.visualization.simpleVtkViewer()
 
 orig_img=reader.get('MRI',subject,space='world',format='vtk')

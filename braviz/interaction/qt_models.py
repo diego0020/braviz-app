@@ -1460,5 +1460,5 @@ class SamplesSelectionModel(QAbstractTableModel):
 if __name__ == "__main__":
     import braviz
 
-    reader = braviz.readAndFilter.kmc40AutoReader()
+    reader = braviz.readAndFilter.BravizAutoReader()
     test_tree = StructureTreeModel(reader)

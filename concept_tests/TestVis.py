@@ -1,16 +1,19 @@
 #Este prograa permite ver los subtest y subsubrtest en un scatterplot atraves de un query del rdf
 from __future__ import division
-import vtk
-import braviz
 import Tkinter as tk
 import tkMessageBox
 import ttk
+from os.path import join as path_join
+import cPickle
+import os
+
+import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-from os.path import join as path_join 
-import cPickle
+
+import braviz
 from kernel.RDFDBManagerClass import *
-import os
+
 
 #kbDatabaseRoot = 'K:\\JohanaForero\\KAB-db'
 
@@ -205,7 +208,7 @@ class TestVis:
     def getRDFDBManager(self):
         return self.myManager
      
-reader=braviz.readAndFilter.kmc40AutoReader(max_cache=500)
+reader=braviz.readAndFilter.BravizAutoReader(max_cache=500)
 data_root=reader.getDataRoot()
 working_director=os.path.dirname(__file__)
 working_director=os.path.join(working_director,'../braint')

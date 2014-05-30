@@ -3,19 +3,21 @@ import Tkinter as tk
 import ttk
 from os.path import join as path_join
 import thread
+from itertools import izip
+
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-
-import braviz
 from scipy.stats import linregress
 import numpy as np
-from itertools import izip
+
+import braviz
 from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.tk_tooltip import ToolTip
 from braviz.interaction.structure_metrics import cached_get_struct_metric_col
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+
+reader=braviz.readAndFilter.BravizAutoReader()
 data_root=reader.getDataRoot()
 file_name=path_join(data_root,'test_small.csv')
 cancel_calculation_flag=False

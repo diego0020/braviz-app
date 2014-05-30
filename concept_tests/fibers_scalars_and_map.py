@@ -10,7 +10,7 @@ from scipy import ndimage
 subj = "144"
 image_type = "FA"
 #image_type = "MD"
-reader = braviz.readAndFilter.kmc40AutoReader()
+reader = braviz.readAndFilter.BravizAutoReader()
 
 
 if image_type == "FA":

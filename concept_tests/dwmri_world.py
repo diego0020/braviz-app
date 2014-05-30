@@ -10,7 +10,7 @@ subject='144'
 v=braviz.visualization.simpleVtkViewer()
 
 #os.chdir(r'C:\Users\da.angulo39\Documents\Kanguro\093\camino')
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 data_root=reader.getDataRoot()
 os.chdir(os.path.join(data_root,subject,'camino'))
 
@@ -23,7 +23,7 @@ img_w=braviz.readAndFilter.applyTransform(img_vtk,inv(img.get_affine()))
 img2_vtk=braviz.readAndFilter.nibNii2vtk(img2)
 img2_w=braviz.readAndFilter.applyTransform(img2_vtk,inv(img2.get_affine()))
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 img3_w=reader.get('MRI',subject,format='vtk')
 models=reader.get('MODEL',subject,index='')
 cc=[m for m in models if 'CC' in m]

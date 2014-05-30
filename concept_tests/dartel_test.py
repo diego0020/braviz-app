@@ -1,11 +1,14 @@
 from __future__ import division
-import braviz
-import vtk
 import os
+import itertools
+
+import vtk
 import nibabel as nib
 import numpy as np
-import itertools
-reader=braviz.readAndFilter.kmc40AutoReader()
+
+import braviz
+
+reader=braviz.readAndFilter.BravizAutoReader()
 data_root=reader.getDataRoot()
 os.chdir(os.path.join(data_root,'Dartel'))
 

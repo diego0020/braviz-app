@@ -15,7 +15,7 @@ import braviz
 import braviz.readAndFilter.tabular_data as braviz_tab
 
 
-reader = braviz.readAndFilter.kmc40AutoReader()
+reader = braviz.readAndFilter.BravizAutoReader()
 
 def load_data(image_type):
     #collect all data

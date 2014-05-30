@@ -1,11 +1,13 @@
 import vtk
+
 import braviz
+
 
 __author__ = 'Diego'
 
 
 #load image
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 viewer=braviz.visualization.simpleVtkViewer()
 
 aparc=reader.get('APARC','310',format='vtk')

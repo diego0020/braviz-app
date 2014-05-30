@@ -11,7 +11,6 @@ import PyQt4.QtCore as QtCore
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import numpy as np
 
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
@@ -26,7 +25,7 @@ class vtk_widget(QVTKRenderWindowInteractor):
         self.renWin=None
         self.setMinimumSize(200,200)
         self.data=None
-        self.reader=braviz.readAndFilter.kmc40AutoReader()
+        self.reader=braviz.readAndFilter.BravizAutoReader()
         self.initRender()
     def initRender(self):
         self.Initialize()

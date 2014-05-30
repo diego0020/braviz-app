@@ -38,5 +38,5 @@ import interaction
 
 if __name__ == "__main__":
     viewer = visualization.simpleVtkViewer()
-    reader = readAndFilter.kmc40AutoReader()
+    reader = readAndFilter.BravizAutoReader()
     get_conf = interaction.get_config()

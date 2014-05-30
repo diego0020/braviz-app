@@ -1,14 +1,16 @@
 #TODO: Este se necesita? Es mejor usar todo lo de Tkinter con tk (como esta mas abajo), para no llenar el espacio
 #con nombres inutiles
 from Tkinter import *
-import BraintProperties
 from tkFileDialog import askopenfile
-import os
 import Tkinter as tk
 import ttk
+
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
+
+import BraintProperties
+
 
 #TODO estos import * no son recomendados sino para trabajo interactivo
 from kernel.RDFDBManagerClass import *
@@ -18,8 +20,7 @@ from VolumeRendererClass import VolumeRendererClass
 from SpiderPlotClass import SpiderPlotClass
 import CSVManager
 import braviz
-from os.path import join as path_join 
-import random
+from os.path import join as path_join
 import os
 os.chdir(os.path.dirname(__file__))
 class MainFrame(Frame):
@@ -47,7 +48,7 @@ class MainFrame(Frame):
         self.main_frame_root.config(menu=menubar)
         
         #create braviz reader
-        self.reader=braviz.readAndFilter.kmc40AutoReader()
+        self.reader=braviz.readAndFilter.BravizAutoReader()
         self.width_win=width
         self.height_win=height
         

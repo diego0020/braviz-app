@@ -3,10 +3,12 @@ Created on 27/08/2013
 
 @author: da.angulo39
 '''
-import braviz
 import vtk
 
-r=braviz.readAndFilter.kmc40AutoReader()
+import braviz
+
+
+r=braviz.readAndFilter.BravizAutoReader()
 struct=r.get('Model','093',name='Left-Caudate')
 
 massProperty=vtk.vtkMassProperties()

@@ -147,7 +147,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
     def save_variables_function(self):
         import braviz
 
-        self.reader = braviz.readAndFilter.kmc40AutoReader()
+        self.reader = braviz.readAndFilter.BravizAutoReader()
         all_subjects = braviz_tab_data.get_subjects()
         for i, subj in enumerate(all_subjects):
             try:

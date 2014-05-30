@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage
 from matplotlib import pyplot as plt
 
-reader = braviz.readAndFilter.kmc40AutoReader()
+reader = braviz.readAndFilter.BravizAutoReader()
 
 def load_data(image_type):
     #collect all data

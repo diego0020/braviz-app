@@ -589,7 +589,7 @@ class AnovaApp(QMainWindow):
             scn_id = params["scn_id"]
             pixmap = QtGui.QPixmap.grabWidget(self.plot)
             file_name = "scenario_%d.png"%scn_id
-            data_root = braviz.readAndFilter.kmc40_auto_data_root()
+            data_root = braviz.readAndFilter.braviz_auto_data_root()
             file_path = os.path.join(data_root, "braviz_data","scenarios",file_name)
             log.info(file_path)
             pixmap.save(file_path)

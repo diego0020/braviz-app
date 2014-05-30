@@ -3,14 +3,14 @@ Created on 26/10/2013
 
 @author: jc.forero47
 '''
-import braviz
 import vtk
-from vtk.tk.vtkTkRenderWindowInteractor import \
-     vtkTkRenderWindowInteractor
+
+import braviz
+
 
 class VolumeRendererClass:
     def __init__(self):
-        self.reader = braviz.readAndFilter.kmc40AutoReader()
+        self.reader = braviz.readAndFilter.BravizAutoReader()
         self.renderer = vtk.vtkRenderer()
         self.render_window = vtk.vtkRenderWindow()
         self.render_window.AddRenderer(self.renderer)

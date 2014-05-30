@@ -3,6 +3,7 @@ import logging
 
 from kernel.RDFDBManagerClass import RDFDBManager
 from braviz.utilities import working_directory, recursive_default_dict
+
 __author__ = 'Diego'
 
 
@@ -28,10 +29,10 @@ def get_free_surfer_pretty_names_dict():
 
 
 def cached_get_free_surfer_dict(reader=None):
-    from braviz.readAndFilter import kmc40AutoReader
+    from braviz.readAndFilter import BravizAutoReader
 
     if reader is None:
-        reader = kmc40AutoReader()
+        reader = BravizAutoReader()
     key = 'free_surfer_long_names_dict'
     names_dict = reader.load_from_cache(key)
     if names_dict is not None:

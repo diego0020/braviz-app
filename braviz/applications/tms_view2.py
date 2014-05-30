@@ -16,8 +16,9 @@ from braviz.visualization.mathplotlib_charts import BarPlot
 from braviz.interaction.tk_tooltip import ToolTip
 import braviz
 
+
 __author__ = 'Diego'
-reader = braviz.readAndFilter.kmc40AutoReader()
+reader = braviz.readAndFilter.BravizAutoReader()
 
 
 #=======global variables=======

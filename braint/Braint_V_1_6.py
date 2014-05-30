@@ -1,31 +1,14 @@
-import tkMessageBox
-
 __author__ = 'jc.forero47'
 
 from Tkinter import *
-import BraintProperties
-from tkFileDialog import askopenfile
-import os
 import Tkinter as tk
 from tkFileDialog import asksaveasfile, askopenfilename
 import tkMessageBox
-import ttk
-import vtk
-import sys,os,os.path
-from vtk.tk.vtkTkRenderWindowInteractor import \
-     vtkTkRenderWindowInteractor
 
 #TODO estos import * no son recomendados sino para trabajo interactivo
 from kernel.RDFDBManagerClass import *
 
-from ScatterPlotClass import ScatterPlotClass
-from VolumeRendererClass import VolumeRendererClass
-from SpiderPlotClass import SpiderPlotClass
-from TreeRingViewClass import TreeRingViewClass
-import CSVManager
 import braviz
-from os.path import join as path_join
-import random
 import ConfigParser
 import os
 
@@ -71,7 +54,7 @@ class MainFrame(Frame):
         self.login_button.grid(row = 2, column = 1, sticky = S+W+E)
 
         self.myManager=RDFDBManager('pythonBD','http://www.semanticweb.org/jc.forero47/ontologies/2013/7/untitled-ontology-53','http://guitaca.uniandes.edu.co:8080')
-        self.reader=braviz.readAndFilter.kmc40AutoReader()
+        self.reader=braviz.readAndFilter.BravizAutoReader()
 
         self.visualization_opened = False
 

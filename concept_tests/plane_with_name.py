@@ -1,7 +1,9 @@
-import braviz
 import vtk
 
-r=braviz.readAndFilter.kmc40AutoReader()
+import braviz
+
+
+r=braviz.readAndFilter.BravizAutoReader()
 
 mri=r.get('mri','093',format='vtk')
 aparc=r.get('aparc','093',format='vtk')

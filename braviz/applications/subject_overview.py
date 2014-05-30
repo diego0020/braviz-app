@@ -37,7 +37,7 @@ class SubjectOverviewApp(QMainWindow):
         #Super init
         QMainWindow.__init__(self)
         #Internal initialization
-        self.reader = braviz.readAndFilter.kmc40AutoReader()
+        self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__curent_subject = None
         self.__pipe = pipe_key
         log = logging.getLogger(__name__)

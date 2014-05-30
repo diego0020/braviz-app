@@ -3,13 +3,16 @@ Created on 13/09/2013
 
 @author: da.angulo39
 '''
-import braviz
-import vtk
 import os
+
+import vtk
+
+import braviz
+
 
 os.chdir(r'C:\Users\da.angulo39\Documents')
 
-r=braviz.readAndFilter.kmc40AutoReader()
+r=braviz.readAndFilter.BravizAutoReader()
 
 fibers=r.get('fibers','144',space='dartel')
 writer=vtk.vtkPolyDataWriter()

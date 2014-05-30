@@ -4,11 +4,8 @@ Created on 26/10/2013
 @author: jc.forero47
 '''
 import braviz
-import vtk
-from vtk.tk.vtkTkRenderWindowInteractor import \
-     vtkTkRenderWindowInteractor
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 
 
 filename = 'File\\directories.txt'

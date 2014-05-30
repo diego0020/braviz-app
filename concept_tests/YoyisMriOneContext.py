@@ -16,7 +16,7 @@ from braviz.interaction.tkSimpleDialog import Dialog as simpleDialog
 currSubj='093'
 currSpace='World'
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 img=reader.get('MRI',currSubj,format='VTK',space=currSpace)
 aparc=reader.get('aparc',currSubj,format='vtk',space=currSpace)
 

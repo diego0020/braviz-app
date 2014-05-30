@@ -1,11 +1,14 @@
-import braviz.readAndFilter
-import vtk
 import Tkinter as tk
+
+import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 from numpy.linalg import inv
+
+import braviz.readAndFilter
+
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 niiImg=reader.get('MRI','093')
 img=braviz.readAndFilter.nibNii2vtk(niiImg)
 img2=braviz.readAndFilter.applyTransform(img, inv(niiImg.get_affine()))

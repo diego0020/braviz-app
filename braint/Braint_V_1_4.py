@@ -6,15 +6,16 @@ Created on 12/11/2013
 #TODO: Este se necesita? Es mejor usar todo lo de Tkinter con tk (como esta mas abajo), para no llenar el espacio
 #con nombres inutiles
 from Tkinter import *
-import BraintProperties
 from tkFileDialog import askopenfile
-import os
 import Tkinter as tk
 import ttk
+
 import vtk
-import sys,os,os.path
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
+
+import BraintProperties
+
 
 #TODO estos import * no son recomendados sino para trabajo interactivo
 from kernel.RDFDBManagerClass import *
@@ -26,7 +27,6 @@ from TreeRingViewClass import TreeRingViewClass
 import CSVManager
 import braviz
 from os.path import join as path_join
-import random
 import os
 
 class MainFrame(Frame):
@@ -63,7 +63,7 @@ class MainFrame(Frame):
         self.main_frame_root.config(menu=menubar)
         
         #create braviz reader
-        self.reader=braviz.readAndFilter.kmc40AutoReader()
+        self.reader=braviz.readAndFilter.BravizAutoReader()
         self.width_win=width
         self.height_win=height
         

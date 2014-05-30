@@ -1306,7 +1306,7 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.ui.screen_shot_label.setText("<No screenshot available>"%index)
         self.ui.screen_shot_label.setScaledContents(False)
         if self.reader is None:
-            data_root = braviz.readAndFilter.kmc40_auto_data_root()
+            data_root = braviz.readAndFilter.braviz_auto_data_root()
         else:
             data_root = self.reader.getDataRoot()
         image_file = os.path.join(data_root,"braviz_data","scenarios","scenario_%d.png"%index)

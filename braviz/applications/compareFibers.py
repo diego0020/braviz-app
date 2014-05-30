@@ -4,6 +4,7 @@ import tkFont
 import ttk
 import threading
 import thread
+from itertools import izip
 
 import vtk
 import numpy as np
@@ -11,7 +12,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz
-from itertools import izip
+
 
 initialized=False     
 class locked_IntVar():
@@ -28,7 +29,7 @@ class locked_IntVar():
         self.lock.release()
         return v
 progress_internal=locked_IntVar(0)
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 
 
 

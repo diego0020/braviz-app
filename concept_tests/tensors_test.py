@@ -1,12 +1,15 @@
 from __future__ import division
-import vtk
-import nibabel as nib
 import itertools
-import numpy as np
-import braviz
 import random
 import os
 from itertools import izip
+
+import vtk
+import nibabel as nib
+import numpy as np
+
+import braviz
+
 #==========test data===============
 
 
@@ -49,7 +52,7 @@ from itertools import izip
 
 #===================real data===================
 
-kmc_40_reader=braviz.readAndFilter.kmc40AutoReader()
+kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
 root_path=kmc_40_reader.getDataRoot()
 
 

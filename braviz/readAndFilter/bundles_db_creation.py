@@ -22,7 +22,7 @@ def __create_bundles_table():
 
 
 def __add_named_bundes_to_table():
-    reader = braviz.readAndFilter.kmc40AutoReader()
+    reader = braviz.readAndFilter.BravizAutoReader()
     named_tracts = reader.get("FIBERS","093",index=True)
     print named_tracts
     conn=get_connection()

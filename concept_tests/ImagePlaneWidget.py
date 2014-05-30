@@ -16,14 +16,16 @@
 # c) right clicking on x,y,z buttons pops up a menu to set
 #    the associated widget's reslice interpolation mode
 
-import vtk
 import Tkinter
+
+import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz.readAndFilter
+
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 niiImg=reader.get('MRI','093')
 img=braviz.readAndFilter.nibNii2vtk(niiImg)
 

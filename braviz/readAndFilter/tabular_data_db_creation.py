@@ -12,7 +12,7 @@ def read_csv_file(path=None):
     if path is None:
         import braviz
 
-        dummy_reader = braviz.readAndFilter.kmc40AutoReader()
+        dummy_reader = braviz.readAndFilter.BravizAutoReader()
         path = os.path.join(dummy_reader.getDataRoot(), "test_small.csv")
     #Replace , for .
     with open(path) as csv_file:
@@ -28,7 +28,7 @@ def create_data_base(path=None):
     if path is None:
         import braviz
 
-        dummy_reader = braviz.readAndFilter.kmc40AutoReader()
+        dummy_reader = braviz.readAndFilter.BravizAutoReader()
         path = os.path.join(dummy_reader.getDataRoot(), "braviz_data", "tabular_data.sqlite")
     conn = sqlite3.connect(path)
 

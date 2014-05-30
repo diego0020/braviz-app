@@ -1,12 +1,15 @@
 from __future__ import division
-import braviz
-import vtk
 import os
-import nibabel as nib
 import itertools
+
+import vtk
+import nibabel as nib
 import numpy as np
 
-kmc_40_reader=braviz.readAndFilter.kmc40AutoReader()
+import braviz
+
+
+kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
 root_path=kmc_40_reader.getDataRoot()
 image_path=os.path.join(root_path,'911','camino','camino_dt.nii.gz')
 output_path=os.path.join(root_path,'911','camino','camino_dt.vtk')

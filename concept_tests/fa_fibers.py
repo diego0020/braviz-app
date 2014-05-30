@@ -3,7 +3,7 @@ import braviz
 
 
 
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 fa_img=reader.get('fa','093',format='vtk')
 #fibers=reader.get('fibers','093',color='y')
 

@@ -11,14 +11,13 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz.readAndFilter
 from braviz.visualization import add_solid_balloon,add_fibers_balloon
 from braviz.interaction.tkSimpleDialog import Dialog as simpleDialog
-from braviz.interaction.tk_tooltip import ToolTip
-from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
+
 
 currSubj='093'
 currSpace='World'
 current_models=[]
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
-reader=braviz.readAndFilter.kmc40AutoReader()
+reader=braviz.readAndFilter.BravizAutoReader()
 img=reader.get('MRI',currSubj,format='VTK',space=currSpace)
 aparc=reader.get('aparc',currSubj,format='vtk',space=currSpace)
 
