@@ -168,6 +168,9 @@ class MatplotWidget(FigureCanvas):
         #    self.__title.remove()
         self.__title = self.axes.set_title(title)
         self.draw()
+    @property
+    def last_viewed_subject(self):
+        return self.painted_plot.get_last_id()
 
 class MatplotBarPlot(_AbstractPlot):
     def __init__(self,axes,data,ylims=None,orientation = "vertical",group_labels=None):
@@ -474,6 +477,7 @@ class ScatterPlot(_AbstractPlot):
         self.qualitative_map = qualitative_map
         self.x_ticks = x_ticks
         self.subject_markers = None
+        self.last_id = None
         self.redraw()
 
     def redraw(self):
@@ -529,12 +533,17 @@ class ScatterPlot(_AbstractPlot):
             urls = event.artist.get_url()
             names = ["%s"%urls[i] for i in ind]
             #names = ["%s"%self.names[i] for i in ind]
+            self.last_id=urls[ind[0]]
             return "\n".join(names)
 
     def add_legend(self):
         if self.hue_labels is None:
             return
         self.axes.legend(title=self.z_name)
+
+    def get_last_id(self):
+        return self.last_id
+
 
 class InterceptPlot(_AbstractPlot):
     def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None,group_labels=None):
@@ -554,6 +563,7 @@ class InterceptPlot(_AbstractPlot):
         self.internal_df=self.df[[y_var]]
         self.subject_markers = None
         self.internal_df.columns=["y_data"]
+        self.last_viewed=None
         if color is None:
             self.color = matplotlib.rcParams['axes.color_cycle'][1]
         else:
@@ -586,7 +596,11 @@ class InterceptPlot(_AbstractPlot):
         self.redraw()
 
     def get_tooltip(self, event):
-        return _AbstractPlot.get_tooltip(self, event)
+        urls=event.artist.get_url()
+        ind = event.ind
+        subj = urls[ind][0]
+        self.last_viewed=subj
+        return "%s"%subj
 
     def redraw(self):
         self.axes.clear()
@@ -620,6 +634,9 @@ class InterceptPlot(_AbstractPlot):
         self.subject_markers = self.axes.scatter(x_coords,y_coords,marker="o",s=120,edgecolors="k",alpha=0.80,zorder=40,
                                                 linewidths=2)
         self.subject_markers.set_facecolor('none')
+
+    def get_last_id(self):
+        return self.last_viewed
 
 
 def get_ci(array):

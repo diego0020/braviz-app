@@ -946,6 +946,7 @@ if __name__ == '__main__':
     from braviz.utilities import configure_logger
     configure_logger("subject_overview")
     log = logging.getLogger(__name__)
+    print "ya"
     log.info(sys.argv)
     scenario = None
     if len(sys.argv)>=2 :

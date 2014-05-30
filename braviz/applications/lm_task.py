@@ -72,10 +72,13 @@ class LinearModelApp(QMainWindow):
         self.ui.matplot_layout = QtGui.QVBoxLayout()
         self.plot = MatplotWidget()
         self.plot.draw_message("Welcome\n\nSelect Outcome and add Regressors to start")
+        self.plot.customContextMenuRequested.connect(self.subject_details_from_plot)
+        self.plot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.matplot_layout.addWidget(self.plot)
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
         self.ui.results_table.activated.connect(self.update_main_plot_from_results)
         self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
+
 
         self.ui.factor_plot_button.clicked.connect(self.draw_coefficints_plot)
         self.ui.residuals_plot_button.clicked.connect(self.draw_residuals_plot)
@@ -412,7 +415,7 @@ class LinearModelApp(QMainWindow):
     def create_view_details_context_menu(self, global_pos, subject=None):
         #TODO: Open images of a given subject
         if subject is None:
-            subject = self.last_viewed_subject
+            subject = self.plot.last_viewed_subject
             if subject is None:
                 return
 
@@ -444,8 +447,6 @@ class LinearModelApp(QMainWindow):
     def subject_details_from_plot(self, pos):
         #print "context menu"
         #print pos
-        print "not yet implemented"
-        return
         global_pos = self.plot.mapToGlobal(pos)
         self.create_view_details_context_menu(global_pos)
 
@@ -467,7 +468,7 @@ class LinearModelApp(QMainWindow):
 
     def launch_mri_viewer(self):
         log = logging.getLogger(__name__)
-        #TODO: think of better way of choicing ports
+        #TODO: think of better way of choosing ports
         address = ('localhost', 6001)
         auth_key = multiprocessing.current_process().authkey
         auth_key_asccii = binascii.b2a_hex(auth_key)
@@ -476,8 +477,12 @@ class LinearModelApp(QMainWindow):
         #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
         log.info("launching viewer")
         log.info([sys.executable, "-m", "braviz.applications.subject_overview", "0", auth_key_asccii])
-        self.mri_viewer_process = subprocess.Popen([sys.executable, "-m", "braviz.applications.subject_overview",
+        if sys.gettrace() is None:
+            self.mri_viewer_process = subprocess.Popen([sys.executable, "-m", "braviz.applications.subject_overview",
                                                     "0", auth_key_asccii])
+        else:
+            print "This doesn't work in debugger"
+            return
 
         #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
         #self.mri_viewer_process.start()
