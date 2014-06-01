@@ -377,14 +377,16 @@ The path containing this structure must be set."""
         self.free_surfer_LUT = color_dict
         self.free_surfer_labels = labels_dict
 
-    def _cached_surface_read(self,surf_file):
+    def _cached_surface_read(self,subj,name):
         "cached function to read a freesurfer structure file"
         #check cache
-        key = surf_file+"_cached_vtk"
+        key = "surf_%s_%s"%(name,subj)
         poly = self.load_from_cache(key)
         #print 'reading from surfer file'
         if poly is None:
-            poly=surface2vtkPolyData(surf_file)
+            path = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'surf')
+            filename = os.path.join(path,name)
+            poly=surface2vtkPolyData(filename)
             self.save_into_cache(key,poly)
         return poly
 
@@ -399,9 +401,8 @@ The path containing this structure must be set."""
             log.error('Name=<surface> and hemi=<l|r> are required.')
             raise Exception('Name=<surface> and hemi=<l|r> are required.')
         if not 'scalars' in kw:
-            path = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'surf')
-            filename = os.path.join(path,name)
-            output = self._cached_surface_read(filename)
+
+            output = self._cached_surface_read(subj,name)
             return self.__movePointsToSpace(output, kw.get('space', 'world'), subj)
         else:
             scalars = self.get('SURF_SCALAR', subj, hemi=name[0], scalars=kw['scalars'])
