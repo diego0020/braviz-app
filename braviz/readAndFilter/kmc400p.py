@@ -263,7 +263,10 @@ The path containing this structure must be set."""
         """Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"""
         #path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
         #path=self.__root+'/'+str(subject)+'/Models2'
-        path = os.path.join(self.__static_root, 'slicer_models',subject)
+        if subject is not None:
+            path = os.path.join(self.__static_root, 'slicer_models',subject)
+        else:
+            path = None
         #todo
         spharm_path = path
         log = logging.getLogger(__name__)

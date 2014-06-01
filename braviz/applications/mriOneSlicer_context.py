@@ -13,11 +13,11 @@ from braviz.visualization import add_solid_balloon,add_fibers_balloon
 from braviz.interaction.tkSimpleDialog import Dialog as simpleDialog
 
 
-currSubj='093'
 currSpace='World'
 current_models=[]
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
 reader=braviz.readAndFilter.BravizAutoReader()
+currSubj=reader.get("ids")[0]
 img=reader.get('MRI',currSubj,format='VTK',space=currSpace)
 aparc=reader.get('aparc',currSubj,format='vtk',space=currSpace)
 
