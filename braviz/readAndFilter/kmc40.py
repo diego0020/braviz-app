@@ -367,6 +367,32 @@ The path containing this structure must be set."""
         self.free_surfer_LUT = color_dict
         self.free_surfer_labels = labels_dict
 
+    def _cached_surface_read(self,surf_file):
+        "cached function to read a freesurfer structure file"
+        #check cache
+        vtkFile=surf_file+'.vtk'
+        if os.path.isfile(vtkFile):
+            #print 'reading from vtk-file'
+            vtkreader=vtk.vtkPolyDataReader()
+            vtkreader.SetFileName(surf_file+'.vtk')
+            vtkreader.Update()
+            return vtkreader.GetOutput()
+
+        #print 'reading from surfer file'
+        poly=surface2vtkPolyData(surf_file)
+        #try to write to cache
+        log = logging.getLogger(__name__)
+        try:
+            vtkWriter=vtk.vtkPolyDataWriter()
+            vtkWriter.SetInputData(poly)
+            vtkWriter.SetFileName(surf_file+'.vtk')
+            vtkWriter.SetFileTypeToBinary()
+            vtkWriter.Update()
+        except Exception:
+            log.warning('cache write failed')
+        if vtkWriter.GetErrorCode() != 0:
+            log.warning('cache write failed')
+        return poly
 
     def __loadFreeSurferSurf(self, subj, **kw):
         """Auxiliary function to read the corresponding surface file for hemi and name.
@@ -381,7 +407,7 @@ The path containing this structure must be set."""
         if not 'scalars' in kw:
             path = os.path.join(self.__root, str(subj), 'Surf')
             filename = path + '/' + name
-            output = surface2vtkPolyData(filename)
+            output = self._cached_surface_read(filename)
             return self.__movePointsToSpace(output, kw.get('space', 'world'), subj)
         else:
             scalars = self.get('SURF_SCALAR', subj, hemi=name[0], scalars=kw['scalars'])

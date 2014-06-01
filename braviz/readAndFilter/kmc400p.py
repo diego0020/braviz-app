@@ -32,11 +32,13 @@ A read and filter class designed to work with the file structure and data from t
 Data is organized into folders, and path and names for the different files can be derived from data type and id.
 The path containing this structure must be set."""
 
-    def __init__(self, path, max_cache=2000):
+    def __init__(self, static_root,dynamic_route, max_cache=2000):
         "The path pointing to the __root of the file structure must be set here"
-        self.__root = os.path.normcase(path)
+        self.__static_root = os.path.normcase(static_root)
         #Remove trailing slashes
-        self.__root = self.__root.rstrip('/\\')
+        self.__static_root = self.__static_root.rstrip('/\\')
+
+        self.__dynaimc_data_root = dynamic_route.rstrip("/\\")
 
         @cache_function(max_cache)
         def get(data, subj_id=None, **kw):
@@ -146,7 +148,7 @@ The path containing this structure must be set."""
         "Auxiliary function to read nifti images"
         #path=self.__root+'/'+str(subj)+'/MRI'
         if data == 'MRI':
-            path = os.path.join(self.__root, "nii",str(subj))
+            path = os.path.join(self.__static_root, "nii",str(subj))
             filename = 'MPRAGEmodifiedSENSE.nii.gz'
         elif data == 'FA':
             raise Exception("Not yet available")
@@ -170,7 +172,7 @@ The path containing this structure must be set."""
             else:
                 filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
-            path = os.path.join(self.__root, "slicer_models",str(subj))
+            path = os.path.join(self.__static_root, "slicer_models",str(subj))
             if kw.get("wm"):
                 filename = 'wmparc.nii.gz'
             else:
@@ -223,7 +225,7 @@ The path containing this structure must be set."""
             #origin, dimension and spacing come from template 
             return img3
         elif space[:2].lower() == 'ta':
-            talairach_file = os.path.join(self.__root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
+            talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
             transform = readFreeSurferTransform(talairach_file)
             img3 = applyTransform(img2, inv(transform), (-100, -120, -110), (190, 230, 230), (1, 1, 1),
                                   interpolate=interpolate)
@@ -244,7 +246,7 @@ The path containing this structure must be set."""
 
     def __getIds(self):
         "Auxiliary function to get the available ids"
-        contents = os.listdir(os.path.join(self.__root,"nii"))
+        contents = os.listdir(os.path.join(self.__static_root,"nii"))
         numbers = re.compile('[0-9]+$')
         ids = [c for c in contents if numbers.match(c) is not None]
         ids.sort(key=int)
@@ -261,7 +263,7 @@ The path containing this structure must be set."""
         """Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"""
         #path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
         #path=self.__root+'/'+str(subject)+'/Models2'
-        path = os.path.join(self.__root, 'slicer_models',subject)
+        path = os.path.join(self.__static_root, 'slicer_models',subject)
         #todo
         spharm_path = path
         log = logging.getLogger(__name__)
@@ -356,7 +358,7 @@ The path containing this structure must be set."""
             self.free_surfer_LUT = cached
             self.free_surfer_labels = cached2
             return
-        color_file_name = os.path.join(self.__root,"freeSurfer_Tracula", 'FreeSurferColorLUT.txt')
+        color_file_name = os.path.join(self.__static_root,"freeSurfer_Tracula", 'FreeSurferColorLUT.txt')
 
         with open(color_file_name) as color_file:
             color_lines = color_file.readlines()
@@ -372,6 +374,16 @@ The path containing this structure must be set."""
         self.free_surfer_LUT = color_dict
         self.free_surfer_labels = labels_dict
 
+    def _cached_surface_read(self,surf_file):
+        "cached function to read a freesurfer structure file"
+        #check cache
+        key = surf_file+"_cached_vtk"
+        poly = self.load_from_cache(key)
+        #print 'reading from surfer file'
+        if poly is None:
+            poly=surface2vtkPolyData(surf_file)
+            self.save_into_cache(key,poly)
+        return poly
 
     def __loadFreeSurferSurf(self, subj, **kw):
         """Auxiliary function to read the corresponding surface file for hemi and name.
@@ -384,9 +396,9 @@ The path containing this structure must be set."""
             log.error('Name=<surface> and hemi=<l|r> are required.')
             raise Exception('Name=<surface> and hemi=<l|r> are required.')
         if not 'scalars' in kw:
-            path = os.path.join(self.__root, "freeSurfer_Tracula",str(subj), 'surf')
+            path = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'surf')
             filename = os.path.join(path,name)
-            output = surface2vtkPolyData(filename)
+            output = self._cached_surface_read(filename)
             return self.__movePointsToSpace(output, kw.get('space', 'world'), subj)
         else:
             scalars = self.get('SURF_SCALAR', subj, hemi=name[0], scalars=kw['scalars'])
@@ -399,7 +411,8 @@ The path containing this structure must be set."""
     def __loadFreeSurferScalar(self, subj, **kw):
         "Auxiliary function to read free surfer scalars"
         morph = {'area', 'curv', 'avg_curv', 'thickness', 'volume', 'sulc'}
-        path = os.path.join(self.__root, "freeSurfer_Tracula",str(subj), 'surf')
+        morph_path = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'surf')
+        labels_path = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'label')
         log = logging.getLogger(__name__)
         try:
             hemisphere = kw['hemi']
@@ -408,7 +421,8 @@ The path containing this structure must be set."""
             log.error("hemi is required")
             raise (Exception("hemi is required"))
         if kw.get('index'):
-            contents = os.listdir(path)
+            contents = os.listdir(morph_path)
+            contents.extend(os.listdir(labels_path))
             pattern = re.compile(hs + r'.*\.annot$')
             annots = [m[3:-6] for m in contents if pattern.match(m) is not None]
             morfs = [m for m in morph if hs + '.' + m in contents]
@@ -421,12 +435,12 @@ The path containing this structure must be set."""
         if scalar_name in morph:
             if kw.get('lut'):
                 return get_free_surfer_lut(scalar_name)
-            scalar_filename = os.path.join(path,hemisphere + 'h.' + scalar_name)
+            scalar_filename = os.path.join(morph_path,hemisphere + 'h.' + scalar_name)
             scalar_array = read_morph_data(scalar_filename)
             return scalar_array
         else:
             #It should be an annotation
-            annot_filename = os.path.join(path , hemisphere + 'h.' + scalar_name + '.annot')
+            annot_filename = os.path.join(labels_path , hemisphere + 'h.' + scalar_name + '.annot')
             labels, ctab, names = read_annot(annot_filename)
             if kw.get('lut'):
                 return surfLUT2VTK(ctab, names)
@@ -719,7 +733,7 @@ The path containing this structure must be set."""
         if space.lower()[:2] == 'wo':
             return point_set
         elif space.lower()[:2] == 'ta':
-            talairach_file = os.path.join(self.__root, "freeSurfer_Tracula",str(subj), 'mri',"transforms",
+            talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'mri',"transforms",
                                           'talairach.xfm')
             transform = readFreeSurferTransform(talairach_file)
             if inverse:
@@ -916,7 +930,7 @@ The path containing this structure must be set."""
 
     def getDataRoot(self):
         """Returns the data_root of this reader"""
-        return self.__root
+        return self.__static_root
 
     def transformPointsToSpace(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space. 
@@ -945,7 +959,7 @@ The path containing this structure must be set."""
         WARNING: Long keys are hashed using sha1: Low risk of collisions, no checking is done
         """
         key = self.__process_key(key)
-        cache_dir = os.path.join(self.getDataRoot(), '.braviz_cache')
+        cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
         if not os.path.isdir(cache_dir):
             os.mkdir(cache_dir)
         if isinstance(data, vtk.vtkObject):
@@ -982,7 +996,7 @@ The path containing this structure must be set."""
         returns None if object not found
         """
         key = self.__process_key(key)
-        cache_dir = os.path.join(self.getDataRoot(), '.braviz_cache')
+        cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
         cache_file = os.path.join(cache_dir, "%s.pickle" % key)
         log = logging.getLogger(__name__)
         try:
@@ -1009,10 +1023,10 @@ The path containing this structure must be set."""
 
 
 known_nodes = {  #
-    # Name          :  ( data root                   , cache size in MB)
-    'gambita.uniandes.edu.co': ('/media/DATAPART5/kmc400', 4000),
-    'dieg8': (r'C:\Users\Diego\Documents\kmc400', 4000),
-    'ATHPC1304' : (r"Z:",14000),
+    # Name          :  ( static data root, dyn data root , cache size in MB)
+    'gambita.uniandes.edu.co': ('/media/DATAPART5/kmc400','/media/DATAPART5/kmc400_braviz', 4000),
+    'dieg8': (r'C:\Users\Diego\Documents\kmc400',"C:\Users\Diego\Documents\kmc400_braviz", 4000),
+    'ATHPC1304' : (r"Z:",r"E:\ProyectoCanguro\kmc400_braviz",14000),
 }
 
 
@@ -1032,14 +1046,16 @@ def autoReader(**kw_args):
     node = known_nodes.get(node_id)
     log = logging.getLogger(__name__)
     if node is not None:
-        data_root = node[0]
+        static_data_root = node[0]
+        dyn_data_root = node[1]
+
         if kw_args.get('max_cache', 0) > 0:
             max_cache = kw_args.pop('max_cache')
 
             log.info("Max cache set to %.2f MB" % max_cache)
         else:
-            max_cache = node[1]
-        return kmc400Reader(data_root, max_cache=max_cache, **kw_args)
+            max_cache = node[2]
+        return kmc400Reader(static_data_root,dyn_data_root, max_cache=max_cache, **kw_args)
     else:
         print "Unknown node %s, please enter route to data" % node_id
         path = raw_input('KMC_root: ')

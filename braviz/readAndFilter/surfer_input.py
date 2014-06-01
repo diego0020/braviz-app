@@ -9,6 +9,7 @@ import vtk
 
 from braviz.visualization import get_colorbrewer_lut
 
+
 def _fread3(fobj):
     """Read a 3-byte int from an open binary file object."""
     b1, b2, b3 = np.fromfile(fobj, ">u1", 3)
@@ -179,8 +180,9 @@ def create_polydata(coords,faces):
             idList.InsertNextId(i)
         poly.InsertNextCell(vtk.VTK_TRIANGLE , idList)
     return poly
-    
-def surface2vtkPolyData(surf_file):
+
+
+def _cached_surface_read(surf_file):
     "cached function to read a freesurfer structure file"
     #check cache
     vtkFile=surf_file+'.vtk'
@@ -190,11 +192,9 @@ def surface2vtkPolyData(surf_file):
         vtkreader.SetFileName(surf_file+'.vtk')
         vtkreader.Update()
         return vtkreader.GetOutput()
-    
-    #print 'reading from surfer file'    
-    coords, faces, geom = read_surface(surf_file)
-    coords2=apply_offset(coords,geom['cras'])
-    poly=create_polydata(coords2,faces)
+
+    #print 'reading from surfer file'
+    poly=surface2vtkPolyData(surf_file)
     #try to write to cache
     log = logging.getLogger(__name__)
     try:
@@ -207,6 +207,13 @@ def surface2vtkPolyData(surf_file):
         log.warning('cache write failed')
     if vtkWriter.GetErrorCode() != 0:
         log.warning('cache write failed')
+    return poly
+
+def surface2vtkPolyData(surf_file):
+    """read free surfer surface and transform to poly data"""
+    coords, faces, geom = read_surface(surf_file)
+    coords2=apply_offset(coords,geom['cras'])
+    poly=create_polydata(coords2,faces)
     return poly
 def addScalars(surf_polydata,scalars):
     "Scalaras are expected as a numpy array"
