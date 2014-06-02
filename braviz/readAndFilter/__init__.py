@@ -265,6 +265,7 @@ def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
 
 def extract_poly_data_subset(polydata,id_list):
     extract_lines = vtk.vtkExtractSelectedPolyDataIds()
+    cleaner = vtk.vtkCleanPolyData()
     if isinstance(id_list,vtk.vtkIdTypeArray):
         id_array=id_list
     else:
@@ -280,8 +281,12 @@ def extract_poly_data_subset(polydata,id_list):
     selection_node.SetSelectionList(id_array)
     extract_lines.SetInputData(1, selection)
     extract_lines.SetInputData(0, polydata)
-    extract_lines.Update()
-    return extract_lines.GetOutput()
+    #extract_lines.Update()
+    cleaner.SetInputConnection(extract_lines.GetOutputPort())
+    cleaner.PointMergingOff()
+    cleaner.Update()
+    fib2 = cleaner.GetOutput()
+    return fib2
 
 
 def boundingBoxIntesection(box1, box2):

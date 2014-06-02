@@ -58,9 +58,9 @@ def aggregate_fiber_scalar(fib, component=0, norm_factor=1.0 / 255):
     if scalars is None or scalars.GetNumberOfTuples() == 0:
         d = [float('nan')]
     else:
-        d = []
+        d = np.zeros(scalars.GetNumberOfTuples())
         for i in xrange(scalars.GetNumberOfTuples()):
-            d.append(scalars.GetTuple(i)[component])
+            d[i]=scalars.GetTuple(i)[component]
         d = np.dot(d, norm_factor)
     return len(d), np.mean(d), np.max(d), np.min(d), np.std(d)
 

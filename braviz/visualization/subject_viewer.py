@@ -758,6 +758,7 @@ class TractographyManager:
         self.__ad_hoc_fiber_checks = checkpoints
         self.__ad_hoc_throug_all = throug_all
         self.__ad_hoc_visibility = True
+        self.__ad_hock_checkpoints = checkpoints
         if self.__ad_hoc_pd_mp_ac is None:
             mapper = vtk.vtkPolyDataMapper()
             actor = vtk.vtkActor()
@@ -996,7 +997,8 @@ class TractographyManager:
                 pd = self.__db_tracts[bid][0]
                 return structure_metrics.get_scalar_from_fiber_ploydata(pd, scalar)
             elif scalar == "mean_fa":
-                fiber = self.get_polydata(bid, color="FA")
+                fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
+                                        db_id=bid,color="FA")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
         else:
@@ -1010,7 +1012,9 @@ class TractographyManager:
             n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, scalar)
             return n
         elif scalar == "mean_fa":
-            fiber = self.reader.get("FIBERS", self.__current_subject, color="FA")
+            operation = "and" if self.__ad_hoc_throug_all else "or"
+            fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
+                                    operation=operation, space=self.__current_space,color="FA")
             n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
             return n
         return float("nan")
