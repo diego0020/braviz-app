@@ -18,7 +18,7 @@ import braviz.visualization.vtk_charts
 __author__ = 'Diego'
 
 #====================global variables===========
-subject='093'
+
 TR=3
 current_volume=34
 spatial_slice=62
@@ -29,15 +29,17 @@ current_mode='space' #time or space
 
 
 reader=braviz.readAndFilter.BravizAutoReader()
-t_stat_img=reader.get('fMRI',subject,format='VTK',space='func',name='precision')
+subject=reader.get("ids")[0]
+initial_fmri = reader.get("fmri",subject,index=True)[0]
+t_stat_img=reader.get('fMRI',subject,format='VTK',space='func',name=initial_fmri)
 origin=t_stat_img.GetOrigin()
 spacing=t_stat_img.GetSpacing()
 dimensions=t_stat_img.GetDimensions()
 
-bold_img=reader.get('BOLD',subject,name='precision')
+bold_img=reader.get('BOLD',subject,name=initial_fmri)
 bold_data=bold_img.get_data()
 
-mri_img=reader.get('MRI',subject,format='VTK',space='fmri_precision')
+mri_img=reader.get('MRI',subject,format='VTK',space='fmri_%s'%initial_fmri.lower())
 
 
 picker = vtk.vtkCellPicker()
@@ -97,8 +99,8 @@ ren.AddActor(outline)
 
 #context cortex
 
-left_cortex=reader.get('surf',subject,hemi='l',name='pial',space='fmri_precision')
-right_cortex=reader.get('surf',subject,hemi='r',name='pial',space='fmri_precision')
+left_cortex=reader.get('surf',subject,hemi='l',name='pial',space='fmri_%s'%initial_fmri)
+right_cortex=reader.get('surf',subject,hemi='r',name='pial',space='fmri_%s'%initial_fmri)
 
 cortex_append=vtk.vtkAppendPolyData()
 cortex_append.UserManagedInputsOn ()
@@ -167,8 +169,8 @@ def calculate_bold_signal(x,y,z):
     min_bold=float(min_y-scale*0.1)
     max_bold=float(max_y+scale*0.1)
     line_plot.set_y_axis("Bold Signal", (min_bold, max_bold))
-
-    experiment=add_experiment_design(scale*1.1,center)
+    line_plot.set_x_axis("Time (s.)",(0,TR*n_time_slices))
+    experiment=add_experiment_design(scale*1.1,center,time_signal)
 
     colors=((0, 0, 0, 255),(0,0,255,255))
     widths=(None,1.0)
@@ -188,8 +190,11 @@ def calculate_bold_signal(x,y,z):
 base_design=([-0.5]*10+[0.5]*10)*4
 assert len(base_design) == 80
 base_design=np.array( base_design )
-def add_experiment_design(scale,center):
-    design=np.dot(base_design,scale)+(center)
+def add_experiment_design(scale,center, time_signal=None):
+    if paradigm_var.get() in {"Precision","Power"}:
+        design=np.dot(base_design,scale)+(center)
+    else:
+        design=np.zeros(len(time_signal))+center
     return design
 
 #=======================================LINE IN TIME PLOT===============================
@@ -223,7 +228,12 @@ def get_time_vol(spatial_slice,axis=0):
 def setSubj(Event=None):
     global origin,spacing,bold_data,mri_img,spatial_slice,subject,dimensions,t_stat_img
     subject=select_subj_frame.get()
-    t_stat_img = reader.get('fMRI', subject, format='VTK', space='func', name=paradigm_var.get())
+    try:
+        t_stat_img = reader.get('fMRI', subject, format='VTK', space='func', name=paradigm_var.get())
+    except Exception:
+        print "%s not available for subject %s"%(paradigm_var.get(),subject)
+        planeWidget.Off()
+    planeWidget.On()
     origin = t_stat_img.GetOrigin()
     spacing = t_stat_img.GetSpacing()
     dimensions= t_stat_img.GetDimensions()
@@ -445,9 +455,9 @@ paradigm_panel=tk.Frame(control_frame)
 paradigm_var=tk.StringVar()
 select_paradigm=ttk.Combobox(paradigm_panel,textvariable=paradigm_var,width=10)
 select_paradigm.grid(row=0,column=1)
-select_paradigm['values']=('Precision','Powergrip')
+select_paradigm['values']=reader.get("fmri",None,index=True)
 select_paradigm['state']='readonly'
-select_paradigm.set('Precision')
+select_paradigm.set(initial_fmri)
 select_paradigm.bind('<<ComboboxSelected>>',setSubj)
 
 paradigm_label=tk.Label(paradigm_panel,text="Paradigm: ")

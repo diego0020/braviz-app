@@ -37,6 +37,7 @@ The path containing this structure must be set."""
         self.__root = os.path.normcase(path)
         #Remove trailing slashes
         self.__root = self.__root.rstrip('/\\')
+        self.FUNCTIONAL_PARADIGMS=("Precision","Power")
 
         @cache_function(max_cache)
         def get(data, subj_id=None, **kw):
@@ -134,6 +135,8 @@ The path containing this structure must be set."""
                 if not hasattr(self, 'fmri_LUT'):
                     self.fmri_LUT = self.__create_fmri_lut()
                 return self.fmri_LUT
+            if kw.get("index"):
+                return self.FUNCTIONAL_PARADIGMS
             return self.__read_func(subj, **kw)
         elif data == 'BOLD':
             return self.__read_bold(subj, kw['name'])

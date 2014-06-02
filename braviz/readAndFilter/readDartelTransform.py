@@ -9,6 +9,7 @@ import numpy as np
 
 from braviz.readAndFilter import numpy2vtkMatrix
 
+
 def dartel2GridTransform(y_file,assume_bad_matrix=False):
     """reads a dartel nifti file from disk and returns a vtkTransform, this function is very slow"""
     log = logging.getLogger(__name__)
@@ -77,14 +78,17 @@ def check_matrix(m):
                     log.warning("WARNING: Matrix contains rotations or shears, this is not tested")
                     return False
     return True
-def dartel2GridTransform_cached(y_file,assume_bad_matrix=False):
+def dartel2GridTransform_cached(y_file,assume_bad_matrix=False,cache_file_name=None):
     "Cached version of dartel2GridTransform"
     log = logging.getLogger(__name__)
-    if y_file[-2:]=='gz':
-        base_name=y_file[:-7] # remove .nii.gz
+    if cache_file_name is None:
+        if y_file[-2:]=='gz':
+            base_name=y_file[:-7] # remove .nii.gz
+        else:
+            base_name=y_file[:-4] # remove .nii
+        cache_name=base_name+'.vtk'
     else:
-        base_name=y_file[:-4] # remove .nii
-    cache_name=base_name+'.vtk'
+        cache_name = cache_file_name
     cache=os.path.isfile(cache_name)
     if not cache:
         log.info("importing dartel warp field... this will take a while")

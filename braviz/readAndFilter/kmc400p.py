@@ -20,7 +20,7 @@ from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, tr
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
     surfLUT2VTK
 from braviz.readAndFilter.read_tensor import cached_readTensorImage
-from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
+from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
@@ -39,6 +39,8 @@ The path containing this structure must be set."""
         self.__static_root = self.__static_root.rstrip('/\\')
 
         self.__dynaimc_data_root = dynamic_route.rstrip("/\\")
+
+        self.FUNCTIONAL_PARADIGMS=('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION')
 
         @cache_function(max_cache)
         def get(data, subj_id=None, **kw):
@@ -136,6 +138,8 @@ The path containing this structure must be set."""
                 if not hasattr(self, 'fmri_LUT'):
                     self.fmri_LUT = self.__create_fmri_lut()
                 return self.fmri_LUT
+            if kw.get("index"):
+                return self.FUNCTIONAL_PARADIGMS
             return self.__read_func(subj, **kw)
         elif data == 'BOLD':
             return self.__read_bold(subj, kw['name'])
@@ -217,9 +221,7 @@ The path containing this structure must be set."""
         if space == 'world':
             return img2
         elif space in ('template', 'dartel'):
-            raise Exception("Not yet available")
-            dartel_yfile = os.path.join(self.__root, 'Dartel', "y_%s-back.nii.gz" % subj)
-            dartel_warp = dartel2GridTransform(dartel_yfile)
+            dartel_warp = self.__get_spm_grid_transform(subj,"dartel","back")
             img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
                                   spacing2=(-1.5, 1.5, 1.5), interpolate=interpolate)
             #origin, dimension and spacing come from template 
@@ -234,6 +236,7 @@ The path containing this structure must be set."""
             #functional space
             paradigm = space[5:]
             #print paradigm
+            paradigm =self.__get_paradigm_name(paradigm)
             transform = self.__read_func_transform(subj, paradigm, True)
             img3 = applyTransform(img2, transform, origin2=(78, -112, -50), dimension2=(79, 95, 68),
                                   spacing2=(-2, 2, 2),
@@ -258,6 +261,23 @@ The path containing this structure must be set."""
                        'Right-Amygdala': 'r_amygdala',
                        'Right-Caudate': 'r_caudate',
                        'Right-Hippocampus': 'r_hippocampus'}
+
+    def __get_spm_grid_transform(self,subject,paradigm,direction,assume_bad_matrix=False):
+        """
+        Get the spm non linear registration transform grid associated to the paradigm
+        Use paradigm=dartel to get the transform associated to the dartel normalization
+        """
+        assert direction in {"forw","back"}
+        if paradigm=="dartel":
+            y_file = os.path.join(self.getDataRoot(),"spm",subject,"T1", "y_dartel_%s.nii" % direction)
+            cache_name=os.path.join(self.__dynaimc_data_root,".braviz_cache",
+                                    "y_%s_%s_%s.vtk"%(paradigm,subject,direction))
+        else:
+            y_file = os.path.join(self.getDataRoot(),"spm", subject,paradigm, "y_seg_%s.nii.gz" % direction)
+            cache_name=os.path.join(self.__dynaimc_data_root,".braviz_cache",
+                                    "y_%s_%s_%s.vtk"%(paradigm,subject,direction))
+        return dartel2GridTransform_cached(y_file,assume_bad_matrix,cache_file_name=cache_name)
+
 
     def __load_free_surfer_model(self, subject, **kw):
         """Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"""
@@ -744,11 +764,10 @@ The path containing this structure must be set."""
                 transform = inv(transform)
             return transformPolyData(point_set, transform)
         elif space.lower() in ('template', 'dartel'):
-            raise NotImplementedError
-            dartel_yfile = os.path.join(self.__root, 'Dartel', "y_%s-forw.nii.gz" % subj)
             if inverse:
-                dartel_yfile = os.path.join(self.__root, 'Dartel', "y_%s-back.nii.gz" % subj)
-            dartel_warp = dartel2GridTransform(dartel_yfile)
+                dartel_warp = self.__get_spm_grid_transform(subj,"dartel","forw")
+            else:
+                dartel_warp = self.__get_spm_grid_transform(subj,"dartel","back")
             return transformPolyData(point_set, dartel_warp)
         elif space[:4] in ('func', 'fmri'):
             #functional space
@@ -839,18 +858,25 @@ The path containing this structure must be set."""
 
         return fmri_color_int
 
-    def __read_func_transform(self, subject, paradigm, inverse=False):
+    def __get_paradigm_name(self,paradigm_name):
+        if paradigm_name.endswith("SENSE"):
+            return paradigm_name
+        paradigm_name = paradigm_name.upper()
+        assert paradigm_name in self.FUNCTIONAL_PARADIGMS
+
+        if paradigm_name=="MIEDO":
+            paradigm_name="MIEDOSofTone"
+        paradigm_name +="SENSE"
+        return paradigm_name
+
+    def __read_func_transform(self, subject, paradigm_name, inverse=False):
         "reads the transform from world to functional space"
-        raise NotImplementedError
-        name = paradigm.upper()
-        if name=="MIEDOSOFTONESENSE":
-            name = "MIEDOSofToneSENSE"
+        paradigm_name = self.__get_paradigm_name(paradigm_name)
         path = os.path.join(self.getDataRoot(), 'spm',subject )
         if inverse is False:
-            dartel_warp = os.path.join(path, name, 'y_seg_forw.nii.gz')
-            T1_func = os.path.join(path, name, 'T1.nii.gz')
-            T1_world = os.path.join(path, 'T1', 'T1.nii.gz')
-            dartel_trans = dartel2GridTransform(dartel_warp, True)
+            T1_func = os.path.join(path, paradigm_name, 'T1.nii')
+            T1_world = os.path.join(path, 'T1', 'T1.nii')
+            dartel_trans = self.__get_spm_grid_transform(subject,paradigm_name,"forw", True)
             T1_func_img = nib.load(T1_func)
             T1_world_img = nib.load(T1_world)
             Tf = T1_func_img.get_affine()
@@ -867,10 +893,9 @@ The path containing this structure must be set."""
             concatenated_trans.Concatenate(dartel_trans)
             return concatenated_trans
         else:
-            dartel_warp = os.path.join(path, name, 'y_seg_back.nii.gz')
-            T1_func = os.path.join(path, name, 'T1.nii.gz')
-            T1_world = os.path.join(path, 'T1', 'T1.nii.gz')
-            dartel_trans = dartel2GridTransform(dartel_warp, True)
+            T1_func = os.path.join(path, paradigm_name, 'T1.nii')
+            T1_world = os.path.join(path, 'T1', 'T1.nii')
+            dartel_trans = self.__get_spm_grid_transform(subject,paradigm_name,"back", True)
             T1_func_img = nib.load(T1_func)
             T1_world_img = nib.load(T1_world)
             Tf = T1_func_img.get_affine()
@@ -890,7 +915,6 @@ The path containing this structure must be set."""
 
     def __read_func(self, subject, **kw):
         "Internal function to read functional images, deals with the SPM transforms"
-        raise NotImplementedError
         log = logging.getLogger(__name__)
         try:
             name = kw['name']
@@ -900,11 +924,12 @@ The path containing this structure must be set."""
         space = kw.get('space', 'world')
         name = name.upper()
         space = space.lower()
-        if name not in ('PRECISION', 'POWERGRIP'):
+        if name not in self.FUNCTIONAL_PARADIGMS:
             log.warning(" functional paradigm %s not available" % name)
             return None
-        path = os.path.join(self.getDataRoot(), subject, 'spm')
-        z_map = os.path.join(path, name, 'spmT_0001.hdr')
+        name = self.__get_paradigm_name(name)
+        path = os.path.join(self.getDataRoot(), "spm",subject,name,"FirstLevel")
+        z_map = os.path.join(path, 'spmT_0001.hdr')
         nii_z_map = nib.load(z_map)
         if kw.get('format', 'nifti').lower() == 'nifti':
             return nii_z_map
@@ -925,8 +950,7 @@ The path containing this structure must be set."""
         return self.__move_img_from_world(subject, world_z_map, True, kw.get('space', 'world'))
 
     def __read_bold(self, subj, paradigm):
-        raise NotImplementedError
-        paradigm = paradigm.upper()
+        paradigm = self.__get_paradigm_name(paradigm)
         route = os.path.join(self.getDataRoot(), 'spm',subj, paradigm, 'smoothed.nii.gz')
         img_4d = nib.load(route)
         return img_4d

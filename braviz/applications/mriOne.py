@@ -8,9 +8,14 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 import braviz
+import braviz.utilities
+
+braviz.utilities.configure_console_logger("mriOne")
 
 
 reader = braviz.readAndFilter.BravizAutoReader()
+FUNCTIONAL_PARADIGMS=reader.FUNCTIONAL_PARADIGMS
+
 initial_subject = reader.get("ids")[0]
 
 img = reader.get('MRI', initial_subject, format='VTK')
@@ -90,12 +95,15 @@ def setSubj(event=None):
     if previous_img == 'MRI':
         planeWidget.GetWindowLevel(mri_window_level)
         mri_lut.DeepCopy(planeWidget.GetLookupTable())
-    if image_var.get() in ('Precision', 'Power'):
+    if image_var.get() in FUNCTIONAL_PARADIGMS:
         mri_img = reader.get('MRI', subj, format='VTK', space=space_var.get())
-        if image_var.get() == 'Precision':
+        selected_pdgm = image_var.get()
+        if selected_pdgm == 'Precision':
             fmri_name = 'Precision'
-        else:
+        elif selected_pdgm == 'Power':
             fmri_name = 'PowerGrip'
+        else:
+            fmri_name = selected_pdgm
         try:
             fa_img = reader.get('fMRI', subj, format='vtk', space=space_var.get(), name=fmri_name)
         except IOError:
@@ -140,7 +148,7 @@ def setSubj(event=None):
     elif image_var.get() == 'FA':
         planeWidget.SetLookupTable(fa_lut)
         planeWidget.SetResliceInterpolateToCubic()
-    elif image_var.get() in ('Precision', 'Power'):
+    elif image_var.get() in FUNCTIONAL_PARADIGMS:
         #planeWidget.SetLookupTable(mri_lut)
         planeWidget.GetColorMap().SetLookupTable(None)
         #planeWidget.UserControlledLookupTableOff()
@@ -203,7 +211,7 @@ def show_transform_grid(event=None):
 
     #get orig_img
     orig_img_desc = orig_images[image_var.get()]
-    if image_var.get() in ('Precision', 'Power'):
+    if image_var.get() in FUNCTIONAL_PARADIGMS:
         orig_img = reader.get('fmri', subj, format='vtk', name=image_var.get(), **orig_img_desc)
     else:
         orig_img = reader.get(image_var.get(), subj, format='vtk', **orig_img_desc)
@@ -264,7 +272,7 @@ image_label = tk.Label(control_frame, text='Image:', pady=10)
 image_label.pack(side='top')
 image_var = tk.StringVar()
 image_sel = ttk.Combobox(control_frame, textvariable=image_var)
-image_sel['values'] = ('MRI', 'FA', 'APARC', 'Precision', 'Power')
+image_sel['values'] = ('MRI', 'FA', 'APARC')+FUNCTIONAL_PARADIGMS
 image_sel['state'] = 'readonly'
 image_sel.set('MRI')
 image_sel.pack(side='top')
@@ -337,4 +345,5 @@ renWin.Render()
 iact.Start()
 setSubj()
 # Start Tkinter event loop
+
 root.mainloop()
