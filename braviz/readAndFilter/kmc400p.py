@@ -249,7 +249,7 @@ The path containing this structure must be set."""
 
     def __getIds(self):
         "Auxiliary function to get the available ids"
-        contents = os.listdir(os.path.join(self.__static_root,"nii"))
+        contents = os.listdir(os.path.join(self.__static_root,"freeSurfer_Tracula"))
         numbers = re.compile('[0-9]+$')
         ids = [c for c in contents if numbers.match(c) is not None]
         ids.sort(key=int)
