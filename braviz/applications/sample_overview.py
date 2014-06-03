@@ -7,7 +7,7 @@ import vtk
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 import braviz
-from braviz.visualization.subject_viewer import QSuvjectViwerWidget
+from braviz.visualization.subject_viewer import QSubjectViwerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
 import braviz.interaction.qt_sample_select_dialog
@@ -572,7 +572,7 @@ class SampleOverview(QtGui.QMainWindow):
                 self.__set_camera_parameters(viewer, parameters)
 
     def __create_viewer(self, subject, parent):
-        viewer = QSuvjectViwerWidget(self.reader, parent)
+        viewer = QSubjectViwerWidget(self.reader, parent)
         self.__set_viewer_subject(viewer, subject)
         return viewer
 

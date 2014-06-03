@@ -15,6 +15,7 @@ from functools import wraps
 import numpy as np
 import logging
 
+
 def do_and_render(f):
     """requiers the class to have the rendered accesible as self.ren"""
 
@@ -40,7 +41,7 @@ def do_and_render(f):
 class SubjectViewer:
     def __init__(self, render_window_interactor, reader, widget):
 
-        #render_window_interactor.Initialize()
+        # render_window_interactor.Initialize()
         #render_window_interactor.Start()
         self.iren = render_window_interactor
         self.ren_win = render_window_interactor.GetRenderWindow()
@@ -123,7 +124,7 @@ class SubjectViewer:
         self.__current_subject = new_subject_img_code
         errors = []
         log = logging.getLogger(__name__)
-        #update image
+        # update image
         try:
             self.image.change_subject(new_subject_img_code, skip_render=True)
         except Exception as e:
@@ -238,7 +239,7 @@ class SubjectViewer:
         return fp, pos, vu
 
 
-class QSuvjectViwerWidget(QFrame):
+class QSubjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
     image_level_changed = pyqtSignal(float)
@@ -254,7 +255,7 @@ class QSuvjectViwerWidget(QFrame):
         self.__layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.__layout)
 
-        #self.subject_viewer.ren_win.Render()
+        # self.subject_viewer.ren_win.Render()
 
         #self.__qwindow_interactor.show()
 
@@ -263,7 +264,7 @@ class QSuvjectViwerWidget(QFrame):
         self.__qwindow_interactor.Initialize()
         self.__qwindow_interactor.Start()
         self.subject_viewer.reset_camera(0)
-        #self.__subject_viewer.show_cone()
+        # self.__subject_viewer.show_cone()
 
     @property
     def subject_viewer(self):
@@ -271,7 +272,7 @@ class QSuvjectViwerWidget(QFrame):
 
     def slice_change_handle(self, new_slice):
         self.slice_changed.emit(new_slice)
-        #print new_slice
+        # print new_slice
 
     def window_level_change_handle(self, window, level):
         self.image_window_changed.emit(window)
@@ -305,7 +306,7 @@ class ImageManager:
     def hide_image(self):
         if self.__image_plane_widget is not None:
             self.__image_plane_widget.Off()
-            #self.image_plane_widget.SetVisibility(0)
+            # self.image_plane_widget.SetVisibility(0)
 
     @do_and_render
     def show_image(self):
@@ -316,7 +317,7 @@ class ImageManager:
     @do_and_render
     def create_image_plane_widget(self):
         if self.__image_plane_widget is not None:
-            #already created
+            # already created
             return
         self.__image_plane_widget = braviz.visualization.persistentImagePlane(self.__current_image_orientation)
         self.__image_plane_widget.SetInteractor(self.iren)
@@ -376,7 +377,7 @@ class ImageManager:
         if (self.__current_image is not None) and (modality == self.__current_image) and (
                     paradigm == self.__curent_fmri_paradigm) and \
                 self.__image_plane_widget.GetEnabled() and not force_reload:
-            #nothing to do
+            # nothing to do
             return
 
         self.__current_image = modality
@@ -399,7 +400,7 @@ class ImageManager:
         if self.__current_subject is None:
             return
 
-        #update image labels:
+        # update image labels:
         log = logging.getLogger(__name__)
         try:
             aparc_img = self.reader.get("APARC", self.__current_subject, format="VTK", space=self.__current_space)
@@ -497,7 +498,7 @@ class ImageManager:
         log = logging.getLogger(__name__)
         if self.__image_plane_widget is None:
             self.__current_image_orientation = orientation
-            log.warning( "Set an image first")
+            log.warning("Set an image first")
             return
         self.__image_plane_widget.set_orientation(orientation)
         self.__current_image_orientation = orientation
@@ -541,7 +542,7 @@ class ImageManager:
 
     @do_and_render
     def reset_window_level(self, button=None):
-        #print button
+        # print button
         if self.__image_plane_widget is None:
             return
         if self.__current_image == "MRI":
@@ -567,7 +568,7 @@ class ModelManager:
         self.__actor_to_model = {}  # for picking
         self.__laterality = None
 
-        #visual attributes
+        # visual attributes
         self.__opacity = 1
         self.__current_color = None
 
@@ -604,7 +605,7 @@ class ModelManager:
             raise Exception("No models found")
 
     def __addModel(self, model_name):
-        #if already exists make visible
+        # if already exists make visible
         trio = self.__pd_map_act.get(model_name)
         if trio is not None:
             model, mapper, actor = trio
@@ -644,7 +645,7 @@ class ModelManager:
     def __removeModel(self, model_name):
         """Deletes internal data structures
         """
-        #check that it actually exists
+        # check that it actually exists
         trio = self.__pd_map_act.get(model_name)
         if trio is None:
             return
@@ -808,7 +809,7 @@ class TractographyManager:
             mapper.SetScalarVisibility(0)
             return
         mapper.SetScalarVisibility(1)
-        #print "setting lut"
+        # print "setting lut"
         if self.__lut is None:
             mapper.SetColorModeToDefault()
         else:
@@ -861,7 +862,7 @@ class TractographyManager:
         colors = colorbrewer.Set1[n]
         colors = map(lambda x: map(lambda y: y / 255, x), colors)
         self.__bundle_colors = colors
-        #print colors
+        # print colors
         return colors
 
     @do_and_render
@@ -905,7 +906,7 @@ class TractographyManager:
             self.__lut = self.reader.get("Fibers", None, scalars=new_color, lut=True)
 
 
-        #print self.__current_color
+        # print self.__current_color
         self.__set_color_bar()
         self.__reload_fibers()
 
@@ -921,7 +922,7 @@ class TractographyManager:
             if self.__color_bar_actor is None:
                 self.__color_bar_actor = vtk.vtkScalarBarActor()
                 self.__color_bar_actor.SetNumberOfLabels(4)
-                #self.__color_bar_actor.SetMaximumWidthInPixels(100)
+                # self.__color_bar_actor.SetMaximumWidthInPixels(100)
                 self.__color_bar_actor.GetTitleTextProperty().SetFontSize(10)
                 self.__color_bar_actor.GetLabelTextProperty().SetFontSize(10)
                 #self.__color_bar_actor.GetTitleTextProperty().SetColor(1,0,0)
@@ -951,12 +952,12 @@ class TractographyManager:
 
             self.__color_bar_actor.SetVisibility(1)
             self.__color_bar_actor.SetLookupTable(self.__lut)
-            #self.__color_bar_actor.SetTitle(scalars[:2].upper())
+            # self.__color_bar_actor.SetTitle(scalars[:2].upper())
             self.__color_bar_actor.SetTitle("")
 
 
     def __reload_fibers(self):
-        #reload ad_hoc
+        # reload ad_hoc
         if self.__ad_hoc_visibility is True:
             self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks, self.__ad_hoc_throug_all)
         #reload db
@@ -998,7 +999,7 @@ class TractographyManager:
                 return structure_metrics.get_scalar_from_fiber_ploydata(pd, scalar)
             elif scalar == "mean_fa":
                 fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                                        db_id=bid,color="FA")
+                                        db_id=bid, color="FA")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
         else:
@@ -1014,7 +1015,7 @@ class TractographyManager:
         elif scalar == "mean_fa":
             operation = "and" if self.__ad_hoc_throug_all else "or"
             fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
-                                    operation=operation, space=self.__current_space,color="FA")
+                                    operation=operation, space=self.__current_space, color="FA")
             n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
             return n
         return float("nan")
@@ -1042,7 +1043,7 @@ class SurfaceManager:
         self.__color_bar_actor = None
         self.__color_bar_widget = None
 
-        #for interaction
+        # for interaction
         if self.picker is not None:
             self.__picking_dict = dict()
             self.__cone_trio = None
@@ -1102,6 +1103,7 @@ class SurfaceManager:
 
     def __setup_picking(self):
         log = logging.getLogger(__name__)
+
         def get_message(picker):
             hemi = self.__picking_dict[id(picker.GetProp3D())]
             pd = self.__surf_trios[hemi][0]
@@ -1158,7 +1160,7 @@ class SurfaceManager:
 
 
     def __update_hemisphere(self, h):
-        #print "updating hemisphere ",h
+        # print "updating hemisphere ",h
         if h == "l":
             active = self.__left_active
         elif h == "r":
@@ -1295,6 +1297,122 @@ class SurfaceManager:
             ac.GetProperty().SetOpacity(self.__opacity / 100)
 
 
+class OrthogonalPlanesViewer:
+    def __init__(self, render_window_interactor, reader, widget):
+        # render_window_interactor.Initialize()
+        #render_window_interactor.Start()
+        self.iren = render_window_interactor
+        self.ren_win = render_window_interactor.GetRenderWindow()
+        self.ren = vtk.vtkRenderer()
+        self.ren.SetBackground((0.75, 0.75, 0.75))
+        self.ren.GradientBackgroundOn()
+        self.ren.SetBackground2((0.5, 0.5, 0.5))
+        self.ren.SetBackground((0.2, 0.2, 0.2))
+        self.ren.SetUseDepthPeeling(1)
+        self.ren_win.SetMultiSamples(0)
+        self.ren_win.AlphaBitPlanesOn()
+        self.ren.SetOcclusionRatio(0.1)
+        self.ren_win.AddRenderer(self.ren)
+
+        self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        self.axes = braviz.visualization.OrientationAxes()
+        self.axes.initialize(self.iren)
+
+        self.light = vtk.vtkLight()
+        self.ren.AddLight(self.light)
+        self.light.SetLightTypeToHeadlight()
+
+        self.reader = reader
+        self.__widget = widget
+
+        self.picker = vtk.vtkCellPicker()
+        self.picker.SetTolerance(0.0005)
+        self.iren.SetPicker(self.picker)
+
+        #state
+        self.__current_subject = None
+        self.__current_space = "world"
+
+        #internal data
+        self.__x_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
+                                              picker=self.picker)
+        self.__y_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
+                                              picker=self.picker)
+        self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
+                                              picker=self.picker)
+
+        self.x_image.change_image_orientation(0)
+        self.y_image.change_image_orientation(1)
+        self.z_image.change_image_orientation(2)
+
+        self.__image_planes = (self.__x_image_manager,self.__y_image_manager,self.__z_image_manager)
+
+    def show_image(self):
+        for im in self.__image_planes:
+            im.show_image()
+
+    def hide_image(self):
+        for im in self.__image_planes:
+            im.show_image()
+    def change_subject(self):
+        for im in self.__image_planes:
+            im.show_image()
+
+    def change_image_modality(self):
+        for im in self.__image_planes:
+            im.show_image()
+
+    @property
+    def x_image(self):
+        return self.__x_image_manager
+
+    @property
+    def y_image(self):
+        return self.__x_image_manager
+
+    @property
+    def z_image(self):
+        return self.__x_image_manager
+
+class QOrthogonalPlanesWidget(QFrame):
+    slice_changed = pyqtSignal(int)
+    image_window_changed = pyqtSignal(float)
+    image_level_changed = pyqtSignal(float)
+
+    def __init__(self, reader, parent):
+        QFrame.__init__(self, parent)
+        self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
+
+        self.__reader = reader
+        self.__subject_viewer = SubjectViewer(self.__qwindow_interactor, self.__reader, self)
+        self.__layout = QHBoxLayout()
+        self.__layout.addWidget(self.__qwindow_interactor)
+        self.__layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.__layout)
+
+        # self.subject_viewer.ren_win.Render()
+
+        #self.__qwindow_interactor.show()
+
+    def initialize_widget(self):
+        """call after showing the interface"""
+        self.__qwindow_interactor.Initialize()
+        self.__qwindow_interactor.Start()
+        self.subject_viewer.reset_camera(0)
+        # self.__subject_viewer.show_cone()
+
+    @property
+    def subject_viewer(self):
+        return self.__subject_viewer
+
+    def slice_change_handle(self, new_slice):
+        self.slice_changed.emit(new_slice)
+        # print new_slice
+
+    def window_level_change_handle(self, window, level):
+        self.image_window_changed.emit(window)
+        self.image_level_changed.emit(level)
+
 if __name__ == "__main__":
     import sys
     import PyQt4.QtGui as QtGui
@@ -1302,10 +1420,10 @@ if __name__ == "__main__":
 
     reader = braviz.readAndFilter.BravizAutoReader()
     app = QtGui.QApplication(sys.argv)
-    main_window = QSuvjectViwerWidget(reader)
+    main_window = QSubjectViwerWidget(reader)
     main_window.show()
     main_window.initialize_widget()
 
     app.exec_()
     log = logging.getLogger(__name__)
-    log.info( "es todo")
+    log.info("es todo")

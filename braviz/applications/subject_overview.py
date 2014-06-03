@@ -16,7 +16,7 @@ import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
 from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList
-from braviz.visualization.subject_viewer import QSuvjectViwerWidget
+from braviz.visualization.subject_viewer import QSubjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 from braviz.interaction.qt_sample_select_dialog import SampleLoadDialog
@@ -56,7 +56,7 @@ class SubjectOverviewApp(QMainWindow):
 
         initial_vars = (11, 17, 1)
 
-        self.vtk_widget = QSuvjectViwerWidget(reader=self.reader, parent=self)
+        self.vtk_widget = QSubjectViwerWidget(reader=self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
         self.sample = braviz_tab_data.get_subjects()
