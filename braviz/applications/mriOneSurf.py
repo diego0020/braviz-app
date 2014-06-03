@@ -13,6 +13,7 @@ import braviz.readAndFilter
 
 
 
+
 #TODO Use vtkSelectPolyData to select a sub region
 root = tk.Tk()
 root.withdraw()
@@ -191,12 +192,18 @@ def async_update():
         progress_internal=60
         progress_lock.release()
     if(ra_internal):
-        r_surf_t=reader.get('Surf',currSubj,name=surface.get(),hemi='r',scalars=scalar.get())
+        try:
+            r_surf_t=reader.get('Surf',currSubj,name=surface.get(),hemi='r',scalars=scalar.get())
+        except Exception:
+            r_surf_t=None
     if(la_internal):
         progress_lock.acquire()
         progress_internal=40
         progress_lock.release()
-        l_surf_t=reader.get('Surf',currSubj,name=surface.get(),hemi='l',scalars=scalar.get())
+        try:
+            l_surf_t=reader.get('Surf',currSubj,name=surface.get(),hemi='l',scalars=scalar.get())
+        except Exception:
+            l_surf_t=None
     #time.sleep(10)
     progress_lock.acquire()
     progress_internal=100
@@ -235,14 +242,22 @@ def refresh(event=None):
     else:        
         if(right_active.get()):
             r_surf=r_surf_t
-            r_surf_mapper.SetInputData(r_surf)
-            r_surf_mapper.SetLookupTable(lut)
-            r_locator.SetDataSet(l_surf)
+            if r_surf is not None:
+                r_surf_mapper.SetInputData(r_surf)
+                r_surf_mapper.SetLookupTable(lut)
+                r_locator.SetDataSet(r_surf)
+                r_surf_actor.SetVisibility(1)
+            else:
+                r_surf_actor.SetVisibility(0)
         if(left_active.get()):
             l_surf=l_surf_t
-            l_surf_mapper.SetInputData(l_surf)
-            l_surf_mapper.SetLookupTable(lut)
-            l_locator.SetDataSet(l_surf)
+            if l_surf is not None:
+                l_surf_mapper.SetInputData(l_surf)
+                l_surf_mapper.SetLookupTable(lut)
+                l_locator.SetDataSet(l_surf)
+                l_surf_actor.SetVisibility(1)
+            else:
+                l_surf_actor.SetVisibility(0)
         renWin.Render()
         for w in widgets:
             w.config(state='normal')
