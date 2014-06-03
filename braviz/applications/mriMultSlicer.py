@@ -8,16 +8,19 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 
 import braviz.readAndFilter
 from braviz.visualization import add_solid_balloon
+from braviz.utilities import configure_console_logger
 
 
 class MriMultSlicerApp():
     def __init__(self,pipe=None):
+        configure_console_logger("mriMultSlicer")
         self.pipe=pipe
-        self.currSubj='093'
+
         chosen_models= {'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'}
         self.currSpace='world'
 
         reader=braviz.readAndFilter.BravizAutoReader()
+        self.currSubj=reader.get("ids")[0]
         self.img=reader.get('MRI',self.currSubj,format='VTK',space=self.currSpace)
         aparc=reader.get('aparc',self.currSubj,format='vtk',space=self.currSpace)
 
@@ -79,13 +82,23 @@ class MriMultSlicerApp():
 
         def setSubj(event=None):
             subj=self.currSubj
-            self.img=reader.get(images_var.get(),subj,format='VTK',space=self.currSpace)
-            aparc=reader.get('aparc',subj,format='vtk',space=self.currSpace)
-            planeWidget.SetInputData(self.img)
+            try:
+                self.img=reader.get(images_var.get(),subj,format='VTK',space=self.currSpace)
+                aparc=reader.get('aparc',subj,format='vtk',space=self.currSpace)
+            except Exception:
+                self.img = None
+                aparc = None
+            if self.img is not None:
+                planeWidget.On()
+                planeWidget.SetInputData(self.img)
+            else:
+                planeWidget.Off()
+
             planeWidget.addLabels(aparc)
             self.availableModels=reader.get('MODEL',subj,index='t')
             self.availableModels.sort()
-            outline.SetInputData(self.img)
+            if self.img is not None:
+                outline.SetInputData(self.img)
             #update model
             select_model_frame.changeSubj(subj)
             if show_tracts_var.get():
@@ -140,11 +153,17 @@ class MriMultSlicerApp():
 
         def add_tracts():
             models=select_model_frame.get()
-            tracts=reader.get('fibers',self.currSubj,space=space_var.get(),waypoint=models,operation='or')
+            try:
+                tracts=reader.get('fibers',self.currSubj,space=space_var.get(),waypoint=models,operation='or')
+            except Exception:
+                tracts = None
             #print currSubj, space_var.get(), models
             #print tracts
-            tracts_mapper.SetInputData(tracts)
-            tracts_actor.SetVisibility(1)
+            if tracts is not None:
+                tracts_mapper.SetInputData(tracts)
+                tracts_actor.SetVisibility(1)
+            else:
+                tracts_actor.SetVisibility(0)
             refresh_display()
             #print models
 

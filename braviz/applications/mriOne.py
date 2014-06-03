@@ -10,6 +10,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz
 import braviz.utilities
 
+
 braviz.utilities.configure_console_logger("mriOne")
 
 
@@ -95,8 +96,14 @@ def setSubj(event=None):
     if previous_img == 'MRI':
         planeWidget.GetWindowLevel(mri_window_level)
         mri_lut.DeepCopy(planeWidget.GetLookupTable())
-    if image_var.get() in FUNCTIONAL_PARADIGMS:
-        mri_img = reader.get('MRI', subj, format='VTK', space=space_var.get())
+    selected_img = image_var.get()
+    img = None
+    if selected_img in FUNCTIONAL_PARADIGMS:
+        try:
+            mri_img = reader.get('MRI', subj, format='VTK', space=space_var.get())
+        except Exception:
+            mri_img = None
+            print "No mri img found"
         selected_pdgm = image_var.get()
         if selected_pdgm == 'Precision':
             fmri_name = 'Precision'
@@ -109,56 +116,71 @@ def setSubj(event=None):
         except IOError:
             print "%s not available for subject %s" % (fmri_name, subj)
             fa_img = None
-        blend = vtk.vtkImageBlend()
 
-        color_mapper2 = vtk.vtkImageMapToColors()
-        color_mapper2.SetInputData(fa_img)
-        color_mapper2.SetLookupTable(fmri_color_int)
-
-        if fa_img is not None:
+        if fa_img is not None and mri_img is not None:
+            planeWidget.On()
+            blend = vtk.vtkImageBlend()
+            color_mapper2 = vtk.vtkImageMapToColors()
+            color_mapper2.SetInputData(fa_img)
+            color_mapper2.SetLookupTable(fmri_color_int)
             blend.AddInputConnection(color_mapper2.GetOutputPort())
             planeWidget.text1_value_from_img(fa_img)
 
-        color_mapper1 = vtk.vtkImageMapToWindowLevelColors()
-        color_mapper1.SetInputData(mri_img)
-        color_mapper1.SetLookupTable(mri_lut)
-        #color_mapper1.SetWindow(mri_window_level[1])
-        #color_mapper1.SetLevel(mri_window_level[0])
+            color_mapper1 = vtk.vtkImageMapToWindowLevelColors()
+            color_mapper1.SetInputData(mri_img)
+            color_mapper1.SetLookupTable(mri_lut)
+            #color_mapper1.SetWindow(mri_window_level[1])
+            #color_mapper1.SetLevel(mri_window_level[0])
 
-        blend.AddInputConnection(color_mapper1.GetOutputPort())
+            blend.AddInputConnection(color_mapper1.GetOutputPort())
 
-        blend.SetOpacity(0, .5)
-        blend.SetOpacity(1, .5)
-        blend.Update()
-        img = blend.GetOutput()
+            blend.SetOpacity(0, .5)
+            blend.SetOpacity(1, .5)
+            blend.Update()
+            img = blend.GetOutput()
+            planeWidget.SetInputData(img)
+        else:
+            planeWidget.Off()
+            img = None
+
+
         #img=fa_img
         #print img
     else:
-        img = reader.get(image_var.get(), subj, format='VTK', space=space_var.get())
-        planeWidget.text1_to_std()
-
-    planeWidget.SetInputData(img)
-    if image_var.get() == 'MRI':
+        try:
+            img = reader.get(selected_img, subj, format='VTK', space=space_var.get())
+            planeWidget.text1_to_std()
+        except Exception:
+            img = None
+            planeWidget.Off()
+        else:
+            planeWidget.SetInputData(img)
+            planeWidget.On()
+    if selected_img == 'MRI':
         planeWidget.SetLookupTable(mri_lut)
         planeWidget.SetWindowLevel(*mri_window_level)
         planeWidget.SetResliceInterpolateToCubic()
-    elif image_var.get() == 'APARC':
+    elif selected_img == 'APARC':
         planeWidget.SetLookupTable(aparc_lut)
         planeWidget.SetResliceInterpolateToNearestNeighbour()
-    elif image_var.get() == 'FA':
+    elif selected_img == 'FA':
         planeWidget.SetLookupTable(fa_lut)
         planeWidget.SetResliceInterpolateToCubic()
-    elif image_var.get() in FUNCTIONAL_PARADIGMS:
+    elif selected_img in FUNCTIONAL_PARADIGMS:
         #planeWidget.SetLookupTable(mri_lut)
         planeWidget.GetColorMap().SetLookupTable(None)
         #planeWidget.UserControlledLookupTableOff()
         planeWidget.SetResliceInterpolateToCubic()
-
-    aparc_img = reader.get('aparc', subj, format='VTK', space=space_var.get())
+    try:
+        aparc_img = reader.get('aparc', subj, format='VTK', space=space_var.get())
+    except Exception:
+        aparc_img = None
     planeWidget.addLabels(aparc_img)
     planeWidget.setLabelsLut(aparc_lut)
-    outline.SetInputData(img)
-    previous_img = image_var.get()
+
+    if img is not None:
+        outline.SetInputData(img)
+    previous_img = selected_img
     paint_fibers()
     show_transform_grid()
     #renWin.Render() called by paint fibers

@@ -1016,6 +1016,11 @@ The path containing this structure must be set."""
         reader.Update()
         return reader.GetOutput()
 
+    def clear_cache(self,last_word=False):
+        if last_word is True:
+            cache_dir = os.path.join(self.getDataRoot(), '.braviz_cache')
+            os.rmdir(cache_dir)
+            os.mkdir(cache_dir)
 
 known_nodes = {  #
     # Name          :  ( data root                   , cache size in MB)

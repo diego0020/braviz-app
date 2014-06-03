@@ -11,8 +11,10 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz.readAndFilter
 from braviz.visualization import add_solid_balloon,add_fibers_balloon
 from braviz.interaction.tkSimpleDialog import Dialog as simpleDialog
+from braviz.utilities import configure_console_logger
 
 
+configure_console_logger("mriOneSlicer_context")
 currSpace='World'
 current_models=[]
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
@@ -79,10 +81,18 @@ def setSubj(event=None):
     global img, currSubj
     subj=select_subj_frame.get()
     currSubj=subj
-    img=reader.get('MRI',subj,format='VTK',space=currSpace)
-    aparc=reader.get('aparc',subj,format='vtk',space=currSpace)
-    
-    planeWidget.SetInputData(img)
+    try:
+        img=reader.get('MRI',subj,format='VTK',space=currSpace)
+        aparc=reader.get('aparc',subj,format='vtk',space=currSpace)
+    except Exception:
+        img = None
+        aparc = None
+
+    if img is not None:
+        planeWidget.SetInputData(img)
+        planeWidget.On()
+    else:
+        planeWidget.Off()
     planeWidget.addLabels(aparc)
     outline.SetInputData(img)
     #update model

@@ -121,7 +121,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.Initialized = False
         self.Orientation = orientation
         self.MiddleButton = False
-        self.Labels_set = False
+        self.labels_set = False
         self.labels_dict = None
         self.slice_change_event = vtk.vtkCommand.UserEvent + 1
         self.cursor_change_event = vtk.vtkCommand.UserEvent + 2
@@ -189,7 +189,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
             else:
                 message = '(%d, %d, %d)' % (x1, y1, z1)
                 self.InvokeEvent(self.cursor_change_event)
-                if self.Labels_set:
+                if self.labels_set:
                     label = self.get_label(x1, y1, z1)
                     message += ': %s' % label
                 if self.alternative_text1:
@@ -240,8 +240,13 @@ class persistentImagePlane(vtkImagePlaneWidget):
 
     def addLabels(self, label_img):
         """A second image can be used to get labels for image coordinates (ex. aparc)"""
+
         self.label_img = label_img
-        self.Labels_set = True
+        if label_img is not None:
+            self.labels_set = True
+        else:
+            self.labels_set = False
+
 
     def get_label(self, x, y, z):
         """Auxiliary function to get the label in a given coordinate (in mm)"""

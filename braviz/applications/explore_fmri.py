@@ -13,7 +13,9 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz
 import braviz.visualization.fmri_view
 import braviz.visualization.vtk_charts
+from braviz.utilities import configure_console_logger
 
+configure_console_logger("explore_fmri")
 
 __author__ = 'Diego'
 
@@ -159,7 +161,10 @@ def calculate_bold_signal(x,y,z):
     bold_signal=bold_signal.swapaxes(current_axis,3)
     position=[x,y,z]
     position[current_axis]=0
-    bold_signal=bold_signal[position[0],position[1],position[2],1:]
+    try:
+        bold_signal=bold_signal[position[0],position[1],position[2],1:]
+    except IndexError:
+        bold_signal = np.zeros(2)
 
     time_signal=[t*TR for t in xrange(1,n_time_slices)]
     min_y=floor(min(bold_signal))
@@ -203,14 +208,16 @@ def add_line_to_graph(coord=None):
 
 #===============================Observers====================
 n_time_slices=0
-def get_time_vol(spatial_slice,axis=0):
+def get_time_vol(spatial_slice_i,axis=0):
     global vol0,vtk0,n_time_slices
     #vol0=bold_data[spatial_slice,:,:,:]
     #vol0=np.rollaxis(vol0,2)
     #swap the current axis with time axis
     vol0=np.swapaxes(bold_data,axis,3)
     # axis 3 is now the fixed in space axis
-    vol0 = vol0[:,:,:,spatial_slice]
+    if spatial_slice_i >= vol0.shape[3]:
+        spatial_slice_i = vol0.shape[3]-1
+    vol0 = vol0[:,:,:,spatial_slice_i]
     #time axis
     n_time_slices=vol0.shape[axis]
     vtk0=braviz.readAndFilter.numpy2vtk_img(vol0)
@@ -233,15 +240,23 @@ def setSubj(Event=None):
     except Exception:
         print "%s not available for subject %s"%(paradigm_var.get(),subject)
         planeWidget.Off()
-    planeWidget.On()
+    else:
+        planeWidget.On()
     origin = t_stat_img.GetOrigin()
     spacing = t_stat_img.GetSpacing()
     dimensions= t_stat_img.GetDimensions()
 
-    bold_img = reader.get('BOLD', subject, name=paradigm_var.get())
-    bold_data = bold_img.get_data()
+    try:
+        bold_img = reader.get('BOLD', subject, name=paradigm_var.get())
+        bold_data = bold_img.get_data()
+    except Exception:
+        bold_img = None
+        bold_data = np.zeros((2,2,2,2))
 
-    mri_img = reader.get('MRI', subject, format='VTK', space='fmri_%s'%paradigm_var.get())
+    try:
+        mri_img = reader.get('MRI', subject, format='VTK', space='fmri_%s'%paradigm_var.get())
+    except Exception:
+        mri_img = None
     blend.change_imgs(mri_img,t_stat_img)
     spatial_slice=planeWidget.GetSliceIndex()
     #planeWidget.SetInputConnection(blend.GetOutputPort())

@@ -14,6 +14,7 @@ import braviz.readAndFilter
 
 
 
+
 #TODO Use vtkSelectPolyData to select a sub region
 root = tk.Tk()
 root.withdraw()
@@ -170,7 +171,8 @@ def update(event=None):
             right_active.set(0)
             actors_visibility()
     else:
-        planeWidget.On()
+        if img is not None:
+            planeWidget.On()
     
     text2.SetVisibility(0)
     redCone.SetVisibility(0)
@@ -220,8 +222,16 @@ def setSubj(event=None):
     global img, currSubj, surf
     subj=select_subj_frame.get()
     currSubj=subj
-    img=reader.get('MRI',subj,format='VTK',space='world')
-    planeWidget.SetInputData(img)
+    try:
+        img=reader.get('MRI',subj,format='VTK',space='world')
+    except Exception:
+        img = None
+
+    if img is None:
+        planeWidget.Off()
+    else:
+        planeWidget.On()
+        planeWidget.SetInputData(img)
     update()
 
     
