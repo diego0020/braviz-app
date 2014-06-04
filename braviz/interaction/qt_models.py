@@ -1456,8 +1456,37 @@ class SamplesSelectionModel(QAbstractTableModel):
             data = braviz_user_data.get_sample_data(int(sample_index))
             return data
 
+class SubjectCheclist(QAbstractListModel):
+    def __init__(self,initial_list=tuple()):
+        QAbstractListModel.__init__(self)
+        self.__list = list(initial_list)
+
+    def set_list(self,lst):
+        self.__list = list(lst)
+        self.modelReset.emit()
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.__list)
+
+    def data(self, QModelIndex, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if int_role == QtCore.Qt.DisplayRole:
+                try:
+                    return self.__list[row]
+                except IndexError:
+                    return QtCore.QVariant()
+            if int_role == QtCore.Qt.CheckStateRole:
+                return QtCore.Qt.Unchecked
+        return QtCore.QVariant()
 
 
+    def flags(self, QModelIndex):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            flags =  QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+            return flags
+        return QtCore.Qt.NoItemFlags
 
 if __name__ == "__main__":
     import braviz

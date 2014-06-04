@@ -10,7 +10,7 @@ import braviz
 from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
 from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
-
+from braviz.interaction.qt_models import SubjectCheclist
 
 __author__ = 'Diego'
 
@@ -23,7 +23,8 @@ class BuildRoiApp(QMainWindow):
         QMainWindow.__init__(self)
         self.ui = None
         self.reader = braviz.readAndFilter.BravizAutoReader()
-        self.__current_subject = self.reader.get("ids")[0]
+        self.__subjects_list = self.reader.get("ids")
+        self.__current_subject = self.__subjects_list[0]
         self.__current_image_mod = "MRI"
         self.__curent_space = "World"
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
@@ -35,7 +36,10 @@ class BuildRoiApp(QMainWindow):
         self.__full_pd = None
         self.__fibers_filterer = None
 
+        self.__subjects_check_model = SubjectCheclist(self.__subjects_list)
+
         self.setup_ui()
+        self.new_sphere()
 
     def setup_ui(self):
         self.ui = Ui_RoiBuildApp()
@@ -52,7 +56,6 @@ class BuildRoiApp(QMainWindow):
         self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice,SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
 
-        self.ui.new_sphere_button.clicked.connect(self.new_sphere)
         self.ui.sphere_radius.valueChanged.connect(self.update_sphere_radius)
         self.ui.sphere_x.valueChanged.connect(self.update_sphere_center)
         self.ui.sphere_y.valueChanged.connect(self.update_sphere_center)
@@ -63,9 +66,7 @@ class BuildRoiApp(QMainWindow):
 
         self.ui.show_fibers_check.stateChanged.connect(self.show_fibers)
 
-        # self.ui.splitter.setStretchFactor(0,1)
-        # self.ui.splitter.setStretchFactor(1,9)
-        # self.ui.splitter.setStretchFactor(2,1)
+        self.ui.subjects_list.setModel(self.__subjects_check_model)
 
     def start(self):
         self.vtk_widget.initialize_widget()
