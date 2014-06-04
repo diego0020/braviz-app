@@ -1457,6 +1457,8 @@ class SamplesSelectionModel(QAbstractTableModel):
             return data
 
 
+
+
 if __name__ == "__main__":
     import braviz
 
