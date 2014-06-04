@@ -4,10 +4,13 @@ from functools import partial as partial_f
 
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import QMainWindow
+import vtk
 
 import braviz
 from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
+from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
+
 
 __author__ = 'Diego'
 
@@ -22,8 +25,15 @@ class BuildRoiApp(QMainWindow):
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__current_subject = self.reader.get("ids")[0]
         self.__current_image_mod = "MRI"
+        self.__curent_space = "World"
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
+
+        self.__fibers_map = None
+        self.__fibers_ac = None
+        self.__filetred_pd = None
+        self.__full_pd = None
+        self.__fibers_filterer = None
 
         self.setup_ui()
 
@@ -50,6 +60,12 @@ class BuildRoiApp(QMainWindow):
         self.ui.copy_from_cursor_button.clicked.connect(self.copy_coords_from_cursor)
         self.ui.sphere_rep.currentIndexChanged.connect(self.set_sphere_representation)
         self.ui.sphere_opac.valueChanged.connect(self.set_sphere_opac)
+
+        self.ui.show_fibers_check.stateChanged.connect(self.show_fibers)
+
+        # self.ui.splitter.setStretchFactor(0,1)
+        # self.ui.splitter.setStretchFactor(1,9)
+        # self.ui.splitter.setStretchFactor(2,1)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -90,10 +106,12 @@ class BuildRoiApp(QMainWindow):
     def update_sphere_center(self,dummy=None):
         ctr = (self.ui.sphere_x.value(),self.ui.sphere_y.value(),self.ui.sphere_z.value())
         self.vtk_viewer.sphere.set_center(ctr)
+        self.show_fibers()
         self.vtk_viewer.ren_win.Render()
 
     def update_sphere_radius(self,r=None):
         self.vtk_viewer.sphere.set_radius(r)
+        self.show_fibers()
         self.vtk_viewer.ren_win.Render()
 
     def set_sphere_representation(self,index):
@@ -116,6 +134,35 @@ class BuildRoiApp(QMainWindow):
         self.ui.sphere_x.setValue(cx)
         self.ui.sphere_y.setValue(cy)
         self.ui.sphere_z.setValue(cz)
+
+    def show_fibers(self,event=None):
+        if self.ui.show_fibers_check.checkState()!=QtCore.Qt.Checked:
+            if self.__fibers_ac is not None:
+                self.__fibers_ac.SetVisibility(0)
+                if event is not None:
+                    self.vtk_viewer.ren_win.Render()
+            return
+        if self.__fibers_ac is None:
+            self.__fibers_ac = vtk.vtkActor()
+            self.__fibers_map = vtk.vtkPolyDataMapper()
+            self.vtk_viewer.ren.AddActor(self.__fibers_ac)
+            self.__fibers_ac.SetMapper(self.__fibers_map)
+            self.__fibers_ac.SetVisibility(0)
+
+        assert self.__fibers_map is not None
+        if self.__fibers_filterer is None:
+            self.__fibers_filterer = FilterBundleWithSphere()
+        if self.__full_pd is None:
+            self.__full_pd = self.reader.get("fibers",self.__current_subject,space=self.__curent_space)
+            self.__fibers_filterer.set_bundle(self.__full_pd)
+
+        ctr = (self.ui.sphere_x.value(),self.ui.sphere_y.value(),self.ui.sphere_z.value())
+        r = self.ui.sphere_radius.value()
+        self.__filetred_pd = self.__fibers_filterer.filter_bundle_with_sphere(ctr,r)
+        self.__fibers_map.SetInputData(self.__filetred_pd)
+        self.__fibers_ac.SetVisibility(1)
+        if event is not None:
+            self.vtk_viewer.ren_win.Render()
 
 def run():
     import sys

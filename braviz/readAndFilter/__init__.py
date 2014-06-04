@@ -388,6 +388,12 @@ def cache_function(max_cache_size):
     return decorator
 
 
+def iter_id_list(id_list):
+    n = id_list.GetNumberOfIds()
+    for i in xrange(n):
+        id_i = id_list.GetId(i)
+        yield id_i
+
 #Easy access to kmc readers
 
 #read configuration file and decide which project to expose
@@ -400,6 +406,8 @@ else:
 
 BravizAutoReader = project_reader.autoReader
 braviz_auto_data_root = project_reader.get_data_root
+
+
 
 #for back compatibility
 from kmc40 import autoReader as _kmc40AutoReader
