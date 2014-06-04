@@ -3,11 +3,13 @@ import logging
 from functools import partial as partial_f
 
 from PyQt4 import QtGui, QtCore
-from PyQt4.QtGui import QMainWindow
+from PyQt4.QtGui import QMainWindow, QDialog
 import vtk
 
 import braviz
 from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
+from braviz.interaction.qt_guis.roi_builder_start import Ui_OpenRoiBuilder
+from braviz.interaction.qt_guis.new_roi import Ui_NewRoi
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
 from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
 from braviz.interaction.qt_models import SubjectCheclist
@@ -18,10 +20,47 @@ AXIAL = 2
 SAGITAL = 0
 CORONAL = 1
 
-class BuildRoiApp(QMainWindow):
+class StartDialog(QDialog):
     def __init__(self):
+        QDialog.__init__(self)
+        self.ui = Ui_OpenRoiBuilder()
+        self.ui.setupUi(self)
+        self.name = "?"
+        self.ui.new_roi_button.clicked.connect(self.new_roi)
+
+    def new_roi(self):
+        new_roi_dialog = NewRoi()
+        res = new_roi_dialog.exec_()
+        if res == new_roi_dialog.Accepted:
+            self.name = new_roi_dialog.name
+            self.accept()
+
+class NewRoi(QDialog):
+    def __init__(self):
+        QDialog.__init__(self)
+        self.ui = Ui_NewRoi()
+        self.ui.setupUi(self)
+        self.ui.error_msg.setText("")
+        self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(0)
+        self.ui.roi_name.textChanged.connect(self.check_name)
+        self.name = None
+
+    def check_name(self):
+        print "checking"
+        self.name = unicode(self.ui.roi_name.text())
+
+        if len(self.name)>2:
+            #todo check for uniqueness
+            self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(1)
+
+
+
+class BuildRoiApp(QMainWindow):
+    def __init__(self,roi_name=None):
         QMainWindow.__init__(self)
         self.ui = None
+        self.__roi_name = roi_name
+
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = self.reader.get("ids")
         self.__current_subject = self.__subjects_list[0]
@@ -39,11 +78,14 @@ class BuildRoiApp(QMainWindow):
         self.__subjects_check_model = SubjectCheclist(self.__subjects_list)
 
         self.setup_ui()
+
         self.new_sphere()
 
     def setup_ui(self):
         self.ui = Ui_RoiBuildApp()
         self.ui.setupUi(self)
+        self.ui.sphere_name.setText(self.__roi_name)
+
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
@@ -188,7 +230,12 @@ def run():
     app = QtGui.QApplication(sys.argv)
     log = logging.getLogger(__name__)
     log.info("started")
-    main_window = BuildRoiApp()
+    start_dialog = StartDialog()
+    res = start_dialog.exec_()
+    if res != start_dialog.Accepted:
+        return
+    roi_name = start_dialog.name
+    main_window = BuildRoiApp(roi_name)
     main_window.show()
     main_window.start()
     try:
