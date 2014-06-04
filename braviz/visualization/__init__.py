@@ -127,6 +127,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.cursor_change_event = vtk.vtkCommand.UserEvent + 2
         self.window_level_change_event = vtk.vtkCommand.UserEvent + 3
         self.alternative_text1 = False
+        self.last_cursor_position = None
 
     def SetInputData(self, img):
         """Changes the input data por the plane widget"""
@@ -169,6 +170,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
             this is usefurl for example to display a composed fmri image but showing in the message only the z-score
             """
             if (not self.GetDisplayText()) and (not self.alternative_text1):
+                self.last_cursor_position = None
                 if self.MiddleButton:
                     self.InvokeEvent(self.slice_change_event)
                 else:
@@ -182,6 +184,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
             x1 = x0 + dx * x
             y1 = y0 + dy * y
             z1 = z0 + dz * z
+            self.last_cursor_position = (x1,y1,z1)
             if self.MiddleButton:
                 message = 'Slice: %d' % self.GetSliceIndex()
                 #create event, an observer can listen to this

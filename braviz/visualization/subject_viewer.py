@@ -1334,33 +1334,99 @@ class OrthogonalPlanesViewer:
         self.__current_space = "world"
 
         #internal data
+        self.__cursor = AdditionalCursors(self.ren)
+
         self.__x_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
         self.__y_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
         self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
-
+        self.__image_planes = (self.__x_image_manager,self.__y_image_manager,self.__z_image_manager)
         self.x_image.change_image_orientation(0)
         self.y_image.change_image_orientation(1)
         self.z_image.change_image_orientation(2)
+        self.hide_image()
 
-        self.__image_planes = (self.__x_image_manager,self.__y_image_manager,self.__z_image_manager)
+        self.__sphere = SphereProp(self.ren)
+
+
+    def finish_initializing(self):
+        self.link_window_level()
+        self.connect_cursors()
+        self.ren.ResetCameraClippingRange()
+        self.ren.ResetCamera()
+
+    def link_window_level(self):
+        "call after initializing the planes"
+        self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
+        self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
+
+    def connect_cursors(self):
+        def draw_cursor2(caller,event):
+            axis = None
+            if caller == self.x_image.image_plane_widget:
+                axis = 0
+            elif caller == self.y_image.image_plane_widget:
+                axis = 1
+            else:
+                axis = 2
+            pw = self.image_planes[axis].image_plane_widget
+            coords = pw.GetCurrentCursorPosition()
+            assert coords is not None
+            self.__cursor.set_axis_coords(axis,coords)
+        def slice_movement(caller,event):
+            last_pos = self.__cursor.get_index()
+            if last_pos is None:
+                return
+            last_pos = np.array(last_pos)
+            if caller == self.x_image.image_plane_widget:
+                axis = 0
+            elif caller == self.y_image.image_plane_widget:
+                axis = 1
+            else:
+                axis = 2
+            sl = self.image_planes[axis].get_current_image_slice()
+            last_pos[axis]=sl
+            self.__cursor.set_axis_coords(axis,last_pos)
+
+        self.x_image.image_plane_widget.AddObserver(self.x_image.image_plane_widget.cursor_change_event,draw_cursor2)
+        self.y_image.image_plane_widget.AddObserver(self.y_image.image_plane_widget.cursor_change_event,draw_cursor2)
+        self.z_image.image_plane_widget.AddObserver(self.z_image.image_plane_widget.cursor_change_event,draw_cursor2)
+
+        self.x_image.image_plane_widget.AddObserver(self.x_image.image_plane_widget.slice_change_event,slice_movement)
+        self.y_image.image_plane_widget.AddObserver(self.y_image.image_plane_widget.slice_change_event,slice_movement)
+        self.z_image.image_plane_widget.AddObserver(self.z_image.image_plane_widget.slice_change_event,slice_movement)
 
     def show_image(self):
         for im in self.__image_planes:
             im.show_image()
 
+
     def hide_image(self):
         for im in self.__image_planes:
-            im.show_image()
-    def change_subject(self):
+            im.hide_image()
+    def change_subject(self,subj):
         for im in self.__image_planes:
-            im.show_image()
+            im.change_subject(subj)
+        self.__cursor.set_image(self.x_image.image_plane_widget.GetOutput())
 
-    def change_image_modality(self):
+    def change_image_modality(self,mod):
         for im in self.__image_planes:
-            im.show_image()
+            im.change_image_modality(mod)
+        self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
+    def get_number_of_slices(self):
+        n_slices = self.x_image.image_plane_widget.GetInput().GetDimensions()
+        return n_slices
+
+    def get_current_slice(self):
+        return (self.x_image.get_current_image_slice(),
+                self.y_image.get_current_image_slice(),
+                self.z_image.get_current_image_slice(),)
+
+    @property
+    def image_planes(self):
+        return self.__image_planes
 
     @property
     def x_image(self):
@@ -1368,11 +1434,105 @@ class OrthogonalPlanesViewer:
 
     @property
     def y_image(self):
-        return self.__x_image_manager
+        return self.__y_image_manager
 
     @property
     def z_image(self):
-        return self.__x_image_manager
+        return self.__z_image_manager
+
+    @property
+    def sphere(self):
+        return self.__sphere
+
+    def current_position(self):
+        return self.__cursor.get_position()
+
+class AdditionalCursors:
+    def __init__(self,ren):
+        self.__cursors = braviz.visualization.cursors()
+        self.__cursors.SetVisibility(0)
+        self.__image = None
+        self.__pos = None
+        self.__axis = None
+        ren.AddActor(self.__cursors)
+
+    def set_image(self,img):
+        self.__image = img
+        dim = img.GetDimensions()
+        sp = img.GetSpacing()
+        org = img.GetOrigin()
+
+        self.__cursors.set_dimensions(*dim)
+        self.__cursors.set_spacing(*sp)
+        self.__cursors.set_origin(*org)
+
+    def get_position(self):
+        if self.__pos is None:
+            return None
+        pos = np.array(self.__pos)
+        org = np.array(self.__image.GetOrigin())
+        sp = np.array(self.__image.GetSpacing())
+        return pos*sp+org
+
+    def get_index(self):
+        return self.__pos
+
+    def set_axis_coords(self,axis=None,coords=None):
+        if axis is None or coords is None or self.__image is None:
+            self.__cursors.SetVisibility(0)
+            self.__pos = None
+        self.__cursors.SetVisibility(1)
+        if axis != self.__axis:
+            self.__cursors.change_axis(axis)
+            self.__axis = axis
+        self.__cursors.set_cursor(*coords)
+        self.__pos = coords
+        self.__cursors.SetVisibility(1)
+        pass
+
+
+class SphereProp:
+    def __init__(self,ren):
+        self.__source = vtk.vtkSphereSource()
+        self.__mapper = vtk.vtkPolyDataMapper()
+        self.__actor = vtk.vtkActor()
+        self.__center = None
+        self.__radius = None
+        self.__RESOLUTION = 20
+
+        self.__actor.SetMapper(self.__mapper)
+        self.__mapper.SetInputConnection(self.__source.GetOutputPort())
+        self.__source.SetThetaResolution(self.__RESOLUTION)
+        self.__source.SetPhiResolution(self.__RESOLUTION)
+        self.__source.LatLongTessellationOn()
+        self.__actor.SetVisibility(0)
+        ren.AddActor(self.__actor)
+
+    def set_center(self,ctr):
+        self.__source.SetCenter(*ctr)
+        self.__center = ctr
+
+    def set_radius(self,r):
+        self.__source.SetRadius(r)
+        self.__radius = r
+
+    def set_color(self):
+        pass
+
+    def set_repr(self,rep):
+        if rep.startswith("w"):
+            self.__actor.GetProperty().SetRepresentationToWireframe()
+        else:
+            self.__actor.GetProperty().SetRepresentationToSurface()
+
+    def hide(self):
+        self.__actor.SetVisibility(0)
+    def show(self):
+        self.__actor.SetVisibility(1)
+
+    def set_opacity(self,opac_int):
+        opac = opac_int/100.0
+        self.__actor.GetProperty().SetOpacity(opac)
 
 class QOrthogonalPlanesWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -1384,7 +1544,7 @@ class QOrthogonalPlanesWidget(QFrame):
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
 
         self.__reader = reader
-        self.__subject_viewer = SubjectViewer(self.__qwindow_interactor, self.__reader, self)
+        self.__vtk_viewer = OrthogonalPlanesViewer(self.__qwindow_interactor, self.__reader, self)
         self.__layout = QHBoxLayout()
         self.__layout.addWidget(self.__qwindow_interactor)
         self.__layout.setContentsMargins(0, 0, 0, 0)
@@ -1398,12 +1558,11 @@ class QOrthogonalPlanesWidget(QFrame):
         """call after showing the interface"""
         self.__qwindow_interactor.Initialize()
         self.__qwindow_interactor.Start()
-        self.subject_viewer.reset_camera(0)
         # self.__subject_viewer.show_cone()
 
     @property
-    def subject_viewer(self):
-        return self.__subject_viewer
+    def orthogonal_viewer(self):
+        return self.__vtk_viewer
 
     def slice_change_handle(self, new_slice):
         self.slice_changed.emit(new_slice)
