@@ -67,6 +67,8 @@ class BuildRoiApp(QMainWindow):
         self.ui.show_fibers_check.stateChanged.connect(self.show_fibers)
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
+        self.ui.subjects_list.activated.connect(self.select_subject)
+        self.ui.subject_sphere_label.setText("Subject %s"%self.__current_subject)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -164,6 +166,18 @@ class BuildRoiApp(QMainWindow):
         self.__fibers_ac.SetVisibility(1)
         if event is not None:
             self.vtk_viewer.ren_win.Render()
+
+    def select_subject(self,index):
+        subj = self.__subjects_check_model.data(index,QtCore.Qt.DisplayRole)
+        self.change_subject(subj)
+
+    def change_subject(self,new_subject):
+        self.__current_subject = new_subject
+        self.ui.subject_sphere_label.setText("Subject %s"%self.__current_subject)
+        self.vtk_viewer.change_subject(new_subject)
+        self.__full_pd = None
+        self.show_fibers()
+        print new_subject
 
 def run():
     import sys

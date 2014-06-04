@@ -218,7 +218,7 @@ class SubjectOverviewApp(QMainWindow):
         log = logging.getLogger(__name__)
         log.info("changing image mod to %s"%selection)
         if selection == "None":
-            self.vtk_viewer.image.change_image_modality(None)
+            self.vtk_viewer.image.hide_image()
             self.ui.image_orientation.setEnabled(0)
             self.ui.image_window.setEnabled(0)
             self.ui.image_level.setEnabled(0)
@@ -228,6 +228,7 @@ class SubjectOverviewApp(QMainWindow):
             self.reset_image_view_controls()
             return
 
+        self.vtk_viewer.image.show_image()
         if selection in ("MRI", "FA", "APARC", "MD", "DTI"):
             self.vtk_viewer.image.change_image_modality(selection)
         else:

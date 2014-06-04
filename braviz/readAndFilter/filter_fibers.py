@@ -28,7 +28,6 @@ class FilterBundleWithSphere:
             return None
         id_list = vtk.vtkIdList()
         self.__locator.FindPointsWithinRadius(radius,center,id_list)
-        npts = id_list.GetNumberOfIds()
         valid_cell_ids = set()
         for pt_id in iter_id_list(id_list):
             id_list2 = vtk.vtkIdList()

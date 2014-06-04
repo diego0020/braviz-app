@@ -312,7 +312,7 @@ class ImageManager:
     def show_image(self):
         if self.__image_plane_widget is not None:
             self.__image_plane_widget.On()
-        self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, True)
+        #self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, True)
 
     @do_and_render
     def create_image_plane_widget(self):
@@ -380,6 +380,14 @@ class ImageManager:
             # nothing to do
             return
 
+        #save previous state
+        if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
+            if (self.__current_image == "MRI" or self.__current_image == "MD") and (
+                        self.__current_mri_window_level is not None):
+                self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
+            elif (self.__current_image == "FA") and (self.__current_fa_window_level is not None):
+                self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
+
         self.__current_image = modality
 
         if modality is None:
@@ -388,14 +396,9 @@ class ImageManager:
 
         if self.__image_plane_widget is None:
             self.create_image_plane_widget()
-        self.__image_plane_widget.On()
+            self.__image_plane_widget.On()
 
-        if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
-            if (self.__current_image == "MRI" or self.__current_image == "MD") and (
-                        self.__current_mri_window_level is not None):
-                self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
-            elif (self.__current_image == "FA") and (self.__current_fa_window_level is not None):
-                self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
+
 
         if self.__current_subject is None:
             return
@@ -480,6 +483,7 @@ class ImageManager:
                 self.reset_window_level()
             else:
                 self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
+
         elif modality == "APARC":
             lut = self.reader.get("APARC", self.__current_subject, lut=True)
             self.__image_plane_widget.SetLookupTable(lut)
@@ -488,7 +492,7 @@ class ImageManager:
             self.__image_plane_widget.SetResliceInterpolateToNearestNeighbour()
 
         #self.__current_image = modality
-        self.__image_plane_widget.On()
+        #self.__image_plane_widget.On() # only at show image
 
     @do_and_render
     def change_image_orientation(self, orientation):
@@ -545,7 +549,7 @@ class ImageManager:
         # print button
         if self.__image_plane_widget is None:
             return
-        if self.__current_image == "MRI":
+        if self.__current_image == "MRI" or self.__current_image == "MD":
             self.__image_plane_widget.SetWindowLevel(3000, 1500)
             self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
@@ -553,6 +557,7 @@ class ImageManager:
             self.__image_plane_widget.SetWindowLevel(1.20, 0.6)
             self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
+
         return
 
 
@@ -1406,10 +1411,11 @@ class OrthogonalPlanesViewer:
     def hide_image(self):
         for im in self.__image_planes:
             im.hide_image()
+
     def change_subject(self,subj):
         for im in self.__image_planes:
             im.change_subject(subj)
-        self.__cursor.set_image(self.x_image.image_plane_widget.GetOutput())
+        self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
 
     def change_image_modality(self,mod):
         for im in self.__image_planes:
