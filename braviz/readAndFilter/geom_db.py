@@ -82,3 +82,9 @@ def load_sphere(sphere_id,subject):
     cur = con.execute(q,(sphere_id,subject))
     res = cur.fetchone()
     return res
+
+def get_all_spheres(sphere_id):
+    q = "SELECT subject,radius,ctr_x,ctr_y,ctr_z FROM geom_spheres WHERE sphere_id = ?"
+    con = get_connection()
+    df = sql.read_sql(q,con,index_col="subject",params=(sphere_id,))
+    return df

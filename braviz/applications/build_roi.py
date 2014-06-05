@@ -12,9 +12,10 @@ from braviz.interaction.qt_guis.roi_builder_start import Ui_OpenRoiBuilder
 from braviz.interaction.qt_guis.new_roi import Ui_NewRoi
 from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
+from braviz.interaction.qt_guis.extrapolate_spheres import Ui_ExtrapolateSpheres
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
 from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
-from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel
+from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel, SubjectCheckTable
 from braviz.readAndFilter import geom_db, tabular_data
 
 __author__ = 'Diego'
@@ -35,6 +36,29 @@ SURFACE_SCALARS_DICT = {enumerate((
     'BA')
 )}
 
+class ExtrapolateDialog(QDialog):
+    def __init__(self,initial_source,subjects_list,sphere_id):
+        QDialog.__init__(self)
+        self.__subjects = subjects_list
+        self.__sphere_id = sphere_id
+        self.spheres_df = None
+        data_cols = self.create_data_cols()
+        targets_model = SubjectCheckTable(subjects_list,data_cols,("Subject","Sphere R","Sphere Center"))
+        self.ui = Ui_ExtrapolateSpheres()
+        self.ui.setupUi(self)
+        self.ui.tableView.setModel(targets_model)
+
+    def create_data_cols(self):
+        self.spheres_df = geom_db.get_all_spheres(self.__sphere_id)
+        radiuses = [""]*len(self.__subjects)
+        centers = [""]*len(self.__subjects)
+        df2 = self.spheres_df.transpose()
+        for i,s in enumerate(self.__subjects):
+            row = df2.get(s)
+            if row is not None:
+                radiuses[i] = "%.4g"%row.radius
+                centers[i] = "( %.3g , %.3g , %.3g )"%(row.ctr_x,row.ctr_y,row.ctr_z)
+        return radiuses,centers
 
 class StartDialog(QDialog):
     def __init__(self):
@@ -202,6 +226,8 @@ class BuildRoiApp(QMainWindow):
         self.ui.left_cortex_check.stateChanged.connect(self.toggle_left_surface)
         self.ui.right_cortex_check.stateChanged.connect(self.toggle_right_surface)
         self.ui.cortex_opac.valueChanged.connect(self.set_cortex_opacity)
+
+        self.ui.extrapolate_button.clicked.connect(self.launch_extrapolate_dialog)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -380,6 +406,12 @@ class BuildRoiApp(QMainWindow):
 
     def set_cortex_opacity(self,int_opac):
         self.vtk_viewer.cortex.set_opacity(int_opac)
+
+    def launch_extrapolate_dialog(self):
+        extrapol_dialog = ExtrapolateDialog(self.__current_subject,self.__subjects_list,self.__roi_id)
+        res = extrapol_dialog.exec_()
+        if res  == extrapol_dialog.Accepted:
+            self.refresh_checked()
 
 def run():
     import sys
