@@ -1475,6 +1475,7 @@ class SubjectChecklist(QAbstractListModel):
     @checked.setter
     def checked(self,new_set):
         self.__checked = new_set
+        self.modelReset.emit()
 
     def set_list(self,lst):
         self.__list = list(lst)

@@ -32,7 +32,7 @@ def _create_spheres_table():
     ctr_x NUMERIC,
     ctr_y NUMERIC,
     ctr_z NUMERIC,
-    PRIMARY KEY (sphere_id,radius)
+    PRIMARY KEY (sphere_id,subject)
     )
     """
     conn=get_connection()
