@@ -61,7 +61,6 @@ def get_data_frame_by_name(columns, reader=None):
         col = sql.read_sql(query, conn, index_col="subject", params=(str(var),), coerce_float=True)
         data[var] = col.astype(pd.np.float64)
 
-    conn.close()
     return data
 
 

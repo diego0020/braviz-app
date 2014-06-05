@@ -40,7 +40,7 @@ class LinearModelApp(QMainWindow):
         self.__table_cols = ["Slope", "T Value", "P Value"]
         empty_df = pd.DataFrame(columns=self.__table_cols)
         empty_df.index.name = "Coefficient"
-        self.result_model = braviz_models.DataFrameModel(empty_df, self.__table_cols)
+        self.result_model = braviz_models.DataFrameModel(empty_df, self.__table_cols,string_columns={0})
         self.sample_model = braviz_models.SampleTree()
         self.plot = None
         self.plot_name = None

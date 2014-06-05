@@ -10,9 +10,11 @@ import braviz
 from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
 from braviz.interaction.qt_guis.roi_builder_start import Ui_OpenRoiBuilder
 from braviz.interaction.qt_guis.new_roi import Ui_NewRoi
+from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
 from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
-from braviz.interaction.qt_models import SubjectCheclist
+from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel
+from braviz.readAndFilter import geom_db, tabular_data
 
 __author__ = 'Diego'
 
@@ -27,12 +29,24 @@ class StartDialog(QDialog):
         self.ui.setupUi(self)
         self.name = "?"
         self.ui.new_roi_button.clicked.connect(self.new_roi)
+        self.ui.load_roi_button.clicked.connect(self.load_roi)
 
     def new_roi(self):
         new_roi_dialog = NewRoi()
         res = new_roi_dialog.exec_()
         if res == new_roi_dialog.Accepted:
             self.name = new_roi_dialog.name
+            coords = new_roi_dialog.coords
+            desc = new_roi_dialog.desc
+            geom_db.create_roi(self.name,0,coords,desc)
+            self.accept()
+
+    def load_roi(self):
+        load_roi_dialog = LoadRoiDialog()
+        res = load_roi_dialog.exec_()
+        if res == load_roi_dialog.Accepted:
+            self.name = load_roi_dialog.name
+            assert self.name is not None
             self.accept()
 
 class NewRoi(QDialog):
@@ -44,15 +58,42 @@ class NewRoi(QDialog):
         self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(0)
         self.ui.roi_name.textChanged.connect(self.check_name)
         self.name = None
+        self.coords = None
+        self.desc = None
+        self.accepted.connect(self.before_accepting)
 
     def check_name(self):
-        print "checking"
         self.name = unicode(self.ui.roi_name.text())
 
         if len(self.name)>2:
-            #todo check for uniqueness
-            self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(1)
+            if geom_db.roi_name_exists(self.name):
+                self.ui.error_msg.setText("Name already exists")
+            else:
+                self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(1)
+                self.ui.error_msg.setText("")
+        else:
+            self.ui.error_msg.setText("")
 
+    def before_accepting(self):
+        self.coords = self.ui.roi_space.currentIndex()
+        self.desc = unicode(self.ui.roi_desc.toPlainText())
+
+class LoadRoiDialog(QDialog):
+    def __init__(self):
+        QDialog.__init__(self)
+        self.ui = Ui_LoadRoiDialog()
+        self.ui.setupUi(self)
+        self.name = None
+        spheres_df = geom_db.get_available_spheres_df()
+        self.model = DataFrameModel(spheres_df,string_columns={0,1})
+        self.ui.tableView.setModel(self.model)
+        self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(0)
+        self.ui.tableView.clicked.connect(self.select)
+
+    def select(self,index):
+        name_index = self.model.index(index.row(),0)
+        self.name = unicode(self.model.data(name_index,QtCore.Qt.DisplayRole))
+        self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(1)
 
 
 class BuildRoiApp(QMainWindow):
@@ -60,12 +101,17 @@ class BuildRoiApp(QMainWindow):
         QMainWindow.__init__(self)
         self.ui = None
         self.__roi_name = roi_name
+        self.__roi_id = geom_db.get_roi_id(roi_name)
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
-        self.__subjects_list = self.reader.get("ids")
+        self.__subjects_list = tabular_data.get_subjects()
         self.__current_subject = self.__subjects_list[0]
+
         self.__current_image_mod = "MRI"
-        self.__curent_space = "World"
+        try:
+            self.__curent_space = geom_db.get_roi_space(roi_name)
+        except Exception:
+            self.__curent_space = "World"
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
 
@@ -75,7 +121,10 @@ class BuildRoiApp(QMainWindow):
         self.__full_pd = None
         self.__fibers_filterer = None
 
-        self.__subjects_check_model = SubjectCheclist(self.__subjects_list)
+        self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
+        assert isinstance(self.__checked_subjects,set)
+        self.__subjects_check_model = SubjectChecklist(self.__subjects_list)
+        self.__subjects_check_model.checked = self.__checked_subjects
 
         self.setup_ui()
 
@@ -111,6 +160,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.subjects_list.setModel(self.__subjects_check_model)
         self.ui.subjects_list.activated.connect(self.select_subject)
         self.ui.subject_sphere_label.setText("Subject %s"%self.__current_subject)
+
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -220,6 +270,9 @@ class BuildRoiApp(QMainWindow):
         self.__full_pd = None
         self.show_fibers()
         print new_subject
+
+    def save_sphere(self):
+        pass
 
 def run():
     import sys

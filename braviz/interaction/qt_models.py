@@ -570,13 +570,14 @@ class DataFrameModel(QAbstractTableModel):
     """
     This model is used for displaying data frames in a QT table view
     """
-    def __init__(self, data_frame, columns=None):
+    def __init__(self, data_frame, columns=None,string_columns=tuple()):
         if not isinstance(data_frame,pd.DataFrame):
             raise ValueError("A pandas data frame is required")
         if columns is None:
             columns = data_frame.columns
         self.__df = data_frame
         self.__cols = columns
+        self.__string_cols = frozenset(string_columns)
         super(DataFrameModel, self).__init__()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -591,12 +592,17 @@ class DataFrameModel(QAbstractTableModel):
         line = QModelIndex.row()
         col = QModelIndex.column()
         if col == 0:
-            return unicode(self.__df.index[line])
+            return self.format_data(0, self.__df.index[line] )
         else:
             col_name = self.__cols[col-1]
             data = self.__df[col_name].iloc[line]
-            return "%.4g"%data
+            return self.format_data(col,data)
 
+    def format_data(self,col_i,data):
+        if col_i in self.__string_cols:
+            return unicode(data)
+        else:
+            return "%.4g"%data
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
             return QtCore.QVariant()
@@ -1456,10 +1462,19 @@ class SamplesSelectionModel(QAbstractTableModel):
             data = braviz_user_data.get_sample_data(int(sample_index))
             return data
 
-class SubjectCheclist(QAbstractListModel):
+class SubjectChecklist(QAbstractListModel):
     def __init__(self,initial_list=tuple()):
         QAbstractListModel.__init__(self)
         self.__list = list(initial_list)
+        self.__checked = set()
+
+    @property
+    def checked(self):
+        return self.__checked
+
+    @checked.setter
+    def checked(self,new_set):
+        self.__checked = new_set
 
     def set_list(self,lst):
         self.__list = list(lst)
@@ -1471,13 +1486,17 @@ class SubjectCheclist(QAbstractListModel):
     def data(self, QModelIndex, int_role=None):
         if QModelIndex.isValid():
             row = QModelIndex.row()
+            try:
+                name = self.__list[row]
+            except IndexError:
+                return QtCore.QVariant()
             if int_role == QtCore.Qt.DisplayRole:
-                try:
-                    return self.__list[row]
-                except IndexError:
-                    return QtCore.QVariant()
+                return name
             if int_role == QtCore.Qt.CheckStateRole:
-                return QtCore.Qt.Unchecked
+                if name in self.checked:
+                    return QtCore.Qt.Checked
+                else:
+                    return QtCore.Qt.Unchecked
         return QtCore.QVariant()
 
 
