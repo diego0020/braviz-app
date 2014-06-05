@@ -296,6 +296,7 @@ class ImageManager:
         self.__widget = widget
         self.__outline_filter = None
         self.__picker = picker
+        self.__hidden = False
         self.iren = interactor
 
     @property
@@ -304,12 +305,14 @@ class ImageManager:
 
     @do_and_render
     def hide_image(self):
+        self.__hidden = True
         if self.__image_plane_widget is not None:
             self.__image_plane_widget.Off()
             # self.image_plane_widget.SetVisibility(0)
 
     @do_and_render
     def show_image(self):
+        self.__hidden = False
         if self.__image_plane_widget is not None:
             self.__image_plane_widget.On()
         #self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, True)
@@ -361,7 +364,7 @@ class ImageManager:
         if self.__current_space == new_space:
             return
         self.__current_space = new_space
-        if self.__image_plane_widget is not None and self.__image_plane_widget.GetEnabled():
+        if self.__image_plane_widget is not None and not self.__hidden:
             self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
                                        skip_render=True)
 
@@ -376,7 +379,7 @@ class ImageManager:
 
         if (self.__current_image is not None) and (modality == self.__current_image) and (
                     paradigm == self.__curent_fmri_paradigm) and \
-                self.__image_plane_widget.GetEnabled() and not force_reload:
+                not self.__hidden and not force_reload:
             # nothing to do
             return
 
@@ -412,15 +415,17 @@ class ImageManager:
             self.__image_plane_widget.setLabelsLut(aparc_lut)
         except Exception as e:
             log.warning(e)
-            self.hide_image(skip_render=True)
+            self.image_plane_widget.Off()
+            raise Exception("Aparc not available")
             #raise
+
 
         if modality == "FMRI":
             mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)
             fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
                                          name=paradigm)
             if fmri_image is None:
-                self.hide_image(skip_render=True)
+                self.image_plane_widget.Off()
                 raise Exception("%s not available for subject %s" % (paradigm, self.__current_subject))
             fmri_lut = self.reader.get("fMRI", self.__current_subject, lut=True)
             self.__fmri_blender.set_luts(self.__mri_lut, fmri_lut)
@@ -434,7 +439,8 @@ class ImageManager:
             self.__current_image = modality
             self.__curent_fmri_paradigm = paradigm
             self.__image_plane_widget.text1_value_from_img(fmri_image)
-            self.__image_plane_widget.On()
+            if self.__hidden is False:
+                self.__image_plane_widget.On()
             return
 
         if modality == "DTI":
@@ -444,6 +450,7 @@ class ImageManager:
             except Exception:
                 self.hide_image(skip_render=True)
                 log.warning("DTI, not available")
+                self.image_plane_widget.Off()
                 raise Exception("DTI, not available")
 
             self.__image_plane_widget.SetInputData(dti_image)
@@ -453,12 +460,17 @@ class ImageManager:
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             self.__current_image = modality
             self.__image_plane_widget.text1_value_from_img(fa_image)
-            self.__image_plane_widget.On()
+            if self.__hidden is False:
+                self.__image_plane_widget.On()
             return
 
         self.__image_plane_widget.text1_to_std()
         #Other images
-        new_image = self.reader.get(modality, self.__current_subject, space=self.__current_space, format="VTK")
+        try:
+            new_image = self.reader.get(modality, self.__current_subject, space=self.__current_space, format="VTK")
+        except Exception:
+            self.image_plane_widget.Off()
+            raise
 
         self.__image_plane_widget.SetInputData(new_image)
         self.__outline_filter.SetInputData(new_image)
@@ -492,7 +504,9 @@ class ImageManager:
             self.__image_plane_widget.SetResliceInterpolateToNearestNeighbour()
 
         #self.__current_image = modality
-        #self.__image_plane_widget.On() # only at show image
+        if self.__hidden is False:
+            self.image_plane_widget.On()
+
 
     @do_and_render
     def change_image_orientation(self, orientation):
@@ -1413,9 +1427,16 @@ class OrthogonalPlanesViewer:
             im.hide_image()
 
     def change_subject(self,subj):
+        ex = None
         for im in self.__image_planes:
-            im.change_subject(subj)
+            try:
+                im.change_subject(subj)
+            except Exception as e:
+                ex = e
+        if ex is not None:
+            raise ex
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
+
 
     def change_image_modality(self,mod):
         for im in self.__image_planes:

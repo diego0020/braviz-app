@@ -106,7 +106,7 @@ class ConfirmSubjectChangeDialog(QDialog):
         self.ui.setupUi(self)
         self.save_requested = False
         self.ui.buttonBox.button(self.ui.buttonBox.Save).clicked.connect(self.set_save)
-        self.ui.buttonBox.button(self.ui.buttonBox.Discard).clicked.connect(self.reject)
+        self.ui.buttonBox.button(self.ui.buttonBox.Discard).clicked.connect(self.accept)
 
     def set_save(self):
         self.save_requested = True
@@ -145,10 +145,11 @@ class BuildRoiApp(QMainWindow):
         self.__sphere_modified = True
 
         self.setup_ui()
-        self.load_sphere(self.__current_subject)
+
         self.vtk_viewer.sphere.show()
         self.update_sphere_radius()
         self.update_sphere_center()
+        self.load_sphere(self.__current_subject)
 
     def setup_ui(self):
         self.ui = Ui_RoiBuildApp()
@@ -185,6 +186,7 @@ class BuildRoiApp(QMainWindow):
     def start(self):
         self.vtk_widget.initialize_widget()
         self.set_image("MRI")
+        self.vtk_viewer.show_image()
         self.vtk_viewer.finish_initializing()
 
     def set_image(self, modality):
@@ -296,6 +298,7 @@ class BuildRoiApp(QMainWindow):
         self.load_sphere(new_subject)
         self.__full_pd = None
         self.show_fibers()
+        self.__sphere_modified = False
         print new_subject
 
     def save_sphere(self):
