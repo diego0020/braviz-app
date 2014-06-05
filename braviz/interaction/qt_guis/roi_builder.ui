@@ -441,29 +441,23 @@
           </widget>
          </item>
          <item row="7" column="1">
-          <widget class="QComboBox" name="comboBox">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
+          <widget class="QComboBox" name="surface_combo">
+           <item>
+            <property name="text">
+             <string>Pial</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>White</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item row="9" column="0">
-          <widget class="QCheckBox" name="checkBox">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
+          <widget class="QCheckBox" name="left_cortex_check">
            <property name="text">
             <string>Left</string>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="0">
-          <widget class="QCheckBox" name="checkBox_2">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Right</string>
            </property>
           </widget>
          </item>
@@ -475,9 +469,79 @@
           </widget>
          </item>
          <item row="8" column="1">
-          <widget class="QComboBox" name="comboBox_3">
-           <property name="enabled">
+          <widget class="QComboBox" name="scalar_combo">
+           <item>
+            <property name="text">
+             <string>Curv</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Average  curv.</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Area</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Thickness</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Sulc</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Parcellation</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Parcellation 2009</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Broadman Area</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="10" column="0">
+          <widget class="QCheckBox" name="right_cortex_check">
+           <property name="text">
+            <string>Right</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0" colspan="2">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>Opacity</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="0" colspan="2">
+          <widget class="QSlider" name="cortex_opac">
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>100</number>
+           </property>
+           <property name="tracking">
             <bool>false</bool>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>

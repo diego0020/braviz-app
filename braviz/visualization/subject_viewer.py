@@ -538,6 +538,7 @@ class ImageManager:
         if self.__image_plane_widget is None:
             return
         self.__image_plane_widget.SetSliceIndex(new_slice)
+        self.__image_plane_widget.InvokeEvent(self.__image_plane_widget.slice_change_event)
 
 
     def get_current_image_window(self):
@@ -1041,12 +1042,16 @@ class TractographyManager:
 
 
 class SurfaceManager:
-    def __init__(self, reader, ren, iren, initial_subj="093", initial_space="World", picker=None):
+    def __init__(self, reader, ren, iren, initial_subj=None, initial_space="World", picker=None,
+                 persistent_cone = False):
         self.ren = ren
         self.reader = reader
         self.picker = picker
         self.iren = iren
+        self.picking_event = vtk.vtkCommand.UserEvent + 1
 
+        self.__persistent_cone = persistent_cone
+        self.__last_picked_pos = None
         self.__left_active = False
         self.__right_active = False
         self.__current_surface = "white"
@@ -1143,8 +1148,9 @@ class SurfaceManager:
                 return
             if event == 'LeftButtonReleaseEvent':
                 self.__active_picking = False
-                self.__cone_trio[2].SetVisibility(0)
-                self.__picking_text.SetVisibility(0)
+                if self.__persistent_cone is False:
+                    self.__cone_trio[2].SetVisibility(0)
+                    self.__picking_text.SetVisibility(0)
                 log.debug("done picking")
                 return
             x, y = caller.GetEventPosition()
@@ -1155,7 +1161,9 @@ class SurfaceManager:
             if picked and (id(picked_prop) in self.__picking_dict):
                 self.__active_picking = True
                 redCone = self.__cone_trio[2]
+                redCone.InvokeEvent(self.picking_event)
                 redCone.SetPosition(p)
+                self.__last_picked_pos=p
                 self.__point_cone(*n)
                 self.__picking_text.SetVisibility(1)
                 redCone.SetVisibility(1)
@@ -1167,8 +1175,9 @@ class SurfaceManager:
                 self.iren.Render()
             else:
                 self.__active_picking = False
-                self.__cone_trio[2].SetVisibility(0)
-                self.__picking_text.SetVisibility(0)
+                if self.__persistent_cone is False:
+                    self.__cone_trio[2].SetVisibility(0)
+                    self.__picking_text.SetVisibility(0)
             return
 
         iren = self.iren
@@ -1315,6 +1324,16 @@ class SurfaceManager:
             ac = trio[2]
             ac.GetProperty().SetOpacity(self.__opacity / 100)
 
+    def hide_cone(self):
+        self.__cone_trio[2].SetVisibility(0)
+        self.__picking_text.SetVisibility(0)
+
+    def get_last_picked_pos(self):
+        return self.__last_picked_pos
+
+    @property
+    def pick_cone_actor(self):
+        return self.__cone_trio[2]
 
 class OrthogonalPlanesViewer:
     def __init__(self, render_window_interactor, reader, widget):
@@ -1368,7 +1387,10 @@ class OrthogonalPlanesViewer:
         self.hide_image()
 
         self.__sphere = SphereProp(self.ren)
+        self.__cortex = SurfaceManager(self.reader,self.ren,self.iren,self.__current_subject,self.__current_space,
+                                       picker=self.picker,persistent_cone=True)
 
+        self.__active_cursor_plane = True
 
     def finish_initializing(self):
         self.link_window_level()
@@ -1383,7 +1405,8 @@ class OrthogonalPlanesViewer:
 
     def connect_cursors(self):
         def draw_cursor2(caller,event):
-            axis = None
+            self.cortex.hide_cone()
+            self.__active_cursor_plane = True
             if caller == self.x_image.image_plane_widget:
                 axis = 0
             elif caller == self.y_image.image_plane_widget:
@@ -1394,7 +1417,10 @@ class OrthogonalPlanesViewer:
             coords = pw.GetCurrentCursorPosition()
             assert coords is not None
             self.__cursor.set_axis_coords(axis,coords)
+
         def slice_movement(caller,event):
+            self.cortex.hide_cone()
+            self.__active_cursor_plane = True
             last_pos = self.__cursor.get_index()
             if last_pos is None:
                 return
@@ -1417,31 +1443,46 @@ class OrthogonalPlanesViewer:
         self.y_image.image_plane_widget.AddObserver(self.y_image.image_plane_widget.slice_change_event,slice_movement)
         self.z_image.image_plane_widget.AddObserver(self.z_image.image_plane_widget.slice_change_event,slice_movement)
 
+        def change_cursor_to_cone(caller,event):
+            self.__active_cursor_plane = False
+            self.__cursor.hide()
+
+        self.cortex.pick_cone_actor.AddObserver(self.cortex.picking_event,change_cursor_to_cone)
+
+    @do_and_render
     def show_image(self):
         for im in self.__image_planes:
-            im.show_image()
+            im.show_image(skip_render=True)
 
-
+    @do_and_render
     def hide_image(self):
         for im in self.__image_planes:
-            im.hide_image()
+            im.hide_image(skip_render=True)
 
+    @do_and_render
     def change_subject(self,subj):
         ex = None
         for im in self.__image_planes:
             try:
-                im.change_subject(subj)
+                im.change_subject(subj,skip_render=True)
             except Exception as e:
                 ex = e
+        try:
+            self.__cortex.set_subject(subj,skip_render=True)
+        except Exception:
+            log = logging.getLogger(__file__)
+            log.warning("Cortex not found for subject %s"%subj)
         if ex is not None:
             raise ex
+
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
 
-
+    @do_and_render
     def change_image_modality(self,mod):
         for im in self.__image_planes:
-            im.change_image_modality(mod)
+            im.change_image_modality(mod,skip_render=True)
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
+
     def get_number_of_slices(self):
         n_slices = self.x_image.image_plane_widget.GetInput().GetDimensions()
         return n_slices
@@ -1471,8 +1512,16 @@ class OrthogonalPlanesViewer:
     def sphere(self):
         return self.__sphere
 
+    @property
+    def cortex(self):
+        return self.__cortex
+
     def current_position(self):
-        return self.__cursor.get_position()
+        if self.__active_cursor_plane:
+            return self.__cursor.get_position()
+        else:
+            return self.cortex.get_last_picked_pos()
+
 
 class AdditionalCursors:
     def __init__(self,ren):
@@ -1517,6 +1566,8 @@ class AdditionalCursors:
         self.__cursors.SetVisibility(1)
         pass
 
+    def hide(self):
+        self.__cursors.SetVisibility(0)
 
 class SphereProp:
     def __init__(self,ren):
@@ -1560,6 +1611,7 @@ class SphereProp:
     def set_opacity(self,opac_int):
         opac = opac_int/100.0
         self.__actor.GetProperty().SetOpacity(opac)
+
 
 class QOrthogonalPlanesWidget(QFrame):
     slice_changed = pyqtSignal(int)

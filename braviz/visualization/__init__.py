@@ -316,6 +316,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.InvokeEvent(self.slice_change_event)
 
 
+
 def add_solid_balloon(balloon_widget, solid_actor, name=None, my_volume=None):
     """Adds a standard balloon for models
 

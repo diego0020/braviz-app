@@ -1466,7 +1466,7 @@ class SubjectChecklist(QAbstractListModel):
     def __init__(self,initial_list=tuple()):
         QAbstractListModel.__init__(self)
         self.__list = list(initial_list)
-        self.__checked = set()
+        self.__checked = frozenset()
 
     @property
     def checked(self):
@@ -1474,7 +1474,7 @@ class SubjectChecklist(QAbstractListModel):
 
     @checked.setter
     def checked(self,new_set):
-        self.__checked = new_set
+        self.__checked = frozenset(new_set)
         self.modelReset.emit()
 
     def set_list(self,lst):

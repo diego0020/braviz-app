@@ -23,6 +23,18 @@ AXIAL = 2
 SAGITAL = 0
 CORONAL = 1
 
+# "curv,avg_curv,area,thickness,sulc,aparc,aparc.a2009s,BA".split(",")
+SURFACE_SCALARS_DICT = {enumerate((
+    'curv',
+    'avg_curv',
+    'area',
+    'thickness',
+    'sulc',
+    'aparc',
+    'aparc.a2009s',
+    'BA')
+)}
+
 
 class StartDialog(QDialog):
     def __init__(self):
@@ -99,6 +111,7 @@ class LoadRoiDialog(QDialog):
         self.name = unicode(self.model.data(name_index, QtCore.Qt.DisplayRole))
         self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(1)
 
+
 class ConfirmSubjectChangeDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
@@ -167,6 +180,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.coronal_slice.valueChanged.connect(partial_f(self.set_slice, CORONAL))
         self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
+        self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
 
         self.ui.sphere_radius.valueChanged.connect(self.update_sphere_radius)
         self.ui.sphere_x.valueChanged.connect(self.update_sphere_center)
@@ -183,11 +197,19 @@ class BuildRoiApp(QMainWindow):
         self.ui.subject_sphere_label.setText("Subject %s" % self.__current_subject)
         self.ui.save_sphere.clicked.connect(self.save_sphere)
 
+        self.ui.surface_combo.currentIndexChanged.connect(self.select_surface)
+        self.ui.scalar_combo.currentIndexChanged.connect(self.select_surface_scalars)
+        self.ui.left_cortex_check.stateChanged.connect(self.toggle_left_surface)
+        self.ui.right_cortex_check.stateChanged.connect(self.toggle_right_surface)
+        self.ui.cortex_opac.valueChanged.connect(self.set_cortex_opacity)
+
     def start(self):
         self.vtk_widget.initialize_widget()
         self.set_image("MRI")
         self.vtk_viewer.show_image()
         self.vtk_viewer.finish_initializing()
+        self.vtk_viewer.change_subject(self.__current_subject)
+        self.select_surface(None)
 
     def set_image(self, modality):
         self.vtk_viewer.change_image_modality(modality)
@@ -293,7 +315,7 @@ class BuildRoiApp(QMainWindow):
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
         self.ui.subject_sphere_label.setText("Subject %s" % self.__current_subject)
-        img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,new_subject)
+        img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, new_subject)
         self.vtk_viewer.change_subject(img_id)
         self.load_sphere(new_subject)
         self.__full_pd = None
@@ -315,11 +337,11 @@ class BuildRoiApp(QMainWindow):
         self.__sphere_modified = True
         self.ui.save_sphere.setEnabled(1)
 
-    def load_sphere(self,subj):
-        res = geom_db.load_sphere(self.__roi_id,subj)
+    def load_sphere(self, subj):
+        res = geom_db.load_sphere(self.__roi_id, subj)
         if res is None:
             return
-        r,x,y,z = res
+        r, x, y, z = res
         self.ui.sphere_radius.setValue(r)
         self.ui.sphere_x.setValue(x)
         self.ui.sphere_y.setValue(y)
@@ -333,6 +355,31 @@ class BuildRoiApp(QMainWindow):
         checked = geom_db.subjects_with_sphere(self.__roi_id)
         self.__subjects_check_model.checked = checked
 
+    def select_image_modality(self, index):
+        mod = str(self.ui.image_combo.currentText())
+        self.change_image_modality(mod)
+
+    def change_image_modality(self, new_mod):
+        self.vtk_viewer.change_image_modality(new_mod)
+
+    def select_surface_scalars(self,index):
+        scalar_name = SURFACE_SCALARS_DICT[int(index)]
+        self.vtk_viewer.cortex.set_scalars(scalar_name)
+
+    def select_surface(self,index):
+        surface_name = str(self.ui.surface_combo.currentText())
+        self.vtk_viewer.cortex.set_surface(surface_name)
+
+    def toggle_left_surface(self,status):
+        b_status = (status == QtCore.Qt.Checked)
+        self.vtk_viewer.cortex.set_hemispheres(left=b_status)
+
+    def toggle_right_surface(self,status):
+        b_status = (status == QtCore.Qt.Checked)
+        self.vtk_viewer.cortex.set_hemispheres(right=b_status)
+
+    def set_cortex_opacity(self,int_opac):
+        self.vtk_viewer.cortex.set_opacity(int_opac)
 
 def run():
     import sys
