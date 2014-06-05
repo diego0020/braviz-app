@@ -37,11 +37,13 @@ SURFACE_SCALARS_DICT = {enumerate((
 )}
 
 class ExtrapolateDialog(QDialog):
-    def __init__(self,initial_source,subjects_list,sphere_id):
+    def __init__(self,initial_source,subjects_list,sphere_id,reader):
         QDialog.__init__(self)
         self.__subjects = subjects_list
         self.__sphere_id = sphere_id
+        self.__roi_space = geom_db.get_roi_space(roi_id=sphere_id)
         self.__origin = initial_source
+        self.__reader = reader
         self.spheres_df = None
         data_cols = self.create_data_cols()
         self.targets_model = SubjectCheckTable(subjects_list,data_cols,("Subject","Sphere R","Sphere Center"))
@@ -52,13 +54,24 @@ class ExtrapolateDialog(QDialog):
         self.ui.select_empty.clicked.connect(self.select_empty)
         self.ui.clear_button.clicked.connect(self.clear_sel)
         self.populate_origin()
-        idx = self.__subjects.index(initial_source)
+        try:
+            idx = self.__subjects.index(initial_source)
+        except ValueError:
+            idx = 0
         self.ui.origin_combo.setCurrentIndex(idx)
         self.ui.quit_button.clicked.connect(self.accept)
         self.ui.start_button.clicked.connect(self.start_button_handle)
 
         self.__started = False
         self.__cancel_flag = False
+        self.__link_space = None
+        self.__scale_radius = False
+
+        self.__origin_img_id = None
+        self.__origin_radius = None
+        self.__origin_center = None
+        self.__center_link = None
+        self.__radius_link = None
 
     def create_data_cols(self):
         self.spheres_df = geom_db.get_all_spheres(self.__sphere_id)
@@ -82,12 +95,35 @@ class ExtrapolateDialog(QDialog):
         self.targets_model.checked = self.spheres_df.index
 
     def populate_origin(self):
-        for s in self.__subjects:
+        for s in self.spheres_df.index:
             self.ui.origin_combo.addItem(str(s))
 
+
+    def translate_one_point(self,pt,subj):
+        subj_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
+        #link -> world
+        w_pt = self.__reader.transformPointsToSpace(pt,self.__link_space,
+                                            subj_img_id,inverse=True)
+        #world -> roi
+        r_pt = self.__reader.transformPointsToSpace(w_pt,self.__roi_space,
+                                            subj_img_id,inverse=False)
+        return r_pt
+
     def extrapolate_one(self,target):
-        import time
-        time.sleep(2)
+        if target == self.__origin:
+            return
+        #coordinates
+        if self.__link_space == "None":
+            ctr = self.__origin_center
+        else:
+            ctr = self.translate_one_point(self.__center_link,target)
+
+        #radius
+        if self.__scale_radius is False:
+            r = self.__origin_radius
+        else:
+            pass
+
 
     def start_button_handle(self):
         if self.__started is True:
@@ -103,6 +139,24 @@ class ExtrapolateDialog(QDialog):
         self.ui.progressBar.setValue(0)
         self.set_controls(0)
         selected = list(self.targets_model.checked)
+        # set parameters
+        self.__origin = int(self.ui.origin_combo.currentText())
+        self.__link_space = self.ui.link_combo.currentText()
+        self.__scale_radius = (self.ui.radio_combo.currentIndex() == 1)
+        origin_sphere = geom_db.load_sphere(self.__sphere_id,self.__origin)
+        self.__origin_radius = origin_sphere[0]
+        self.__origin_center = origin_sphere[1:4]
+        self.__origin_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__origin)
+
+        if self.__link_space != "None":
+            #roi -> world
+            ctr_world = self.__reader.transformPointsToSpace(self.__origin_center,self.__roi_space,
+                                                             self.__origin_img_id,inverse=True)
+            #world -> link
+            ctr_link = self.__reader.transformPointsToSpace(ctr_world,self.__link_space,
+                                                             self.__origin_img_id,inverse=False)
+            self.__center_link = ctr_link
+
         for i,s in enumerate(selected):
             QtGui.QApplication.instance().processEvents()
             if self.__cancel_flag is True:
@@ -479,7 +533,7 @@ class BuildRoiApp(QMainWindow):
         self.vtk_viewer.cortex.set_opacity(int_opac)
 
     def launch_extrapolate_dialog(self):
-        extrapol_dialog = ExtrapolateDialog(self.__current_subject,self.__subjects_list,self.__roi_id)
+        extrapol_dialog = ExtrapolateDialog(self.__current_subject,self.__subjects_list,self.__roi_id, self.reader)
         res = extrapol_dialog.exec_()
         if res  == extrapol_dialog.Accepted:
             self.refresh_checked()
