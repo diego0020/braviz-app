@@ -1523,6 +1523,11 @@ class SubjectCheckTable(QAbstractTableModel):
         self.__data = data_cols
         self.__headers = headers
 
+    def set_data_cols(self,new_cols):
+        assert len(new_cols)==len(self.__headers)-1
+        self.__data = new_cols
+        self.modelReset.emit()
+
     @property
     def checked(self):
         return self.__checked

@@ -145,7 +145,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="quit_button">
         <property name="text">
          <string>Quit Dialog</string>
         </property>
@@ -200,6 +200,13 @@
        <widget class="QPushButton" name="select_empty">
         <property name="text">
          <string>Select Empty</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="clear_button">
+        <property name="text">
+         <string>Clear Selection</string>
         </property>
        </widget>
       </item>

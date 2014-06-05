@@ -41,12 +41,24 @@ class ExtrapolateDialog(QDialog):
         QDialog.__init__(self)
         self.__subjects = subjects_list
         self.__sphere_id = sphere_id
+        self.__origin = initial_source
         self.spheres_df = None
         data_cols = self.create_data_cols()
-        targets_model = SubjectCheckTable(subjects_list,data_cols,("Subject","Sphere R","Sphere Center"))
+        self.targets_model = SubjectCheckTable(subjects_list,data_cols,("Subject","Sphere R","Sphere Center"))
         self.ui = Ui_ExtrapolateSpheres()
         self.ui.setupUi(self)
-        self.ui.tableView.setModel(targets_model)
+        self.ui.tableView.setModel(self.targets_model)
+        self.ui.select_all_button.clicked.connect(self.select_all)
+        self.ui.select_empty.clicked.connect(self.select_empty)
+        self.ui.clear_button.clicked.connect(self.clear_sel)
+        self.populate_origin()
+        idx = self.__subjects.index(initial_source)
+        self.ui.origin_combo.setCurrentIndex(idx)
+        self.ui.quit_button.clicked.connect(self.accept)
+        self.ui.start_button.clicked.connect(self.start_button_handle)
+
+        self.__started = False
+        self.__cancel_flag = False
 
     def create_data_cols(self):
         self.spheres_df = geom_db.get_all_spheres(self.__sphere_id)
@@ -59,6 +71,65 @@ class ExtrapolateDialog(QDialog):
                 radiuses[i] = "%.4g"%row.radius
                 centers[i] = "( %.3g , %.3g , %.3g )"%(row.ctr_x,row.ctr_y,row.ctr_z)
         return radiuses,centers
+
+    def select_all(self):
+        self.targets_model.checked = self.__subjects
+
+    def clear_sel(self):
+        self.targets_model.checked = tuple()
+
+    def select_empty(self):
+        self.targets_model.checked = self.spheres_df.index
+
+    def populate_origin(self):
+        for s in self.__subjects:
+            self.ui.origin_combo.addItem(str(s))
+
+    def extrapolate_one(self,target):
+        import time
+        time.sleep(2)
+
+    def start_button_handle(self):
+        if self.__started is True:
+            self.__cancel_flag = True
+            self.ui.start_button.setEnabled(0)
+        else:
+            self.__cancel_flag = False
+            self.ui.start_button.setText("Cancel")
+            self.extrapolate_selected()
+
+    def extrapolate_selected(self):
+        self.__started = True
+        self.ui.progressBar.setValue(0)
+        self.set_controls(0)
+        selected = list(self.targets_model.checked)
+        for i,s in enumerate(selected):
+            QtGui.QApplication.instance().processEvents()
+            if self.__cancel_flag is True:
+                break
+            self.extrapolate_one(s)
+            self.ui.progressBar.setValue((i+1)*100/len(selected))
+        r,c = self.create_data_cols()
+        self.targets_model.set_data_cols((r,c))
+        self.__started = False
+        self.ui.start_button.setText("Start Extrapolation")
+        self.set_controls(1)
+        QtCore.QTimer.singleShot(1000,partial_f(self.ui.start_button.setEnabled,1))
+
+
+    def set_controls(self,value):
+        self.ui.select_all_button.setEnabled(value)
+        self.ui.select_empty.setEnabled(value)
+        self.ui.clear_button.setEnabled(value)
+        self.ui.tableView.setEnabled(value)
+        self.ui.origin_combo.setEnabled(value)
+        self.ui.link_combo.setEnabled(value)
+        self.ui.quit_button.setEnabled(value)
+        self.ui.radio_combo.setEnabled(value)
+
+
+
+
 
 class StartDialog(QDialog):
     def __init__(self):
