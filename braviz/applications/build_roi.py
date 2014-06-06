@@ -26,7 +26,7 @@ SAGITAL = 0
 CORONAL = 1
 
 # "curv,avg_curv,area,thickness,sulc,aparc,aparc.a2009s,BA".split(",")
-SURFACE_SCALARS_DICT = {enumerate((
+SURFACE_SCALARS_DICT = dict(enumerate((
     'curv',
     'avg_curv',
     'area',
@@ -35,7 +35,7 @@ SURFACE_SCALARS_DICT = {enumerate((
     'aparc',
     'aparc.a2009s',
     'BA')
-)}
+))
 UNIT_VECTORS = np.array(((1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1)))
 class ExtrapolateDialog(QDialog):
     def __init__(self,initial_source,subjects_list,sphere_id,reader):

@@ -173,14 +173,11 @@ class StructureTreeModel(QAbstractItemModel):
             #asking for root nodes
             meta_root = self.__root
             if (0 <= p_int < len(meta_root.children)) and (p_int_1 == 0):
-                #print "papasito"
                 root = meta_root.children[p_int]
                 index = self.__get_node_index(root)
                 return index
-        assert True
 
-    def headerData(self, p_int, Qt_Orientation, int_role=None):
-        pass
+
 
     def hasChildren(self, QModelIndex_parent=None, *args, **kwargs):
         if QModelIndex_parent.isValid():

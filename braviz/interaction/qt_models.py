@@ -1469,10 +1469,11 @@ class SamplesSelectionModel(QAbstractTableModel):
 
 
 class SubjectChecklist(QAbstractListModel):
-    def __init__(self, initial_list=tuple()):
+    def __init__(self, initial_list=tuple(),show_checks=True):
         QAbstractListModel.__init__(self)
         self.__list = list(initial_list)
         self.__checked = frozenset()
+        self.__show_checks = show_checks
 
     @property
     def checked(self):
@@ -1499,7 +1500,7 @@ class SubjectChecklist(QAbstractListModel):
                 return QtCore.QVariant()
             if int_role == QtCore.Qt.DisplayRole:
                 return name
-            if int_role == QtCore.Qt.CheckStateRole:
+            if (int_role == QtCore.Qt.CheckStateRole) and self.__show_checks:
                 if name in self.checked:
                     return QtCore.Qt.Checked
                 else:

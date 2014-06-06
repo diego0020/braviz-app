@@ -63,6 +63,12 @@ def get_roi_id(roi_name):
     idx = cur.fetchone()[0]
     return idx
 
+def get_roi_name(roi_id):
+    con = get_connection()
+    q = "SELECT roi_name FROM geom_rois WHERE roi_id = ?"
+    cur = con.execute(q, (roi_id,))
+    name = cur.fetchone()[0]
+    return name
 
 def subjects_with_sphere(sphere_id):
     con = get_connection()
