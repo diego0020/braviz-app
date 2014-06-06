@@ -1622,6 +1622,8 @@ class SphereProp:
         opac = opac_int/100.0
         self.__actor.GetProperty().SetOpacity(opac)
 
+    def set_color(self,r,g,b):
+        self.__actor.GetProperty().SetColor(r,g,b)
 
 class QOrthogonalPlanesWidget(QFrame):
     slice_changed = pyqtSignal(int)

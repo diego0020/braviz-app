@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1133</width>
+    <width>1148</width>
     <height>745</height>
    </rect>
   </property>
@@ -291,14 +291,14 @@
             <string>Color:</string>
            </property>
            <property name="buddy">
-            <cstring>pushButton_3</cstring>
+            <cstring>color_button</cstring>
            </property>
           </widget>
          </item>
          <item row="20" column="1">
-          <widget class="QPushButton" name="pushButton_3">
+          <widget class="QPushButton" name="color_button">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="text">
             <string>Select</string>
@@ -653,7 +653,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1133</width>
+     <width>1148</width>
      <height>26</height>
     </rect>
    </property>
@@ -661,32 +661,22 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionSave_scenario_2"/>
-    <addaction name="actionLoad_scenario_2"/>
+    <addaction name="actionSave_Scenario"/>
+    <addaction name="actionLoad_Scenario"/>
     <addaction name="separator"/>
     <addaction name="actionSave_sphere_as"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionSave_scenario">
+  <action name="actionSave_Scenario">
    <property name="text">
-    <string>Save scenario</string>
+    <string>Save Scenario</string>
    </property>
   </action>
-  <action name="actionLoad_scenario">
+  <action name="actionLoad_Scenario">
    <property name="text">
-    <string>Load scenario</string>
-   </property>
-  </action>
-  <action name="actionSave_scenario_2">
-   <property name="text">
-    <string>Save scenario</string>
-   </property>
-  </action>
-  <action name="actionLoad_scenario_2">
-   <property name="text">
-    <string>Load scenario</string>
+    <string>Load Scenario</string>
    </property>
   </action>
   <action name="actionSave_sphere_as">

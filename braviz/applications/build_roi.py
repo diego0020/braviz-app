@@ -378,6 +378,12 @@ class BuildRoiApp(QMainWindow):
 
         self.ui.extrapolate_button.clicked.connect(self.launch_extrapolate_dialog)
 
+        self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
+        self.ui.actionLoad_Scenario.triggered.connect(self.load_scenario)
+        self.ui.actionSave_sphere_as.triggered.connect(self.save_sphere_as)
+        self.ui.color_button.clicked.connect(self.set_sphere_color)
+
+
     def start(self):
         self.vtk_widget.initialize_widget()
         self.set_image("MRI")
@@ -584,6 +590,28 @@ class BuildRoiApp(QMainWindow):
         res = extrapol_dialog.exec_()
         if res  == extrapol_dialog.Accepted:
             self.refresh_checked()
+
+    def get_state(self):
+        pass
+
+    def load_state(self):
+        pass
+
+    def save_scenario(self):
+        pass
+
+    def load_scenario(self):
+        pass
+
+    def save_sphere_as(self):
+        pass
+
+    def set_sphere_color(self):
+        color = QtGui.QColorDialog.getColor()
+        self.ui.color_button.setStyleSheet("#color_button{color : %s}"%color.name())
+        self.vtk_viewer.sphere.set_color(color.red(),color.green(),color.blue())
+        self.vtk_viewer.ren_win.Render()
+
 
 def run():
     import sys
