@@ -14,6 +14,7 @@ def roi_name_exists(name):
 
 def create_roi(name, roi_type, coords, desc=""):
     con = get_connection()
+    coords = COORDS_I.get(coords,coords)
     assert coords in {0, 1, 2}
     q = "INSERT INTO geom_rois (roi_name,roi_type,roi_desc,roi_coords) VALUES(?,?,?,?)"
     cur = con.execute(q, (name, roi_type, desc, coords))
@@ -38,6 +39,7 @@ def get_available_spheres_df():
 
 
 COORDS = {0: "World", 1: "Talairach", 2: "Dartel"}
+COORDS_I = {"World": 0, "Talairach": 1, "Dartel": 2}
 
 
 def get_roi_space(name=None, roi_id=None):
@@ -52,6 +54,7 @@ def get_roi_space(name=None, roi_id=None):
         cur = con.execute(q, (roi_id,))
         idx = cur.fetchone()[0]
     return COORDS[idx]
+
 
 def get_roi_id(roi_name):
     con = get_connection()
@@ -69,22 +72,34 @@ def subjects_with_sphere(sphere_id):
     subjs = set(r[0] for r in rows)
     return subjs
 
-def save_sphere(sphere_id,subject,radius,center):
-    x,y,z = center
+
+def save_sphere(sphere_id, subject, radius, center):
+    x, y, z = center
     con = get_connection()
     q = "INSERT OR REPLACE INTO geom_spheres VALUES (?,?,?,?,?,?)"
-    con.execute(q,(sphere_id,subject,radius,x,y,z))
+    con.execute(q, (sphere_id, subject, radius, x, y, z))
     con.commit()
 
-def load_sphere(sphere_id,subject):
+
+def load_sphere(sphere_id, subject):
     q = "SELECT radius,ctr_x,ctr_y,ctr_z FROM geom_spheres WHERE sphere_id = ? and subject = ?"
     con = get_connection()
-    cur = con.execute(q,(sphere_id,subject))
+    cur = con.execute(q, (sphere_id, subject))
     res = cur.fetchone()
     return res
+
 
 def get_all_spheres(sphere_id):
     q = "SELECT subject,radius,ctr_x,ctr_y,ctr_z FROM geom_spheres WHERE sphere_id = ?"
     con = get_connection()
-    df = sql.read_sql(q,con,index_col="subject",params=(sphere_id,))
+    df = sql.read_sql(q, con, index_col="subject", params=(sphere_id,))
     return df
+
+def copy_spheres(orig_id,dest_id):
+    q = """INSERT OR REPLACE INTO geom_spheres
+    SELECT ? as sphere_id , subject, radius, ctr_x, ctr_y, ctr_z
+    FROM geom_spheres
+    WHERE sphere_id = ?"""
+    con = get_connection()
+    con.execute(q,(dest_id,orig_id))
+    con.commit()

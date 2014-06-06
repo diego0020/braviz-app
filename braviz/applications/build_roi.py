@@ -237,13 +237,16 @@ class StartDialog(QDialog):
 
 
 class NewRoi(QDialog):
-    def __init__(self):
+    def __init__(self,block_space=None):
         QDialog.__init__(self)
         self.ui = Ui_NewRoi()
         self.ui.setupUi(self)
         self.ui.error_msg.setText("")
         self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(0)
         self.ui.roi_name.textChanged.connect(self.check_name)
+        if block_space is not None:
+            self.ui.roi_space.setCurrentText(block_space)
+            self.ui.roi_space.setEnabled(0)
         self.name = None
         self.coords = None
         self.desc = None
@@ -604,7 +607,19 @@ class BuildRoiApp(QMainWindow):
         pass
 
     def save_sphere_as(self):
-        pass
+        dialog = NewRoi(self.__curent_space)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_name = dialog.name
+            desc = dialog.desc
+            new_id = geom_db.create_roi(new_name,0,self.__curent_space,desc)
+            geom_db.copy_spheres(self.__roi_id,new_id)
+            self.__roi_id=new_id
+            self.__roi_name = new_name
+            self.refresh_checked()
+
+
+
 
     def set_sphere_color(self):
         color = QtGui.QColorDialog.getColor()
