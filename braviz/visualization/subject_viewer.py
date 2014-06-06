@@ -1522,6 +1522,16 @@ class OrthogonalPlanesViewer:
         else:
             return self.cortex.get_last_picked_pos()
 
+    @do_and_render
+    def change_space(self,new_space):
+        for im in self.image_planes:
+            im.change_space(new_space,skip_render=True)
+        self.cortex.set_space(new_space,skip_render=True)
+        self.__current_space = new_space
+        self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
+        self.iren.Render()
+
+
 
 class AdditionalCursors:
     def __init__(self,ren):

@@ -5,6 +5,7 @@ from functools import partial as partial_f
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import QMainWindow, QDialog
 import vtk
+import numpy as np
 
 import braviz
 from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
@@ -35,7 +36,7 @@ SURFACE_SCALARS_DICT = {enumerate((
     'aparc.a2009s',
     'BA')
 )}
-
+UNIT_VECTORS = np.array(((1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1)))
 class ExtrapolateDialog(QDialog):
     def __init__(self,initial_source,subjects_list,sphere_id,reader):
         QDialog.__init__(self)
@@ -55,8 +56,8 @@ class ExtrapolateDialog(QDialog):
         self.ui.clear_button.clicked.connect(self.clear_sel)
         self.populate_origin()
         try:
-            idx = self.__subjects.index(initial_source)
-        except ValueError:
+            idx = self.spheres_df.index.get_loc(initial_source)
+        except KeyError:
             idx = 0
         self.ui.origin_combo.setCurrentIndex(idx)
         self.ui.quit_button.clicked.connect(self.accept)
@@ -110,19 +111,32 @@ class ExtrapolateDialog(QDialog):
         return r_pt
 
     def extrapolate_one(self,target):
+        log = logging.getLogger(__file__)
+        log.debug("extrapolating %s",target)
         if target == self.__origin:
             return
         #coordinates
         if self.__link_space == "None":
             ctr = self.__origin_center
         else:
-            ctr = self.translate_one_point(self.__center_link,target)
+            try:
+                ctr = self.translate_one_point(self.__center_link,target)
+            except Exception:
+                log.warning("Couldn't extrapolate subject %s",target)
+                return
 
         #radius
-        if self.__scale_radius is False:
+        if self.__scale_radius is False or self.__link_space == "None":
             r = self.__origin_radius
         else:
-            pass
+            vecs_roi = np.array([self.translate_one_point(r,target) for r in self.__radius_link])
+            r_roi = vecs_roi-ctr
+            #print r_roi
+            norms_r_roi = np.apply_along_axis(np.linalg.norm,1,r_roi)
+            #print norms_r_roi
+            r = np.mean(norms_r_roi)
+
+        geom_db.save_sphere(self.__sphere_id,target,r,ctr)
 
 
     def start_button_handle(self):
@@ -141,7 +155,7 @@ class ExtrapolateDialog(QDialog):
         selected = list(self.targets_model.checked)
         # set parameters
         self.__origin = int(self.ui.origin_combo.currentText())
-        self.__link_space = self.ui.link_combo.currentText()
+        self.__link_space = str(self.ui.link_combo.currentText())
         self.__scale_radius = (self.ui.radio_combo.currentIndex() == 1)
         origin_sphere = geom_db.load_sphere(self.__sphere_id,self.__origin)
         self.__origin_radius = origin_sphere[0]
@@ -156,6 +170,15 @@ class ExtrapolateDialog(QDialog):
             ctr_link = self.__reader.transformPointsToSpace(ctr_world,self.__link_space,
                                                              self.__origin_img_id,inverse=False)
             self.__center_link = ctr_link
+            if self.__scale_radius is True:
+                rad_vectors = (self.__origin_center+v*self.__origin_radius for v in UNIT_VECTORS)
+                #roi -> world
+                rad_vectors_world = (self.__reader.transformPointsToSpace(r,self.__roi_space,
+                                                             self.__origin_img_id,inverse=True) for r in rad_vectors)
+                #world -> link
+                rad_vectors_link = (self.__reader.transformPointsToSpace(r,self.__link_space,
+                                             self.__origin_img_id,inverse=False) for r in rad_vectors_world)
+                self.__radius_link = list(rad_vectors_link)
 
         for i,s in enumerate(selected):
             QtGui.QApplication.instance().processEvents()
@@ -284,6 +307,7 @@ class BuildRoiApp(QMainWindow):
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
         self.__current_subject = self.__subjects_list[0]
+        self.__current_img_id = None
 
         self.__current_image_mod = "MRI"
         try:
@@ -358,8 +382,9 @@ class BuildRoiApp(QMainWindow):
         self.vtk_widget.initialize_widget()
         self.set_image("MRI")
         self.vtk_viewer.show_image()
+        self.vtk_viewer.change_space(self.__curent_space)
         self.vtk_viewer.finish_initializing()
-        self.vtk_viewer.change_subject(self.__current_subject)
+        self.change_subject(self.__current_subject)
         self.select_surface(None)
 
     def set_image(self, modality):
@@ -437,11 +462,21 @@ class BuildRoiApp(QMainWindow):
             self.__fibers_ac.SetMapper(self.__fibers_map)
             self.__fibers_ac.SetVisibility(0)
 
+        if self.__full_pd == "Unavailable":
+            #dont try to load again
+            return
+
         assert self.__fibers_map is not None
         if self.__fibers_filterer is None:
             self.__fibers_filterer = FilterBundleWithSphere()
         if self.__full_pd is None:
-            self.__full_pd = self.reader.get("fibers", self.__current_subject, space=self.__curent_space)
+            try:
+                self.__full_pd = self.reader.get("fibers", self.__current_img_id, space=self.__curent_space)
+            except Exception:
+                self.__full_pd = "Unavailable"
+                self.__fibers_ac.SetVisibility(0)
+                self.vtk_viewer.ren_win.Render()
+                return
             self.__fibers_filterer.set_bundle(self.__full_pd)
 
         ctr = (self.ui.sphere_x.value(), self.ui.sphere_y.value(), self.ui.sphere_z.value())
@@ -467,7 +502,12 @@ class BuildRoiApp(QMainWindow):
         self.__current_subject = new_subject
         self.ui.subject_sphere_label.setText("Subject %s" % self.__current_subject)
         img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, new_subject)
-        self.vtk_viewer.change_subject(img_id)
+        self.__current_img_id = img_id
+        log = logging.getLogger(__file__)
+        try:
+            self.vtk_viewer.change_subject(img_id)
+        except Exception:
+            log.warning("Couldnt load data for subject %s",new_subject)
         self.load_sphere(new_subject)
         self.__full_pd = None
         self.show_fibers()
@@ -533,6 +573,13 @@ class BuildRoiApp(QMainWindow):
         self.vtk_viewer.cortex.set_opacity(int_opac)
 
     def launch_extrapolate_dialog(self):
+        if self.__sphere_modified:
+            check_save = ConfirmSubjectChangeDialog()
+            res = check_save.exec_()
+            if res == check_save.Rejected:
+                return
+            if check_save.save_requested:
+                self.save_sphere()
         extrapol_dialog = ExtrapolateDialog(self.__current_subject,self.__subjects_list,self.__roi_id, self.reader)
         res = extrapol_dialog.exec_()
         if res  == extrapol_dialog.Accepted:
@@ -547,6 +594,7 @@ def run():
     app = QtGui.QApplication(sys.argv)
     log = logging.getLogger(__name__)
     log.info("started")
+    logging.basicConfig(level=logging.DEBUG)
     start_dialog = StartDialog()
     res = start_dialog.exec_()
     if res != start_dialog.Accepted:

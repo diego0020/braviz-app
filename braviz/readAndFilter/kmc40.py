@@ -736,6 +736,10 @@ The path containing this structure must be set."""
     def __movePointsToSpace(self, point_set, space, subj, inverse=False):
         """Transforms a set of points in 'world' space to the talairach or template spaces
         If inverse is True, the points will be moved from 'space' to world"""
+        #pad subject
+        subj=str(subj)
+        if len(subj)<3:
+            subj = "0"*(3-len(subj))+subj
         if space.lower()[:2] == 'wo':
             return point_set
         elif space.lower()[:2] == 'ta':
