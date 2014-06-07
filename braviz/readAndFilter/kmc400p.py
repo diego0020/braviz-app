@@ -591,6 +591,9 @@ The path containing this structure must be set."""
             log.error("cache write failed")
         return ids
 
+    def filter_fibers(self,subj,struct):
+        return self.__cached_filter_fibers(subj,struct)
+
     def __readFibers_from_db(self,subj,db_id,**kw):
         log = logging.getLogger(__name__)
         raise NotImplementedError

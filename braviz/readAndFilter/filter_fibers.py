@@ -19,7 +19,7 @@ class FilterBundleWithSphere:
         self.__locator.SetDataSet(self.__full_bundle)
         self.__locator.BuildLocator()
 
-    def filter_bundle_with_sphere(self,center,radius):
+    def filter_bundle_with_sphere(self,center,radius,get_ids = False):
         """
         Filter a polydata to keep only the lines which have a point inside a sphere
         """
@@ -34,6 +34,8 @@ class FilterBundleWithSphere:
             self.__full_bundle.GetPointCells(pt_id,id_list2)
             valid_cell_ids.update(iter_id_list(id_list2))
 
+        if get_ids is True:
+            return valid_cell_ids
         out_pd = extract_poly_data_subset(self.__full_bundle,valid_cell_ids)
         return out_pd
 

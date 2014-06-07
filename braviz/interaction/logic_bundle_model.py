@@ -3,27 +3,35 @@ __author__ = 'Diego'
 import PyQt4.QtCore as QtCore
 from PyQt4.QtCore import QAbstractItemModel
 import logging
+from braviz.readAndFilter import geom_db,tabular_data
+import vtk
 
-NODE_TYPES = {"LOGIC":0,"STRUCT":1,"ROI":2}
-NODE_TYPES_I = {0:"LOGIC",1:"STRUCT",2:"ROI"}
 
 class LogicBundleNode:
-    def __init__(self,parent,son_number,node_type,value,extra_data=None):
+    LOGIC = 0
+    STRUCT = 1
+    ROI = 2
+
+    def __init__(self, parent, son_number, node_type, value, extra_data=None):
+        assert node_type in {self.LOGIC, self.STRUCT, self.ROI}
         self.__parent = parent
-        if isinstance(node_type,str):
-            node_type = NODE_TYPES[node_type]
-        self.__node_type = int(node_type)
+        self.__node_type = node_type
         self.__value = value
         self.__son_number = son_number
         self.__extra_data = extra_data
-        self.children = []
+        # only logic may have children
+        if self.__node_type == self.LOGIC:
+            self.children = []
+        else:
+            self.children = tuple()
         pass
 
     def __str__(self):
         return self.__value
 
-    def add_son(self,logic,value,extra_data = None):
-        new_son = LogicBundleNode(self,len(self.children),logic,value,extra_data)
+    def add_son(self, node_type, value, extra_data=None):
+        new_son = LogicBundleNode(self, len(self.children), node_type, value, extra_data)
+        assert self.__node_type == self.LOGIC
         self.children.append(new_son)
         return new_son
 
@@ -35,6 +43,10 @@ class LogicBundleNode:
     def son_number(self):
         return self.__son_number
 
+    @property
+    def node_type(self):
+        return self.__node_type
+
     def decrease_son_number(self):
         """
         When a brother is removed
@@ -43,22 +55,174 @@ class LogicBundleNode:
         assert self.__son_number >= 0
 
 
-    def remove_kid(self,index):
+    def remove_kid(self, index):
+        assert self.node_type == self.LOGIC
         self.children.pop(index)
         for s in self.children[index:]:
             s.decrease_son_number()
 
+    def to_dict(self):
+        """
+        to make it easy to pickle and move around
+        """
+        ans = dict()
+        ans["node_type"]=self.node_type
+        ans["value"]=self.__value
+        ans["extra_data"] = self.__extra_data
+        ans["children"] = [c.to_dict() for c in self.children]
+        return ans
 
 
+class LogicBundleNodeWithVTK(LogicBundleNode):
+    def __init__(self, parent, son_number, node_type, value, extra_data=None, reader=None, subj=None, space="World"):
+        LogicBundleNode.__init__(self, parent, son_number, node_type, value, extra_data=extra_data)
+        self.__reader = reader
+        self.subj = subj
+        self.space = space
+        self.__value = value
+        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
+        if node_type == self.LOGIC:
+            self.__prop = None
+        elif node_type == self.STRUCT:
+            if subj is not None:
+                try:
+                    self.__pd = reader.get("MODEL", subj_img, name=value, space=space)
+                except Exception:
+                    self.__pd = None
+            else:
+                self.__pd = None
+            self.__mapper = vtk.vtkPolyDataMapper()
+            self.__prop = vtk.vtkActor()
+            self.__prop.SetMapper(self.__mapper)
+            if self.__pd is not None:
+                self.__mapper.SetInputData(self.__pd)
+                self.prop.SetVisibility(1)
+            else:
+                self.prop.SetVisibility(0)
+        elif node_type == self.ROI:
+            self.__roi_id = extra_data
+            self.__mapper = vtk.vtkPolyDataMapper()
+            self.__prop = vtk.vtkActor()
+            self.__prop.SetMapper(self.__mapper)
+            self.__sphere_source = vtk.vtkSphereSource()
+            RESOLUTION = 20
+            self.__sphere_source.SetThetaResolution(RESOLUTION)
+            self.__sphere_source.SetPhiResolution(RESOLUTION)
+            self.__sphere_source.LatLongTessellationOn()
+            sphere_data = geom_db.load_sphere(extra_data, subj)
+            if sphere_data is None:
+                self.prop.SetVisibility(0)
+            else:
+                r, x, y, z = sphere_data
+                self.prop.SetVisibility(1)
+
+                self.__sphere_source.SetRadius(r)
+                self.__sphere_source.SetCenter(x, y, z)
+                self.__sphere_source.Update()
+                # coordinates
+                source_coords = geom_db.get_roi_space(roi_id=extra_data)
+                # source -> world
+                self.__sphere_world = reader.transformPointsToSpace(self.__sphere_source.GetOutput(), source_coords,
+                                                                    subj_img, inverse=True)
+                #world -> current
+                self.__sphere_current = reader.transformPointsToSpace(self.__sphere_world, self.space,
+                                                                      subj_img, inverse=False)
+                self.__mapper.SetInputData(self.__sphere_current)
+        else:
+            raise Exception("Wrong type")
+
+    def remove_kid(self, index):
+        LogicBundleNode.remove_kid(self, index)
+
+    def add_son(self, node_type, value, extra_data=None):
+        assert self.node_type == self.LOGIC
+        new_son = LogicBundleNodeWithVTK(self, len(self.children), node_type, value, extra_data, self.__reader,
+                                         self.subj, self.space)
+        self.children.append(new_son)
+        return new_son
+
+    def __update_sphere(self, subj, space):
+        sphere_data = geom_db.load_sphere(self.__roi_id, subj)
+        reader = self.__reader
+        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
+        self.space=space
+        if sphere_data is None:
+            self.prop.SetVisibility(0)
+        else:
+            r, x, y, z = sphere_data
+            self.__sphere_source.SetRadius(r)
+            self.__sphere_source.SetCenter(x, y, z)
+            self.__sphere_source.Update()
+            # coordinates
+            try:
+                source_coords = geom_db.get_roi_space(roi_id=self.__roi_id)
+                # source -> world
+                self.__sphere_world = reader.transformPointsToSpace(self.__sphere_source.GetOutput(), source_coords,
+                                                                    subj_img, inverse=True)
+
+                #world -> current
+                self.__sphere_current = reader.transformPointsToSpace(self.__sphere_world, self.space,
+
+                                                                      subj_img, inverse=False)
+            except Exception:
+                self.prop.SetVisibility(0)
+            else:
+                self.__mapper.SetInputData(self.__sphere_current)
+                self.prop.SetVisibility(1)
+
+    def __update_struct(self, subj, space):
+        reader = self.__reader
+        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
+        try:
+            self.__pd = reader.get("MODEL", subj_img, name=self.__value, space=space)
+        except Exception:
+            self.__pd = None
+            self.prop.SetVisibility(0)
+            raise
+        else:
+            self.__mapper.SetInputData(self.__pd)
+            self.prop.SetVisibility(1)
 
 
+    def update(self, subj, space):
+        for c in self.children:
+            c.update(subj, space)
+        self.space = space
+        self.subj = subj
+        if self.node_type == self.STRUCT:
+            self.__update_struct(subj, space)
+        elif self.node_type == self.ROI:
+            self.__update_sphere(subj, space)
+
+    @property
+    def prop(self):
+        return self.__prop
+
+    def set_opacity(self,int_opac):
+        if self.node_type == self.LOGIC:
+            for i in self.children:
+                i.set_opacity(int_opac)
+        else:
+            self.prop.GetProperty().SetOpacity(int_opac/100.0)
+
+    def set_color(self,color):
+        if self.node_type == self.LOGIC:
+            for i in self.children:
+                i.set_color(color)
+        else:
+            self.prop.GetProperty().SetColor(*color)
 
 class LogicBundleQtTree(QAbstractItemModel):
-    def __init__(self):
+    def __init__(self, root=None):
         QAbstractItemModel.__init__(self)
-        self.__root = LogicBundleNode(None,0,True,"AND")
-        self.__id_index=dict()
-        self.__id_index[id(self.__root)]=self.__root
+        if root is None:
+            self.__root = LogicBundleNode(None, 0, LogicBundleNode.LOGIC, "AND")
+        else:
+            assert isinstance(root, LogicBundleNode)
+            self.__root = root
+
+        self.__id_index = dict()
+        self.__id_index[id(self.__root)] = self.__root
 
     def parent(self, QModelIndex=None):
         nid = QModelIndex.internalId()
@@ -75,7 +239,7 @@ class LogicBundleQtTree(QAbstractItemModel):
             parent = self.__id_index[inid]
             return len(parent.children)
         else:
-            #root
+            # root
             return 1
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -101,8 +265,8 @@ class LogicBundleQtTree(QAbstractItemModel):
                     index = self.__get_node_index(child)
                     return index
         else:
-            #root
-            index = self.createIndex(0,0,id(self.__root))
+            # root
+            index = self.createIndex(0, 0, id(self.__root))
             assert index.isValid()
             return index
 
@@ -111,18 +275,14 @@ class LogicBundleQtTree(QAbstractItemModel):
         assert index.isValid()
         return index
 
-    def add_node(self,parent_index,node_type,value,extra_data = None):
-        if not parent_index.isValid():
-            parent = self.__root
-        else:
-            parent = self.__id_index[parent_index.internalId()]
+    def add_node(self, parent, node_type, value, extra_data=None):
         self.beginResetModel()
-        new_node = parent.add_son(node_type,value,extra_data)
-        self.__id_index[id(new_node)]=new_node
+        new_node = parent.add_son(node_type, value, extra_data)
+        self.__id_index[id(new_node)] = new_node
         self.endResetModel()
-        return self.__get_node_index(new_node)
+        return new_node
 
-    def remove_node(self,index):
+    def remove_node(self, index):
         self.beginResetModel()
         if not index.isValid():
             return
@@ -131,12 +291,24 @@ class LogicBundleQtTree(QAbstractItemModel):
         self.modelAboutToBeReset.emit()
         self.endResetModel()
 
-    def __remove_node(self,node):
-        #remove kids
+    def get_node(self, index):
+        if index.isValid():
+            i = index.internalId()
+            return self.__id_index[i]
+        else:
+            return None
+
+    def __remove_node(self, node):
+        # remove kids
         for k in reversed(node.children):
             self.__remove_node(k)
-        #remove from parent
+        # remove from parent
         parent = node.parent
         parent.remove_kid(node.son_number)
-        #remove from index
+        # remove from index
         del self.__id_index[id(node)]
+
+    @property
+    def root(self):
+        return self.__root
+

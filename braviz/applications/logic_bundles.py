@@ -12,18 +12,25 @@ from braviz.interaction.qt_guis.logic_bundles import Ui_LogicBundlesApp
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 from braviz.interaction.qt_guis.AddStructuresDialog import Ui_AddSegmented
 from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
-from braviz.interaction.logic_bundle_model import LogicBundleQtTree
+from braviz.interaction.logic_bundle_model import LogicBundleQtTree, LogicBundleNodeWithVTK
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
-from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
 from braviz.interaction.qt_structures_model import StructureTreeModel
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel
 from braviz.readAndFilter import geom_db, tabular_data
+from braviz.readAndFilter.hierarchical_fibers import read_logical_fibers
 
 __author__ = 'Diego'
+
+#TODO Save bundle
+#TODO Export scalars
+
 
 AXIAL = 2
 SAGITAL = 0
 CORONAL = 1
+NORMAL_COLOR = (0.10588235294117647, 0.6196078431372549, 0.4666666666666667)
+ACCENT_COLOR = (0.9019607843137255, 0.6705882352941176, 0.00784313725490196)
+
 
 # "curv,avg_curv,area,thickness,sulc,aparc,aparc.a2009s,BA".split(",")
 SURFACE_SCALARS_DICT = dict(enumerate((
@@ -83,7 +90,7 @@ class LogicBundlesApp(QMainWindow):
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
         self.__current_subject = self.__subjects_list[0]
-        self.__current_img_id = None
+        self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__current_subject)
 
         self.__current_image_mod = "MRI"
         self.__curent_space = "World"
@@ -91,13 +98,19 @@ class LogicBundlesApp(QMainWindow):
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
 
-        self.logic_tree = LogicBundleQtTree()
+        self.vtk_tree = LogicBundleNodeWithVTK(None,0,LogicBundleNodeWithVTK.LOGIC,
+                                               "AND",reader=self.reader,subj=self.__current_subject,
+                                               space = self.__curent_space)
 
-        self.__fibers_map = None
-        self.__fibers_ac = None
+        self.logic_tree = LogicBundleQtTree(self.vtk_tree)
+
+        self.__fibers_map = vtk.vtkPolyDataMapper()
+        self.__fibers_ac = vtk.vtkActor()
         self.__filetred_pd = None
-        self.__full_pd = None
-        self.__fibers_filterer = None
+
+        self.__fibers_ac.SetMapper(self.__fibers_map)
+        self.vtk_viewer.ren.AddActor(self.__fibers_ac)
+        self.__fibers_ac.SetVisibility(0)
 
         self.__subjects_check_model = SubjectChecklist(self.__subjects_list,show_checks=False)
 
@@ -138,6 +151,7 @@ class LogicBundlesApp(QMainWindow):
 
         self.ui.treeView.setModel(self.logic_tree)
         self.ui.treeView.customContextMenuRequested.connect(self.launch_tree_context_menu)
+        self.ui.treeView.clicked.connect(self.highlight_waypoints)
 
         #logic menu
         logic_menu = QtGui.QMenu(self.ui.add_logic)
@@ -151,10 +165,25 @@ class LogicBundlesApp(QMainWindow):
 
         self.ui.add_segmented.clicked.connect(self.add_segmented_structure_dialog)
         self.ui.add_roi.clicked.connect(self.launch_add_roi_dialog)
+        self.ui.waypoints_opacity.valueChanged.connect(self.change_waypoint_opac)
+
+        self.ui.preview_bundle.stateChanged.connect(self.update_fibers)
+
+
+    def get_valid_parent(self):
+        index = self.ui.treeView.currentIndex()
+        node = self.logic_tree.get_node(index)
+        if node is None:
+            node = self.logic_tree.root
+
+        while node.node_type != node.LOGIC:
+            node = node.parent
+        return node
+
 
     def add_logic_node(self,value):
-        index = self.ui.treeView.currentIndex()
-        self.logic_tree.add_node(index,node_type="LOGIC",value=value)
+        parent = self.get_valid_parent()
+        self.logic_tree.add_node(parent,parent.LOGIC,value=value)
         self.ui.treeView.expandAll()
 
     def add_segmented_structure_dialog(self):
@@ -171,12 +200,15 @@ class LogicBundlesApp(QMainWindow):
         """
         if len(structures_list)==0:
             return
-        parent_index = self.ui.treeView.currentIndex()
+        parent = self.get_valid_parent()
         if len(structures_list)>1:
-            parent_index=self.logic_tree.add_node(parent_index,"LOGIC",value="OR")
+            parent=self.logic_tree.add_node(parent,parent.LOGIC,value="OR")
         for st in structures_list:
-            self.logic_tree.add_node(parent_index,"STRUCT",value=st)
+            new_node = self.logic_tree.add_node(parent,parent.STRUCT,value=st)
+            self.vtk_viewer.ren.AddActor(new_node.prop)
         self.ui.treeView.expandAll()
+        self.refresh_waypoints()
+        self.update_fibers()
 
     def launch_add_roi_dialog(self):
         dialog = LoadRoiDialog()
@@ -190,8 +222,12 @@ class LogicBundlesApp(QMainWindow):
     def add_roi(self,roi_id,roi_name = None):
         if roi_name is None:
             roi_name = geom_db.get_roi_name(roi_id)
-        parent = self.ui.treeView.currentIndex()
-        self.logic_tree.add_node(parent,"ROI",roi_name,roi_id)
+        parent = self.get_valid_parent()
+        node = self.logic_tree.add_node(parent,parent.ROI,roi_name,roi_id)
+        self.vtk_viewer.ren.AddActor(node.prop)
+        self.ui.treeView.expandAll()
+        self.refresh_waypoints()
+        self.update_fibers()
 
 
     def start(self):
@@ -234,15 +270,15 @@ class LogicBundlesApp(QMainWindow):
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
-        img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, new_subject)
+        img_id = str(tabular_data.get_var_value(tabular_data.IMAGE_CODE, new_subject))
         self.__current_img_id = img_id
         log = logging.getLogger(__file__)
+        self.vtk_tree.update(new_subject,self.__curent_space)
         try:
             self.vtk_viewer.change_subject(img_id)
         except Exception:
             log.warning("Couldnt load data for subject %s",new_subject)
-        self.__full_pd = None
-        print new_subject
+        self.update_fibers()
 
 
     def select_image_modality(self, index):
@@ -278,7 +314,27 @@ class LogicBundlesApp(QMainWindow):
     def change_space(self,new_space):
         self.vtk_viewer.change_space(new_space)
         self.__curent_space = new_space
+        self.vtk_tree.update(self.__current_img_id,new_space)
+        self.update_fibers()
 
+    def change_waypoint_opac(self,value):
+        self.logic_tree.root.set_opacity(value)
+        self.vtk_viewer.ren_win.Render()
+
+    def change_waypoints_color(self,color):
+        self.logic_tree.root.set_color(color)
+        self.vtk_viewer.ren_win.Render()
+
+    def highlight_waypoints(self,index):
+        self.logic_tree.root.set_color(NORMAL_COLOR)
+        node = self.logic_tree.get_node(index)
+        node.set_color(ACCENT_COLOR)
+        self.vtk_viewer.ren_win.Render()
+
+
+    def refresh_waypoints(self):
+        self.change_waypoint_opac(self.ui.waypoints_opacity.value())
+        self.change_waypoints_color(NORMAL_COLOR)
 
     def launch_tree_context_menu(self, pos):
         global_pos = self.ui.treeView.mapToGlobal(pos)
@@ -290,13 +346,41 @@ class LogicBundlesApp(QMainWindow):
         menu = QtGui.QMenu()
         menu.addAction(remove_action)
 
+        def remove_node_from_render(node):
+            for c in node.children:
+                remove_node_from_render(c)
+            self.vtk_viewer.ren.RemoveActor(node.prop)
+
         def remove_item(*args):
+            node = self.logic_tree.get_node(selection)
+            remove_node_from_render(node)
             self.logic_tree.remove_node(selection)
             self.ui.treeView.expandAll()
+            self.vtk_viewer.ren_win.Render()
 
         remove_action.triggered.connect(remove_item)
         menu.addAction(remove_action)
         menu.exec_(global_pos)
+
+    def get_bundle(self):
+        dict_tree = self.logic_tree.root.to_dict()
+        fibers = read_logical_fibers(self.__current_subject,dict_tree,self.reader,space=self.__curent_space)
+        return fibers
+
+    def update_fibers(self,dummy=None):
+        if self.ui.preview_bundle.checkState() == QtCore.Qt.Checked:
+            try:
+                self.__filetred_pd = self.get_bundle()
+            except Exception:
+                self.statusBar().showMessage("Error loading fibers",2000)
+                self.__fibers_ac.SetVisibility(0)
+                raise
+            else:
+                self.__fibers_map.SetInputData(self.__filetred_pd)
+                self.__fibers_ac.SetVisibility(1)
+        else:
+            self.__fibers_ac.SetVisibility(0)
+        self.vtk_viewer.ren_win.Render()
 
     def get_state(self):
         pass

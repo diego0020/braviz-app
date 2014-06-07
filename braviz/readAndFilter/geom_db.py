@@ -90,7 +90,7 @@ def save_sphere(sphere_id, subject, radius, center):
 def load_sphere(sphere_id, subject):
     q = "SELECT radius,ctr_x,ctr_y,ctr_z FROM geom_spheres WHERE sphere_id = ? and subject = ?"
     con = get_connection()
-    cur = con.execute(q, (sphere_id, subject))
+    cur = con.execute(q, (int(sphere_id), int(subject)))
     res = cur.fetchone()
     return res
 

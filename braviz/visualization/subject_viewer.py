@@ -1476,12 +1476,14 @@ class OrthogonalPlanesViewer:
             raise ex
 
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
+        self.link_window_level()
 
     @do_and_render
     def change_image_modality(self,mod):
         for im in self.__image_planes:
             im.change_image_modality(mod,skip_render=True)
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
+        self.link_window_level()
 
     def get_number_of_slices(self):
         n_slices = self.x_image.image_plane_widget.GetInput().GetDimensions()
@@ -1603,9 +1605,6 @@ class SphereProp:
     def set_radius(self,r):
         self.__source.SetRadius(r)
         self.__radius = r
-
-    def set_color(self):
-        pass
 
     def set_repr(self,rep):
         if rep.startswith("w"):
