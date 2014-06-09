@@ -290,7 +290,8 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.alternative_img = img2
         self.text1 = text1
         ren = self.GetCurrentRenderer()
-        ren.AddActor(self.text1)
+        if ren is not None:
+            ren.AddActor(self.text1)
 
     def text1_to_std(self):
         """Turn text1 behaviour back to standard, reverts the effects of text1_value_from_img"""

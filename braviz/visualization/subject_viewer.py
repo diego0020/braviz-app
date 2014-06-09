@@ -1382,6 +1382,7 @@ class OrthogonalPlanesViewer:
         #state
         self.__current_subject = None
         self.__current_space = "world"
+        self.__curent_modality = None
 
         #internal data
         self.__cursor = AdditionalCursors(self.ren)
@@ -1404,6 +1405,7 @@ class OrthogonalPlanesViewer:
 
         self.__active_cursor_plane = True
 
+
     def finish_initializing(self):
         self.link_window_level()
         self.connect_cursors()
@@ -1412,8 +1414,9 @@ class OrthogonalPlanesViewer:
 
     def link_window_level(self):
         "call after initializing the planes"
-        self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
-        self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
+        if self.__curent_modality != "DTI":
+            self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
+            self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
 
     def connect_cursors(self):
         def draw_cursor2(caller,event):
@@ -1494,6 +1497,7 @@ class OrthogonalPlanesViewer:
     def change_image_modality(self,mod):
         for im in self.__image_planes:
             im.change_image_modality(mod,skip_render=True)
+        self.__curent_modality = mod
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
         self.link_window_level()
 
@@ -1649,6 +1653,7 @@ class SphereProp:
         self.__actor.GetProperty().SetOpacity(opac)
 
     def set_color(self,r,g,b):
+        r,g,b = map(lambda x:x/255.0,(r,g,b))
         self.__actor.GetProperty().SetColor(r,g,b)
 
 class QOrthogonalPlanesWidget(QFrame):

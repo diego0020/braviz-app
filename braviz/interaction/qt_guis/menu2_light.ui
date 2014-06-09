@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>572</width>
-    <height>708</height>
+    <height>787</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -246,6 +246,52 @@ Export variables to the database</string>
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="roi_builder">
+            <property name="toolTip">
+             <string>Compare geometric structures across multiple subjects</string>
+            </property>
+            <property name="text">
+             <string>Roi Builder</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/roi_builder.png</normaloff>:/icons/roi_builder.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>120</width>
+              <height>120</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="logic_bundles">
+            <property name="toolTip">
+             <string>Compare geometric structures across multiple subjects</string>
+            </property>
+            <property name="text">
+             <string>Logic Bundles</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/logic.png</normaloff>:/icons/logic.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>120</width>
+              <height>120</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

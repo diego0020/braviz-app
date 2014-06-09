@@ -18,6 +18,11 @@ from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
 from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel, SubjectCheckTable
 from braviz.readAndFilter import geom_db, tabular_data
+from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
+import datetime
+import platform
+import os
+import sys
 
 __author__ = 'Diego'
 
@@ -214,8 +219,10 @@ class StartDialog(QDialog):
         self.ui = Ui_OpenRoiBuilder()
         self.ui.setupUi(self)
         self.name = "?"
+        self.scenario_data = None
         self.ui.new_roi_button.clicked.connect(self.new_roi)
         self.ui.load_roi_button.clicked.connect(self.load_roi)
+        self.ui.load_scenario.clicked.connect(self.load_scenario)
 
     def new_roi(self):
         new_roi_dialog = NewRoi()
@@ -235,6 +242,15 @@ class StartDialog(QDialog):
             assert self.name is not None
             self.accept()
 
+    def load_scenario(self):
+        my_name = os.path.splitext(os.path.basename(__file__))[0]
+        dialog = LoadScenarioDialog(my_name)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            self.scenario_data = dialog.out_dict
+            self.accept()
+        else:
+            self.scenario_data = None
 
 class NewRoi(QDialog):
     def __init__(self,block_space=None):
@@ -267,6 +283,7 @@ class NewRoi(QDialog):
     def before_accepting(self):
         self.coords = self.ui.roi_space.currentIndex()
         self.desc = unicode(self.ui.roi_desc.toPlainText())
+
 
 
 class LoadRoiDialog(QDialog):
@@ -305,7 +322,11 @@ class BuildRoiApp(QMainWindow):
         QMainWindow.__init__(self)
         self.ui = None
         self.__roi_name = roi_name
-        self.__roi_id = geom_db.get_roi_id(roi_name)
+        if roi_name is not None:
+            self.__roi_id = geom_db.get_roi_id(roi_name)
+        else:
+            self.__roi_id = None
+            self.__roi_name = ""
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
@@ -326,7 +347,10 @@ class BuildRoiApp(QMainWindow):
         self.__full_pd = None
         self.__fibers_filterer = None
 
-        self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
+        if self.__roi_id is not None:
+            self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
+        else:
+            self.__checked_subjects = set()
         assert isinstance(self.__checked_subjects, set)
         self.__subjects_check_model = SubjectChecklist(self.__subjects_list)
         self.__subjects_check_model.checked = self.__checked_subjects
@@ -338,7 +362,9 @@ class BuildRoiApp(QMainWindow):
         self.vtk_viewer.sphere.show()
         self.update_sphere_radius()
         self.update_sphere_center()
-        self.load_sphere(self.__current_subject)
+        if self.__roi_id is not None:
+            self.load_sphere(self.__current_subject)
+        self.__sphere_color = (255,255,255)
 
     def setup_ui(self):
         self.ui = Ui_RoiBuildApp()
@@ -393,10 +419,12 @@ class BuildRoiApp(QMainWindow):
         self.vtk_viewer.show_image()
         self.vtk_viewer.change_space(self.__curent_space)
         self.vtk_viewer.finish_initializing()
-        self.change_subject(self.__current_subject)
+        if self.__roi_id is not None:
+            self.change_subject(self.__current_subject)
         self.select_surface(None)
 
     def set_image(self, modality):
+        self.__current_image_mod = modality
         self.vtk_viewer.change_image_modality(modality)
         dims = self.vtk_viewer.get_number_of_slices()
         self.ui.axial_slice.setMaximum(dims[AXIAL])
@@ -557,10 +585,8 @@ class BuildRoiApp(QMainWindow):
 
     def select_image_modality(self, index):
         mod = str(self.ui.image_combo.currentText())
-        self.change_image_modality(mod)
+        self.set_image(mod)
 
-    def change_image_modality(self, new_mod):
-        self.vtk_viewer.change_image_modality(new_mod)
 
     def select_surface_scalars(self,index):
         scalar_name = SURFACE_SCALARS_DICT[int(index)]
@@ -595,16 +621,136 @@ class BuildRoiApp(QMainWindow):
             self.refresh_checked()
 
     def get_state(self):
-        pass
+        state = dict()
+        state["roi_id"] = self.__roi_id
+        #context
+        context_dict = {}
+        context_dict["image_type"] = self.ui.image_combo.currentText()
+        context_dict["axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
+        context_dict["coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
+        context_dict["sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
 
-    def load_state(self):
-        pass
+        context_dict["axial_slice"] = int(self.ui.axial_slice.value())
+        context_dict["coronal_slice"] = int(self.ui.coronal_slice.value())
+        context_dict["sagital_slice"] = int(self.ui.sagital_slice.value())
+
+        context_dict["cortex"] = str(self.ui.surface_combo.currentText())
+        context_dict["surf_scalars"] = str(self.ui.scalar_combo.currentText())
+        context_dict["left_surface"] = self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked
+        context_dict["right_surface"] = self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked
+        context_dict["cortex_opac"] = int(self.ui.cortex_opac.value())
+        state["context"] = context_dict
+        #visual
+        visual_dict = {}
+        visual_dict["coords"] = self.__curent_space
+        #camera
+        visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
+        visual_dict["spher_rep"] = self.ui.sphere_rep.currentIndex()
+        visual_dict["sphere_opac"] = self.ui.sphere_opac.value()
+        visual_dict["sphere_color"] = self.__sphere_color
+        visual_dict["show_fibers"] = self.ui.show_fibers_check.checkState() == QtCore.Qt.Checked
+        state["visual"] = visual_dict
+
+        #subject
+        subjs_state = {}
+        subjs_state["subject"] = self.__current_subject
+        subjs_state["img_code"] = self.__current_img_id
+        subjs_state["sample"] = self.__subjects_list
+        state["subjects"] = subjs_state
+
+        #meta
+        meta = {"date": datetime.datetime.now(), "exec": sys.argv, "machine": platform.node(),
+                "application": os.path.splitext(os.path.basename(__file__))[0]}
+        state["meta"] = meta
+        return state
+
+    def load_state(self,state):
+        self.__roi_id = state["roi_id"]
+        self.__roi_name = geom_db.get_roi_name(self.__roi_id)
+        self.ui.sphere_name.setText(self.__roi_name)
+        subjs_state = state["subjects"]
+        subjs_state["subject"] = self.__current_subject
+        self.vtk_viewer.change_subject(self.__current_subject)
+        self.__subjects_list = subjs_state["sample"]
+        self.__current_subject = subjs_state["subject"]
+        self.__current_img_id = subjs_state["img_code"]
+        try:
+            self.__curent_space = geom_db.get_roi_space(self.__roi_name)
+        except Exception:
+            self.__curent_space = "World"
+        self.vtk_viewer.change_space(self.__curent_space)
+        self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
+        self.__subjects_check_model.checked = self.__checked_subjects
+        self.__sphere_modified = False
+
+        #context
+        context_dict = state["context"]
+        img = context_dict["image_type"]
+        idx = self.ui.image_combo.findText(img)
+        assert idx >= 0
+        self.ui.image_combo.setCurrentIndex(idx)
+        assert self.__current_image_mod == img
+        self.ui.axial_check.setChecked(context_dict["axial_on"])
+        self.ui.coronal_check.setChecked(context_dict["coronal_on"])
+        self.ui.sagital_check.setChecked(context_dict["sagital_on"])
+
+        self.ui.axial_slice.setValue(context_dict["axial_slice"])
+        self.ui.coronal_slice.setValue(context_dict["coronal_slice"])
+        self.ui.sagital_slice.setValue(context_dict["sagital_slice"])
+
+        ctx = context_dict["cortex"]
+        idx = self.ui.surface_combo.findText(ctx)
+        assert idx >= 0
+        self.ui.surface_combo.setCurrentIndex(idx)
+
+        csc = context_dict["surf_scalars"]
+        idx = self.ui.scalar_combo.findText(csc)
+        assert idx >= 0
+        self.ui.scalar_combo.setCurrentIndex(idx)
+
+        self.ui.left_cortex_check.setChecked(context_dict["left_surface"])
+        self.ui.right_cortex_check.setChecked(context_dict["right_surface"])
+        self.ui.cortex_opac.setValue(context_dict["cortex_opac"])
+
+        #visual
+        visual_dict = state["visual"]
+        self.__sphere_color = visual_dict["sphere_color"]
+        self.vtk_viewer.sphere.set_color(*self.__sphere_color)
+        fp,pos,vu = visual_dict["camera"]
+        self.vtk_viewer.set_camera(fp,pos,vu)
+        self.ui.sphere_rep.setCurrentIndex(visual_dict["spher_rep"])
+        self.ui.sphere_opac.setValue(visual_dict["sphere_opac"])
+        self.ui.show_fibers_check.setChecked(visual_dict.get("show_fibers",False))
+
+        self.change_subject(self.__current_subject)
+        self.__sphere_modified = False
+
 
     def save_scenario(self):
-        pass
+        state = self.get_state()
+        app_name = state["meta"]["application"]
+        dialog = SaveScenarioDialog(app_name,state)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            scn_id = dialog.params["scn_id"]
+            self.save_screenshot(scn_id)
+
+
+    def save_screenshot(self,scenario_index):
+        file_name = "scenario_%d.png"%scenario_index
+        file_path = os.path.join(self.reader.getDynDataRoot(), "braviz_data","scenarios",file_name)
+        log = logging.getLogger(__name__)
+        log.info(file_path)
+        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
 
     def load_scenario(self):
-        pass
+        my_name = os.path.splitext(os.path.basename(__file__))[0]
+        dialog = LoadScenarioDialog(my_name,reader=self.reader)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            wanted_state = dialog.out_dict
+            self.load_state(wanted_state)
+
 
     def save_sphere_as(self):
         dialog = NewRoi(self.__curent_space)
@@ -625,6 +771,7 @@ class BuildRoiApp(QMainWindow):
         color = QtGui.QColorDialog.getColor()
         self.ui.color_button.setStyleSheet("#color_button{color : %s}"%color.name())
         self.vtk_viewer.sphere.set_color(color.red(),color.green(),color.blue())
+        self.__sphere_color = (color.red(),color.green(),color.blue())
         self.vtk_viewer.ren_win.Render()
 
 
@@ -642,10 +789,16 @@ def run():
     res = start_dialog.exec_()
     if res != start_dialog.Accepted:
         return
-    roi_name = start_dialog.name
-    main_window = BuildRoiApp(roi_name)
-    main_window.show()
-    main_window.start()
+    if start_dialog.scenario_data is not None:
+        main_window = BuildRoiApp(None)
+        main_window.show()
+        main_window.start()
+        main_window.load_state(start_dialog.scenario_data)
+    else:
+        roi_name = start_dialog.name
+        main_window = BuildRoiApp(roi_name)
+        main_window.show()
+        main_window.start()
     try:
         app.exec_()
     except Exception as e:
