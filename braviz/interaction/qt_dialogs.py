@@ -242,7 +242,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
         self.vars_list_model = braviz_models.VarListModel(checkeable=multiple)
         self.ui.tableView.setModel(self.vars_list_model)
-        self.ui.tableView.activated.connect(self.update_right_side)
+        self.ui.tableView.clicked.connect(self.update_right_side)
 
         self.ui.select_button.clicked.connect(self.select_and_return)
 
@@ -669,7 +669,7 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.vars_model = braviz_models.VarAndGiniModel(outcome_var)
         self.ui.tableView.setModel(self.vars_model)
         self.finish_ui_setup()
-        self.ui.tableView.activated.connect(self.update_right_side)
+        self.ui.tableView.clicked.connect(self.update_right_side)
         self.ui.add_button.clicked.connect(self.add_regressor)
         self.regressors_table_model = regressors_model
         self.ui.current_regressors_table.setModel(self.regressors_table_model)
@@ -859,14 +859,14 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.vars_model = braviz_models.VarListModel(checkeable=False)
         self.ui.tableView.setModel(self.vars_model)
         self.finish_ui_setup()
-        self.ui.tableView.activated.connect(self.update_right_side)
+        self.ui.tableView.clicked.connect(self.update_right_side)
         self.ui.add_button.clicked.connect(self.add_variable)
         self.current_variables_model = braviz_models.ContextVariablesModel(context_vars_list=variables_list,
                                                                            editable_dict=editables_dict)
         self.ui.current_variables.setModel(self.current_variables_model)
         self.ui.current_variables.customContextMenuRequested.connect(self.show_context_menu)
         self.ui.done_button.clicked.connect(self.finish_close)
-        self.ui.current_variables.activated.connect(self.update_right_side2)
+        self.ui.current_variables.clicked.connect(self.update_right_side2)
 
         self.ui.create_varible_button.clicked.connect(self.launch_new_variable_dialog)
         self.jitter = None
@@ -1245,10 +1245,12 @@ class SaveFibersBundleDialog(QtGui.QDialog):
 
 
 class SaveScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,state,params):
+    def __init__(self,app_name,state,params=None):
         super(SaveScenarioDialog,self).__init__()
         self.app_name = app_name
         self.data = cPickle.dumps(state,2)
+        if params is None:
+            params = dict()
         self.params=params
         self.ui = None
         self.init_gui()
@@ -1280,8 +1282,10 @@ class SaveScenarioDialog(QtGui.QDialog):
 
 
 class LoadScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,out_dict,reader=None):
+    def __init__(self,app_name,out_dict=None,reader=None):
         super(LoadScenarioDialog,self).__init__()
+        if out_dict is None:
+            out_dict = {}
         self.out_dict = out_dict
         self.model = braviz_models.ScenariosTableModel(app_name)
         self.reader = reader
@@ -1294,7 +1298,7 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(0)
         self.ui.scenarios_table.setModel(self.model)
-        self.ui.scenarios_table.activated.connect(self.select_scenario)
+        self.ui.scenarios_table.clicked.connect(self.select_scenario)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.load_data)
 
     def select_scenario(self,index):

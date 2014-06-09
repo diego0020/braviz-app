@@ -3,7 +3,7 @@ __author__ = 'Diego'
 import PyQt4.QtCore as QtCore
 from PyQt4.QtCore import QAbstractItemModel
 import logging
-from braviz.readAndFilter import geom_db,tabular_data
+from braviz.readAndFilter import geom_db, tabular_data
 import vtk
 
 
@@ -66,12 +66,17 @@ class LogicBundleNode:
         to make it easy to pickle and move around
         """
         ans = dict()
-        ans["node_type"]=self.node_type
-        ans["value"]=self.__value
+        ans["node_type"] = self.node_type
+        ans["value"] = self.__value
         ans["extra_data"] = self.__extra_data
         ans["children"] = [c.to_dict() for c in self.children]
         return ans
 
+    def __iter__(self):
+        yield self
+        for k in self.children:
+            for i in k:
+                yield i
 
 class LogicBundleNodeWithVTK(LogicBundleNode):
     def __init__(self, parent, son_number, node_type, value, extra_data=None, reader=None, subj=None, space="World"):
@@ -80,7 +85,7 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
         self.subj = subj
         self.space = space
         self.__value = value
-        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
+        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE, subj)
         if node_type == self.LOGIC:
             self.__prop = None
         elif node_type == self.STRUCT:
@@ -124,7 +129,7 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
                 # source -> world
                 self.__sphere_world = reader.transformPointsToSpace(self.__sphere_source.GetOutput(), source_coords,
                                                                     subj_img, inverse=True)
-                #world -> current
+                # world -> current
                 self.__sphere_current = reader.transformPointsToSpace(self.__sphere_world, self.space,
                                                                       subj_img, inverse=False)
                 self.__mapper.SetInputData(self.__sphere_current)
@@ -144,8 +149,8 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
     def __update_sphere(self, subj, space):
         sphere_data = geom_db.load_sphere(self.__roi_id, subj)
         reader = self.__reader
-        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
-        self.space=space
+        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE, subj)
+        self.space = space
         if sphere_data is None:
             self.prop.SetVisibility(0)
         else:
@@ -160,7 +165,7 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
                 self.__sphere_world = reader.transformPointsToSpace(self.__sphere_source.GetOutput(), source_coords,
                                                                     subj_img, inverse=True)
 
-                #world -> current
+                # world -> current
                 self.__sphere_current = reader.transformPointsToSpace(self.__sphere_world, self.space,
 
                                                                       subj_img, inverse=False)
@@ -172,13 +177,12 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
 
     def __update_struct(self, subj, space):
         reader = self.__reader
-        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
+        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE, subj)
         try:
             self.__pd = reader.get("MODEL", subj_img, name=self.__value, space=space)
         except Exception:
             self.__pd = None
             self.prop.SetVisibility(0)
-            raise
         else:
             self.__mapper.SetInputData(self.__pd)
             self.prop.SetVisibility(1)
@@ -198,19 +202,36 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
     def prop(self):
         return self.__prop
 
-    def set_opacity(self,int_opac):
+    def set_opacity(self, int_opac):
         if self.node_type == self.LOGIC:
             for i in self.children:
                 i.set_opacity(int_opac)
         else:
-            self.prop.GetProperty().SetOpacity(int_opac/100.0)
+            self.prop.GetProperty().SetOpacity(int_opac / 100.0)
 
-    def set_color(self,color):
+    def set_color(self, color):
         if self.node_type == self.LOGIC:
             for i in self.children:
                 i.set_color(color)
         else:
             self.prop.GetProperty().SetColor(*color)
+
+    @staticmethod
+    def from_dict(values, reader, subj=None, space="World"):
+
+        new_root = LogicBundleNodeWithVTK(None, 0, values["node_type"], values["value"],
+                                          values["extra_data"], reader, subj, space)
+
+        for k in values["children"]:
+            new_root.add_sons_from_dict(k)
+
+        return new_root
+
+    def add_sons_from_dict(self, values):
+        new_son = self.add_son(values["node_type"], values["value"], values["extra_data"])
+        for k in values["children"]:
+            new_son.add_sons_from_dict(k)
+
 
 class LogicBundleQtTree(QAbstractItemModel):
     def __init__(self, root=None):
@@ -304,9 +325,25 @@ class LogicBundleQtTree(QAbstractItemModel):
             self.__remove_node(k)
         # remove from parent
         parent = node.parent
-        parent.remove_kid(node.son_number)
+        if parent is not None:
+            parent.remove_kid(node.son_number)
         # remove from index
         del self.__id_index[id(node)]
+
+    def set_root(self, new_root):
+        # remove everything
+        self.beginResetModel()
+        self.__remove_node(self.__root)
+        self.__root = new_root
+        assert len(self.__id_index) == 0
+        self.rebuild_index(self.__root)
+        self.endResetModel()
+
+    def rebuild_index(self, node):
+        self.__id_index[id(node)] = node
+        for c in node.children:
+            self.rebuild_index(c)
+
 
     @property
     def root(self):

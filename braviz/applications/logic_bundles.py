@@ -7,6 +7,9 @@ from PyQt4.QtGui import QMainWindow, QDialog
 import vtk
 import numpy as np
 import os
+import datetime
+import sys
+import platform
 
 import braviz
 from braviz.interaction.qt_guis.logic_bundles import Ui_LogicBundlesApp
@@ -21,6 +24,7 @@ from braviz.readAndFilter import geom_db, tabular_data
 from braviz.readAndFilter.hierarchical_fibers import read_logical_fibers
 from braviz.interaction import compute_fiber_lengths
 from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
+from braviz.interaction.qt_dialogs import SaveScenarioDialog,LoadScenarioDialog
 
 __author__ = 'Diego'
 
@@ -125,8 +129,6 @@ class LogicBundlesApp(QMainWindow):
         self.__fibers_ac.SetVisibility(0)
 
         self.__subjects_check_model = SubjectChecklist(self.__subjects_list,show_checks=False)
-
-        self.__sphere_modified = True
 
         self.setup_ui()
 
@@ -257,6 +259,7 @@ class LogicBundlesApp(QMainWindow):
 
     def set_image(self, modality):
         self.vtk_viewer.change_image_modality(modality)
+        self.__current_image_mod = modality
         dims = self.vtk_viewer.get_number_of_slices()
         self.ui.axial_slice.setMaximum(dims[AXIAL])
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
@@ -398,7 +401,6 @@ class LogicBundlesApp(QMainWindow):
             except Exception:
                 self.statusBar().showMessage("Error loading fibers",2000)
                 self.__fibers_ac.SetVisibility(0)
-                raise
             else:
                 self.__fibers_map.SetInputData(self.__filetred_pd)
                 self.__fibers_ac.SetVisibility(1)
@@ -433,7 +435,7 @@ class LogicBundlesApp(QMainWindow):
         except Exception:
             logger.warning("Couldn't read fibers")
             self.ui.scalar_box.setValue(float("nan"))
-            raise
+
             return
 
         self.update_scalar_metric(metric)
@@ -446,7 +448,7 @@ class LogicBundlesApp(QMainWindow):
         except Exception:
             logger.warning("Couldnt calculate metric")
             ans = float("nan")
-            raise
+
         self.ui.scalar_box.setValue(ans)
 
 
@@ -481,20 +483,136 @@ class LogicBundlesApp(QMainWindow):
         pass
 
     def get_state(self):
-        pass
+        state = dict()
+        #current tree
+        state["logic_tree"] = self.vtk_tree.to_dict()
+        #context
+        context_dict = {}
+        context_dict["image_type"] = self.__current_image_mod
+        context_dict["axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
+        context_dict["coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
+        context_dict["sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
 
-    def load_state(self):
-        pass
+        context_dict["axial_slice"] = int(self.ui.axial_slice.value())
+        context_dict["coronal_slice"] = int(self.ui.coronal_slice.value())
+        context_dict["sagital_slice"] = int(self.ui.sagital_slice.value())
+
+        context_dict["cortex"] = str(self.ui.surface_combo.currentText())
+        context_dict["surf_scalars"] = str(self.ui.scalar_combo.currentText())
+        context_dict["left_surface"] = self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked
+        context_dict["right_surface"] = self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked
+        context_dict["cortex_opac"] = int(self.ui.cortex_opac.value())
+        state["context"] = context_dict
+        #visual
+        visual_dict = {}
+        visual_dict["coords"] = self.__curent_space
+        visual_dict["waypoints_opac"] = int(self.ui.waypoints_opacity.value())
+        visual_dict["preview"] = self.ui.preview_bundle.checkState() == QtCore.Qt.Checked
+        visual_dict["scalar"] = str(self.ui.fiber_scalar_combo.currentText())
+        #camera
+        visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
+        state["visual"] = visual_dict
+
+        #subject
+        subjs_state = {}
+        subjs_state["subject"] = self.__current_subject
+        subjs_state["img_code"] = self.__current_img_id
+        subjs_state["sample"] = self.__subjects_list
+        state["subjects"] = subjs_state
+
+        #meta
+        meta = {"date": datetime.datetime.now(), "exec": sys.argv, "machine": platform.node(),
+                "application": os.path.splitext(os.path.basename(__file__))[0]}
+        state["meta"] = meta
+        return state
+
+    def load_state(self,state):
+        #subject
+        subjs_state = state["subjects"]
+        subj = subjs_state["subject"]
+        self.change_subject(subj)
+        assert self.__current_img_id == subjs_state["img_code"]
+        self.__subjects_list = subjs_state["sample"]
+        #context
+        context_dict =state["context"]
+        img = context_dict["image_type"]
+        idx = self.ui.image_combo.findText(img)
+        assert idx >= 0
+        self.ui.image_combo.setCurrentIndex(idx)
+        assert self.__current_image_mod == img
+        self.ui.axial_check.setChecked(context_dict["axial_on"])
+        self.ui.coronal_check.setChecked(context_dict["coronal_on"])
+        self.ui.sagital_check.setChecked(context_dict["sagital_on"])
+
+        self.ui.axial_slice.setValue(context_dict["axial_slice"])
+        self.ui.coronal_slice.setValue(context_dict["coronal_slice"])
+        self.ui.sagital_slice.setValue(context_dict["sagital_slice"])
+
+        ctx = context_dict["cortex"]
+        idx = self.ui.surface_combo.findText(ctx)
+        assert idx >= 0
+        self.ui.surface_combo.setCurrentIndex(idx)
+
+        csc = context_dict["surf_scalars"]
+        idx = self.ui.scalar_combo.findText(csc)
+        assert idx >= 0
+        self.ui.scalar_combo.setCurrentIndex(idx)
+
+        self.ui.left_cortex_check.setChecked(context_dict["left_surface"])
+        self.ui.right_cortex_check.setChecked(context_dict["right_surface"])
+        self.ui.cortex_opac.setValue(context_dict["cortex_opac"])
+
+        tree = state["logic_tree"]
+        #remove all from render
+        for node in self.vtk_tree:
+            self.vtk_viewer.ren.RemoveActor(node.prop)
+        self.vtk_tree = LogicBundleNodeWithVTK.from_dict(tree,self.reader,self.__current_subject,self.__curent_space)
+        self.logic_tree.set_root(self.vtk_tree)
+        #add all to render
+        for node in self.vtk_tree:
+            self.vtk_viewer.ren.AddActor(node.prop)
+        self.refresh_waypoints()
+
+        #visual
+        visual_dict = state["visual"]
+        coords = visual_dict["coords"]
+        idx = self.ui.space_combo.findText(coords)
+        assert idx >= 0
+        self.ui.space_combo.setCurrentIndex(idx)
+
+        self.ui.waypoints_opacity.setValue(visual_dict["waypoints_opac"])
+        self.ui.preview_bundle.setChecked(visual_dict["preview"])
+        fsc = visual_dict["scalar"]
+        idx = self.ui.fiber_scalar_combo.findText(fsc)
+        assert  idx >= 0
+        self.ui.fiber_scalar_combo.setCurrentIndex(idx)
+        #camera
+        fp,pos,vu = visual_dict["camera"]
+        self.vtk_viewer.set_camera(fp,pos,vu)
+
+
 
     def save_scenario(self):
+        state = self.get_state()
+        meta = state["meta"]
+        dialog = SaveScenarioDialog(meta["application"], state)
+        res=dialog.exec_()
+        if res==QtGui.QDialog.Accepted:
+            scn_id = dialog.params["scn_id"]
+            self.save_screenshot(scn_id)
         pass
 
     def load_scenario(self):
-        pass
+        my_name = os.path.splitext(os.path.basename(__file__))[0]
+        dialog = LoadScenarioDialog(my_name, reader=self.reader)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            wanted_state = dialog.out_dict
+            self.load_state(wanted_state)
 
     def save_screenshot(self,scenario_index):
         file_name = "scenario_%d.png"%scenario_index
-        file_path = os.path.join(self.reader.get(), "braviz_data","scenarios",file_name)
+        file_path = os.path.join(self.reader.getDynDataRoot(), "braviz_data","scenarios",file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
         braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)

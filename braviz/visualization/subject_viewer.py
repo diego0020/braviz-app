@@ -1506,6 +1506,21 @@ class OrthogonalPlanesViewer:
                 self.y_image.get_current_image_slice(),
                 self.z_image.get_current_image_slice(),)
 
+    def get_camera_parameters(self):
+        cam1 = self.ren.GetActiveCamera()
+        fp = cam1.GetFocalPoint()
+        pos = cam1.GetPosition()
+        vu = cam1.GetViewUp()
+        return fp, pos, vu
+
+    def set_camera(self, focal_point, position, view_up):
+        cam1 = self.ren.GetActiveCamera()
+        cam1.SetFocalPoint(focal_point)
+        cam1.SetPosition(position)
+        cam1.SetViewUp(view_up)
+
+        self.ren.ResetCameraClippingRange()
+        self.ren_win.Render()
     @property
     def image_planes(self):
         return self.__image_planes
