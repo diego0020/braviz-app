@@ -24,7 +24,7 @@ from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
-
+from hierarchical_fibers import read_logical_fibers
 
 class kmc40Reader:
     """
@@ -602,6 +602,10 @@ The path containing this structure must be set."""
             operation = "and" if bundle_type == 1 else "or"
             checkpoints = pickle.loads(data)
             poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation,**kw)
+            return poly
+        elif bundle_type == 10:
+            tree_dict = pickle.loads(data)
+            poly = read_logical_fibers(subj,tree_dict,self,**kw)
             return poly
         else:
             log.error("Unknown data type")
