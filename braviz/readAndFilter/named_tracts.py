@@ -23,7 +23,7 @@ def __cached_named_tract(name_tract_func):
             cache_file = 'named_fibs_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color)
         else:
             cache_file = 'named_fibs_%s_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color, scalars)
-        cache_full_path = os.path.join(reader.getDataRoot(), 'pickles', cache_file)
+        cache_full_path = os.path.join(reader.getDynDataRoot(), 'pickles', cache_file)
         if os.path.isfile(cache_full_path):
             fib_reader = vtk.vtkPolyDataReader()
             fib_reader.SetFileName(cache_full_path)

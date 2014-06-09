@@ -6,6 +6,7 @@ from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import QMainWindow, QDialog
 import vtk
 import numpy as np
+import os
 
 import braviz
 from braviz.interaction.qt_guis.logic_bundles import Ui_LogicBundlesApp
@@ -490,6 +491,13 @@ class LogicBundlesApp(QMainWindow):
 
     def load_scenario(self):
         pass
+
+    def save_screenshot(self,scenario_index):
+        file_name = "scenario_%d.png"%scenario_index
+        file_path = os.path.join(self.reader.get(), "braviz_data","scenarios",file_name)
+        log = logging.getLogger(__name__)
+        log.info(file_path)
+        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
 
 def run():
     import sys

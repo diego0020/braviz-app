@@ -9,6 +9,7 @@ def __create_bundles_table():
     0 : Named tracts, refer to python functions and are accessed via the reader.get interface, data contains 'name' argument
     1 : Checkpoint tracts where the operation is 'and', data contains the pickled list of checkpoints
     2 : Checkpoint tracts where the operation is 'or', data contains the pickled list of checkpoints
+    10: Logic bundles,
     """
     q="""CREATE TABLE IF NOT EXISTS fiber_bundles (
     bundle_id INTEGER PRIMARY KEY ,

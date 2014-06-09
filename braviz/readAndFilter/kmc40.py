@@ -940,6 +940,10 @@ The path containing this structure must be set."""
         """Returns the data_root of this reader"""
         return self.__root
 
+    def getDynDataRoot(self):
+        """Returns the dynamic data_root of this reader"""
+        return self.__root
+
     def transformPointsToSpace(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space. 
         If inverse is true moves from space to world"""
@@ -1058,6 +1062,9 @@ def get_data_root():
     log = logging.getLogger(__name__)
     log.error("Unknown node")
     raise Exception("Unkown node")
+
+def get_dyn_data_root():
+    return get_data_root()
 
 #===============================================================================================
 def autoReader(**kw_args):

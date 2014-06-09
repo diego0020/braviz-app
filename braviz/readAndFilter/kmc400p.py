@@ -963,6 +963,10 @@ The path containing this structure must be set."""
         """Returns the data_root of this reader"""
         return self.__static_root
 
+    def getDynDataRoot(self):
+        """Returns the dynamic data_root of this reader"""
+        return self.__dynaimc_data_root
+
     def transformPointsToSpace(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space. 
         If inverse is true moves from space to world"""
@@ -1071,6 +1075,15 @@ def get_data_root():
     node = known_nodes.get(node_id)
     if node is not None:
         return node[0]
+    log = logging.getLogger(__name__)
+    log.error("Unknown node")
+    raise Exception("Unkown node")
+
+def get_dyn_data_root():
+    node_id = platform.node()
+    node = known_nodes.get(node_id)
+    if node is not None:
+        return node[1]
     log = logging.getLogger(__name__)
     log.error("Unknown node")
     raise Exception("Unkown node")

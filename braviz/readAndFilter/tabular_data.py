@@ -27,7 +27,7 @@ def get_connection(reader=None):
     if node == "archi5":
         path = os.path.join("/home/diego/braviz_data", "tabular_data.sqlite")
     else:
-        data_root = braviz.readAndFilter.braviz_auto_data_root()
+        data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
         path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
     conn = sqlite3.connect(path)
     return conn

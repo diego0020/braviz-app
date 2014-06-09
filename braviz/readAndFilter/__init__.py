@@ -406,6 +406,7 @@ else:
 
 BravizAutoReader = project_reader.autoReader
 braviz_auto_data_root = project_reader.get_data_root
+braviz_auto_dynamic_data_root = project_reader.get_dyn_data_root
 
 
 

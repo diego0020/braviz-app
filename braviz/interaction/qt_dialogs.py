@@ -1294,10 +1294,10 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(0)
         self.ui.scenarios_table.setModel(self.model)
-        self.ui.scenarios_table.activated.connect(self.select_model)
+        self.ui.scenarios_table.activated.connect(self.select_scenario)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.load_data)
 
-    def select_model(self,index):
+    def select_scenario(self,index):
         row = index.row()
         self.current_row = row
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(1)
@@ -1306,9 +1306,9 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.ui.screen_shot_label.setText("<No screenshot available>"%index)
         self.ui.screen_shot_label.setScaledContents(False)
         if self.reader is None:
-            data_root = braviz.readAndFilter.braviz_auto_data_root()
+            data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
         else:
-            data_root = self.reader.getDataRoot()
+            data_root = self.reader.getDynDataRoot()
         image_file = os.path.join(data_root,"braviz_data","scenarios","scenario_%d.png"%index)
         if os.path.isfile(image_file):
             image = QtGui.QImage(image_file)

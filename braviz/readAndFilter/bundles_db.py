@@ -46,3 +46,5 @@ def save_checkpoints_bundle(bundle_name,operation_is_and,checkpoints):
     conn.execute(q,(bundle_name,btype,data))
     conn.commit()
 
+def save_logic_bundle(bundle_name,logic_tree_dict):
+    pass
