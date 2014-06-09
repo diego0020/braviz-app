@@ -322,11 +322,12 @@ def get_scalar_from_fiber_ploydata(poly_data, scalar):
     if scalar == "number":
         return pd.GetNumberOfLines()
     elif scalar == "mean_length":
-        desc = braviz.interaction.get_fiber_bundle_descriptors(pd)
-        n = float(desc[1])
+        lengths = braviz.interaction.compute_fiber_lengths(pd)
+        # TODO, only desc[1] is ever used?
+        n = np.mean(lengths)
         return n
     elif scalar == "mean_color":
-        desc = braviz.interaction.aggregate_fiber_scalar(pd, component=0, norm_factor=1 / 255)
+        desc = braviz.interaction.aggregate_fiber_scalar(pd, component=0, norm_factor=1)
         n = float(desc[1])
         return n
     else:

@@ -18,6 +18,8 @@ from braviz.interaction.qt_structures_model import StructureTreeModel
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel
 from braviz.readAndFilter import geom_db, tabular_data
 from braviz.readAndFilter.hierarchical_fibers import read_logical_fibers
+from braviz.interaction import compute_fiber_lengths
+from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
 
 __author__ = 'Diego'
 
@@ -43,6 +45,13 @@ SURFACE_SCALARS_DICT = dict(enumerate((
     'aparc.a2009s',
     'BA')
 ))
+
+FIBER_SCALARS_DICT = dict(enumerate((
+    "number",
+    "mean_length",
+    "mean_fa",
+    "mean_md"
+)))
 
 class LoadRoiDialog(QDialog):
     def __init__(self):
@@ -107,6 +116,8 @@ class LogicBundlesApp(QMainWindow):
         self.__fibers_map = vtk.vtkPolyDataMapper()
         self.__fibers_ac = vtk.vtkActor()
         self.__filetred_pd = None
+        self.__fibers_color = "orient"
+        self.__fibers_lut = None
 
         self.__fibers_ac.SetMapper(self.__fibers_map)
         self.vtk_viewer.ren.AddActor(self.__fibers_ac)
@@ -169,6 +180,8 @@ class LogicBundlesApp(QMainWindow):
 
         self.ui.preview_bundle.stateChanged.connect(self.update_fibers)
 
+        self.ui.fiber_scalar_combo.currentIndexChanged.connect(self.update_fibers)
+
 
     def get_valid_parent(self):
         index = self.ui.treeView.currentIndex()
@@ -209,6 +222,7 @@ class LogicBundlesApp(QMainWindow):
         self.ui.treeView.expandAll()
         self.refresh_waypoints()
         self.update_fibers()
+        #self.update_scalar_metric()
 
     def launch_add_roi_dialog(self):
         dialog = LoadRoiDialog()
@@ -228,6 +242,7 @@ class LogicBundlesApp(QMainWindow):
         self.ui.treeView.expandAll()
         self.refresh_waypoints()
         self.update_fibers()
+        #self.update_scalar_metric()
 
 
     def start(self):
@@ -279,6 +294,7 @@ class LogicBundlesApp(QMainWindow):
         except Exception:
             log.warning("Couldnt load data for subject %s",new_subject)
         self.update_fibers()
+        #self.update_scalar_metric()
 
 
     def select_image_modality(self, index):
@@ -316,6 +332,7 @@ class LogicBundlesApp(QMainWindow):
         self.__curent_space = new_space
         self.vtk_tree.update(self.__current_img_id,new_space)
         self.update_fibers()
+        #self.update_scalar_metric()
 
     def change_waypoint_opac(self,value):
         self.logic_tree.root.set_opacity(value)
@@ -364,11 +381,17 @@ class LogicBundlesApp(QMainWindow):
 
     def get_bundle(self):
         dict_tree = self.logic_tree.root.to_dict()
-        fibers = read_logical_fibers(self.__current_subject,dict_tree,self.reader,space=self.__curent_space)
+        if self.__fibers_color == "orient":
+            sc = None
+        else:
+            sc = self.__fibers_color
+        fibers = read_logical_fibers(self.__current_subject,dict_tree,self.reader,space=self.__curent_space,
+                                     scalars=sc)
         return fibers
 
-    def update_fibers(self,dummy=None):
+    def read_fibers(self,dummy=None):
         if self.ui.preview_bundle.checkState() == QtCore.Qt.Checked:
+
             try:
                 self.__filetred_pd = self.get_bundle()
             except Exception:
@@ -380,7 +403,81 @@ class LogicBundlesApp(QMainWindow):
                 self.__fibers_ac.SetVisibility(1)
         else:
             self.__fibers_ac.SetVisibility(0)
+        if self.__fibers_color == "orient":
+            self.__fibers_lut = None
+            self.__fibers_map.SetColorModeToDefault()
+        else:
+            self.__fibers_lut = self.reader.get("Fibers",None,scalars=self.__fibers_color,lut = True)
+            self.__fibers_map.UseLookupTableScalarRangeOn()
+            self.__fibers_map.SetColorModeToMapScalars()
+            self.__fibers_map.SetLookupTable(self.__fibers_lut)
         self.vtk_viewer.ren_win.Render()
+
+
+    def update_fibers(self,dummy=None):
+        if self.ui.preview_bundle.checkState() != QtCore.Qt.Checked:
+            self.ui.fiber_scalar_combo.setEnabled(0)
+            self.ui.scalar_box.setEnabled(0)
+            self.__fibers_ac.SetVisibility(0)
+            self.vtk_viewer.ren_win.Render()
+            return
+        self.ui.fiber_scalar_combo.setEnabled(1)
+        self.ui.scalar_box.setEnabled(1)
+        index=self.ui.fiber_scalar_combo.currentIndex()
+        logger = logging.getLogger(__file__)
+        metric = FIBER_SCALARS_DICT[int(index)]
+        self.set_fiber_color(metric)
+        try:
+            self.read_fibers()
+        except Exception:
+            logger.warning("Couldn't read fibers")
+            self.ui.scalar_box.setValue(float("nan"))
+            raise
+            return
+
+        self.update_scalar_metric(metric)
+
+
+    def update_scalar_metric(self,metric):
+        logger = logging.getLogger(__file__)
+        try:
+            ans = self.get_scalar_metric(metric)
+        except Exception:
+            logger.warning("Couldnt calculate metric")
+            ans = float("nan")
+            raise
+        self.ui.scalar_box.setValue(ans)
+
+
+    def set_fiber_color(self,metric):
+        if metric == "mean_fa":
+            color = "fa_p"
+        elif metric == "mean_md":
+            color = "md_p"
+        else:
+            color = "orient"
+        self.__fibers_color = color
+
+    def get_scalar_metric(self,metric):
+
+        fibers = self.__filetred_pd
+        self.ui.scalar_box.setSuffix("")
+        if metric == "number":
+            return fibers.GetNumberOfLines()
+        elif metric == "mean_length":
+            lengths = compute_fiber_lengths(fibers)
+            return np.mean(lengths)
+        elif metric in {"mean_fa","mean_md"}:
+            ans = get_scalar_from_fiber_ploydata(fibers,"mean_color")
+            if metric=="mean_md":
+                ans *= 10e9
+                self.ui.scalar_box.setSuffix(" x10e9")
+            return ans
+        else:
+            raise Exception("Unknwon metric")
+
+    def save_bundle(self):
+        pass
 
     def get_state(self):
         pass

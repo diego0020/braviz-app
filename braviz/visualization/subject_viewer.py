@@ -1022,6 +1022,12 @@ class TractographyManager:
                                         db_id=bid, color="FA")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
+            elif scalar == "mean_md":
+                fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
+                                        db_id=bid, color="MD")
+                n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
+                return n
+
         else:
             return float("nan")
 
@@ -1036,6 +1042,12 @@ class TractographyManager:
             operation = "and" if self.__ad_hoc_throug_all else "or"
             fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
                                     operation=operation, space=self.__current_space, color="FA")
+            n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
+            return n
+        elif scalar == "mean_md":
+            operation = "and" if self.__ad_hoc_throug_all else "or"
+            fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
+                                    operation=operation, space=self.__current_space, color="MD")
             n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
             return n
         return float("nan")

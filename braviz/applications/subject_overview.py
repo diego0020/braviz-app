@@ -509,7 +509,8 @@ class SubjectOverviewApp(QMainWindow):
 
     fiber_metrics_dict = {"Count": "number",
                           "Mean L": "mean_length",
-                          "Mean FA": "mean_fa"}
+                          "Mean FA": "mean_fa",
+                          "Mean MD": "mean_md"}
 
     def update_fiber_scalars(self, index=None):
         log = logging.getLogger(__name__)

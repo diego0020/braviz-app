@@ -1,9 +1,11 @@
 from braviz.readAndFilter import geom_db,tabular_data
 import logging
-#from logic_bundle_model
+import numpy as np
+
 from braviz.readAndFilter import extract_poly_data_subset
 from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
 
+#from logic_bundle_model
 LOGIC = 0
 STRUCT = 1
 ROI = 2
@@ -82,6 +84,7 @@ def get_valied_lines_from_roi(subj,roi_id,reader):
 
         fibers = reader.get("Fibers",subj,space=space)
         filterer = FilterBundleWithSphere()
+        #Maybe overkill for only one sphere, but still fater than brute force
         filterer.set_bundle(fibers)
 
         valid_ids = filterer.filter_bundle_with_sphere((x,y,z),r,get_ids=True)
@@ -89,3 +92,24 @@ def get_valied_lines_from_roi(subj,roi_id,reader):
         return valid_ids
     else:
         return cached
+
+
+def brute_force_lines_in_sphere(fibers,ctr,radius):
+    ans = set()
+    c = np.array(ctr)
+    n_lines = fibers.GetNumberOfLines()
+    n_cells = fibers.GetNumberOfCells()
+    r2 = radius**2
+    assert n_lines == n_cells
+
+
+    for i in xrange(n_lines):
+        l = fibers.GetCell(i)
+        pts = l.GetPoints()
+        n_pts = l.GetNumberOfPoints()
+        for j in xrange(n_pts):
+            p = pts.GetPoint(j)
+            if np.dot((p-c),(p-c)) <= r2:
+                ans.add(i)
+                break
+    return ans

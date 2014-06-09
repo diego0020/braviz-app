@@ -20,7 +20,7 @@ def compute_volume_and_area(struct):
 
 
 def compute_fiber_lengths(fib):
-    """Returns a dictionary mapping line ids to line lengths"""
+    """Returns an array of line lengths"""
     if not fib.GetNumberOfLines() == fib.GetNumberOfCells():
         log = logging.getLogger(__name__)
         log.error("Error, fib must contain only lines")
@@ -39,14 +39,18 @@ def compute_fiber_lengths(fib):
             pt1 = pt2
         return length
 
-    for i in xrange(fib.GetNumberOfLines()):
-        lengths[i] = line_length(fib.GetCell(i))
+    #for i in xrange(fib.GetNumberOfLines()):
+    #    lengths[i] = line_length(fib.GetCell(i))
+    n = fib.GetNumberOfLines()
+    lengths = np.zeros(n)
+    for i in xrange(n):
+        lengths[i]=line_length(fib.GetCell(i))
     return lengths
 
 
 def get_fiber_bundle_descriptors(fib):
     """Returns ( number of fibers, mean length, max length, min length, standard deviation of length) """
-    d = compute_fiber_lengths(fib).values()
+    d = compute_fiber_lengths(fib)
     if len(d) == 0:
         d = [0]
     return len(d), np.mean(d), np.max(d), np.min(d), np.std(d)
