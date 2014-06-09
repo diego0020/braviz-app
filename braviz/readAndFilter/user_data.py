@@ -16,6 +16,8 @@ def save_scenario(application, scenario_name, scenario_description, scenario_dat
     scenario_description: Description of the current scenario
     scenario_data : Binary data for the current scenario
     """
+    if not isinstance(scenario_data,basestring):
+        scenario_data=cPickle.dumps(scenario_data,2)
     scenario_data = buffer(scenario_data)
     conn = get_connection()
     q = """INSERT  OR ABORT INTO scenarios

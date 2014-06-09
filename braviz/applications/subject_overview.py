@@ -149,6 +149,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.save_bundle_button.clicked.connect(self.save_fibers_bundle)
         self.ui.fibers_opacity.valueChanged.connect(self.change_tractography_opacity)
         self.ui.bundles_list.activated.connect(self.update_current_bundle)
+        self.ui.bundles_list.clicked.connect(self.update_current_bundle)
         self.ui.fibers_scalar_combo.currentIndexChanged.connect(self.update_fiber_scalars)
         self.ui.export_fiber_scalars_to_db.clicked.connect(self.export_fiber_scalars_to_db)
         #surface panel

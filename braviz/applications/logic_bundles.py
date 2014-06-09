@@ -16,6 +16,7 @@ from braviz.interaction.qt_guis.logic_bundles import Ui_LogicBundlesApp
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 from braviz.interaction.qt_guis.AddStructuresDialog import Ui_AddSegmented
 from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
+from braviz.interaction.qt_guis.export_logic_scalar_into_db import Ui_ExportScalar
 from braviz.interaction.logic_bundle_model import LogicBundleQtTree, LogicBundleNodeWithVTK
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
 from braviz.interaction.qt_structures_model import StructureTreeModel
@@ -24,7 +25,9 @@ from braviz.readAndFilter import geom_db, tabular_data
 from braviz.readAndFilter.hierarchical_fibers import read_logical_fibers
 from braviz.interaction import compute_fiber_lengths
 from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
-from braviz.interaction.qt_dialogs import SaveScenarioDialog,LoadScenarioDialog
+from braviz.interaction.qt_dialogs import SaveScenarioDialog,LoadScenarioDialog, SaveLogicFibersBundleDialog, LoadLogicBundle
+from braviz.readAndFilter import user_data as braviz_user_data
+
 
 __author__ = 'Diego'
 
@@ -102,8 +105,9 @@ class LogicBundlesApp(QMainWindow):
         self.ui = None
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
-        self.__subjects_list = tabular_data.get_subjects()
-        self.__current_subject = self.__subjects_list[0]
+        self.subjects_list = tabular_data.get_subjects()
+
+        self.__current_subject = self.subjects_list[0]
         self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__current_subject)
 
         self.__current_image_mod = "MRI"
@@ -128,8 +132,8 @@ class LogicBundlesApp(QMainWindow):
         self.vtk_viewer.ren.AddActor(self.__fibers_ac)
         self.__fibers_ac.SetVisibility(0)
 
-        self.__subjects_check_model = SubjectChecklist(self.__subjects_list,show_checks=False)
-
+        self.__subjects_check_model = SubjectChecklist(self.subjects_list,show_checks=False)
+        self.scalar_metric_value = None
         self.setup_ui()
 
 
@@ -162,10 +166,13 @@ class LogicBundlesApp(QMainWindow):
 
         self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
         self.ui.actionLoad_Scenario.triggered.connect(self.load_scenario)
+        self.ui.actionSave_Bundle.triggered.connect(self.save_bundle)
+        self.ui.actionLoad_Bundle.triggered.connect(self.load_bundle)
 
         self.ui.treeView.setModel(self.logic_tree)
         self.ui.treeView.customContextMenuRequested.connect(self.launch_tree_context_menu)
         self.ui.treeView.clicked.connect(self.highlight_waypoints)
+        self.ui.treeView.activated.connect(self.highlight_waypoints)
 
         #logic menu
         logic_menu = QtGui.QMenu(self.ui.add_logic)
@@ -184,6 +191,7 @@ class LogicBundlesApp(QMainWindow):
         self.ui.preview_bundle.stateChanged.connect(self.update_fibers)
 
         self.ui.fiber_scalar_combo.currentIndexChanged.connect(self.update_fibers)
+        self.ui.export_to_db.clicked.connect(self.export_scalar_to_db)
 
 
     def get_valid_parent(self):
@@ -421,11 +429,13 @@ class LogicBundlesApp(QMainWindow):
         if self.ui.preview_bundle.checkState() != QtCore.Qt.Checked:
             self.ui.fiber_scalar_combo.setEnabled(0)
             self.ui.scalar_box.setEnabled(0)
+            self.ui.export_to_db.setEnabled(0)
             self.__fibers_ac.SetVisibility(0)
             self.vtk_viewer.ren_win.Render()
             return
         self.ui.fiber_scalar_combo.setEnabled(1)
         self.ui.scalar_box.setEnabled(1)
+        self.ui.export_to_db.setEnabled(1)
         index=self.ui.fiber_scalar_combo.currentIndex()
         logger = logging.getLogger(__file__)
         metric = FIBER_SCALARS_DICT[int(index)]
@@ -448,7 +458,7 @@ class LogicBundlesApp(QMainWindow):
         except Exception:
             logger.warning("Couldnt calculate metric")
             ans = float("nan")
-
+        self.scalar_metric_value = ans
         self.ui.scalar_box.setValue(ans)
 
 
@@ -480,7 +490,24 @@ class LogicBundlesApp(QMainWindow):
             raise Exception("Unknwon metric")
 
     def save_bundle(self):
-        pass
+        dialog = SaveLogicFibersBundleDialog(self.logic_tree)
+        dialog.exec_()
+
+    def load_bundle(self):
+        dialog = LoadLogicBundle()
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            data = dialog.current_data
+            new_root = LogicBundleNodeWithVTK.from_dict(data,self.reader,self.__current_subject,self.__curent_space)
+            #remove from render
+            for k in self.vtk_tree:
+                self.vtk_viewer.ren.RemoveActor(k.prop)
+            self.vtk_tree = new_root
+            self.logic_tree.set_root(new_root)
+            #add new ones
+            for k in self.vtk_tree:
+                self.vtk_viewer.ren.AddActor(k.prop)
+            self.refresh_waypoints()
 
     def get_state(self):
         state = dict()
@@ -517,7 +544,7 @@ class LogicBundlesApp(QMainWindow):
         subjs_state = {}
         subjs_state["subject"] = self.__current_subject
         subjs_state["img_code"] = self.__current_img_id
-        subjs_state["sample"] = self.__subjects_list
+        subjs_state["sample"] = self.subjects_list
         state["subjects"] = subjs_state
 
         #meta
@@ -532,7 +559,7 @@ class LogicBundlesApp(QMainWindow):
         subj = subjs_state["subject"]
         self.change_subject(subj)
         assert self.__current_img_id == subjs_state["img_code"]
-        self.__subjects_list = subjs_state["sample"]
+        self.subjects_list = subjs_state["sample"]
         #context
         context_dict =state["context"]
         img = context_dict["image_type"]
@@ -616,6 +643,101 @@ class LogicBundlesApp(QMainWindow):
         log = logging.getLogger(__name__)
         log.info(file_path)
         braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
+
+    def export_scalar_to_db(self):
+        dialog = ExportScalarToDB(self)
+        dialog.exec_()
+
+class ExportScalarToDB(QDialog):
+    def __init__(self,caller):
+        QDialog.__init__(self)
+        assert isinstance(caller,LogicBundlesApp)
+        self.caller = caller
+        self.ui = Ui_ExportScalar()
+        self.ui.setupUi(self)
+        self.ui.error_str.setText("")
+        self.ui.var_name_input.textChanged.connect(self.check_name)
+        self.ui.progressBar.setValue(0)
+        self.ui.start_button.clicked.connect(self.start_calculation)
+        self.ui.cancel_button.clicked.connect(self.cancel)
+        self.cancel_flag = False
+        self.done = False
+        self.var_id = None
+
+
+    def check_name(self,text=None):
+        self.ui.error_str = ""
+        self.ui.start_button.setEnabled(0)
+        if len(text)>2:
+            if tabular_data.does_variable_name_exists(str(text)) is True:
+                self.ui.error_str = "Name exists, please choose a unique name"
+            else:
+                self.ui.start_button.setEnabled(1)
+
+    def start_calculation(self):
+        if self.done is True:
+            self.accept()
+            return
+
+        self.ui.start_button.setEnabled(0)
+        self.ui.var_name_input.setEnabled(0)
+        self.ui.var_description.setEnabled(0)
+        self.cancel_flag = False
+        #create variable
+        var_name = str(self.ui.var_name_input.text())
+        desc = unicode(self.ui.var_description.toPlainText())
+        var_id = tabular_data.register_new_variable(var_name)
+        self.var_id = var_id
+        tabular_data.save_var_description(var_id,desc)
+        self.process_qt_events()
+
+        #create scenario
+        orig_state = self.caller.get_state()
+        app = orig_state["meta"]["application"]
+        scn_id=braviz_user_data.save_scenario(app,"<AUTO>:%s"%var_name,desc,orig_state)
+        self.caller.save_screenshot(scn_id)
+        self.process_qt_events()
+        #create link
+        braviz_user_data.link_var_scenario(var_id,scn_id)
+        self.process_qt_events()
+        #fill values
+        subjs = self.caller.subjects_list
+        n = len(subjs)
+        self.caller.ui.axial_check.setChecked(False)
+        self.caller.ui.coronal_check.setChecked(False)
+        self.caller.ui.sagital_check.setChecked(False)
+        self.caller.ui.left_cortex_check.setChecked(False)
+        self.caller.ui.right_cortex_check.setChecked(False)
+        for i,sbj in enumerate(subjs):
+            if self.cancel_flag is True:
+                break
+            self.calculate_one(sbj)
+            self.ui.progressBar.setValue((i+1)*100/n)
+            self.process_qt_events()
+
+        self.caller.load_state(orig_state)
+        if self.cancel_flag is True:
+            self.ui.start_button.setEnabled(1)
+            self.ui.var_name_input.setEnabled(1)
+            self.ui.var_description.setEnabled(1)
+        else:
+            self.ui.start_button.setText("Done")
+            self.ui.cancel_button.setEnabled(0)
+            self.ui.start_button.setEnabled(1)
+            self.done = True
+
+
+
+    def process_qt_events(self):
+        QtGui.QApplication.instance().processEvents()
+
+    def calculate_one(self,subj):
+        self.caller.change_subject(subj)
+        val = self.caller.scalar_metric_value
+        tabular_data.updata_variable_value(self.var_id,subj,val)
+
+    def cancel(self):
+        self.cancel_flag = True
 
 def run():
     import sys

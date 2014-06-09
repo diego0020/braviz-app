@@ -72,11 +72,30 @@ class LogicBundleNode:
         ans["children"] = [c.to_dict() for c in self.children]
         return ans
 
+    @staticmethod
+    def from_dict(values):
+
+        new_root = LogicBundleNode(None, 0, values["node_type"], values["value"],
+                                   values["extra_data"])
+
+        for k in values["children"]:
+            new_root.add_sons_from_dict(k)
+
+        return new_root
+
+    def add_sons_from_dict(self, values):
+        new_son = self.add_son(values["node_type"], values["value"], values["extra_data"])
+        for k in values["children"]:
+            new_son.add_sons_from_dict(k)
+
     def __iter__(self):
         yield self
         for k in self.children:
+            # recuersively call in children
+            # for i in k calls __iter__ in children k
             for i in k:
                 yield i
+
 
 class LogicBundleNodeWithVTK(LogicBundleNode):
     def __init__(self, parent, son_number, node_type, value, extra_data=None, reader=None, subj=None, space="World"):
@@ -226,11 +245,6 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
             new_root.add_sons_from_dict(k)
 
         return new_root
-
-    def add_sons_from_dict(self, values):
-        new_son = self.add_son(values["node_type"], values["value"], values["extra_data"])
-        for k in values["children"]:
-            new_son.add_sons_from_dict(k)
 
 
 class LogicBundleQtTree(QAbstractItemModel):

@@ -98,9 +98,12 @@ def get_data_frame_by_index(columns, reader=None,col_name_index=False):
 def is_variable_real(var_idx):
     conn = get_connection()
     cur = conn.execute("SELECT is_real FROM variables WHERE var_idx = ?", (int(var_idx),))
-    return False if cur.fetchone()[0] == 0 else 1
+    return False if cur.fetchone()[0] == 0 else True
 
-
+def does_variable_name_exists(var_name):
+    conn = get_connection()
+    cur = conn.execute("SELECT count(*) FROM variables WHERE var_name = ?", (var_name,))
+    return False if cur.fetchone()[0] == 0 else True
 def is_variable_nominal(var_idx):
     return not is_variable_real(var_idx)
 
@@ -108,7 +111,7 @@ def is_variable_nominal(var_idx):
 def is_variable_name_real(var_name):
     conn = get_connection()
     cur = conn.execute("SELECT is_real FROM variables  WHERE var_name = ?", (unicode(var_name),))
-    return False if cur.fetchone()[0] == 0 else 1
+    return False if cur.fetchone()[0] == 0 else True
 
 
 def is_variable_name_nominal(var_name):
@@ -407,15 +410,16 @@ def register_new_variable(var_name,is_real=1):
         is_real = 0
     q="""INSERT INTO variables (var_name, is_real)
          Values (? , ?)"""
-    conn.execute(q,(unicode(var_name),is_real))
+    cur = conn.execute(q,(unicode(var_name),is_real))
+    conn.commit()
+    row_id = cur.lastrowid
     cur=conn.execute(q1,(var_name,))
     var_idx = cur.fetchone()
     if var_idx is None:
         log = logging.getLogger(__name__)
         log.error("Problem adding to Data Base")
-        raise Exception("Problem adding to Data Base")
-    conn.commit()
-    return var_idx[0]
+    assert var_idx[0] == row_id
+    return row_id
 
 def update_variable_values(var_idx,tuples):
     """

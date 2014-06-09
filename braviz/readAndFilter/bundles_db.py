@@ -47,4 +47,36 @@ def save_checkpoints_bundle(bundle_name,operation_is_and,checkpoints):
     conn.commit()
 
 def save_logic_bundle(bundle_name,logic_tree_dict):
-    pass
+    tree_blob = buffer(cPickle.dumps(logic_tree_dict,2))
+    q = """INSERT OR FAIL INTO fiber_bundles (bundle_name, bundle_type, bundle_data) VALUES (?,10,?) """
+    con = get_connection()
+    con.execute(q,(bundle_name,tree_blob))
+    con.commit()
+
+def get_bundles_list(bundle_type=None):
+    con = get_connection()
+    if bundle_type is None:
+        q = "SELECT bundle_name FROM fiber_bundles"
+        cur = con.execute(q)
+        res = list(map(lambda x: x[0],cur.fetchall()))
+        return res
+    else:
+        q = "SELECT bundle_name FROM fiber_bundles WHERE bundle_type = ?"
+        cur = con.execute(q,(bundle_type,))
+        res = list(map(lambda x: x[0],cur.fetchall()))
+        return res
+
+def get_logic_bundle_dict(bundle_id = None,bundle_name = None):
+    con = get_connection()
+    if bundle_id is None:
+        q = "SELECT bundle_data FROM fiber_bundles WHERE bundle_name = ?"
+        cur = con.execute(q,(bundle_name,))
+    else:
+        q = "SELECT bundle_data FROM fiber_bundles WHERE bundle_id = ?"
+        cur = con.execute(q,(bundle_id,))
+    r1 = cur.fetchone()
+    if r1 is None:
+        raise Exception("Fiber doesn't exist")
+    data_buf = r1[0]
+    data_dict = cPickle.loads(str(data_buf))
+    return data_dict

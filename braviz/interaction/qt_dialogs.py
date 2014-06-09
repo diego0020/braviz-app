@@ -25,8 +25,11 @@ from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariab
 from braviz.interaction.qt_guis.new_variable_dialog import Ui_NewVariableDialog
 from braviz.interaction.qt_guis.load_bundles_dialog import Ui_LoadBundles
 from braviz.interaction.qt_guis.save_fibers_bundle import Ui_SaveBundleDialog
+from braviz.interaction.qt_guis.save_logic_fibers_bundle import Ui_SaveLogicBundleDialog
 from braviz.interaction.qt_guis.save_scenario_dialog import Ui_SaveScenarioDialog
 from braviz.interaction.qt_guis.load_scenario_dialog import Ui_LoadScenarioDialog
+from braviz.interaction.qt_guis.load_logic_bundle import Ui_LoadLogicDialog
+from braviz.interaction.logic_bundle_model import LogicBundleNode,LogicBundleQtTree
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_data_frame_by_name, get_var_idx, get_var_name, \
@@ -243,6 +246,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.vars_list_model = braviz_models.VarListModel(checkeable=multiple)
         self.ui.tableView.setModel(self.vars_list_model)
         self.ui.tableView.clicked.connect(self.update_right_side)
+        self.ui.tableView.activated.connect(self.update_right_side)
 
         self.ui.select_button.clicked.connect(self.select_and_return)
 
@@ -670,6 +674,7 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.ui.tableView.setModel(self.vars_model)
         self.finish_ui_setup()
         self.ui.tableView.clicked.connect(self.update_right_side)
+        self.ui.tableView.activated.connect(self.update_right_side)
         self.ui.add_button.clicked.connect(self.add_regressor)
         self.regressors_table_model = regressors_model
         self.ui.current_regressors_table.setModel(self.regressors_table_model)
@@ -860,6 +865,7 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.ui.tableView.setModel(self.vars_model)
         self.finish_ui_setup()
         self.ui.tableView.clicked.connect(self.update_right_side)
+        self.ui.tableView.activated.connect(self.update_right_side)
         self.ui.add_button.clicked.connect(self.add_variable)
         self.current_variables_model = braviz_models.ContextVariablesModel(context_vars_list=variables_list,
                                                                            editable_dict=editables_dict)
@@ -1200,7 +1206,7 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
-        self.ui.lineEdit.editingFinished.connect(self.check_name)
+        self.ui.lineEdit.textChanged.connect(self.check_name)
         self.ui.error_message.setText("")
         self.ui.save_succesful.setText("")
         self.ui.operation_label.setText(operation)
@@ -1243,6 +1249,51 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Cancel).setEnabled(False)
         self.ui.lineEdit.setEnabled(False)
 
+class SaveLogicFibersBundleDialog(QtGui.QDialog):
+    def __init__(self,tree_model):
+        super(SaveLogicFibersBundleDialog,self).__init__()
+        self.__tree_model = tree_model
+        self.ui = Ui_SaveLogicBundleDialog()
+        self.ui.setupUi(self)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+        self.ui.lineEdit.textChanged.connect(self.check_name)
+        self.ui.error_message.setText("")
+        self.ui.save_succesful.setText("")
+        self.ui.treeView.setModel(tree_model)
+        self.ui.treeView.expandAll()
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.accept_save)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.accept)
+
+    def check_name(self):
+        name = str(self.ui.lineEdit.text())
+        if len(name)<2:
+            self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+            return
+        if bundles_db.check_if_name_exists(name) is True:
+            self.ui.error_message.setText("A bundle with this name already exists")
+            self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+        else:
+            self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(True)
+            self.ui.error_message.setText("")
+
+    def accept_save(self):
+        log = logging.getLogger(__name__)
+        log.info("saving")
+        name = str(self.ui.lineEdit.text())
+        log.info(str(self.ui.lineEdit.text()))
+        tree_dict = self.__tree_model.root.to_dict()
+        log.info(tree_dict)
+        try :
+            bundles_db.save_logic_bundle(name,tree_dict)
+        except:
+            log.error("problem saving into database")
+            raise
+        self.ui.save_succesful.setText("Save succesful")
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Cancel).setEnabled(False)
+        self.ui.lineEdit.setEnabled(False)
 
 class SaveScenarioDialog(QtGui.QDialog):
     def __init__(self,app_name,state,params=None):
@@ -1299,6 +1350,7 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(0)
         self.ui.scenarios_table.setModel(self.model)
         self.ui.scenarios_table.clicked.connect(self.select_scenario)
+        self.ui.scenarios_table.activated.connect(self.select_scenario)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.load_data)
 
     def select_scenario(self,index):
@@ -1327,4 +1379,34 @@ class LoadScenarioDialog(QtGui.QDialog):
         parameters_dict["meta"]["scn_id"] = scn_id
         self.out_dict.update(parameters_dict)
         self.accept()
+
+class LoadLogicBundle(QtGui.QDialog):
+    def __init__(self):
+        super(LoadLogicBundle,self).__init__()
+        self.__tree_root = LogicBundleNode(None,0,LogicBundleNode.LOGIC,"AND")
+        self.__tree_model = LogicBundleQtTree(self.__tree_root)
+        self.__bundles = bundles_db.get_bundles_list(bundle_type=10)
+        self.__bundles_model = braviz_models.SimpleSetModel()
+        self.__bundles_model.set_elements(self.__bundles)
+        self.ui = Ui_LoadLogicDialog()
+        self.ui.setupUi(self)
+        self.ui.treeView.setModel(self.__tree_model)
+        self.ui.listView.setModel(self.__bundles_model)
+        self.ui.listView.clicked.connect(self.update_tree)
+        self.ui.listView.activated.connect(self.update_tree)
+        self.current_data = None
+        self.accepted.connect(self.before_accepting)
+
+
+    def update_tree(self,index):
+        name = str(self.__bundles_model.data(index,QtCore.Qt.DisplayRole))
+        data = bundles_db.get_logic_bundle_dict(bundle_name=name)
+        self.current_data = data
+        self.__tree_root = LogicBundleNode.from_dict(data)
+        self.__tree_model.set_root(self.__tree_root)
+        self.ui.treeView.expandAll()
+
+    def before_accepting(self):
+        index = self.ui.listView.currentIndex()
+        self.update_tree(index)
 
