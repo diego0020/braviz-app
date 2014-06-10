@@ -749,9 +749,11 @@ class ModelManager:
 
 
 class TractographyManager:
-    def __init__(self, reader, ren, initial_subj="093", initial_space="World"):
+    def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
         self.reader = reader
         self.ren = ren
+        if initial_subj is None:
+            initial_subj = reader.get("ids",None)[0]
         self.__current_subject = initial_subj
         self.__current_space = initial_space
         self.__current_color = "orient"
