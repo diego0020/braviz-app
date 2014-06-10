@@ -577,8 +577,10 @@ class ImageManager:
 
 
 class ModelManager:
-    def __init__(self, reader, ren, initial_subj="093", initial_space="World"):
+    def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
         self.ren = ren
+        if initial_subj is None:
+            initial_subj = reader.get("ids",None)[0]
         self.__active_models_set = set()
         self.__pd_map_act = dict()
         self.__available_models = set()
@@ -598,7 +600,12 @@ class ModelManager:
     def __get_laterality(self):
         lat_var_idx = 6
         lat_dict = {1: 'r', 2: 'l'}
-        label = braviz.readAndFilter.tabular_data.get_var_value(lat_var_idx, self.__current_subject)
+        log = logging.getLogger(__file__)
+        try:
+            label = braviz.readAndFilter.tabular_data.get_var_value(lat_var_idx, self.__current_subject)
+        except Exception:
+            log.warning("Laterality no found for subject %s, assuming right handed"%self.__current_subject)
+            label = 1
         return lat_dict[label]
 
     @do_and_render

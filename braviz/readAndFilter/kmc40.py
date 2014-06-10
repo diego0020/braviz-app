@@ -1053,7 +1053,7 @@ known_nodes = {  #
     'ISIS-EML725001': (r'C:\KAB-db', 1200),
     'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db",4000),
     'dellingr.vrac.iastate.edu' : (r"/Volumes/diegoa/KAB-db",14000),
-    'cosxpp9832-3.local' : ("/Users/CS/Desktop/diego_data",7000),
+    'MacAirCyril-S.local' : ("/Users/CS/Desktop/diego_data",7000),
     'ATHPC1304' : (r"E:\ProyectoCanguro\KAB-db",14000),
 }
 

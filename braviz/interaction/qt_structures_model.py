@@ -75,8 +75,10 @@ class StructureTreeNode:
 class StructureTreeModel(QAbstractItemModel):
     selection_changed = QtCore.pyqtSignal()
 
-    def __init__(self, reader, subj="144", dominant=False):
+    def __init__(self, reader, subj=None, dominant=False):
         super(StructureTreeModel, self).__init__()
+        if subj is None:
+            subj = reader.get("ids",None)[0]
         self.subj = subj
         self.reader = reader
         self.pretty_names = cached_get_free_surfer_dict(reader)
@@ -87,7 +89,9 @@ class StructureTreeModel(QAbstractItemModel):
         self.reload_hierarchy(subj, dominant)
 
 
-    def reload_hierarchy(self, subj="144", dominant=False):
+    def reload_hierarchy(self, subj=None, dominant=False):
+        if subj is None:
+            subj = self.reader.get("ids",None)[0]
         log = logging.getLogger(__name__)
         log.debug("reloading hierarchy")
         self.leaf_ids=set()

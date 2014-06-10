@@ -3,7 +3,7 @@ from braviz.readAndFilter.tabular_data import get_connection
 
 __author__ = 'Diego'
 
-def _create_geom_rois_tables():
+def create_geom_rois_tables():
     """
     geom types
     0 : spheres
@@ -24,7 +24,7 @@ def _create_geom_rois_tables():
     conn.execute(q)
     conn.commit()
 
-def _create_spheres_table():
+def create_spheres_table():
     q="""CREATE TABLE IF NOT EXISTS geom_spheres (
     sphere_id INTEGER,
     subject REFERENCES subjects(subject),

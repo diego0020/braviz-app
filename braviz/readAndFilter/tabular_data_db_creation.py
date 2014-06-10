@@ -24,12 +24,23 @@ def read_csv_file(path=None):
     return data
 
 
+def create_directories():
+    import os
+    path = os.path.join(braviz.readAndFilter.braviz_auto_dynamic_data_root(), "braviz_data")
+    try:
+        os.mkdir(path)
+    except WindowsError:
+        pass
+    scenarios = os.path.join("scenarios")
+    try:
+        os.mkdir(scenarios)
+    except WindowsError:
+        pass
+
 def create_data_base(path=None):
     if path is None:
         import braviz
-
-        dummy_reader = braviz.readAndFilter.BravizAutoReader()
-        path = os.path.join(dummy_reader.getDataRoot(), "braviz_data", "tabular_data.sqlite")
+        path = os.path.join(braviz.readAndFilter.braviz_auto_dynamic_data_root(), "braviz_data", "tabular_data.sqlite")
     conn = sqlite3.connect(path)
 
     #enable foreign keys
@@ -63,7 +74,7 @@ def create_data_base(path=None):
     conn.execute(query)
     conn.commit()
     query = """
-    CREATE INDEX nominal_var_idx ON nom_meta(var_idx);
+    CREATE INDEX IF NOT EXISTS nominal_var_idx ON nom_meta(var_idx);
     """
     conn.execute(query)
     conn.commit()
@@ -94,13 +105,13 @@ def create_data_base(path=None):
     conn.commit()
 
     query = """
-    CREATE INDEX subj_value_idx ON var_values(subject);
+    CREATE INDEX IF NOT EXISTS subj_value_idx ON var_values(subject);
     """
     conn.execute(query)
     conn.commit()
 
     query = """
-    CREATE INDEX var_value_idx ON var_values(var_idx);
+    CREATE INDEX IF NOT EXISTS var_value_idx ON var_values(var_idx);
     """
     conn.execute(query)
     conn.commit()
@@ -110,8 +121,7 @@ def create_data_base(path=None):
     CREATE TABLE IF NOT EXISTS var_descriptions
     (var_idx INTEGER REFERENCES variables(var_idx) PRIMARY KEY,
     description TEXT )
-    PRIMARY KEY (var_idx)
-    );
+    ;
     """
     conn.execute(query)
 

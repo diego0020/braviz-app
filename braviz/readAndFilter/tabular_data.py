@@ -96,8 +96,14 @@ def get_data_frame_by_index(columns, reader=None,col_name_index=False):
 
 
 def is_variable_real(var_idx):
+    """
+    All variables are assumed real by default
+    """
     conn = get_connection()
     cur = conn.execute("SELECT is_real FROM variables WHERE var_idx = ?", (int(var_idx),))
+    res = cur.fetchone()
+    if res is None:
+        return True
     return False if cur.fetchone()[0] == 0 else True
 
 def does_variable_name_exists(var_name):
@@ -265,18 +271,30 @@ def get_subject_variables(subj_code, var_codes):
     values = []
     for idx in var_codes:
         cur = conn.execute("SELECT var_name, is_real FROM variables WHERE var_idx = ?", (int(idx),))
-        var_name, is_real = cur.fetchone()
+        ans = cur.fetchone()
+        if ans is None:
+            var_name, is_real = "<Unexistent>", 1
+        else:
+            var_name, is_real = ans
         if subj_code is None:
             value = "Nan"
         elif (is_real is None) or (is_real > 0):
             cur = conn.execute("SELECT value FROM var_values WHERE var_idx = ? and subject = ?",
                                (int(idx), int(subj_code)))
-            value = cur.fetchone()[0]
+            ans = cur.fetchone()
+            if ans is None:
+                value = float("nan")
+            else:
+                value = ans[0]
         else:
             q = """SELECT name FROM var_values NATURAL JOIN nom_meta
             WHERE subject = ? and var_idx = ? and var_values.value == nom_meta.label"""
             cur = conn.execute(q, (int(subj_code), int(idx)))
-            value = cur.fetchone()[0]
+            ans = cur.fetchone()
+            if ans is None:
+                value = "?"
+            else:
+                value = ans[0]
         names.append(var_name)
         values.append(value)
     output = pd.DataFrame({"name": names, "value": values}, index=var_codes)

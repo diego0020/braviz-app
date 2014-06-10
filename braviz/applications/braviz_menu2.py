@@ -10,13 +10,14 @@ from PyQt4 import QtCore
 
 try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
+    import braviz.interaction.qt_dialogs
+    import braviz.interaction.qt_sample_select_dialog
 except ImportError:
     import braviz.interaction.generate_qt_guis
     braviz.interaction.generate_qt_guis.update_guis()
     print "please try again"
     sys.exit()
-import braviz.interaction.qt_dialogs
-import braviz.interaction.qt_sample_select_dialog
+
 
 
 class BravizMenu2(QtGui.QMainWindow):

@@ -4,7 +4,7 @@ import braviz
 from braviz.readAndFilter.tabular_data import get_connection
 
 
-def __create_bundles_table():
+def create_bundles_table():
     """Tract bundle types:
     0 : Named tracts, refer to python functions and are accessed via the reader.get interface, data contains 'name' argument
     1 : Checkpoint tracts where the operation is 'and', data contains the pickled list of checkpoints
@@ -22,9 +22,9 @@ def __create_bundles_table():
     conn.commit()
 
 
-def __add_named_bundes_to_table():
+def add_named_bundes_to_table():
     reader = braviz.readAndFilter.BravizAutoReader()
-    named_tracts = reader.get("FIBERS","093",index=True)
+    named_tracts = reader.get("FIBERS",None,index=True)
     print named_tracts
     conn=get_connection()
     tuples=( (name,0,name) for name in named_tracts)
