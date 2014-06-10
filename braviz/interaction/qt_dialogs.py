@@ -1095,7 +1095,10 @@ class ContextVariablesPanel(QtGui.QGroupBox):
     def set_subject(self, subject_id):
         values = self.__internal_df.loc[int(subject_id)]
         for i, idx in enumerate(self.__context_variable_codes):
-            value = values[self.__context_variable_names[idx]]
+            try:
+                value = values[self.__context_variable_names[idx]]
+            except KeyError:
+                value = float("nan")
             #print self.__context_variable_names[idx], value
             value_widget = self.__values_widgets[i]
             if self.__is_nominal[idx]:

@@ -628,7 +628,7 @@ The path containing this structure must be set."""
         the list is then used to remove unwanted polylines,
         and finally the fibers are translated to the wanted space
         """
-        raise NotImplementedError
+
         log = logging.getLogger(__name__)
         if 'progress' in kw:
             log.warning("The progress argument is deprecated")

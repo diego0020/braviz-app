@@ -187,7 +187,10 @@ def get_names_label_dict(var_name):
 def get_var_name(var_idx):
     conn = get_connection()
     cur = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (int(var_idx),))
-    return cur.fetchone()[0]
+    ans = cur.fetchone()
+    if ans is None:
+        return "?"
+    return ans[0]
 
 
 def get_var_idx(var_name):

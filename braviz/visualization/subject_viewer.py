@@ -280,9 +280,11 @@ class QSubjectViwerWidget(QFrame):
 
 
 class ImageManager:
-    def __init__(self, reader, ren, widget, interactor, initial_subj="093", initial_space="World", picker=None):
+    def __init__(self, reader, ren, widget, interactor, initial_subj=None, initial_space="World", picker=None):
         self.ren = ren
         self.reader = reader
+        if initial_subj is None:
+            initial_subj = reader.get("ids",None)[0]
         self.__current_subject = initial_subj
         self.__current_space = initial_space
         self.__current_image = None
@@ -416,8 +418,8 @@ class ImageManager:
         except Exception as e:
             log.warning(e)
             self.image_plane_widget.Off()
-            raise Exception("Aparc not available")
-            #raise
+            #raise Exception("Aparc not available")
+            raise
 
 
         if modality == "FMRI":

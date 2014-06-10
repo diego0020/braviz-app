@@ -327,33 +327,6 @@ Export variables to the database</string>
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="correlations">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>Find correlations among pairs of variables in the database</string>
-            </property>
-            <property name="text">
-             <string>Correlations</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normalon>:/icons/correlations_app.png</normalon>
-             </iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>120</width>
-              <height>120</height>
-             </size>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QToolButton" name="linear_model">
             <property name="enabled">
              <bool>true</bool>
@@ -391,6 +364,33 @@ Export variables to the database</string>
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="correlations">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string>Find correlations among pairs of variables in the database</string>
+            </property>
+            <property name="text">
+             <string>Correlations</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normalon>:/icons/correlations_app.png</normalon>
+             </iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>120</width>
+              <height>120</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
