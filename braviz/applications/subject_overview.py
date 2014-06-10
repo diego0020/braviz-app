@@ -130,6 +130,11 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_window.valueChanged.connect(self.vtk_viewer.image.set_image_window)
         self.ui.image_level.valueChanged.connect(self.vtk_viewer.image.set_image_level)
         self.ui.reset_window_level.clicked.connect(self.vtk_viewer.image.reset_window_level)
+        fmri_paradigms = self.reader.get("fmri",None,index=True)
+        for pdg in fmri_paradigms:
+            self.ui.image_mod_combo.addItem(pdg)
+        #MRI
+        self.ui.image_mod_combo.setCurrentIndex(1)
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
