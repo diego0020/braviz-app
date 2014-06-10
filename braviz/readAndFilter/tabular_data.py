@@ -104,7 +104,7 @@ def is_variable_real(var_idx):
     res = cur.fetchone()
     if res is None:
         return True
-    return False if cur.fetchone()[0] == 0 else True
+    return False if res[0] == 0 else True
 
 def does_variable_name_exists(var_name):
     conn = get_connection()
