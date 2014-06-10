@@ -794,7 +794,8 @@ The path containing this structure must be set."""
         #Based on subject 143
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
         if color_dict is None:
-            aparc_img = self.get('APARC', '143')
+            ref = self.get("ids")[0]
+            aparc_img = self.get('APARC', ref)
             aparc_data = aparc_img.get_data()
             aparc_values = set()
             for v in aparc_data.flat:

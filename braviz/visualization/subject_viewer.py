@@ -1255,7 +1255,8 @@ class SurfaceManager:
         self.__surf_trios[h] = trio
 
     def __update_lut(self):
-        lut = self.reader.get("SURF_SCALAR", "144", scalars=self.__current_scalars, lut=True, hemi="l")
+        ref = self.__subject
+        lut = self.reader.get("SURF_SCALAR", ref, scalars=self.__current_scalars, lut=True, hemi="l")
         for trio in self.__surf_trios.itervalues():
             mapper = trio[1]
             mapper.SetLookupTable(lut)
