@@ -58,7 +58,7 @@ class BravizMenu2(QtGui.QMainWindow):
         "correlations":"correlations",
         "linear_model": "lm_task",
         "logic_bundles":"logic_bundles",
-        "build_roi":"buid_roi"
+        "build_roi":"build_roi"
     }
 
     def make_application_launcher(self,app,button):

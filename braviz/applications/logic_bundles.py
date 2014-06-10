@@ -153,7 +153,7 @@ class LogicBundlesApp(QMainWindow):
         self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
         self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
-        self.ui.space_combo.currentTextChanged.connect(self.select_space)
+        self.ui.space_combo.currentIndexChanged.connect(self.select_space)
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
         self.ui.subjects_list.activated.connect(self.select_subject)

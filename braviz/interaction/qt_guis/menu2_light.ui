@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>572</width>
+    <width>624</width>
     <height>787</height>
    </rect>
   </property>
@@ -250,10 +250,10 @@ Export variables to the database</string>
           <item>
            <widget class="QToolButton" name="roi_builder">
             <property name="toolTip">
-             <string>Compare geometric structures across multiple subjects</string>
+             <string>Use spheres to select regions of interest</string>
             </property>
             <property name="text">
-             <string>Roi Builder</string>
+             <string>ROI Builder</string>
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
@@ -273,7 +273,7 @@ Export variables to the database</string>
           <item>
            <widget class="QToolButton" name="logic_bundles">
             <property name="toolTip">
-             <string>Compare geometric structures across multiple subjects</string>
+             <string>Create bundles by combining ROIs and Structures</string>
             </property>
             <property name="text">
              <string>Logic Bundles</string>
@@ -521,7 +521,7 @@ Export variables to the database</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>572</width>
+     <width>624</width>
      <height>26</height>
     </rect>
    </property>
