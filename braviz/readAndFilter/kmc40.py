@@ -557,15 +557,11 @@ The path containing this structure must be set."""
     def __cached_filter_fibers(self, subj, waypoint):
         "Only one waypoint, returns a set"
         #print "filtering for model "+waypoint
-        pickles_dir = os.path.join(self.getDynDataRoot(), 'pickles')
-        pickle_name = 'fibers_%s_%s.pickle' % (subj, waypoint)
+        cache_key = 'fibers_%s_%s.pickle' % (subj, waypoint)
         log = logging.getLogger(__name__)
-        # try:
-        #     with open(os.path.join(pickles_dir, pickle_name), 'rb') as cache_file:
-        #         ids = cPickle.Unpickler(cache_file).load()
-        #         return ids
-        # except IOError:
-        #     log.info("cache not found")
+        ids = self.load_from_cache(cache_file)
+        if ids is not None:
+            return ids
         fibers = self.get('fibers', subj, space='world')
         if waypoint[:3]=="wm-":
             img_name = "WMPARC"
@@ -594,13 +590,7 @@ The path containing this structure must be set."""
                 ids = braviz.readAndFilter.filter_polylines_with_img(fibers,img,lbl,do_remove=False)
             else:
                 ids = set()
-        try:
-            with open(os.path.join(pickles_dir, pickle_name), 'wb') as cache_file:
-                log.info("writing cache to %s",pickle_name)
-                cPickle.Pickler(cache_file, 2).dump(ids)
-                cache_file.close()
-        except IOError:
-            log.error("cache write failed")
+        self.save_into_cache(cache_key)
         return ids
 
     def filter_fibers(self,subj,struct):
