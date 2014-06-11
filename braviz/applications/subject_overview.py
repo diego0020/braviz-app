@@ -235,7 +235,7 @@ class SubjectOverviewApp(QMainWindow):
             return
 
         self.vtk_viewer.image.show_image()
-        if selection in ("MRI", "FA", "APARC", "MD", "DTI"):
+        if selection in ("MRI", "FA", "APARC","WMPARC", "MD", "DTI"):
             self.vtk_viewer.image.change_image_modality(selection)
         else:
             try:

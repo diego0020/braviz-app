@@ -398,6 +398,7 @@ class ImageManager:
         if modality is None:
             self.hide_image()
             return
+        modality = modality.upper()
 
         if self.__image_plane_widget is None:
             self.create_image_plane_widget()
@@ -411,8 +412,12 @@ class ImageManager:
         # update image labels:
         log = logging.getLogger(__name__)
         try:
-            aparc_img = self.reader.get("APARC", self.__current_subject, format="VTK", space=self.__current_space)
-            aparc_lut = self.reader.get("APARC", self.__current_subject, lut=True)
+            if modality == "WMPARC":
+                ref = "WMPARC"
+            else:
+                ref = "APARC"
+            aparc_img = self.reader.get(ref, self.__current_subject, format="VTK", space=self.__current_space)
+            aparc_lut = self.reader.get(ref, self.__current_subject, lut=True)
             self.__image_plane_widget.addLabels(aparc_img)
             self.__image_plane_widget.setLabelsLut(aparc_lut)
         except Exception as e:
@@ -498,7 +503,7 @@ class ImageManager:
             else:
                 self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
 
-        elif modality == "APARC":
+        elif modality in {"APARC","WMPARC"}:
             lut = self.reader.get("APARC", self.__current_subject, lut=True)
             self.__image_plane_widget.SetLookupTable(lut)
 

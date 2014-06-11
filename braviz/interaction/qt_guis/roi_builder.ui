@@ -380,6 +380,11 @@
            </item>
            <item>
             <property name="text">
+             <string>WMPARC</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
              <string>DTI</string>
             </property>
            </item>

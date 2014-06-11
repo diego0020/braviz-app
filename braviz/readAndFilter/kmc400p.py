@@ -59,7 +59,9 @@ The path containing this structure must be set."""
             DTI: Same options as MRI, but space also accepts 'diffusion'
             
             APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
-            
+
+            WMPARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
+
             FMRI: requires name=<Paradigm>
 
             BOLD: requires name=<Paradigm>, only nifti format is available
@@ -127,7 +129,7 @@ The path containing this structure must be set."""
             return self.__readFibers(subj, **kw)
         elif data == 'TENSORS':
             return self.__readTensors(subj, **kw)
-        elif data == 'APARC':
+        elif data in {"APARC","WMPARC"}:
             if kw.get('lut'):
                 if not hasattr(self, 'free_surfer_aparc_LUT'):
                     self.free_surfer_aparc_LUT = self.__create_surfer_lut()
@@ -179,8 +181,12 @@ The path containing this structure must be set."""
             path = os.path.join(self.__static_root, "slicer_models",str(subj))
             if kw.get("wm"):
                 filename = 'wmparc.nii.gz'
+                print "Warning... deprecated, use WMPARC instead"
             else:
                 filename = 'aparc+aseg.nii.gz'
+        elif data == "WMPARC":
+            path = os.path.join(self.__static_root, "slicer_models",str(subj))
+            filename = 'wmparc.nii.gz'
         else:
             log = logging.getLogger(__name__)
             log.error('Unknown image type %s' % data)
@@ -802,12 +808,16 @@ The path containing this structure must be set."""
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
         #Based on subject 119
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
+        #color_dict = None
         if color_dict is None:
-            aparc_img = self.get('APARC', '119')
+            ref = self.get("ids")[0]
+            aparc_img = self.get('APARC', ref)
             aparc_data = aparc_img.get_data()
-            aparc_values = set()
-            for v in aparc_data.flat:
-                aparc_values.add(v)
+            aparc_values = set(np.unique(aparc_data.flat))
+            wmparc_img = self.get("WMPARC",ref)
+            wmparc_data = wmparc_img.get_data()
+            wmparc_values = np.unique(wmparc_data.flat)
+            aparc_values.update(wmparc_values)
             color_file_name = os.path.join(self.getDataRoot(),"freeSurfer_Tracula", 'FreeSurferColorLUT.txt')
             try:
                 color_file = open(color_file_name)
@@ -828,11 +838,11 @@ The path containing this structure must be set."""
         out_lut.SetNanColor(0.0, 1.0, 0.0, 1.0)
         out_lut.SetNumberOfTableValues(max(color_dict.iterkeys()) + 1)
         out_lut.IndexedLookupOn()
-        for i in color_dict:
-            out_lut.SetAnnotation(i, color_dict[i][1])
-        for i in color_dict:  # HACKY.... maybe there is a bug?
-            idx = out_lut.GetAnnotatedValueIndex(i)
-            out_lut.SetTableValue(idx, color_dict[i][0])
+        for k,v in color_dict.iteritems():
+            out_lut.SetAnnotation(k, v[1])
+        for k,v in color_dict.iteritems():  # HACKY.... maybe there is a bug?
+            idx = out_lut.GetAnnotatedValueIndex(k)
+            out_lut.SetTableValue(idx, v[0])
         #self.save_into_cache('free_surfer_vtk_color_lut',out_lut)
         return out_lut
 
