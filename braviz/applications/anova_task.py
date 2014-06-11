@@ -36,6 +36,9 @@ import platform
 import logging
 #TODO: Move all database access to read and filter
 
+INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
+SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
+
 class AnovaApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -43,7 +46,7 @@ class AnovaApp(QMainWindow):
         self.anova = None
         self.regressors_model = braviz_models.AnovaRegressorsModel()
         self.result_model = braviz_models.AnovaResultsModel()
-        self.sample_model = braviz_models.SampleTree()
+        self.sample_model = braviz_models.SampleTree(SAMPLE_TREE_COLUMNS)
         self.plot = None
         self.plot_data_frame = None
         self.plot_x_var = None
@@ -62,9 +65,10 @@ class AnovaApp(QMainWindow):
     def setup_gui(self):
         self.ui = Ui_Anova_gui()
         self.ui.setupUi(self)
+        for v_idx in INITIAL_OUTCOMES:
+            self.ui.outcome_sel.insertItem(0,braviz_tab_data.get_var_name(v_idx))
         self.ui.outcome_sel.insertSeparator(self.ui.outcome_sel.count()-1)
         self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count()-1)
-        #self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
         self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
         self.ui.add_regressor_button.clicked.connect(self.launch_add_regressor_dialog)
         self.ui.reg_table.setModel(self.regressors_model)

@@ -102,16 +102,6 @@
                </property>
                <item>
                 <property name="text">
-                 <string>IHIdurd</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>IHIlatd</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
                  <string extracomment="select a new variable">Select Outcome...</string>
                 </property>
                </item>

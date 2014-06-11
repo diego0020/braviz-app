@@ -31,6 +31,10 @@ import braviz.readAndFilter.user_data as braviz_user_data
 
 __author__ = 'Diego'
 
+INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
+SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
+
+
 class LinearModelApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -41,7 +45,7 @@ class LinearModelApp(QMainWindow):
         empty_df = pd.DataFrame(columns=self.__table_cols)
         empty_df.index.name = "Coefficient"
         self.result_model = braviz_models.DataFrameModel(empty_df, self.__table_cols,string_columns={0})
-        self.sample_model = braviz_models.SampleTree()
+        self.sample_model = braviz_models.SampleTree(SAMPLE_TREE_COLUMNS)
         self.plot = None
         self.plot_name = None
         self.last_viewed_subject = None
@@ -58,6 +62,8 @@ class LinearModelApp(QMainWindow):
     def setup_gui(self):
         self.ui = Ui_LinearModel()
         self.ui.setupUi(self)
+        for v_idx in INITIAL_OUTCOMES:
+            self.ui.outcome_sel.insertItem(0,braviz_tab_data.get_var_name(v_idx))
         self.ui.outcome_sel.insertSeparator(self.ui.outcome_sel.count() - 1)
         self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count() - 1)
         #self.ui.outcome_sel.currentIndexChanged.connect(self.dispatch_outcome_select)
