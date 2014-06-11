@@ -41,7 +41,23 @@ SURFACE_SCALARS_DICT = dict(enumerate((
     'aparc.a2009s',
     'BA')
 ))
-UNIT_VECTORS = np.array(((1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1)))
+
+def get_unit_vectors():
+    # from http://blog.marmakoide.org/?p=1
+    n = 20
+    golden_angle = np.pi * (3 - np.sqrt(5))
+    theta = golden_angle * np.arange(n)
+    z = np.linspace(1 - 1.0 / n, 1.0 / n - 1, n)
+    radius = np.sqrt(1 - z * z)
+
+    points = np.zeros((n, 3))
+    points[:,0] = radius * np.cos(theta)
+    points[:,1] = radius * np.sin(theta)
+    points[:,2] = z
+    return points
+
+UNIT_VECTORS = get_unit_vectors()
+
 class ExtrapolateDialog(QDialog):
     def __init__(self,initial_source,subjects_list,sphere_id,reader):
         QDialog.__init__(self)
@@ -106,6 +122,7 @@ class ExtrapolateDialog(QDialog):
 
 
     def translate_one_point(self,pt,subj):
+
         subj_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
         #link -> world
         w_pt = self.__reader.transformPointsToSpace(pt,self.__link_space,
@@ -617,8 +634,7 @@ class BuildRoiApp(QMainWindow):
                 self.save_sphere()
         extrapol_dialog = ExtrapolateDialog(self.__current_subject,self.__subjects_list,self.__roi_id, self.reader)
         res = extrapol_dialog.exec_()
-        if res  == extrapol_dialog.Accepted:
-            self.refresh_checked()
+        self.refresh_checked()
 
     def get_state(self):
         state = dict()
