@@ -105,16 +105,11 @@
           <item>
            <widget class="QComboBox" name="nomina_combo">
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <item>
              <property name="text">
               <string>&lt;Select&gt;</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>GENERO</string>
              </property>
             </item>
            </widget>
@@ -217,16 +212,11 @@
           <item>
            <widget class="QComboBox" name="rational_combo">
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <item>
              <property name="text">
               <string>&lt;Select&gt;</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>FSIQ</string>
              </property>
             </item>
            </widget>

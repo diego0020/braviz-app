@@ -29,7 +29,7 @@ import subprocess
 
 SAMPLE_SIZE = 0.3
 #SAMPLE_SIZE = 0.5
-NOMINAL_VARIABLE = 11  # GENRE
+NOMINAL_VARIABLE = 11  # GENDER
 RATIONAL_VARIBLE = 5  # FSIQ
 
 
@@ -95,8 +95,11 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
         self.ui.space_combo.currentIndexChanged.connect(self.set_space_from_menu)
         self.ui.action_load_visualization.triggered.connect(self.load_visualization)
+        self.ui.nomina_combo.addItem(braviz_tab_data.get_var_name(NOMINAL_VARIABLE))
         self.ui.nomina_combo.setCurrentIndex(1)
         self.ui.nomina_combo.currentIndexChanged.connect(self.select_nominal_variable)
+        self.ui.rational_combo.addItem(braviz_tab_data.get_var_name(RATIONAL_VARIBLE))
+        self.ui.rational_combo.setCurrentIndex(1)
         self.ui.rational_combo.currentIndexChanged.connect(self.select_rational_variable)
         self.ui.action_save_scenario.triggered.connect(self.save_scenario)
         self.ui.action_load_scenario.triggered.connect(self.load_scenario_dialog)
