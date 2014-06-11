@@ -20,34 +20,15 @@ def __cached_named_tract(name_tract_func):
     def cached_func(reader, subject, color,scalars = None):
         log = logging.getLogger(__name__)
         if scalars is None:
-            cache_file = 'named_fibs_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color)
+            cache_key = 'named_fibs_%s_%s_%s' % (name_tract_func.__name__, subject, color)
         else:
-            cache_file = 'named_fibs_%s_%s_%s_%s.vtk' % (name_tract_func.__name__, subject, color, scalars)
-        cache_full_path = os.path.join(reader.getDynDataRoot(), 'pickles', cache_file)
-        if os.path.isfile(cache_full_path):
-            fib_reader = vtk.vtkPolyDataReader()
-            fib_reader.SetFileName(cache_full_path)
-            try:
-                fib_reader.Update()
-            except Exception:
-                log.error("problems reading %s" % cache_full_path)
-                raise
-            else:
-                out_fib = fib_reader.GetOutput()
-                fib_reader.CloseVTKFile()
-                return out_fib, name_tract_func(None, None, None,None, get_out_space=True)
+            cache_key = 'named_fibs_%s_%s_%s_%s' % (name_tract_func.__name__, subject, color, scalars)
+        out_fib = reader.load_from_cache(cache_key)
+        if out_fib is not None:
+            return out_fib, name_tract_func(None, None, None,None, get_out_space=True)
 
         fibers, out_space = name_tract_func(reader, subject, color,scalars)
-        fib_writer = vtk.vtkPolyDataWriter()
-        fib_writer.SetFileName(cache_full_path)
-        fib_writer.SetInputData(fibers)
-        fib_writer.SetFileTypeToBinary()
-        try:
-            fib_writer.Update()
-            if fib_writer.GetErrorCode() != 0:
-                log.warning('cache write failed')
-        except Exception:
-            log.warning('cache write failed')
+        reader.save_into_cache(cache_key,fibers)
         return fibers, out_space
 
     return cached_func

@@ -557,9 +557,9 @@ The path containing this structure must be set."""
     def __cached_filter_fibers(self, subj, waypoint):
         "Only one waypoint, returns a set"
         #print "filtering for model "+waypoint
-        cache_key = 'fibers_%s_%s.pickle' % (subj, waypoint)
+        cache_key = 'fibers_%s_%s' % (subj, waypoint)
         log = logging.getLogger(__name__)
-        ids = self.load_from_cache(cache_file)
+        ids = self.load_from_cache(cache_key)
         if ids is not None:
             return ids
         fibers = self.get('fibers', subj, space='world')
@@ -590,7 +590,7 @@ The path containing this structure must be set."""
                 ids = braviz.readAndFilter.filter_polylines_with_img(fibers,img,lbl,do_remove=False)
             else:
                 ids = set()
-        self.save_into_cache(cache_key)
+        self.save_into_cache(cache_key,ids)
         return ids
 
     def filter_fibers(self,subj,struct):
@@ -981,9 +981,9 @@ The path containing this structure must be set."""
         if len(key) + data_root_length > 250:
             key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
         else:
-            ilegal = ['<', '>', ':', '"', '/', "\\", '|', '?', '*']
-            for il in ilegal:
-                key = key.replace(il, '_')
+            ilegal = ['_','<', '>', ':', '"', '/', "\\", '|', '?', '*']
+            for i,il in enumerate(ilegal):
+                key = key.replace(il, '%d_'%i)
         return key
 
 

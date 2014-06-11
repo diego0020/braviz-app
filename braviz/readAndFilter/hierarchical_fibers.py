@@ -77,21 +77,22 @@ def get_valied_lines_from_roi(subj,roi_id,reader):
     if sphere_data is None:
         raise Exception("Sphere not found")
     r,x,y,z = sphere_data
-    key="roi_fibers_%s_%s_%f_%f_%f_%f"%(subj,roi_id,r,x,y,z)
+    key="roi_fibers_%s_%s"%(subj,roi_id)
     cached = reader.load_from_cache(key)
+    if cached is not None:
+        valid_ids, sphere_data_c = cached
+        if sphere_data_c == sphere_data:
+            return valid_ids
 
-    if cached is None:
+    fibers = reader.get("Fibers",subj,space=space)
+    filterer = FilterBundleWithSphere()
+    #Maybe overkill for only one sphere, but still fater than brute force
+    filterer.set_bundle(fibers)
 
-        fibers = reader.get("Fibers",subj,space=space)
-        filterer = FilterBundleWithSphere()
-        #Maybe overkill for only one sphere, but still fater than brute force
-        filterer.set_bundle(fibers)
+    valid_ids = filterer.filter_bundle_with_sphere((x,y,z),r,get_ids=True)
+    reader.save_into_cache(key,(valid_ids,(r,x,y,z)))
+    return valid_ids
 
-        valid_ids = filterer.filter_bundle_with_sphere((x,y,z),r,get_ids=True)
-        reader.save_into_cache(key,valid_ids)
-        return valid_ids
-    else:
-        return cached
 
 
 def brute_force_lines_in_sphere(fibers,ctr,radius):
