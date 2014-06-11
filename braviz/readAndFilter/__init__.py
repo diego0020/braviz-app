@@ -207,6 +207,36 @@ def transformGeneralData(data, transform):
     return output
 
 
+def abstract_test_lines_in_polyline(fibers,test_point_fun):
+    """
+    return a list of line_ids where at least one of the points passes the condition test_point_fun(p) == True
+    """
+    valid_fibers = set()
+    n = fibers.GetNumberOfCells()
+    l = fibers.GetNumberOfLines()
+    if n != l:
+        log = logging.getLogger(__name__)
+        log.error("Input must be a polydata containing only lines")
+        raise Exception("Input must be a polydata containing only lines")
+    def test_polyline(cellId):
+        i = cellId
+        c = fibers.GetCell(i)
+        pts = c.GetPoints()
+        npts = pts.GetNumberOfPoints()
+        #inside=False
+        for j in xrange(npts):
+            p = pts.GetPoint(j)
+            if test_point_fun(p):
+                #inside=True
+                return True
+            #if not inside:
+        return False
+
+    for i in xrange(n):
+        if test_polyline(i):
+            valid_fibers.add(i)
+    return valid_fibers
+
 def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
     """filters a polyline, keeps only the lines that cross a model
     the progress variable is pudated (via its set method) to indicate progress in the filtering operation
@@ -214,53 +244,47 @@ def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
      otherwise a list of the fibers that do cross the model is returned"""
     selector = vtk.vtkSelectEnclosedPoints()
     selector.Initialize(model)
-    model_bb = model.GetBounds()
-    valid_fibers = set()
-    invalid_fibers = set()
     if progress:
         log = logging.getLogger(__name__)
         log.warning("use of this progress argument is deprecated")
-        progress.set(10)
-    n = fibers.GetNumberOfCells()
-    l = fibers.GetNumberOfLines()
-    if n != l:
-        log = logging.getLogger(__name__)
-        log.error("Input must be a polydata containing only lines")
-        raise Exception("Input must be a polydata containing only lines")
-
-    def test_Polyline(cellId):
-        i = cellId
-        c = fibers.GetCell(i)
-        c_bb = c.GetBounds()
-        if not boundingBoxIntesection(model_bb, c_bb):
-            #fibers.DeleteCell(cellId)
-            return False
-        pts = c.GetPoints()
-        npts = pts.GetNumberOfPoints()
-        #inside=False
-        pts_list = range(npts)
-        random.shuffle(pts_list)
-        for j in pts_list:
-            p = pts.GetPoint(j)
-            if selector.IsInsideSurface(p):
-                #inside=True
-                return True
-            #if not inside:
-        return False
-
-    for i in xrange(n):
-        if not test_Polyline(i):
-            invalid_fibers.add(i)
+        progress.set(0)
+    def test_point_inside_model(p):
+        if selector.IsInsideSurface(p):
+            return True
         else:
-            valid_fibers.add(i)
+            return False
+
+    valid_fibers = abstract_test_lines_in_polyline(fibers,test_point_inside_model)
     selector.Complete()
-    if do_remove:
-        for i in invalid_fibers:
-            fibers.DeleteCell(i)
-        fibers.RemoveDeletedCells()
-        return fibers
-    else:
+    if do_remove is False:
         return valid_fibers
+    else:
+        raise Exception("Deprecated, you may use extract_poly_data_subset")
+
+def filter_polylines_with_img(polydata,img,label,do_remove=False):
+    """
+    img should be in the nibabel format
+    """
+    #TODO, do it all with numpy arrays, only one for
+    if do_remove is True:
+        raise NotImplementedError
+    affine = img.get_affine()
+    i_affine = np.linalg.inv(affine)
+    data = img.get_data()
+    label = data.dtype.type(label)
+    def test_point_in_img(p):
+        n_p = np.ones(4)
+        n_p[:3] = p
+        coords_h = i_affine.dot(n_p)
+        coords = coords_h[:3]/coords_h[3]
+        coords_i = np.round(coords)
+        try:
+            v = data[tuple(coords_i)]
+        except IndexError:
+            v = None
+        return v == label
+    valid_fibers = abstract_test_lines_in_polyline(polydata,test_point_in_img)
+    return valid_fibers
 
 
 def extract_poly_data_subset(polydata,id_list):

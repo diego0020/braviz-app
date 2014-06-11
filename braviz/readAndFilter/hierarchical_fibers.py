@@ -95,6 +95,7 @@ def get_valied_lines_from_roi(subj,roi_id,reader):
 
 
 def brute_force_lines_in_sphere(fibers,ctr,radius):
+    #TODO trye by loading first all points into a numpy array
     ans = set()
     c = np.array(ctr)
     n_lines = fibers.GetNumberOfLines()

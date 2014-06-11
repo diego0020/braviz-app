@@ -26,6 +26,8 @@ import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
 from hierarchical_fibers import read_logical_fibers
 
+
+#TODO: remove all hasattr, maybe change with porperties or None
 class kmc40Reader:
     """
 A read and filter class designed to work with the file structure and data from the KMC pilot project which contains 40 subjects.
@@ -555,24 +557,43 @@ The path containing this structure must be set."""
     def __cached_filter_fibers(self, subj, waypoint):
         "Only one waypoint, returns a set"
         #print "filtering for model "+waypoint
-        pickles_dir = os.path.join(self.getDataRoot(), 'pickles')
+        pickles_dir = os.path.join(self.getDynDataRoot(), 'pickles')
         pickle_name = 'fibers_%s_%s.pickle' % (subj, waypoint)
         log = logging.getLogger(__name__)
-        try:
-            with open(os.path.join(pickles_dir, pickle_name), 'rb') as cache_file:
-                ids = cPickle.Unpickler(cache_file).load()
-                cache_file.close()
-                #print "read from cache"
-                return ids
-        except IOError:
-            log.info("cache not found")
+        # try:
+        #     with open(os.path.join(pickles_dir, pickle_name), 'rb') as cache_file:
+        #         ids = cPickle.Unpickler(cache_file).load()
+        #         return ids
+        # except IOError:
+        #     log.info("cache not found")
         fibers = self.get('fibers', subj, space='world')
-        model = self.get('model', subj, name=waypoint, space='world')
-        if model:
-            ids = braviz.readAndFilter.filterPolylinesWithModel(fibers, model, do_remove=False)
+        if waypoint[:3]=="wm-":
+            img_name = "WMPARC"
+        elif waypoint[-7:]=="-SPHARM":
+            #have to do it in the old style
+            img_name = None
         else:
-            ids = set()
-
+            img_name = "APARC"
+        if img_name is None:
+            model = self.get('model', subj, name=waypoint, space='world')
+            if model:
+                ids = braviz.readAndFilter.filterPolylinesWithModel(fibers, model, do_remove=False)
+            else:
+                ids = set()
+        else:
+            if not hasattr(self,"free_surfer_labels"):
+                self.__parse_fs_color_file()
+            lbl = self.free_surfer_labels.get(waypoint)
+            if lbl is None:
+                raise Exception("Unknown structure")
+            try:
+                img = self.get(img_name,subj)
+            except Exception:
+                img = None
+            if img is not None:
+                ids = braviz.readAndFilter.filter_polylines_with_img(fibers,img,lbl,do_remove=False)
+            else:
+                ids = set()
         try:
             with open(os.path.join(pickles_dir, pickle_name), 'wb') as cache_file:
                 log.info("writing cache to %s",pickle_name)
