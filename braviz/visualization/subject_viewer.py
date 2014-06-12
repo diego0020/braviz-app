@@ -422,15 +422,20 @@ class ImageManager:
             self.__image_plane_widget.setLabelsLut(aparc_lut)
         except Exception as e:
             log.warning(e)
-            self.image_plane_widget.Off()
+            log.warning("APARC image not found")
             #raise Exception("Aparc not available")
-            raise
+            self.__image_plane_widget.addLabels(None)
+
 
 
         if modality == "FMRI":
-            mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)
-            fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
+            try:
+                mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)
+                fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
                                          name=paradigm)
+            except Exception:
+                fmri_image = None
+
             if fmri_image is None:
                 self.image_plane_widget.Off()
                 raise Exception("%s not available for subject %s" % (paradigm, self.__current_subject))
@@ -455,7 +460,6 @@ class ImageManager:
                 dti_image = self.reader.get("DTI", self.__current_subject, format="VTK", space=self.__current_space)
                 fa_image = self.reader.get("FA", self.__current_subject, format="VTK", space=self.__current_space)
             except Exception:
-                self.hide_image(skip_render=True)
                 log.warning("DTI, not available")
                 self.image_plane_widget.Off()
                 raise Exception("DTI, not available")

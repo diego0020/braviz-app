@@ -306,7 +306,7 @@ def get_subject_variables(subj_code, var_codes):
 def get_subjects():
     conn = get_connection()
     cur=conn.execute("SELECT subject FROM subjects ORDER BY subject")
-    subj_list = list( t[0] for t in cur.fetchall())
+    subj_list = [ t[0] for t in cur.fetchall()]
     return subj_list
 
 def get_var_description(var_idx):
