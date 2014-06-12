@@ -10,10 +10,13 @@ def configure_logger(app_name):
     """
     import logging
     import datetime
-    from braviz.readAndFilter.kmc40 import get_data_root
+    from braviz.readAndFilter import braviz_auto_dynamic_data_root
     now = datetime.datetime.now()
     time_str = now.strftime("%d_%m_%y-%Hh%Mm%Ss")
-    log_file = os.path.join(get_data_root(),"logs","%s_%s.txt"%(app_name,time_str))
+    path_root = os.path.join(braviz_auto_dynamic_data_root(),"logs")
+    if not os.path.isdir(path_root):
+        os.mkdir(path_root)
+    log_file = os.path.join(path_root,"%s_%s.txt"%(app_name,time_str))
     format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
     logging.basicConfig(filename=log_file,level=logging.INFO,format=format_str)
     logging.captureWarnings(True)
