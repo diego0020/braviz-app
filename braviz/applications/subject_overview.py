@@ -197,8 +197,9 @@ class SubjectOverviewApp(QMainWindow):
         self.subject_details_model.change_subject(new_subject)
         #image
         image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(new_subject)))
-        if len(image_code) < 3:
-            image_code = "0" + image_code
+
+        # if len(image_code) < 3:
+        #     image_code = "0" + image_code
         log = logging.getLogger(__name__)
         log.info("Image Code: %s", image_code)
         try:

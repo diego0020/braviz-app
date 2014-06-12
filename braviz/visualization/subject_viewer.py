@@ -119,8 +119,6 @@ class SubjectViewer:
         self.ren_win.Render()
 
     def change_subject(self, new_subject_img_code):
-        if len(new_subject_img_code) < 3:
-            new_subject_img_code = "0" + new_subject_img_code
         self.__current_subject = new_subject_img_code
         errors = []
         log = logging.getLogger(__name__)
