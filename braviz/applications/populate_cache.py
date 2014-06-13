@@ -33,15 +33,14 @@ def populate_cache(subj):
     print " %s: Colored Fibers"%subj
     with ignored(Exception):
         reader2.get('fibers',subj,color='fa')
-    with ignored(Exception):
-        reader2.get('fibers',subj,color='orient')
-    with ignored(Exception):
-        reader2.get('fibers',subj,color='curv')
-    with ignored(Exception):
-        reader2.get('fibers',subj,color='y')
+    # with ignored(Exception):
+    #     reader2.get('fibers',subj,color='orient')
+    # with ignored(Exception):
+    #     reader2.get('fibers',subj,color='curv')
+    # with ignored(Exception):
+    #     reader2.get('fibers',subj,color='y')
     with ignored(Exception):
         reader2.get('fibers',subj,scalars="fa_p")
-
     with ignored(Exception):
         reader2.get('fibers',subj,scalars="fa_l")
     with ignored(Exception):

@@ -218,7 +218,15 @@ The path containing this structure must be set."""
                 #print "turning off interpolate"
 
             img2 = applyTransform(vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
-            return self.__move_img_from_world(subj, img2, interpolate, kw.get('space', 'world'))
+            space = kw.get('space', 'world')
+            if space == "diff" and (data in {"FA","MD","DTI"}):
+                return img2
+            return self.__move_img_from_world(subj, img2, interpolate, space=space)
+        space = kw.get('space', 'world')
+        if space == "diff" and (data in {"FA","MD","DTI"}):
+            pass
+        else:
+            raise NotImplementedError
         return img
 
     def __move_img_from_world(self, subj, img2, interpolate=False, space='world'):
@@ -247,6 +255,12 @@ The path containing this structure must be set."""
             img3 = applyTransform(img2, transform, origin2=(78, -112, -50), dimension2=(79, 95, 68),
                                   spacing2=(-2, 2, 2),
                                   interpolate=interpolate)
+            return img3
+        elif space == "diff":
+            path = os.path.join(self.__root, str(subj), 'camino')
+            # notice we are reading the inverse transform diff -> world
+            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            img3 = applyTransform(img2, trans, interpolate=interpolate)
             return img3
         else:
             log = logging.getLogger(__name__)
@@ -476,36 +490,31 @@ The path containing this structure must be set."""
         if (color is None) and (scalars is None):
             color = "orient"
 
+        #WE ARE IN DIFF SPACE
         if color is not None:
             color = color.lower()
-            cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams_%s.vtk' % color)
             if color.startswith('orient'):
                 #This one should always exist!!!!!
-                cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams.vtk')
-                if not os.path.isfile(cache_name):
+                file_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams.vtk')
+                if not os.path.isfile(file_name):
                     raise Exception("Fibers file not found")
+                pd_reader = vtk.vtkPolyDataReader()
+                pd_reader.SetFileName(file_name)
+                pd_reader.Update()
+                fibs = pd_reader.GetOutput()
+                pd_reader.CloseVTKFile()
+                #!!! This is the base case
+                return fibs
+            cache_key = 'streams_%s_%s.vtk' % (subj,color)
         else:
             scalars = scalars.lower()
-            cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams_sc_%s.vtk' % scalars)
+            cache_key = 'streams_%s_sc_%s.vtk' % (subj,scalars)
 
-
-        cached = os.path.isfile(cache_name)
-        if cached:
-            fib_reader = vtk.vtkPolyDataReader()
-            fib_reader.SetFileName(cache_name)
-            if fib_reader.IsFilePolyData() < 1:
-                log.error("fibers polydata file not found")
-                raise Exception("fibers polydata file not found")
-            try:
-                fib_reader.Update()
-            except Exception:
-                log.error("problems reading %s" % cache_name)
-                raise
-            else:
-                out = fib_reader.GetOutput()
-                fib_reader.CloseVTKFile()
-                return out
+        cached = self.load_from_cache(cache_key)
+        if cached is not None:
+                return cached
         else:
+            #WE ARE IN DIFF SPACE
             fibers = self.__cached_color_fibers(subj, 'orient')
             if color == 'orient':
                 return fibers
@@ -514,7 +523,7 @@ The path containing this structure must be set."""
                 braviz.readAndFilter.color_fibers.color_fibers_pts(fibers, color_fun)
             elif color == 'fa':
                 color_fun = braviz.readAndFilter.color_fibers.color_by_fa
-                fa_img = self.get('fa', subj, format='vtk')
+                fa_img = self.get('fa', subj, format='vtk',space="diff")
                 fun_args = (fa_img,)
                 braviz.readAndFilter.color_fibers.color_fibers_pts(fibers, color_fun, *fun_args)
             elif color == 'rand':
@@ -524,16 +533,16 @@ The path containing this structure must be set."""
                 color_fun = braviz.readAndFilter.color_fibers.line_curvature
                 braviz.readAndFilter.color_fibers.color_fibers_lines(fibers, color_fun)
             elif scalars == "fa_p":
-                fa_img = self.get("FA",subj,space="world")
+                fa_img = self.get("FA",subj,space="diff")
                 braviz.readAndFilter.color_fibers.scalars_from_image(fibers,fa_img)
             elif scalars == "fa_l":
-                fa_img = self.get("FA",subj,space="world")
+                fa_img = self.get("FA",subj,space="diff")
                 braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,fa_img)
             elif scalars == "md_p":
-                md_img = self.get("MD",subj,space="world")
+                md_img = self.get("MD",subj,space="diff")
                 braviz.readAndFilter.color_fibers.scalars_from_image(fibers,md_img)
             elif scalars == "md_l":
-                md_img = self.get("MD",subj,space="world")
+                md_img = self.get("MD",subj,space="diff")
                 braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,md_img)
             elif scalars == "length":
                 braviz.readAndFilter.color_fibers.scalars_from_length(fibers)
@@ -542,16 +551,7 @@ The path containing this structure must be set."""
                 raise Exception('Unknown coloring scheme %s' % color)
 
             #Cache write
-            fib_writer = vtk.vtkPolyDataWriter()
-            fib_writer.SetFileName(cache_name)
-            fib_writer.SetInputData(fibers)
-            fib_writer.SetFileTypeToBinary()
-            try:
-                fib_writer.Update()
-                if fib_writer.GetErrorCode() != 0:
-                    log.warning('cache write failed')
-            except Exception:
-                log.warning('cache write failed')
+            self.save_into_cache(cache_key,fibers)
             return fibers
 
     def __cached_filter_fibers(self, subj, waypoint):
@@ -762,10 +762,7 @@ The path containing this structure must be set."""
     def __movePointsToSpace(self, point_set, space, subj, inverse=False):
         """Transforms a set of points in 'world' space to the talairach or template spaces
         If inverse is True, the points will be moved from 'space' to world"""
-        #pad subject
         subj=str(subj)
-        if len(subj)<3:
-            subj = "0"*(3-len(subj))+subj
         if space.lower()[:2] == 'wo':
             return point_set
         elif space.lower()[:2] == 'ta':
@@ -973,6 +970,8 @@ The path containing this structure must be set."""
     def transformPointsToSpace(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space. 
         If inverse is true moves from space to world"""
+        if len(subj)<3:
+            subj="0"*(3-len(subj))+subj
         return self.__movePointsToSpace(point_set, space, subj, inverse)
 
     def __process_key(self, key):

@@ -24,7 +24,7 @@ from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
-
+from hierarchical_fibers import read_logical_fibers
 
 class kmc400Reader:
     """
@@ -218,8 +218,17 @@ The path containing this structure must be set."""
                 #print "turning off interpolate"
 
             img2 = applyTransform(vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
-            return self.__move_img_from_world(subj, img2, interpolate, kw.get('space', 'world'))
+            space = kw.get('space', 'world')
+            if space == "diff" and (data in {"FA","MD","DTI"}):
+                return img2
+            return self.__move_img_from_world(subj, img2, interpolate, space)
+        space = kw.get('space', 'world')
+        if space == "diff" and (data in {"FA","MD","DTI"}):
+            pass
+        else:
+            raise NotImplementedError
         return img
+
 
     def __move_img_from_world(self, subj, img2, interpolate=False, space='world'):
         "moves an image from the world coordinate space to talairach or dartel spaces"
@@ -247,6 +256,12 @@ The path containing this structure must be set."""
             img3 = applyTransform(img2, transform, origin2=(78, -112, -50), dimension2=(79, 95, 68),
                                   spacing2=(-2, 2, 2),
                                   interpolate=interpolate)
+            return img3
+        elif space == "diff":
+            path = os.path.join(self.getDataRoot(), "tractography", str(subj), 'output')
+            # notice we are reading the inverse transform diff -> world
+            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            img3 = applyTransform(img2, trans, interpolate=interpolate)
             return img3
         else:
             log = logging.getLogger(__name__)
@@ -479,43 +494,40 @@ The path containing this structure must be set."""
     def __cached_color_fibers(self, subj, color=None,scalars=None):
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
-        #todo
-        raise NotImplementedError
 
+        #WE ARE IN DIFF SPACE!!
         log = logging.getLogger(__name__)
         if (color is None) and (scalars is None):
             color = "orient"
 
         if color is not None:
             color = color.lower()
-            cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams_%s.vtk' % color)
             if color.startswith('orient'):
                 #This one should always exist!!!!!
-                cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams.vtk')
-                if not os.path.isfile(cache_name):
-                    raise Exception("Fibers file not found")
+                if color.startswith('orient'):
+                    #This one should always exist!!!!!
+                    file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'output', 'CaminoTracts.vtk')
+                    if not os.path.isfile(file_name):
+                        raise Exception("Fibers file not found")
+                    pd_reader = vtk.vtkPolyDataReader()
+                    pd_reader.SetFileName(file_name)
+                    pd_reader.Update()
+                    fibs = pd_reader.GetOutput()
+                    pd_reader.CloseVTKFile()
+                    #!!! This is the base case
+                    return fibs
+            cache_key = 'streams_%s_%s.vtk' % (subj,color)
         else:
             scalars = scalars.lower()
-            cache_name = os.path.join(self.getDataRoot(), subj, 'camino', 'streams_sc_%s.vtk' % scalars)
+            cache_key = 'streams_%s_sc_%s.vtk' % (subj,scalars)
 
 
-        cached = os.path.isfile(cache_name)
-        if cached:
-            fib_reader = vtk.vtkPolyDataReader()
-            fib_reader.SetFileName(cache_name)
-            if fib_reader.IsFilePolyData() < 1:
-                log.error("fibers polydata file not found")
-                raise Exception("fibers polydata file not found")
-            try:
-                fib_reader.Update()
-            except Exception:
-                log.error("problems reading %s" % cache_name)
-                raise
-            else:
-                out = fib_reader.GetOutput()
-                fib_reader.CloseVTKFile()
-                return out
+        cached = self.load_from_cache(cache_key)
+        if cached is not None:
+                return cached
         else:
+            #WE ARE IN DIFF SPACE
+            #base case
             fibers = self.__cached_color_fibers(subj, 'orient')
             if color == 'orient':
                 return fibers
@@ -524,7 +536,7 @@ The path containing this structure must be set."""
                 braviz.readAndFilter.color_fibers.color_fibers_pts(fibers, color_fun)
             elif color == 'fa':
                 color_fun = braviz.readAndFilter.color_fibers.color_by_fa
-                fa_img = self.get('fa', subj, format='vtk')
+                fa_img = self.get('fa', subj, format='vtk',space="diff")
                 fun_args = (fa_img,)
                 braviz.readAndFilter.color_fibers.color_fibers_pts(fibers, color_fun, *fun_args)
             elif color == 'rand':
@@ -534,16 +546,16 @@ The path containing this structure must be set."""
                 color_fun = braviz.readAndFilter.color_fibers.line_curvature
                 braviz.readAndFilter.color_fibers.color_fibers_lines(fibers, color_fun)
             elif scalars == "fa_p":
-                fa_img = self.get("FA",subj,space="world")
+                fa_img = self.get("FA",subj,space="diff")
                 braviz.readAndFilter.color_fibers.scalars_from_image(fibers,fa_img)
             elif scalars == "fa_l":
-                fa_img = self.get("FA",subj,space="world")
+                fa_img = self.get("FA",subj,space="diff")
                 braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,fa_img)
             elif scalars == "md_p":
-                md_img = self.get("MD",subj,space="world")
+                md_img = self.get("MD",subj,space="diff")
                 braviz.readAndFilter.color_fibers.scalars_from_image(fibers,md_img)
             elif scalars == "md_l":
-                md_img = self.get("MD",subj,space="world")
+                md_img = self.get("MD",subj,space="diff")
                 braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,md_img)
             elif scalars == "length":
                 braviz.readAndFilter.color_fibers.scalars_from_length(fibers)
@@ -552,49 +564,46 @@ The path containing this structure must be set."""
                 raise Exception('Unknown coloring scheme %s' % color)
 
             #Cache write
-            fib_writer = vtk.vtkPolyDataWriter()
-            fib_writer.SetFileName(cache_name)
-            fib_writer.SetInputData(fibers)
-            fib_writer.SetFileTypeToBinary()
-            try:
-                fib_writer.Update()
-                if fib_writer.GetErrorCode() != 0:
-                    log.warning('cache write failed')
-            except Exception:
-                log.warning('cache write failed')
+            self.save_into_cache(cache_key,fibers)
             return fibers
 
     def __cached_filter_fibers(self, subj, waypoint):
         "Only one waypoint, returns a set"
-        raise NotImplementedError
         #print "filtering for model "+waypoint
-        pickles_dir = os.path.join(self.getDataRoot(), '.pickles')
-        if not os.path.isdir(pickles_dir):
-            os.mkdir(pickles_dir)
-        pickle_name = 'fibers_%s_%s.pickle' % (subj, waypoint)
+        cache_key = 'fibers_%s_%s' % (subj, waypoint)
         log = logging.getLogger(__name__)
-        try:
-            with open(os.path.join(pickles_dir, pickle_name), 'rb') as cache_file:
-                ids = cPickle.Unpickler(cache_file).load()
-                cache_file.close()
-                #print "read from cache"
-                return ids
-        except IOError:
-            log.info("cache not found")
+        ids = self.load_from_cache(cache_key)
+        if ids is not None:
+            return ids
         fibers = self.get('fibers', subj, space='world')
-        model = self.get('model', subj, name=waypoint, space='world')
-        if model:
-            ids = braviz.readAndFilter.filterPolylinesWithModel(fibers, model, do_remove=False)
+        if waypoint[:3]=="wm-":
+            img_name = "WMPARC"
+        elif waypoint[-7:]=="-SPHARM":
+            #have to do it in the old style
+            img_name = None
         else:
-            ids = set()
-
-        try:
-            with open(os.path.join(pickles_dir, pickle_name), 'wb') as cache_file:
-                log.info("writing cache to %s",pickle_name)
-                cPickle.Pickler(cache_file, 2).dump(ids)
-                cache_file.close()
-        except IOError:
-            log.error("cache write failed")
+            img_name = "APARC"
+        if img_name is None:
+            model = self.get('model', subj, name=waypoint, space='world')
+            if model:
+                ids = braviz.readAndFilter.filterPolylinesWithModel(fibers, model, do_remove=False)
+            else:
+                ids = set()
+        else:
+            if not hasattr(self,"free_surfer_labels"):
+                self.__parse_fs_color_file()
+            lbl = self.free_surfer_labels.get(waypoint)
+            if lbl is None:
+                raise Exception("Unknown structure")
+            try:
+                img = self.get(img_name,subj)
+            except Exception:
+                img = None
+            if img is not None:
+                ids = braviz.readAndFilter.filter_polylines_with_img(fibers,img,lbl,do_remove=False)
+            else:
+                ids = set()
+        self.save_into_cache(cache_key,ids)
         return ids
 
     def filter_fibers(self,subj,struct):
@@ -602,7 +611,6 @@ The path containing this structure must be set."""
 
     def __readFibers_from_db(self,subj,db_id,**kw):
         log = logging.getLogger(__name__)
-        raise NotImplementedError
         try:
             _, bundle_type, data = bundles_db.get_bundle_details(db_id)
         except Exception:
@@ -622,6 +630,10 @@ The path containing this structure must be set."""
             operation = "and" if bundle_type == 1 else "or"
             checkpoints = pickle.loads(data)
             poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation,**kw)
+            return poly
+        elif bundle_type == 10:
+            tree_dict = pickle.loads(data)
+            poly = read_logical_fibers(subj,tree_dict,self,**kw)
             return poly
         else:
             log.error("Unknown data type")
@@ -690,12 +702,12 @@ The path containing this structure must be set."""
                 return transformed_streams
             return fibers
         if 'waypoint' not in kw:
-            path = os.path.join(self.__root, str(subj), 'camino')
+            path = os.path.join(self.getDataRoot(),'tractography', str(subj),"output")
             streams = self.__cached_color_fibers(subj, kw.get('color'),kw.get("scalars"))
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
             #move to world
-            matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
             streams_mri = transformPolyData(streams, matrix)
             if kw.get('space', 'world').lower() != 'world':
                 transformed_streams = self.__movePointsToSpace(streams_mri, kw['space'], subj)
@@ -990,9 +1002,9 @@ The path containing this structure must be set."""
         if len(key) + data_root_length > 250:
             key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
         else:
-            ilegal = ['<', '>', ':', '"', '/', "\\", '|', '?', '*']
-            for il in ilegal:
-                key = key.replace(il, '_')
+            ilegal = ['_','<', '>', ':', '"', '/', "\\", '|', '?', '*']
+            for i,il in enumerate(ilegal):
+                key = key.replace(il, '%d_'%i)
         return key
 
 
