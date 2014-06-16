@@ -820,7 +820,7 @@ The path containing this structure must be set."""
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
         #Based on subject 119
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
-        if len(color_dict)<180:
+        if color_dict is not None and len(color_dict)<180:
             color_dict = None
         #color_dict = None
         if color_dict is None:
