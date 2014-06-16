@@ -226,7 +226,8 @@ The path containing this structure must be set."""
         if space == "diff" and (data in {"FA","MD","DTI"}):
             pass
         else:
-            raise NotImplementedError
+            pass
+
         return img
 
 
