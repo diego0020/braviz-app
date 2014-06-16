@@ -31,8 +31,12 @@ import braviz.readAndFilter.user_data as braviz_user_data
 
 __author__ = 'Diego'
 
-INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
-SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
+if braviz.readAndFilter.PROJECT == "kmc40":
+    INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
+    SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
+else:
+    INITIAL_OUTCOMES = (540,) # IHIdurd,IHIlatd
+    SAMPLE_TREE_COLUMNS = ("primipar","sexo5")
 
 
 class LinearModelApp(QMainWindow):

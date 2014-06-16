@@ -36,8 +36,12 @@ import platform
 import logging
 #TODO: Move all database access to read and filter
 
-INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
-SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
+if braviz.readAndFilter.PROJECT == "kmc40":
+    INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
+    SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
+else:
+    INITIAL_OUTCOMES = (540,) # IHIdurd,IHIlatd
+    SAMPLE_TREE_COLUMNS = ("primipar","sexo5")
 
 class AnovaApp(QMainWindow):
     def __init__(self):

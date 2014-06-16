@@ -27,10 +27,17 @@ import multiprocessing.connection
 import binascii
 import subprocess
 
-SAMPLE_SIZE = 0.3
+
 #SAMPLE_SIZE = 0.5
-NOMINAL_VARIABLE = 11  # GENDER
-RATIONAL_VARIBLE = 5  # FSIQ
+if braviz.readAndFilter.PROJECT == "kmc40":
+    NOMINAL_VARIABLE = 11  # GENDER
+    RATIONAL_VARIBLE = 5  # FSIQ
+    SAMPLE_SIZE = 0.3
+else:
+    NOMINAL_VARIABLE = 310  # SEXO5
+    RATIONAL_VARIBLE = 540  # psnacercorr
+    SAMPLE_SIZE = 0.1
+
 
 
 class SampleOverview(QtGui.QMainWindow):

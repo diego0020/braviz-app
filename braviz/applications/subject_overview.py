@@ -54,7 +54,15 @@ class SubjectOverviewApp(QMainWindow):
         else:
             self.__pipe_check_timer = None
 
-        initial_vars = (11, 17, 1)
+        if braviz.readAndFilter.PROJECT == "kmc40":
+            initial_vars = (11, 17, 1)
+            self.__context_variables = [11, 6, 17, 1]
+            initial_details_vars = [6, 11, 248, 249, 250, 251, 252, 253, 254, 255]
+        else:
+            initial_vars = (278, 310, 324)
+            self.__context_variables = [278, 310, 324, 359]
+            initial_details_vars = [278, 310, 324, 359]
+
 
         self.vtk_widget = QSubjectViwerWidget(reader=self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer
@@ -63,13 +71,13 @@ class SubjectOverviewApp(QMainWindow):
 
         #context panel
         self.context_frame = None
-        self.__context_variables = [11, 6, 17, 1]
+
 
         #select first subject
         index = self.subjects_model.index(0, 0)
         self.__curent_subject = self.subjects_model.data(index, QtCore.Qt.DisplayRole)
 
-        initial_details_vars = [6, 11, 248, 249, 250, 251, 252, 253, 254, 255]
+
         self.subject_details_model = SubjectDetails(initial_vars=initial_details_vars,
                                                     initial_subject=self.__curent_subject)
         #Structures model
@@ -172,7 +180,8 @@ class SubjectOverviewApp(QMainWindow):
         #self.vtk_viewer.show_cone()
 
         #context view
-        self.context_frame = ContextVariablesPanel(self.ui.splitter_2, "Context",app=self)
+        self.context_frame = ContextVariablesPanel(self.ui.splitter_2, "Context",app=self,
+                                                   initial_variable_idxs=self.__context_variables)
 
         #menubar
         self.ui.actionSave_scenario.triggered.connect(self.save_state)
