@@ -60,9 +60,6 @@ def delete_node(var_idx):
     delete_node_aux(conn,var_idx)
     conn.commit()
 
-
-
-
 def get_sons(var_idx,recursive=False):
     if recursive is True:
         raise NotImplementedError
@@ -81,4 +78,9 @@ def get_var_parent(var_idx):
         return ans[0]
     return None
 
-
+def add_relation(origin_idx ,dest_idx,ambi=False):
+    conn = get_connection()
+    q="INSERT OR IGNORE INTO relations (origin_id,destination_id,counter,UNCLEAR) VALUES (?,?,0,?)"
+    conn.execute(q,(origin_idx,dest_idx,ambi))
+    conn.execute(q,(dest_idx,origin_idx,ambi))
+    conn.commit()

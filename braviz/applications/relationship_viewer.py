@@ -9,6 +9,7 @@ from braviz.interaction import qt_models
 
 from braviz.readAndFilter import tabular_data, braint_db
 from functools import partial as partial_f
+from braviz.interaction.qt_dialogs import NewVariableDialog
 
 __author__ = 'Diego'
 
@@ -30,6 +31,14 @@ class RelationShipViewer(QMainWindow):
         self.ui.add_var_button.clicked.connect(self.add_variable)
         self.ui.add_father_tree.customContextMenuRequested.connect(partial_f(self.show_remove_context,
                                                                             self.ui.add_father_tree))
+        self.ui.new_var_button.clicked.connect(self.create_new_variable)
+        self.ui.add_source_tree.setModel(self.__big_tree_model)
+        self.ui.add_dest_tree.setModel(self.__big_tree_model)
+        self.ui.add_source_tree.expandToDepth(3)
+        self.ui.add_dest_tree.expandToDepth(3)
+
+        self.ui.add_rel_button.clicked.connect(self.add_relation)
+
     def add_variable(self):
         father_idx = self.ui.add_father_tree.currentIndex()
         father_node = self.__big_tree_model.get_node(father_idx)
@@ -52,6 +61,10 @@ class RelationShipViewer(QMainWindow):
         for n in ants:
             self.ui.add_father_tree.expand(n)
 
+    def create_new_variable(self):
+        dialog = NewVariableDialog()
+        dialog.exec_()
+        self.__vars_list.update_list()
 
     def reset_tree(self):
         self.__big_tree_model.fill_from_db()
@@ -72,16 +85,28 @@ class RelationShipViewer(QMainWindow):
             for n in ants:
                 caller.expand(n)
 
-
-
-
-
         menu = QtGui.QMenu("Remove Node")
         delete_node_action = QtGui.QAction("delete %s"%label,caller)
         delete_node_action.triggered.connect(partial_f(delete_node,current_node.var_id))
         menu.addAction(delete_node_action)
         global_pos = caller.mapToGlobal(pos)
         menu.exec_(global_pos)
+
+    def add_relation(self):
+        origin_index = self.ui.add_source_tree.currentIndex()
+        if not origin_index.isValid():
+            return
+        dest_index = self.ui.add_dest_tree.currentIndex()
+        if not dest_index.isValid():
+            return
+        origin_id = int(self.__big_tree_model.get_node(origin_index).var_id)
+        dest_id = int(self.__big_tree_model.get_node(dest_index).var_id)
+        ambiguous = bool(self.ui.ambi_check.isChecked())
+        message = "adding relationship from %s to %s"%(origin_id,dest_id)
+        message += "ambi" if ambiguous else "not ambi"
+        braint_db.add_relation(origin_id,dest_id,ambiguous)
+        self.statusBar().showMessage(message,1000)
+
 
 def run():
     import sys
