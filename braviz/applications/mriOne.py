@@ -197,9 +197,13 @@ ren.AddActor(fib_actor)
 def paint_fibers(event=None):
     if active_fibers.get():
         subj = select_subj_frame.get()
-        fibers = reader.get('fibers', subj, space=space_var.get(), color=tract_var.get())
-        fib_mapper.SetInputData(fibers)
-        fib_actor.SetVisibility(1)
+        try:
+            fibers = reader.get('fibers', subj, space=space_var.get(), color=tract_var.get())
+        except Exception:
+            fib_actor.SetVisibility(0)
+        else:
+            fib_mapper.SetInputData(fibers)
+            fib_actor.SetVisibility(1)
     else:
         fib_actor.SetVisibility(0)
     renWin.Render()

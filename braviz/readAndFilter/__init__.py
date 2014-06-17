@@ -15,7 +15,7 @@ import numpy as np
 import psutil
 
 from braviz.interaction.config_file import get_config as __get_config
-
+from scipy import ndimage
 
 def nibNii2vtk(nii):
     """Transform a nifti image read by nibabel into a vtkImageData"""
@@ -261,6 +261,7 @@ def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
     else:
         raise Exception("Deprecated, you may use extract_poly_data_subset")
 
+
 def filter_polylines_with_img(polydata,img,label,do_remove=False):
     """
     img should be in the nibabel format
@@ -284,6 +285,42 @@ def filter_polylines_with_img(polydata,img,label,do_remove=False):
             v = None
         return v == label
     valid_fibers = abstract_test_lines_in_polyline(polydata,test_point_in_img)
+    return valid_fibers
+
+
+def filter_polylines_with_img_numpy_slow(polydata,img,label,do_remove=False):
+    """
+    img should be in the nibabel format
+    """
+    if do_remove is True:
+        raise NotImplementedError
+    affine = img.get_affine()
+    i_affine = np.linalg.inv(affine)
+    data = img.get_data()
+    label = data.dtype.type(label)
+    def test_poly_line(cell):
+        pts = cell.GetPoints()
+        n_pts = pts.GetNumberOfPoints()
+        points_array = np.ones((n_pts,4))
+        for i in xrange(n_pts):
+            points_array[i,:3]=pts.GetPoint(i)
+        coords_h = i_affine.dot(points_array.T).T
+        coords = coords_h[:,:3]
+        divisors = np.repeat(coords_h[:,3:],3,axis=1)
+        coords = coords/divisors
+        coords_i = np.round(coords)
+        vals = ndimage.map_coordinates(data,coords_i.T)
+        if np.any(vals==label):
+            return True
+        else:
+            return False
+    n = polydata.GetNumberOfCells()
+    l = polydata.GetNumberOfLines()
+    if n != l:
+        log = logging.getLogger(__name__)
+        log.error("Input must be a polydata containing only lines")
+        raise Exception("Input must be a polydata containing only lines")
+    valid_fibers = set(i for i in xrange(n) if test_poly_line(polydata.GetCell(i)))
     return valid_fibers
 
 

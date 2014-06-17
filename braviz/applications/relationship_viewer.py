@@ -130,7 +130,8 @@ class RelationShipViewer(QMainWindow):
         node = self.__big_tree_model.get_node(index)
         self.ui.rels_label.setText("Relationships from %s:"%node.label)
         rels = braint_db.get_relations_count(node.var_id,aggregate=True)
-        self.__rels_model.set_count(rels)
+        direct_rels = braint_db.get_relations_count(node.var_id,aggregate=False)
+        self.__rels_model.set_count(rels,direct_rels)
         self.aux_update_tree(self.__rels_model.root)
 
 

@@ -157,22 +157,19 @@ The path containing this structure must be set."""
             path = os.path.join(self.__static_root, "nii",str(subj))
             filename = 'MPRAGEmodifiedSENSE.nii.gz'
         elif data == 'FA':
-            raise Exception("Not yet available")
-            path = os.path.join(self.__root, 'tractography',str(subj))
+            path = os.path.join(self.__static_root, 'tractography',str(subj))
             if kw.get('space',"").startswith('diff'):
-                filename = 'FA_masked.nii.gz'
+                filename = 'fa.nii.gz'
             else:
-                filename = 'FA_mri_masked.nii.gz'
+                filename = 'fa_mri.nii.gz'
         elif data == "MD":
-            raise Exception("Not yet available")
-            path = os.path.join(self.__root, 'tractography',str(subj))
+            path = os.path.join(self.__static_root, 'tractography',str(subj))
             if kw.get('space',"").startswith('diff'):
                 filename = 'MD_masked.nii.gz'
             else:
                 filename = 'MD_mri_masked.nii.gz'
         elif data == "DTI":
-            raise Exception("Not yet available")
-            path = os.path.join(self.__root, 'tractography',str(subj))
+            path = os.path.join(self.__static_root, 'tractography',str(subj))
             if kw.get('space','').startswith('diff'):
                 filename = 'rgb_dti_masked.nii.gz'
             else:

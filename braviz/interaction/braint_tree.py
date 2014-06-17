@@ -166,6 +166,7 @@ class BraintTreeWithCount(BraintTree):
     def __init__(self):
         BraintTree.__init__(self)
         self.__count_dict = {}
+        self.__direct_count_dict = {}
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return 2
@@ -181,7 +182,7 @@ class BraintTreeWithCount(BraintTree):
             else:
                 return self.__count_dict.get(node.var_id,0)
         if int_role == QtCore.Qt.FontRole:
-            count = self.__count_dict.get(node.var_id,0)
+            count = self.__direct_count_dict.get(node.var_id,0)
             if count>0:
                 font = QtGui.QFont()
                 font.setBold(font.Bold)
@@ -195,8 +196,12 @@ class BraintTreeWithCount(BraintTree):
                 return self._header[p_int]
         return QtCore.QVariant()
 
-    def set_count(self,counts):
+    def set_count(self,counts,direct_counts = None):
         self.__count_dict=counts
+        if direct_counts is None:
+            self.__direct_count_dict = self.__count_dict
+        else:
+            self.__direct_count_dict = direct_counts
         self.aux_change_data(self.root)
 
     def aux_change_data(self,node):

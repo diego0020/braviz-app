@@ -574,7 +574,12 @@ class ImageManager:
         if self.__image_plane_widget is None:
             return
         if self.__current_image == "MRI" or self.__current_image == "MD":
-            self.__image_plane_widget.SetWindowLevel(3000, 1500)
+            if braviz.readAndFilter.PROJECT == "kmc40":
+                self.__image_plane_widget.SetWindowLevel(3000, 1500)
+            elif braviz.readAndFilter.PROJECT == "kmc400":
+                self.__image_plane_widget.SetWindowLevel(500, 200)
+            else:
+                raise Exception("Unknown project")
             self.__image_plane_widget.GetWindowLevel(self.__current_mri_window_level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
         elif self.__current_image == "FA":
@@ -1052,22 +1057,25 @@ class TractographyManager:
     def get_scalar_from_structs(self, scalar):
         if self.__ad_hoc_visibility is False:
             return float("nan")
-        if scalar in ("number", "mean_length"):
-            fiber = self.__ad_hoc_pd_mp_ac[0]
-            n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, scalar)
-            return n
-        elif scalar == "mean_fa":
-            operation = "and" if self.__ad_hoc_throug_all else "or"
-            fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
-                                    operation=operation, space=self.__current_space, color="FA")
-            n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
-            return n
-        elif scalar == "mean_md":
-            operation = "and" if self.__ad_hoc_throug_all else "or"
-            fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
-                                    operation=operation, space=self.__current_space, color="MD")
-            n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
-            return n
+        try:
+            if scalar in ("number", "mean_length"):
+                fiber = self.__ad_hoc_pd_mp_ac[0]
+                n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, scalar)
+                return n
+            elif scalar == "mean_fa":
+                operation = "and" if self.__ad_hoc_throug_all else "or"
+                fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
+                                        operation=operation, space=self.__current_space, color="FA")
+                n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
+                return n
+            elif scalar == "mean_md":
+                operation = "and" if self.__ad_hoc_throug_all else "or"
+                fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
+                                        operation=operation, space=self.__current_space, color="MD")
+                n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
+                return n
+        except Exception:
+            return float("nan")
         return float("nan")
 
 
@@ -1720,7 +1728,7 @@ if __name__ == "__main__":
 
     reader = braviz.readAndFilter.BravizAutoReader()
     app = QtGui.QApplication(sys.argv)
-    main_window = QSubjectViwerWidget(reader)
+    main_window = QSubjectViwerWidget(reader,None)
     main_window.show()
     main_window.initialize_widget()
 
