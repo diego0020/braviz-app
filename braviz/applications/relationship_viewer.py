@@ -18,9 +18,16 @@ class RelationShipViewer(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.__big_tree_model = braint_tree.BraintTree()
+        self.__rels_model = braint_tree.BraintTreeWithCount()
         self.__vars_list = qt_models.VarListModel()
         self.__vars_list.internal_data.insert(0,"NONE")
         self.load_gui()
+
+    def reset_tree_views(self):
+        self.ui.add_source_tree.expandToDepth(3)
+        self.ui.add_dest_tree.expandToDepth(3)
+        self.ui.view_source_tree.expandToDepth(3)
+        self.ui.view_rel_tree.expandToDepth(3)
 
 
     def load_gui(self):
@@ -38,6 +45,15 @@ class RelationShipViewer(QMainWindow):
         self.ui.add_dest_tree.expandToDepth(3)
 
         self.ui.add_rel_button.clicked.connect(self.add_relation)
+
+        self.ui.view_source_tree.setModel(self.__big_tree_model)
+        self.ui.view_source_tree.expandToDepth(3)
+
+        self.ui.view_rel_tree.setModel(self.__rels_model)
+        self.ui.rels_label.setText("Relationships from <None>:")
+        self.ui.view_source_tree.clicked.connect(self.update_relations)
+        self.ui.view_source_tree.activated.connect(self.update_relations)
+        self.ui.view_rel_tree.expandToDepth(3)
 
     def add_variable(self):
         father_idx = self.ui.add_father_tree.currentIndex()
@@ -57,6 +73,7 @@ class RelationShipViewer(QMainWindow):
             tab_var_id = tabular_data.get_var_idx(tab_var_name)
         new_id=braint_db.add_variable(father_id,pretty_name,tab_var_id)
         self.reset_tree()
+
         ants = self.__big_tree_model.get_antecessors(new_id)
         for n in ants:
             self.ui.add_father_tree.expand(n)
@@ -68,6 +85,8 @@ class RelationShipViewer(QMainWindow):
 
     def reset_tree(self):
         self.__big_tree_model.fill_from_db()
+        self.__rels_model.fill_from_db()
+        self.reset_tree_views()
 
     def show_remove_context(self,caller,pos):
         current_node_index = caller.currentIndex()
@@ -106,6 +125,24 @@ class RelationShipViewer(QMainWindow):
         message += "ambi" if ambiguous else "not ambi"
         braint_db.add_relation(origin_id,dest_id,ambiguous)
         self.statusBar().showMessage(message,1000)
+
+    def update_relations(self,index):
+        node = self.__big_tree_model.get_node(index)
+        self.ui.rels_label.setText("Relationships from %s:"%node.label)
+        rels = braint_db.get_relations_count(node.var_id,aggregate=True)
+        self.__rels_model.set_count(rels)
+        self.aux_update_tree(self.__rels_model.root)
+
+
+    def aux_update_tree(self,node):
+        #update me
+        idx = self.__rels_model.get_node_index(node,1)
+        idx2 = self.__rels_model.get_node_index(node,0)
+        self.ui.view_rel_tree.update(idx)
+        self.ui.view_rel_tree.update(idx2)
+        #update my kids
+        for k in node.children:
+            self.aux_update_tree(k)
 
 
 def run():

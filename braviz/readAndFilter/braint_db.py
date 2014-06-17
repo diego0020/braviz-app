@@ -61,12 +61,14 @@ def delete_node(var_idx):
     conn.commit()
 
 def get_sons(var_idx,recursive=False):
-    if recursive is True:
-        raise NotImplementedError
     conn = get_connection()
     q = "SELECT var_id FROM braint_var WHERE father = ?"
     cur = conn.execute(q,(var_idx,))
     ans = [x[0] for x in cur.fetchall()]
+    if recursive is True:
+        ans2 = ans[:]
+        for k in ans:
+            ans2.extend(get_sons(k))
     return ans
 
 def get_var_parent(var_idx):
@@ -84,3 +86,31 @@ def add_relation(origin_idx ,dest_idx,ambi=False):
     conn.execute(q,(origin_idx,dest_idx,ambi))
     conn.execute(q,(dest_idx,origin_idx,ambi))
     conn.commit()
+
+def get_relations_count(origin_idx,aggregate=False):
+    conn = get_connection()
+    if aggregate is True:
+        q = """SELECT destination_id,1,level FROM relations JOIN braint_var ON (var_id = destination_id) WHERE origin_id = ?"""
+        cur = conn.execute(q,(origin_idx,))
+        tuples = list(cur.fetchall())
+        #sort by level, from higher to lower
+        tuples.sort(key = lambda x:x[2],reverse=True)
+        ans = dict((a[0],a[1]) for a in tuples)
+
+        def iter_ancestors(var_idx):
+            parent = get_var_parent(var_idx)
+            if parent is not None:
+                yield parent
+                for pi in iter_ancestors(parent):
+                    yield pi
+
+        for k in tuples:
+            var_idx = k[0]
+            for p in iter_ancestors(var_idx):
+                ans[p] = ans.get(p,0)+1
+        return ans
+    else:
+        q = """SELECT destination_id,1 FROM relations WHERE origin_id = ?"""
+        cur = conn.execute(q,(origin_idx,))
+        ans = dict(cur.fetchall())
+    return ans
