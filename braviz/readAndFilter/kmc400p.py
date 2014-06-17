@@ -158,21 +158,21 @@ The path containing this structure must be set."""
             filename = 'MPRAGEmodifiedSENSE.nii.gz'
         elif data == 'FA':
             raise Exception("Not yet available")
-            path = os.path.join(self.__root, str(subj), 'camino')
+            path = os.path.join(self.__root, 'tractography',str(subj))
             if kw.get('space',"").startswith('diff'):
                 filename = 'FA_masked.nii.gz'
             else:
                 filename = 'FA_mri_masked.nii.gz'
         elif data == "MD":
             raise Exception("Not yet available")
-            path = os.path.join(self.__root, str(subj), 'camino')
+            path = os.path.join(self.__root, 'tractography',str(subj))
             if kw.get('space',"").startswith('diff'):
                 filename = 'MD_masked.nii.gz'
             else:
                 filename = 'MD_mri_masked.nii.gz'
         elif data == "DTI":
             raise Exception("Not yet available")
-            path = os.path.join(self.__root, str(subj), 'camino')
+            path = os.path.join(self.__root, 'tractography',str(subj))
             if kw.get('space','').startswith('diff'):
                 filename = 'rgb_dti_masked.nii.gz'
             else:
@@ -259,7 +259,7 @@ The path containing this structure must be set."""
                                   interpolate=interpolate)
             return img3
         elif space == "diff":
-            path = os.path.join(self.getDataRoot(), "tractography", str(subj), 'output')
+            path = os.path.join(self.getDataRoot(), "tractography", str(subj))
             # notice we are reading the inverse transform diff -> world
             trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
             img3 = applyTransform(img2, trans, interpolate=interpolate)
@@ -507,7 +507,7 @@ The path containing this structure must be set."""
                 #This one should always exist!!!!!
                 if color.startswith('orient'):
                     #This one should always exist!!!!!
-                    file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'output', 'CaminoTracts.vtk')
+                    file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
                     if not os.path.isfile(file_name):
                         raise Exception("Fibers file not found")
                     pd_reader = vtk.vtkPolyDataReader()
@@ -703,7 +703,7 @@ The path containing this structure must be set."""
                 return transformed_streams
             return fibers
         if 'waypoint' not in kw:
-            path = os.path.join(self.getDataRoot(),'tractography', str(subj),"output")
+            path = os.path.join(self.getDataRoot(),'tractography', str(subj))
             streams = self.__cached_color_fibers(subj, kw.get('color'),kw.get("scalars"))
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
