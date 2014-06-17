@@ -112,6 +112,8 @@ def delete_relation(origin_idx,destination_idx):
     conn = get_connection()
     q= "DELETE FROM relations WHERE origin_id = ? and destination_id = ?"
     conn.execute(q,(origin_idx,destination_idx))
+    q= "DELETE FROM relations WHERE origin_id = ? and destination_id = ?"
+    conn.execute(q,(destination_idx,origin_idx))
     conn.commit()
 
 def get_linked_var(braint_var_id):

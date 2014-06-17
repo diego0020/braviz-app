@@ -143,7 +143,7 @@ class RelationShipViewer(QMainWindow):
 
 
         menu = QtGui.QMenu("Remove Relation")
-        delete_rel_action = QtGui.QAction("delete %s"%label,menu)
+        delete_rel_action = QtGui.QAction("delete relation to%s"%label,menu)
         delete_rel_action.triggered.connect(partial_f(delete_rel,current_node.var_id))
         menu.addAction(delete_rel_action)
         global_pos = self.ui.view_rel_tree.mapToGlobal(pos)
