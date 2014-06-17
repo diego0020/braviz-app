@@ -17,7 +17,7 @@ def add_variable(father_id,pretty_name,tab_var_id=None):
     conn.commit()
     row_id = cur.lastrowid
     if tab_var_id is not None:
-        q2 = "INSERTO into braint_tab VALUES (?,?)"
+        q2 = "INSERT into braint_tab VALUES (?,?)"
         conn.execute(q2,(row_id,tab_var_id))
         conn.commit()
     return row_id
@@ -112,4 +112,27 @@ def delete_relation(origin_idx,destination_idx):
     conn = get_connection()
     q= "DELETE FROM relations WHERE origin_id = ? and destination_id = ?"
     conn.execute(q,(origin_idx,destination_idx))
+    conn.commit()
+
+def get_linked_var(braint_var_id):
+    conn = get_connection()
+    q= """SELECT var_name FROM braint_tab JOIN variables ON (variables.var_idx = braint_tab.tab_var_id)
+     WHERE braint_var_id = ?"""
+    cur = conn.execute(q,(braint_var_id,))
+    ans = cur.fetchone()
+    if ans is None:
+        return None
+    else:
+        return ans[0]
+
+def save_link(braint_var_id,tab_var_id):
+    conn = get_connection()
+    q="INSERT OR REPLACE INTO braint_tab VALUES (?,?)"
+    conn.execute(q,(braint_var_id,tab_var_id))
+    conn.commit()
+
+def delete_link(braint_var_id):
+    conn = get_connection()
+    q="DELETE FROM braint_tab WHERE  braint_var_id = ?"
+    conn.execute(q,(braint_var_id,))
     conn.commit()

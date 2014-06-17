@@ -3,7 +3,7 @@ from collections import namedtuple
 import logging
 
 import pandas as pd
-import PyQt4.QtCore as QtCore
+from PyQt4 import QtCore,QtGui
 from PyQt4.QtCore import QAbstractListModel
 from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
 
@@ -25,6 +25,7 @@ class VarListModel(QAbstractListModel):
         self.outcome = outcome_var
         self.checkeable = checkeable
         self.checked_set = None
+        self.highlighted_name = None
         if checkeable:
             self.checked_set = set()
 
@@ -51,6 +52,12 @@ class VarListModel(QAbstractListModel):
                 name = self.internal_data[idx]
                 desc = braviz_tab_data.get_var_description_by_name(name)
                 return desc
+            elif int_role == QtCore.Qt.FontRole:
+                name = self.internal_data[idx]
+                font = QtGui.QFont()
+                if name == self.highlighted_name:
+                    font.setBold(font.Bold)
+                return font
         else:
             return QtCore.QVariant()
 
@@ -102,6 +109,8 @@ class VarListModel(QAbstractListModel):
             name = braviz_tab_data.get_var_name(i)
             self.checked_set.add(name)
 
+    def set_highlighted(self,highlighted_name=None):
+        self.highlighted_name = highlighted_name
 
 class VarAndGiniModel(QAbstractTableModel):
     def __init__(self, outcome_var=None, parent=None):

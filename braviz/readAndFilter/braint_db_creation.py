@@ -26,7 +26,7 @@ def create_braint_db():
     conn.execute(q)
     q="""CREATE TABLE IF NOT EXISTS braint_tab
     (braint_var_id INTEGER PRIMARY KEY REFERENCES braint_var(var_id),
-    tab_var_id INTEGER UNIQUE REFERENCES variables(var_id)
+    tab_var_id INTEGER REFERENCES variables(var_idx)
     )
     """
     conn.execute(q)

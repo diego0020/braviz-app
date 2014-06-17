@@ -29,6 +29,8 @@ class RelationShipViewer(QMainWindow):
         self.ui.add_dest_tree.expandToDepth(3)
         self.ui.view_source_tree.expandToDepth(3)
         self.ui.view_rel_tree.expandToDepth(3)
+        self.ui.link_tree.expandToDepth(3)
+
 
 
     def load_gui(self):
@@ -56,6 +58,15 @@ class RelationShipViewer(QMainWindow):
         self.ui.view_source_tree.activated.connect(self.update_relations)
         self.ui.view_rel_tree.expandToDepth(3)
         self.ui.view_rel_tree.customContextMenuRequested.connect(self.show_remove_relation_context)
+
+        self.ui.link_tree.setModel(self.__big_tree_model)
+        self.ui.link_var_list.setModel(self.__vars_list)
+        self.ui.link_tree.clicked.connect(self.update_link)
+        self.ui.link_tree.activated.connect(self.update_link)
+        self.ui.link_tree.expandToDepth(3)
+        self.ui.save_link_button.clicked.connect(self.save_link)
+
+        self.ui.tabWidget.currentChanged.connect(self.page_change)
 
     def add_variable(self):
         father_idx = self.ui.add_father_tree.currentIndex()
@@ -103,6 +114,7 @@ class RelationShipViewer(QMainWindow):
             self.__big_tree_model.clear()
             self.__big_tree_model.fill_from_db()
             ants = self.__big_tree_model.get_antecessors(parent)
+            self.reset_tree_views()
             for n in ants:
                 caller.expand(n)
 
@@ -174,6 +186,42 @@ class RelationShipViewer(QMainWindow):
         for k in node.children:
             self.aux_update_tree(k)
 
+    def update_link(self,index):
+        node = self.__big_tree_model.get_node(index)
+        node_id = node.var_id
+        linked_var_name = braint_db.get_linked_var(node_id)
+        if linked_var_name is None:
+            linked_var_name = "NONE"
+        self.__vars_list.set_highlighted(linked_var_name)
+        i=self.__vars_list.internal_data.index(linked_var_name)
+        ix=self.__vars_list.index(i,0)
+        self.ui.link_var_list.scrollTo(ix)
+        self.ui.link_var_list.dataChanged(ix,ix)
+
+
+    def save_link(self):
+        braint_index = self.ui.link_tree.currentIndex()
+        if not braint_index.isValid():
+            return
+        var_index = self.ui.link_var_list.currentIndex()
+        if not var_index.isValid():
+            return
+        braint_id = self.__big_tree_model.get_node(braint_index).var_id
+        tab_name = str(self.__vars_list.data(var_index,QtCore.Qt.DisplayRole))
+        if tab_name == "NONE":
+            braint_db.delete_link(braint_id)
+            message = "unlinking %s "%braint_id
+            self.statusBar().showMessage(message,1000)
+        else:
+            tab_id = tabular_data.get_var_idx(tab_name)
+            message = "linking %s with %s"%(braint_id,tab_id)
+            self.statusBar().showMessage(message,1000)
+            braint_db.save_link(braint_id,tab_id)
+        self.update_link(braint_index)
+
+    def page_change(self,index):
+        self.__vars_list.set_highlighted("NONE")
+        self.reset_tree_views()
 
 def run():
     import sys
