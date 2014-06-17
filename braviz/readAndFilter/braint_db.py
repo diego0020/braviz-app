@@ -89,28 +89,27 @@ def add_relation(origin_idx ,dest_idx,ambi=False):
 
 def get_relations_count(origin_idx,aggregate=False):
     conn = get_connection()
-    if aggregate is True:
-        q = """SELECT destination_id,1,level FROM relations JOIN braint_var ON (var_id = destination_id) WHERE origin_id = ?"""
-        cur = conn.execute(q,(origin_idx,))
-        tuples = list(cur.fetchall())
-        #sort by level, from higher to lower
-        tuples.sort(key = lambda x:x[2],reverse=True)
-        ans = dict((a[0],a[1]) for a in tuples)
+    q = """SELECT destination_id,1 FROM relations WHERE origin_id = ?"""
+    cur = conn.execute(q,(origin_idx,))
+    ans = dict(cur.fetchall())
 
+    if aggregate is True:
         def iter_ancestors(var_idx):
             parent = get_var_parent(var_idx)
             if parent is not None:
                 yield parent
                 for pi in iter_ancestors(parent):
                     yield pi
-
-        for k in tuples:
-            var_idx = k[0]
-            for p in iter_ancestors(var_idx):
+        orig_keys = list(ans.keys())
+        for k in orig_keys:
+            for p in iter_ancestors(k):
                 ans[p] = ans.get(p,0)+1
         return ans
     else:
-        q = """SELECT destination_id,1 FROM relations WHERE origin_id = ?"""
-        cur = conn.execute(q,(origin_idx,))
-        ans = dict(cur.fetchall())
-    return ans
+        return ans
+
+def delete_relation(origin_idx,destination_idx):
+    conn = get_connection()
+    q= "DELETE FROM relations WHERE origin_id = ? and destination_id = ?"
+    conn.execute(q,(origin_idx,destination_idx))
+    conn.commit()

@@ -210,7 +210,7 @@ The path containing this structure must be set."""
                 return vtkImg
 
             interpolate = True
-            if data == 'APARC':
+            if data in {'APARC': 'WMPARC'}:
                 interpolate = False
                 #print "turning off interpolate"
 
@@ -219,12 +219,14 @@ The path containing this structure must be set."""
             if space == "diff" and (data in {"FA","MD","DTI"}):
                 return img2
             return self.__move_img_from_world(subj, img2, interpolate, space)
-        space = kw.get('space', 'world')
+        space = kw.get('space', 'native')
         if space == "diff" and (data in {"FA","MD","DTI"}):
-            pass
-        else:
-            pass
+            return img
+        elif space == "native":
+            return img
 
+        log = logging.getLogger(__file__)
+        log.warning("Returned nifti image is in native space")
         return img
 
 

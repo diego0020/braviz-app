@@ -21,6 +21,7 @@ class RelationShipViewer(QMainWindow):
         self.__rels_model = braint_tree.BraintTreeWithCount()
         self.__vars_list = qt_models.VarListModel()
         self.__vars_list.internal_data.insert(0,"NONE")
+        self.__current_rel_source = None
         self.load_gui()
 
     def reset_tree_views(self):
@@ -36,7 +37,7 @@ class RelationShipViewer(QMainWindow):
         self.ui.add_father_tree.setModel(self.__big_tree_model)
         self.ui.db_names_list.setModel(self.__vars_list)
         self.ui.add_var_button.clicked.connect(self.add_variable)
-        self.ui.add_father_tree.customContextMenuRequested.connect(partial_f(self.show_remove_context,
+        self.ui.add_father_tree.customContextMenuRequested.connect(partial_f(self.show_remove_node_context,
                                                                             self.ui.add_father_tree))
         self.ui.new_var_button.clicked.connect(self.create_new_variable)
         self.ui.add_source_tree.setModel(self.__big_tree_model)
@@ -54,6 +55,7 @@ class RelationShipViewer(QMainWindow):
         self.ui.view_source_tree.clicked.connect(self.update_relations)
         self.ui.view_source_tree.activated.connect(self.update_relations)
         self.ui.view_rel_tree.expandToDepth(3)
+        self.ui.view_rel_tree.customContextMenuRequested.connect(self.show_remove_relation_context)
 
     def add_variable(self):
         father_idx = self.ui.add_father_tree.currentIndex()
@@ -88,7 +90,7 @@ class RelationShipViewer(QMainWindow):
         self.__rels_model.fill_from_db()
         self.reset_tree_views()
 
-    def show_remove_context(self,caller,pos):
+    def show_remove_node_context(self,caller,pos):
         current_node_index = caller.currentIndex()
         if not current_node_index.isValid():
             return
@@ -111,6 +113,30 @@ class RelationShipViewer(QMainWindow):
         global_pos = caller.mapToGlobal(pos)
         menu.exec_(global_pos)
 
+    def show_remove_relation_context(self,pos):
+        current_node_index = self.ui.view_rel_tree.currentIndex()
+        if not current_node_index.isValid():
+            return
+        current_node = self.__rels_model.get_node(current_node_index)
+        label = current_node.label
+        dest_var_id = current_node.var_id
+        if not self.__rels_model.direct_relation(dest_var_id):
+            return
+        origin_idx = self.__current_rel_source
+        def delete_rel(dest_var_idx):
+            message = "deleting relation between %s and %s"%(origin_idx,dest_var_idx)
+            self.statusBar().showMessage(message,1000)
+            braint_db.delete_relation(origin_idx,dest_var_idx)
+            self.update_relations()
+
+
+        menu = QtGui.QMenu("Remove Relation")
+        delete_rel_action = QtGui.QAction("delete %s"%label,menu)
+        delete_rel_action.triggered.connect(partial_f(delete_rel,current_node.var_id))
+        menu.addAction(delete_rel_action)
+        global_pos = self.ui.view_rel_tree.mapToGlobal(pos)
+        menu.exec_(global_pos)
+
     def add_relation(self):
         origin_index = self.ui.add_source_tree.currentIndex()
         if not origin_index.isValid():
@@ -126,11 +152,14 @@ class RelationShipViewer(QMainWindow):
         braint_db.add_relation(origin_id,dest_id,ambiguous)
         self.statusBar().showMessage(message,1000)
 
-    def update_relations(self,index):
-        node = self.__big_tree_model.get_node(index)
-        self.ui.rels_label.setText("Relationships from %s:"%node.label)
-        rels = braint_db.get_relations_count(node.var_id,aggregate=True)
-        direct_rels = braint_db.get_relations_count(node.var_id,aggregate=False)
+    def update_relations(self,index=None):
+        if index is not None:
+            node = self.__big_tree_model.get_node(index)
+            self.ui.rels_label.setText("Relationships from %s:"%node.label)
+            self.__current_rel_source = node.var_id
+        var_id = self.__current_rel_source
+        rels = braint_db.get_relations_count(var_id,aggregate=True)
+        direct_rels = braint_db.get_relations_count(var_id,aggregate=False)
         self.__rels_model.set_count(rels,direct_rels)
         self.aux_update_tree(self.__rels_model.root)
 

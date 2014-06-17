@@ -212,6 +212,8 @@ class BraintTreeWithCount(BraintTree):
         idx  = self.get_node_index(node,1)
         self.emit(QtCore.SIGNAL("dataChanged"),idx,idx)
 
+    def direct_relation(self,var_id):
+        return self.__direct_count_dict.get(var_id,0)
 
 
 
