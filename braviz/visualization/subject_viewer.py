@@ -286,6 +286,7 @@ class ImageManager:
         self.__current_subject = initial_subj
         self.__current_space = initial_space
         self.__current_image = None
+        self.__current_contrast = None
         self.__current_image_orientation = 0
         self.__curent_fmri_paradigm = None
         self.__current_mri_window_level = None
@@ -369,7 +370,7 @@ class ImageManager:
                                        skip_render=True)
 
     @do_and_render
-    def change_image_modality(self, modality, paradigm=None, force_reload=False):
+    def change_image_modality(self, modality, paradigm=None, force_reload=False,contrast=1):
         """Changes the modality of the current image
         to hide the image call hide_image
         in the case of fMRI modality should be fMRI and paradigm the name of the paradigm"""
@@ -378,7 +379,7 @@ class ImageManager:
             modality = modality.upper()
 
         if (self.__current_image is not None) and (modality == self.__current_image) and (
-                    paradigm == self.__curent_fmri_paradigm) and \
+                    paradigm == self.__curent_fmri_paradigm) and (contrast == self.__current_contrast) and \
                 not self.__hidden and not force_reload:
             # nothing to do
             return
@@ -392,6 +393,7 @@ class ImageManager:
                 self.__image_plane_widget.GetWindowLevel(self.__current_fa_window_level)
 
         self.__current_image = modality
+        self.__current_contrast = contrast
 
         if modality is None:
             self.hide_image()
@@ -430,7 +432,7 @@ class ImageManager:
             try:
                 mri_image = self.reader.get("MRI", self.__current_subject, format="VTK", space=self.__current_space)
                 fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
-                                         name=paradigm)
+                                         name=paradigm,contrast=contrast)
             except Exception:
                 fmri_image = None
 

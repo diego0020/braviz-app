@@ -165,9 +165,9 @@ The path containing this structure must be set."""
         elif data == "MD":
             path = os.path.join(self.__static_root, 'tractography',str(subj))
             if kw.get('space',"").startswith('diff'):
-                filename = 'MD_masked.nii.gz'
+                filename = 'md.nii.gz'
             else:
-                filename = 'MD_mri_masked.nii.gz'
+                filename = 'md_mri.nii.gz'
         elif data == "DTI":
             path = os.path.join(self.__static_root, 'tractography',str(subj))
             if kw.get('space','').startswith('diff'):
@@ -200,7 +200,7 @@ The path containing this structure must be set."""
         if kw.get('format', '').upper() == 'VTK':
             if data == "MD":
                 img_data=img.get_data()
-                img_data *= 1e12
+                img_data *= 1e5
                 vtkImg = numpy2vtk_img(img_data)
             elif data == "DTI":
                 vtkImg = nifti_rgb2vtk(img)
@@ -956,7 +956,9 @@ The path containing this structure must be set."""
             return None
         name = self.__get_paradigm_name(name)
         path = os.path.join(self.getDataRoot(), "spm",subject,name,"FirstLevel")
-        z_map = os.path.join(path, 'spmT_0001.hdr')
+        contrast = kw.get("contrast",1)
+        contrast_n = "%.4d"%contrast
+        z_map = os.path.join(path, 'spmT_%s.hdr')%contrast_n
         nii_z_map = nib.load(z_map)
         if kw.get('format', 'nifti').lower() == 'nifti':
             return nii_z_map

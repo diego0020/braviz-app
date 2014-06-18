@@ -60,7 +60,7 @@ class SubjectOverviewApp(QMainWindow):
             initial_details_vars = [6, 11, 248, 249, 250, 251, 252, 253, 254, 255]
         else:
             initial_vars = (278, 310, 324)
-            self.__context_variables = [278, 310, 324, 359]
+            self.__context_variables = [276, 310, 324, 359]
             initial_details_vars = [278, 310, 324, 359]
 
 
@@ -141,8 +141,11 @@ class SubjectOverviewApp(QMainWindow):
         fmri_paradigms = self.reader.get("fmri",None,index=True)
         for pdg in fmri_paradigms:
             self.ui.image_mod_combo.addItem(pdg)
+        for i in xrange(1,7):
+            self.ui.contrast_combo.addItem("%d"%i)
         #MRI
         self.ui.image_mod_combo.setCurrentIndex(1)
+        self.ui.contrast_combo.activated.connect(self.image_modality_change)
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
@@ -249,7 +252,7 @@ class SubjectOverviewApp(QMainWindow):
             self.vtk_viewer.image.change_image_modality(selection)
         else:
             try:
-                self.vtk_viewer.image.change_image_modality("FMRI", selection)
+                self.vtk_viewer.image.change_image_modality("FMRI", selection,contrast=int(self.ui.contrast_combo.currentText()))
             except Exception as e:
                 log.warning(e.message)
                 self.statusBar().showMessage(e.message, 5000)
