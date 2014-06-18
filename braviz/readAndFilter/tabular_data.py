@@ -10,7 +10,7 @@ from pandas.io import sql
 import pandas as pd
 
 import braviz
-
+from braviz.utilities import remove_non_ascii
 
 LATERALITY = 6
 IMAGE_CODE = 273
@@ -495,5 +495,25 @@ def get_variable_normal_range(var_idx):
         return (float("nan"),float("nan"))
     else:
         return values
+
+def add_data_frame(df):
+    conn = get_connection()
+    with conn:
+        columns = df.columns
+        columns = map(remove_non_ascii,columns)
+        df.columns = columns
+        q1 = "INSERT INTO variables (var_name) VALUES (?)"
+        conn.executemany(q1,((c,) for c in columns))
+        df = df.convert_objects(convert_numeric=True)
+        print df
+        q2 = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
+        VALUES ( (SELECT var_idx FROM variables WHERE var_name = ?),
+        ?,?)"""
+        df2 = df.stack()
+        conn.executemany(q2,((str(i[1]),int(i[0]),float(df2[i])) for i in df2.index))
+
+
+
+
 
 

@@ -70,3 +70,6 @@ def get_leafs(rec_dict,name):
         sub_leafs=map(lambda x:':'.join((name,x)),sub_leafs)
         leafs.extend(sub_leafs)
     return leafs
+
+def remove_non_ascii(s):
+    return str("".join(i for i in s if ord(i)<128))
