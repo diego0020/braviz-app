@@ -105,6 +105,8 @@ The path containing this structure must be set."""
     def __get(self, data, subj=None, **kw):
         "Internal: decode instruction and dispatch"
         data = data.upper()
+        if subj is not None:
+            subj = str(subj)
         if data == 'MRI':
             return self.__getImg(data, subj, **kw)
         elif data == "MD":
