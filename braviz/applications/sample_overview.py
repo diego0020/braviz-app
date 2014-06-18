@@ -434,11 +434,12 @@ class SampleOverview(QtGui.QMainWindow):
             mod = image_state.get("modality")
             if mod is not None:
                 try:
-                    if mod in ("Precision", "Power"):
+                    if mod in self.reader.FUNCTIONAL_PARADIGMS:
                         paradigm = mod
                         mod = "fMRI"
+                        cont = image_state.get("contrast",1)
                         #to load MRI window level
-                        viewer.image.change_image_modality("MRI", None, skip_render=True)
+                        viewer.image.change_image_modality(mod, paradigm,contrast=cont, skip_render=True)
                         window = image_state.get("window")
                         if window is not None:
                             viewer.image.set_image_window(window, skip_render=True)
@@ -462,6 +463,7 @@ class SampleOverview(QtGui.QMainWindow):
                     level = image_state.get("level")
                     if level is not None:
                         viewer.image.set_image_level(level, skip_render=True)
+
                 except Exception as e:
                     log.warning(e.message)
                     viewer.image.change_image_modality(None, paradigm=None, skip_render=True)
