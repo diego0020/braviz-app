@@ -41,6 +41,8 @@ class BravizMenu2(QtGui.QMainWindow):
                                                                               self.ui.sample_overview))
         self.ui.subject_overview.clicked.connect(self.make_application_launcher("subject_overview",
                                                                                self.ui.subject_overview))
+        self.ui.excel.clicked.connect(self.make_application_launcher("excel",
+                                                                               self.ui.excel))
 
         #self.ui.braviz_menu_classic.clicked.connect(self.make_application_launcher("braviz_menu_classic",
         #                                                                           self.ui.braviz_menu_classic))
@@ -58,7 +60,8 @@ class BravizMenu2(QtGui.QMainWindow):
         "correlations":"correlations",
         "linear_model": "lm_task",
         "logic_bundles":"logic_bundles",
-        "build_roi":"build_roi"
+        "build_roi":"build_roi",
+        "excel":"import_from_excel"
     }
 
     def make_application_launcher(self,app,button):

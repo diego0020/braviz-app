@@ -505,7 +505,6 @@ def add_data_frame(df):
         q1 = "INSERT INTO variables (var_name) VALUES (?)"
         conn.executemany(q1,((c,) for c in columns))
         df = df.convert_objects(convert_numeric=True)
-        print df
         q2 = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
         VALUES ( (SELECT var_idx FROM variables WHERE var_name = ?),
         ?,?)"""

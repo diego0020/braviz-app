@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>database.png</file>
     <file>logic.png</file>
     <file>roi_builder.png</file>
     <file>help-browser.png</file>

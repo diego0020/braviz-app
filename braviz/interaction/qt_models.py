@@ -581,7 +581,7 @@ class DataFrameModel(QAbstractTableModel):
     This model is used for displaying data frames in a QT table view
     """
 
-    def __init__(self, data_frame, columns=None, string_columns=tuple()):
+    def __init__(self, data_frame, columns=None, string_columns=tuple(),show_index=False):
         if not isinstance(data_frame, pd.DataFrame):
             raise ValueError("A pandas data frame is required")
         if columns is None:
@@ -589,40 +589,57 @@ class DataFrameModel(QAbstractTableModel):
         self.__df = data_frame
         self.__cols = columns
         self.__string_cols = frozenset(string_columns)
+        self.show_index = show_index
         super(DataFrameModel, self).__init__()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.__df)
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
-        return len(self.__cols) + 1
+        if not self.show_index:
+            return len(self.__cols) + 1
+        else:
+            return len(self.__cols)
 
     def data(self, QModelIndex, int_role=None):
         if not (int_role == QtCore.Qt.DisplayRole):
             return QtCore.QVariant()
         line = QModelIndex.row()
         col = QModelIndex.column()
-        if col == 0:
-            return self.format_data(0, self.__df.index[line])
+        if not self.show_index:
+            if col == 0:
+                return self.format_data(0, self.__df.index[line])
+            else:
+                col_name = self.__cols[col - 1]
+                data = self.__df[col_name].iloc[line]
+                return self.format_data(col, data)
         else:
-            col_name = self.__cols[col - 1]
+            col_name = self.__cols[col]
             data = self.__df[col_name].iloc[line]
             return self.format_data(col, data)
+
 
     def format_data(self, col_i, data):
         if col_i in self.__string_cols:
             return unicode(data)
         else:
-            return "%.4g" % data
+            try:
+                ans = "%.4g" % data
+            except Exception:
+                ans = str(data)
+            return ans
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
-        if Qt_Orientation != QtCore.Qt.Horizontal:
-            return QtCore.QVariant()
-        if int_role == QtCore.Qt.DisplayRole:
-            if p_int == 0:
-                return unicode(self.__df.index.name)
-            else:
-                return self.__cols[p_int - 1]
+        if Qt_Orientation == QtCore.Qt.Horizontal:
+            if int_role == QtCore.Qt.DisplayRole:
+                if p_int == 0:
+                    return unicode(self.__df.index.name)
+                else:
+                    return self.__cols[p_int - 1]
+        elif Qt_Orientation == QtCore.Qt.Vertical and self.show_index:
+            if int_role == QtCore.Qt.DisplayRole:
+                return str(self.__df.index[p_int])
+
         return QtCore.QVariant()
 
     def sort(self, p_int, Qt_SortOrder_order=None):

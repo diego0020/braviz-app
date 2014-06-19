@@ -496,6 +496,33 @@ Export variables to the database</string>
            </widget>
           </item>
           <item>
+           <widget class="QToolButton" name="excel">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string>Import variables from excel</string>
+            </property>
+            <property name="text">
+             <string>Excel Imp</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normalon>:/icons/database.png</normalon>
+             </iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>50</width>
+              <height>30</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_4">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
