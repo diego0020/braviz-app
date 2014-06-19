@@ -38,6 +38,16 @@ def get_all_variables():
     cur = conn.execute(q)
     return list(cur.fetchall())
 
+def get_var_id(var_name):
+    conn = get_connection()
+    q = "SELECT var_id FROM braint_var WHERE label = ?"
+    cur = conn.execute(q,(var_name,))
+    ans = cur.fetchone()
+    if ans is None:
+        return ans
+    else:
+        return ans[0]
+
 def delete_node_aux(conn,var_idx):
     pass
     #check there are no relations
