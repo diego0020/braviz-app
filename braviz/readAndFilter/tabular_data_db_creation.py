@@ -45,6 +45,7 @@ def create_data_base(path=None):
 
     #enable foreign keys
     conn.execute("PRAGMA foreign_keys= ON;")
+    conn.execute("pragma case_sensitive_like=ON;")
     #create subjects table
     query = """CREATE TABLE IF NOT EXISTS subjects
     (subject INTEGER PRIMARY KEY);

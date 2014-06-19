@@ -243,7 +243,12 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.ui.actionChange_Sample.triggered.connect(self.set_sample)
         self.ui.actionSave_Matrix.triggered.connect(self.save_matrix)
         self.ui.actionSave_Scatter.triggered.connect(self.save_reg)
+        self.ui.search_box.returnPressed.connect(self.filter_list)
         self.cor_mat.SquareSelected.connect(self.reg_plot.draw_reg)
+
+    def filter_list(self):
+        mask = "%%%s%%"%self.ui.search_box.text()
+        self.vars_model.update_list(mask)
 
     def set_sample(self):
         dialog = qt_sample_select_dialog.SampleLoadDialog()

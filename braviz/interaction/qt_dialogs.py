@@ -249,6 +249,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.ui.tableView.activated.connect(self.update_right_side)
 
         self.ui.select_button.clicked.connect(self.select_and_return)
+        self.ui.search_box.returnPressed.connect(self.filter_list)
 
     def update_right_side(self, var_name=None):
         curr_idx = self.ui.tableView.currentIndex()
@@ -269,6 +270,9 @@ class OutcomeSelectDialog(VariableSelectDialog):
             self.params_dict["selected_outcome"] = self.var_name
         self.accept()
 
+    def filter_list(self):
+        mask = "%%%s%%"%self.ui.search_box.text()
+        self.vars_list_model.update_list(mask)
 
 class GenericVariableSelectDialog(OutcomeSelectDialog):
     """
@@ -680,6 +684,7 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.ui.current_regressors_table.setModel(self.regressors_table_model)
         self.ui.current_regressors_table.customContextMenuRequested.connect(self.show_context_menu)
         self.ui.done_button.clicked.connect(self.finish_close)
+        self.ui.search_box.returnPressed.connect(self.filter_list)
 
     def update_right_side(self, name=None):
         curr_idx = self.ui.tableView.currentIndex()
@@ -721,6 +726,10 @@ class RegressorSelectDialog(VariableSelectDialog):
 
     def finish_close(self):
         self.done(self.Accepted)
+
+    def filter_list(self):
+        mask = "%%%s%%"%self.ui.search_box.text()
+        self.vars_model.update_list(mask)
 
 
 class InteractionSelectDialog(QtGui.QDialog):
@@ -875,6 +884,7 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.ui.current_variables.clicked.connect(self.update_right_side2)
 
         self.ui.create_varible_button.clicked.connect(self.launch_new_variable_dialog)
+        self.ui.search_box.returnPressed.connect(self.filter_list)
         self.jitter = None
         self.variable_list = variables_list
 
@@ -939,6 +949,9 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
             self.vars_model.update_list()
 
 
+    def filter_list(self):
+        mask = "%%%s%%"%self.ui.search_box.text()
+        self.vars_model.update_list(mask)
 
 
 class ContextVariablesPanel(QtGui.QGroupBox):

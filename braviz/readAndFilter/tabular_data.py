@@ -15,9 +15,13 @@ from braviz.utilities import remove_non_ascii
 LATERALITY = 6
 IMAGE_CODE = 273
 
-def get_variables(reader=None):
+def get_variables(reader=None,mask=None):
     conn = get_connection(reader)
-    data = sql.read_sql("SELECT var_idx, var_name from variables;", conn,index_col="var_idx")
+    if mask is None:
+        data = sql.read_sql("SELECT var_idx, var_name from variables;", conn,index_col="var_idx")
+    else:
+        data = sql.read_sql("SELECT var_idx, var_name from variables WHERE var_name like ?;", conn,params=(mask,),
+                            index_col="var_idx")
     conn.close()
     return data
 

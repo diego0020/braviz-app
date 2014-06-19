@@ -30,8 +30,8 @@ class VarListModel(QAbstractListModel):
             self.checked_set = set()
 
 
-    def update_list(self):
-        panda_data = braviz_tab_data.get_variables()
+    def update_list(self,mask=None):
+        panda_data = braviz_tab_data.get_variables(mask=mask)
         self.internal_data = list(panda_data["var_name"])
         self.modelReset.emit()
 
@@ -120,9 +120,10 @@ class VarAndGiniModel(QAbstractTableModel):
         self.data_frame["Ginni"] = "?"
         self.ginni_calculated = False
         self.outcome = outcome_var
+        self.filtered_index = self.data_frame.index
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
-        return len(self.data_frame)
+        return len(self.filtered_index)
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return 2
@@ -130,15 +131,16 @@ class VarAndGiniModel(QAbstractTableModel):
     def data(self, QModelIndex, int_role=None):
         line = QModelIndex.row()
         col = QModelIndex.column()
-        if 0 <= line < len(self.data_frame):
+        df2 =  self.data_frame.loc[self.filtered_index]
+        if 0 <= line < len(df2):
             if col == 0:
                 if int_role == QtCore.Qt.DisplayRole:
-                    return self.data_frame.iloc[line, 0]
+                    return df2.iloc[line, 0]
                 elif int_role == QtCore.Qt.ToolTipRole:
-                    return braviz_tab_data.get_var_description(self.data_frame.index[line])
+                    return braviz_tab_data.get_var_description(df2[line])
             elif col == 1:
                 if int_role == QtCore.Qt.DisplayRole:
-                    return str(self.data_frame.iloc[line, 1])
+                    return str(df2.iloc[line, 1])
         return QtCore.QVariant()
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
@@ -178,6 +180,10 @@ class VarAndGiniModel(QAbstractTableModel):
             return
         self.data_frame = calculate_ginni_index(self.outcome, self.data_frame)
 
+    def update_list(self,mask):
+        pdf = braviz_tab_data.get_variables(mask=mask)
+        self.filtered_index = pdf.index
+        self.modelReset.emit()
 
 class AnovaRegressorsModel(QAbstractTableModel):
     def __init__(self, regressors_list=tuple(), parent=None):

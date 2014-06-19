@@ -32,6 +32,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QLineEdit" name="search_box">
+         <property name="placeholderText">
+          <string>Search</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QListView" name="variables_list">
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
