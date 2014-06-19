@@ -482,7 +482,8 @@ def get_var_value(var_idx,subject):
     if res is None:
         log = logging.getLogger(__name__)
         log.error("%s not found for subject %s"%(var_idx,subject))
-        raise Exception("%s not found for subject %s"%(var_idx,subject))
+        return float("nan")
+        #raise Exception("%s not found for subject %s"%(var_idx,subject))
     return res[0]
 
 def get_variable_normal_range(var_idx):
