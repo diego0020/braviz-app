@@ -20,7 +20,7 @@ class RelationShipViewer(QMainWindow):
         self.__big_tree_model = braint_tree.BraintTree()
         self.__rels_model = braint_tree.BraintTreeWithCount()
         self.__vars_list = qt_models.VarListModel()
-        self.__vars_list.internal_data.insert(0,"NONE")
+        self.__vars_list.internal_data.insert(0, "NONE")
         self.__current_rel_source = None
         self.load_gui()
 
@@ -32,7 +32,6 @@ class RelationShipViewer(QMainWindow):
         self.ui.link_tree.expandToDepth(3)
 
 
-
     def load_gui(self):
         self.ui = Ui_RelationshipViewer()
         self.ui.setupUi(self)
@@ -40,7 +39,7 @@ class RelationShipViewer(QMainWindow):
         self.ui.db_names_list.setModel(self.__vars_list)
         self.ui.add_var_button.clicked.connect(self.add_variable)
         self.ui.add_father_tree.customContextMenuRequested.connect(partial_f(self.show_remove_node_context,
-                                                                            self.ui.add_father_tree))
+                                                                             self.ui.add_father_tree))
         self.ui.new_var_button.clicked.connect(self.create_new_variable)
         self.ui.add_source_tree.setModel(self.__big_tree_model)
         self.ui.add_dest_tree.setModel(self.__big_tree_model)
@@ -66,6 +65,7 @@ class RelationShipViewer(QMainWindow):
         self.ui.link_tree.expandToDepth(3)
         self.ui.save_link_button.clicked.connect(self.save_link)
 
+
         self.ui.tabWidget.currentChanged.connect(self.page_change)
 
     def add_variable(self):
@@ -77,14 +77,14 @@ class RelationShipViewer(QMainWindow):
             father_id = father_node.var_id
         pretty_name = str(self.ui.pretty_name.text())
         tab_var_idx = self.ui.db_names_list.currentIndex()
-        tab_var_name = str(self.__vars_list.data(tab_var_idx,QtCore.Qt.DisplayRole))
+        tab_var_name = str(self.__vars_list.data(tab_var_idx, QtCore.Qt.DisplayRole))
         if not tab_var_idx.isValid():
             tab_var_id = None
         elif tab_var_name == "NONE":
             tab_var_id = None
         else:
             tab_var_id = tabular_data.get_var_idx(tab_var_name)
-        new_id=braint_db.add_variable(father_id,pretty_name,tab_var_id)
+        new_id = braint_db.add_variable(father_id, pretty_name, tab_var_id)
         self.reset_tree()
 
         ants = self.__big_tree_model.get_antecessors(new_id)
@@ -101,15 +101,23 @@ class RelationShipViewer(QMainWindow):
         self.__rels_model.fill_from_db()
         self.reset_tree_views()
 
-    def show_remove_node_context(self,caller,pos):
+    def show_remove_node_context(self, caller, pos):
         current_node_index = caller.currentIndex()
         if not current_node_index.isValid():
             return
         current_node = self.__big_tree_model.get_node(current_node_index)
         label = current_node.label
+
         def delete_node(var_idx):
-            print "deleting"
             parent = braint_db.get_var_parent(var_idx)
+            # check if there are relations
+            rels = braint_db.get_relations_count(var_idx)
+            if len(rels) > 0:
+                m = "This node contains associated relationships, if you proceed this relationships will also be deleted.\n\nAre you sure you want to delete the node and it's relations?; """
+                res = QtGui.QMessageBox.question(self, "Confirm Delete", m,
+                                                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+                if res == QtGui.QMessageBox.No:
+                    return
             braint_db.delete_node(var_idx)
             self.__big_tree_model.clear()
             self.__big_tree_model.fill_from_db()
@@ -118,14 +126,33 @@ class RelationShipViewer(QMainWindow):
             for n in ants:
                 caller.expand(n)
 
+        def rename_node(index):
+            node = self.__big_tree_model.get_node(index)
+            name,accepted = (QtGui.QInputDialog.getText(self,"Rename Node","Enter new name",
+                                                  QtGui.QLineEdit.Normal,node.label))
+            if accepted:
+                name = str(name)
+                parent = braint_db.get_var_parent(node.var_id)
+                braint_db.rename_node(node.var_id,name)
+                self.__big_tree_model.clear()
+                self.__big_tree_model.fill_from_db()
+                ants = self.__big_tree_model.get_antecessors(parent)
+                self.reset_tree_views()
+                for n in ants:
+                    caller.expand(n)
+
+
         menu = QtGui.QMenu("Remove Node")
-        delete_node_action = QtGui.QAction("delete %s"%label,caller)
-        delete_node_action.triggered.connect(partial_f(delete_node,current_node.var_id))
+        delete_node_action = QtGui.QAction("delete %s" % label, caller)
+        delete_node_action.triggered.connect(partial_f(delete_node, current_node.var_id))
+        rename_node_action = QtGui.QAction("rename %s"%label,caller)
+        rename_node_action.triggered.connect(partial_f(rename_node,current_node_index))
         menu.addAction(delete_node_action)
+        menu.addAction(rename_node_action)
         global_pos = caller.mapToGlobal(pos)
         menu.exec_(global_pos)
 
-    def show_remove_relation_context(self,pos):
+    def show_remove_relation_context(self, pos):
         current_node_index = self.ui.view_rel_tree.currentIndex()
         if not current_node_index.isValid():
             return
@@ -135,16 +162,17 @@ class RelationShipViewer(QMainWindow):
         if not self.__rels_model.direct_relation(dest_var_id):
             return
         origin_idx = self.__current_rel_source
+
         def delete_rel(dest_var_idx):
-            message = "deleting relation between %s and %s"%(origin_idx,dest_var_idx)
-            self.statusBar().showMessage(message,1000)
-            braint_db.delete_relation(origin_idx,dest_var_idx)
+            message = "deleting relation between %s and %s" % (origin_idx, dest_var_idx)
+            self.statusBar().showMessage(message, 1000)
+            braint_db.delete_relation(origin_idx, dest_var_idx)
             self.update_relations()
 
 
         menu = QtGui.QMenu("Remove Relation")
-        delete_rel_action = QtGui.QAction("delete relation to%s"%label,menu)
-        delete_rel_action.triggered.connect(partial_f(delete_rel,current_node.var_id))
+        delete_rel_action = QtGui.QAction("delete relation to%s" % label, menu)
+        delete_rel_action.triggered.connect(partial_f(delete_rel, current_node.var_id))
         menu.addAction(delete_rel_action)
         global_pos = self.ui.view_rel_tree.mapToGlobal(pos)
         menu.exec_(global_pos)
@@ -159,44 +187,45 @@ class RelationShipViewer(QMainWindow):
         origin_id = int(self.__big_tree_model.get_node(origin_index).var_id)
         dest_id = int(self.__big_tree_model.get_node(dest_index).var_id)
         ambiguous = bool(self.ui.ambi_check.isChecked())
-        message = "adding relationship from %s to %s"%(origin_id,dest_id)
+        message = "adding relationship from %s to %s" % (origin_id, dest_id)
         message += "ambi" if ambiguous else "not ambi"
-        braint_db.add_relation(origin_id,dest_id,ambiguous)
-        self.statusBar().showMessage(message,1000)
+        braint_db.add_relation(origin_id, dest_id, ambiguous)
+        self.statusBar().showMessage(message, 1000)
 
-    def update_relations(self,index=None):
+    def update_relations(self, index=None):
         if index is not None:
             node = self.__big_tree_model.get_node(index)
-            self.ui.rels_label.setText("Relationships from %s:"%node.label)
+            self.ui.rels_label.setText("Relationships from %s:" % node.label)
             self.__current_rel_source = node.var_id
         var_id = self.__current_rel_source
-        rels = braint_db.get_relations_count(var_id,aggregate=True)
-        direct_rels = braint_db.get_relations_count(var_id,aggregate=False)
-        self.__rels_model.set_count(rels,direct_rels)
+        rels = braint_db.get_relations_count(var_id, aggregate=True)
+        direct_rels = braint_db.get_relations_count(var_id, aggregate=False)
+        self.__rels_model.set_count(rels, direct_rels)
         self.aux_update_tree(self.__rels_model.root)
 
 
-    def aux_update_tree(self,node):
-        #update me
-        idx = self.__rels_model.get_node_index(node,1)
-        idx2 = self.__rels_model.get_node_index(node,0)
+
+    def aux_update_tree(self, node):
+        # update me
+        idx = self.__rels_model.get_node_index(node, 1)
+        idx2 = self.__rels_model.get_node_index(node, 0)
         self.ui.view_rel_tree.update(idx)
         self.ui.view_rel_tree.update(idx2)
-        #update my kids
+        # update my kids
         for k in node.children:
             self.aux_update_tree(k)
 
-    def update_link(self,index):
+    def update_link(self, index):
         node = self.__big_tree_model.get_node(index)
         node_id = node.var_id
         linked_var_name = braint_db.get_linked_var(node_id)
         if linked_var_name is None:
             linked_var_name = "NONE"
         self.__vars_list.set_highlighted(linked_var_name)
-        i=self.__vars_list.internal_data.index(linked_var_name)
-        ix=self.__vars_list.index(i,0)
+        i = self.__vars_list.internal_data.index(linked_var_name)
+        ix = self.__vars_list.index(i, 0)
         self.ui.link_var_list.scrollTo(ix)
-        self.ui.link_var_list.dataChanged(ix,ix)
+        self.ui.link_var_list.dataChanged(ix, ix)
 
 
     def save_link(self):
@@ -207,25 +236,27 @@ class RelationShipViewer(QMainWindow):
         if not var_index.isValid():
             return
         braint_id = self.__big_tree_model.get_node(braint_index).var_id
-        tab_name = str(self.__vars_list.data(var_index,QtCore.Qt.DisplayRole))
+        tab_name = str(self.__vars_list.data(var_index, QtCore.Qt.DisplayRole))
         if tab_name == "NONE":
             braint_db.delete_link(braint_id)
-            message = "unlinking %s "%braint_id
-            self.statusBar().showMessage(message,1000)
+            message = "unlinking %s " % braint_id
+            self.statusBar().showMessage(message, 1000)
         else:
             tab_id = tabular_data.get_var_idx(tab_name)
-            message = "linking %s with %s"%(braint_id,tab_id)
-            self.statusBar().showMessage(message,1000)
-            braint_db.save_link(braint_id,tab_id)
+            message = "linking %s with %s" % (braint_id, tab_id)
+            self.statusBar().showMessage(message, 1000)
+            braint_db.save_link(braint_id, tab_id)
         self.update_link(braint_index)
 
-    def page_change(self,index):
+    def page_change(self, index):
         self.__vars_list.set_highlighted("NONE")
         self.reset_tree_views()
+
 
 def run():
     import sys
     from braviz.utilities import configure_logger
+
     configure_logger("anova_app")
     app = QtGui.QApplication(sys.argv)
     log = logging.getLogger(__name__)
@@ -237,6 +268,7 @@ def run():
     except Exception as e:
         log.exception(e)
         raise
+
 
 if __name__ == '__main__':
     run()

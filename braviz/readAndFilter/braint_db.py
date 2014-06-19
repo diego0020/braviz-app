@@ -49,9 +49,6 @@ def get_var_id(var_name):
         return ans[0]
 
 def delete_node_aux(conn,var_idx):
-    pass
-    #check there are no relations
-    #TODO
     #delete kids
     kids = get_sons(var_idx)
     for k in kids:
@@ -65,8 +62,8 @@ def delete_node_aux(conn,var_idx):
 
 
 def delete_node(var_idx):
+    """Node, relationships referring this node will also be deleted"""
     conn = get_connection()
-
     delete_node_aux(conn,var_idx)
     conn.commit()
 
@@ -147,4 +144,21 @@ def delete_link(braint_var_id):
     conn = get_connection()
     q="DELETE FROM braint_tab WHERE  braint_var_id = ?"
     conn.execute(q,(braint_var_id,))
+    conn.commit()
+
+def get_description(braint_var_id):
+    conn = get_connection()
+    q = """
+    SELECT description FROM braint_tab JOIN var_descriptions ON braint_tab.tab_var_id = var_descriptions.var_idx
+    WHERE braint_var_id = ?
+        """
+    cur = conn.execute(q,(braint_var_id,))
+    ans = cur.fetchone()
+    if ans is not None:
+        return ans[0]
+    return None
+def rename_node(braint_var_id,new_name):
+    conn = get_connection()
+    q= "UPDATE OR IGNORE braint_var SET label = ? WHERE var_id = ?"
+    conn.execute(q,(new_name,braint_var_id))
     conn.commit()

@@ -16,11 +16,11 @@ def create_braint_db():
       )"""
     conn.execute(q)
     q="""CREATE TABLE IF NOT EXISTS relations
-    (origin_id REFERENCES braint_var(var_id),
-    destination_id REFERENCES braint_vat(var_id),
+    (origin_id INTEGER REFERENCES braint_var(var_id) ON DELETE CASCADE,
+    destination_id INTEGER REFERENCES braint_var(var_id) ON DELETE CASCADE,
     counter INTEGER,
     UNCLEAR INTEGER,
-    PRIMARY KEY (origin_id,destination_id)
+    UNIQUE (origin_id,destination_id)
     )
     """
     conn.execute(q)

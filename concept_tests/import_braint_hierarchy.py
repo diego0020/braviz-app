@@ -19,3 +19,10 @@ with open("Jerarquia.csv") as jer_file:
 
 
 
+
+# link with tab_sata
+q="""
+INSERT or IGNORE into braint_tab
+SELECT braint_var.var_id as braint_var_id, variables.var_idx as tab_var_id
+FROM variables join braint_var WHERE variables.var_name = braint_var.label
+"""

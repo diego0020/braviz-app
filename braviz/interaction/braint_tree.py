@@ -36,6 +36,9 @@ class BraintNode:
     @property
     def label(self):
         return self.__label
+    @label.setter
+    def label(self,value):
+        self.__label = value
 
 class BraintTree(QAbstractItemModel):
     def __init__(self):
@@ -74,6 +77,10 @@ class BraintTree(QAbstractItemModel):
         assert node.son_number == row
         if int_role == QtCore.Qt.DisplayRole:
             return str(node)
+        elif int_role == QtCore.Qt.ToolTipRole:
+            desc = braint_db.get_description(node.var_id)
+            if desc is not None:
+                return desc
 
         return QtCore.QVariant()
 
@@ -162,6 +169,16 @@ class BraintTree(QAbstractItemModel):
         self.__var_id_index[None]=self.__root
         self.endResetModel()
 
+    def aux_change_data(self,node):
+        #update sons
+        #update me
+        idx  = self.get_node_index(node,0)
+        self.modelAboutToBeReset.emit()
+        self.dataChanged.emit(idx,idx)
+        self.emit(QtCore.SIGNAL("dataChanged"),idx,idx)
+        self.modelReset.emit()
+
+
 class BraintTreeWithCount(BraintTree):
     def __init__(self):
         BraintTree.__init__(self)
@@ -181,12 +198,16 @@ class BraintTreeWithCount(BraintTree):
                 return str(node)
             else:
                 return self.__count_dict.get(node.var_id,0)
-        if int_role == QtCore.Qt.FontRole:
+        elif int_role == QtCore.Qt.FontRole:
             count = self.__direct_count_dict.get(node.var_id,0)
             if count>0:
                 font = QtGui.QFont()
                 font.setBold(font.Bold)
                 return font
+        elif int_role == QtCore.Qt.ToolTipRole:
+            desc = braint_db.get_description(node.var_id)
+            if desc is not None:
+                return desc
         return QtCore.QVariant()
 
     _header = ("Identifier","Relations")
