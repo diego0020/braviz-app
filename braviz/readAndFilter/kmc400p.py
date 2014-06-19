@@ -609,6 +609,7 @@ The path containing this structure must be set."""
         return ids
 
     def filter_fibers(self,subj,struct):
+        subj = str(subj)
         return self.__cached_filter_fibers(subj,struct)
 
     def __readFibers_from_db(self,subj,db_id,**kw):
@@ -998,6 +999,7 @@ The path containing this structure must be set."""
     def transformPointsToSpace(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space. 
         If inverse is true moves from space to world"""
+        subj = str(subj)
         return self.__movePointsToSpace(point_set, space, subj, inverse)
 
     def __process_key(self, key):
