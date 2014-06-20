@@ -965,6 +965,7 @@ The path containing this structure must be set."""
         contrast = kw.get("contrast",1)
         contrast_n = "%.4d"%contrast
         z_map = os.path.join(path, 'spmT_%s.hdr')%contrast_n
+        log.info("Loading map %s"%z_map)
         nii_z_map = nib.load(z_map)
         if kw.get('format', 'nifti').lower() == 'nifti':
             return nii_z_map
@@ -980,6 +981,7 @@ The path containing this structure must be set."""
         dimension2 = T1_world.GetDimensions()
         spacing2 = T1_world.GetSpacing()
         fmri_trans = self.__read_func_transform(subject, name)
+        log.info("attempting to move to world")
         world_z_map = applyTransform(vtk_z_map, fmri_trans, origin2, dimension2, spacing2)
 
         return self.__move_img_from_world(subject, world_z_map, True, kw.get('space', 'world'))
