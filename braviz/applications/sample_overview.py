@@ -430,6 +430,7 @@ class SampleOverview(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         #images panel
         image_state = wanted_state.get("image_state")
+        log.info(image_state)
         if image_state is not None:
             mod = image_state.get("modality")
             if mod is not None:
@@ -437,6 +438,7 @@ class SampleOverview(QtGui.QMainWindow):
                     if mod in self.reader.FUNCTIONAL_PARADIGMS:
                         paradigm = mod
                         mod = "fMRI"
+                        log.info("Loading fMRI")
                         cont = image_state.get("contrast",1)
                         #to load MRI window level
                         viewer.image.change_image_modality(mod, paradigm,contrast=cont, skip_render=True)
