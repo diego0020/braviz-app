@@ -12,7 +12,8 @@ import pandas as pd
 import braviz
 from braviz.utilities import remove_non_ascii
 
-if braviz.readAndFilter.PROJECT == "kmc400":
+from braviz.readAndFilter import PROJECT
+if PROJECT == "kmc400":
     LATERALITY = 913
 else:
     LATERALITY = 6
