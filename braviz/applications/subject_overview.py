@@ -906,20 +906,25 @@ class SubjectOverviewApp(QMainWindow):
             self.surfaces_state = surface_state
 
             #update gui
-            left_active = self.surfaces_state["left"]
-            self.ui.surface_left_check.setChecked(left_active)
-            right_active = self.surfaces_state["right"]
-            self.ui.surface_right_check.setChecked(right_active)
-            surface = self.surfaces_state["surf"]
-            index = self.ui.surface_select_combo.findText(surface)
-            self.ui.surface_select_combo.setCurrentIndex(index)
-            scalar_index = self.surfaces_state["scalar_idx"]
-            self.ui.surface_scalars_combo.setCurrentIndex(scalar_index)
-            color_bar = self.surfaces_state["color_bar"]
-            self.ui.surface_color_bar_check.setChecked(color_bar)
-            opacity = self.surfaces_state["opacity"]
-            self.ui.surf_opacity_slider.setValue(opacity)
-            self.__update_surfaces()
+            try:
+                left_active = self.surfaces_state["left"]
+                self.ui.surface_left_check.setChecked(left_active)
+                right_active = self.surfaces_state["right"]
+                self.ui.surface_right_check.setChecked(right_active)
+                surface = self.surfaces_state["surf"]
+                index = self.ui.surface_select_combo.findText(surface)
+                self.ui.surface_select_combo.setCurrentIndex(index)
+                scalar_index = self.surfaces_state["scalar_idx"]
+                self.ui.surface_scalars_combo.setCurrentIndex(scalar_index)
+                color_bar = self.surfaces_state["color_bar"]
+                self.ui.surface_color_bar_check.setChecked(color_bar)
+                opacity = self.surfaces_state["opacity"]
+                self.ui.surf_opacity_slider.setValue(opacity)
+            except KeyError:
+                pass
+            else:
+                self.__update_surfaces()
+
 
         #context panel
         context_state = wanted_state.get("context_state")
