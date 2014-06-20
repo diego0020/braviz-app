@@ -614,7 +614,7 @@ class ModelManager:
 
 
     def __get_laterality(self):
-        lat_var_idx = 6
+        lat_var_idx = braviz.readAndFilter.tabular_data.LATERALITY
         lat_dict = {1: 'r', 2: 'l'}
         log = logging.getLogger(__file__)
         try:
