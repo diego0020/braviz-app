@@ -37,8 +37,11 @@ The path containing this structure must be set."""
         self.__static_root = os.path.normcase(static_root)
         #Remove trailing slashes
         self.__static_root = self.__static_root.rstrip('/\\')
-
         self.__dynaimc_data_root = dynamic_route.rstrip("/\\")
+        if self.__static_root[-1]==":":
+            self.__static_root+="\\"
+        if self.__dynaimc_data_root[-1]==":":
+            self.__dynaimc_data_root+="\\"
 
         self.FUNCTIONAL_PARADIGMS=('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION')
 
