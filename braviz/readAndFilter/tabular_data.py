@@ -12,7 +12,11 @@ import pandas as pd
 import braviz
 from braviz.utilities import remove_non_ascii
 
-LATERALITY = 6
+if braviz.readAndFilter.PROJECT == "kmc400":
+    LATERALITY = 913
+else:
+    LATERALITY = 6
+
 IMAGE_CODE = 273
 
 def get_variables(reader=None,mask=None):
