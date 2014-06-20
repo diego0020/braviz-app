@@ -365,8 +365,7 @@ class ImageManager:
         if self.__current_space == new_space:
             return
         self.__current_space = new_space
-        if self.__image_plane_widget is not None and not self.__hidden:
-            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
+        self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
                                        skip_render=True)
 
     @do_and_render
