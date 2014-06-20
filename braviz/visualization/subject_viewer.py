@@ -435,6 +435,7 @@ class ImageManager:
                                          name=paradigm,contrast=contrast)
             except Exception:
                 fmri_image = None
+                log.warning("FMRI IMAGE NOT FOUND pdgm = %s"%paradigm)
 
             if fmri_image is None:
                 self.image_plane_widget.Off()
