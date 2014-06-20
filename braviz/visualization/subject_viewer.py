@@ -622,7 +622,7 @@ class ModelManager:
         except Exception:
             log.warning("Laterality no found for subject %s, assuming right handed"%self.__current_subject)
             label = 1
-        return lat_dict[label]
+        return lat_dict.get(label,'r')
 
     @do_and_render
     def reload_models(self, subj=None, space=None):
