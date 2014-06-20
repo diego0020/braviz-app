@@ -681,7 +681,7 @@ class SubjectOverviewApp(QMainWindow):
         #images panel
         image_state = dict()
         image_state["modality"] = str(self.ui.image_mod_combo.currentText())
-        image_state["contrast"] = int(self.ui.contrast_combo.currentIndex())
+        image_state["contrast"] = int(self.ui.contrast_combo.currentIndex())+1
         image_state["orientation"] = str(self.ui.image_orientation.currentText())
         image_state["window"] = float(self.ui.image_window.value())
         image_state["level"] = float(self.ui.image_level.value())
@@ -824,7 +824,7 @@ class SubjectOverviewApp(QMainWindow):
             if slice is not None:
                 self.ui.slice_spin.setValue(slice)
             cont = image_state.get("contrast",1)
-            self.ui.contrast_combo.setCurrentIndex(cont)
+            self.ui.contrast_combo.setCurrentIndex(cont-1)
 
 
         #segmentation panel
