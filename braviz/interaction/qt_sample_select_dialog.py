@@ -284,9 +284,12 @@ def get_filter_function(params):
     var_idx = braviz_tab_data.get_var_idx(var_name)
 
     def filter_func(subj):
-        x = braviz_tab_data.get_var_value(var_idx, subj)
-        return f(x)
-
+        try:
+            x = braviz_tab_data.get_var_value(var_idx, subj)
+        except Exception:
+            return False
+        else:
+            return f(x)
     return filter_func
 
 
