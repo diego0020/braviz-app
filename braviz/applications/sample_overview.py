@@ -434,6 +434,7 @@ class SampleOverview(QtGui.QMainWindow):
         if image_state is not None:
             mod = image_state.get("modality")
             if mod is not None:
+                viewer.image.show_image()
                 try:
                     if mod in self.reader.FUNCTIONAL_PARADIGMS:
                         paradigm = mod
@@ -441,6 +442,7 @@ class SampleOverview(QtGui.QMainWindow):
                         log.info("Loading fMRI")
                         cont = image_state.get("contrast",1)
                         #to load MRI window level
+
                         viewer.image.change_image_modality(mod, paradigm,contrast=cont, skip_render=True)
                         window = image_state.get("window")
                         if window is not None:
@@ -468,7 +470,9 @@ class SampleOverview(QtGui.QMainWindow):
 
                 except Exception as e:
                     log.warning(e.message)
-                    viewer.image.change_image_modality(None, paradigm=None, skip_render=True)
+                    #viewer.image.change_image_modality(None, paradigm=None, skip_render=True)
+            else:
+                viewer.image.hide_image()
         QtGui.QApplication.instance().processEvents()
         #segmentation panel
         segmentation_state = wanted_state.get("segmentation_state")
