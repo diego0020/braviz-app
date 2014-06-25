@@ -6,18 +6,19 @@ from braviz.readAndFilter import filter_fibers
 from braviz.readAndFilter.filter_fibers import iter_id_list
 
 __author__ = 'Diego'
+SUBJ = "119"
 
 reader = braviz.readAndFilter.BravizAutoReader()
-fibs1 = reader.get("fibers","093",space="workd",waypoint=["CC_Anterior"])
+fibs1 = reader.get("fibers",SUBJ,space="workd",waypoint=["CC_Anterior"])
 
 
-aparc = reader.get("APARC","093",space="diff")
-fibs = reader.get("fibers","093",space="diff")
+aparc = reader.get("APARC",SUBJ,space="diff")
+fibs = reader.get("fibers",SUBJ,space="diff")
 
 
 
-pd = reader.get("fibers","093")
-img = reader.get("aparc","093")
+pd = reader.get("fibers",SUBJ)
+img = reader.get("aparc",SUBJ)
 #s = filter_fibers.filter_polylines_with_img_numpy_slow(pd,img,251)
 #print s
 
@@ -26,7 +27,7 @@ scalars_from_image_int(fibs,aparc)
 aparc_vtk = braviz.readAndFilter.nibNii2vtk(aparc)
 aparc_vtk = braviz.readAndFilter.applyTransform(aparc_vtk,np.linalg.inv(aparc.get_affine()),interpolate=False)
 
-lut = reader.get("APARC","093",lut=True)
+lut = reader.get("APARC",SUBJ,lut=True)
 
 
 def select_label(fibs,l):

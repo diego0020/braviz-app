@@ -224,7 +224,7 @@ The path containing this structure must be set."""
             return self.__move_img_from_world(subj, img2, interpolate, space=space)
         space = kw.get('space', 'native')
         if space == "diff" and (data in {"FA","MD","DTI"}):
-            pass
+            return img
         elif space == "world":
             return img
         elif space == "diff":

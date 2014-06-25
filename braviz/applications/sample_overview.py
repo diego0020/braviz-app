@@ -321,7 +321,7 @@ class SampleOverview(QtGui.QMainWindow):
                     self.load_scenario_in_viewer(viewer, scenario, subj)
             except Exception as e:
                 log.exception(e)
-                raise
+                self.statusBar().showMessage(e.message,1000)
             QtGui.QApplication.instance().processEvents()
         self.ui.progress_bar.setValue(100)
         self.ui.statusbar.removeWidget(self.ui.progress_bar)
@@ -878,8 +878,9 @@ class SampleOverview(QtGui.QMainWindow):
         self.widgets_dict = new_widgets_dict
         log.info("loading visualization dict:")
         log.info(visualization_dict)
-        self.current_scenario = visualization_dict
-        self.reload_viewers(visualization_dict)
+        if visualization_dict is not None:
+            self.current_scenario = visualization_dict
+        self.reload_viewers(self.current_scenario)
 
     def launch_mri_viewer(self):
         #TODO: Move this to the subject_viewer class

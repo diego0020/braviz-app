@@ -226,14 +226,14 @@ The path containing this structure must be set."""
             return self.__move_img_from_world(subj, img2, interpolate, space=space)
         space = kw.get('space', 'native')
         if space == "diff" and (data in {"FA","MD","DTI"}):
-            pass
+            return img
         elif space == "world":
             return img
         elif space == "diff":
             #read transform:
-            path = os.path.join(self.__root, str(subj), 'camino')
+            path = os.path.join(self.getDataRoot(), "tractography",str(subj))
             #matrix = readFlirtMatrix('surf2diff.mat', 'FA.nii.gz', 'orig.nii.gz', path)
-            matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
             affine = img.get_affine()
             aff2 = matrix.dot(affine)
             img2=nib.Nifti1Image(img.get_data(),aff2)
@@ -804,9 +804,9 @@ The path containing this structure must be set."""
             return transformPolyData(point_set, transform)
         elif space.lower() in ('template', 'dartel'):
             if inverse:
-                dartel_warp = self.__get_spm_grid_transform(subj,"dartel","forw")
-            else:
                 dartel_warp = self.__get_spm_grid_transform(subj,"dartel","back")
+            else:
+                dartel_warp = self.__get_spm_grid_transform(subj,"dartel","forw")
             return transformPolyData(point_set, dartel_warp)
         elif space[:4] in ('func', 'fmri'):
             #functional space

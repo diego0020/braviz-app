@@ -17,9 +17,9 @@ def populate_cache(subj):
     #Dartel Transform
     print " %s: Dartel"%subj
     with ignored(Exception):
-        reader2.get('MRI',subj,format='vtk',space='Template')
+        reader2.get('MRI',subj,format='vtk',space='dartel')
     with ignored(Exception):
-        reader2.get('fibers',subj,space='template')
+        reader2.get('fibers',subj,space='dartel')
 
     #FreeSurferSurface
     print " %s: Surfaces"%subj
@@ -53,7 +53,7 @@ def populate_cache(subj):
     waypoints=( 'Brain-Stem','CC_Anterior','CC_Central','CC_Mid_Anterior','CC_Mid_Posterior','CC_Posterior',
                 'Left-Cerebellum-Cortex', 'Left-Cerebellum-White-Matter', 'Left-Cerebral-White-Matter',
                 'Right-Cerebellum-Cortex', 'Right-Cerebellum-White-Matter', 'Right-Cerebral-White-Matter',
-                'ctx-lh-precentral','ctx-rh-precentral')
+                'ctx-lh-precentral','ctx-rh-precentral','wm-lh-precentral','wm-rh-precentral')
     print " %s: Waypoints"%subj
     for w in waypoints:
         print " %s: Waypoints - %s"%(subj,w)
