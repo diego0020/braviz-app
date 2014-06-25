@@ -93,7 +93,7 @@ def line_curvature(line):
     return color_dict
         
 
-def scalars_from_image(fibers,nifti_image):
+def scalars_from_image(fibers,nifti_image,order=1):
 
     affine = nifti_image.get_affine()
     iaffine = np.linalg.inv(affine)
@@ -114,8 +114,36 @@ def scalars_from_image(fibers,nifti_image):
         coords = np.dot(iaffine,coords)
         coords = coords[:3]/coords[3]
         coords = coords.reshape(3, 1)
-        image_val = ndimage.map_coordinates(data,coords,order=1)
-        new_array.SetComponent(i,0,image_val)
+        image_val = ndimage.map_coordinates(data,coords,order=order,mode="nearest")
+        new_array.SetComponent(i,0,image_val[0])
+
+    pd.SetScalars(new_array)
+
+
+def scalars_from_image_int(fibers,nifti_image):
+
+    affine = nifti_image.get_affine()
+    iaffine = np.linalg.inv(affine)
+    data = nifti_image.get_data()
+
+    #update scalars
+    #remove colors array
+    pd = fibers.GetPointData()
+    pd.RemoveArray(0)
+
+    npoints = fibers.GetNumberOfPoints()
+    new_array = vtk.vtkIntArray()
+    new_array.SetNumberOfTuples(npoints)
+    new_array.SetNumberOfComponents(1)
+
+    for i in xrange(npoints):
+        coords = fibers.GetPoint(i) + (1,)
+        coords = np.dot(iaffine,coords)
+        coords = coords[:3]/coords[3]
+        coords = coords.reshape(3, 1)
+        coords = coords.astype(np.int)
+        image_val = data[coords[0],coords[1],coords[2]]
+        new_array.SetComponent(i,0,image_val[0])
 
     pd.SetScalars(new_array)
 

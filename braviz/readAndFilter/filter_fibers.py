@@ -129,7 +129,7 @@ def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
         raise Exception("Deprecated, you may use extract_poly_data_subset")
 
 
-def filter_polylines_with_img(polydata,img,label,do_remove=False):
+def filter_polylines_with_img_slow(polydata,img,label,do_remove=False):
     """
     img should be in the nibabel format
     """
@@ -155,7 +155,7 @@ def filter_polylines_with_img(polydata,img,label,do_remove=False):
     return valid_fibers
 
 
-def filter_polylines_with_img_numpy_slow(polydata,img,label,do_remove=False):
+def filter_polylines_with_img(polydata,img,label,do_remove=False):
     """
     img should be in the nibabel format
     """
@@ -175,8 +175,9 @@ def filter_polylines_with_img_numpy_slow(polydata,img,label,do_remove=False):
         coords = coords_h[:,:3]
         divisors = np.repeat(coords_h[:,3:],3,axis=1)
         coords = coords/divisors
-        coords_i = np.round(coords)
-        vals = ndimage.map_coordinates(data,coords_i.T)
+        coords_i = np.round(coords).astype(np.int)
+        #interpolates, too slow
+        vals = data[coords_i[:,0],coords_i[:,1],coords_i[:,2]]
         if np.any(vals==label):
             return True
         else:
@@ -190,12 +191,34 @@ def filter_polylines_with_img_numpy_slow(polydata,img,label,do_remove=False):
     valid_fibers = set(i for i in xrange(n) if test_poly_line(polydata.GetCell(i)))
     return valid_fibers
 
-def filter_polylines_with_img_vtk(fibs,img,scalar):
-    #paint fibs with image
-    #threshold polydata
-    #extract cells
+def filter_polylines_by_scalar(fibs,scalar):
+    selection = vtk.vtkSelection()
+    selection_node = vtk.vtkSelectionNode()
+    selection_node.GetProperties().Set(vtk.vtkSelectionNode.CONTENT_TYPE(), vtk.vtkSelectionNode.THRESHOLDS)
+    selection_node.GetProperties().Set(vtk.vtkSelectionNode.FIELD_TYPE(), vtk.vtkSelectionNode.POINT)
+    selection.AddNode(selection_node)
 
-    pass
+    array = vtk.vtkDoubleArray()
+    array.SetNumberOfComponents(1)
+    array.InsertNextValue(scalar-.5)
+    array.InsertNextValue(scalar+.5)
+    selection_node.SetSelectionList(array)
+    extract_lines = vtk.vtkExtractSelection()
+    extract_lines.SetInputData(1, selection)
+    extract_lines.SetInputData(0, fibs)
+    extract_lines.PreserveTopologyOff()
+    extract_lines.Update()
+    out = extract_lines.GetOutput()
+    out_ids = out.GetPointData().GetScalars("vtkOriginalPointIds")
+
+    valid_cell_ids = set()
+    for i in xrange(out_ids.GetNumberOfTuples()):
+        pt_id = int(out_ids.GetTuple(i)[0])
+        id_list2 = vtk.vtkIdList()
+        fibs.GetPointCells(pt_id,id_list2)
+        valid_cell_ids.update(iter_id_list(id_list2))
+
+    return valid_cell_ids
 
 if __name__ == "__main__":
     reader = braviz.readAndFilter.BravizAutoReader()

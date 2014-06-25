@@ -308,7 +308,8 @@ def cache_function(max_cache_size):
     return decorator
 
 
-from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, extract_poly_data_subset
+from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, extract_poly_data_subset,\
+    filter_polylines_by_scalar
 
 #Easy access to kmc readers
 
