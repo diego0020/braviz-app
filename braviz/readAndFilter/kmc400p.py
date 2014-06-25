@@ -223,13 +223,21 @@ The path containing this structure must be set."""
             space = kw.get('space', 'world')
             if space == "diff" and (data in {"FA","MD","DTI"}):
                 return img2
-            return self.__move_img_from_world(subj, img2, interpolate, space)
+            return self.__move_img_from_world(subj, img2, interpolate, space=space)
         space = kw.get('space', 'native')
         if space == "diff" and (data in {"FA","MD","DTI"}):
+            pass
+        elif space == "world":
             return img
-        elif space == "native":
-            return img
-
+        elif space == "diff":
+            #read transform:
+            path = os.path.join(self.__root, str(subj), 'camino')
+            #matrix = readFlirtMatrix('surf2diff.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            affine = img.get_affine()
+            aff2 = matrix.dot(affine)
+            img2=nib.Nifti1Image(img.get_data(),aff2)
+            return img2
         log = logging.getLogger(__file__)
         log.warning("Returned nifti image is in native space")
         return img
@@ -500,11 +508,11 @@ The path containing this structure must be set."""
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
 
-        #WE ARE IN DIFF SPACE!!
         log = logging.getLogger(__name__)
         if (color is None) and (scalars is None):
             color = "orient"
 
+        #WE ARE IN DIFF SPACE
         if color is not None:
             color = color.lower()
             if color.startswith('orient'):
@@ -525,7 +533,6 @@ The path containing this structure must be set."""
         else:
             scalars = scalars.lower()
             cache_key = 'streams_%s_sc_%s.vtk' % (subj,scalars)
-
 
         cached = self.load_from_cache(cache_key)
         if cached is not None:
@@ -564,6 +571,12 @@ The path containing this structure must be set."""
                 braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,md_img)
             elif scalars == "length":
                 braviz.readAndFilter.color_fibers.scalars_from_length(fibers)
+            elif scalars == "aparc":
+                aparc_img = self.get("APARC",subj,space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image_int(fibers,aparc_img)
+            elif scalars == "wmparc":
+                wmparc_img = self.get("WMPARC",subj,space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image_int(fibers,wmparc_img)
             else:
                 log.error('Unknown coloring scheme %s' % color)
                 raise Exception('Unknown coloring scheme %s' % color)
@@ -580,7 +593,6 @@ The path containing this structure must be set."""
         ids = self.load_from_cache(cache_key)
         if ids is not None:
             return ids
-        fibers = self.get('fibers', subj, space='world')
         if waypoint[:3]=="wm-":
             img_name = "WMPARC"
         elif waypoint[-7:]=="-SPHARM":
@@ -589,25 +601,25 @@ The path containing this structure must be set."""
         else:
             img_name = "APARC"
         if img_name is None:
+            fibers = self.get('fibers', subj, space='world')
             model = self.get('model', subj, name=waypoint, space='world')
             if model:
                 ids = braviz.readAndFilter.filterPolylinesWithModel(fibers, model, do_remove=False)
             else:
                 ids = set()
         else:
+            try:
+                fibers = self.get('fibers', subj, space='world',color=None,scalars=img_name)
+            except Exception:
+                log.error("%s image not found"%img_name)
+                return set()
             if not hasattr(self,"free_surfer_labels"):
                 self.__parse_fs_color_file()
             lbl = self.free_surfer_labels.get(waypoint)
             if lbl is None:
                 raise Exception("Unknown structure")
-            try:
-                img = self.get(img_name,subj)
-            except Exception:
-                img = None
-            if img is not None:
-                ids = braviz.readAndFilter.filter_polylines_with_img(fibers,img,lbl,do_remove=False)
-            else:
-                ids = set()
+            ids = braviz.readAndFilter.filter_polylines_by_scalar(fibers,int(lbl))
+
         self.save_into_cache(cache_key,ids)
         return ids
 

@@ -222,7 +222,7 @@ The path containing this structure must be set."""
             if space == "diff" and (data in {"FA","MD","DTI"}):
                 return img2
             return self.__move_img_from_world(subj, img2, interpolate, space=space)
-        space = kw.get('space', 'world')
+        space = kw.get('space', 'native')
         if space == "diff" and (data in {"FA","MD","DTI"}):
             pass
         elif space == "world":
@@ -236,7 +236,10 @@ The path containing this structure must be set."""
             aff2 = matrix.dot(affine)
             img2=nib.Nifti1Image(img.get_data(),aff2)
             return img2
+        log = logging.getLogger(__file__)
+        log.warning("Returned nifti image is in native space")
         return img
+
 
     def __move_img_from_world(self, subj, img2, interpolate=False, space='world'):
         "moves an image from the world coordinate space to talairach or dartel spaces"
@@ -495,6 +498,7 @@ The path containing this structure must be set."""
     def __cached_color_fibers(self, subj, color=None,scalars=None):
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
+
         log = logging.getLogger(__name__)
         if (color is None) and (scalars is None):
             color = "orient"
@@ -524,6 +528,7 @@ The path containing this structure must be set."""
                 return cached
         else:
             #WE ARE IN DIFF SPACE
+            #base case
             fibers = self.__cached_color_fibers(subj, 'orient')
             if color == 'orient':
                 return fibers
@@ -608,6 +613,7 @@ The path containing this structure must be set."""
         return ids
 
     def filter_fibers(self,subj,struct):
+        subj=str(subj)
         if len(subj)<3:
             subj="0"*(3-len(subj))+subj
         return self.__cached_filter_fibers(subj,struct)
@@ -649,6 +655,7 @@ The path containing this structure must be set."""
         the list is then used to remove unwanted polylines,
         and finally the fibers are translated to the wanted space
         """
+
         log = logging.getLogger(__name__)
         if 'progress' in kw:
             log.warning("The progress argument is deprecated")
@@ -821,6 +828,8 @@ The path containing this structure must be set."""
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
         #Based on subject 143
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
+        if color_dict is not None and len(color_dict)<180:
+            color_dict = None
         #color_dict = None
         if color_dict is None:
             ref = self.get("ids")[0]
