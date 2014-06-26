@@ -433,7 +433,11 @@ class BuildRoiApp(QMainWindow):
     def start(self):
         self.vtk_widget.initialize_widget()
         self.set_image("MRI")
-        self.vtk_viewer.show_image()
+        try:
+            self.vtk_viewer.show_image()
+        except Exception as e:
+            log = logging.getLogger(__file__)
+            log.warning(e)
         self.vtk_viewer.change_space(self.__curent_space)
         self.vtk_viewer.finish_initializing()
         if self.__roi_id is not None:
@@ -461,7 +465,11 @@ class BuildRoiApp(QMainWindow):
 
     def show_image(self, axis, state):
         if state == QtCore.Qt.Checked:
-            self.vtk_viewer.image_planes[axis].show_image()
+            try:
+                self.vtk_viewer.image_planes[axis].show_image()
+            except Exception as e:
+                log = logging.getLogger(__file__)
+                log.warning(e)
         elif state == QtCore.Qt.Unchecked:
             self.vtk_viewer.image_planes[axis].hide_image()
         self.vtk_viewer.ren_win.Render()

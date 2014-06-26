@@ -247,15 +247,15 @@ class SubjectOverviewApp(QMainWindow):
             self.reset_image_view_controls()
             return
 
-        self.vtk_viewer.image.show_image()
-        if selection in ("MRI", "FA", "APARC","WMPARC", "MD", "DTI"):
-            self.vtk_viewer.image.change_image_modality(selection)
-        else:
-            try:
+        try:
+            if selection in ("MRI", "FA", "APARC","WMPARC", "MD", "DTI"):
+                self.vtk_viewer.image.change_image_modality(selection)
+            else:
                 self.vtk_viewer.image.change_image_modality("FMRI", selection,contrast=int(self.ui.contrast_combo.currentText()))
-            except Exception as e:
-                log.warning(e.message)
-                self.statusBar().showMessage(e.message, 5000)
+            self.vtk_viewer.image.show_image()
+        except Exception as e:
+            log.warning(e.message)
+            self.statusBar().showMessage(e.message, 5000)
 
         self.ui.image_orientation.setEnabled(1)
         self.ui.slice_spin.setEnabled(1)
