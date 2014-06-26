@@ -377,8 +377,9 @@ class SampleOverview(QtGui.QMainWindow):
         self.rational_name = self.scalar_data.columns[0]
         self.nominal_name = self.scalar_data.columns[1]
         self.scalar_data = self.scalar_data.loc[self.sample]
+        self.scalar_data[np.isnan(self.scalar_data[self.rational_name])][self.rational_name]=np.inf
         self.scalar_data.sort(self.rational_name, inplace=True, ascending=False)
-        self.sample.sort(key=lambda s: self.scalar_data[self.rational_name][s])
+        self.sample.sort(key=lambda s: self.scalar_data.index.get_loc(s),reverse=True)
         log.debug("sample: ")
         log.debug(self.sample)
         labels_dict = braviz_tab_data.get_labels_dict(nominal_var_index)
@@ -434,7 +435,6 @@ class SampleOverview(QtGui.QMainWindow):
         if image_state is not None:
             mod = image_state.get("modality")
             if mod is not None:
-                viewer.image.show_image()
                 try:
                     if mod in self.reader.FUNCTIONAL_PARADIGMS:
                         paradigm = mod
@@ -453,6 +453,7 @@ class SampleOverview(QtGui.QMainWindow):
                     else:
                         paradigm = None
                     viewer.image.change_image_modality(mod, paradigm=paradigm, skip_render=True)
+                    viewer.image.show_image()
                     viewer.image.image_plane_widget.SetInteraction(0)
                     orient = image_state.get("orientation")
                     if orient is not None:
@@ -874,6 +875,7 @@ class SampleOverview(QtGui.QMainWindow):
             QtGui.QApplication.instance().processEvents()
 
         self.sample = new_sample
+        self.load_scalar_data(self.rational_index,self.nominal_index,force=True)
         self.viewers_dict = new_viewers_dict
         self.widgets_dict = new_widgets_dict
         log.info("loading visualization dict:")

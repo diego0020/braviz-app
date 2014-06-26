@@ -993,6 +993,7 @@ The path containing this structure must be set."""
     def transformPointsToSpace(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space. 
         If inverse is true moves from space to world"""
+        subj = str(subj)
         if len(subj)<3:
             subj="0"*(3-len(subj))+subj
         return self.__movePointsToSpace(point_set, space, subj, inverse)
