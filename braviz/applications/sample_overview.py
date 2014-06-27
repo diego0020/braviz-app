@@ -379,7 +379,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.scalar_data = self.scalar_data.loc[self.sample]
         self.scalar_data[np.isnan(self.scalar_data[self.rational_name])][self.rational_name]=np.inf
         self.scalar_data.sort(self.rational_name, inplace=True, ascending=False)
-        self.sample.sort(key=lambda s: self.scalar_data.index.get_loc(s),reverse=True)
+        self.sample = list(reversed(self.scalar_data.index))
         log.debug("sample: ")
         log.debug(self.sample)
         labels_dict = braviz_tab_data.get_labels_dict(nominal_var_index)
