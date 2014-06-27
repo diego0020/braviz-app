@@ -261,6 +261,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.slice_spin.setEnabled(1)
         self.ui.slice_slider.setEnabled(1)
         self.ui.slice_slider.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
+        self.ui.slice_spin.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
         self.reset_image_view_controls()
 
         window_level_control = 1 if selection in ("MRI", "FA", "MD","Precision","Power") else 0
@@ -292,6 +293,8 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_viewer.change_current_space(new_space)
         log = logging.getLogger(__name__)
         log.info(new_space)
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
+        self.ui.slice_spin.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
 
     def print_vtk_camera(self):
         self.vtk_viewer.print_camera()

@@ -133,6 +133,8 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
     reslicer.SetInformationInput(outData)
     if interpolate is False:
         reslicer.SetInterpolationModeToNearestNeighbor()
+    else:
+        reslicer.SetInterpolationModeToCubic()
     reslicer.Update()
     outImg = reslicer.GetOutput()
     #print dimension2

@@ -332,16 +332,8 @@ class SampleOverview(QtGui.QMainWindow):
         img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(subject)))
         try:
             viewer.change_subject(img_code)
-            #For testing
-            return
-            viewer.change_current_space("Talairach", skip_render=True)
-            viewer.image.change_image_modality("MRI", skip_render=True)
-            viewer.models.set_models(['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior',
-                                      'CC_Mid_Posterior', 'CC_Posterior'], skip_render=True)
-            viewer.reset_camera(1)
         except Exception as e:
             log.warning(e.message)
-        QtGui.QApplication.instance().processEvents()
 
 
     def locate_subj(self, subj):
@@ -885,7 +877,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.reload_viewers(self.current_scenario)
 
     def launch_mri_viewer(self):
-        #TODO: Move this to the subject_viewer class
+        #TODO: Change to sockets, find better ports, use timeout
         #copied from anova_task
         address = ('localhost', 6001)
         auth_key = multiprocessing.current_process().authkey
@@ -907,12 +899,18 @@ class SampleOverview(QtGui.QMainWindow):
     def show_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
         log.info("showing subject %s" % subj)
+        if self.mri_viewer is not None:
+            try:
+                self.mri_pipe.send({"subject": subj})
+            except IOError:
+                #maybe it was closed
+                self.mri_pipe = None
+                self.mri_viewer = None
         if self.mri_viewer is None:
             self.launch_mri_viewer()
             scn_id = self.current_scenario["meta"]["scn_id"]
             self.mri_pipe.send({"subject": subj, "scenario": scn_id})
-        else:
-            self.mri_pipe.send({"subject": subj})
+
 
     def show_select_sample_dialog(self):
         dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
