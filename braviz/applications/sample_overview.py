@@ -904,6 +904,7 @@ class SampleOverview(QtGui.QMainWindow):
                 self.mri_pipe.send({"subject": subj})
             except IOError:
                 #maybe it was closed
+                self.mri_pipe.close()
                 self.mri_pipe = None
                 self.mri_viewer = None
         if self.mri_viewer is None:
