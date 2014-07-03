@@ -14,6 +14,7 @@ from braviz.interaction.qt_dialogs import OutcomeSelectDialog, RegressorSelectDi
     InteractionSelectDialog
 
 import braviz.interaction.r_functions
+from braviz.interaction.connection import MessageClient,MessageServer
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
@@ -24,11 +25,8 @@ import colorbrewer
 
 from itertools import izip
 
-import multiprocessing
-import multiprocessing.connection
 import subprocess
 import sys
-import binascii
 import datetime
 import os
 import platform
@@ -44,7 +42,7 @@ else:
     SAMPLE_TREE_COLUMNS = ("primipar","sexo5")
 
 class AnovaApp(QMainWindow):
-    def __init__(self):
+    def __init__(self,scenario,server_broadcast_address,server_receive_address):
         QMainWindow.__init__(self)
         self.outcome_var_name = None
         self.anova = None
@@ -59,13 +57,21 @@ class AnovaApp(QMainWindow):
         self.plot_var_name = None
         self.last_viewed_subject = None
         self.mri_viewer_pipe = None
-        self.mri_viewer_process = None
-        self.poll_timer = None
         self.sample = braviz_tab_data.get_subjects()
         self.ui = None
+
+        if server_broadcast_address is not None or server_receive_address is not None:
+            self._message_client = MessageClient(server_broadcast_address,server_receive_address)
+            self._message_client.message_received.connect(self.receive_message)
+        else:
+            self._message_client = None
+        #in case no central server exists
+        self._auxiliary_server = None
         self.setup_gui()
-
-
+        if scenario is not None:
+            scn_int = int(scenario)
+            if scn_int>0:
+                self.load_scenario_id(scenario)
     def setup_gui(self):
         self.ui = Ui_Anova_gui()
         self.ui.setupUi(self)
@@ -98,8 +104,6 @@ class AnovaApp(QMainWindow):
         self.ui.sample_tree.customContextMenuRequested.connect(self.subject_details_from_tree)
         self.ui.modify_sample_button.clicked.connect(self.load_sample)
         self.ui.modify_sample_button.setEnabled(True)
-        self.poll_timer = QtCore.QTimer(self)
-        self.poll_timer.timeout.connect(self.poll_messages_from_mri_viewer)
 
         self.ui.actionSave_scneario.triggered.connect(self.save_scenario_dialog)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
@@ -395,12 +399,16 @@ class AnovaApp(QMainWindow):
                                       var_name,
                                       self.outcome_var_name, urls=data.index.get_values())
 
-    def add_subjects_to_plot(self, index=None,subject_ids=None):
+    def add_subjects_to_plot(self,tree_indexes=None,subject_ids=None):
+        #tree_indexes used when called from tree
         #find selected subjects
         if subject_ids is None:
             selection = self.ui.sample_tree.currentIndex()
             leafs = self.sample_model.get_leafs(selection)
             subject_ids = map(int, leafs)
+
+        if not isinstance(subject_ids,list):
+            subject_ids = list(subject_ids)
 
         #get data
         #print subject_ids
@@ -423,27 +431,22 @@ class AnovaApp(QMainWindow):
 
         self.plot.add_subject_points(x_data, y_data,z_data, colors,urls=subject_ids)
 
-    def poll_messages_from_mri_viewer(self):
-        #print "polling"
+    def change_subject_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
-        if self.mri_viewer_process is None or (self.mri_viewer_process.poll() is not None):
-            #stop timer
-            self.poll_timer.stop()
-            return
-        if self.mri_viewer_pipe.poll():
-            try:
-                message = self.mri_viewer_pipe.recv()
-            except EOFError:
-                #process should have ended
+        subj = str(subj)
+        msg1 = "subject %s"%subj
+        log.info(msg1)
+        if self._message_client is not None:
+            self._message_client.send_message(msg1)
 
-                log.info("Pipe closed")
-                self.mri_viewer_process = None
-                self.mri_viewer_pipe = None
-                return
-            subj = message.get('subject')
+    def receive_message(self,msg):
+        log = logging.getLogger(__name__)
+        log.info("RECEIVED %s"%msg)
+        if msg.startswith("subject"):
+            subj = msg.split()[1]
             if subj is not None:
                 log.info("showing subject %s"%subj)
-                self.add_subjects_to_plot(subject_ids=[int(subj)])
+                self.add_subjects_to_plot(subject_ids=(int(subj),))
 
 
     def handle_box_outlier_pick(self, x, y, position):
@@ -468,17 +471,26 @@ class AnovaApp(QMainWindow):
         self.last_viewed_subject = subj
         QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
 
-    def create_context_action(self,subject,scenario_id,scenario_name,show_name = None):
+    def create_context_action(self,subject,scenario_id,scenario_name,show_name = None, new_viewer=True):
         if show_name is None:
             show_name = scenario_name
-        def show_scenario():
-            self.change_subject_in_mri_viewer(subject,scenario_id)
-        action = QtGui.QAction("Show subject %s's %s" % (subject,show_name), None)
-        action.triggered.connect(show_scenario)
+        if scenario_id is None:
+            scenario_id = 0
+        def show_subject():
+            self.change_subject_in_mri_viewer(subject)
+            self.add_subjects_to_plot(subject_ids=(int(subject),))
+        def launch_new_viewer():
+            self.launch_mri_viewer(subject,scenario_id)
+            self.add_subjects_to_plot(subject_ids=(int(subject),))
+        if new_viewer:
+            action = QtGui.QAction("Show subject %s's %s in new viewer" % (subject,show_name), None)
+            action.triggered.connect(launch_new_viewer)
+        else:
+            action = QtGui.QAction("Show %s in existing viewers" % subject, None)
+            action.triggered.connect(show_subject)
         return action
 
     def create_view_details_context_menu(self, global_pos, subject=None):
-        #TODO: Open images of a given subject
         if subject is None:
             subject = self.last_viewed_subject
             if subject is None:
@@ -497,6 +509,8 @@ class AnovaApp(QMainWindow):
                 scenarios[reg]=reg_scenarios.items()
 
         menu = QtGui.QMenu("Subject %s" % subject)
+        show_action = self.create_context_action(subject,None,None,new_viewer=False)
+        menu.addAction(show_action)
         launch_mri_action = self.create_context_action(subject,None,"MRI")
         menu.addAction(launch_mri_action)
 
@@ -531,35 +545,25 @@ class AnovaApp(QMainWindow):
     def clear_last_viewed_subject(self):
         self.last_viewed_subject = None
 
-    def launch_mri_viewer(self):
-        log = logging.getLogger(__name__)
-        #TODO: think of better way of choicing ports
-        address = ('localhost',6001)
-        auth_key=multiprocessing.current_process().authkey
-        auth_key_asccii = binascii.b2a_hex(auth_key)
-        listener = multiprocessing.connection.Listener(address,authkey=auth_key)
+    def launch_auxiliary_server(self):
+        self._auxiliary_server = MessageServer(local_only=True)
+        self._auxiliary_server.message_received.connect(self.receive_message)
 
-        #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
+    def launch_mri_viewer(self,subject,scenario):
+        log = logging.getLogger(__name__)
+
         log.info("launching viewer")
-        log.info([sys.executable,"-m","braviz.applications.subject_overview","0",auth_key_asccii])
-        self.mri_viewer_process = subprocess.Popen([sys.executable,"-m","braviz.applications.subject_overview",
-                                                    "0",auth_key_asccii])
+        if self._message_client is None:
+            log.info("Becoming an auxiliary server")
+            self.launch_auxiliary_server()
+            self._message_client=MessageClient(self._auxiliary_server.broadcast_address,
+                                               self._auxiliary_server.receive_address)
+        args = [sys.executable,"-m","braviz.applications.subject_overview",str(scenario),
+                self._message_client.server_broadcast,self._message_client.server_receive,str(subject)]
 
-        #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
-        #self.mri_viewer_process.start()
-        self.mri_viewer_pipe = listener.accept()
-        self.poll_timer.start(200)
+        log.info(args)
+        subprocess.Popen(args)
 
-    def change_subject_in_mri_viewer(self, subj,scenario=None):
-        log = logging.getLogger(__name__)
-        if (self.mri_viewer_process is None) or (self.mri_viewer_process.poll() is not None):
-            self.launch_mri_viewer()
-        if self.mri_viewer_pipe is not None:
-            message = {'subject': str(subj)}
-            if scenario is not None:
-                message["scenario"]=scenario
-            self.mri_viewer_pipe.send(message)
-            log.info("sending message: subj: %s", message)
 
     def closeEvent(self, *args, **kwargs):
         #if self.mri_viewer_process is not None:
@@ -614,6 +618,15 @@ class AnovaApp(QMainWindow):
             log.info("Loading state")
             log.info(wanted_state)
             self.restore_state(wanted_state)
+
+    def load_scenario_id(self,scn_id):
+        wanted_state = braviz_user_data.get_scenario_data_dict(scn_id)
+        app = wanted_state.get("meta").get("application")
+        if app == os.path.splitext(os.path.basename(__file__))[0]:
+            self.restore_state(wanted_state)
+        else:
+            log = logging.getLogger(__file__)
+            log.error("Scenario id doesn't correspond to an anova scenario, ignoring")
 
     def restore_state(self,wanted_state):
         #restore outcome
@@ -682,10 +695,20 @@ def run():
     import sys
     from braviz.utilities import configure_logger
     configure_logger("anova_app")
-    app = QtGui.QApplication(sys.argv)
+    args = sys.argv
+    scenario = None
+    server_broadcast_address = None
+    server_receive_address = None
+    if len(args)>1:
+        scenario = int(args[1])
+        if len(args)>2:
+            server_broadcast_address = args[2]
+            if len(args)>3:
+                server_receive_address = args[3]
+    app = QtGui.QApplication([])
     log = logging.getLogger(__name__)
     log.info("started")
-    main_window = AnovaApp()
+    main_window = AnovaApp(scenario,server_broadcast_address,server_receive_address)
     main_window.show()
     try:
         app.exec_()

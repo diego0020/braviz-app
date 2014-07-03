@@ -7,6 +7,8 @@ import logging
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
+from braviz.interaction.connection import MessageServer
+
 
 try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
@@ -26,8 +28,14 @@ class BravizMenu2(QtGui.QMainWindow):
         self.reader = None
 
         self.ui = None
-        self.setup_gui()
         self.setWindowTitle("Braviz Menu")
+        self.messages_server = MessageServer(local_only=True)
+        print "Server Started"
+        print "Broadcast address: %s"%self.messages_server.broadcast_address
+        print "Receive address: %s"%self.messages_server.receive_address
+
+        self.messages_server.message_received.connect(self.print_messages)
+        self.setup_gui()
 
     def setup_gui(self):
         self.ui = Ui_BavizMenu()
@@ -67,7 +75,9 @@ class BravizMenu2(QtGui.QMainWindow):
     def make_application_launcher(self,app,button):
         interpreter = sys.executable
         module = self.__applications[app]
-        args = [interpreter,"-m","braviz.applications.%s"%module]
+        # python -m <module> scenario=0 <broadcast_address> <receive_address>
+        args = [interpreter,"-m","braviz.applications.%s"%module,"0",
+                self.messages_server.broadcast_address,self.messages_server.receive_address]
         def restore_icon():
             button.setEnabled(True)
 
@@ -110,6 +120,10 @@ class BravizMenu2(QtGui.QMainWindow):
         help_file = os.path.join(doc_path,"faq.html")
         url = "file://%s"%help_file
         webbrowser.open(url,2)
+
+    def print_messages(self,msg):
+        #for testing
+        print "RECEIVED: %s"%msg
 
 def run():
     import sys

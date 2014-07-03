@@ -23,9 +23,9 @@ import os
 import datetime
 import functools
 import cPickle
-import multiprocessing.connection
-import binascii
 import subprocess
+
+from braviz.interaction.connection import MessageClient, MessageServer
 
 
 #SAMPLE_SIZE = 0.5
@@ -41,10 +41,10 @@ else:
 
 
 class SampleOverview(QtGui.QMainWindow):
-    def __init__(self, initial_scenario=None):
+    def __init__(self,server_broadcast_address=None, server_receive_address=None, initial_scenario=None):
         super(SampleOverview, self).__init__()
         self.reader = braviz.readAndFilter.BravizAutoReader()
-
+        log = logging.getLogger(__name__)
         self.plot_widget = None
         self.sample = braviz_tab_data.get_subjects()
         self.viewers_dict = {}
@@ -69,9 +69,14 @@ class SampleOverview(QtGui.QMainWindow):
         self.current_selection = None
         self.current_scenario = None
 
-        self.mri_viewer = None
-        self.mri_pipe = None
+        if server_broadcast_address is not None or server_receive_address is not None:
+            self._message_client = MessageClient(server_broadcast_address, server_receive_address)
+            self._message_client.message_received.connect(self.receive_message)
+            log.info( "started messages client")
+        else:
+            self._message_client = None
 
+        self._auxiliary_server = None
         self.ui = None
         self.context_menu_opened_recently = False
         self.setup_gui()
@@ -338,6 +343,9 @@ class SampleOverview(QtGui.QMainWindow):
 
     def locate_subj(self, subj):
         #restore previous
+        subj = int(subj)
+        if not subj in self.sample:
+            return
         if self.current_selection is not None:
             i_widget = self.widgets_dict[self.current_selection]
             i_widget.setFrameStyle(QtGui.QFrame.NoFrame)
@@ -357,6 +365,7 @@ class SampleOverview(QtGui.QMainWindow):
         #locate in bar plot
         self.plot_widget.highlight_id(int(subj))
         self.ui.camera_combo.setItemText(2, "Copy from %s" % self.current_selection)
+
 
 
     def load_scalar_data(self, rational_var_index, nominal_var_index, force=False):
@@ -617,13 +626,22 @@ class SampleOverview(QtGui.QMainWindow):
                 return
             log.info("Context for %s", subj)
             menu = QtGui.QMenu()
-            action = QtGui.QAction("Show %s in subject viewer" % subj, menu)
+            show_action = QtGui.QAction("Show %s in current viewers" % subj, menu)
 
             def show_subj_in_mri_viewer():
                 self.show_in_mri_viewer(subj)
 
-            action.triggered.connect(show_subj_in_mri_viewer)
-            menu.addAction(action)
+            show_action.triggered.connect(show_subj_in_mri_viewer)
+            menu.addAction(show_action)
+
+            new_viewer_action = QtGui.QAction("Show %s in new viewer" % subj, menu)
+
+            def launch_mri_viewer():
+                self.launch_mri_viewer(subj)
+
+            new_viewer_action.triggered.connect(launch_mri_viewer)
+            menu.addAction(new_viewer_action)
+
             global_pos = widget.mapToGlobal(pos)
             menu.exec_(global_pos)
             widget.subject_viewer.iren.InvokeEvent(vtk.vtkCommand.RightButtonReleaseEvent)
@@ -876,42 +894,34 @@ class SampleOverview(QtGui.QMainWindow):
             self.current_scenario = visualization_dict
         self.reload_viewers(self.current_scenario)
 
-    def launch_mri_viewer(self):
-        #TODO: Change to sockets, find better ports, use timeout
-        #copied from anova_task
-        address = ('localhost', 6001)
-        auth_key = multiprocessing.current_process().authkey
-        auth_key_asccii = binascii.b2a_hex(auth_key)
-        listener = multiprocessing.connection.Listener(address, authkey=auth_key)
+    def launch_auxiliary_server(self):
+        self._auxiliary_server = MessageServer(local_only=True)
+        self._auxiliary_server.message_received.connect(self.receive_message)
+
+    def launch_mri_viewer(self,subject):
         log = logging.getLogger(__name__)
+        if self.current_scenario is not None:
+            scenario =  self.current_scenario["meta"]["scn_id"]
+        else:
+            scenario = 0
 
-        #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
-        log.info("Excecuting command ")
-        log.info([sys.executable, "-m", "braviz.applications.subject_overview", "0", auth_key_asccii])
-        self.mri_viewer = subprocess.Popen([sys.executable, "-m", "braviz.applications.subject_overview",
-                                            "0", auth_key_asccii])
+        log.info("launching viewer")
+        if self._message_client is None:
+            log.info("Becoming an auxiliary server")
+            self.launch_auxiliary_server()
+            self._message_client=MessageClient(self._auxiliary_server.broadcast_address,
+                                               self._auxiliary_server.receive_address)
+        args = [sys.executable,"-m","braviz.applications.subject_overview",str(scenario),
+                self._message_client.server_broadcast,self._message_client.server_receive,str(subject)]
 
-        #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
-        #self.mri_viewer_process.start()
-        self.mri_pipe = listener.accept()
-        #self.poll_timer.start(200)
+        log.info(args)
+        subprocess.Popen(args)
 
     def show_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
         log.info("showing subject %s" % subj)
-        if self.mri_viewer is not None:
-            try:
-                self.mri_pipe.send({"subject": subj})
-            except IOError:
-                #maybe it was closed
-                self.mri_pipe.close()
-                self.mri_pipe = None
-                self.mri_viewer = None
-        if self.mri_viewer is None:
-            self.launch_mri_viewer()
-            scn_id = self.current_scenario["meta"]["scn_id"]
-            self.mri_pipe.send({"subject": subj, "scenario": scn_id})
-
+        if self._message_client is not None:
+            self._message_client.send_message("subject %s"%subj)
 
     def show_select_sample_dialog(self):
         dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
@@ -924,20 +934,24 @@ class SampleOverview(QtGui.QMainWindow):
             self.load_scalar_data(self.rational_index, self.nominal_index, force=True)
             self.re_arrange_viewers()
 
+    def receive_message(self,msg):
+        if msg.startswith("subject"):
+            subj = msg.split()[1]
+            self.locate_subj(subj)
 
 def say_ciao():
     log = logging.getLogger(__name__)
     log.info("Exiting sample overview")
 
 
-def run(scn_id=None):
+def run(server_broadcast=None, server_receive=None, scenario=None):
     import sys
     from braviz.utilities import configure_logger
 
     configure_logger("sample_overview")
     log = logging.getLogger(__name__)
     app = QtGui.QApplication([])
-    main_window = SampleOverview(scn_id)
+    main_window = SampleOverview(server_broadcast, server_receive, scenario)
     main_window.show()
     main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     main_window.destroyed.connect(say_ciao)
@@ -948,11 +962,29 @@ def run(scn_id=None):
         raise
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    #args: [scenario] [server_broadcast] [server_receive]
     import sys
 
-    scn_id = None
-    if len(sys.argv) >= 2:
-        scn_id = sys.argv[1]
+    from braviz.utilities import configure_logger
 
-    run(scn_id)
+    configure_logger("subject_overview")
+    log = logging.getLogger(__name__)
+    log.info(sys.argv)
+    scenario = None
+
+
+    server_broadcast = None
+    server_receive = None
+    subject = None
+    if len(sys.argv) >= 2:
+        maybe_scene = int(sys.argv[1])
+        if maybe_scene > 0:
+            scenario = maybe_scene
+        if len(sys.argv) >= 3:
+            server_broadcast = sys.argv[2]
+            if len(sys.argv) >= 4:
+                server_receive = sys.argv[3]
+
+
+    run(server_broadcast, server_receive, scenario)

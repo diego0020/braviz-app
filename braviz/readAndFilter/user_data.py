@@ -71,6 +71,10 @@ def get_scenario_data(scn_id):
         raise Exception("scenario not found")
     return res[0]
 
+def get_scenario_data_dict(scn_id):
+    res = get_scenario_data(scn_id)
+    scn_dict = cPickle.loads(str(res))
+    return scn_dict
 
 def link_var_scenario(var_idx, scn_idx):
     conn = get_connection()

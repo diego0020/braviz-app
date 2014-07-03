@@ -21,38 +21,31 @@ from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVa
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 from braviz.interaction.qt_sample_select_dialog import SampleLoadDialog
 import subprocess
-import multiprocessing.connection
+from braviz.interaction.connection import MessageClient
 import binascii
 import cPickle
 import functools
 import logging
 
-#TODO only load scalar metrics if visible
+# TODO only load scalar metrics if visible
 
-surfaces_scalars_dict={0 : "curv", 1 : "avg_curv", 2: "thickness",
+surfaces_scalars_dict = {0: "curv", 1: "avg_curv", 2: "thickness",
                          3: "sulc", 4: "aparc", 5: "aparc.a2009s", 6: "BA"}
 
+
 class SubjectOverviewApp(QMainWindow):
-    def __init__(self, pipe_key=None,scenario=None):
+    def __init__(self, server_broadcast_address=None, server_receive_address=None, scenario=None,subject=None):
         #Super init
         QMainWindow.__init__(self)
         #Internal initialization
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__curent_subject = None
-        self.__pipe = pipe_key
         log = logging.getLogger(__name__)
-        if pipe_key is not None:
-            log.info("Got pipe key")
-            log.info(pipe_key)
-            pipe_key_bin = binascii.a2b_hex(pipe_key)
-
-            address = ("localhost", 6001)
-            self.__pipe = multiprocessing.connection.Client(address, authkey=pipe_key_bin)
-            self.__pipe_check_timer = QtCore.QTimer()
-            self.__pipe_check_timer.timeout.connect(self.poll_from_pipe)
-            self.__pipe_check_timer.start(200)
-        else:
-            self.__pipe_check_timer = None
+        self._messages_client = None
+        if server_broadcast_address is not None or server_receive_address is not None:
+            self._messages_client = MessageClient(server_broadcast_address, server_receive_address)
+            self._messages_client.message_received.connect(self.receive_message)
+            log.info( "started messages client")
 
         if braviz.readAndFilter.PROJECT == "kmc40":
             initial_vars = (11, 17, 1)
@@ -62,7 +55,6 @@ class SubjectOverviewApp(QMainWindow):
             initial_vars = (278, 310, 324)
             self.__context_variables = [276, 310, 324, 359]
             initial_details_vars = [278, 310, 324, 359]
-
 
         self.vtk_widget = QSubjectViwerWidget(reader=self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer
@@ -74,9 +66,11 @@ class SubjectOverviewApp(QMainWindow):
 
 
         #select first subject
-        index = self.subjects_model.index(0, 0)
-        self.__curent_subject = self.subjects_model.data(index, QtCore.Qt.DisplayRole)
-
+        if subject is None:
+            index = self.subjects_model.index(0, 0)
+            self.__curent_subject = self.subjects_model.data(index, QtCore.Qt.DisplayRole)
+        else:
+            self.__curent_subject = subject
 
         self.subject_details_model = SubjectDetails(initial_vars=initial_details_vars,
                                                     initial_subject=self.__curent_subject)
@@ -96,10 +90,10 @@ class SubjectOverviewApp(QMainWindow):
         self.setup_gui()
 
         if scenario is not None:
-            scn_data_str=braviz_user_data.get_scenario_data(scenario)
+            scn_data_str = braviz_user_data.get_scenario_data(scenario)
             scn_data = cPickle.loads(str(scn_data_str))
-            load_scn = functools.partial(self.load_scenario,scn_data)
-            QtCore.QTimer.singleShot(0,load_scn)
+            load_scn = functools.partial(self.load_scenario, scn_data)
+            QtCore.QTimer.singleShot(0, load_scn)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -138,11 +132,11 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_window.valueChanged.connect(self.vtk_viewer.image.set_image_window)
         self.ui.image_level.valueChanged.connect(self.vtk_viewer.image.set_image_level)
         self.ui.reset_window_level.clicked.connect(self.vtk_viewer.image.reset_window_level)
-        fmri_paradigms = self.reader.get("fmri",None,index=True)
+        fmri_paradigms = self.reader.get("fmri", None, index=True)
         for pdg in fmri_paradigms:
             self.ui.image_mod_combo.addItem(pdg)
-        for i in xrange(1,7):
-            self.ui.contrast_combo.addItem("%d"%i)
+        for i in xrange(1, 7):
+            self.ui.contrast_combo.addItem("%d" % i)
         #MRI
         self.ui.image_mod_combo.setCurrentIndex(1)
         self.ui.contrast_combo.activated.connect(self.image_modality_change)
@@ -183,7 +177,7 @@ class SubjectOverviewApp(QMainWindow):
         #self.vtk_viewer.show_cone()
 
         #context view
-        self.context_frame = ContextVariablesPanel(self.ui.splitter_2, "Context",app=self,
+        self.context_frame = ContextVariablesPanel(self.ui.splitter_2, "Context", app=self,
                                                    initial_variable_idxs=self.__context_variables)
 
         #menubar
@@ -197,11 +191,11 @@ class SubjectOverviewApp(QMainWindow):
             subj_code_index = self.subjects_model.index(selected_index.row(), 0)
             new_subject = self.subjects_model.data(subj_code_index, QtCore.Qt.DisplayRole)
 
-        if self.__pipe is not None:
-            self.__pipe.send({'subject': str(new_subject)})
+        if self._messages_client is not None and new_subject != self.__curent_subject:
+            self._messages_client.send_message('subject %s' % new_subject)
         #label
         logger = logging.getLogger(__name__)
-        logger.info("Changing subject to %s"%new_subject)
+        logger.info("Changing subject to %s" % new_subject)
         self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
         self.ui.subject_id2.setText("%s" % new_subject)
@@ -235,7 +229,7 @@ class SubjectOverviewApp(QMainWindow):
     def image_modality_change(self):
         selection = str(self.ui.image_mod_combo.currentText())
         log = logging.getLogger(__name__)
-        log.info("changing image mod to %s"%selection)
+        log.info("changing image mod to %s" % selection)
         if selection == "None":
             self.vtk_viewer.image.hide_image()
             self.ui.image_orientation.setEnabled(0)
@@ -248,10 +242,11 @@ class SubjectOverviewApp(QMainWindow):
             return
 
         try:
-            if selection in ("MRI", "FA", "APARC","WMPARC", "MD", "DTI"):
+            if selection in ("MRI", "FA", "APARC", "WMPARC", "MD", "DTI"):
                 self.vtk_viewer.image.change_image_modality(selection)
             else:
-                self.vtk_viewer.image.change_image_modality("FMRI", selection,contrast=int(self.ui.contrast_combo.currentText()))
+                self.vtk_viewer.image.change_image_modality("FMRI", selection,
+                                                            contrast=int(self.ui.contrast_combo.currentText()))
             self.vtk_viewer.image.show_image()
         except Exception as e:
             log.warning(e.message)
@@ -264,7 +259,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.slice_spin.setMaximum(self.vtk_viewer.image.get_number_of_image_slices())
         self.reset_image_view_controls()
 
-        window_level_control = 1 if selection in ("MRI", "FA", "MD","Precision","Power") else 0
+        window_level_control = 1 if selection in ("MRI", "FA", "MD", "Precision", "Power") else 0
         self.ui.image_window.setEnabled(window_level_control)
         self.ui.image_level.setEnabled(window_level_control)
         self.ui.reset_window_level.setEnabled(window_level_control)
@@ -273,7 +268,7 @@ class SubjectOverviewApp(QMainWindow):
         orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
         logger = logging.getLogger(__name__)
         selection = str(self.ui.image_orientation.currentText())
-        logger.info("Changing orientation to %s"%selection)
+        logger.info("Changing orientation to %s" % selection)
         self.vtk_viewer.image.change_image_orientation(orientation_dict[selection])
         self.reset_image_view_controls()
 
@@ -284,7 +279,7 @@ class SubjectOverviewApp(QMainWindow):
         selection = str(self.ui.camera_pos.currentText())
         camera_pos_dict = {"Default": 0, "Left": 1, "Right": 2, "Front": 3, "Back": 4, "Top": 5, "Bottom": 6}
         logger = logging.getLogger(__name__)
-        logger.info("Changing camera to %s"%selection)
+        logger.info("Changing camera to %s" % selection)
         self.vtk_viewer.reset_camera(camera_pos_dict[selection])
         self.ui.camera_pos.setCurrentIndex(0)
 
@@ -316,7 +311,7 @@ class SubjectOverviewApp(QMainWindow):
             new_selection = params["checked"]
             self.subjects_model.set_var_columns(new_selection)
             logger = logging.getLogger(__name__)
-            logger.info("new models %s"%new_selection)
+            logger.info("new models %s" % new_selection)
 
     def show_select_sample_dialog(self):
         dialog = SampleLoadDialog()
@@ -327,9 +322,9 @@ class SubjectOverviewApp(QMainWindow):
             log.info("*sample changed*")
             self.change_sample(new_sample)
             logger = logging.getLogger(__name__)
-            logger.info("new sample: %s"%new_sample)
+            logger.info("new sample: %s" % new_sample)
 
-    def change_sample(self,new_sample):
+    def change_sample(self, new_sample):
         self.sample = sorted(new_sample)
         self.subjects_model.set_sample(self.sample)
         self.context_frame.set_sample(self.sample)
@@ -344,7 +339,7 @@ class SubjectOverviewApp(QMainWindow):
         if new_selection is not None:
             self.subject_details_model.set_variables(sorted(new_selection))
             logger = logging.getLogger(__name__)
-            logger.info("new detail variables %s"%new_selection)
+            logger.info("new detail variables %s" % new_selection)
 
 
     def go_to_previus_subject(self):
@@ -407,7 +402,7 @@ class SubjectOverviewApp(QMainWindow):
 
         scenario_data = self.get_state_dict()
         app_name = scenario_data["meta"]["application"]
-        scenario_data_str = cPickle.dumps(scenario_data,2)
+        scenario_data_str = cPickle.dumps(scenario_data, 2)
         scn_id = braviz_user_data.save_scenario(app_name, scenario_name="<AUTO>",
                                                 scenario_description="", scenario_data=scenario_data_str)
         self.save_screenshot(scn_id)
@@ -479,21 +474,21 @@ class SubjectOverviewApp(QMainWindow):
         self.update_current_bundle()
 
     def change_tractography_color(self, index):
-        color_codes = {0: "orient", 1: "fa_p",2:"fa_l",
-                       3 : "md_p", 4: "md_l" , 5:"length",
+        color_codes = {0: "orient", 1: "fa_p", 2: "fa_l",
+                       3: "md_p", 4: "md_l", 5: "length",
                        6: "rand", 7: "bundle"}
         color_text = color_codes.get(index)
         logger = logging.getLogger(__name__)
-        logger.info("tractography color changed to: %s"%color_text)
+        logger.info("tractography color changed to: %s" % color_text)
         if color_text is not None:
             self.vtk_viewer.tractography.change_color(color_text)
         else:
             self.show_error("Not yet implemented")
 
-    def toggle_tractography_color_bar(self,value):
+    def toggle_tractography_color_bar(self, value):
         logger = logging.getLogger(__name__)
-        logger.info("tractography color bar: %s"%value)
-        if isinstance(value,bool):
+        logger.info("tractography color bar: %s" % value)
+        if isinstance(value, bool):
             self.vtk_viewer.tractography.set_show_color_bar(value)
             return
         else:
@@ -582,7 +577,7 @@ class SubjectOverviewApp(QMainWindow):
         #                      "metric": scalar_text, "db_id": db_id, "operation": operation}
         scenario_data = self.get_state_dict()
         app_name = scenario_data["meta"]["application"]
-        scenario_data_str = cPickle.dumps(scenario_data,2)
+        scenario_data_str = cPickle.dumps(scenario_data, 2)
         scn_id = braviz_user_data.save_scenario(app_name, scenario_name="<AUTO>",
                                                 scenario_description="", scenario_data=scenario_data_str)
         self.save_screenshot(scn_id)
@@ -620,7 +615,7 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveFibersBundleDialog(operation, checkpoints, throug_all)
         dialog.exec_()
 
-    def update_surfaces_from_gui(self,event=None):
+    def update_surfaces_from_gui(self, event=None):
         logger = logging.getLogger(__name__)
         logger.info("updating surfaces")
         left_active = self.ui.surface_left_check.isChecked()
@@ -628,7 +623,7 @@ class SubjectOverviewApp(QMainWindow):
         surface = str(self.ui.surface_select_combo.currentText())
         scalars_index = self.ui.surface_scalars_combo.currentIndex()
         color_bar = self.ui.surface_color_bar_check.isChecked()
-        opacity  = int(self.ui.surf_opacity_slider.value())
+        opacity = int(self.ui.surf_opacity_slider.value())
         # print "========="
         # print "left", left_active
         # print "right", right_active
@@ -658,13 +653,12 @@ class SubjectOverviewApp(QMainWindow):
         color_bar = self.surfaces_state["color_bar"]
         opacity = self.surfaces_state["opacity"]
 
-        self.vtk_viewer.surface.set_hemispheres(left_active,right_active,skip_render=True)
-        self.vtk_viewer.surface.set_surface(surface,skip_render=True)
-        self.vtk_viewer.surface.set_scalars(scalars,skip_render=True)
-        self.vtk_viewer.surface.set_opacity(opacity,skip_render=True)
-        self.vtk_viewer.surface.show_color_bar(color_bar,skip_render=True)
+        self.vtk_viewer.surface.set_hemispheres(left_active, right_active, skip_render=True)
+        self.vtk_viewer.surface.set_surface(surface, skip_render=True)
+        self.vtk_viewer.surface.set_scalars(scalars, skip_render=True)
+        self.vtk_viewer.surface.set_opacity(opacity, skip_render=True)
+        self.vtk_viewer.surface.show_color_bar(color_bar, skip_render=True)
         self.vtk_viewer.ren_win.Render()
-
 
 
     def get_state_dict(self):
@@ -684,7 +678,7 @@ class SubjectOverviewApp(QMainWindow):
         #images panel
         image_state = dict()
         image_state["modality"] = str(self.ui.image_mod_combo.currentText())
-        image_state["contrast"] = int(self.ui.contrast_combo.currentIndex())+1
+        image_state["contrast"] = int(self.ui.contrast_combo.currentIndex()) + 1
         image_state["orientation"] = str(self.ui.image_orientation.currentText())
         image_state["window"] = float(self.ui.image_window.value())
         image_state["level"] = float(self.ui.image_level.value())
@@ -735,26 +729,26 @@ class SubjectOverviewApp(QMainWindow):
         meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
         state["meta"] = meta
         logger = logging.getLogger(__name__)
-        logger.info("Current state %s"%state)
+        logger.info("Current state %s" % state)
         return state
 
     def save_state(self):
         state = self.get_state_dict()
         meta = state["meta"]
-        params={}
-        dialog = SaveScenarioDialog(meta["application"], state,params)
-        res=dialog.exec_()
-        if res==QtGui.QDialog.Accepted:
+        params = {}
+        dialog = SaveScenarioDialog(meta["application"], state, params)
+        res = dialog.exec_()
+        if res == QtGui.QDialog.Accepted:
             scn_id = params["scn_id"]
             self.save_screenshot(scn_id)
 
 
-    def save_screenshot(self,scenario_index):
-        file_name = "scenario_%d.png"%scenario_index
-        file_path = os.path.join(self.reader.getDynDataRoot(), "braviz_data","scenarios",file_name)
+    def save_screenshot(self, scenario_index):
+        file_name = "scenario_%d.png" % scenario_index
+        file_path = os.path.join(self.reader.getDynDataRoot(), "braviz_data", "scenarios", file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
-        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
+        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
 
 
     def load_scenario_dialog(self):
@@ -826,8 +820,8 @@ class SubjectOverviewApp(QMainWindow):
             slice = image_state.get("slice")
             if slice is not None:
                 self.ui.slice_spin.setValue(slice)
-            cont = image_state.get("contrast",1)
-            self.ui.contrast_combo.setCurrentIndex(cont-1)
+            cont = image_state.get("contrast", 1)
+            self.ui.contrast_combo.setCurrentIndex(cont - 1)
 
 
         #segmentation panel
@@ -941,26 +935,18 @@ class SubjectOverviewApp(QMainWindow):
                 self.context_frame.set_subject(self.__curent_subject)
         return
 
-    def poll_from_pipe(self):
-        if self.__pipe is not None:
-            if self.__pipe.poll():
-                message = self.__pipe.recv()
-                subj = message.get('subject')
-                self.change_subject(subj)
-                scenario = message.get("scenario")
-                if scenario is not None:
-                    scn_str = braviz_user_data.get_scenario_data(scenario)
-                    scn_dict = cPickle.loads(str(scn_str))
-                    try:
-                        scn_dict["subject_state"].pop("current_subject")
-                    except KeyError:
-                        pass
-                    self.load_scenario(scn_dict)
+    def receive_message(self, msg):
+        log = logging.getLogger(__file__)
+        log.info("RECEIVED: %s" % msg)
+        if msg.startswith("subject"):
+            subj = msg.split()[1]
+            self.change_subject(subj)
 
 
-def run(pipe_key,scenario):
+
+def run(server_broadcast=None, server_receive=None, scenario=None,subject=None):
     app = QtGui.QApplication([])
-    main_window = SubjectOverviewApp(pipe_key,scenario)
+    main_window = SubjectOverviewApp(server_broadcast, server_receive, scenario,subject)
     main_window.show()
     main_window.start()
     log = logging.getLogger(__name__)
@@ -973,23 +959,29 @@ def run(pipe_key,scenario):
 
 
 if __name__ == '__main__':
-    #args: [scenario] [pipe_key]
+    #args: [scenario] [server_broadcast] [server_receive]
     import sys
 
     from braviz.utilities import configure_logger
+
     configure_logger("subject_overview")
     log = logging.getLogger(__name__)
-    print "ya"
     log.info(sys.argv)
     scenario = None
-    if len(sys.argv)>=2 :
+
+
+    server_broadcast = None
+    server_receive = None
+    subject = None
+    if len(sys.argv) >= 2:
         maybe_scene = int(sys.argv[1])
         if maybe_scene > 0:
             scenario = maybe_scene
+        if len(sys.argv) >= 3:
+            server_broadcast = sys.argv[2]
+            if len(sys.argv) >= 4:
+                server_receive = sys.argv[3]
+                if len(sys.argv) >= 5:
+                    subject = sys.argv[4]
 
-
-    if len(sys.argv) >= 3:
-        key = sys.argv[2]
-    else:
-        key = None
-    run(key,scenario)
+    run(server_broadcast, server_receive, scenario,subject)

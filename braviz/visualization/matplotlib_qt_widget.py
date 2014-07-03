@@ -143,11 +143,7 @@ class MatplotWidget(FigureCanvas):
 
 
     def mouse_move_handler(self,event):
-        self.reset_last_id()
         self.pick(event)
-
-    def reset_last_id(self):
-        self.last_id = None
 
     def mouse_click_handler(self,event):
         button = event.button

@@ -27,7 +27,7 @@ import braviz.interaction.r_functions
 import braviz.interaction.qt_models as braviz_models
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
-
+from braviz.interaction.connection import MessageClient,MessageServer
 
 __author__ = 'Diego'
 
@@ -40,7 +40,7 @@ else:
 
 
 class LinearModelApp(QMainWindow):
-    def __init__(self):
+    def __init__(self,scenario,server_broadcast_address,server_receive_address):
         QMainWindow.__init__(self)
         self.outcome_var_name = None
         self.model = None
@@ -52,14 +52,19 @@ class LinearModelApp(QMainWindow):
         self.sample_model = braviz_models.SampleTree(SAMPLE_TREE_COLUMNS)
         self.plot = None
         self.plot_name = None
-        self.last_viewed_subject = None
-        self.mri_viewer_pipe = None
-        self.mri_viewer_process = None
-        self.poll_timer = None
         self.sample = braviz_tab_data.get_subjects()
         self.coefs_df = None
         self.regression_results = None
         self.ui = None
+
+        if server_broadcast_address is not None or server_receive_address is not None:
+            self._message_client = MessageClient(server_broadcast_address,server_receive_address)
+            self._message_client.message_received.connect(self.receive_message)
+        else:
+            self._message_client = None
+        #in case no central server exists
+        self._auxiliary_server = None
+
         self.setup_gui()
 
 
@@ -99,8 +104,6 @@ class LinearModelApp(QMainWindow):
         self.ui.sample_tree.customContextMenuRequested.connect(self.subject_details_from_tree)
         self.ui.modify_sample_button.clicked.connect(self.load_sample)
         self.ui.modify_sample_button.setEnabled(True)
-        self.poll_timer = QtCore.QTimer(self)
-        self.poll_timer.timeout.connect(self.poll_messages_from_mri_viewer)
 
         self.ui.actionSave_scneario.triggered.connect(self.save_scenario_dialog)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
@@ -284,7 +287,8 @@ class LinearModelApp(QMainWindow):
 
 
 
-    def add_subjects_to_plot(self, index=None, subject_ids=None):
+    def add_subjects_to_plot(self, tree_indexes=None, subject_ids=None):
+        #tree_indexes used when called from tree
         if subject_ids is None:
             selection = self.ui.sample_tree.currentIndex()
             leafs = self.sample_model.get_leafs(selection)
@@ -388,42 +392,44 @@ class LinearModelApp(QMainWindow):
                                x_labels=x_labels)
         self.plot.set_figure_title("RAW interaction of %s and %s"%(regressor1,regressor2))
 
-    def poll_messages_from_mri_viewer(self):
-        #print "polling"
+    def change_subject_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
-        if self.mri_viewer_process is None or (self.mri_viewer_process.poll() is not None):
-            #stop timer
-            self.poll_timer.stop()
-            return
-        if self.mri_viewer_pipe.poll():
-            try:
-                message = self.mri_viewer_pipe.recv()
-            except EOFError:
-                #process should have ended
+        subj = str(subj)
+        msg1 = "subject %s"%subj
+        log.info(msg1)
+        if self._message_client is not None:
+            self._message_client.send_message(msg1)
 
-                log.info("Pipe closed")
-                self.mri_viewer_process = None
-                self.mri_viewer_pipe = None
-                return
-            subj = message.get('subject')
+    def receive_message(self,msg):
+        log = logging.getLogger(__name__)
+        log.info("RECEIVED %s"%msg)
+        if msg.startswith("subject"):
+            subj = msg.split()[1]
             if subj is not None:
-                log.info("showing subject %s" % subj)
-                self.add_subjects_to_plot(subject_ids=[int(subj)])
+                log.info("showing subject %s"%subj)
+                self.add_subjects_to_plot(subject_ids=(int(subj),))
 
 
-    def create_context_action(self, subject, scenario_id, scenario_name, show_name=None):
+    def create_context_action(self,subject,scenario_id,scenario_name,show_name = None, new_viewer=True):
         if show_name is None:
             show_name = scenario_name
-
-        def show_scenario():
-            self.change_subject_in_mri_viewer(subject, scenario_id)
-
-        action = QtGui.QAction("Show subject %s's %s" % (subject, show_name), None)
-        action.triggered.connect(show_scenario)
+        if scenario_id is None:
+            scenario_id = 0
+        def show_subject():
+            self.change_subject_in_mri_viewer(subject)
+            self.add_subjects_to_plot(subject_ids=(int(subject),))
+        def launch_new_viewer():
+            self.launch_mri_viewer(subject,scenario_id)
+            self.add_subjects_to_plot(subject_ids=(int(subject),))
+        if new_viewer:
+            action = QtGui.QAction("Show subject %s's %s in new viewer" % (subject,show_name), None)
+            action.triggered.connect(launch_new_viewer)
+        else:
+            action = QtGui.QAction("Show %s in existing viewers" % subject, None)
+            action.triggered.connect(show_subject)
         return action
 
     def create_view_details_context_menu(self, global_pos, subject=None):
-        #TODO: Open images of a given subject
         if subject is None:
             subject = self.plot.last_viewed_subject
             if subject is None:
@@ -432,24 +438,26 @@ class LinearModelApp(QMainWindow):
         scenarios = {}
         outcome_idx = braviz_tab_data.get_var_idx(self.outcome_var_name)
         outcome_scenarios = braviz_user_data.get_variable_scenarios(outcome_idx)
-        if len(outcome_scenarios) > 0:
-            scenarios[self.outcome_var_name] = outcome_scenarios.items()
+        if len(outcome_scenarios)>0:
+            scenarios[self.outcome_var_name]=outcome_scenarios.items()
         regressors = self.regressors_model.get_regressors()
         for reg in regressors:
             reg_idx = braviz_tab_data.get_var_idx(reg)
             reg_scenarios = braviz_user_data.get_variable_scenarios(reg_idx)
             if len(reg_scenarios):
-                scenarios[reg] = reg_scenarios.items()
+                scenarios[reg]=reg_scenarios.items()
 
         menu = QtGui.QMenu("Subject %s" % subject)
-        launch_mri_action = self.create_context_action(subject, None, "MRI")
+        show_action = self.create_context_action(subject,None,None,new_viewer=False)
+        menu.addAction(show_action)
+        launch_mri_action = self.create_context_action(subject,None,"MRI")
         menu.addAction(launch_mri_action)
 
         log = logging.getLogger(__name__)
         log.debug(scenarios)
-        for var, scn_lists in scenarios.iteritems():
-            for scn_id, scn_name in scn_lists:
-                action = self.create_context_action(subject, scn_id, scn_name, var)
+        for var,scn_lists in scenarios.iteritems():
+            for scn_id,scn_name in scn_lists:
+                action = self.create_context_action(subject,scn_id,scn_name,var)
                 menu.addAction(action)
 
         menu.exec_(global_pos)
@@ -473,42 +481,25 @@ class LinearModelApp(QMainWindow):
             #print subject
             self.create_view_details_context_menu(global_pos, subject)
 
-    def clear_last_viewed_subject(self):
-        self.last_viewed_subject = None
+    def launch_auxiliary_server(self):
+        self._auxiliary_server = MessageServer(local_only=True)
+        self._auxiliary_server.message_received.connect(self.receive_message)
 
-    def launch_mri_viewer(self):
+    def launch_mri_viewer(self,subject,scenario):
         log = logging.getLogger(__name__)
-        #TODO: think of better way of choosing ports
-        address = ('localhost', 6001)
-        auth_key = multiprocessing.current_process().authkey
-        auth_key_asccii = binascii.b2a_hex(auth_key)
-        listener = multiprocessing.connection.Listener(address, authkey=auth_key)
 
-        #self.mri_viewer_process = multiprocessing.Process(target=mriMultSlicer.launch_new, args=(pipe_mri_side,))
         log.info("launching viewer")
-        log.info([sys.executable, "-m", "braviz.applications.subject_overview", "0", auth_key_asccii])
-        if sys.gettrace() is None:
-            self.mri_viewer_process = subprocess.Popen([sys.executable, "-m", "braviz.applications.subject_overview",
-                                                    "0", auth_key_asccii])
-        else:
-            print "This doesn't work in debugger"
-            return
+        if self._message_client is None:
+            log.info("Becoming an auxiliary server")
+            self.launch_auxiliary_server()
+            self._message_client=MessageClient(self._auxiliary_server.broadcast_address,
+                                               self._auxiliary_server.receive_address)
+        args = [sys.executable,"-m","braviz.applications.subject_overview",str(scenario),
+                self._message_client.server_broadcast,self._message_client.server_receive,str(subject)]
 
-        #self.mri_viewer_process = multiprocessing.Process(target=subject_overview.run, args=(pipe_mri_side,))
-        #self.mri_viewer_process.start()
-        self.mri_viewer_pipe = listener.accept()
-        self.poll_timer.start(200)
+        log.info(args)
+        subprocess.Popen(args)
 
-    def change_subject_in_mri_viewer(self, subj, scenario=None):
-        log = logging.getLogger(__name__)
-        if (self.mri_viewer_process is None) or (self.mri_viewer_process.poll() is not None):
-            self.launch_mri_viewer()
-        if self.mri_viewer_pipe is not None:
-            message = {'subject': str(subj)}
-            if scenario is not None:
-                message["scenario"] = scenario
-            self.mri_viewer_pipe.send(message)
-            log.info("sending message: subj: %s", message)
 
     def closeEvent(self, *args, **kwargs):
         #if self.mri_viewer_process is not None:
@@ -859,15 +850,34 @@ class LinearModelApp(QMainWindow):
                     fitted+=prod
         return fitted
 
+    def load_scenario_id(self,scn_id):
+        wanted_state = braviz_user_data.get_scenario_data_dict(scn_id)
+        app = wanted_state.get("meta").get("application")
+        if app == os.path.splitext(os.path.basename(__file__))[0]:
+            self.restore_state(wanted_state)
+        else:
+            log = logging.getLogger(__file__)
+            log.error("Scenario id doesn't correspond to an anova scenario, ignoring")
+
 def run():
     import sys
     from braviz.utilities import configure_console_logger
     #configure_logger("lm_task")
     configure_console_logger("lm_task")
-    app = QtGui.QApplication(sys.argv)
+    args = sys.argv
+    scenario = None
+    server_broadcast_address = None
+    server_receive_address = None
+    if len(args)>1:
+        scenario = int(args[1])
+        if len(args)>2:
+            server_broadcast_address = args[2]
+            if len(args)>3:
+                server_receive_address = args[3]
+    app = QtGui.QApplication([])
     log = logging.getLogger(__name__)
     log.info("started")
-    main_window = LinearModelApp()
+    main_window = LinearModelApp(scenario,server_broadcast_address,server_receive_address)
     #ic = main_window.windowIcon()
     main_window.show()
     try:
