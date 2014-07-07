@@ -26,7 +26,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
         self.ui = None
         self.progress = 0
         self.timer = None
-        self.structs = structures_list
+        self.structs = list(set(structures_list)) # remove duplicates
         log = logging.getLogger(__name__)
         log.info(structures_list)
         self.fibers_mode = fibers
@@ -85,6 +85,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
         self.ui.error_str.setText("")
         self.ui.var_name_input.textChanged.connect(self.check_name)
         self.ui.tip_label.setText("")
+        self.ui.var_description.setPlainText("From Braviz")
 
     def start_calculations(self):
         self.ui.var_name_input.setEnabled(0)
