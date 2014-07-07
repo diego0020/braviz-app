@@ -14,17 +14,17 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0" colspan="4">
-    <widget class="QTableView" name="tableView">
-     <property name="alternatingRowColors">
-      <bool>true</bool>
+   <item row="0" column="0">
+    <widget class="QPushButton" name="select_file_button">
+     <property name="text">
+      <string>Select File</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Preview:</string>
+   <item row="3" column="0" colspan="4">
+    <widget class="QTableView" name="tableView">
+     <property name="alternatingRowColors">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -41,6 +41,13 @@
      </property>
     </spacer>
    </item>
+   <item row="4" column="0" colspan="4">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close|QDialogButtonBox::Save</set>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="2">
     <widget class="QLineEdit" name="file_name_label">
      <property name="readOnly">
@@ -48,17 +55,20 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
-    <widget class="QPushButton" name="select_file_button">
+   <item row="2" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>Select File</string>
+      <string>Preview:</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0" colspan="4">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::Save</set>
+   <item row="1" column="0">
+    <widget class="QCheckBox" name="omitExistent">
+     <property name="toolTip">
+      <string>Omit variables whose name appears already in the database</string>
+     </property>
+     <property name="text">
+      <string>Omit existent</string>
      </property>
     </widget>
    </item>

@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="icons">
+    <file>database_out.png</file>
+    <file>database_in.png</file>
     <file>database.png</file>
     <file>logic.png</file>
     <file>roi_builder.png</file>

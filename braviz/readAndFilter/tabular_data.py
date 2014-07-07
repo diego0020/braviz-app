@@ -520,8 +520,35 @@ def add_data_frame(df):
         df2 = df.stack()
         conn.executemany(q2,((str(i[1]),int(i[0]),float(df2[i])) for i in df2.index))
 
-
-
+def _recursive_delete_variable(var_idx):
+    """
+    Warning... scenario files may become invalid, this is not reversible
+    """
+    conn = get_connection()
+    try:
+        with conn:
+            #delete values
+            q = "DELETE FROM var_values WHERE var_idx = ?"
+            conn.execute(q,(var_idx,))
+            #delete meta
+            q1 = "DELETE FROM nom_meta WHERE var_idx = ?"
+            q2 = "DELETE FROM ratio_meta WHERE var_idx = ?"
+            conn.execute(q1,(var_idx,))
+            conn.execute(q2,(var_idx,))
+            #delete description
+            q = "DELETE FROM var_descriptions WHERE var_idx = ?"
+            conn.execute(q,(var_idx,))
+            #delete vars_scenarios
+            q = "DELETE FROM vars_scenarios WHERE var_idx = ?"
+            conn.execute(q,(var_idx,))
+            #delete variable
+            q = "DELETE FROM variables WHERE var_idx = ?"
+            conn.execute(q,(var_idx,))
+    except sqlite3.IntegrityError as e:
+        print e.message
+        print "DataBase not modified"
+    else:
+        print "Done"
 
 
 

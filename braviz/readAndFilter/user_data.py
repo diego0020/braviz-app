@@ -6,7 +6,11 @@ from pandas.io import sql
 import pandas as pd
 import cPickle
 import logging
+import os
+import braviz.readAndFilter
 from braviz.readAndFilter.tabular_data import get_connection
+import sqlite3
+
 
 
 def save_scenario(application, scenario_name, scenario_description, scenario_data):
@@ -125,3 +129,26 @@ def get_sample_data(sample_idx):
     data_str = res[0]
     data = cPickle.loads(str(data_str))
     return data
+
+def delete_scenario(scn_id):
+    conn = get_connection()
+    try:
+        with conn:
+            #delete vars_scenarios
+            q = "DELETE FROM vars_scenarios WHERE scn_id = ?"
+            conn.execute(q,(scn_id,))
+            #delete scenario
+            q = "DELETE FROM scenarios WHERE scn_id = ?"
+            conn.execute(q,(scn_id,))
+    except sqlite3.IntegrityError as e:
+        print e
+        print "DataBase not modified"
+        raise
+    else:
+        #delete screenshot
+        scenario_dir = os.path.join(braviz.readAndFilter.braviz_auto_dynamic_data_root(),"braviz_data","scenarios")
+        scenario_name = "scenario_%d.png"%scn_id
+        full_name = os.path.join(scenario_dir,scenario_name)
+        print full_name
+        if os.path.isfile(full_name):
+            os.remove(full_name)

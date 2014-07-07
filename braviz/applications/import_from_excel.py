@@ -14,6 +14,7 @@ class ImportFromExcel(QtGui.QDialog):
         self.ui = None
         self.setup_gui()
         self.__df = None
+        self.__df2 = None
         self.__file_name = None
         self.__model = None
 
@@ -25,6 +26,21 @@ class ImportFromExcel(QtGui.QDialog):
         self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(0)
         self.ui.buttonBox.button(self.ui.buttonBox.Save).clicked.connect(self.save)
         self.ui.buttonBox.button(self.ui.buttonBox.Close).clicked.connect(self.reject)
+        self.ui.omitExistent.clicked.connect(self.update_model)
+
+    def update_model(self):
+        if self.__df is None:
+            return
+        cols = self.__df.columns
+        if self.ui.omitExistent.isChecked():
+            cols2 = filter(lambda x: not tabular_data.does_variable_name_exists(x),cols)
+            df = self.__df[cols2]
+        else:
+            df = self.__df
+        self.__model = DataFrameModel(df,show_index=True)
+        self.ui.tableView.setModel(self.__model)
+        self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(1)
+        self.__df2 = df
 
 
     def read_excel(self,file_name):
@@ -34,9 +50,7 @@ class ImportFromExcel(QtGui.QDialog):
         df.columns = columns
         df = df.convert_objects(convert_numeric=True)
         self.__df = df
-        self.__model = DataFrameModel(df,show_index=True)
-        self.ui.tableView.setModel(self.__model)
-        self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(1)
+
 
 
     def get_file_name(self):
@@ -47,12 +61,13 @@ class ImportFromExcel(QtGui.QDialog):
             self.__file_name = file_name
             self.ui.file_name_label.setText(file_name)
             self.read_excel(file_name)
+            self.update_model()
 
 
     def save(self):
         self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(0)
         QtGui.QApplication.instance().processEvents()
-        tabular_data.add_data_frame(self.__df)
+        tabular_data.add_data_frame(self.__df2)
 
 
 def run():
