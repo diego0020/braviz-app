@@ -137,6 +137,7 @@ class SubjectOverviewApp(QMainWindow):
             self.ui.image_mod_combo.addItem(pdg)
         for i in xrange(1, 7):
             self.ui.contrast_combo.addItem("%d" % i)
+        self.ui.contrast_combo.setCurrentIndex(0)
         #MRI
         self.ui.image_mod_combo.setCurrentIndex(1)
         self.ui.contrast_combo.activated.connect(self.image_modality_change)

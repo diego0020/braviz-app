@@ -77,8 +77,11 @@ class VariableSelectDialog(QtGui.QDialog):
         pass
 
     def update_right_side(self, var_name):
-
-        self.ui.var_name.setText(var_name)
+        try:
+            self.ui.var_name.setText(var_name)
+        except TypeError:
+            #if nothing is selected
+            return
         self.ui.save_button.setEnabled(True)
         self.ui.var_type_combo.setEnabled(True)
         is_real = is_variable_name_real(var_name)
