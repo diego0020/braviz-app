@@ -16,7 +16,8 @@ from numpy.linalg import inv
 import vtk
 
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
-    readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk
+    readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk, \
+    CacheContainer
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
     surfLUT2VTK
 from braviz.readAndFilter.read_tensor import cached_readTensorImage
@@ -28,11 +29,12 @@ from hierarchical_fibers import read_logical_fibers
 
 
 #TODO: remove all hasattr, maybe change with porperties or None
-class kmc40Reader:
+class kmc40Reader(object):
     """
 A read and filter class designed to work with the file structure and data from the KMC pilot project which contains 40 subjects.
 Data is organized into folders, and path and names for the different files can be derived from data type and id.
 The path containing this structure must be set."""
+    __cache_container = CacheContainer()
 
     def __init__(self, path, max_cache=2000):
         "The path pointing to the __root of the file structure must be set here"
@@ -40,65 +42,63 @@ The path containing this structure must be set."""
         #Remove trailing slashes
         self.__root = self.__root.rstrip('/\\')
         self.FUNCTIONAL_PARADIGMS=("Precision","Power")
+        self.__cache_container.max_cache = max_cache
 
-        @cache_function(max_cache)
-        def get(data, subj_id=None, **kw):
-            """All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
-            Available spaces for all data are: world, talairach and dartel. Some data may support additional values
-            data should be one of:
-            IDS: Return the ids of all subjects in the study as a list
-    
-            MRI: By default returns a nibnii object, use format='VTK' to get a vtkImageData object. 
-                 Additionally use space='native' to ignore the nifti transform.
-    
-            FA:  Same options as MRI, but space also accepts 'diffusion', also accepts 'lut'
+    @cache_function(__cache_container)
+    def get(self,data, subj_id=None, **kw):
+        """All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
+        Available spaces for all data are: world, talairach and dartel. Some data may support additional values
+        data should be one of:
+        IDS: Return the ids of all subjects in the study as a list
 
-            MD:  Same options as MRI, but space also accepts 'diffusion'
+        MRI: By default returns a nibnii object, use format='VTK' to get a vtkImageData object.
+             Additionally use space='native' to ignore the nifti transform.
 
-            DTI: Same options as MRI, but space also accepts 'diffusion'
-            
-            APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
+        FA:  Same options as MRI, but space also accepts 'diffusion', also accepts 'lut'
 
-            WMPARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
-            
-            FMRI: requires name=<Paradigm>
+        MD:  Same options as MRI, but space also accepts 'diffusion'
 
-            BOLD: requires name=<Paradigm>, only nifti format is available
-    
-            MODEL:Use name=<model> to get the vtkPolyData. Use index='T' to get a list of the available models for a subject.
-                  Use color=True to get the standard color associated to the structure
-                  Use volume=True to get the volume of the structure
-                  Use label=True to get the label corresponding to the structure
-    
-            SURF: Use name=<surface> and hemi=<r|h> to get the vtkPolyData of a free surfer surface reconstruction, 
-                  use scalars to add scalars to the data
-                  surface must be orig pial white smoothwm inflated sphere
-    
-            SURF_SCALAR: Use scalar=<name> and hemi=<l|r> to get scalar data associated to a SURF.
-                         Use index=True to get a list of available scalars,
-                         Use lut=True to get the associated lookUpTable for Annotations and a standard LUT for morphology
-    
-            FIBERS: The default space is world, use space='diff' to get fibers in diffusion space. 
-                    Use waypoint=<model-name> to restrict to fibers passing through a given MODEL as indicated above.
-                    waypoint may also be a list of models. In this case you will by default get tracts that pass through all
-                    the models if the list. This can be changed by setting operation='or', to get tracts which pass through
-                    any of the models.
-                    Can accept color=<orient|fa|curv|y|rand> to get different color scalars
-                    Otherwise can acecpt scalars=<fa_p|fa_l|md_p|md_l|length>
-                    In this case you may use lut=T to get the corresponding LUT
-                    'Name' can be provided instead of waypoint to get custom tracts, to get a list of currently available
-                    named tracts call index=True
-                    Use db_id = 'id' to read a fiber stored in the braviz data base
+        DTI: Same options as MRI, but space also accepts 'diffusion'
 
-            TENSORS: Get an unstructured grid containing tensors at the points where they are available
-                     and scalars representing the orientation of the main eigenvector
-                     Use space=world to get output in world coordinates [experimental]
+        APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
 
-            """
-            #All cache moved to decorator @cache_function
-            return self.__get(data, subj_id, **kw)
+        WMPARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
 
-        self.get = get
+        FMRI: requires name=<Paradigm>
+
+        BOLD: requires name=<Paradigm>, only nifti format is available
+
+        MODEL:Use name=<model> to get the vtkPolyData. Use index='T' to get a list of the available models for a subject.
+              Use color=True to get the standard color associated to the structure
+              Use volume=True to get the volume of the structure
+              Use label=True to get the label corresponding to the structure
+
+        SURF: Use name=<surface> and hemi=<r|h> to get the vtkPolyData of a free surfer surface reconstruction,
+              use scalars to add scalars to the data
+              surface must be orig pial white smoothwm inflated sphere
+
+        SURF_SCALAR: Use scalar=<name> and hemi=<l|r> to get scalar data associated to a SURF.
+                     Use index=True to get a list of available scalars,
+                     Use lut=True to get the associated lookUpTable for Annotations and a standard LUT for morphology
+
+        FIBERS: The default space is world, use space='diff' to get fibers in diffusion space.
+                Use waypoint=<model-name> to restrict to fibers passing through a given MODEL as indicated above.
+                waypoint may also be a list of models. In this case you will by default get tracts that pass through all
+                the models if the list. This can be changed by setting operation='or', to get tracts which pass through
+                any of the models.
+                Can accept color=<orient|fa|curv|y|rand> to get different color scalars
+                Otherwise can acecpt scalars=<fa_p|fa_l|md_p|md_l|length>
+                In this case you may use lut=T to get the corresponding LUT
+                'Name' can be provided instead of waypoint to get custom tracts, to get a list of currently available
+                named tracts call index=True
+                Use db_id = 'id' to read a fiber stored in the braviz data base
+
+        TENSORS: Get an unstructured grid containing tensors at the points where they are available
+                 and scalars representing the orientation of the main eigenvector
+                 Use space=world to get output in world coordinates [experimental]
+
+        """
+        return self.__get(data, subj_id, **kw)
 
     #============================end of public API==========================================
     def __get(self, data, subj=None, **kw):

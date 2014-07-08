@@ -117,7 +117,7 @@ def random_partition(n,n_data):
     idxs2 = all_idxs[n:]
     return idxs1, idxs2
 
-class LinearLeastSquaresModel:
+class LinearLeastSquaresModel(object):
     """linear system solved using linear least squares
 
     This class serves as an example that fulfills the model interface
@@ -141,7 +141,7 @@ class LinearLeastSquaresModel:
         return err_per_point
 
 from scipy.stats import linregress
-class LinearRegression:
+class LinearRegression(object):
     """linear system solved using linear least squares
 
     This class serves as an example that fulfills the model interface

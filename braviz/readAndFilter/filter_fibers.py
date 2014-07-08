@@ -73,7 +73,7 @@ def extract_poly_data_subset(polydata,id_list):
     fib2 = cleaner.GetOutput()
     return fib2
 
-class FilterBundleWithSphere:
+class FilterBundleWithSphere(object):
     def __init__(self):
         self.__full_bundle = None
         self.__locator = None

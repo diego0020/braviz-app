@@ -15,7 +15,7 @@ import braviz
 
 
 initialized=False     
-class locked_IntVar():
+class locked_IntVar(object):
     def __init__(self,x0):
         self.lock=threading.Lock()
         self.x=x0

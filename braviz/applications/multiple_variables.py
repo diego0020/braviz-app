@@ -656,7 +656,7 @@ class GraphFrame(tkFrame):
         self.__active_plot.paint()
 
 
-class DataFetcher():
+class DataFetcher(object):
     def __init__(self,reader,codes=None):
         self.__reader=reader
         self.__codes=codes
@@ -843,7 +843,7 @@ class DataFetcher():
 
 
 
-class SaveAndRestore():
+class SaveAndRestore(object):
     def __init__(self,application_name,parent,default_dir=None):
         self.__application_name=application_name
         self.__parent=parent
@@ -884,7 +884,7 @@ class SaveAndRestore():
         return variables_dict
 
 
-class AsyncUpdataAll():
+class AsyncUpdataAll(object):
     def __init__(self,var_select,fetch,plots,vtk_view):
         self.var_select=var_select
         self.fetcher=fetch
@@ -991,7 +991,7 @@ class AsyncUpdataAll():
         #async_update()
 
 
-class MultipleVariablesApp():
+class MultipleVariablesApp(object):
     def __init__(self,pipe=None):
         self.pipe=pipe
 

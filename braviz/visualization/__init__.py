@@ -9,7 +9,7 @@ from braviz.interaction import compute_volume_and_area, get_fiber_bundle_descrip
 import create_lut
 
 
-class simpleVtkViewer():
+class simpleVtkViewer(object):
     """A very simple windows with vtk renderers and interactors.
     Use addPolyData to add polydata objects and addImg to add a vtkImagePlaneWidget
     Use clear_poly_data to remove all polydata actors from the viewer
@@ -658,7 +658,7 @@ def test_arrow(head, tail):
     iren.Start()
 
 
-class OrientationAxes():
+class OrientationAxes(object):
     def __init__(self):
         axes_actor = vtk.vtkAnnotatedCubeActor()
         axes_actor.SetXPlusFaceText("R")
@@ -684,7 +684,7 @@ class OrientationAxes():
         self.axes.InteractiveOn()
 
 
-class fMRI_blender:
+class fMRI_blender(object):
     def __init__(self):
         self.blend = vtk.vtkImageBlend()
         self.color_mapper2 = vtk.vtkImageMapToColors()

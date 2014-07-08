@@ -38,7 +38,7 @@ def do_and_render(f):
     return wrapped
 
 
-class SubjectViewer:
+class SubjectViewer(object):
     def __init__(self, render_window_interactor, reader, widget):
 
         # render_window_interactor.Initialize()
@@ -277,7 +277,7 @@ class QSubjectViwerWidget(QFrame):
         self.image_level_changed.emit(level)
 
 
-class ImageManager:
+class ImageManager(object):
     def __init__(self, reader, ren, widget, interactor, initial_subj=None, initial_space="World", picker=None):
         self.ren = ren
         self.reader = reader
@@ -589,7 +589,7 @@ class ImageManager:
         return
 
 
-class ModelManager:
+class ModelManager(object):
     def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
         self.ren = ren
         if initial_subj is None:
@@ -759,7 +759,7 @@ class ModelManager:
         return value
 
 
-class TractographyManager:
+class TractographyManager(object):
     def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
         self.reader = reader
         self.ren = ren
@@ -1078,7 +1078,7 @@ class TractographyManager:
         return float("nan")
 
 
-class SurfaceManager:
+class SurfaceManager(object):
     def __init__(self, reader, ren, iren, initial_subj=None, initial_space="World", picker=None,
                  persistent_cone=False):
         self.ren = ren
@@ -1374,7 +1374,7 @@ class SurfaceManager:
         return self.__cone_trio[2]
 
 
-class OrthogonalPlanesViewer:
+class OrthogonalPlanesViewer(object):
     def __init__(self, render_window_interactor, reader, widget):
         # render_window_interactor.Initialize()
         # render_window_interactor.Start()
@@ -1593,7 +1593,7 @@ class OrthogonalPlanesViewer:
         self.iren.Render()
 
 
-class AdditionalCursors:
+class AdditionalCursors(object):
     def __init__(self, ren):
         self.__cursors = braviz.visualization.cursors()
         self.__cursors.SetVisibility(0)
@@ -1640,7 +1640,7 @@ class AdditionalCursors:
         self.__cursors.SetVisibility(0)
 
 
-class SphereProp:
+class SphereProp(object):
     def __init__(self, ren):
         self.__source = vtk.vtkSphereSource()
         self.__mapper = vtk.vtkPolyDataMapper()

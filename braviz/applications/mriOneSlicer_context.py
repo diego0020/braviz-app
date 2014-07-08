@@ -272,7 +272,7 @@ space_sel.bind('<<ComboboxSelected>>',spaceChange)
 
 #==========================Show Fibers=======================
 
-class locked_IntVar():
+class locked_IntVar(object):
     def __init__(self,x0):
         self.lock=threading.Lock()
         self.x=x0

@@ -7,7 +7,7 @@ from braviz.readAndFilter import geom_db, tabular_data
 import vtk
 
 
-class LogicBundleNode:
+class LogicBundleNode(object):
     LOGIC = 0
     STRUCT = 1
     ROI = 2

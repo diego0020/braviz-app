@@ -256,43 +256,61 @@ class LastUpdatedOrderedDict(OrderedDict):
             del self[key]
         OrderedDict.__setitem__(self, key, value)
 
-def cache_function(max_cache_size):
+class CacheContainer(object):
+    def __init__(self,max_cache=500):
+        self.__cache = LastUpdatedOrderedDict()
+        self.__max_cache = max_cache
+
+    @property
+    def max_cache(self):
+        return self.__max_cache
+
+    @max_cache.setter
+    def max_cache(self,val):
+        self.__max_cache = val
+
+    @property
+    def cache(self):
+        return self.__cache
+
+
+def cache_function(cache_container):
     "modified classic python @memo decorator to handle some special cases in braviz"
 
     def decorator(f):
-        cache = f.cache = LastUpdatedOrderedDict()
+        f.cache_container = cache_container
+        f.cache = f.cache_container.cache
         #print "max cache is %d"%max_cache_size
         #cache will store tuples (output,date)
-        max_cache = f.max_cache = max_cache_size
 
         @functools.wraps(f)
         def cached_f(*args, **kw_args):
             #print "cache size=%d"%len(cache)
             key = str(args) + str(kw_args)
             key = key.upper()
-            if key not in cache:
+            if key not in f.cache:
                 output = f(*args, **kw_args)
                 if output is not None:
                     #new method to test memory in cache
                     process_id=psutil.Process(os.getpid())
                     mem=process_id.get_memory_info()[0]/(2**20)
-                    if mem >= max_cache:
+                    if mem >= f.cache_container.max_cache:
                         log = logging.getLogger(__name__)
                         log.info("freeing cache")
                         try:
-                            while mem > 0.9*max_cache:
-                                for i in xrange(len(cache)//10+1):
-                                    rem_key,val=cache.popitem(last=False)
+                            while mem > 0.9*f.cache_container.max_cache:
+                                for i in xrange(len(f.cache)//10+1):
+                                    rem_key,val=f.cache.popitem(last=False)
                                     #print "removing %s with access time= %s"%(rem_key,val[1])
                                 mem = process_id.get_memory_info()[0] / (2 ** 20)
                         except KeyError:
                             log = logging.getLogger(__name__)
                             log.warning("Cache is empty and memory still too high! check your program for memory leaks")
-                    cache[key] = (output, time.time())
+                    f.cache[key] = (output, time.time())
             else:
-                output, _ = cache[key]
+                output, _ = f.cache[key]
                 #update access time
-                cache[key] = (output, time.time())
+                f.cache[key] = (output, time.time())
                 #return a copy to keep integrity of objects in cache
             try:
                 output_copy = output.NewInstance()

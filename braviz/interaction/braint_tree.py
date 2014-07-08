@@ -4,7 +4,7 @@ from braviz.readAndFilter import braint_db
 __author__ = 'Diego'
 
 
-class BraintNode:
+class BraintNode(object):
     def __init__(self, parent, son_number, label, var_id=None):
         self.__parent = parent
         self.__label = label

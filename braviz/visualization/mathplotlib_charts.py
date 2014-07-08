@@ -14,7 +14,7 @@ from braviz.interaction import ransac
 
 __author__ = 'Diego'
 highlight_color='#FF7F00'
-class BarPlot():
+class BarPlot(object):
     """Displays a series of scalars in a bar plot.
     Optionally can highlight a bar, can add error bars, can add background bars to create groups
     Colors are defined by a color function
@@ -297,7 +297,7 @@ class BarPlot():
         self.highlight=index
 
 
-class ScatterPlot():
+class ScatterPlot(object):
     """A widget for displaying two variables in a scatter plot with an optional regression line"""
     def __init__(self,tight=True,use_ransac=True):
         """If tight is True uses the tightlayout option of matplotlib
@@ -529,7 +529,7 @@ def calculate_ransac_regression(x,y):
 
 
 
-class SpiderPlot():
+class SpiderPlot(object):
     """Shows several variables in a spider plot, colors are defined by a color function"""
     def __init__(self,tight=True):
         """If tight is True uses the tightlayout option of matplotlib"""

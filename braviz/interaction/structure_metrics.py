@@ -306,6 +306,9 @@ def mean_inside(subject, structures, img2, paradigm=None):
     res /= n_voxels
     return res
 
+def mean_in_roi(subject, roi_ctr,roi_radius,roi_space, img2, paradigm=None):
+    return #TODO
+    pass
 
 def get_locations(reader, subject, struct_name):
     label = int(reader.get("Model", subject, name=struct_name, label=True))

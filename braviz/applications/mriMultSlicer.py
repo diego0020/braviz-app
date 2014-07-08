@@ -11,7 +11,7 @@ from braviz.visualization import add_solid_balloon
 from braviz.utilities import configure_console_logger
 
 
-class MriMultSlicerApp():
+class MriMultSlicerApp(object):
     def __init__(self,pipe=None):
         configure_console_logger("mriMultSlicer")
         self.pipe=pipe

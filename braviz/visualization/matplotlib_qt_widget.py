@@ -21,7 +21,7 @@ import logging
 import seaborn as sns
 
 
-class _AbstractPlot():
+class _AbstractPlot(object):
     def redraw(self):
         raise NotImplementedError("must be reinplemented")
     def add_subjects(self,subjs):

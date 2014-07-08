@@ -163,8 +163,6 @@ class ExportScalarToDataBase(QtGui.QDialog):
 
     def get_scalar_value(self, subj):
         image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subj))
-        if len(image_code) < 3:
-            image_code = "0" + image_code
         if self.fibers_mode is False:
             val = braviz_struct_metrics.get_mult_struct_metric(self.reader, self.structs, image_code, self.metric_code)
             return val

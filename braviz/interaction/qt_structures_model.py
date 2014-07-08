@@ -8,7 +8,7 @@ from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy_with_names
 import logging
 
-class StructureTreeNode:
+class StructureTreeNode(object):
     def __init__(self, parent=None, name="", son_number=0):
         self.parent_id = id(parent)
         self.parent = parent
