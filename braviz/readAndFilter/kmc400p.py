@@ -46,8 +46,9 @@ The path containing this structure must be set."""
         if self.__dynaimc_data_root[-1]==":":
             self.__dynaimc_data_root+="\\"
 
-        self.FUNCTIONAL_PARADIGMS=('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION')
+        self.__functional_paradigms=('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION')
         self.__cache_container.max_cache = max_cache
+        self.__fmri_LUT = None
 
     @cache_function(__cache_container)
     def get(self,data, subj_id=None, **kw):
@@ -144,11 +145,11 @@ The path containing this structure must be set."""
             return self.__getImg(data, subj, **kw)
         elif data == "FMRI":
             if kw.get('lut'):
-                if not hasattr(self, 'fmri_LUT'):
-                    self.fmri_LUT = self.__create_fmri_lut()
-                return self.fmri_LUT
+                if self.__fmri_LUT is None:
+                    self.__fmri_LUT = self.__create_fmri_lut()
+                return self.__fmri_LUT
             if kw.get("index"):
-                return self.FUNCTIONAL_PARADIGMS
+                return self.__functional_paradigms
             return self.__read_func(subj, **kw)
         elif data == 'BOLD':
             return self.__read_bold(subj, kw['name'])

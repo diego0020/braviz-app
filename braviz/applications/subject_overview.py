@@ -365,17 +365,23 @@ class SubjectOverviewApp(QMainWindow):
         self.update_segmentation_scalar()
         self.show_fibers_from_segment(self.ui.fibers_from_segments_box.currentIndex())
 
-    metrics_dict = {"Volume": ("volume", "mm^3"),
-                    "Area": ("area", "mm^2"),
-                    "FA inside": ("fa_inside", ""),
-                    "MD inside": ("md_inside", "*1e-12")}
 
     def update_segmentation_scalar(self, scalar_index=None):
+        if braviz.readAndFilter.PROJECT == "kmc40":
+            metrics_dict = {"Volume": ("volume", "mm^3"),
+                    "Area": ("area", "mm^2"),
+                    "FA inside": ("fa_inside", ""),
+                    "MD inside": ("md_inside", "e-12")}
+        elif braviz.readAndFilter.PROJECT == "kmc400":
+            metrics_dict = {"Volume": ("volume", "mm^3"),
+                    "Area": ("area", "mm^2"),
+                    "FA inside": ("fa_inside", ""),
+                    "MD inside": ("md_inside", "e-5")}
 
         if scalar_index is None:
             scalar_index = self.ui.struct_scalar_combo.currentIndex()
         scalar_text = str(self.ui.struct_scalar_combo.itemText(scalar_index))
-        metric_params = self.metrics_dict.get(scalar_text)
+        metric_params = metrics_dict.get(scalar_text)
         if metric_params is None:
             self.ui.struct_scalar_value.clear()
             self.show_error("Unknown metric %s" % scalar_text)
@@ -387,8 +393,9 @@ class SubjectOverviewApp(QMainWindow):
         if np.isnan(new_value):
             self.ui.struct_scalar_value.clear()
         else:
-            self.ui.struct_scalar_value.setValue(new_value)
-            self.ui.struct_scalar_value.setSuffix(units)
+            new_value_text = "%.4g %s"%(new_value,units)
+            self.ui.struct_scalar_value.setText(new_value_text)
+            #self.ui.struct_scalar_value.setSuffix(units)
 
     def export_segmentation_scalars_to_db(self):
 
@@ -553,7 +560,7 @@ class SubjectOverviewApp(QMainWindow):
         if np.isnan(value):
             self.ui.fibers_scalar_value.clear()
         else:
-            self.ui.fibers_scalar_value.setValue(value)
+            self.ui.fibers_scalar_value.setText("%.4g"%value)
 
     def export_fiber_scalars_to_db(self):
         if self.current_fibers is None:

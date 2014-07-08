@@ -1041,12 +1041,12 @@ class TractographyManager(object):
                 return structure_metrics.get_scalar_from_fiber_ploydata(pd, scalar)
             elif scalar == "mean_fa":
                 fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                                        db_id=bid, color="FA")
+                                        db_id=bid, color=None,scalars="fa_p")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
             elif scalar == "mean_md":
                 fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                                        db_id=bid, color="MD")
+                                        db_id=bid, color=None,scalars="md_p")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
 
@@ -1064,13 +1064,13 @@ class TractographyManager(object):
             elif scalar == "mean_fa":
                 operation = "and" if self.__ad_hoc_throug_all else "or"
                 fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
-                                        operation=operation, space=self.__current_space, color="FA")
+                                        operation=operation, space=self.__current_space, color=None,scalars="fa_p")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
             elif scalar == "mean_md":
                 operation = "and" if self.__ad_hoc_throug_all else "or"
                 fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
-                                        operation=operation, space=self.__current_space, color="MD")
+                                        operation=operation, space=self.__current_space, color=None,scalars="md_p")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
         except Exception:
@@ -1441,7 +1441,7 @@ class OrthogonalPlanesViewer(object):
 
     def link_window_level(self):
         "call after initializing the planes"
-        if self.__curent_modality != "DTI":
+        if self.__curent_modality not in ("DTI","FMRI"):
             self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
 
@@ -1521,9 +1521,15 @@ class OrthogonalPlanesViewer(object):
         self.link_window_level()
 
     @do_and_render
-    def change_image_modality(self, mod):
+    def change_image_modality(self, mod,contrast=None):
+        mod = mod.upper()
+        if contrast is not None:
+            pdgm = mod
+            mod = "FMRI"
+        else:
+            pdgm = None
         for im in self.__image_planes:
-            im.change_image_modality(mod, skip_render=True)
+            im.change_image_modality(mod, pdgm,mod,skip_render=True)
         self.__curent_modality = mod
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
         self.link_window_level()

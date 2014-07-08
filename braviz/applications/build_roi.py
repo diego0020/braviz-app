@@ -400,7 +400,14 @@ class BuildRoiApp(QMainWindow):
         self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
         self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
-
+        paradigms = self.reader.get("fMRI",None,index=True)
+        for p in paradigms:
+            self.ui.image_combo.addItem(p)
+        for i in xrange(1):
+            self.ui.contrast_combo.addItem("Contrast %d"%i)
+        self.ui.contrast_combo.setCurrentIndex(0)
+        self.ui.contrast_combo.setEnabled(False)
+        self.ui.contrast_combo.currentIndexChanged.connect(self.select_image_modality)
         self.ui.sphere_radius.valueChanged.connect(self.update_sphere_radius)
         self.ui.sphere_x.valueChanged.connect(self.update_sphere_center)
         self.ui.sphere_y.valueChanged.connect(self.update_sphere_center)
@@ -444,9 +451,9 @@ class BuildRoiApp(QMainWindow):
             self.change_subject(self.__current_subject)
         self.select_surface(None)
 
-    def set_image(self, modality):
+    def set_image(self, modality,contrast=None):
         self.__current_image_mod = modality
-        self.vtk_viewer.change_image_modality(modality)
+        self.vtk_viewer.change_image_modality(modality,contrast)
         dims = self.vtk_viewer.get_number_of_slices()
         self.ui.axial_slice.setMaximum(dims[AXIAL])
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
@@ -608,9 +615,16 @@ class BuildRoiApp(QMainWindow):
         checked = geom_db.subjects_with_sphere(self.__roi_id)
         self.__subjects_check_model.checked = checked
 
-    def select_image_modality(self, index):
+    def select_image_modality(self, dummy_index):
         mod = str(self.ui.image_combo.currentText())
-        self.set_image(mod)
+        if self.ui.image_combo.currentIndex() > 3:
+            #functional
+            self.ui.contrast_combo.setEnabled(1)
+            contrast = int(self.ui.contrast_combo.currentIndex())+1
+        else:
+            self.ui.contrast_combo.setEnabled(0)
+            contrast = None
+        self.set_image(mod,contrast)
 
 
     def select_surface_scalars(self,index):
