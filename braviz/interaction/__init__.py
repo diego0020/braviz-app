@@ -50,6 +50,8 @@ def compute_fiber_lengths(fib):
 
 def get_fiber_bundle_descriptors(fib):
     """Returns ( number of fibers, mean length, max length, min length, standard deviation of length) """
+    if fib is None:
+        return (0,0,0,0,0)
     d = compute_fiber_lengths(fib)
     if len(d) == 0:
         d = [0]
