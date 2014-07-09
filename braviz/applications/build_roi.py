@@ -19,6 +19,7 @@ from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel, SubjectCheckTable
 from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
+from braviz.interaction.structure_metrics import AggregateInRoi
 import datetime
 import platform
 import os
@@ -348,9 +349,10 @@ class BuildRoiApp(QMainWindow):
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
         self.__current_subject = self.__subjects_list[0]
-        self.__current_img_id = None
+        self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__current_subject)
 
         self.__current_image_mod = "MRI"
+        self.__current_contrast = None
         try:
             self.__curent_space = geom_db.get_roi_space(roi_name)
         except Exception:
@@ -375,13 +377,17 @@ class BuildRoiApp(QMainWindow):
         self.__sphere_modified = True
 
         self.setup_ui()
-
+        self.__sphere_color = (255,255,255)
+        self.__sphere_center = None
+        self.__sphere_radius = None
+        self.__aux_lut = None
+        self.__mean_in_img_calculator = AggregateInRoi(self.reader)
         self.vtk_viewer.sphere.show()
         self.update_sphere_radius()
         self.update_sphere_center()
         if self.__roi_id is not None:
             self.load_sphere(self.__current_subject)
-        self.__sphere_color = (255,255,255)
+
 
     def setup_ui(self):
         self.ui = Ui_RoiBuildApp()
@@ -453,12 +459,56 @@ class BuildRoiApp(QMainWindow):
 
     def set_image(self, modality,contrast=None):
         self.__current_image_mod = modality
+        self.__current_contrast = contrast
         self.vtk_viewer.change_image_modality(modality,contrast)
         dims = self.vtk_viewer.get_number_of_slices()
         self.ui.axial_slice.setMaximum(dims[AXIAL])
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
         self.ui.sagital_slice.setMaximum(dims[SAGITAL])
         self.update_slice_controls()
+        self.caclulate_image_in_roi_pre()
+
+    def caclulate_image_in_roi_pre(self):
+        modality = self.__current_image_mod
+        contrast = self.__current_contrast
+        if self.__sphere_center is None or self.__sphere_radius is None:
+            self.ui.mean_inside_text.clear()
+            return
+        if contrast is not None:
+            self.ui.mean_inside_label.setText("Mean Z-score")
+            self.ui.mean_inside_label.setToolTip("Mean Z-score inside the ROI")
+            self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,"FMRI",modality,contrast,
+                                                     mean=True)
+        else:
+            if modality == "DTI":
+                self.ui.mean_inside_label.setText("Mean FA")
+                self.ui.mean_inside_label.setToolTip("Mean FA inside the ROI")
+                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,"FA",mean=True)
+            elif modality in {"APARC","WMPARC"}:
+                self.ui.mean_inside_label.setText("Label Mode")
+                self.ui.mean_inside_label.setToolTip("Mode of labels inside the ROI")
+                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,modality,mean=False)
+                self.__aux_lut = self.reader.get(self.__current_image_mod,None,lut=True)
+            else:
+                assert modality == "MRI"
+                self.ui.mean_inside_label.setText("Mean value")
+                self.ui.mean_inside_label.setToolTip("Mean value of image inside the ROI")
+                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,modality,mean=True)
+
+        self.caclulate_image_in_roi()
+
+    def caclulate_image_in_roi(self):
+        try:
+            value = self.__mean_in_img_calculator.get_value(self.__sphere_center,self.__sphere_radius)
+        except Exception:
+            value = np.nan
+        if self.__current_image_mod in {"APARC","WMPARC"}:
+            int_val = int(value[0])
+            idx = self.__aux_lut.GetAnnotatedValueIndex(int_val)
+            label = self.__aux_lut.GetAnnotation(idx)
+            self.ui.mean_inside_text.setText(label)
+        else:
+            self.ui.mean_inside_text.setText("%.4g"%value)
 
     def update_slice_controls(self, new_slice=None):
         curr_slices = self.vtk_viewer.get_current_slice()
@@ -483,16 +533,20 @@ class BuildRoiApp(QMainWindow):
 
     def update_sphere_center(self, dummy=None):
         ctr = (self.ui.sphere_x.value(), self.ui.sphere_y.value(), self.ui.sphere_z.value())
+        self.__sphere_center = ctr
         self.vtk_viewer.sphere.set_center(ctr)
         self.show_fibers()
+        self.caclulate_image_in_roi()
         self.vtk_viewer.ren_win.Render()
         self.sphere_just_changed()
 
     def update_sphere_radius(self, r=None):
         if r is None:
             r = self.ui.sphere_radius.value()
+        self.__sphere_radius = r
         self.vtk_viewer.sphere.set_radius(r)
         self.show_fibers()
+        self.caclulate_image_in_roi()
         self.vtk_viewer.ren_win.Render()
         self.sphere_just_changed()
 
@@ -580,6 +634,7 @@ class BuildRoiApp(QMainWindow):
         self.load_sphere(new_subject)
         self.__full_pd = None
         self.show_fibers()
+        self.caclulate_image_in_roi_pre()
         self.__sphere_modified = False
         print new_subject
 

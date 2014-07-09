@@ -7,7 +7,7 @@ import numpy as np
 
 import braviz
 import braviz.readAndFilter.tabular_data
-
+import scipy.stats
 __author__ = 'Diego'
 
 
@@ -37,10 +37,10 @@ def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
     elif metric in ("fa_inside", "md_inside"):
         if metric == "fa_inside":
             img2 = "FA"
-            result = mean_inside(code, struct_names, img2)
+            result = mean_inside(reader,code, struct_names, img2)
         else:
             img2 = "MD"
-            result = mean_inside(code, struct_names, img2)
+            result = mean_inside(reader,code, struct_names, img2)
             result *= 1e12
     else:
         log = logging.getLogger(__name__)
@@ -255,14 +255,13 @@ def solve_laterality(laterality, names):
         return new_names
 
 
-def mean_inside(subject, structures, img2, paradigm=None):
+def mean_inside(reader,subject, structures, img2, paradigm=None,contrast=1):
     """
     Calculate the mean value of img2 modality inside of the structures listed
     img2 must be FA, MD, MRI or fMRI
     """
     if len(structures) == 0:
         return float("nan")
-    reader = braviz.readAndFilter.BravizAutoReader()
     #find label
     #print "label:",label
     #find voxels in structure
@@ -291,7 +290,7 @@ def mean_inside(subject, structures, img2, paradigm=None):
     if paradigm is None:
         target_img = reader.get(img2, subject, space="world", format="nii")
     else:
-        target_img = reader.get(img2, subject, space="world", format="nii", name=paradigm)
+        target_img = reader.get(img2, subject, space="world", format="nii", name=paradigm,contrast=contrast)
     t2 = target_img.get_affine()
     t2i = np.linalg.inv(t2)
     fa_coords = mm_coords.dot(t2i.T)
@@ -306,9 +305,105 @@ def mean_inside(subject, structures, img2, paradigm=None):
     res /= n_voxels
     return res
 
-def mean_in_roi(subject, roi_ctr,roi_radius,roi_space, img2, paradigm=None):
-    return #TODO
-    pass
+
+class AggregateInRoi(object):
+    def __init__(self,reader):
+        self.reader = reader
+        self.img_values = None
+        self.mean = True
+        self.img = None
+
+    def load_image(self,subject,space,modality,paradigm=None,contrast=1,mean=True):
+        reader = self.reader
+        if paradigm is None:
+            target_img = reader.get(modality, subject, space=space, format="nii")
+        else:
+            target_img = reader.get(modality, subject, space=space, format="nii", name=paradigm,contrast=contrast)
+
+        all_values = target_img.get_data()
+
+        self.img_values = all_values
+        self.img = target_img
+
+        self.mean = mean
+
+    def get_value(self,roi_ctr,roi_radius):
+        target_img = self.img
+        shape = target_img.get_shape()
+        affine = target_img.get_affine()
+
+        #Calculate bounding box for sphere
+        i_affine = np.linalg.inv(affine)
+        ctr_h = np.ones((4,1))
+        ctr_h[0:3,0]=roi_ctr
+        ctr_img_h = np.dot(i_affine,ctr_h)
+        ctr_img = ctr_img_h[0:3]/ctr_img_h[3]
+        max_factor = np.max(np.abs(i_affine.diagonal()))*roi_radius
+        bb_x0 = max(0,int(ctr_img[0]-max_factor))
+        bb_x1 = int(np.ceil(ctr_img[0]+max_factor))
+
+        bb_y0 = max(0,ctr_img[1]-max_factor)
+        bb_y1 = int(np.ceil(ctr_img[1]+max_factor))
+
+        bb_z0 = max(0,ctr_img[2]-max_factor)
+        bb_z1 = int(np.ceil(ctr_img[2]+max_factor))
+        #create numpy grid
+        grid = np.mgrid[bb_x0:bb_x1,bb_y0:bb_y1,bb_z0:bb_z1]
+        grid = np.rollaxis(grid,0,4)
+        points = grid.reshape((-1,3))
+        points_h = np.hstack((points,np.ones((points.shape[0],1))))
+        points_world_h = np.dot(affine,points_h.T).T
+        points_world = points_world_h[:,:3]
+        divisor = np.repeat(points_world_h[:,3:],3,1)
+        points_world = points_world/divisor
+        r_sq = roi_radius**2
+        offsets = points_world - roi_ctr
+        dist_sq = np.sum(offsets*offsets,1)
+        inside = (dist_sq <= r_sq)
+
+        points_inside = points[inside,:]
+        all_values = self.img_values
+        values_inside = all_values[points_inside[:,0],points_inside[:,1],points_inside[:,2]]
+        if self.mean is True:
+            ans = np.mean(values_inside)
+        else:
+            ans = scipy.stats.mode(values_inside)[0]
+        return ans
+
+def aggregate_in_roi(reader,subject, roi_ctr,roi_radius,roi_space, img2, paradigm=None,contrast=None,mean=True):
+    if paradigm is None:
+        target_img = reader.get(img2, subject, space=roi_space, format="nii")
+    else:
+        target_img = reader.get(img2, subject, space=roi_space, format="nii", name=paradigm,contrast=contrast)
+    r_sq = roi_radius**2
+    shape = target_img.get_shape()
+    affine = target_img.get_affine()
+    #create numpy grid
+    grid = np.mgrid[0:shape[0],0:shape[1],0:shape[2]]
+    grid = np.rollaxis(grid,0,4)
+    points = grid.reshape((np.prod(shape),3))
+    points_h = np.hstack((points,np.ones((points.shape[0],1))))
+    points_world_h = np.dot(affine,points_h.T).T
+    points_world = points_world_h[:,:3]
+    divisor = np.repeat(points_world_h[:,3:],3,1)
+    points_world = points_world/divisor
+
+    offsets = points_world - roi_ctr
+    dist_sq = np.sum(offsets*offsets,1)
+    inside = (dist_sq <= r_sq)
+
+    points_inside = points[inside,:]
+    all_values = target_img.get_data()
+    values_inside = all_values[points_inside[:,0],points_inside[:,1],points_inside[:,2]]
+    if mean is True:
+        ans = np.mean(values_inside)
+    else:
+        ans = scipy.stats.mode(values_inside)[0]
+    return ans
+
+
+
+
 
 def get_locations(reader, subject, struct_name):
     label = int(reader.get("Model", subject, name=struct_name, label=True))

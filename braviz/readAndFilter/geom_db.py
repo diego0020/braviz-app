@@ -25,7 +25,7 @@ def create_roi(name, roi_type, coords, desc=""):
 def get_available_spheres_df():
     con = get_connection()
     q = """
-        SELECT roi_name as name, roi_desc as description, num as number
+        SELECT roi_name as name, roi_desc as description, num as quantity
         FROM geom_rois JOIN
         (SELECT sphere_id, count(*) as num FROM geom_spheres group by sphere_id
         UNION
