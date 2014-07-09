@@ -442,6 +442,8 @@ class BuildRoiApp(QMainWindow):
         self.ui.actionSave_sphere_as.triggered.connect(self.save_sphere_as)
         self.ui.color_button.clicked.connect(self.set_sphere_color)
 
+        self.ui.inside_check.clicked.connect(self.caclulate_image_in_roi_pre)
+
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -469,11 +471,17 @@ class BuildRoiApp(QMainWindow):
         self.caclulate_image_in_roi_pre()
 
     def caclulate_image_in_roi_pre(self):
+        if not self.ui.inside_check.isChecked():
+            self.ui.mean_inside_text.clear()
+            self.ui.mean_inside_text.setEnabled(0)
+            return
+
         modality = self.__current_image_mod
         contrast = self.__current_contrast
         if self.__sphere_center is None or self.__sphere_radius is None:
             self.ui.mean_inside_text.clear()
             return
+        self.ui.mean_inside_text.setEnabled(1)
         if contrast is not None:
             self.ui.mean_inside_label.setText("Mean Z-score")
             self.ui.mean_inside_label.setToolTip("Mean Z-score inside the ROI")
@@ -498,6 +506,8 @@ class BuildRoiApp(QMainWindow):
         self.caclulate_image_in_roi()
 
     def caclulate_image_in_roi(self):
+        if not self.ui.inside_check.isChecked():
+            return
         try:
             value = self.__mean_in_img_calculator.get_value(self.__sphere_center,self.__sphere_radius)
         except Exception:
