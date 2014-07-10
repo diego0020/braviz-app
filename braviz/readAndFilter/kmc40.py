@@ -41,7 +41,7 @@ The path containing this structure must be set."""
         self.__root = os.path.normcase(path)
         #Remove trailing slashes
         self.__root = self.__root.rstrip('/\\')
-        self.__functional_paradigms=("Precision","Power")
+        self.__functional_paradigms={"Precision","Power"}
         self.__cache_container.max_cache = max_cache
         self.__fmri_lut = None
 

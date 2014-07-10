@@ -437,7 +437,7 @@ class SampleOverview(QtGui.QMainWindow):
             mod = image_state.get("modality")
             if mod is not None:
                 try:
-                    if mod in self.reader.FUNCTIONAL_PARADIGMS:
+                    if mod in self.reader.get("fMRI",None,index=True):
                         paradigm = mod
                         mod = "fMRI"
                         log.info("Loading fMRI")
@@ -968,7 +968,7 @@ if __name__ == '__main__':
 
     from braviz.utilities import configure_logger
 
-    configure_logger("subject_overview")
+    configure_logger("sample_overview")
     log = logging.getLogger(__name__)
     log.info(sys.argv)
     scenario = None
