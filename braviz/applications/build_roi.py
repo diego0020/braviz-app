@@ -408,12 +408,11 @@ class BuildRoiApp(QMainWindow):
         self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
         paradigms = self.reader.get("fMRI",None,index=True)
         for p in paradigms:
-            self.ui.image_combo.addItem(p)
-        for i in xrange(1):
-            self.ui.contrast_combo.addItem("Contrast %d"%i)
+            self.ui.image_combo.addItem(p.title())
+        self.ui.contrast_combo.setEnabled(0)
         self.ui.contrast_combo.setCurrentIndex(0)
         self.ui.contrast_combo.setEnabled(False)
-        self.ui.contrast_combo.currentIndexChanged.connect(self.select_image_modality)
+        self.ui.contrast_combo.activated.connect(self.select_image_modality)
         self.ui.sphere_radius.valueChanged.connect(self.update_sphere_radius)
         self.ui.sphere_x.valueChanged.connect(self.update_sphere_center)
         self.ui.sphere_y.valueChanged.connect(self.update_sphere_center)
@@ -462,7 +461,12 @@ class BuildRoiApp(QMainWindow):
     def set_image(self, modality,contrast=None):
         self.__current_image_mod = modality
         self.__current_contrast = contrast
-        self.vtk_viewer.change_image_modality(modality,contrast)
+        log = logging.getLogger(__name__)
+        try:
+            self.vtk_viewer.change_image_modality(modality,contrast)
+        except Exception as e:
+            self.statusBar().showMessage(e.message,500)
+            log.warning(e.message)
         dims = self.vtk_viewer.get_number_of_slices()
         self.ui.axial_slice.setMaximum(dims[AXIAL])
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
@@ -685,6 +689,17 @@ class BuildRoiApp(QMainWindow):
         if self.ui.image_combo.currentIndex() > 3:
             #functional
             self.ui.contrast_combo.setEnabled(1)
+            previus_index = self.ui.contrast_combo.currentIndex()
+            try:
+                contrasts_dict = self.reader.get("FMRI",self.__current_img_id,name=mod,contrasts_dict=True)
+            except Exception:
+                pass
+            else:
+                self.ui.contrast_combo.clear()
+                for i in xrange(len(contrasts_dict)):
+                    self.ui.contrast_combo.addItem(contrasts_dict[i+1])
+                if 0<=previus_index<len(contrasts_dict):
+                    self.ui.contrast_combo.setCurrentIndex(previus_index)
             contrast = int(self.ui.contrast_combo.currentIndex())+1
         else:
             self.ui.contrast_combo.setEnabled(0)
