@@ -41,7 +41,7 @@ The path containing this structure must be set."""
         self.__root = os.path.normcase(path)
         #Remove trailing slashes
         self.__root = self.__root.rstrip('/\\')
-        self.__functional_paradigms={"Precision","Power"}
+        self.__functional_paradigms={"PRECISION","POWERGRIP"}
         self.__cache_container.max_cache = max_cache
         self.__fmri_lut = None
 
@@ -65,7 +65,8 @@ The path containing this structure must be set."""
 
         WMPARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
 
-        FMRI: requires name=<Paradigm>, use index = True to get a list of possible paradigms
+        FMRI: requires name=<Paradigm>, may also receive contrast to indicate a specific contrast (the defautl is 1)
+              Use contrasts_dict = True togethet with paradigms to get the names of the contrasts
 
         BOLD: requires name=<Paradigm>, only nifti format is available
 
@@ -952,10 +953,12 @@ The path containing this structure must be set."""
         space = kw.get('space', 'world')
         name = name.upper()
         space = space.lower()
-        if name not in ('PRECISION', 'POWERGRIP'):
+        if name not in self.__functional_paradigms:
             log.warning(" functional paradigm %s not available" % name)
             return None
         path = os.path.join(self.getDataRoot(), subject, 'spm')
+        if "contrasts_dict" in kw:
+            return {1: "One"}
         z_map = os.path.join(path, name, 'spmT_0001.hdr')
         nii_z_map = nib.load(z_map)
         if kw.get('format', 'nifti').lower() == 'nifti':

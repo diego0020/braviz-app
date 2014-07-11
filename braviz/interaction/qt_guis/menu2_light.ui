@@ -21,10 +21,11 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget#centralwidget{
-background-image: url(:/icons/imagine.svg);
+background-image: url(:/icons/imagine2.svg);
 background-repeat: no-repeat;
 background-position: bottom right;
 background-origin: content;
+background-size: 100px 200px
 }
 QToolButton:hover{
  font: bold;
@@ -55,7 +56,7 @@ QToolButton:hover{
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,4,0,0,4,0">
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="2,0,2,0,0,4,0">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -116,7 +117,7 @@ QToolButton:hover{
              </font>
             </property>
             <property name="text">
-             <string>Select Tool</string>
+             <string>Welcome to Braviz</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>

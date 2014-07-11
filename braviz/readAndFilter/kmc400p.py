@@ -27,6 +27,7 @@ from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
 from hierarchical_fibers import read_logical_fibers
+from braviz.readAndFilter.read_spm import get_contrasts_dict
 
 class kmc400Reader(object):
     """
@@ -70,7 +71,8 @@ The path containing this structure must be set."""
 
         WMPARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
 
-        FMRI: requires name=<Paradigm>
+        FMRI: requires name=<Paradigm>, may also receive contrast to indicate a specific contrast (the defautl is 1)
+              Use contrasts_dict = True togethet with paradigms to get the names of the contrasts
 
         BOLD: requires name=<Paradigm>, only nifti format is available
 
@@ -910,7 +912,7 @@ The path containing this structure must be set."""
         if paradigm_name.endswith("SENSE"):
             return paradigm_name
         paradigm_name = paradigm_name.upper()
-        assert paradigm_name in self.FUNCTIONAL_PARADIGMS
+        assert paradigm_name in self.__functional_paradigms
 
         if paradigm_name=="MIEDO":
             paradigm_name="MIEDOSofTone"
@@ -972,11 +974,14 @@ The path containing this structure must be set."""
         space = kw.get('space', 'world')
         name = name.upper()
         space = space.lower()
-        if name not in self.FUNCTIONAL_PARADIGMS:
+        if name not in self.__functional_paradigms:
             log.warning(" functional paradigm %s not available" % name)
             return None
         name = self.__get_paradigm_name(name)
         path = os.path.join(self.getDataRoot(), "spm",subject,name,"FirstLevel")
+        if "contrasts_dict" in kw:
+            spm_file_path = os.path.join(path,"SPM.mat")
+            return get_contrasts_dict(spm_file_path)
         contrast = kw.get("contrast",1)
         contrast_n = "%.4d"%contrast
         z_map = os.path.join(path, 'spmT_%s.hdr')%contrast_n

@@ -134,9 +134,8 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.reset_window_level.clicked.connect(self.vtk_viewer.image.reset_window_level)
         fmri_paradigms = self.reader.get("fmri", None, index=True)
         for pdg in fmri_paradigms:
-            self.ui.image_mod_combo.addItem(pdg)
-        for i in xrange(1, 7):
-            self.ui.contrast_combo.addItem("%d" % i)
+            self.ui.image_mod_combo.addItem(pdg.title())
+        self.ui.contrast_combo.setEnabled(0)
         self.ui.contrast_combo.setCurrentIndex(0)
         #MRI
         self.ui.image_mod_combo.setCurrentIndex(1)
@@ -245,9 +244,26 @@ class SubjectOverviewApp(QMainWindow):
         try:
             if selection in ("MRI", "FA", "APARC", "WMPARC", "MD", "DTI"):
                 self.vtk_viewer.image.change_image_modality(selection)
+                self.ui.contrast_combo.setEnabled(0)
             else:
+                self.ui.contrast_combo.setEnabled(1)
+                previus_contrast = self.ui.contrast_combo.currentIndex()
+                img_code = braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE,self.__curent_subject)
+                try:
+                    available_contrasts = self.reader.get("FMRI",img_code,name=selection,contrasts_dict=True)
+                    self.ui.contrast_combo.clear()
+                    for i in xrange(len(available_contrasts)):
+                        cont_name = available_contrasts[i+1]
+                        self.ui.contrast_combo.addItem(cont_name)
+                    if 0 <= previus_contrast < len(available_contrasts):
+                        self.ui.contrast_combo.setCurrentIndex(previus_contrast)
+                    else:
+                        self.ui.contrast_combo.setCurrentIndex(0)
+                except Exception:
+                    pass
+
                 self.vtk_viewer.image.change_image_modality("FMRI", selection,
-                                                            contrast=int(self.ui.contrast_combo.currentText()))
+                                                            contrast=self.ui.contrast_combo.currentIndex()+1)
             self.vtk_viewer.image.show_image()
         except Exception as e:
             log.warning(e.message)

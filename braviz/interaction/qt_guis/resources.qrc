@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>imagine2.svg</file>
     <file>database_out.png</file>
     <file>database_in.png</file>
     <file>database.png</file>
