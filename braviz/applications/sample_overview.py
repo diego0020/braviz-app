@@ -436,6 +436,7 @@ class SampleOverview(QtGui.QMainWindow):
         if image_state is not None:
             mod = image_state.get("modality")
             if mod is not None:
+                mod = mod.upper()
                 try:
                     if mod in self.reader.get("fMRI",None,index=True):
                         paradigm = mod
