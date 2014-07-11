@@ -1529,7 +1529,7 @@ class OrthogonalPlanesViewer(object):
         else:
             pdgm = None
         for im in self.__image_planes:
-            im.change_image_modality(mod, pdgm,mod,skip_render=True)
+            im.change_image_modality(mod, pdgm,mod,skip_render=True,contrast=contrast)
         self.__curent_modality = mod
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
         self.link_window_level()

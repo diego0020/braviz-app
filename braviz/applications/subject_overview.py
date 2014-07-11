@@ -139,7 +139,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.contrast_combo.setCurrentIndex(0)
         #MRI
         self.ui.image_mod_combo.setCurrentIndex(1)
-        self.ui.contrast_combo.activated.connect(self.image_modality_change)
+        self.ui.contrast_combo.activated.connect(self.change_contrast)
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
@@ -204,6 +204,7 @@ class SubjectOverviewApp(QMainWindow):
         #image
         image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(new_subject)))
 
+
         # if len(image_code) < 3:
         #     image_code = "0" + image_code
         log = logging.getLogger(__name__)
@@ -214,6 +215,7 @@ class SubjectOverviewApp(QMainWindow):
             self.show_error(e.message)
             log.warning(e.message)
             #raise
+        self.reload_contrast_names()
         self.reset_image_view_controls()
         #context
         self.update_segmentation_scalar()
@@ -247,21 +249,8 @@ class SubjectOverviewApp(QMainWindow):
                 self.ui.contrast_combo.setEnabled(0)
             else:
                 self.ui.contrast_combo.setEnabled(1)
-                previus_contrast = self.ui.contrast_combo.currentIndex()
-                img_code = braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE,self.__curent_subject)
-                try:
-                    available_contrasts = self.reader.get("FMRI",img_code,name=selection,contrasts_dict=True)
-                    self.ui.contrast_combo.clear()
-                    for i in xrange(len(available_contrasts)):
-                        cont_name = available_contrasts[i+1]
-                        self.ui.contrast_combo.addItem(cont_name)
-                    if 0 <= previus_contrast < len(available_contrasts):
-                        self.ui.contrast_combo.setCurrentIndex(previus_contrast)
-                    else:
-                        self.ui.contrast_combo.setCurrentIndex(0)
-                except Exception:
-                    pass
 
+                self.reload_contrast_names(selection)
                 self.vtk_viewer.image.change_image_modality("FMRI", selection,
                                                             contrast=self.ui.contrast_combo.currentIndex()+1)
             self.vtk_viewer.image.show_image()
@@ -280,6 +269,34 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_window.setEnabled(window_level_control)
         self.ui.image_level.setEnabled(window_level_control)
         self.ui.reset_window_level.setEnabled(window_level_control)
+
+    def change_contrast(self,dummy_index=None):
+        selection = str(self.ui.image_mod_combo.currentText()).upper()
+        if selection not in self.reader.get("fMRI",None,index=True):
+            return
+        self.vtk_viewer.image.change_image_modality("FMRI", selection,
+                    contrast=self.ui.contrast_combo.currentIndex()+1)
+
+    def reload_contrast_names(self,pdgm=None):
+        if pdgm is None:
+            pdgm = str(self.ui.image_mod_combo.currentText())
+        if pdgm.upper() not in self.reader.get("fMRI",None,index=True):
+            return
+        previus_contrast = self.ui.contrast_combo.currentIndex()
+        img_code = braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE,self.__curent_subject)
+        try:
+            available_contrasts = self.reader.get("FMRI",img_code,name=pdgm,contrasts_dict=True)
+            self.ui.contrast_combo.clear()
+            for i in xrange(len(available_contrasts)):
+                cont_name = available_contrasts[i+1]
+                self.ui.contrast_combo.addItem(cont_name)
+            if 0 <= previus_contrast < len(available_contrasts):
+                self.ui.contrast_combo.setCurrentIndex(previus_contrast)
+            else:
+                self.ui.contrast_combo.setCurrentIndex(0)
+                self.change_contrast()
+        except Exception:
+            pass
 
     def image_orientation_change(self):
         orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}

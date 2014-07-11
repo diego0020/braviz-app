@@ -412,7 +412,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.contrast_combo.setEnabled(0)
         self.ui.contrast_combo.setCurrentIndex(0)
         self.ui.contrast_combo.setEnabled(False)
-        self.ui.contrast_combo.activated.connect(self.select_image_modality)
+        self.ui.contrast_combo.activated.connect(self.change_contrast)
         self.ui.sphere_radius.valueChanged.connect(self.update_sphere_radius)
         self.ui.sphere_x.valueChanged.connect(self.update_sphere_center)
         self.ui.sphere_y.valueChanged.connect(self.update_sphere_center)
@@ -640,6 +640,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.subject_sphere_label.setText("Subject %s" % self.__current_subject)
         img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, new_subject)
         self.__current_img_id = img_id
+        self.reload_contrast_names()
         log = logging.getLogger(__file__)
         try:
             self.vtk_viewer.change_subject(img_id)
@@ -689,23 +690,38 @@ class BuildRoiApp(QMainWindow):
         if self.ui.image_combo.currentIndex() > 3:
             #functional
             self.ui.contrast_combo.setEnabled(1)
-            previus_index = self.ui.contrast_combo.currentIndex()
-            try:
-                contrasts_dict = self.reader.get("FMRI",self.__current_img_id,name=mod,contrasts_dict=True)
-            except Exception:
-                pass
-            else:
-                self.ui.contrast_combo.clear()
-                for i in xrange(len(contrasts_dict)):
-                    self.ui.contrast_combo.addItem(contrasts_dict[i+1])
-                if 0<=previus_index<len(contrasts_dict):
-                    self.ui.contrast_combo.setCurrentIndex(previus_index)
+            self.reload_contrast_names(mod)
             contrast = int(self.ui.contrast_combo.currentIndex())+1
         else:
             self.ui.contrast_combo.setEnabled(0)
             contrast = None
         self.set_image(mod,contrast)
 
+    def reload_contrast_names(self,mod=None):
+        if mod is None:
+            mod = str(self.ui.image_combo.currentText())
+        if mod.upper() not in self.reader.get("FMRI",None,index=True):
+            return
+        previus_index = self.ui.contrast_combo.currentIndex()
+        try:
+            contrasts_dict = self.reader.get("FMRI",self.__current_img_id,name=mod,contrasts_dict=True)
+        except Exception:
+            pass
+        else:
+            self.ui.contrast_combo.clear()
+            for i in xrange(len(contrasts_dict)):
+                self.ui.contrast_combo.addItem(contrasts_dict[i+1])
+            if 0<=previus_index<len(contrasts_dict):
+                self.ui.contrast_combo.setCurrentIndex(previus_index)
+            else:
+                self.ui.contrast_combo.setCurrentIndex(0)
+                self.change_contrast()
+
+
+    def change_contrast(self,dummy_index=None):
+        new_contrast = self.ui.contrast_combo.currentIndex()+1
+        mod = str(self.ui.image_combo.currentText())
+        self.set_image(mod,new_contrast)
 
     def select_surface_scalars(self,index):
         scalar_name = SURFACE_SCALARS_DICT[int(index)]
