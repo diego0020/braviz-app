@@ -25,7 +25,6 @@ background-image: url(:/icons/imagine2.svg);
 background-repeat: no-repeat;
 background-position: bottom right;
 background-origin: content;
-background-size: 100px 200px
 }
 QToolButton:hover{
  font: bold;
