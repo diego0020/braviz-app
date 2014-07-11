@@ -357,7 +357,8 @@ class ImageManager(object):
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
         if not self.__hidden:
-            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True)
+            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
+                                       contrast=self.__current_contrast)
 
     @do_and_render
     def change_space(self, new_space):
