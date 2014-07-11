@@ -4,7 +4,8 @@ import dipy
 import braviz
 import numpy as np
 reader = braviz.readAndFilter.BravizAutoReader()
-tracts = reader.get("FIBERS","093")
+subject = "093" if braviz.readAndFilter.PROJECT == "kmc40" else "119"
+tracts = reader.get("FIBERS",subject)
 tracts.GetNumberOfLines()
 from braviz.readAndFilter.filter_fibers import extract_poly_data_subset
 
@@ -20,7 +21,10 @@ n_lines = tracts.GetNumberOfCells()
 np_tracts = [line_to_array(tracts.GetCell(i)) for i in xrange(n_lines)]
 
 import dipy.segment.quickbundles
+
+#====================================================================
 bundles = dipy.segment.quickbundles.QuickBundles(np_tracts,30,25)
+#====================================================================
 print bundles.total_clusters
 partitions = bundles.partitions()
 in_cluster = bundles.label2tracksids(0)
@@ -68,7 +72,7 @@ c=[0,0,0]
 #     print c
 mp.SetLookupTable(lut)
 
-context_img = reader.get("MRI","093",format="vtk")
+context_img = reader.get("MRI",subject,format="vtk")
 image_widget = v.addImg(context_img)
 v.start()
 
