@@ -23,3 +23,4 @@ print bundles.total_clusters
 partitions = bundles.partitions()
 in_cluster = bundles.label2tracksids(0)
 bundles.remove_small_clusters(5)
+
