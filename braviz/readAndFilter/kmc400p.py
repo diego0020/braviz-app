@@ -27,7 +27,7 @@ from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
 from hierarchical_fibers import read_logical_fibers
-from braviz.readAndFilter.read_spm import get_contrasts_dict
+from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
 
 class kmc400Reader(object):
     """
@@ -73,6 +73,7 @@ The path containing this structure must be set."""
 
         FMRI: requires name=<Paradigm>, may also receive contrast to indicate a specific contrast (the defautl is 1)
               Use contrasts_dict = True togethet with paradigms to get the names of the contrasts
+              Use SPM = True to get a representation of the corresponding spm file
 
         BOLD: requires name=<Paradigm>, only nifti format is available
 
@@ -982,6 +983,9 @@ The path containing this structure must be set."""
         if "contrasts_dict" in kw:
             spm_file_path = os.path.join(path,"SPM.mat")
             return get_contrasts_dict(spm_file_path)
+        if kw.get("spm"):
+            spm_file = os.path.join(path,"SPM.mat")
+            return SpmFileReader(spm_file)
         contrast = kw.get("contrast",1)
         contrast_n = "%.4d"%contrast
         z_map = os.path.join(path, 'spmT_%s.hdr')%contrast_n

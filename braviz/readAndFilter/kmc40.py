@@ -26,7 +26,7 @@ from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
 from hierarchical_fibers import read_logical_fibers
-
+from braviz.readAndFilter.read_spm import SpmFileReader,get_contrasts_dict
 
 #TODO: remove all hasattr, maybe change with porperties or None
 class kmc40Reader(object):
@@ -67,6 +67,7 @@ The path containing this structure must be set."""
 
         FMRI: requires name=<Paradigm>, may also receive contrast to indicate a specific contrast (the defautl is 1)
               Use contrasts_dict = True togethet with paradigms to get the names of the contrasts
+              Use SPM = True to get a representation of the corresponding spm file
 
         BOLD: requires name=<Paradigm>, only nifti format is available
 
@@ -958,7 +959,14 @@ The path containing this structure must be set."""
             return None
         path = os.path.join(self.getDataRoot(), subject, 'spm')
         if "contrasts_dict" in kw:
-            return {1: "One"}
+            try:
+                spm_file_path = os.path.join(path,name,"SPM.mat")
+                return get_contrasts_dict(spm_file_path)
+            except Exception as e:
+                return {1: "One"}
+        if kw.get("spm"):
+            spm_file = os.path.join(path,name,"SPM.mat")
+            return SpmFileReader(spm_file)
         z_map = os.path.join(path, name, 'spmT_0001.hdr')
         nii_z_map = nib.load(z_map)
         if kw.get('format', 'nifti').lower() == 'nifti':

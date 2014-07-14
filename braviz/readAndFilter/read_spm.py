@@ -13,7 +13,7 @@ def get_contrasts_dict(spm_file_path):
     n_contrasts = contrasts_info.shape[1]
     contrast_names = {}
     for i in xrange(n_contrasts):
-        contrast_names[i+1] = contrasts_info[0,i]["name"][0,0]
+        contrast_names[i+1] = contrasts_info[0,i]["name"][0]
     return contrast_names
 
 ContrastInfo = namedtuple("ContrastInfo",("name","design"))
