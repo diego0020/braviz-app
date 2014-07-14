@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
 
     reader = braviz.readAndFilter.BravizAutoReader()
-    FUNCTIONAL_PARADIGMS=reader.FUNCTIONAL_PARADIGMS
+    FUNCTIONAL_PARADIGMS=list(reader.get("fMRI",None,index=True))
 
     initial_subject = reader.get("ids")[0]
 
@@ -298,7 +298,7 @@ if __name__ == "__main__":
     image_label.pack(side='top')
     image_var = tk.StringVar()
     image_sel = ttk.Combobox(control_frame, textvariable=image_var)
-    image_sel['values'] = ('MRI', 'FA', 'APARC')+FUNCTIONAL_PARADIGMS
+    image_sel['values'] = ('MRI', 'FA', 'APARC')+tuple(FUNCTIONAL_PARADIGMS)
     image_sel['state'] = 'readonly'
     image_sel.set('MRI')
     image_sel.pack(side='top')

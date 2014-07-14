@@ -47,7 +47,7 @@ The path containing this structure must be set."""
         if self.__dynaimc_data_root[-1]==":":
             self.__dynaimc_data_root+="\\"
 
-        self.__functional_paradigms={'ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION'}
+        self.__functional_paradigms=frozenset(('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION'))
         self.__cache_container.max_cache = max_cache
         self.__fmri_LUT = None
 
