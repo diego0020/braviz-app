@@ -53,6 +53,8 @@ class TimeseriesPlot(FigureCanvas):
         self.__background = None
         self.__old_size = None
 
+        self.__frozen_points_signals = {}
+
         self.axes.tick_params('y', left='off', right='off', labelleft='off', labelright='off')
         self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
         self.axes.set_xlabel("Time (s.)")
@@ -95,7 +97,7 @@ class TimeseriesPlot(FigureCanvas):
         #draw background
         current_size = self.axes.bbox.width, self.axes.bbox.height
         if current_size != self.__old_size:
-            self.draw_contrast()
+            self.draw_background()
         else:
             self.restore_region(self.__background)
         self.axes.set_ylim(-2,2,auto=False)
@@ -110,21 +112,33 @@ class TimeseriesPlot(FigureCanvas):
         self.blit(self.axes.bbox)
         pass
 
-    def add_perm_bold_signal(self,coordinates):
+    def add_frozen_bold_signal(self,coordinates):
+        pass
+
+    def draw_frozen_bold_signals(self):
         pass
 
     def set_contrast(self,contrast):
         self.__contrast = contrast
+        self.draw_background()
+
+    def draw_background(self):
         self.draw_contrast()
+        self.draw()
+        self.__background = self.copy_from_bbox(self.axes.bbox)
+        current_size = self.axes.bbox.width, self.axes.bbox.height
+        self.__old_size = current_size
 
     def draw_contrast(self):
         if self.spm is None or self.__contrast is None:
             return
         cont = self.spm.contrasts[self.__contrast]
         self.axes.clear()
-        design = cont.design
         self.axes.set_ylim(-2,2,auto=False)
         self.axes.set_xlim(0,self.spm.tr+self.volumes_times[-1],auto=False)
+        self.axes.set_xlabel("Time (s.)")
+
+        design = cont.design
         for i,v in enumerate(design):
             if v!=0:
                 c=self.__condition_colors[i]
@@ -133,8 +147,5 @@ class TimeseriesPlot(FigureCanvas):
                 self.axes.fill_between(self.experiment_time,blocks,alpha=0.5,color=c,
                                        zorder=1)
         self.axes.legend()
-        self.draw()
-        self.__background = self.copy_from_bbox(self.axes.bbox)
-        current_size = self.axes.bbox.width, self.axes.bbox.height
-        self.__old_size = current_size
+
 

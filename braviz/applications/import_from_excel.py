@@ -37,7 +37,7 @@ class ImportFromExcel(QtGui.QDialog):
             df = self.__df[cols2]
         else:
             df = self.__df
-        self.__model = DataFrameModel(df,show_index=True)
+        self.__model = DataFrameModel(df, index_as_column=False)
         self.ui.tableView.setModel(self.__model)
         self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(1)
         self.__df2 = df

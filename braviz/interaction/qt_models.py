@@ -587,7 +587,7 @@ class DataFrameModel(QAbstractTableModel):
     This model is used for displaying data frames in a QT table view
     """
 
-    def __init__(self, data_frame, columns=None, string_columns=tuple(),show_index=False):
+    def __init__(self, data_frame, columns=None, string_columns=tuple(),index_as_column=True):
         if not isinstance(data_frame, pd.DataFrame):
             raise ValueError("A pandas data frame is required")
         if columns is None:
@@ -595,14 +595,14 @@ class DataFrameModel(QAbstractTableModel):
         self.__df = data_frame
         self.__cols = columns
         self.__string_cols = frozenset(string_columns)
-        self.show_index = show_index
+        self.index_as_column=index_as_column
         super(DataFrameModel, self).__init__()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.__df)
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
-        if not self.show_index:
+        if self.index_as_column:
             return len(self.__cols) + 1
         else:
             return len(self.__cols)
@@ -612,7 +612,7 @@ class DataFrameModel(QAbstractTableModel):
             return QtCore.QVariant()
         line = QModelIndex.row()
         col = QModelIndex.column()
-        if not self.show_index:
+        if self.index_as_column:
             if col == 0:
                 return self.format_data(0, self.__df.index[line])
             else:
@@ -638,11 +638,14 @@ class DataFrameModel(QAbstractTableModel):
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation == QtCore.Qt.Horizontal:
             if int_role == QtCore.Qt.DisplayRole:
-                if p_int == 0:
-                    return unicode(self.__df.index.name)
-                else:
-                    return self.__cols[p_int - 1]
-        elif Qt_Orientation == QtCore.Qt.Vertical and self.show_index:
+                if self.index_as_column:
+                    if p_int == 0:
+                        return unicode(self.__df.index.name)
+                    else:
+                        return self.__cols[p_int - 1]
+                else :
+                    return self.__cols[p_int]
+        elif Qt_Orientation == QtCore.Qt.Vertical:
             if int_role == QtCore.Qt.DisplayRole:
                 return str(self.__df.index[p_int])
 
@@ -652,14 +655,17 @@ class DataFrameModel(QAbstractTableModel):
         reverse = True
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             reverse = False
-        if p_int == 0:
+        if p_int == 0 and self.index_as_column:
             i_name = self.__df.index.name
             i_l = list(self.__df.index)
             i_l.sort(reverse=reverse)
             self.__df = self.__df.loc[i_l].copy()
             self.__df.index.name = i_name
         else:
-            self.__df.sort(self.__df.columns[p_int - 1], ascending=reverse, inplace=True)
+            if self.index_as_column:
+                self.__df.sort(self.__df.columns[p_int - 1], ascending=reverse, inplace=True)
+            else:
+                self.__df.sort(self.__df.columns[p_int], ascending=reverse, inplace=True)
         self.modelReset.emit()
 
     def flags(self, QModelIndex):

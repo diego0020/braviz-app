@@ -4,13 +4,15 @@ import braviz
 import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
 from braviz.readAndFilter import user_data as braviz_user_data
+from braviz.interaction.qt_models import DataFrameModel
+import pandas as pd
 
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
 import logging
 
 import numpy as np
 
-
+#todo: receive messages and send, connect to menu
 __author__ = 'Diego'
 
 class ListValidator(QtGui.QValidator):
@@ -42,6 +44,9 @@ class FmriExplorer(QtGui.QMainWindow):
         self.__current_subject = None
         self.__current_paradigm = None
         self.__current_contrast = 1
+
+        self.__frozen_points = pd.DataFrame(columns=["Coordinates","T Stat"])
+        self.__frozen_model = DataFrameModel(self.__frozen_points,["Coordinates","T Stat"],(0,),index_as_column=False)
 
         self.ui = None
         self.three_d_widget = None
@@ -95,6 +100,9 @@ class FmriExplorer(QtGui.QMainWindow):
 
         self.ui.image_orientation_combo.setCurrentIndex(2)
         self.ui.image_orientation_combo.activated.connect(self.change_image_orientation)
+
+        #Frozen
+        self.ui.frozen_points_table.setModel(self.__frozen_model)
 
     def start(self):
         self.three_d_widget.initialize_widget()
@@ -157,6 +165,9 @@ class FmriExplorer(QtGui.QMainWindow):
     def handle_cursor_move(self,coords):
         self.statusBar().showMessage(str(coords))
         self.time_plot.draw_bold_signal(coords)
+
+    def freeze_point(self):
+        pass
 
 def run():
     import sys
