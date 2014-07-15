@@ -1614,7 +1614,7 @@ class AdditionalCursors(object):
         self.__cursors = braviz.visualization.cursors()
         self.__cursors.SetVisibility(0)
         self.__image = None
-        self.__pos = None
+        self.__coords = None
         self.__axis = None
         ren.AddActor(self.__cursors)
 
@@ -1631,26 +1631,26 @@ class AdditionalCursors(object):
         self.__cursors.set_delta(max_sp/5)
 
     def get_position(self):
-        if self.__pos is None:
+        if self.__coords is None:
             return None
-        pos = np.array(self.__pos)
+        pos = np.array(self.__coords)
         org = np.array(self.__image.GetOrigin())
         sp = np.array(self.__image.GetSpacing())
         return pos * sp + org
 
     def get_coords(self):
-        return self.__pos
+        return self.__coords
 
     def set_axis_coords(self, axis=None, coords=None):
         if axis is None or coords is None or self.__image is None:
             self.__cursors.SetVisibility(0)
-            self.__pos = None
+            self.__coords = None
         self.__cursors.SetVisibility(1)
         if axis != self.__axis:
             self.__cursors.change_axis(axis)
             self.__axis = axis
         self.__cursors.set_cursor(*coords)
-        self.__pos = coords
+        self.__coords = coords
         self.__cursors.SetVisibility(1)
         pass
 
@@ -1825,7 +1825,7 @@ class fMRI_viewer(object):
         self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.cursor_change_event, draw_cursor2)
         self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.slice_change_event, slice_movement)
 
-    def current_index(self):
+    def current_coords(self):
         return self.__cursor.get_coords()
 
     @property

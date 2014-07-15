@@ -128,6 +128,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
         self.window_level_change_event = vtk.vtkCommand.UserEvent + 3
         self.alternative_text1 = False
         self.last_cursor_position = None
+        self.alternative_img = None
 
     def SetInputData(self, img):
         """Changes the input data por the plane widget"""

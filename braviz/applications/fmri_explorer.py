@@ -103,6 +103,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
         #Frozen
         self.ui.frozen_points_table.setModel(self.__frozen_model)
+        self.ui.freeze_point_button.clicked.connect(self.freeze_point)
 
     def start(self):
         self.three_d_widget.initialize_widget()
@@ -155,7 +156,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.time_plot.clear()
         self.time_plot.set_spm_and_bold(spm_data,bold_image)
         self.time_plot.set_contrast(self.__current_contrast)
-        self.time_plot.draw_bold_signal(self.image_view.current_index())
+        self.time_plot.draw_bold_signal(self.image_view.current_coords())
 
     def update_slice_controls(self):
         n_slices = self.image_view.image.get_number_of_image_slices()
@@ -167,6 +168,10 @@ class FmriExplorer(QtGui.QMainWindow):
         self.time_plot.draw_bold_signal(coords)
 
     def freeze_point(self):
+        cx,cy,cz = ( int(x) for x in self.image_view.current_coords())
+        stat = self.image_view.image.image_plane_widget.alternative_img.GetScalarComponentAsDouble(cx,cy,cz,0)
+        print cx,cy,cz
+        print stat
         pass
 
 def run():
