@@ -80,22 +80,35 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.contrast_combo.activated.connect(self.update_fmri_data_view)
         self.ui.paradigm_combo.activated.connect(self.update_fmri_data_view)
 
+        #subject
         self.ui.subj_completer = QtGui.QCompleter(list(self.__valid_ids))
         self.ui.subject_edit.setCompleter(self.ui.subj_completer)
         self.ui.subj_validator = ListValidator(self.__valid_ids)
         self.ui.subject_edit.setValidator(self.ui.subj_validator)
         self.ui.subject_edit.editingFinished.connect(self.update_fmri_data_view)
 
+        #image
+        self.three_d_widget.slice_changed.connect(self.ui.slice_slider.setValue)
+        self.ui.slice_slider.valueChanged.connect(self.image_view.image.set_image_slice)
+        self.ui.slice_spin.setMinimum(0)
+        self.ui.slice_slider.setMinimum(0)
+
+        self.ui.image_orientation_combo.setCurrentIndex(2)
+        self.ui.image_orientation_combo.activated.connect(self.change_image_orientation)
 
     def start(self):
         self.three_d_widget.initialize_widget()
 
+    def change_image_orientation(self):
+        orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
+        selection = str(self.ui.image_orientation_combo.currentText())
+        orientation_index = orientation_dict[selection]
+        self.image_view.change_orientation(orientation_index)
+        self.update_slice_controls()
 
     def load_initial_view(self):
         self.__current_subject = self.__reader.get("ids")[0]
         self.ui.subject_edit.setText(self.__current_subject)
-#        self.__current_paradigm = str(self.ui.paradigm_combo.currentText())
-#        self.__current_contrast = 1
         self.update_fmri_data_view()
 
     def update_fmri_data_view(self):
@@ -129,11 +142,17 @@ class FmriExplorer(QtGui.QMainWindow):
             log.warning(message)
             self.statusBar().showMessage(message,500)
             bold_image = None
-        #todo update contrasts combo
+
+        self.update_slice_controls()
         self.time_plot.clear()
         self.time_plot.set_spm_and_bold(spm_data,bold_image)
         self.time_plot.set_contrast(self.__current_contrast)
-        self.time_plot.draw_bold_signal(self.image_view.current_position())
+        self.time_plot.draw_bold_signal(self.image_view.current_index())
+
+    def update_slice_controls(self):
+        n_slices = self.image_view.image.get_number_of_image_slices()
+        self.ui.slice_spin.setMaximum(n_slices)
+        self.ui.slice_slider.setMaximum(n_slices)
 
     def handle_cursor_move(self,coords):
         self.statusBar().showMessage(str(coords))

@@ -1473,7 +1473,7 @@ class OrthogonalPlanesViewer(object):
         def slice_movement(caller, event):
             self.cortex.hide_cone()
             self.__active_cursor_plane = True
-            last_pos = self.__cursor.get_index()
+            last_pos = self.__cursor.get_coords()
             if last_pos is None:
                 return
             last_pos = np.array(last_pos)
@@ -1638,7 +1638,7 @@ class AdditionalCursors(object):
         sp = np.array(self.__image.GetSpacing())
         return pos * sp + org
 
-    def get_index(self):
+    def get_coords(self):
         return self.__pos
 
     def set_axis_coords(self, axis=None, coords=None):
@@ -1787,6 +1787,18 @@ class fMRI_viewer(object):
         #widget, signal handling
         self.__widget = widget
 
+    def change_orientation(self,orientation_index):
+        #find cursor position
+        pos = self.__cursor.get_coords()
+        self.image.change_image_orientation(orientation_index)
+        if pos is None:
+            new_slice = self.image.get_number_of_image_slices()//2
+        else:
+            new_slice = int(pos[orientation_index])
+            self.__cursor.set_axis_coords(orientation_index,pos)
+        self.image.set_image_slice(new_slice)
+
+
 
     def connect_cursors(self):
         def draw_cursor2(caller, event):
@@ -1800,7 +1812,7 @@ class fMRI_viewer(object):
 
         def slice_movement(caller, event):
             self.__active_cursor_plane = True
-            last_pos = self.__cursor.get_index()
+            last_pos = self.__cursor.get_coords()
             if last_pos is None:
                 return
             last_pos = np.array(last_pos)
@@ -1813,8 +1825,8 @@ class fMRI_viewer(object):
         self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.cursor_change_event, draw_cursor2)
         self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.slice_change_event, slice_movement)
 
-    def current_position(self):
-        return self.__cursor.get_position()
+    def current_index(self):
+        return self.__cursor.get_coords()
 
     @property
     def image(self):
