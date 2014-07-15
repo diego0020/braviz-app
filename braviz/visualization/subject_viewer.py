@@ -15,6 +15,7 @@ from functools import wraps
 import numpy as np
 import logging
 
+#TODO: Abstract viewer classes
 
 def do_and_render(f):
     """requiers the class to have the rendered accesible as self.ren"""
@@ -324,7 +325,7 @@ class ImageManager(object):
         self.__image_plane_widget = braviz.visualization.persistentImagePlane(self.__current_image_orientation)
         self.__image_plane_widget.SetInteractor(self.iren)
         self.__image_plane_widget.On()
-        self.__mri_lut = vtk.vtkLookupTable()
+        self.__mri_lut = vtk.vtkWindowLevelLookupTable()
         self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
 
 
@@ -436,8 +437,16 @@ class ImageManager(object):
 
             if fmri_image is None:
                 self.image_plane_widget.Off()
+                #raise
                 raise Exception("%s not available for subject %s" % (paradigm, self.__current_subject))
             fmri_lut = self.reader.get("fMRI", self.__current_subject, lut=True)
+            if self.__current_mri_window_level is None:
+                #we need to load the mri image first to get a valid window_level
+                self.__image_plane_widget.SetLookupTable(self.__mri_lut)
+                self.__image_plane_widget.SetInputData(mri_image)
+                self.__current_mri_window_level=[0,0]
+                self.reset_window_level(skip_render=True)
+
             self.__fmri_blender.set_luts(self.__mri_lut, fmri_lut)
             new_image = self.__fmri_blender.set_images(mri_image, fmri_image)
 
@@ -490,7 +499,7 @@ class ImageManager(object):
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             if self.__current_mri_window_level is None:
                 self.__current_mri_window_level = [0, 0]
-                self.reset_window_level()
+                self.reset_window_level(skip_render=True)
             else:
                 self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
         elif modality == "FA":
@@ -501,7 +510,7 @@ class ImageManager(object):
             self.__image_plane_widget.SetResliceInterpolateToCubic()
             if self.__current_fa_window_level is None:
                 self.__current_fa_window_level = [0, 0]
-                self.reset_window_level()
+                self.reset_window_level(skip_render=True)
             else:
                 self.__image_plane_widget.SetWindowLevel(*self.__current_fa_window_level)
 
@@ -573,7 +582,7 @@ class ImageManager(object):
         # print button
         if self.__image_plane_widget is None:
             return
-        if self.__current_image == "MRI" or self.__current_image == "MD":
+        if self.__current_image == "MRI" or self.__current_image == "MD" or self.__current_image == "FMRI":
             if braviz.readAndFilter.PROJECT == "kmc40":
                 self.__image_plane_widget.SetWindowLevel(3000, 1500)
             elif braviz.readAndFilter.PROJECT == "kmc400":
@@ -1614,10 +1623,12 @@ class AdditionalCursors(object):
         dim = img.GetDimensions()
         sp = img.GetSpacing()
         org = img.GetOrigin()
+        max_sp = max(sp)
 
         self.__cursors.set_dimensions(*dim)
         self.__cursors.set_spacing(*sp)
         self.__cursors.set_origin(*org)
+        self.__cursors.set_delta(max_sp/20)
 
     def get_position(self):
         if self.__pos is None:
@@ -1731,7 +1742,191 @@ class QOrthogonalPlanesWidget(QFrame):
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
+class fMRI_viewer(object):
+    def __init__(self, render_window_interactor, reader, widget):
+        self.iren = render_window_interactor
+        self.ren_win = render_window_interactor.GetRenderWindow()
+        self.ren = vtk.vtkRenderer()
+        self.ren.SetBackground((0.75, 0.75, 0.75))
+        self.ren.GradientBackgroundOn()
+        self.ren.SetBackground2((0.5, 0.5, 0.5))
+        self.ren.SetBackground((0.2, 0.2, 0.2))
+        self.ren.SetUseDepthPeeling(1)
+        self.ren_win.SetMultiSamples(0)
+        self.ren_win.AlphaBitPlanesOn()
+        self.ren.SetOcclusionRatio(0.1)
+        self.ren_win.AddRenderer(self.ren)
 
+        self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        self.axes = braviz.visualization.OrientationAxes()
+        self.axes.initialize(self.iren)
+
+        self.light = vtk.vtkLight()
+        self.ren.AddLight(self.light)
+        self.light.SetLightTypeToHeadlight()
+
+        self.reader = reader
+
+        # state
+        self.__current_subject = None
+        self.__current_space = "func"
+        self.__current_paradigm = None
+        self.__current_contrast = 1
+
+        self.picker = vtk.vtkCellPicker()
+        self.picker.SetTolerance(0.0005)
+        self.iren.SetPicker(self.picker)
+
+        # internal data
+        self.__image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
+                                            picker=self.picker)
+        self.__cursor = AdditionalCursors(self.ren)
+        self.__image_loaded = False
+        #reset camera and render
+        self.reset_camera(0)
+        #widget, signal handling
+        self.__widget = widget
+
+
+    def connect_cursors(self):
+        def draw_cursor2(caller, event):
+            self.__active_cursor_plane = True
+            axis = self.image.image_plane_widget.GetPlaneOrientation()
+            pw = self.image.image_plane_widget
+            coords = pw.GetCurrentCursorPosition()
+            assert coords is not None
+            self.__cursor.set_axis_coords(axis, coords)
+            self.__widget.cursor_move_handler(coords)
+
+        def slice_movement(caller, event):
+            self.__active_cursor_plane = True
+            last_pos = self.__cursor.get_index()
+            if last_pos is None:
+                return
+            last_pos = np.array(last_pos)
+            axis = self.image.image_plane_widget.GetPlaneOrientation()
+            sl = self.image.get_current_image_slice()
+            last_pos[axis] = sl
+            self.__cursor.set_axis_coords(axis, last_pos)
+            self.__widget.cursor_move_handler(last_pos)
+
+        self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.cursor_change_event, draw_cursor2)
+        self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.slice_change_event, slice_movement)
+
+
+    @property
+    def image(self):
+        return self.__image_manager
+
+    @do_and_render
+    def change_subject(self,new_subj):
+        if self.__current_subject != new_subj:
+            self.__current_subject = new_subj
+            self.update_view(skip_render=True)
+
+    @do_and_render
+    def change_paradigm(self,new_pdgm):
+        if self.__current_paradigm != new_pdgm:
+            self.__current_paradigm = new_pdgm
+            self.update_view(skip_render=True)
+
+    @do_and_render
+    def change_contrast(self,new_contrast):
+        if self.__current_contrast != new_contrast:
+            self.__current_contrast = new_contrast
+            self.update_view(skip_render=True)
+
+    @do_and_render
+    def set_all(self,new_subject,new_pdgm,new_contrast):
+        if self.__current_subject != new_subject:
+            self.__current_subject = new_subject
+        if self.__current_paradigm != new_pdgm:
+            self.__current_paradigm = new_pdgm
+        if self.__current_contrast != new_contrast:
+            self.__current_contrast = new_contrast
+        self.update_view(skip_render=True)
+
+    @do_and_render
+    def update_view(self):
+        if self.__current_subject is None or self.__current_paradigm is None or self.__current_contrast is None:
+            return
+        self.image.change_subject(self.__current_subject)
+        self.image.change_space("func-%s"%self.__current_paradigm)
+        self.image.change_image_modality("fMRI",self.__current_paradigm,contrast=self.__current_contrast)
+        if not self.__image_loaded:
+            self.connect_cursors()
+            self.__image_loaded = True
+        self.__cursor.set_image(self.image.image_plane_widget.GetInput())
+    __camera_positions_dict = {
+        0: ((-3.5, 0, 13), (157, 154, 130), (0, 0, 1)),
+        2: ((-3.5, 0, 10), (250, 0, 10), (0, 0, 1)),
+        1: ((-3.5, 0, 10), (-250, 0, 10), (0, 0, 1)),
+        4: ((-3.5, 0, 10), (-3.5, -200, 10), (0, 0, 1)),
+        3: ((-3.5, 0, 10), (-3.5, 200, 10), (0, 0, 1)),
+        5: ((-3, 0, 3), (-3, 0, 252), (0, 1, 0)),
+        6: ((-3, 0, 3), (-3, 0, -252), (0, 1, 0)),
+    }
+
+    def reset_camera(self, position):
+        """resets the current camera to standard locations. Position may be:
+        0: initial 3d view
+        1: left
+        2: right
+        3: front
+        4: back
+        5: top
+        6: bottom"""
+
+        focal, position, viewup = self.__camera_positions_dict[position]
+
+        cam1 = self.ren.GetActiveCamera()
+        cam1.SetFocalPoint(focal)
+        cam1.SetPosition(position)
+        cam1.SetViewUp(viewup)
+
+        self.ren.ResetCameraClippingRange()
+        self.ren_win.Render()
+
+class QFmriWidget(QFrame):
+    slice_changed = pyqtSignal(int)
+    image_window_changed = pyqtSignal(float)
+    image_level_changed = pyqtSignal(float)
+    cursor_moved = pyqtSignal(tuple)
+
+    def __init__(self, reader, parent):
+        QFrame.__init__(self, parent)
+        self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
+        self.__reader = reader
+        self.__vtk_viewer = fMRI_viewer(self.__qwindow_interactor, self.__reader, self)
+        self.__layout = QHBoxLayout()
+        self.__layout.addWidget(self.__qwindow_interactor)
+        self.__layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.__layout)
+
+        # self.subject_viewer.ren_win.Render()
+
+        # self.__qwindow_interactor.show()
+
+    def initialize_widget(self):
+        """call after showing the interface"""
+        self.__qwindow_interactor.Initialize()
+        self.__qwindow_interactor.Start()
+        # self.__subject_viewer.show_cone()
+
+    @property
+    def viewer(self):
+        return self.__vtk_viewer
+
+    def slice_change_handle(self, new_slice):
+        self.slice_changed.emit(new_slice)
+        # print new_slice
+
+    def window_level_change_handle(self, window, level):
+        self.image_window_changed.emit(window)
+        self.image_level_changed.emit(level)
+
+    def cursor_move_handler(self,coordinates):
+        self.cursor_moved.emit(tuple(coordinates))
 if __name__ == "__main__":
     import sys
     import PyQt4.QtGui as QtGui

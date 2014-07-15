@@ -13,6 +13,11 @@
   <property name="windowTitle">
    <string>Braviz: Sample Overview</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/icons/sample_overview.PNG</normalon>
+   </iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
@@ -277,6 +282,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -13,6 +13,11 @@
   <property name="windowTitle">
    <string>Correlations</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/icons/correlations_app.png</normalon>
+   </iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,5,5">
     <item>
@@ -125,6 +130,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

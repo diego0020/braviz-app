@@ -95,3 +95,8 @@ class SpmFileReader(object):
             dur_d = duration*tr_divisions if units == "scans" else int(duration/time_bin)
             condition[onset_d:onset_d+dur_d]=1
         return condition
+
+    def get_contrast_names(self):
+        contrasts = self.contrasts
+        contrast_names = dict(( (k,v.name) for k,v in contrasts.iteritems()))
+        return contrast_names

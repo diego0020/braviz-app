@@ -472,6 +472,9 @@ class cursors(vtk.vtkPropAssembly):
         self.actor_x2.SetPosition(actors_spacing2)
         self.actor_y2.SetPosition(actors_spacing2)
 
+    def set_delta(self,delta):
+        self.delta = delta
+
 
 class OutlineActor(vtk.vtkActor):
     """A simple shortcut for displaying the outline of an object

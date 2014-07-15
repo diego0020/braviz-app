@@ -13,6 +13,11 @@
   <property name="windowTitle">
    <string>Braviz - Anova</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/icons/baviz_anova.png</normalon>
+   </iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_4">
     <item>
@@ -425,6 +430,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

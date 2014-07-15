@@ -13,6 +13,11 @@
   <property name="windowTitle">
    <string>Braviz: Subject Overview</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/icons/some_fibers.PNG</normalon>
+   </iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <property name="bottomMargin">

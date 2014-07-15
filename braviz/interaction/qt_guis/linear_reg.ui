@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
-    <normaloff>:/icons/amygdala_spharm.PNG</normaloff>:/icons/amygdala_spharm.PNG</iconset>
+    <normaloff>:/icons/linear.png</normaloff>:/icons/linear.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_4">
