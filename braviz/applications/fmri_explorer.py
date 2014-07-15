@@ -132,6 +132,8 @@ class FmriExplorer(QtGui.QMainWindow):
         #todo update contrasts combo
         self.time_plot.clear()
         self.time_plot.set_spm_and_bold(spm_data,bold_image)
+        self.time_plot.set_contrast(self.__current_contrast)
+        self.time_plot.draw_bold_signal(self.image_view.current_position())
 
     def handle_cursor_move(self,coords):
         self.statusBar().showMessage(str(coords))

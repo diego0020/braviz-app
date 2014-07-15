@@ -46,9 +46,12 @@ class TimeseriesPlot(FigureCanvas):
         self.spm = None
         self.bold = None
         self.volumes_times = None
+        self.experiment_time = None
+        self.__contrast = None
 
-        self.colors_dict = None
-        self.__title = None
+        self.__condition_colors = None
+        self.__background = None
+        self.__old_size = None
 
         self.axes.tick_params('y', left='off', right='off', labelleft='off', labelright='off')
         self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
@@ -77,29 +80,61 @@ class TimeseriesPlot(FigureCanvas):
 
     def _set_spm(self,spm_struct):
         self.spm = spm_struct
+        if self.spm is None:
+            return
+        self.experiment_time=spm_struct.get_time_vector()
+        self.__condition_colors= sns.color_palette("Dark2",len(spm_struct.conditions) )
 
     def set_spm_and_bold(self,spm_file,bold_image):
         self._set_spm(spm_file)
         self._set_bold(bold_image)
 
     def draw_bold_signal(self,coordinates):
-        if self.bold is None:
+        if self.bold is None or coordinates is None:
             return
         #draw background
-        self.axes.clear()
+        current_size = self.axes.bbox.width, self.axes.bbox.height
+        if current_size != self.__old_size:
+            self.draw_contrast()
+        else:
+            self.restore_region(self.__background)
         self.axes.set_ylim(-2,2,auto=False)
         self.axes.set_xlim(0,self.spm.tr+self.volumes_times[-1],auto=False)
 
         coordinates = np.array(coordinates).astype(np.int)
         signal = self.bold[coordinates[0],coordinates[1],coordinates[2],:]
         normalized_signal = (signal - np.mean(signal))/np.std(signal)
-        self.axes.plot(self.volumes_times,normalized_signal)
-        self.draw()
+        bold_artist=self.axes.plot(self.volumes_times,normalized_signal,c="k",zorder=10)
+        for a in bold_artist:
+            self.axes.draw_artist(a)
+        self.blit(self.axes.bbox)
         pass
 
     def add_perm_bold_signal(self,coordinates):
         pass
 
-    def draw_contrast(self,contrast_index):
-        pass
+    def set_contrast(self,contrast):
+        self.__contrast = contrast
+        self.draw_contrast()
+
+    def draw_contrast(self):
+        if self.spm is None or self.__contrast is None:
+            return
+        cont = self.spm.contrasts[self.__contrast]
+        self.axes.clear()
+        design = cont.design
+        self.axes.set_ylim(-2,2,auto=False)
+        self.axes.set_xlim(0,self.spm.tr+self.volumes_times[-1],auto=False)
+        for i,v in enumerate(design):
+            if v!=0:
+                c=self.__condition_colors[i]
+                blocks = self.spm.get_condition_block(i)*v
+                self.axes.plot(self.experiment_time,blocks,color=c,zorder=1,label=self.spm.conditions[i].name)
+                self.axes.fill_between(self.experiment_time,blocks,alpha=0.5,color=c,
+                                       zorder=1)
+        self.axes.legend()
+        self.draw()
+        self.__background = self.copy_from_bbox(self.axes.bbox)
+        current_size = self.axes.bbox.width, self.axes.bbox.height
+        self.__old_size = current_size
 

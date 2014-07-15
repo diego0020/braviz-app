@@ -29,6 +29,7 @@ class SpmFileReader(object):
         self.__tr = float(self.spm["xY"]["RT"][0,0][0,0])
         self.__conditions = None
         self.__constrasts = None
+        self.__experiment_samples = None
 
     def __parse_contrasts(self):
         spm_struct = self.spm
@@ -80,7 +81,9 @@ class SpmFileReader(object):
         TR = self.tr
         n_scans = self.n_scans
         time_bin = self.__time_bin
-        return np.arange(0,TR*n_scans,time_bin)
+        time_vec = np.arange(0,TR*n_scans,time_bin)
+        self.__experiment_samples = time_vec.shape
+        return time_vec
 
     def get_condition_block(self,index):
         cond = self.conditions[index]
@@ -89,7 +92,9 @@ class SpmFileReader(object):
         tr_divisions = self.__tr_divisions
         units = self.__units
         time_bin = self.__time_bin
-        condition = np.zeros(self.__n_scans*tr_divisions)
+        if self.__experiment_samples is None:
+            self.get_time_vector()
+        condition = np.zeros(self.__experiment_samples)
         for onset,duration in izip(cond_onsets,cond_durations):
             onset_d = onset*tr_divisions if units == "scans" else int(onset/time_bin)
             dur_d = duration*tr_divisions if units == "scans" else int(duration/time_bin)

@@ -1628,7 +1628,7 @@ class AdditionalCursors(object):
         self.__cursors.set_dimensions(*dim)
         self.__cursors.set_spacing(*sp)
         self.__cursors.set_origin(*org)
-        self.__cursors.set_delta(max_sp/20)
+        self.__cursors.set_delta(max_sp/5)
 
     def get_position(self):
         if self.__pos is None:
@@ -1813,6 +1813,8 @@ class fMRI_viewer(object):
         self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.cursor_change_event, draw_cursor2)
         self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.slice_change_event, slice_movement)
 
+    def current_position(self):
+        return self.__cursor.get_position()
 
     @property
     def image(self):
