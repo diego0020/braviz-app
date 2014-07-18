@@ -45,8 +45,8 @@ class FmriExplorer(QtGui.QMainWindow):
         self.__current_paradigm = None
         self.__current_contrast = 1
 
-        self.__frozen_points = pd.DataFrame(columns=["Coordinates","T Stat"])
-        self.__frozen_model = DataFrameModel(self.__frozen_points,["Coordinates","T Stat"],(0,),index_as_column=False)
+        self.__frozen_points = pd.DataFrame(columns=["Subject","Coordinates","T Stat"],index=[])
+        self.__frozen_model = DataFrameModel(self.__frozen_points,string_columns=(1,),index_as_column=False)
 
         self.ui = None
         self.three_d_widget = None
@@ -104,6 +104,11 @@ class FmriExplorer(QtGui.QMainWindow):
         #Frozen
         self.ui.frozen_points_table.setModel(self.__frozen_model)
         self.ui.freeze_point_button.clicked.connect(self.freeze_point)
+        self.ui.clear_button.clicked.connect(self.clear_frozen)
+        self.ui.frozen_points_table.customContextMenuRequested.connect(self.get_frozen_context_menu)
+        self.ui.frozen_points_table.activated.connect(self.highlight_frozen)
+        self.ui.frozen_points_table.clicked.connect(self.highlight_frozen)
+
 
     def start(self):
         self.three_d_widget.initialize_widget()
@@ -125,7 +130,10 @@ class FmriExplorer(QtGui.QMainWindow):
         subj = str(self.ui.subject_edit.text())
         if subj in self.__valid_ids:
             self.__current_subject = subj
-        self.__current_paradigm = str(self.ui.paradigm_combo.currentText())
+        new_paradigm = str(self.ui.paradigm_combo.currentText())
+        if new_paradigm != self.__current_paradigm:
+            self.recalculate_frozen()
+        self.__current_paradigm = new_paradigm
         self.__current_contrast = self.ui.contrast_combo.currentIndex()+1
 
         try:
@@ -164,15 +172,58 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.slice_slider.setMaximum(n_slices)
 
     def handle_cursor_move(self,coords):
-        self.statusBar().showMessage(str(coords))
+        cx,cy,cz = map(int,coords)
+        stat = self.image_view.image.image_plane_widget.alternative_img.GetScalarComponentAsDouble(cx,cy,cz,0)
+        self.statusBar().showMessage("(%d,%d,%d) : %.4g"%(cx,cy,cz,stat))
         self.time_plot.draw_bold_signal(coords)
 
     def freeze_point(self):
-        cx,cy,cz = ( int(x) for x in self.image_view.current_coords())
+        coords = self.image_view.current_coords()
+        if coords is None:
+            return
+        cx,cy,cz = ( int(x) for x in coords)
+        s = int(self.__current_subject)
         stat = self.image_view.image.image_plane_widget.alternative_img.GetScalarComponentAsDouble(cx,cy,cz,0)
-        print cx,cy,cz
-        print stat
-        pass
+        i = (s,cx,cy,cz)
+        if i in self.__frozen_points.index:
+            return
+        df2 = pd.DataFrame({"Subject":[s],"Coordinates":[(cx,cy,cz)],"T Stat":[stat]},
+                           index=[i])
+        self.__frozen_points = self.__frozen_points.append(df2)
+        self.__frozen_model.set_df(self.__frozen_points)
+        self.time_plot.add_frozen_bold_signal(i,(cx,cy,cz))
+
+    def clear_frozen(self):
+        self.__frozen_points = pd.DataFrame(columns=["Subject","Coordinates","T Stat"])
+        self.__frozen_model.set_df(self.__frozen_points)
+        self.time_plot.clear_frozen_bold_signals()
+
+    def recalculate_frozen(self):
+        "When paradigm changes"
+        if len(self.__frozen_points)>0:
+            raise NotImplementedError
+
+
+
+    def get_frozen_context_menu(self,pos):
+        item = self.ui.frozen_points_table.currentIndex()
+        if not item.isValid():
+            return
+        def delete_item():
+            item_index = self.__frozen_model.get_item_index(item)
+            self.__frozen_points = self.__frozen_points.drop(item_index)
+            self.__frozen_model.set_df(self.__frozen_points)
+            self.time_plot.remove_frozen_bold_signal(item_index)
+        menu = QtGui.QMenu(self.ui.frozen_points_table)
+        remove_action = QtGui.QAction("Remove",None)
+        menu.addAction(remove_action)
+        remove_action.triggered.connect(delete_item)
+        global_pos = self.ui.frozen_points_table.mapToGlobal(pos)
+        menu.exec_(global_pos)
+
+    def highlight_frozen(self,item):
+        item_index = self.__frozen_model.get_item_index(item)
+        self.time_plot.highlight_frozen_bold(item_index)
 
 def run():
     import sys

@@ -112,11 +112,42 @@ class TimeseriesPlot(FigureCanvas):
         self.blit(self.axes.bbox)
         pass
 
-    def add_frozen_bold_signal(self,coordinates):
+    def add_frozen_bold_signal(self,url,coordinates):
+        signal = self.bold[coordinates[0],coordinates[1],coordinates[2],:]
+        normalized_signal = (signal - np.mean(signal))/np.std(signal)
+        self.__frozen_points_signals[url]=normalized_signal
+        self.draw_background()
         pass
 
+    def remove_frozen_bold_signal(self,url):
+        del self.__frozen_points_signals.clear[url]
+        self.draw_background()
+
+    def clear_frozen_bold_signals(self):
+        self.__frozen_points_signals.clear()
+        self.draw_background()
+
     def draw_frozen_bold_signals(self):
+        dark_gray = (0.2,0.2,0.2)
+        for k,v in self.__frozen_points_signals.iteritems():
+            self.axes.plot(self.volumes_times,v,c=dark_gray,zorder=5,alpha=0.6,url=k)
         pass
+
+    def highlight_frozen_bold(self,url):
+        #draw background
+        current_size = self.axes.bbox.width, self.axes.bbox.height
+        if current_size != self.__old_size:
+            self.draw_background()
+        else:
+            self.restore_region(self.__background)
+        self.axes.set_ylim(-2,2,auto=False)
+        self.axes.set_xlim(0,self.spm.tr+self.volumes_times[-1],auto=False)
+
+        signal = self.__frozen_points_signals[url]
+        artist = self.axes.plot(self.volumes_times,signal,c="k",zorder=10)
+        for a in artist:
+            self.axes.draw_artist(a)
+        self.blit(self.axes.bbox)
 
     def set_contrast(self,contrast):
         self.__contrast = contrast
@@ -124,6 +155,7 @@ class TimeseriesPlot(FigureCanvas):
 
     def draw_background(self):
         self.draw_contrast()
+        self.draw_frozen_bold_signals()
         self.draw()
         self.__background = self.copy_from_bbox(self.axes.bbox)
         current_size = self.axes.bbox.width, self.axes.bbox.height

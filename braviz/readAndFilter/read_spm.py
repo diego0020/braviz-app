@@ -78,10 +78,12 @@ class SpmFileReader(object):
         return self.__conditions
 
     def get_time_vector(self):
-        TR = self.tr
+        #TODO: Decreaser resolution
+        tr = self.tr
         n_scans = self.n_scans
         time_bin = self.__time_bin
-        time_vec = np.arange(0,TR*n_scans,time_bin)
+        time_vec = np.arange(0,tr*n_scans,time_bin)
+        #time_vec = np.arange(0,tr*n_scans,TR)
         self.__experiment_samples = time_vec.shape
         return time_vec
 
@@ -90,6 +92,7 @@ class SpmFileReader(object):
         cond_onsets = cond.onsets
         cond_durations = cond.durations
         tr_divisions = self.__tr_divisions
+        #tr = self.tr
         units = self.__units
         time_bin = self.__time_bin
         if self.__experiment_samples is None:
@@ -97,7 +100,9 @@ class SpmFileReader(object):
         condition = np.zeros(self.__experiment_samples)
         for onset,duration in izip(cond_onsets,cond_durations):
             onset_d = onset*tr_divisions if units == "scans" else int(onset/time_bin)
+            #onset_d = onset if units == "scans" else int(round(onset/tr))
             dur_d = duration*tr_divisions if units == "scans" else int(duration/time_bin)
+            #dur_d = duration if units == "scans" else int(round(duration/tr))
             condition[onset_d:onset_d+dur_d]=1
         return condition
 

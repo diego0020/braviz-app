@@ -624,6 +624,11 @@ class DataFrameModel(QAbstractTableModel):
             data = self.__df[col_name].iloc[line]
             return self.format_data(col, data)
 
+    def get_item_index(self,QModelIndex):
+        if not QModelIndex.isValid():
+            return
+        row = QModelIndex.row()
+        return self.__df.index[row]
 
     def format_data(self, col_i, data):
         if col_i in self.__string_cols:
