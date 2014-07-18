@@ -108,6 +108,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.frozen_points_table.customContextMenuRequested.connect(self.get_frozen_context_menu)
         self.ui.frozen_points_table.activated.connect(self.highlight_frozen)
         self.ui.frozen_points_table.clicked.connect(self.highlight_frozen)
+        self.ui.for_all_subjects.clicked.connect(self.add_point_for_all)
 
 
     def start(self):
@@ -178,6 +179,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.time_plot.draw_bold_signal(coords)
 
     def freeze_point(self):
+        #todo should include contrast?
         coords = self.image_view.current_coords()
         if coords is None:
             return
@@ -224,6 +226,42 @@ class FmriExplorer(QtGui.QMainWindow):
     def highlight_frozen(self,item):
         item_index = self.__frozen_model.get_item_index(item)
         self.time_plot.highlight_frozen_bold(item_index)
+
+    def add_point_for_all(self):
+        log = logging.getLogger(__file__)
+        coords = self.image_view.current_coords()
+        if coords is None:
+            return
+        self.ui.clear_button.setEnabled(0)
+        self.ui.freeze_point_button.setEnabled(0)
+        self.ui.for_all_subjects.setEnabled(0)
+        cx,cy,cz = ( int(x) for x in coords)
+        subjs = self.__valid_ids
+        self.ui.progressBar.setValue(0)
+        for j,s in enumerate(sorted(subjs,key=int)):
+            i = (int(s),cx,cy,cz)
+            progress = j/(len(self.__valid_ids))*100
+            self.ui.progressBar.setValue(progress)
+            QtCore.QCoreApplication.instance().processEvents()
+            if i not in self.__frozen_points.index:
+                try:
+                    fmri = self.__reader.get("fMRI",s,name=self.__current_paradigm,contrast=self.__current_contrast,
+                                             space="fmri-%s"%self.__current_paradigm)
+                    bold = self.__reader.get("bold",s,name=self.__current_paradigm)
+                except Exception:
+                    log.warning("%s not found for subject %s"%(self.__current_paradigm,s))
+                else:
+                    stat = fmri.get_data()[cx,cy,cz]
+                    df2 = pd.DataFrame({"Subject":[s],"Coordinates":[(cx,cy,cz)],"T Stat":[stat]},
+                                       index=[i])
+                    self.__frozen_points = self.__frozen_points.append(df2)
+                    self.__frozen_model.set_df(self.__frozen_points)
+                    self.time_plot.add_frozen_bold_signal(i,(cx,cy,cz),bold.get_data())
+        self.ui.progressBar.setValue(100)
+        self.ui.clear_button.setEnabled(1)
+        self.ui.freeze_point_button.setEnabled(1)
+        self.ui.for_all_subjects.setEnabled(1)
+
 
 def run():
     import sys

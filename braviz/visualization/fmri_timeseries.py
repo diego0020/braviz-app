@@ -112,9 +112,21 @@ class TimeseriesPlot(FigureCanvas):
         self.blit(self.axes.bbox)
         pass
 
-    def add_frozen_bold_signal(self,url,coordinates):
-        signal = self.bold[coordinates[0],coordinates[1],coordinates[2],:]
+    def add_frozen_bold_signal(self,url,coordinates,bold=None):
+        if bold is None:
+            bold = self.bold
+                #HACK
+        elif braviz.readAndFilter.PROJECT == "kmc40":
+            #ignore first volume
+            bold = bold[:,:,:,1:]
+        signal = bold[coordinates[0],coordinates[1],coordinates[2],:]
         normalized_signal = (signal - np.mean(signal))/np.std(signal)
+        if len(normalized_signal) > len(self.volumes_times):
+            normalized_signal = normalized_signal[:len(self.volumes_times)]
+        elif len(normalized_signal)<len(self.volumes_times):
+            signal2=np.zeros(len(self.volumes_times))
+            signal2[:len(normalized_signal)]=normalized_signal
+            normalized_signal = signal2
         self.__frozen_points_signals[url]=normalized_signal
         self.draw_background()
         pass
@@ -130,10 +142,11 @@ class TimeseriesPlot(FigureCanvas):
     def draw_frozen_bold_signals(self):
         dark_gray = (0.2,0.2,0.2)
         for k,v in self.__frozen_points_signals.iteritems():
-            self.axes.plot(self.volumes_times,v,c=dark_gray,zorder=5,alpha=0.6,url=k)
+            self.axes.plot(self.volumes_times,v,c=dark_gray,zorder=5,alpha=0.4,url=k)
         pass
 
     def highlight_frozen_bold(self,url):
+        from matplotlib import patheffects
         #draw background
         current_size = self.axes.bbox.width, self.axes.bbox.height
         if current_size != self.__old_size:
@@ -144,7 +157,9 @@ class TimeseriesPlot(FigureCanvas):
         self.axes.set_xlim(0,self.spm.tr+self.volumes_times[-1],auto=False)
 
         signal = self.__frozen_points_signals[url]
-        artist = self.axes.plot(self.volumes_times,signal,c="k",zorder=10)
+        artist = self.axes.plot(self.volumes_times,signal,c="k",zorder=10,
+                                path_effects=[patheffects.withStroke(linewidth=3, foreground="w")])
+
         for a in artist:
             self.axes.draw_artist(a)
         self.blit(self.axes.bbox)
