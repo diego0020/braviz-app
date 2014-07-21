@@ -1,4 +1,3 @@
-
 Install:
 Add the location of this directory to PYTHONPATH environment variable.
 Prerequisites:
@@ -20,4 +19,3 @@ svn+ssh://imagine@guitaca.uniandes.edu.co/media/DATA/repositories/svn/repos/brav
 
 Matplotlib styles changed to those from
 https://gist.github.com/mattions/5291765
-
