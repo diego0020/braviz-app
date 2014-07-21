@@ -1,6 +1,5 @@
 #Braviz
 Interactive Brain Data Visualization
-
 ## Install:
 Add the location of this directory to PYTHONPATH environment variable.
 Prerequisites:
@@ -19,5 +18,3 @@ Python packages:
 
 Subversion repository:
 svn+ssh://imagine@guitaca.uniandes.edu.co/media/DATA/repositories/svn/repos/braviz/
-
-
