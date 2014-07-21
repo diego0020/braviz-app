@@ -13,7 +13,7 @@
       <excludeFolder url="file://$MODULE_DIR$/doc" />
       <excludeFolder url="file://$MODULE_DIR$/sphinx_doc" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7.6 (C:/Python27/python.exe)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7 (C:\Python27\python.exe)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PackageRequirementsSettings">
