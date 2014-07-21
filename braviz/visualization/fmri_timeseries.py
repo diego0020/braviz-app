@@ -54,6 +54,10 @@ class TimeseriesPlot(FigureCanvas):
         self.__old_size = None
 
         self.__frozen_points_signals = {}
+        self.__frozen_colors = None
+        self.__frozen_groups = None
+        self.__frozen_group2color = None
+        self.__frozen_aggregration = False
 
         self.axes.tick_params('y', left='off', right='off', labelleft='off', labelright='off')
         self.axes.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
@@ -115,18 +119,12 @@ class TimeseriesPlot(FigureCanvas):
     def add_frozen_bold_signal(self,url,coordinates,bold=None):
         if bold is None:
             bold = self.bold
-                #HACK
         elif braviz.readAndFilter.PROJECT == "kmc40":
+            #HACK
             #ignore first volume
             bold = bold[:,:,:,1:]
         signal = bold[coordinates[0],coordinates[1],coordinates[2],:]
         normalized_signal = (signal - np.mean(signal))/np.std(signal)
-        if len(normalized_signal) > len(self.volumes_times):
-            normalized_signal = normalized_signal[:len(self.volumes_times)]
-        elif len(normalized_signal)<len(self.volumes_times):
-            signal2=np.zeros(len(self.volumes_times))
-            signal2[:len(normalized_signal)]=normalized_signal
-            normalized_signal = signal2
         self.__frozen_points_signals[url]=normalized_signal
         self.draw_background()
         pass
@@ -141,9 +139,53 @@ class TimeseriesPlot(FigureCanvas):
 
     def draw_frozen_bold_signals(self):
         dark_gray = (0.2,0.2,0.2)
-        for k,v in self.__frozen_points_signals.iteritems():
-            self.axes.plot(self.volumes_times,v,c=dark_gray,zorder=5,alpha=0.4,url=k)
-        pass
+        if self.__frozen_aggregration is False:
+            for k,v in self.__frozen_points_signals.iteritems():
+                #adjust length
+                vn = self.normalize_time_signal_length(v)
+                if self.__frozen_colors is None:
+                    color = dark_gray
+                else:
+                    color = self.__frozen_colors(k)
+                self.axes.plot(self.volumes_times,vn,c=color,zorder=5,alpha=0.4,url=k)
+        else:
+            if self.__frozen_groups is None:
+                n_signals = [self.normalize_time_signal_length(s) for s in self.__frozen_points_signals.itervalues()]
+                print len(n_signals)
+                if len(n_signals)>0:
+                    sns.tsplot(n_signals,time = self.volumes_times,legend=False,color="k",ax=self.axes,ci=(95,68))
+            else:
+                grouped_signals = dict()
+                for k,s in self.__frozen_points_signals.iteritems():
+                    g = self.__frozen_groups(k)
+                    grouped_signals.setdefault(g,[]).append(self.normalize_time_signal_length(s))
+                for g,ss in grouped_signals.iteritems():
+                    color = self.__frozen_group2color[g]
+                    if len(ss)>0:
+                        sns.tsplot(ss,time = self.volumes_times,legend=False,color=color,ax=self.axes,ci=(95,68))
+
+
+    def normalize_time_signal_length(self,signal):
+        if len(signal) > len(self.volumes_times):
+            signal = signal[:len(self.volumes_times)]
+        elif len(signal)<len(self.volumes_times):
+            signal2=np.zeros(len(self.volumes_times))
+            signal2[:len(signal)] = signal
+            signal = signal2
+        return signal
+
+    def set_frozen_colors(self,color_fun):
+        self.__frozen_colors = color_fun
+        self.draw_background()
+
+    def set_frozen_groups_and_colors(self,groups,colors):
+        self.__frozen_groups = groups
+        self.__frozen_group2color = colors
+
+    def set_frozen_aggregration(self,aggregrate):
+        self.__frozen_aggregration = aggregrate
+        self.draw_background()
+
 
     def highlight_frozen_bold(self,url):
         from matplotlib import patheffects
@@ -155,10 +197,13 @@ class TimeseriesPlot(FigureCanvas):
             self.restore_region(self.__background)
         self.axes.set_ylim(-2,2,auto=False)
         self.axes.set_xlim(0,self.spm.tr+self.volumes_times[-1],auto=False)
-
+        if self.__frozen_colors is None:
+            color = "k"
+        else:
+            color = self.__frozen_colors(url)
         signal = self.__frozen_points_signals[url]
-        artist = self.axes.plot(self.volumes_times,signal,c="k",zorder=10,
-                                path_effects=[patheffects.withStroke(linewidth=3, foreground="w")])
+        artist = self.axes.plot(self.volumes_times,signal,c=color,zorder=10,linewidth=3,
+                                path_effects=[patheffects.withStroke(linewidth=5, foreground="w")])
 
         for a in artist:
             self.axes.draw_artist(a)

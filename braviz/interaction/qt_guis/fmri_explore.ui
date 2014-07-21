@@ -35,7 +35,7 @@
           </property>
           <widget class="QTabWidget" name="fMRI">
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="tab">
             <attribute name="title">
@@ -361,6 +361,7 @@
     <addaction name="actionSave_scenario"/>
     <addaction name="actionLoad_scenario"/>
     <addaction name="separator"/>
+    <addaction name="actionSelect_Sample"/>
     <addaction name="menuExport"/>
    </widget>
    <addaction name="menuFile"/>
@@ -384,6 +385,11 @@
   <action name="actionSignals">
    <property name="text">
     <string>Signals</string>
+   </property>
+  </action>
+  <action name="actionSelect_Sample">
+   <property name="text">
+    <string>Select Sample</string>
    </property>
   </action>
  </widget>

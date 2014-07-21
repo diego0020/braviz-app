@@ -1831,6 +1831,13 @@ class fMRI_viewer(object):
     def current_coords(self):
         return self.__cursor.get_coords()
 
+    @do_and_render
+    def set_cursor_coords(self,coords):
+        axis = self.image.image_plane_widget.GetPlaneOrientation()
+        self.__cursor.set_axis_coords(axis,coords)
+        slice = coords[axis]
+        self.image.set_image_slice(slice)
+
     @property
     def image(self):
         return self.__image_manager

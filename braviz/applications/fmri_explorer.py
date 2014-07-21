@@ -4,9 +4,11 @@ import braviz
 import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
 from braviz.readAndFilter import user_data as braviz_user_data
+from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
 import pandas as pd
+import seaborn as sns
 
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
 import logging
@@ -46,8 +48,8 @@ class FmriExplorer(QtGui.QMainWindow):
         self.__current_paradigm = None
         self.__current_contrast = 1
 
-        self.__frozen_points = pd.DataFrame(columns=["Subject","Coordinates","T Stat"],index=[])
-        self.__frozen_model = DataFrameModel(self.__frozen_points,string_columns=(1,),index_as_column=False)
+        self.__frozen_points = pd.DataFrame(columns=["Subject","Coordinates","Contrast","T Stat"],index=[])
+        self.__frozen_model = DataFrameModel(self.__frozen_points,string_columns=(1,2),index_as_column=False)
 
         self.ui = None
         self.three_d_widget = None
@@ -119,7 +121,9 @@ class FmriExplorer(QtGui.QMainWindow):
         #timelines
         self.ui.time_color_combo.insertSeparator(1)
         self.ui.time_color_combo.addItem("Select group variable")
+        self.ui.time_color_combo.addItem("Group by location")
         self.ui.time_color_combo.activated.connect(self.select_time_color)
+        self.ui.time_aggregrate_combo.activated.connect(self.timeline_aggregrate_combo)
 
 
     def start(self):
@@ -145,7 +149,13 @@ class FmriExplorer(QtGui.QMainWindow):
             self.__current_subject = subj
         new_paradigm = str(self.ui.paradigm_combo.currentText())
         if new_paradigm != self.__current_paradigm:
-            self.recalculate_frozen()
+            res = self.warn_and_remove_frozen()
+            if not res:
+                #operation cancelled
+                ix = self.ui.paradigm_combo.findText(self.__current_paradigm)
+                self.ui.paradigm_combo.setCurrentIndex(ix)
+                return
+
         self.__current_paradigm = new_paradigm
         self.__current_contrast = self.ui.contrast_combo.currentIndex()+1
 
@@ -208,11 +218,14 @@ class FmriExplorer(QtGui.QMainWindow):
             return
         cx,cy,cz = ( int(x) for x in coords)
         s = int(self.__current_subject)
+        contrast = self.ui.contrast_combo.itemText(self.ui.contrast_combo.currentIndex())
         stat = self.image_view.image.image_plane_widget.alternative_img.GetScalarComponentAsDouble(cx,cy,cz,0)
         i = (s,cx,cy,cz)
         if i in self.__frozen_points.index:
             return
-        df2 = pd.DataFrame({"Subject":[s],"Coordinates":[(cx,cy,cz)],"T Stat":[stat]},
+        df2 = pd.DataFrame({"Subject":[s],
+                            "Coordinates":[(cx,cy,cz)],"Contrast":[contrast],
+                            "T Stat":[stat]},
                            index=[i])
         self.__frozen_points = self.__frozen_points.append(df2)
         self.__frozen_model.set_df(self.__frozen_points)
@@ -223,10 +236,21 @@ class FmriExplorer(QtGui.QMainWindow):
         self.__frozen_model.set_df(self.__frozen_points)
         self.time_plot.clear_frozen_bold_signals()
 
-    def recalculate_frozen(self):
+    def warn_and_remove_frozen(self):
         "When paradigm changes"
         if len(self.__frozen_points)>0:
-            raise NotImplementedError
+            dialog = QtGui.QMessageBox()
+            dialog.setText("Changing paradigm will delete the current frozen points")
+            dialog.setInformativeText("Do you want to clear frozen points?")
+            dialog.setStandardButtons(dialog.Discard | dialog.Cancel)
+            dialog.setIcon(dialog.Question)
+            res = dialog.exec_()
+            if res == dialog.Discard:
+                self.clear_frozen()
+                return True
+            else:
+                return False
+        return True
 
 
 
@@ -249,10 +273,13 @@ class FmriExplorer(QtGui.QMainWindow):
     def highlight_frozen(self,item):
         item_index = self.__frozen_model.get_item_index(item)
         self.time_plot.highlight_frozen_bold(item_index)
+        location = item_index[1:]
+        self.image_view.set_cursor_coords(location)
 
     def add_point_for_all(self):
         log = logging.getLogger(__file__)
         coords = self.image_view.current_coords()
+        contrast = self.ui.contrast_combo.itemText(self.ui.contrast_combo.currentIndex())
         if coords is None:
             return
         self.ui.clear_button.setEnabled(0)
@@ -277,7 +304,9 @@ class FmriExplorer(QtGui.QMainWindow):
                     log.warning("%s not found for subject %s"%(self.__current_paradigm,s))
                 else:
                     stat = fmri.get_data()[cx,cy,cz]
-                    df2 = pd.DataFrame({"Subject":[s],"Coordinates":[(cx,cy,cz)],"T Stat":[stat]},
+                    df2 = pd.DataFrame({"Subject":[s],"Coordinates":[(cx,cy,cz)],
+                                        "Contrast":[contrast],
+                                        "T Stat":[stat]},
                                        index=[i])
                     self.__frozen_points = self.__frozen_points.append(df2)
                     self.__frozen_model.set_df(self.__frozen_points)
@@ -290,7 +319,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.time_aggregrate_combo.setEnabled(1)
 
     def select_time_color(self):
-        if self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count()-1:
+        if self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count()-2:
             params = {}
             dialog = qt_dialogs.SelectOneVariableWithFilter(params,accept_real=False,sample=self.__valid_ids)
             res = dialog.exec_()
@@ -300,15 +329,70 @@ class FmriExplorer(QtGui.QMainWindow):
                     self.ui.time_color_combo.insertItem(1,"Color by %s"%var_name)
                     self.set_timeline_colors(var_name)
                     self.ui.time_color_combo.setCurrentIndex(1)
+        if self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count()-1:
+            self.set_timeline_colors_by_location()
         elif self.ui.time_color_combo.currentIndex() == 0:
             self.set_timeline_colors(None)
         else:
-            var_name = self.ui.time_color_combo.itemText(self.ui.time_color_combo.currentIndex())
+            var_name = str(self.ui.time_color_combo.itemText(self.ui.time_color_combo.currentIndex()))
             self.set_timeline_colors(var_name[9:]) # len("Color by ")
 
 
     def set_timeline_colors(self,var_name):
         print "Coloring by ", var_name
+        if var_name is None:
+            self.time_plot.set_frozen_colors(None)
+            self.time_plot.set_frozen_groups_and_colors(None,None)
+        else:
+            df = braviz_tab_data.get_data_frame_by_name(var_name)
+            series = df[var_name].astype(int)
+            values = set(series.astype(int))
+            values.add(None)
+            n_values = len(values)
+            color_palette = sns.color_palette("Set1",n_values)
+            color_dict = dict( ( (v,color_palette[i]) for i,v in enumerate(values)))
+
+            def color_fun(url):
+                subj = url[0]
+                val = series.get(subj)
+                color = color_dict[val]
+                return color
+
+            def group_function(url):
+                subj = url[0]
+                val = series.get(subj,-1)
+                return val
+            self.time_plot.set_frozen_groups_and_colors(group_function,color_dict)
+            self.time_plot.set_frozen_colors(color_fun)
+
+    def set_timeline_colors_by_location(self):
+        locations = [t for t in self.__frozen_points["Coordinates"]]
+        unique_locs = set(locations)
+        colors = sns.color_palette("Set1",len(unique_locs))
+        loc_indexes = dict(( (l,i) for i,l in enumerate(unique_locs)))
+        color_dict = dict(( (i,c) for i,c in enumerate(colors)))
+        def color_fun(url):
+            location = tuple(url[1:])
+            l_i = loc_indexes[location]
+            color = color_dict[l_i]
+            return color
+
+        def group_function(url):
+            location = tuple(url[1:])
+            return loc_indexes[location]
+
+        self.time_plot.set_frozen_groups_and_colors(group_function,color_dict)
+        self.time_plot.set_frozen_colors(color_fun)
+
+    def timeline_aggregrate_combo(self):
+        aggregrate=self.ui.time_aggregrate_combo.currentIndex()>0
+        self.set_timeline_aggregate(aggregrate)
+
+
+    def set_timeline_aggregate(self,aggregate=False):
+        self.time_plot.set_frozen_aggregration(aggregate)
+
+
 
 def run():
     import sys
