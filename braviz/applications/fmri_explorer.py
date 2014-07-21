@@ -7,6 +7,7 @@ from braviz.readAndFilter import user_data as braviz_user_data
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
+from braviz.interaction.connection import MessageClient
 import pandas as pd
 import seaborn as sns
 
@@ -40,6 +41,7 @@ class ListValidator(QtGui.QValidator):
 class FmriExplorer(QtGui.QMainWindow):
     def __init__(self,scenario,server_broadcast_address,server_receive_address):
         super(FmriExplorer,self).__init__()
+        log = logging.getLogger(__file__)
 
         self.__reader = braviz.readAndFilter.BravizAutoReader()
 
@@ -56,8 +58,19 @@ class FmriExplorer(QtGui.QMainWindow):
         self.image_view = None
         self.time_plot = None
         self.start_ui()
-        if scenario is None:
+
+        self._messages_client = None
+        if server_broadcast_address is not None or server_receive_address is not None:
+            self._messages_client = MessageClient(server_broadcast_address, server_receive_address)
+            self._messages_client.message_received.connect(self.receive_message)
+            log.info( "started messages client")
+
+
+        if scenario is None or scenario == 0:
             QtCore.QTimer.singleShot(0, self.load_initial_view)
+        else:
+            print "Got scenario"
+            print scenario
 
     def start_ui(self):
         self.ui = Ui_fMRI_Explorer()
@@ -146,6 +159,8 @@ class FmriExplorer(QtGui.QMainWindow):
         log = logging.getLogger(__file__)
         subj = str(self.ui.subject_edit.text())
         if subj in self.__valid_ids:
+            if self._messages_client is not None and subj != self.__current_subject:
+                self._messages_client.send_message('subject %s' % subj)
             self.__current_subject = subj
         new_paradigm = str(self.ui.paradigm_combo.currentText())
         if new_paradigm != self.__current_paradigm:
@@ -392,6 +407,26 @@ class FmriExplorer(QtGui.QMainWindow):
     def set_timeline_aggregate(self,aggregate=False):
         self.time_plot.set_frozen_aggregration(aggregate)
 
+    def get_state(self):
+        pass
+
+    def save_scenario(self):
+        pass
+
+    def load_scenario(self):
+        pass
+
+    def load_state(self,wanted_state):
+        pass
+
+    def receive_message(self):
+        pass
+
+    def change_sample(self,new_sample):
+        pass
+
+    def select_sample(self):
+        pass
 
 
 def run():

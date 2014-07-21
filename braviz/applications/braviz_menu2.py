@@ -47,6 +47,7 @@ class BravizMenu2(QtGui.QMainWindow):
         self.connect_application_launcher("build_roi",self.ui.roi_builder)
         self.connect_application_launcher("sample_overview", self.ui.sample_overview)
         self.connect_application_launcher("subject_overview", self.ui.subject_overview)
+        self.connect_application_launcher("fmri_explorer", self.ui.fmri_explorer)
         self.connect_application_launcher("excel", self.ui.excel)
         self.connect_application_launcher("export", self.ui.export_2)
 
@@ -67,7 +68,8 @@ class BravizMenu2(QtGui.QMainWindow):
         "logic_bundles":"logic_bundles",
         "build_roi":"build_roi",
         "excel":"import_from_excel",
-        "export":"export_vars"
+        "export":"export_vars",
+        "fmri_explorer":"fmri_explorer",
     }
 
     def connect_application_launcher(self,app,button):
