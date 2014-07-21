@@ -182,7 +182,8 @@ class TimeseriesPlot(FigureCanvas):
         cont = self.spm.contrasts[self.__contrast]
         self.axes.clear()
         self.axes.set_ylim(-2,2,auto=False)
-        self.axes.set_xlim(0,self.spm.tr+self.volumes_times[-1],auto=False)
+        if self.volumes_times is not None:
+            self.axes.set_xlim(0,self.spm.tr+self.volumes_times[-1],auto=False)
         self.axes.set_xlabel("Time (s.)")
 
         design = cont.design

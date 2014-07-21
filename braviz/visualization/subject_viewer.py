@@ -1781,6 +1781,10 @@ class fMRI_viewer(object):
         self.__image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                             picker=self.picker)
         self.__cursor = AdditionalCursors(self.ren)
+        self.__contours = FmriContours(self.ren)
+        fmri_lut = self.reader.get("fMRI", self.__current_subject, lut=True)
+        self.__contours.set_lut(fmri_lut)
+
         self.__image_loaded = False
         #reset camera and render
         self.reset_camera(0)
@@ -1797,7 +1801,6 @@ class fMRI_viewer(object):
             new_slice = int(pos[orientation_index])
             self.__cursor.set_axis_coords(orientation_index,pos)
         self.image.set_image_slice(new_slice)
-
 
 
     def connect_cursors(self):
@@ -1832,6 +1835,10 @@ class fMRI_viewer(object):
     def image(self):
         return self.__image_manager
 
+    @property
+    def contours(self):
+        return self.__contours
+
     @do_and_render
     def change_subject(self,new_subj):
         if self.__current_subject != new_subj:
@@ -1861,6 +1868,18 @@ class fMRI_viewer(object):
         self.update_view(skip_render=True)
 
     @do_and_render
+    def set_contour_value(self,value):
+        self.__contours.set_value(value)
+
+    @do_and_render
+    def set_contour_opacity(self,value):
+        self.__contours.actor.GetProperty().SetOpacity(value/100)
+
+    @do_and_render
+    def set_contour_visibility(self,value):
+        self.__contours.actor.SetVisibility(value)
+
+    @do_and_render
     def update_view(self):
         if self.__current_subject is None or self.__current_paradigm is None or self.__current_contrast is None:
             return
@@ -1871,6 +1890,14 @@ class fMRI_viewer(object):
             self.connect_cursors()
             self.__image_loaded = True
         self.__cursor.set_image(self.image.image_plane_widget.GetInput())
+        if self.image.image_plane_widget.GetEnabled():
+            self.__contours.set_image(self.image.image_plane_widget.alternative_img)
+            self.__contours.actor.SetVisibility(1)
+
+        else:
+            self.__contours.actor.SetVisibility(0)
+
+
     __camera_positions_dict = {
         0: ((-3.5, 0, 13), (157, 154, 130), (0, 0, 1)),
         2: ((-3.5, 0, 10), (250, 0, 10), (0, 0, 1)),
@@ -1900,6 +1927,44 @@ class fMRI_viewer(object):
 
         self.ren.ResetCameraClippingRange()
         self.ren_win.Render()
+
+class FmriContours(object):
+    def __init__(self,ren):
+        self.__contour_filter = vtk.vtkContourFilter()
+        self.__contour_filter.UseScalarTreeOn()
+        self.__contour_filter.ComputeNormalsOff()
+
+        self.__mapper = vtk.vtkPolyDataMapper()
+        self.__mapper.SetInputConnection(self.__contour_filter.GetOutputPort())
+
+        self.__actor = vtk.vtkActor()
+        self.__actor.SetMapper(self.__mapper)
+        ren.AddActor(self.__actor)
+
+        self.__value = None
+        self.__contour_filter.SetValue(0,5)
+        self.__contour_filter.SetValue(1,-5)
+        self.__img = None
+        self.__lut = None
+
+    def set_value(self,value):
+        self.__value = value
+        self.__contour_filter.SetValue(0,value)
+        self.__contour_filter.SetValue(1,-1*value)
+
+    def set_image(self,img):
+        self.__img = img
+        self.__contour_filter.SetInputData(img)
+        self.__contour_filter.Update()
+
+    def set_lut(self,lut):
+        self.__mapper.SetLookupTable(lut)
+        self.__mapper.UseLookupTableScalarRangeOn()
+
+    @property
+    def actor(self):
+        return self.__actor
+
 
 class QFmriWidget(QFrame):
     slice_changed = pyqtSignal(int)

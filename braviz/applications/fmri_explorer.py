@@ -101,6 +101,11 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.image_orientation_combo.setCurrentIndex(2)
         self.ui.image_orientation_combo.activated.connect(self.change_image_orientation)
 
+        #contours
+        self.ui.show_contours_value.valueChanged.connect(self.change_contour_value)
+        self.ui.show_contours_check.clicked.connect(self.change_contour_visibility)
+        self.ui.contour_opacity_slider.valueChanged.connect(self.change_contour_opacity)
+
         #Frozen
         self.ui.frozen_points_table.setModel(self.__frozen_model)
         self.ui.freeze_point_button.clicked.connect(self.freeze_point)
@@ -120,6 +125,7 @@ class FmriExplorer(QtGui.QMainWindow):
         orientation_index = orientation_dict[selection]
         self.image_view.change_orientation(orientation_index)
         self.update_slice_controls()
+
 
     def load_initial_view(self):
         self.__current_subject = self.__reader.get("ids")[0]
@@ -160,6 +166,7 @@ class FmriExplorer(QtGui.QMainWindow):
             log.warning(message)
             self.statusBar().showMessage(message,500)
             bold_image = None
+            #raise
 
         self.update_slice_controls()
         self.time_plot.clear()
@@ -177,6 +184,16 @@ class FmriExplorer(QtGui.QMainWindow):
         stat = self.image_view.image.image_plane_widget.alternative_img.GetScalarComponentAsDouble(cx,cy,cz,0)
         self.statusBar().showMessage("(%d,%d,%d) : %.4g"%(cx,cy,cz,stat))
         self.time_plot.draw_bold_signal(coords)
+
+    def change_contour_value(self,value):
+        self.image_view.set_contour_value(value)
+
+    def change_contour_visibility(self):
+        checked = self.ui.show_contours_check.isChecked()
+        self.image_view.set_contour_visibility(checked)
+
+    def change_contour_opacity(self,value):
+        self.image_view.set_contour_opacity(value)
 
     def freeze_point(self):
         #todo should include contrast?
