@@ -5,6 +5,7 @@ import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
 from braviz.readAndFilter import user_data as braviz_user_data
 from braviz.interaction.qt_models import DataFrameModel
+from braviz.interaction import qt_dialogs
 import pandas as pd
 
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
@@ -114,6 +115,11 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.frozen_points_table.activated.connect(self.highlight_frozen)
         self.ui.frozen_points_table.clicked.connect(self.highlight_frozen)
         self.ui.for_all_subjects.clicked.connect(self.add_point_for_all)
+
+        #timelines
+        self.ui.time_color_combo.insertSeparator(1)
+        self.ui.time_color_combo.addItem("Select group variable")
+        self.ui.time_color_combo.activated.connect(self.select_time_color)
 
 
     def start(self):
@@ -252,6 +258,8 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.clear_button.setEnabled(0)
         self.ui.freeze_point_button.setEnabled(0)
         self.ui.for_all_subjects.setEnabled(0)
+        self.ui.time_color_combo.setEnabled(0)
+        self.ui.time_aggregrate_combo.setEnabled(0)
         cx,cy,cz = ( int(x) for x in coords)
         subjs = self.__valid_ids
         self.ui.progressBar.setValue(0)
@@ -278,7 +286,29 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.clear_button.setEnabled(1)
         self.ui.freeze_point_button.setEnabled(1)
         self.ui.for_all_subjects.setEnabled(1)
+        self.ui.time_color_combo.setEnabled(1)
+        self.ui.time_aggregrate_combo.setEnabled(1)
 
+    def select_time_color(self):
+        if self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count()-1:
+            params = {}
+            dialog = qt_dialogs.SelectOneVariableWithFilter(params,accept_real=False,sample=self.__valid_ids)
+            res = dialog.exec_()
+            if res == dialog.Accepted:
+                var_name = params.get("selected_outcome")
+                if var_name is not None:
+                    self.ui.time_color_combo.insertItem(1,"Color by %s"%var_name)
+                    self.set_timeline_colors(var_name)
+                    self.ui.time_color_combo.setCurrentIndex(1)
+        elif self.ui.time_color_combo.currentIndex() == 0:
+            self.set_timeline_colors(None)
+        else:
+            var_name = self.ui.time_color_combo.itemText(self.ui.time_color_combo.currentIndex())
+            self.set_timeline_colors(var_name[9:]) # len("Color by ")
+
+
+    def set_timeline_colors(self,var_name):
+        print "Coloring by ", var_name
 
 def run():
     import sys

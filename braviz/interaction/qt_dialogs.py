@@ -67,7 +67,7 @@ class VariableSelectDialog(QtGui.QDialog):
         if sample is None:
             self.sample = braviz_tab_data.get_subjects()
         else:
-            self.sample = sorted(list(sample))
+            self.sample = sorted(map(int,sample))
             log = logging.getLogger(__name__)
             log.info("got custom sample")
             log.info(self.sample)
