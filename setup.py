@@ -20,7 +20,7 @@ setup(
     keywords = "visual analytics brain data",
     url = "imagine.uniandes.edu.co",
     packages=['braviz', 'braint'],
-    long_description=read('README.txt'),
+    long_description=read('README.md'),
     install_requires=['nibabel','colorbrewer','numpy',
                       'scipy','rdflib','httplib2','psutil',
                       'matplotlib','PyQt4','sip','pandas', 'mpltools', 'seaborn','rpy2'],
