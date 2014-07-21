@@ -1112,6 +1112,7 @@ known_nodes = {  #
     'dellingr.vrac.iastate.edu' : (r"/Volumes/diegoa/KAB-db",14000),
     'MacAirCyril-S.local' : ("/Users/CS/Desktop/diego_data",7000),
     'ATHPC1304' : (r"E:\ProyectoCanguro\KAB-db",14000),
+    'IIND-EML754066' : (r"C:\Users\da.angulo39\Documents\KAB-db",2000),
 }
 
 
