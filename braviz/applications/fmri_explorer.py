@@ -8,6 +8,7 @@ from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
 from braviz.interaction.connection import MessageClient
+from braviz.interaction.qt_sample_select_dialog import SampleLoadDialog
 import pandas as pd
 import seaborn as sns
 
@@ -41,11 +42,11 @@ class ListValidator(QtGui.QValidator):
 class FmriExplorer(QtGui.QMainWindow):
     def __init__(self,scenario,server_broadcast_address,server_receive_address):
         super(FmriExplorer,self).__init__()
-        log = logging.getLogger(__file__)
+        log = logging.getLogger(__name__)
 
         self.__reader = braviz.readAndFilter.BravizAutoReader()
 
-        self.__valid_ids = frozenset(str(i) for i in self.__reader.get("ids"))
+        self.__valid_ids = frozenset(str(i) for i in braviz_tab_data.get_subjects())
         self.__current_subject = None
         self.__current_paradigm = None
         self.__current_contrast = 1
@@ -151,12 +152,12 @@ class FmriExplorer(QtGui.QMainWindow):
 
 
     def load_initial_view(self):
-        self.__current_subject = self.__reader.get("ids")[0]
-        self.ui.subject_edit.setText(self.__current_subject)
+        self.__current_subject = braviz_tab_data.get_subjects()[0]
+        self.ui.subject_edit.setText(str(self.__current_subject))
         self.update_fmri_data_view()
 
     def update_fmri_data_view(self):
-        log = logging.getLogger(__file__)
+        log = logging.getLogger(__name__)
         subj = str(self.ui.subject_edit.text())
         if subj in self.__valid_ids:
             if self._messages_client is not None and subj != self.__current_subject:
@@ -170,12 +171,12 @@ class FmriExplorer(QtGui.QMainWindow):
                 ix = self.ui.paradigm_combo.findText(self.__current_paradigm)
                 self.ui.paradigm_combo.setCurrentIndex(ix)
                 return
-
+        image_code = braviz_tab_data.get_image_code(self.__current_subject)
         self.__current_paradigm = new_paradigm
         self.__current_contrast = self.ui.contrast_combo.currentIndex()+1
 
         try:
-            spm_data = self.__reader.get("fmri",self.__current_subject,name=self.__current_paradigm,spm=True)
+            spm_data = self.__reader.get("fmri",image_code,name=self.__current_paradigm,spm=True)
             contrasts = spm_data.get_contrast_names()
         except Exception:
             log.warning("Couldn't read spm file")
@@ -190,8 +191,8 @@ class FmriExplorer(QtGui.QMainWindow):
                 self.ui.contrast_combo.setCurrentIndex(0)
                 self.__current_contrast = 1  # 0+1
         try:
-            self.image_view.set_all(self.__current_subject,self.__current_paradigm,self.__current_contrast)
-            bold_image = self.__reader.get("BOLD",self.__current_subject,name=self.__current_paradigm)
+            self.image_view.set_all(image_code,self.__current_paradigm,self.__current_contrast)
+            bold_image = self.__reader.get("BOLD",image_code,name=self.__current_paradigm)
         except Exception:
             message = "%s not available for subject %s"%(self.__current_paradigm,self.__current_subject)
             log.warning(message)
@@ -287,12 +288,12 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def highlight_frozen(self,item):
         item_index = self.__frozen_model.get_item_index(item)
-        self.time_plot.highlight_frozen_bold(item_index)
         location = item_index[1:]
         self.image_view.set_cursor_coords(location)
+        self.time_plot.highlight_frozen_bold(item_index)
 
     def add_point_for_all(self):
-        log = logging.getLogger(__file__)
+        log = logging.getLogger(__name__)
         coords = self.image_view.current_coords()
         contrast = self.ui.contrast_combo.itemText(self.ui.contrast_combo.currentIndex())
         if coords is None:
@@ -305,21 +306,22 @@ class FmriExplorer(QtGui.QMainWindow):
         cx,cy,cz = ( int(x) for x in coords)
         subjs = self.__valid_ids
         self.ui.progressBar.setValue(0)
-        for j,s in enumerate(sorted(subjs,key=int)):
-            i = (int(s),cx,cy,cz)
+        for j,sbj in enumerate(sorted(subjs,key=int)):
+            i = (int(sbj),cx,cy,cz)
+            s_img = braviz_tab_data.get_image_code(sbj)
             progress = j/(len(self.__valid_ids))*100
             self.ui.progressBar.setValue(progress)
             QtCore.QCoreApplication.instance().processEvents()
             if i not in self.__frozen_points.index:
                 try:
-                    fmri = self.__reader.get("fMRI",s,name=self.__current_paradigm,contrast=self.__current_contrast,
+                    fmri = self.__reader.get("fMRI",s_img,name=self.__current_paradigm,contrast=self.__current_contrast,
                                              space="fmri-%s"%self.__current_paradigm)
-                    bold = self.__reader.get("bold",s,name=self.__current_paradigm)
+                    bold = self.__reader.get("bold",s_img,name=self.__current_paradigm)
                 except Exception:
-                    log.warning("%s not found for subject %s"%(self.__current_paradigm,s))
+                    log.warning("%s not found for subject %s"%(self.__current_paradigm,s_img))
                 else:
                     stat = fmri.get_data()[cx,cy,cz]
-                    df2 = pd.DataFrame({"Subject":[s],"Coordinates":[(cx,cy,cz)],
+                    df2 = pd.DataFrame({"Subject":[sbj],"Coordinates":[(cx,cy,cz)],
                                         "Contrast":[contrast],
                                         "T Stat":[stat]},
                                        index=[i])
@@ -419,14 +421,32 @@ class FmriExplorer(QtGui.QMainWindow):
     def load_state(self,wanted_state):
         pass
 
-    def receive_message(self):
-        pass
+    def receive_message(self,msg):
+        log = logging.getLogger(__name__)
+        if msg.startswith("subject"):
+            subj = msg.split()[1]
+            if subj in self.__valid_ids:
+                self.ui.subject_edit.setText(subj)
+                log.info("Changing to subj %s"%subj)
+                self.update_fmri_data_view()
 
     def change_sample(self,new_sample):
-        pass
+        log = logging.getLogger(__name__)
+        log.info("*sample changed*")
+        self.__valid_ids={"%s" for s in new_sample}
+        logger = logging.getLogger(__name__)
+        logger.info("new sample: %s" % new_sample)
+        self.ui.subj_completer = QtGui.QCompleter(list(self.__valid_ids))
+        self.ui.subject_edit.setCompleter(self.ui.subj_completer)
+        self.ui.subj_validator = ListValidator(self.__valid_ids)
+        self.ui.subject_edit.setValidator(self.ui.subj_validator)
 
     def select_sample(self):
-        pass
+        dialog = SampleLoadDialog()
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            self.change_sample(new_sample)
 
 
 def run():

@@ -490,6 +490,9 @@ def get_var_value(var_idx,subject):
         raise Exception("%s not found for subject %s"%(var_idx,subject))
     return res[0]
 
+def get_image_code(subject):
+    return get_var_value(IMAGE_CODE,subject)
+
 def get_variable_normal_range(var_idx):
     conn = get_connection()
     #minimum,maximum
