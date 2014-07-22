@@ -1,5 +1,6 @@
 from __future__ import division
 from PyQt4 import QtCore, QtGui
+from itertools import izip,repeat
 import braviz
 import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
@@ -9,6 +10,7 @@ from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
 from braviz.interaction.connection import MessageClient
 from braviz.interaction.qt_sample_select_dialog import SampleLoadDialog
+
 import pandas as pd
 import seaborn as sns
 
@@ -143,6 +145,10 @@ class FmriExplorer(QtGui.QMainWindow):
         #menu
         self.ui.actionSelect_Sample.triggered.connect(self.select_sample)
         self.ui.actionSave_scenario.triggered.connect(self.save_scenario)
+        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
+        self.ui.actionFrozen_Table.triggered.connect(self.export_frozen_table)
+        self.ui.actionGraph.triggered.connect(self.export_time_plot)
+        self.ui.actionSignals.triggered.connect(self.export_signals)
 
 
     def start(self):
@@ -299,22 +305,23 @@ class FmriExplorer(QtGui.QMainWindow):
             self.image_view.set_cursor_coords(location)
         self.time_plot.highlight_frozen_bold(item_index)
 
-    def add_point_for_all(self):
+    def batch_add_points(self,subj_coords,contrast):
         log = logging.getLogger(__name__)
-        coords = self.image_view.current_coords()
-        contrast = self.ui.contrast_combo.currentText()
-        if coords is None:
-            return
         self.ui.clear_button.setEnabled(0)
         self.ui.freeze_point_button.setEnabled(0)
         self.ui.for_all_subjects.setEnabled(0)
         self.ui.time_color_combo.setEnabled(0)
         self.ui.time_aggregrate_combo.setEnabled(0)
-        cx, cy, cz = ( int(x) for x in coords)
-        subjs = self.__valid_ids
         self.ui.progressBar.setValue(0)
-        for j, sbj in enumerate(sorted(subjs, key=int)):
-            i = (int(sbj), cx, cy, cz)
+        if isinstance(contrast,basestring):
+            iterator = izip(subj_coords,repeat(contrast))
+        else:
+            iterator = izip(subj_coords,contrast)
+        for j,each in enumerate(iterator):
+            i,cont = each
+            cont_number = self.ui.contrast_combo.findText(cont)+1
+            sbj = i[0]
+            cx,cy,cz = i[1:4]
             s_img = braviz_tab_data.get_image_code(sbj)
             progress = j / (len(self.__valid_ids)) * 100
             self.ui.progressBar.setValue(progress)
@@ -322,7 +329,7 @@ class FmriExplorer(QtGui.QMainWindow):
             if i not in self.__frozen_points.index:
                 try:
                     fmri = self.__reader.get("fMRI", s_img, name=self.__current_paradigm,
-                                             contrast=self.__current_contrast,
+                                             contrast=cont_number,
                                              space="fmri-%s" % self.__current_paradigm)
                     bold = self.__reader.get("bold", s_img, name=self.__current_paradigm)
                 except Exception:
@@ -330,7 +337,7 @@ class FmriExplorer(QtGui.QMainWindow):
                 else:
                     stat = fmri.get_data()[cx, cy, cz]
                     df2 = pd.DataFrame({"Subject": [sbj], "Coordinates": [(cx, cy, cz)],
-                                        "Contrast": [contrast],
+                                        "Contrast": [cont],
                                         "T Stat": [stat]},
                                        index=[i])
                     self.__frozen_points = self.__frozen_points.append(df2)
@@ -342,6 +349,17 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.for_all_subjects.setEnabled(1)
         self.ui.time_color_combo.setEnabled(1)
         self.ui.time_aggregrate_combo.setEnabled(1)
+
+    def add_point_for_all(self):
+        coords = self.image_view.current_coords()
+        x,y,z = coords
+        contrast = str(self.ui.contrast_combo.currentText())
+        if coords is None:
+            return
+        subjs = self.__valid_ids
+        subj_coords = izip(subjs,repeat(x),repeat(y),repeat(z))
+        self.batch_add_points(subj_coords,contrast)
+
 
     def select_time_color(self):
         if self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count() - 2:
@@ -436,7 +454,7 @@ class FmriExplorer(QtGui.QMainWindow):
         fmri_state["contours_active"] = self.ui.show_contours_check.isChecked()
         fmri_state["contours_threshold"] = float(self.ui.show_contours_value.value())
         fmri_state["contours_opacity"] = int(self.ui.contour_opacity_slider.value())
-
+        fmri_state["camera"] = self.image_view.get_camera_parameters()
         state["fmri"] = fmri_state
         #Timelines
         timeline_state = {}
@@ -458,17 +476,119 @@ class FmriExplorer(QtGui.QMainWindow):
         return state
 
     def save_scenario(self):
+        import functools
         state = self.get_state()
-        print state
+        app_name = state["meta"]["application"]
+        params = {}
+        dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name, state, params)
+        res = dialog.exec_()
+        log = logging.getLogger(__name__)
+        if res == QtGui.QDialog.Accepted:
+            scn_id = params["scn_id"]
+            log.info("scenario saved with id %d" % scn_id)
+            take_screen = functools.partial(self.take_screenshot, scn_id)
+            QtCore.QTimer.singleShot(500, take_screen)
 
     def load_scenario(self):
-        pass
+        new_state = {}
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("fmri_explorer", new_state, self.__reader)
+        res = dialog.exec_()
+        log = logging.getLogger(__name__)
+        if res == QtGui.QDialog.Accepted:
+            log.info("New state : ")
+            log.info(new_state)
+            self.load_state(new_state)
 
     def load_state(self, wanted_state):
-        pass
+        #fmri
+        sample = wanted_state["sample"]
+        if sample is not None:
+            self.change_sample(sample)
 
-    def take_screenshot(self, file_name):
-        pass
+        fmri_state = wanted_state["fmri"]
+        subj = fmri_state.get("subject")
+        if subj is not None:
+            self.ui.subject_edit.setText(str(subj))
+        pdgm = fmri_state["paradigm"]
+        if pdgm is not None:
+            ix = self.ui.paradigm_combo.findText(pdgm)
+            if ix>=0:
+                self.ui.paradigm_combo.setCurrentIndex(ix)
+        cont = fmri_state.get("contrast")
+        self.update_fmri_data_view()
+        self.ui.contrast_combo.setCurrentIndex(cont-1)
+        self.update_fmri_data_view()
+
+        img_or = fmri_state.get("image_orientation")
+        if img_or is not  None:
+            orientation_dict = {2:"Axial", 1:"Coronal", 0:"Sagital"}
+            name = orientation_dict.get(img_or)
+            ix = self.ui.image_orientation_combo.findText(name)
+            if ix >= 0 :
+                self.ui.image_orientation_combo.setCurrentIndex(ix)
+                self.change_image_orientation()
+        image_slice = fmri_state.get("image_slice")
+        if image_slice is not None:
+            self.ui.slice_spin.setValue(image_slice)
+            self.image_view.image.set_image_slice(image_slice)
+        cont_act = fmri_state.get("contours_active")
+        if cont_act is not None:
+            self.ui.show_contours_check.setChecked(cont_act)
+            self.change_contour_visibility()
+        cont_thr = fmri_state.get("contours_threshold")
+        if cont_thr is not None:
+            self.ui.show_contours_value.setValue(cont_thr)
+            self.change_contour_value(cont_thr)
+        cont_opac = fmri_state.get("contours_opacity")
+        if cont_opac is not None:
+            self.ui.contour_opacity_slider.setValue(cont_opac)
+            self.change_contour_opacity(cont_opac)
+        camera = fmri_state.get("camera")
+        if camera is not None:
+            self.image_view.set_camera(*camera)
+
+        timeline_state = wanted_state["timeline"]
+        color = timeline_state.get("color")
+        if color is not None:
+            if color == "<uniform>":
+                self.ui.time_color_combo.setCurrentIndex(0)
+                self.set_timeline_colors(None)
+            elif color == "<location>":
+                self.ui.time_color_combo.setCurrentIndex(self.ui.time_color_combo.count()-1)
+                self.set_timeline_colors_by_location()
+            else:
+                full_text = "Color by %s"%color
+                ix = self.ui.time_color_combo.findText(full_text)
+                if ix >=0:
+                    self.ui.time_color_combo.setCurrentIndex(ix)
+                else:
+                    self.ui.time_color_combo.insertItem(1,full_text)
+                    self.ui.time_color_combo.setCurrentIndex(1)
+                self.set_timeline_colors(color)
+        agg = timeline_state.get("aggregate")
+        if agg is not None:
+            if agg:
+                self.ui.time_aggregrate_combo.setCurrentIndex(1)
+            else:
+                self.ui.time_aggregrate_combo.setCurrentIndex(0)
+            self.set_timeline_aggregate(agg)
+
+        frozen = timeline_state.get("frozen")
+        if frozen is not None:
+            self.clear_frozen()
+            ixs,conts = izip(*frozen)
+            self.batch_add_points(ixs,conts)
+
+    def take_screenshot(self, scenario_index):
+        import os
+        geom = self.geometry()
+        pixmap = QtGui.QPixmap.grabWindow(QtGui.QApplication.desktop().winId(), geom.x(), geom.y(), geom.width(),
+                                          geom.height())
+        file_name = "scenario_%d.png" % scenario_index
+        file_path = os.path.join(self.__reader.getDynDataRoot(), "braviz_data", "scenarios", file_name)
+        pixmap.save(file_path, "png")
+        log = logging.getLogger(__name__)
+        log.info("chick %s" % file_path)
 
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
@@ -497,6 +617,18 @@ class FmriExplorer(QtGui.QMainWindow):
             new_sample = dialog.current_sample
             self.change_sample(new_sample)
 
+    def export_time_plot(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self, "Save Timeline Plot",".","PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
+        self.time_plot.fig.savefig(filename)
+
+    def export_signals(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self, "Save Signals",".","matlab (*.mat)"))
+        self.time_plot.export_frozen_signals(filename)
+        pass
+
+    def export_frozen_table(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self, "Save Signals",".","table (*.csv)"))
+        self.__frozen_points.to_csv(filename)
 
 def run():
     import sys

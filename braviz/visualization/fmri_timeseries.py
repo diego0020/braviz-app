@@ -15,11 +15,13 @@ import braviz
 from itertools import izip
 
 import numpy as np
+from scipy import io as sio
 import pandas as pd
-
+import seaborn as sns
 import logging
 
-import seaborn as sns
+
+
 
 class TimeseriesPlot(FigureCanvas):
     #These signals return the id of the point where the action occured
@@ -241,4 +243,11 @@ class TimeseriesPlot(FigureCanvas):
                                        zorder=1)
         self.axes.legend()
 
-
+    def export_frozen_signals(self,filename):
+        #create numpy object array
+        obj_array = np.zeros((len(self.__frozen_points_signals),),dtype=np.object)
+        for i,(k,v) in enumerate(self.__frozen_points_signals.iteritems()):
+            obj = {"subj": k[0], "coordinates":k[1:],"signal":v}
+            obj_array[i] = obj
+        output = {"signals":obj_array,"time":self.volumes_times}
+        sio.savemat(filename,output)

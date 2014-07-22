@@ -357,6 +357,7 @@
      </property>
      <addaction name="actionGraph"/>
      <addaction name="actionSignals"/>
+     <addaction name="actionFrozen_Table"/>
     </widget>
     <addaction name="actionSave_scenario"/>
     <addaction name="actionLoad_scenario"/>
@@ -390,6 +391,11 @@
   <action name="actionSelect_Sample">
    <property name="text">
     <string>Select Sample</string>
+   </property>
+  </action>
+  <action name="actionFrozen_Table">
+   <property name="text">
+    <string>Frozen Table</string>
    </property>
   </action>
  </widget>

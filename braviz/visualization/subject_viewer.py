@@ -1935,6 +1935,23 @@ class fMRI_viewer(object):
         self.ren.ResetCameraClippingRange()
         self.ren_win.Render()
 
+    def get_camera_parameters(self):
+        cam1 = self.ren.GetActiveCamera()
+        fp = cam1.GetFocalPoint()
+        pos = cam1.GetPosition()
+        vu = cam1.GetViewUp()
+        return fp, pos, vu
+
+    def set_camera(self, focal_point, position, view_up):
+        cam1 = self.ren.GetActiveCamera()
+        cam1.SetFocalPoint(focal_point)
+        cam1.SetPosition(position)
+        cam1.SetViewUp(view_up)
+
+        self.ren.ResetCameraClippingRange()
+        self.ren_win.Render()
+
+
 class FmriContours(object):
     def __init__(self,ren):
         self.__contour_filter = vtk.vtkContourFilter()
