@@ -289,7 +289,8 @@ class FmriExplorer(QtGui.QMainWindow):
     def highlight_frozen(self,item):
         item_index = self.__frozen_model.get_item_index(item)
         location = item_index[1:]
-        self.image_view.set_cursor_coords(location)
+        if location != self.image_view.current_coords:
+            self.image_view.set_cursor_coords(location)
         self.time_plot.highlight_frozen_bold(item_index)
 
     def add_point_for_all(self):
