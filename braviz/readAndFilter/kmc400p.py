@@ -1125,7 +1125,7 @@ known_nodes = {  #
     # Name          :  ( static data root, dyn data root , cache size in MB)
     'gambita.uniandes.edu.co': ('/media/DATAPART5/kmc400','/media/DATAPART5/kmc400_braviz', 4000),
     'dieg8': (r'C:\Users\Diego\Documents\kmc400',"C:\Users\Diego\Documents\kmc400_braviz", 4000),
-    'ATHPC1304' : (r"Z:",r"E:\ProyectoCanguro\kmc400_braviz",14000),
+    'ATHPC1304' : (r"Z:",r"F:\ProyectoCanguro\kmc400_braviz",14000),
     'IIND-EML754066' : (r"Z:",r"C:\Users\da.angulo39\Documents\kmc400_braviz",2000),
 }
 
