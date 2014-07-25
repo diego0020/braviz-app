@@ -594,7 +594,7 @@ class FmriExplorer(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         if msg.startswith("subject"):
             subj = msg.split()[1]
-            if subj in self.__valid_ids:
+            if subj in self.__valid_ids and subj != self.__current_subject:
                 self.ui.subject_edit.setText(subj)
                 log.info("Changing to subj %s" % subj)
                 self.update_fmri_data_view()

@@ -542,7 +542,10 @@ class ImageManager(object):
     def get_number_of_image_slices(self):
         if self.__image_plane_widget is None:
             return 0
-        dimensions = self.__image_plane_widget.GetInput().GetDimensions()
+        img = self.__image_plane_widget.GetInput()
+        if img is None:
+            return 0
+        dimensions = img.GetDimensions()
 
         return dimensions[self.__current_image_orientation]
 
@@ -1890,8 +1893,12 @@ class fMRI_viewer(object):
     def update_view(self):
         if self.__current_subject is None or self.__current_paradigm is None or self.__current_contrast is None:
             return
-        self.image.change_subject(self.__current_subject)
-        self.image.change_space("func-%s"%self.__current_paradigm)
+        try: self.image.change_subject(self.__current_subject)
+        except Exception: pass
+
+        try: self.image.change_space("func-%s"%self.__current_paradigm)
+        except Exception : pass
+
         self.image.change_image_modality("fMRI",self.__current_paradigm,contrast=self.__current_contrast)
         if not self.__image_loaded:
             self.connect_cursors()
