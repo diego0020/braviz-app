@@ -11,7 +11,12 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Braviz - fMRI Explore</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/icons/fmri_explore_small.png</normalon>
+   </iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -399,7 +404,9 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>slice_spin</sender>

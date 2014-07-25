@@ -558,7 +558,7 @@ class ImageManager(object):
     def set_image_slice(self, new_slice):
         if self.__image_plane_widget is None:
             return
-        self.__image_plane_widget.SetSliceIndex(new_slice)
+        self.__image_plane_widget.SetSliceIndex(int(new_slice))
         self.__image_plane_widget.InvokeEvent(self.__image_plane_widget.slice_change_event)
 
 

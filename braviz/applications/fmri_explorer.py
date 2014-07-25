@@ -394,6 +394,7 @@ class FmriExplorer(QtGui.QMainWindow):
             n_values = len(values)
             color_palette = sns.color_palette("Set1", n_values)
             color_dict = dict(( (v, color_palette[i]) for i, v in enumerate(values)))
+            color_dict[-1] = "#FF00E6"  # nan
 
             def color_fun(url):
                 subj = url[0]
