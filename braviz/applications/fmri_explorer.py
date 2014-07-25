@@ -405,7 +405,7 @@ class FmriExplorer(QtGui.QMainWindow):
             def group_function(url):
                 subj = url[0]
                 val = series.get(subj, -1)
-                return val
+                return int(val)
 
             self.time_plot.set_frozen_groups_and_colors(group_function, color_dict)
             self.time_plot.set_frozen_colors(color_fun)
