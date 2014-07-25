@@ -319,8 +319,9 @@ class FmriExplorer(QtGui.QMainWindow):
             iterator = izip(subj_coords,contrast)
         for j,each in enumerate(iterator):
             i,cont = each
+            i = tuple(map(int,i))
             cont_number = self.ui.contrast_combo.findText(cont)+1
-            sbj = i[0]
+            sbj = int(i[0])
             cx,cy,cz = i[1:4]
             s_img = braviz_tab_data.get_image_code(sbj)
             progress = j / (len(self.__valid_ids)) * 100
@@ -388,6 +389,8 @@ class FmriExplorer(QtGui.QMainWindow):
             self.time_plot.set_frozen_groups_and_colors(None, None)
         else:
             df = braviz_tab_data.get_data_frame_by_name(var_name)
+            df = df.set_index(df.index.astype(int))
+            df = df.loc[[int(i) for i in self.__valid_ids]]
             series = df[var_name].astype(int)
             values = set(series.astype(int))
             values.add(None)
@@ -397,14 +400,16 @@ class FmriExplorer(QtGui.QMainWindow):
             color_dict[-1] = "#FF00E6"  # nan
 
             def color_fun(url):
-                subj = url[0]
+                subj = int(url[0])
                 val = series.get(subj)
                 color = color_dict[val]
                 return color
 
             def group_function(url):
-                subj = url[0]
+                subj = int(url[0])
                 val = series.get(subj, -1)
+                if np.isnan(val):
+                    val = -1
                 return int(val)
 
             self.time_plot.set_frozen_groups_and_colors(group_function, color_dict)
