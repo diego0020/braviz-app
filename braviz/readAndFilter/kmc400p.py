@@ -1127,7 +1127,7 @@ known_nodes = {  #
     'dieg8': (r'C:\Users\Diego\Documents\kmc400',"C:\Users\Diego\Documents\kmc400_braviz", 4000),
     'ATHPC1304' : (r"Z:",r"F:\ProyectoCanguro\kmc400_braviz",14000),
     'IIND-EML754066' : (r"Z:",r"C:\Users\da.angulo39\Documents\kmc400_braviz",2000),
-    'da-angulo': ("Z:\\", 4000),
+    'da-angulo': ("Z:\\","D:\\kmc400-braviz" ,4000),
 }
 
 
@@ -1151,7 +1151,7 @@ def get_dyn_data_root():
 
 #===============================================================================================
 def autoReader(**kw_args):
-    """Initialized a kmc40Reader based on the computer name"""
+    """Initialized a kmc400Reader based on the computer name"""
     node_id = platform.node()
     node = known_nodes.get(node_id)
     log = logging.getLogger(__name__)
