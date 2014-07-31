@@ -1127,6 +1127,7 @@ known_nodes = {  #
     'dieg8': (r'C:\Users\Diego\Documents\kmc400',"C:\Users\Diego\Documents\kmc400_braviz", 4000),
     'ATHPC1304' : (r"Z:",r"F:\ProyectoCanguro\kmc400_braviz",14000),
     'IIND-EML754066' : (r"Z:",r"C:\Users\da.angulo39\Documents\kmc400_braviz",2000),
+    'da-angulo': ("Z:\\", 4000),
 }
 
 

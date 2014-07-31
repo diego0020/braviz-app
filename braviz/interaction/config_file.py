@@ -40,21 +40,25 @@ def get_config(custom_dir=None):
     default_config_name=os.path.join(config_dir,config_file_name)
     config_files=[default_config_name]
     if custom_dir is not None:
+        if os.path.isfile(custom_dir):
+            custom_dir = os.path.dirname(custom_dir)
         custom_dir=os.path.realpath(custom_dir)
         full_config_name=os.path.join(custom_dir,config_file_name)
-        config_files.append(full_config_name)
-        full_config_name=os.path.join(os.path.dirname(custom_dir),config_file_name)
-        config_files.append(full_config_name)
+        if not os.path.isfile(full_config_name):
+            make_default_config(full_config_name)
+        else:
+            config_files.append(full_config_name)
         #print config_files
     braviz_conf=braviz_config()
     braviz_conf.read(config_files)
     return braviz_conf
 
-def make_default_config():
+def make_default_config(default_config_name=None):
     """Creates a configuration file with defailt parameters and stores it as 'braviz.cfg'"""
-    config_dir=os.path.dirname(os.path.realpath(__file__))
-    config_file_name='braviz.cfg'
-    default_config_name=os.path.join(config_dir,config_file_name)
+    if default_config_name is None:
+        config_dir=os.path.dirname(os.path.realpath(__file__))
+        config_file_name='braviz.cfg'
+        default_config_name=os.path.join(config_dir,config_file_name)
     braviz_conf=braviz_config()
     braviz_conf.add_section('VTK')
     braviz_conf.set('VTK','Background','0.1 0.1 0.2')

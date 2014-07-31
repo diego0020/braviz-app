@@ -18,7 +18,8 @@ import vtk
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
     readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk, \
     CacheContainer
-from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
+from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, \
+    get_free_surfer_lut, \
     surfLUT2VTK
 from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
@@ -26,9 +27,9 @@ from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
 from hierarchical_fibers import read_logical_fibers
-from braviz.readAndFilter.read_spm import SpmFileReader,get_contrasts_dict
+from braviz.readAndFilter.read_spm import SpmFileReader, get_contrasts_dict
 
-#TODO: remove all hasattr, maybe change with porperties or None
+# TODO: remove all hasattr, maybe change with porperties or None
 class kmc40Reader(object):
     """
 A read and filter class designed to work with the file structure and data from the KMC pilot project which contains 40 subjects.
@@ -41,12 +42,12 @@ The path containing this structure must be set."""
         self.__root = os.path.normcase(path)
         #Remove trailing slashes
         self.__root = self.__root.rstrip('/\\')
-        self.__functional_paradigms=frozenset(("PRECISION","POWERGRIP"))
+        self.__functional_paradigms = frozenset(("PRECISION", "POWERGRIP"))
         self.__cache_container.max_cache = max_cache
         self.__fmri_lut = None
 
     @cache_function(__cache_container)
-    def get(self,data, subj_id=None, **kw):
+    def get(self, data, subj_id=None, **kw):
         """All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
         Available spaces for all data are: world, talairach and dartel. Some data may support additional values
         data should be one of:
@@ -109,8 +110,8 @@ The path containing this structure must be set."""
         data = data.upper()
         if subj is not None:
             subj = str(subj)
-            if len(subj)<3:
-                subj = "0"*(3-len(subj))+subj
+            if len(subj) < 3:
+                subj = "0" * (3 - len(subj)) + subj
         if data == 'MRI':
             return self.__getImg(data, subj, **kw)
         elif data == "MD":
@@ -135,7 +136,7 @@ The path containing this structure must be set."""
             return self.__readFibers(subj, **kw)
         elif data == 'TENSORS':
             return self.__readTensors(subj, **kw)
-        elif data in {"APARC","WMPARC"}:
+        elif data in {"APARC", "WMPARC"}:
             if kw.get('lut'):
                 if not hasattr(self, 'free_surfer_aparc_LUT'):
                     self.free_surfer_aparc_LUT = self.__create_surfer_lut()
@@ -164,19 +165,19 @@ The path containing this structure must be set."""
             filename = '%s-MRI-full.nii.gz' % str(subj)
         elif data == 'FA':
             path = os.path.join(self.__root, str(subj), 'camino')
-            if kw.get('space',"").startswith('diff'):
+            if kw.get('space', "").startswith('diff'):
                 filename = 'FA_masked.nii.gz'
             else:
                 filename = 'FA_mri_masked.nii.gz'
         elif data == "MD":
             path = os.path.join(self.__root, str(subj), 'camino')
-            if kw.get('space',"").startswith('diff'):
+            if kw.get('space', "").startswith('diff'):
                 filename = 'MD_masked.nii.gz'
             else:
                 filename = 'MD_mri_masked.nii.gz'
         elif data == "DTI":
             path = os.path.join(self.__root, str(subj), 'camino')
-            if kw.get('space','').startswith('diff'):
+            if kw.get('space', '').startswith('diff'):
                 filename = 'rgb_dti_masked.nii.gz'
             else:
                 filename = 'rgb_dti_mri_masked.nii.gz'
@@ -205,7 +206,7 @@ The path containing this structure must be set."""
 
         if kw.get('format', '').upper() == 'VTK':
             if data == "MD":
-                img_data=img.get_data()
+                img_data = img.get_data()
                 img_data *= 1e12
                 vtkImg = numpy2vtk_img(img_data)
             elif data == "DTI":
@@ -216,17 +217,17 @@ The path containing this structure must be set."""
                 return vtkImg
 
             interpolate = True
-            if data in {'APARC',"WMPARC"}:
+            if data in {'APARC', "WMPARC"}:
                 interpolate = False
                 #print "turning off interpolate"
 
             img2 = applyTransform(vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
             space = kw.get('space', 'world')
-            if space == "diff" and (data in {"FA","MD","DTI"}):
+            if space == "diff" and (data in {"FA", "MD", "DTI"}):
                 return img2
             return self.__move_img_from_world(subj, img2, interpolate, space=space)
         space = kw.get('space', 'native')
-        if space == "diff" and (data in {"FA","MD","DTI"}):
+        if space == "diff" and (data in {"FA", "MD", "DTI"}):
             return img
         elif space == "world":
             return img
@@ -237,7 +238,7 @@ The path containing this structure must be set."""
             matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
             affine = img.get_affine()
             aff2 = matrix.dot(affine)
-            img2=nib.Nifti1Image(img.get_data(),aff2)
+            img2 = nib.Nifti1Image(img.get_data(), aff2)
             return img2
         log = logging.getLogger(__file__)
         log.warning("Returned nifti image is in native space")
@@ -332,13 +333,13 @@ The path containing this structure must be set."""
                 if name.endswith('-SPHARM'):
                     log.warning("Warning, spharm structure treated as non-spharm equivalent")
                     name = name[:-7]
-                if not hasattr(self,"free_surfer_labels"):
+                if not hasattr(self, "free_surfer_labels"):
                     self.__parse_fs_color_file()
                 return self.free_surfer_labels.get(name)
             else:
                 available = self.__load_free_surfer_model(subject, index='T')
                 if not name in available:
-                    log.warning( 'Model %s not available' % name)
+                    log.warning('Model %s not available' % name)
                     raise Exception('Model %s not available' % name)
                 if name.endswith('-SPHARM'):
                     spharm_name = self.__spharm_models[name[:-7]]
@@ -400,36 +401,36 @@ The path containing this structure must be set."""
         with open(color_file_name) as color_file:
             color_lines = color_file.readlines()
             color_file.close()
-            color_lists = [l.split() for l in color_lines if l[0] not in ('#', '\n', ' ') ]
+            color_lists = [l.split() for l in color_lines if l[0] not in ('#', '\n', ' ')]
             color_tuples = ((l[1], tuple([float(c) / 256 for c in l[2:]])) for l in color_lists)
             color_dict = dict(color_tuples)
             self.save_into_cache('free_surfer_color_lut_internal', color_dict)
-            labels_tuples = ((l[1],l[0]) for l in color_lists )
-            labels_dict=dict(labels_tuples)
-            self.save_into_cache('free_surfer_labels_dict_internal',labels_dict)
+            labels_tuples = ((l[1], l[0]) for l in color_lists )
+            labels_dict = dict(labels_tuples)
+            self.save_into_cache('free_surfer_labels_dict_internal', labels_dict)
 
         self.free_surfer_LUT = color_dict
         self.free_surfer_labels = labels_dict
 
-    def _cached_surface_read(self,surf_file):
+    def _cached_surface_read(self, surf_file):
         "cached function to read a freesurfer structure file"
         #check cache
-        vtkFile=surf_file+'.vtk'
+        vtkFile = surf_file + '.vtk'
         if os.path.isfile(vtkFile):
             #print 'reading from vtk-file'
-            vtkreader=vtk.vtkPolyDataReader()
-            vtkreader.SetFileName(surf_file+'.vtk')
+            vtkreader = vtk.vtkPolyDataReader()
+            vtkreader.SetFileName(surf_file + '.vtk')
             vtkreader.Update()
             return vtkreader.GetOutput()
 
         #print 'reading from surfer file'
-        poly=surface2vtkPolyData(surf_file)
+        poly = surface2vtkPolyData(surf_file)
         #try to write to cache
         log = logging.getLogger(__name__)
         try:
-            vtkWriter=vtk.vtkPolyDataWriter()
+            vtkWriter = vtk.vtkPolyDataWriter()
             vtkWriter.SetInputData(poly)
-            vtkWriter.SetFileName(surf_file+'.vtk')
+            vtkWriter.SetFileName(surf_file + '.vtk')
             vtkWriter.SetFileTypeToBinary()
             vtkWriter.Update()
         except Exception:
@@ -441,7 +442,7 @@ The path containing this structure must be set."""
     def __loadFreeSurferSurf(self, subj, **kw):
         """Auxiliary function to read the corresponding surface file for hemi and name.
         Scalars can be added to the output surface"""
-        if 'name' in  kw and 'hemi' in kw:
+        if 'name' in kw and 'hemi' in kw:
             #Check required arguments
             name = kw['hemi'] + 'h.' + kw['name']
         else:
@@ -498,7 +499,7 @@ The path containing this structure must be set."""
                 return surfLUT2VTK(ctab, names)
             return labels
 
-    def __cached_color_fibers(self, subj, color=None,scalars=None):
+    def __cached_color_fibers(self, subj, color=None, scalars=None):
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
 
@@ -521,14 +522,14 @@ The path containing this structure must be set."""
                 pd_reader.CloseVTKFile()
                 #!!! This is the base case
                 return fibs
-            cache_key = 'streams_%s_%s.vtk' % (subj,color)
+            cache_key = 'streams_%s_%s.vtk' % (subj, color)
         else:
             scalars = scalars.lower()
-            cache_key = 'streams_%s_sc_%s.vtk' % (subj,scalars)
+            cache_key = 'streams_%s_sc_%s.vtk' % (subj, scalars)
 
         cached = self.load_from_cache(cache_key)
         if cached is not None:
-                return cached
+            return cached
         else:
             #WE ARE IN DIFF SPACE
             #base case
@@ -540,7 +541,7 @@ The path containing this structure must be set."""
                 braviz.readAndFilter.color_fibers.color_fibers_pts(fibers, color_fun)
             elif color == 'fa':
                 color_fun = braviz.readAndFilter.color_fibers.color_by_fa
-                fa_img = self.get('fa', subj, format='vtk',space="diff")
+                fa_img = self.get('fa', subj, format='vtk', space="diff")
                 fun_args = (fa_img,)
                 braviz.readAndFilter.color_fibers.color_fibers_pts(fibers, color_fun, *fun_args)
             elif color == 'rand':
@@ -550,31 +551,31 @@ The path containing this structure must be set."""
                 color_fun = braviz.readAndFilter.color_fibers.line_curvature
                 braviz.readAndFilter.color_fibers.color_fibers_lines(fibers, color_fun)
             elif scalars == "fa_p":
-                fa_img = self.get("FA",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_from_image(fibers,fa_img)
+                fa_img = self.get("FA", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image(fibers, fa_img)
             elif scalars == "fa_l":
-                fa_img = self.get("FA",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,fa_img)
+                fa_img = self.get("FA", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers, fa_img)
             elif scalars == "md_p":
-                md_img = self.get("MD",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_from_image(fibers,md_img)
+                md_img = self.get("MD", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image(fibers, md_img)
             elif scalars == "md_l":
-                md_img = self.get("MD",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,md_img)
+                md_img = self.get("MD", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers, md_img)
             elif scalars == "length":
                 braviz.readAndFilter.color_fibers.scalars_from_length(fibers)
             elif scalars == "aparc":
-                aparc_img = self.get("APARC",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_from_image_int(fibers,aparc_img)
+                aparc_img = self.get("APARC", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image_int(fibers, aparc_img)
             elif scalars == "wmparc":
-                wmparc_img = self.get("WMPARC",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_from_image_int(fibers,wmparc_img)
+                wmparc_img = self.get("WMPARC", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image_int(fibers, wmparc_img)
             else:
                 log.error('Unknown coloring scheme %s' % color)
                 raise Exception('Unknown coloring scheme %s' % color)
 
             #Cache write
-            self.save_into_cache(cache_key,fibers)
+            self.save_into_cache(cache_key, fibers)
             return fibers
 
     def __cached_filter_fibers(self, subj, waypoint):
@@ -585,9 +586,9 @@ The path containing this structure must be set."""
         ids = self.load_from_cache(cache_key)
         if ids is not None:
             return ids
-        if waypoint[:3]=="wm-":
+        if waypoint[:3] == "wm-":
             img_name = "WMPARC"
-        elif waypoint[-7:]=="-SPHARM":
+        elif waypoint[-7:] == "-SPHARM":
             #have to do it in the old style
             img_name = None
         else:
@@ -601,33 +602,33 @@ The path containing this structure must be set."""
                 ids = set()
         else:
             try:
-                fibers = self.get('fibers', subj, space='world',color=None,scalars=img_name)
+                fibers = self.get('fibers', subj, space='world', color=None, scalars=img_name)
             except Exception:
-                log.error("%s image not found"%img_name)
+                log.error("%s image not found" % img_name)
                 return set()
-            if not hasattr(self,"free_surfer_labels"):
+            if not hasattr(self, "free_surfer_labels"):
                 self.__parse_fs_color_file()
             lbl = self.free_surfer_labels.get(waypoint)
             if lbl is None:
                 raise Exception("Unknown structure")
-            ids = braviz.readAndFilter.filter_polylines_by_scalar(fibers,int(lbl))
+            ids = braviz.readAndFilter.filter_polylines_by_scalar(fibers, int(lbl))
 
-        self.save_into_cache(cache_key,ids)
+        self.save_into_cache(cache_key, ids)
         return ids
 
-    def filter_fibers(self,subj,struct):
-        subj=str(subj)
-        if len(subj)<3:
-            subj="0"*(3-len(subj))+subj
-        return self.__cached_filter_fibers(subj,struct)
+    def filter_fibers(self, subj, struct):
+        subj = str(subj)
+        if len(subj) < 3:
+            subj = "0" * (3 - len(subj)) + subj
+        return self.__cached_filter_fibers(subj, struct)
 
-    def __readFibers_from_db(self,subj,db_id,**kw):
+    def __readFibers_from_db(self, subj, db_id, **kw):
         log = logging.getLogger(__name__)
         try:
             _, bundle_type, data = bundles_db.get_bundle_details(db_id)
         except Exception:
-            log.error("Fiber with id=%s nor found in database"%db_id)
-            raise Exception("Fiber with id=%s nor found in database"%db_id)
+            log.error("Fiber with id=%s nor found in database" % db_id)
+            raise Exception("Fiber with id=%s nor found in database" % db_id)
 
         bundle_type = int(bundle_type)
 
@@ -641,11 +642,11 @@ The path containing this structure must be set."""
             assert "operation" not in kw
             operation = "and" if bundle_type == 1 else "or"
             checkpoints = pickle.loads(data)
-            poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation,**kw)
+            poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation, **kw)
             return poly
         elif bundle_type == 10:
             tree_dict = pickle.loads(data)
-            poly = read_logical_fibers(subj,tree_dict,self,**kw)
+            poly = read_logical_fibers(subj, tree_dict, self, **kw)
             return poly
         else:
             log.error("Unknown data type")
@@ -664,25 +665,27 @@ The path containing this structure must be set."""
             log.warning("The progress argument is deprecated")
             kw['progress'].set(5)
 
-        if kw.get("lut",False):
+        if kw.get("lut", False):
             scalars = kw.get("scalars")
             scalars = scalars.lower()
             if scalars is None:
                 log.error("This requires scalars")
                 raise Exception("This requires scalars")
             import braviz.readAndFilter.color_fibers
+
             if scalars == "length":
                 lut = braviz.readAndFilter.color_fibers.get_length_lut()
                 return lut
-            elif scalars[:2]=="fa":
+            elif scalars[:2] == "fa":
                 lut = braviz.readAndFilter.color_fibers.get_fa_lut()
                 return lut
-            elif scalars[:2]=="md":
+            elif scalars[:2] == "md":
                 lut = braviz.readAndFilter.color_fibers.get_md_lut()
                 return lut
         #named tracts index
         if kw.get('index', False):
             import braviz.readAndFilter.named_tracts
+
             named_tract_funcs = dir(braviz.readAndFilter.named_tracts)
             functions = filter(lambda x: isinstance(getattr(braviz.readAndFilter.named_tracts, x),
                                                     types.FunctionType), named_tract_funcs)
@@ -691,7 +694,7 @@ The path containing this structure must be set."""
         #deal with database tracts:
         if "db_id" in kw:
             db_id = kw.pop("db_id")
-            poly = self.__readFibers_from_db(subj,db_id,**kw)
+            poly = self.__readFibers_from_db(subj, db_id, **kw)
             return poly
 
         if 'name' in kw:
@@ -702,7 +705,7 @@ The path containing this structure must be set."""
                 named_tract_func = getattr(braviz.readAndFilter.named_tracts, kw['name'])
             except AttributeError:
                 raise Exception("unknown tract name %s" % kw['name'])
-            fibers, result_space = named_tract_func(self, subj, color=kw.get('color'),scalars=kw.get("scalars"))
+            fibers, result_space = named_tract_func(self, subj, color=kw.get('color'), scalars=kw.get("scalars"))
             #this are in result_splace coordinates, check if we need to change them
             target_space = kw.get('space', 'world').lower()
             if target_space == result_space:
@@ -715,7 +718,7 @@ The path containing this structure must be set."""
             return fibers
         if 'waypoint' not in kw:
             path = os.path.join(self.__root, str(subj), 'camino')
-            streams = self.__cached_color_fibers(subj, kw.get('color'),kw.get("scalars"))
+            streams = self.__cached_color_fibers(subj, kw.get('color'), kw.get("scalars"))
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
             #move to world
@@ -735,7 +738,7 @@ The path containing this structure must be set."""
                     models = (models,)
                 if (kw.get('operation', 'and') == 'and') and len(models) == 0:
                     #return all fibers
-                    fibers = self.get('fibers', subj, space='world', color=kw.get('color'),scalars=kw.get("scalars"))
+                    fibers = self.get('fibers', subj, space='world', color=kw.get('color'), scalars=kw.get("scalars"))
                     return fibers
 
                 valid_ids = None
@@ -755,7 +758,7 @@ The path containing this structure must be set."""
                     valid_ids = set()
 
                 #Take advantage of buffer
-                fibers = self.get('fibers', subj, space='world', color=kw.get('color'),scalars=kw.get("scalars"))
+                fibers = self.get('fibers', subj, space='world', color=kw.get('color'), scalars=kw.get("scalars"))
                 fibers2 = extract_poly_data_subset(fibers, valid_ids)
                 return fibers2
             else:
@@ -786,7 +789,7 @@ The path containing this structure must be set."""
     def __movePointsToSpace(self, point_set, space, subj, inverse=False):
         """Transforms a set of points in 'world' space to the talairach or template spaces
         If inverse is True, the points will be moved from 'space' to world"""
-        subj=str(subj)
+        subj = str(subj)
         if space.lower()[:2] == 'wo':
             return point_set
         elif space.lower()[:2] == 'ta':
@@ -831,7 +834,7 @@ The path containing this structure must be set."""
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
         #Based on subject 143
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
-        if color_dict is not None and len(color_dict)<180:
+        if color_dict is not None and len(color_dict) < 180:
             color_dict = None
         #color_dict = None
         if color_dict is None:
@@ -839,7 +842,7 @@ The path containing this structure must be set."""
             aparc_img = self.get('APARC', ref)
             aparc_data = aparc_img.get_data()
             aparc_values = set(np.unique(aparc_data.flat))
-            wmparc_img = self.get("WMPARC",ref)
+            wmparc_img = self.get("WMPARC", ref)
             wmparc_data = wmparc_img.get_data()
             wmparc_values = np.unique(wmparc_data.flat)
             aparc_values.update(wmparc_values)
@@ -864,9 +867,9 @@ The path containing this structure must be set."""
         out_lut.SetNanColor(0.0, 1.0, 0.0, 1.0)
         out_lut.SetNumberOfTableValues(max(color_dict.iterkeys()) + 1)
         out_lut.IndexedLookupOn()
-        for k,v in color_dict.iteritems():
+        for k, v in color_dict.iteritems():
             out_lut.SetAnnotation(k, v[1])
-        for k,v in color_dict.iteritems():  # HACKY.... maybe there is a bug?
+        for k, v in color_dict.iteritems():  # HACKY.... maybe there is a bug?
             idx = out_lut.GetAnnotatedValueIndex(k)
             out_lut.SetTableValue(idx, v[0])
         #self.save_into_cache('free_surfer_vtk_color_lut',out_lut)
@@ -960,12 +963,12 @@ The path containing this structure must be set."""
         path = os.path.join(self.getDataRoot(), subject, 'spm')
         if "contrasts_dict" in kw:
             try:
-                spm_file_path = os.path.join(path,name,"SPM.mat")
+                spm_file_path = os.path.join(path, name, "SPM.mat")
                 return get_contrasts_dict(spm_file_path)
             except Exception as e:
                 return {1: "One"}
         if kw.get("spm"):
-            spm_file = os.path.join(path,name,"SPM.mat")
+            spm_file = os.path.join(path, name, "SPM.mat")
             return SpmFileReader(spm_file)
         z_map = os.path.join(path, name, 'spmT_0001.hdr')
         nii_z_map = nib.load(z_map)
@@ -1006,8 +1009,8 @@ The path containing this structure must be set."""
         """Access to the internal coordinate transform function. Moves from world to space. 
         If inverse is true moves from space to world"""
         subj = str(subj)
-        if len(subj)<3:
-            subj="0"*(3-len(subj))+subj
+        if len(subj) < 3:
+            subj = "0" * (3 - len(subj)) + subj
         return self.__movePointsToSpace(point_set, space, subj, inverse)
 
     def __process_key(self, key):
@@ -1016,9 +1019,9 @@ The path containing this structure must be set."""
         if len(key) + data_root_length > 250:
             key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
         else:
-            ilegal = ['_','<', '>', ':', '"', '/', "\\", '|', '?', '*']
-            for i,il in enumerate(ilegal):
-                key = key.replace(il, '%d_'%i)
+            ilegal = ['_', '<', '>', ':', '"', '/', "\\", '|', '?', '*']
+            for i, il in enumerate(ilegal):
+                key = key.replace(il, '%d_' % i)
         return key
 
 
@@ -1094,25 +1097,27 @@ The path containing this structure must be set."""
         reader.Update()
         return reader.GetOutput()
 
-    def clear_cache(self,last_word=False):
+    def clear_cache(self, last_word=False):
         if last_word is True:
             cache_dir = os.path.join(self.getDataRoot(), '.braviz_cache')
             os.rmdir(cache_dir)
             os.mkdir(cache_dir)
 
+
 known_nodes = {  #
-    # Name          :  ( data root                   , cache size in MB)
-    'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db', 4000),
-    'Unidelosandes': ('K:\\JohanaForero\\KAB-db', 1200),
-    'dieg8': (r'C:\Users\Diego\Documents\kmc40-db\KAB-db', 4000),
-    'TiberioHernande': (r'E:\KAB-db', 1100),
-    'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
-    'ISIS-EML725001': (r'C:\KAB-db', 1200),
-    'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db",4000),
-    'dellingr.vrac.iastate.edu' : (r"/Volumes/diegoa/KAB-db",14000),
-    'MacAirCyril-S.local' : ("/Users/CS/Desktop/diego_data",7000),
-    'ATHPC1304' : (r"F:\ProyectoCanguro\KAB-db",14000),
-    'IIND-EML754066' : (r"C:\Users\da.angulo39\Documents\KAB-db",2000),
+                 # Name          :  ( data root                   , cache size in MB)
+                 'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db', 4000),
+                 'Unidelosandes': ('K:\\JohanaForero\\KAB-db', 1200),
+                 'dieg8': (r'C:\Users\Diego\Documents\kmc40-db\KAB-db', 4000),
+                 'TiberioHernande': (r'E:\KAB-db', 1100),
+                 'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
+                 'ISIS-EML725001': (r'C:\KAB-db', 1200),
+                 'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db", 4000),
+                 'dellingr.vrac.iastate.edu': (r"/Volumes/diegoa/KAB-db", 14000),
+                 'MacAirCyril-S.local': ("/Users/CS/Desktop/diego_data", 7000),
+                 'ATHPC1304': (r"F:\ProyectoCanguro\KAB-db", 14000),
+                 'IIND-EML754066': (r"C:\Users\da.angulo39\Documents\KAB-db", 2000),
+                 'da-angulo': (r"D:\KAB-db", 4000),
 }
 
 
@@ -1125,8 +1130,10 @@ def get_data_root():
     log.error("Unknown node")
     raise Exception("Unkown node")
 
+
 def get_dyn_data_root():
     return get_data_root()
+
 
 #===============================================================================================
 def autoReader(**kw_args):
