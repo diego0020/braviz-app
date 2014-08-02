@@ -7,11 +7,7 @@ import scipy.spatial
 import nibabel
 
 __author__ = 'da.angulo39'
-os.chdir(r"D:\KAB-db\093\Models")
 
-aseg = nibabel.load("aparc+aseg.nii.gz")
-
-labels = 17
 
 
 
