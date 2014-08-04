@@ -30,7 +30,7 @@ import logging
 # TODO only load scalar metrics if visible
 
 surfaces_scalars_dict = {0: "curv", 1: "avg_curv", 2: "thickness",
-                         3: "sulc", 4: "aparc", 5: "aparc.a2009s", 6: "BA"}
+                         3: "sulc", 4: "aparc", 5: "aparc.a2009s", 7: "BA", 6 : "aparc.DKTatlas40"}
 
 
 class SubjectOverviewApp(QMainWindow):

@@ -1186,7 +1186,7 @@ class SurfaceManager(object):
             scalars = point_data.GetScalars()
             scalar = self.__current_scalars
             t = scalars.GetTuple(ptId)
-            annotations = ['aparc', 'aparc.a2009s', 'BA']
+            annotations = {'aparc', 'aparc.a2009s', 'BA',"aparc.DKTatlas40"}
             if scalar in annotations:
                 label = self.__lut.GetAnnotation(int(t[0]))
                 return "%s-Label: %s" % (scalar, label)
@@ -1313,7 +1313,7 @@ class SurfaceManager(object):
 
     @do_and_render
     def set_scalars(self, scalars):
-        scalars = scalars.lower()
+
         if scalars == self.__current_scalars:
             return
         self.__current_scalars = scalars
