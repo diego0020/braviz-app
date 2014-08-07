@@ -43,7 +43,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="sphere_tab">
         <attribute name="title">
@@ -233,6 +233,9 @@
          </item>
          <item row="10" column="0" colspan="2">
           <widget class="QPushButton" name="copy_from_cursor_button">
+           <property name="toolTip">
+            <string>Move sphere center to cursor(&quot;c&quot;)</string>
+           </property>
            <property name="text">
             <string>Copy from cursor</string>
            </property>

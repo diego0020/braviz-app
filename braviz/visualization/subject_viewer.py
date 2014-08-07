@@ -242,16 +242,18 @@ class SubjectViewer(object):
 
 class FilterArrows(QtCore.QObject):
     key_pressed = pyqtSignal(QtCore.QEvent)
-    def __init__(self,parent=None):
+    def __init__(self,parent=None,other_keys=tuple()):
         super(FilterArrows,self).__init__(parent)
+        keys = {QtCore.Qt.Key_Left, QtCore.Qt.Key_Right}
+        keys.update(other_keys)
+        self.__filter_keys = frozenset(keys)
     def eventFilter(self, QObject, QEvent):
         if QEvent.type() == QEvent.KeyPress:
             q_event_key = QEvent.key()
-            if q_event_key == QtCore.Qt.Key_Left or q_event_key == QtCore.Qt.Key_Right:
-                #print "intercepted arrow"
+            if q_event_key in self.__filter_keys:
+                #print "intercepted key"
                 self.key_pressed.emit(QEvent)
                 return True
-
         return False
 
 class QSubjectViwerWidget(QFrame):
@@ -1736,7 +1738,7 @@ class QOrthogonalPlanesWidget(QFrame):
     def __init__(self, reader, parent):
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
-        filt = FilterArrows(self)
+        filt = FilterArrows(self,(QtCore.Qt.Key_C,))
         filt.key_pressed.connect(lambda e: self.event(e))
         self.__qwindow_interactor.installEventFilter(filt)
         self.__reader = reader

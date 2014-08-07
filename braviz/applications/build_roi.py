@@ -458,6 +458,8 @@ class BuildRoiApp(QMainWindow):
             idx = self.__subjects_list.index(subj)
             prev = self.__subjects_list[idx-1]
             self.change_subject(prev)
+        elif event.key() == QtCore.Qt.Key_C:
+            self.copy_coords_from_cursor()
         else:
             super(BuildRoiApp,self).keyPressEvent(event)
 
