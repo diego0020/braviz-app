@@ -33,7 +33,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -542,6 +542,11 @@
            <item>
             <property name="text">
              <string>Parcellation 2009</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Parcellation DKT</string>
             </property>
            </item>
            <item>

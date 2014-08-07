@@ -51,6 +51,7 @@ SURFACE_SCALARS_DICT = dict(enumerate((
     'sulc',
     'aparc',
     'aparc.a2009s',
+    'aparc.DKTatlas40',
     'BA')
 ))
 

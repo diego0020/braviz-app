@@ -385,6 +385,11 @@
            </item>
            <item>
             <property name="text">
+             <string>Parcellation DKT</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
              <string>Broadman Area</string>
             </property>
            </item>
