@@ -655,7 +655,7 @@ class ModelManager(object):
         if len(self.__available_models) == 0:
             log = logging.getLogger(__name__)
             log.warning("No models found")
-            raise Exception("No models found")
+            #raise Exception("No models found")
 
     def __addModel(self, model_name):
         # if already exists make visible

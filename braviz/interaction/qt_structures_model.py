@@ -77,17 +77,25 @@ class StructureTreeModel(QAbstractItemModel):
 
     def __init__(self, reader, subj=None, dominant=False):
         super(StructureTreeModel, self).__init__()
-        if subj is None:
-            subj = reader.get("ids",None)[0]
-        self.subj = subj
+
         self.reader = reader
         self.pretty_names = cached_get_free_surfer_dict(reader)
         self.hierarchy = None
         self.__id_index = {}
         self.__root = None
         self.leaf_ids = set()
-        self.reload_hierarchy(subj, dominant)
+        self.optimistic_reload_hierarchy(dominant)
+        if subj is None:
+            subj = reader.get("ids",None)[0]
+        self.subj = subj
 
+    def optimistic_reload_hierarchy(self,dominant):
+        possibles = self.reader.get("ids",None)
+        for subj in possibles:
+            self.reload_hierarchy(subj,dominant)
+            if len(self.hierarchy)>0:
+                return
+        raise Exception("Couldnt build structures index")
 
     def reload_hierarchy(self, subj=None, dominant=False):
         if subj is None:
