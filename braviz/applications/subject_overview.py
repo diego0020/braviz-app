@@ -22,12 +22,13 @@ from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVa
 from braviz.interaction.qt_sample_select_dialog import SampleLoadDialog
 import subprocess
 from braviz.interaction.connection import MessageClient
-import binascii
 import cPickle
 import functools
 import logging
 
 # TODO only load scalar metrics if visible
+# TODO Arrows to change subject
+# TODO Application to measure in talairach in planes (perpendicular?)
 
 surfaces_scalars_dict = {0: "curv", 1: "avg_curv", 2: "thickness",
                          3: "sulc", 4: "aparc", 5: "aparc.a2009s", 7: "BA", 6 : "aparc.DKTatlas40"}

@@ -18,6 +18,16 @@
     <normalon>:/icons/roi_builder.png</normalon>
    </iconset>
   </property>
+  <property name="styleSheet">
+   <string notr="true">#sphere_tab{
+	
+	background-image: url(:/icons/circle.png);
+	background-repeat:no-repeat;
+	background-position:center;
+	background-clip:padding;
+	background-origin:padding;
+}</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
@@ -35,7 +45,7 @@
        <property name="currentIndex">
         <number>1</number>
        </property>
-       <widget class="QWidget" name="tab">
+       <widget class="QWidget" name="sphere_tab">
         <attribute name="title">
          <string>Sphere</string>
         </attribute>

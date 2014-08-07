@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>circle.png</file>
     <file>fmri_explore_small.png</file>
     <file>imagine2.svg</file>
     <file>database_out.png</file>
