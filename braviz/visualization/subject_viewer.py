@@ -4,8 +4,10 @@ __author__ = 'Diego'
 
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from PyQt4 import QtCore
 from PyQt4.QtGui import QFrame, QHBoxLayout
 from PyQt4.QtCore import pyqtSignal
+
 from braviz.interaction.structure_metrics import solve_laterality
 import braviz.readAndFilter.tabular_data
 from itertools import izip
@@ -238,6 +240,20 @@ class SubjectViewer(object):
         return fp, pos, vu
 
 
+class FilterArrows(QtCore.QObject):
+    key_pressed = pyqtSignal(QtCore.QEvent)
+    def __init__(self,parent=None):
+        super(FilterArrows,self).__init__(parent)
+    def eventFilter(self, QObject, QEvent):
+        if QEvent.type() == QEvent.KeyPress:
+            q_event_key = QEvent.key()
+            if q_event_key == QtCore.Qt.Key_Left or q_event_key == QtCore.Qt.Key_Right:
+                #print "intercepted arrow"
+                self.key_pressed.emit(QEvent)
+                return True
+
+        return False
+
 class QSubjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
@@ -246,6 +262,9 @@ class QSubjectViwerWidget(QFrame):
     def __init__(self, reader, parent):
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
+        filt = FilterArrows(self)
+        filt.key_pressed.connect(lambda e: self.event(e))
+        self.__qwindow_interactor.installEventFilter(filt)
 
         self.__reader = reader
         self.__subject_viewer = SubjectViewer(self.__qwindow_interactor, self.__reader, self)
@@ -276,6 +295,8 @@ class QSubjectViwerWidget(QFrame):
     def window_level_change_handle(self, window, level):
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
+
+
 
 
 class ImageManager(object):

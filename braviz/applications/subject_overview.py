@@ -185,6 +185,17 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.actionSave_scenario.triggered.connect(self.save_state)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
 
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
+
+
+    def keyPressEvent(self,event):
+        key = event.key()
+        if key == QtCore.Qt.Key_Right:
+            self.go_to_next_subject()
+        elif key == QtCore.Qt.Key_Left:
+            self.go_to_previus_subject()
+        else:
+            super(SubjectOverviewApp,self).keyPressEvent(event)
 
     def change_subject(self, new_subject=None):
         if isinstance(new_subject, QtCore.QModelIndex):
