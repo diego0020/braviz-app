@@ -1736,7 +1736,9 @@ class QOrthogonalPlanesWidget(QFrame):
     def __init__(self, reader, parent):
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
-
+        filt = FilterArrows(self)
+        filt.key_pressed.connect(lambda e: self.event(e))
+        self.__qwindow_interactor.installEventFilter(filt)
         self.__reader = reader
         self.__vtk_viewer = OrthogonalPlanesViewer(self.__qwindow_interactor, self.__reader, self)
         self.__layout = QHBoxLayout()

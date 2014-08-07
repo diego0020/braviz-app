@@ -444,6 +444,22 @@ class BuildRoiApp(QMainWindow):
 
         self.ui.inside_check.clicked.connect(self.caclulate_image_in_roi_pre)
 
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Right:
+            subj = self.__current_subject
+            idx = self.__subjects_list.index(subj)
+            next_idx = (idx+1)%len(self.__subjects_list)
+            next_one = self.__subjects_list[next_idx]
+            self.change_subject(next_one)
+        elif event.key() == QtCore.Qt.Key_Left:
+            subj = self.__current_subject
+            idx = self.__subjects_list.index(subj)
+            prev = self.__subjects_list[idx-1]
+            self.change_subject(prev)
+        else:
+            super(BuildRoiApp,self).keyPressEvent(event)
 
     def start(self):
         self.vtk_widget.initialize_widget()
