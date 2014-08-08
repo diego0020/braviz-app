@@ -8,18 +8,16 @@ import vtk
 import numpy as np
 
 import braviz
-from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
-from braviz.interaction.qt_guis.roi_builder_start import Ui_OpenRoiBuilder
+from braviz.interaction.qt_guis.ortho_measure import Ui_OrtoMeasure
+from braviz.interaction.qt_guis.ortho_measure_start import Ui_OpenMeasureApp
 from braviz.interaction.qt_guis.new_roi import Ui_NewRoi
 from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
-from braviz.interaction.qt_guis.extrapolate_spheres import Ui_ExtrapolateSpheres
-from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
-from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
+
+from braviz.visualization.subject_viewer import QMeasurerWidget
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel, SubjectCheckTable
 from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
-from braviz.interaction.structure_metrics import AggregateInRoi
 import datetime
 import platform
 import os
@@ -31,211 +29,10 @@ AXIAL = 2
 SAGITAL = 0
 CORONAL = 1
 
-# "curv,avg_curv,area,thickness,sulc,aparc,aparc.a2009s,BA".split(",")
-SURFACE_SCALARS_DICT = dict(enumerate((
-    'curv',
-    'avg_curv',
-    'area',
-    'thickness',
-    'sulc',
-    'aparc',
-    'aparc.a2009s',
-    'aparc.DKTatlas40',
-    'BA')
-))
-
-def get_unit_vectors():
-    # from http://blog.marmakoide.org/?p=1
-    n = 20
-    golden_angle = np.pi * (3 - np.sqrt(5))
-    theta = golden_angle * np.arange(n)
-    z = np.linspace(1 - 1.0 / n, 1.0 / n - 1, n)
-    radius = np.sqrt(1 - z * z)
-
-    points = np.zeros((n, 3))
-    points[:,0] = radius * np.cos(theta)
-    points[:,1] = radius * np.sin(theta)
-    points[:,2] = z
-    return points
-
-UNIT_VECTORS = get_unit_vectors()
-
-class ExtrapolateDialog(QDialog):
-    def __init__(self,initial_source,subjects_list,sphere_id,reader):
-        QDialog.__init__(self)
-        self.__subjects = subjects_list
-        self.__sphere_id = sphere_id
-        self.__roi_space = geom_db.get_roi_space(roi_id=sphere_id)
-        self.__origin = initial_source
-        self.__reader = reader
-        self.spheres_df = None
-        data_cols = self.create_data_cols()
-        self.targets_model = SubjectCheckTable(subjects_list,data_cols,("Subject","Sphere R","Sphere Center"))
-        self.ui = Ui_ExtrapolateSpheres()
-        self.ui.setupUi(self)
-        self.ui.tableView.setModel(self.targets_model)
-        self.ui.select_all_button.clicked.connect(self.select_all)
-        self.ui.select_empty.clicked.connect(self.select_empty)
-        self.ui.clear_button.clicked.connect(self.clear_sel)
-        self.populate_origin()
-        try:
-            idx = self.spheres_df.index.get_loc(initial_source)
-        except KeyError:
-            idx = 0
-        self.ui.origin_combo.setCurrentIndex(idx)
-        self.ui.quit_button.clicked.connect(self.accept)
-        self.ui.start_button.clicked.connect(self.start_button_handle)
-
-        self.__started = False
-        self.__cancel_flag = False
-        self.__link_space = None
-        self.__scale_radius = False
-
-        self.__origin_img_id = None
-        self.__origin_radius = None
-        self.__origin_center = None
-        self.__center_link = None
-        self.__radius_link = None
-
-    def create_data_cols(self):
-        self.spheres_df = geom_db.get_all_spheres(self.__sphere_id)
-        radiuses = [""]*len(self.__subjects)
-        centers = [""]*len(self.__subjects)
-        df2 = self.spheres_df.transpose()
-        for i,s in enumerate(self.__subjects):
-            row = df2.get(s)
-            if row is not None:
-                radiuses[i] = "%.4g"%row.radius
-                centers[i] = "( %.3g , %.3g , %.3g )"%(row.ctr_x,row.ctr_y,row.ctr_z)
-        return radiuses,centers
-
-    def select_all(self):
-        self.targets_model.checked = self.__subjects
-
-    def clear_sel(self):
-        self.targets_model.checked = tuple()
-
-    def select_empty(self):
-        self.targets_model.checked = self.spheres_df.index
-
-    def populate_origin(self):
-        for s in self.spheres_df.index:
-            self.ui.origin_combo.addItem(str(s))
-
-
-    def translate_one_point(self,pt,subj):
-
-        subj_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
-        #link -> world
-        w_pt = self.__reader.transformPointsToSpace(pt,self.__link_space,
-                                            subj_img_id,inverse=True)
-        #world -> roi
-        r_pt = self.__reader.transformPointsToSpace(w_pt,self.__roi_space,
-                                            subj_img_id,inverse=False)
-        return r_pt
-
-    def extrapolate_one(self,target):
-        log = logging.getLogger(__file__)
-        log.debug("extrapolating %s",target)
-        if target == self.__origin:
-            return
-        #coordinates
-        if self.__link_space == "None":
-            ctr = self.__origin_center
-        else:
-            try:
-                ctr = self.translate_one_point(self.__center_link,target)
-            except Exception:
-                log.warning("Couldn't extrapolate subject %s",target)
-                return
-
-        #radius
-        if self.__scale_radius is False or self.__link_space == "None":
-            r = self.__origin_radius
-        else:
-            vecs_roi = np.array([self.translate_one_point(r,target) for r in self.__radius_link])
-            r_roi = vecs_roi-ctr
-            #print r_roi
-            norms_r_roi = np.apply_along_axis(np.linalg.norm,1,r_roi)
-            #print norms_r_roi
-            r = np.mean(norms_r_roi)
-
-        geom_db.save_sphere(self.__sphere_id,target,r,ctr)
-
-
-    def start_button_handle(self):
-        if self.__started is True:
-            self.__cancel_flag = True
-            self.ui.start_button.setEnabled(0)
-        else:
-            self.__cancel_flag = False
-            self.ui.start_button.setText("Cancel")
-            self.extrapolate_selected()
-
-    def extrapolate_selected(self):
-        self.__started = True
-        self.ui.progressBar.setValue(0)
-        self.set_controls(0)
-        selected = list(self.targets_model.checked)
-        # set parameters
-        self.__origin = int(self.ui.origin_combo.currentText())
-        self.__link_space = str(self.ui.link_combo.currentText())
-        self.__scale_radius = (self.ui.radio_combo.currentIndex() == 1)
-        origin_sphere = geom_db.load_sphere(self.__sphere_id,self.__origin)
-        self.__origin_radius = origin_sphere[0]
-        self.__origin_center = origin_sphere[1:4]
-        self.__origin_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__origin)
-
-        if self.__link_space != "None":
-            #roi -> world
-            ctr_world = self.__reader.transformPointsToSpace(self.__origin_center,self.__roi_space,
-                                                             self.__origin_img_id,inverse=True)
-            #world -> link
-            ctr_link = self.__reader.transformPointsToSpace(ctr_world,self.__link_space,
-                                                             self.__origin_img_id,inverse=False)
-            self.__center_link = ctr_link
-            if self.__scale_radius is True:
-                rad_vectors = (self.__origin_center+v*self.__origin_radius for v in UNIT_VECTORS)
-                #roi -> world
-                rad_vectors_world = (self.__reader.transformPointsToSpace(r,self.__roi_space,
-                                                             self.__origin_img_id,inverse=True) for r in rad_vectors)
-                #world -> link
-                rad_vectors_link = (self.__reader.transformPointsToSpace(r,self.__link_space,
-                                             self.__origin_img_id,inverse=False) for r in rad_vectors_world)
-                self.__radius_link = list(rad_vectors_link)
-
-        for i,s in enumerate(selected):
-            QtGui.QApplication.instance().processEvents()
-            if self.__cancel_flag is True:
-                break
-            self.extrapolate_one(s)
-            self.ui.progressBar.setValue((i+1)*100/len(selected))
-        r,c = self.create_data_cols()
-        self.targets_model.set_data_cols((r,c))
-        self.__started = False
-        self.ui.start_button.setText("Start Extrapolation")
-        self.set_controls(1)
-        QtCore.QTimer.singleShot(1000,partial_f(self.ui.start_button.setEnabled,1))
-
-
-    def set_controls(self,value):
-        self.ui.select_all_button.setEnabled(value)
-        self.ui.select_empty.setEnabled(value)
-        self.ui.clear_button.setEnabled(value)
-        self.ui.tableView.setEnabled(value)
-        self.ui.origin_combo.setEnabled(value)
-        self.ui.link_combo.setEnabled(value)
-        self.ui.quit_button.setEnabled(value)
-        self.ui.radio_combo.setEnabled(value)
-
-
-
-
-
 class StartDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
-        self.ui = Ui_OpenRoiBuilder()
+        self.ui = Ui_OpenMeasureApp()
         self.ui.setupUi(self)
         self.name = "?"
         self.scenario_data = None
@@ -244,13 +41,13 @@ class StartDialog(QDialog):
         self.ui.load_scenario.clicked.connect(self.load_scenario)
 
     def new_roi(self):
-        new_roi_dialog = NewRoi()
+        new_roi_dialog = NewMeasure()
         res = new_roi_dialog.exec_()
         if res == new_roi_dialog.Accepted:
             self.name = new_roi_dialog.name
             coords = new_roi_dialog.coords
             desc = new_roi_dialog.desc
-            geom_db.create_roi(self.name, 0, coords, desc)
+            geom_db.create_roi(self.name, 1, coords, desc)
             self.accept()
 
     def load_roi(self):
@@ -271,17 +68,16 @@ class StartDialog(QDialog):
         else:
             self.scenario_data = None
 
-class NewRoi(QDialog):
-    def __init__(self,block_space=None):
+class NewMeasure(QDialog):
+    def __init__(self):
         QDialog.__init__(self)
         self.ui = Ui_NewRoi()
         self.ui.setupUi(self)
         self.ui.error_msg.setText("")
         self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(0)
         self.ui.roi_name.textChanged.connect(self.check_name)
-        if block_space is not None:
-            self.ui.roi_space.setCurrentText(block_space)
-            self.ui.roi_space.setEnabled(0)
+        self.ui.roi_space.setCurrentText("Talairach")
+        self.ui.roi_space.setEnabled(0)
         self.name = None
         self.coords = None
         self.desc = None
@@ -304,14 +100,13 @@ class NewRoi(QDialog):
         self.desc = unicode(self.ui.roi_desc.toPlainText())
 
 
-
 class LoadRoiDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
         self.ui = Ui_LoadRoiDialog()
         self.ui.setupUi(self)
         self.name = None
-        spheres_df = geom_db.get_available_spheres_df()
+        spheres_df = geom_db.get_available_lines_df()
         self.model = DataFrameModel(spheres_df, string_columns={0, 1})
         self.ui.tableView.setModel(self.model)
         self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(0)
@@ -336,7 +131,7 @@ class ConfirmSubjectChangeDialog(QDialog):
         self.save_requested = True
 
 
-class BuildRoiApp(QMainWindow):
+class MeasureApp(QMainWindow):
     def __init__(self, roi_name=None):
         QMainWindow.__init__(self)
         self.ui = None
@@ -357,43 +152,30 @@ class BuildRoiApp(QMainWindow):
         try:
             self.__curent_space = geom_db.get_roi_space(roi_name)
         except Exception:
-            self.__curent_space = "World"
-        self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
+            self.__curent_space = "Talairach"
+        assert self.__curent_space == "Talairach"
+        self.vtk_widget = QMeasurerWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
 
-        self.__fibers_map = None
-        self.__fibers_ac = None
-        self.__filetred_pd = None
-        self.__full_pd = None
-        self.__fibers_filterer = None
-
         if self.__roi_id is not None:
-            self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
+            self.__checked_subjects = geom_db.subjects_with_line(self.__roi_id)
         else:
             self.__checked_subjects = set()
         assert isinstance(self.__checked_subjects, set)
         self.__subjects_check_model = SubjectChecklist(self.__subjects_list)
         self.__subjects_check_model.checked = self.__checked_subjects
 
-        self.__sphere_modified = True
+        self.__line_modified = True
 
         self.setup_ui()
-        self.__sphere_color = (255,255,255)
-        self.__sphere_center = None
-        self.__sphere_radius = None
+        self.__line_color = (255,255,255)
         self.__aux_lut = None
-        self.__mean_in_img_calculator = AggregateInRoi(self.reader)
-        self.vtk_viewer.sphere.show()
-        self.update_sphere_radius()
-        self.update_sphere_center()
-        if self.__roi_id is not None:
-            self.load_sphere(self.__current_subject)
 
 
     def setup_ui(self):
-        self.ui = Ui_RoiBuildApp()
+        self.ui = Ui_OrtoMeasure()
         self.ui.setupUi(self)
-        self.ui.sphere_name.setText(self.__roi_name)
+        self.ui.measure_name.setText(self.__roi_name)
 
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
@@ -414,35 +196,19 @@ class BuildRoiApp(QMainWindow):
         self.ui.contrast_combo.setCurrentIndex(0)
         self.ui.contrast_combo.setEnabled(False)
         self.ui.contrast_combo.activated.connect(self.change_contrast)
-        self.ui.sphere_radius.valueChanged.connect(self.update_sphere_radius)
-        self.ui.sphere_x.valueChanged.connect(self.update_sphere_center)
-        self.ui.sphere_y.valueChanged.connect(self.update_sphere_center)
-        self.ui.sphere_z.valueChanged.connect(self.update_sphere_center)
-        self.ui.copy_from_cursor_button.clicked.connect(self.copy_coords_from_cursor)
-        self.ui.sphere_rep.currentIndexChanged.connect(self.set_sphere_representation)
-        self.ui.sphere_opac.valueChanged.connect(self.set_sphere_opac)
-
-        self.ui.show_fibers_check.stateChanged.connect(self.show_fibers)
+        self.ui.line_opac.valueChanged.connect(self.set_line_opac)
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
         self.ui.subjects_list.activated.connect(self.select_subject)
-        self.ui.subject_sphere_label.setText("Subject %s" % self.__current_subject)
-        self.ui.save_sphere.clicked.connect(self.save_sphere)
-
-        self.ui.surface_combo.currentIndexChanged.connect(self.select_surface)
-        self.ui.scalar_combo.currentIndexChanged.connect(self.select_surface_scalars)
-        self.ui.left_cortex_check.stateChanged.connect(self.toggle_left_surface)
-        self.ui.right_cortex_check.stateChanged.connect(self.toggle_right_surface)
-        self.ui.cortex_opac.valueChanged.connect(self.set_cortex_opacity)
-
-        self.ui.extrapolate_button.clicked.connect(self.launch_extrapolate_dialog)
+        self.ui.subject_line_label.setText("Subject %s" % self.__current_subject)
+        self.ui.save_line.clicked.connect(self.save_line)
 
         self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
         self.ui.actionLoad_Scenario.triggered.connect(self.load_scenario)
-        self.ui.actionSave_sphere_as.triggered.connect(self.save_sphere_as)
-        self.ui.color_button.clicked.connect(self.set_sphere_color)
+        self.ui.actionSave_line_as.triggered.connect(self.save_line_as)
+        self.ui.color_button.clicked.connect(self.set_line_color)
 
-        self.ui.inside_check.clicked.connect(self.caclulate_image_in_roi_pre)
+        self.ui.reset_measure.clicked.connect(self.reset_measure)
 
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
@@ -458,10 +224,8 @@ class BuildRoiApp(QMainWindow):
             idx = self.__subjects_list.index(subj)
             prev = self.__subjects_list[idx-1]
             self.change_subject(prev)
-        elif event.key() == QtCore.Qt.Key_C:
-            self.copy_coords_from_cursor()
         else:
-            super(BuildRoiApp,self).keyPressEvent(event)
+            super(MeasureApp,self).keyPressEvent(event)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -475,7 +239,9 @@ class BuildRoiApp(QMainWindow):
         self.vtk_viewer.finish_initializing()
         if self.__roi_id is not None:
             self.change_subject(self.__current_subject)
-        self.select_surface(None)
+
+    def reset_measure(self):
+        self.vtk_viewer.reset_measure()
 
     def set_image(self, modality,contrast=None):
         self.__current_image_mod = modality
@@ -491,57 +257,8 @@ class BuildRoiApp(QMainWindow):
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
         self.ui.sagital_slice.setMaximum(dims[SAGITAL])
         self.update_slice_controls()
-        self.caclulate_image_in_roi_pre()
 
-    def caclulate_image_in_roi_pre(self):
-        if not self.ui.inside_check.isChecked():
-            self.ui.mean_inside_text.clear()
-            self.ui.mean_inside_text.setEnabled(0)
-            return
 
-        modality = self.__current_image_mod
-        contrast = self.__current_contrast
-        if self.__sphere_center is None or self.__sphere_radius is None:
-            self.ui.mean_inside_text.clear()
-            return
-        self.ui.mean_inside_text.setEnabled(1)
-        if contrast is not None:
-            self.ui.mean_inside_label.setText("Mean Z-score")
-            self.ui.mean_inside_label.setToolTip("Mean Z-score inside the ROI")
-            self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,"FMRI",modality,contrast,
-                                                     mean=True)
-        else:
-            if modality == "DTI":
-                self.ui.mean_inside_label.setText("Mean FA")
-                self.ui.mean_inside_label.setToolTip("Mean FA inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,"FA",mean=True)
-            elif modality in {"APARC","WMPARC"}:
-                self.ui.mean_inside_label.setText("Label Mode")
-                self.ui.mean_inside_label.setToolTip("Mode of labels inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,modality,mean=False)
-                self.__aux_lut = self.reader.get(self.__current_image_mod,None,lut=True)
-            else:
-                assert modality == "MRI"
-                self.ui.mean_inside_label.setText("Mean value")
-                self.ui.mean_inside_label.setToolTip("Mean value of image inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,modality,mean=True)
-
-        self.caclulate_image_in_roi()
-
-    def caclulate_image_in_roi(self):
-        if not self.ui.inside_check.isChecked():
-            return
-        try:
-            value = self.__mean_in_img_calculator.get_value(self.__sphere_center,self.__sphere_radius)
-        except Exception:
-            value = np.nan
-        if self.__current_image_mod in {"APARC","WMPARC"}:
-            int_val = int(value[0])
-            idx = self.__aux_lut.GetAnnotatedValueIndex(int_val)
-            label = self.__aux_lut.GetAnnotation(idx)
-            self.ui.mean_inside_text.setText(label)
-        else:
-            self.ui.mean_inside_text.setText("%.4g"%value)
 
     def update_slice_controls(self, new_slice=None):
         curr_slices = self.vtk_viewer.get_current_slice()
@@ -564,99 +281,25 @@ class BuildRoiApp(QMainWindow):
             self.vtk_viewer.image_planes[axis].hide_image()
         self.vtk_viewer.ren_win.Render()
 
-    def update_sphere_center(self, dummy=None):
-        ctr = (self.ui.sphere_x.value(), self.ui.sphere_y.value(), self.ui.sphere_z.value())
-        self.__sphere_center = ctr
-        self.vtk_viewer.sphere.set_center(ctr)
-        self.show_fibers()
-        self.caclulate_image_in_roi()
-        self.vtk_viewer.ren_win.Render()
-        self.sphere_just_changed()
 
-    def update_sphere_radius(self, r=None):
-        if r is None:
-            r = self.ui.sphere_radius.value()
-        self.__sphere_radius = r
-        self.vtk_viewer.sphere.set_radius(r)
-        self.show_fibers()
-        self.caclulate_image_in_roi()
-        self.vtk_viewer.ren_win.Render()
-        self.sphere_just_changed()
-
-    def set_sphere_representation(self, index):
-        if index == 0:
-            rep = "solid"
-        else:
-            rep = "wire"
-        self.vtk_viewer.sphere.set_repr(rep)
-        self.vtk_viewer.ren_win.Render()
-
-    def set_sphere_opac(self, opac_val):
+    def set_line_opac(self, opac_val):
         self.vtk_viewer.sphere.set_opacity(opac_val)
         self.vtk_viewer.ren_win.Render()
 
-    def copy_coords_from_cursor(self):
-        coords = self.vtk_viewer.current_position()
-        if coords is None:
-            return
-        cx, cy, cz = coords
-        self.ui.sphere_x.setValue(cx)
-        self.ui.sphere_y.setValue(cy)
-        self.ui.sphere_z.setValue(cz)
-
-    def show_fibers(self, event=None):
-        if self.ui.show_fibers_check.checkState() != QtCore.Qt.Checked:
-            if self.__fibers_ac is not None:
-                self.__fibers_ac.SetVisibility(0)
-                if event is not None:
-                    self.vtk_viewer.ren_win.Render()
-            return
-        if self.__fibers_ac is None:
-            self.__fibers_ac = vtk.vtkActor()
-            self.__fibers_map = vtk.vtkPolyDataMapper()
-            self.vtk_viewer.ren.AddActor(self.__fibers_ac)
-            self.__fibers_ac.SetMapper(self.__fibers_map)
-            self.__fibers_ac.SetVisibility(0)
-
-        if self.__full_pd == "Unavailable":
-            #dont try to load again
-            return
-
-        assert self.__fibers_map is not None
-        if self.__fibers_filterer is None:
-            self.__fibers_filterer = FilterBundleWithSphere()
-        if self.__full_pd is None:
-            try:
-                self.__full_pd = self.reader.get("fibers", self.__current_img_id, space=self.__curent_space)
-            except Exception:
-                self.__full_pd = "Unavailable"
-                self.__fibers_ac.SetVisibility(0)
-                self.vtk_viewer.ren_win.Render()
-                return
-            self.__fibers_filterer.set_bundle(self.__full_pd)
-
-        ctr = (self.ui.sphere_x.value(), self.ui.sphere_y.value(), self.ui.sphere_z.value())
-        r = self.ui.sphere_radius.value()
-        self.__filetred_pd = self.__fibers_filterer.filter_bundle_with_sphere(ctr, r)
-        self.__fibers_map.SetInputData(self.__filetred_pd)
-        self.__fibers_ac.SetVisibility(1)
-        if event is not None:
-            self.vtk_viewer.ren_win.Render()
-
     def select_subject(self, index):
         subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
-        if self.__sphere_modified:
+        if self.__line_modified:
             confirmation_dialog = ConfirmSubjectChangeDialog()
             res = confirmation_dialog.exec_()
             if res == confirmation_dialog.Rejected:
                 return
             if confirmation_dialog.save_requested:
-                self.save_sphere()
+                self.save_line()
         self.change_subject(subj)
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
-        self.ui.subject_sphere_label.setText("Subject %s" % self.__current_subject)
+        self.ui.subject_line_label.setText("Subject %s" % self.__current_subject)
         img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, new_subject)
         self.__current_img_id = img_id
         self.reload_contrast_names()
@@ -665,28 +308,21 @@ class BuildRoiApp(QMainWindow):
             self.vtk_viewer.change_subject(img_id)
         except Exception:
             log.warning("Couldnt load data for subject %s",new_subject)
-        self.load_sphere(new_subject)
-        self.__full_pd = None
-        self.show_fibers()
-        self.caclulate_image_in_roi_pre()
-        self.__sphere_modified = False
+        self.load_line(new_subject)
+        self.__line_modified = False
         print new_subject
 
-    def save_sphere(self):
-        x = self.ui.sphere_x.value()
-        y = self.ui.sphere_y.value()
-        z = self.ui.sphere_z.value()
-        r = self.ui.sphere_radius.value()
-        geom_db.save_sphere(self.__roi_id, self.__current_subject, r, (x, y, z))
+    def save_line(self):
+        print "Todo"
         self.refresh_checked()
-        self.__sphere_modified = False
+        self.__line_modified = False
         self.ui.save_line.setEnabled(0)
 
-    def sphere_just_changed(self):
-        self.__sphere_modified = True
+    def line_just_changed(self):
+        self.__line_modified = True
         self.ui.save_line.setEnabled(1)
 
-    def load_sphere(self, subj):
+    def load_line(self, subj):
         res = geom_db.load_sphere(self.__roi_id, subj)
         if res is None:
             return
@@ -697,7 +333,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.sphere_z.setValue(z)
         self.update_sphere_radius()
         self.update_sphere_center()
-        self.__sphere_modified = False
+        self.__line_modified = False
         self.ui.save_line.setEnabled(0)
 
     def refresh_checked(self):
@@ -742,37 +378,6 @@ class BuildRoiApp(QMainWindow):
         mod = str(self.ui.image_combo.currentText())
         self.set_image(mod,new_contrast)
 
-    def select_surface_scalars(self,index):
-        scalar_name = SURFACE_SCALARS_DICT[int(index)]
-        self.vtk_viewer.cortex.set_scalars(scalar_name)
-
-    def select_surface(self,index):
-        surface_name = str(self.ui.surface_combo.currentText())
-        self.vtk_viewer.cortex.set_surface(surface_name)
-
-    def toggle_left_surface(self,status):
-        b_status = (status == QtCore.Qt.Checked)
-        self.vtk_viewer.cortex.set_hemispheres(left=b_status)
-
-    def toggle_right_surface(self,status):
-        b_status = (status == QtCore.Qt.Checked)
-        self.vtk_viewer.cortex.set_hemispheres(right=b_status)
-
-    def set_cortex_opacity(self,int_opac):
-        self.vtk_viewer.cortex.set_opacity(int_opac)
-
-    def launch_extrapolate_dialog(self):
-        if self.__sphere_modified:
-            check_save = ConfirmSubjectChangeDialog()
-            res = check_save.exec_()
-            if res == check_save.Rejected:
-                return
-            if check_save.save_requested:
-                self.save_sphere()
-        extrapol_dialog = ExtrapolateDialog(self.__current_subject,self.__subjects_list,self.__roi_id, self.reader)
-        res = extrapol_dialog.exec_()
-        self.refresh_checked()
-
     def get_state(self):
         state = dict()
         state["roi_id"] = self.__roi_id
@@ -800,7 +405,7 @@ class BuildRoiApp(QMainWindow):
         visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
         visual_dict["spher_rep"] = self.ui.sphere_rep.currentIndex()
         visual_dict["sphere_opac"] = self.ui.sphere_opac.value()
-        visual_dict["sphere_color"] = self.__sphere_color
+        visual_dict["sphere_color"] = self.__line_color
         visual_dict["show_fibers"] = self.ui.show_fibers_check.checkState() == QtCore.Qt.Checked
         state["visual"] = visual_dict
 
@@ -834,7 +439,7 @@ class BuildRoiApp(QMainWindow):
         self.vtk_viewer.change_space(self.__curent_space)
         self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
         self.__subjects_check_model.checked = self.__checked_subjects
-        self.__sphere_modified = False
+        self.__line_modified = False
 
         #context
         context_dict = state["context"]
@@ -867,8 +472,8 @@ class BuildRoiApp(QMainWindow):
 
         #visual
         visual_dict = state["visual"]
-        self.__sphere_color = visual_dict["sphere_color"]
-        self.vtk_viewer.sphere.set_color(*self.__sphere_color)
+        self.__line_color = visual_dict["sphere_color"]
+        self.vtk_viewer.sphere.set_color(*self.__line_color)
         fp,pos,vu = visual_dict["camera"]
         self.vtk_viewer.set_camera(fp,pos,vu)
         self.ui.sphere_rep.setCurrentIndex(visual_dict["spher_rep"])
@@ -876,7 +481,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.show_fibers_check.setChecked(visual_dict.get("show_fibers",False))
 
         self.change_subject(self.__current_subject)
-        self.__sphere_modified = False
+        self.__line_modified = False
 
 
     def save_scenario(self):
@@ -905,8 +510,8 @@ class BuildRoiApp(QMainWindow):
             self.load_state(wanted_state)
 
 
-    def save_sphere_as(self):
-        dialog = NewRoi(self.__curent_space)
+    def save_line_as(self):
+        dialog = NewMeasure(self.__curent_space)
         res = dialog.exec_()
         if res == dialog.Accepted:
             new_name = dialog.name
@@ -920,11 +525,11 @@ class BuildRoiApp(QMainWindow):
 
 
 
-    def set_sphere_color(self):
+    def set_line_color(self):
         color = QtGui.QColorDialog.getColor()
         self.ui.color_button.setStyleSheet("#color_button{color : %s}"%color.name())
         self.vtk_viewer.sphere.set_color(color.red(),color.green(),color.blue())
-        self.__sphere_color = (color.red(),color.green(),color.blue())
+        self.__line_color = (color.red(),color.green(),color.blue())
         self.vtk_viewer.ren_win.Render()
 
 
@@ -943,13 +548,13 @@ def run():
     if res != start_dialog.Accepted:
         return
     if start_dialog.scenario_data is not None:
-        main_window = BuildRoiApp(None)
+        main_window = MeasureApp(None)
         main_window.show()
         main_window.start()
         main_window.load_state(start_dialog.scenario_data)
     else:
         roi_name = start_dialog.name
-        main_window = BuildRoiApp(roi_name)
+        main_window = MeasureApp(roi_name)
         main_window.show()
         main_window.start()
     try:

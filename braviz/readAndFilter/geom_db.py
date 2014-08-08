@@ -1,5 +1,6 @@
 from __future__ import division
 from braviz.readAndFilter.tabular_data import get_connection
+import numpy as np
 from pandas.io import sql
 
 __author__ = 'Diego'
@@ -37,6 +38,20 @@ def get_available_spheres_df():
     df = sql.read_sql(q, con, index_col="name")
     return df
 
+def get_available_lines_df():
+    con = get_connection()
+    q = """
+        SELECT roi_name as name, roi_desc as description, num as quantity
+        FROM geom_rois JOIN
+        (SELECT line_id, count(*) as num FROM geom_lines group by line_id
+        UNION
+        SELECT roi_id as line_id, 0 as num FROM geom_rois WHERE line_id not in (select line_id FROM geom_lines)
+        )
+        ON roi_id = line_id
+        WHERE roi_type = 1
+        """
+    df = sql.read_sql(q, con, index_col="name")
+    return df
 
 COORDS = {0: "World", 1: "Talairach", 2: "Dartel"}
 COORDS_I = {"World": 0, "Talairach": 1, "Dartel": 2}
@@ -78,6 +93,13 @@ def subjects_with_sphere(sphere_id):
     subjs = set(r[0] for r in rows)
     return subjs
 
+def subjects_with_line(line_id):
+    con = get_connection()
+    q = "SELECT subject FROM geom_lines WHERE line_id = ?"
+    cur = con.execute(q, (line_id,))
+    rows = cur.fetchall()
+    subjs = set(r[0] for r in rows)
+    return subjs
 
 def save_sphere(sphere_id, subject, radius, center):
     x, y, z = center
@@ -100,6 +122,24 @@ def get_all_spheres(sphere_id):
     con = get_connection()
     df = sql.read_sql(q, con, index_col="subject", params=(sphere_id,))
     return df
+
+def save_line(line_id, subject, point1, point2):
+    p1 = np.array(point1)
+    p2 = np.array(point2)
+    length = np.linalg.norm(p1-p2)
+
+    q = "INSERT OR REPLACE INTO geom_lines VALUES (?,?, ?,?,?, ?,?,?, ?)"
+    con = get_connection()
+    con.execute(q, (line_id, subject, p1[0],p1[1],p1[2],p2[0],p2[1],p2[2],length))
+    con.commit()
+
+
+def load_line(line_id, subject):
+    q = "SELECT p1_x,p1_y,p1_z,p2_x,p2_y,p2_z FROM geom_lines WHERE line_id = ? and subject = ?"
+    con = get_connection()
+    cur = con.execute(q, (int(line_id), int(subject)))
+    res = cur.fetchone()
+    return res
 
 def copy_spheres(orig_id,dest_id):
     q = """INSERT OR REPLACE INTO geom_spheres

@@ -5,7 +5,7 @@ __author__ = 'Diego'
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt4 import QtCore
-from PyQt4.QtGui import QFrame, QHBoxLayout
+from PyQt4.QtGui import QFrame, QHBoxLayout, QApplication
 from PyQt4.QtCore import pyqtSignal
 
 from braviz.interaction.structure_metrics import solve_laterality
@@ -326,6 +326,8 @@ class ImageManager(object):
 
     @property
     def image_plane_widget(self):
+        if self.__image_plane_widget is None:
+            self.create_image_plane_widget()
         return self.__image_plane_widget
 
     @do_and_render
@@ -1634,6 +1636,245 @@ class OrthogonalPlanesViewer(object):
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
         self.iren.Render()
 
+class MeasurerViewer(object):
+    def __init__(self, render_window_interactor, reader, widget):
+        self.iren = render_window_interactor
+        self.ren_win = render_window_interactor.GetRenderWindow()
+        self.ren = vtk.vtkRenderer()
+        self.ren.SetBackground((0.75, 0.75, 0.75))
+        self.ren.GradientBackgroundOn()
+        self.ren.SetBackground2((0.5, 0.5, 0.5))
+        self.ren.SetBackground((0.2, 0.2, 0.2))
+        self.ren.SetUseDepthPeeling(1)
+        self.ren_win.SetMultiSamples(0)
+        self.ren_win.AlphaBitPlanesOn()
+        self.ren.SetOcclusionRatio(0.1)
+        self.ren_win.AddRenderer(self.ren)
+
+        self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        self.axes = braviz.visualization.OrientationAxes()
+        self.axes.initialize(self.iren)
+
+        self.light = vtk.vtkLight()
+        self.ren.AddLight(self.light)
+        self.light.SetLightTypeToHeadlight()
+
+        self.reader = reader
+        self.__widget = widget
+
+        self.picker = vtk.vtkCellPicker()
+        self.picker.SetTolerance(0.0005)
+        self.iren.SetPicker(self.picker)
+
+        # state
+        self.__current_subject = None
+        self.__current_space = "talairach"
+        self.__curent_modality = None
+
+        # internal data
+
+        self.__x_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
+                                              picker=self.picker)
+        self.__y_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
+                                              picker=self.picker)
+        self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
+                                              picker=self.picker)
+        self.__image_planes = (self.__x_image_manager, self.__y_image_manager, self.__z_image_manager)
+        self.x_image.change_image_orientation(0)
+        self.y_image.change_image_orientation(1)
+        self.z_image.change_image_orientation(2)
+        for pw in self.__image_planes:
+            pw.image_plane_widget.InteractionOff()
+
+        self.hide_image()
+
+
+        self.__placed = False
+        self.measure_widget = vtk.vtkDistanceWidget()
+        self.measure_widget.KeyPressActivationOff()
+        self.measure_repr = vtk.vtkDistanceRepresentation3D()
+        acs = vtk.vtkPropCollection()
+        self.measure_repr.GetActors(acs)
+        for i in xrange(acs.GetNumberOfItems()):
+            ac =acs.GetItemAsObject(i)
+            ac.GetProperty().SetLineWidth(2)
+        self.measure_widget.SetRepresentation(self.measure_repr)
+        self.measure_widget.SetInteractor(self.iren)
+        self.obs_id=self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent,self.dummy_listener)
+        self.obs_id2=self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent,self.dummy_listener)
+
+    def dummy_listener(self,object,event):
+        z_plane = self.z_image.image_plane_widget.GetSlicePosition()
+
+        modifiers = QApplication.keyboardModifiers()
+        straight = False
+        if QtCore.Qt.ControlModifier & modifiers:
+            straight = True
+
+        repr = object.GetRepresentation()
+        r1 = repr.GetPoint1Representation()
+        r2 = repr.GetPoint2Representation()
+        r1i = r1.GetInteractionState()
+        r2i = r2.GetInteractionState()
+
+        if r1i>0 or not self.__placed:
+            self.__placed = True
+            p1 = np.zeros(3)
+            repr.GetPoint1WorldPosition(p1)
+            p1[2]=z_plane
+            repr.SetPoint1WorldPosition(p1)
+            if straight:
+                ref = np.zeros(3)
+                repr.GetPoint2WorldPosition(ref)
+                dif = np.abs(p1 - ref)
+                if dif[0]>dif[1]:
+                    p1[1]=ref[1]
+                else:
+                    p1[0]=ref[0]
+                repr.SetPoint1WorldPosition(p1)
+        else:
+            p2 = np.zeros(3)
+            repr.GetPoint2WorldPosition(p2)
+            p2[2] = z_plane
+            repr.SetPoint2WorldPosition(p2)
+            if straight:
+                ref = np.zeros(3)
+                repr.GetPoint1WorldPosition(ref)
+                dif = np.abs(p2 - ref)
+                if dif[0]>dif[1]:
+                    p2[1]=ref[1]
+                else:
+                    p2[0]=ref[0]
+                repr.SetPoint2WorldPosition(p2)
+        camera = self.ren.GetActiveCamera()
+
+
+
+
+
+
+
+        #print object
+
+    def finish_initializing(self):
+        self.link_window_level()
+        self.ren.ResetCameraClippingRange()
+        self.ren.ResetCamera()
+        self.measure_widget.On()
+
+
+    def link_window_level(self):
+        "call after initializing the planes"
+        if self.__curent_modality not in ("DTI","FMRI"):
+            self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
+            self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
+
+        def slice_movement(caller, event):
+            if caller == self.x_image.image_plane_widget:
+                axis = 0
+            elif caller == self.y_image.image_plane_widget:
+                axis = 1
+            else:
+                axis = 2
+            sl = self.image_planes[axis].get_current_image_slice()
+            self.slice_changed(axis,sl)
+
+        self.x_image.image_plane_widget.AddObserver(self.x_image.image_plane_widget.slice_change_event, slice_movement)
+        self.y_image.image_plane_widget.AddObserver(self.y_image.image_plane_widget.slice_change_event, slice_movement)
+        self.z_image.image_plane_widget.AddObserver(self.z_image.image_plane_widget.slice_change_event, slice_movement)
+
+    @do_and_render
+    def show_image(self):
+        for im in self.__image_planes:
+            im.show_image(skip_render=True)
+
+    @do_and_render
+    def hide_image(self):
+        for im in self.__image_planes:
+            im.hide_image(skip_render=True)
+
+    @do_and_render
+    def change_subject(self, subj):
+        ex = None
+        for im in self.__image_planes:
+            try:
+                im.change_subject(subj, skip_render=True)
+            except Exception as e:
+                ex = e
+        self.link_window_level()
+
+    @do_and_render
+    def change_image_modality(self, mod,contrast=None):
+        mod = mod.upper()
+        if contrast is not None:
+            pdgm = mod
+            mod = "FMRI"
+        else:
+            pdgm = None
+        for im in self.__image_planes:
+            im.change_image_modality(mod, pdgm,mod,skip_render=True,contrast=contrast)
+        self.__curent_modality = mod
+        self.link_window_level()
+
+    def get_number_of_slices(self):
+        n_slices = self.x_image.image_plane_widget.GetInput().GetDimensions()
+        return n_slices
+
+    def get_current_slice(self):
+        return (self.x_image.get_current_image_slice(),
+                self.y_image.get_current_image_slice(),
+                self.z_image.get_current_image_slice(),)
+
+    def get_camera_parameters(self):
+        cam1 = self.ren.GetActiveCamera()
+        fp = cam1.GetFocalPoint()
+        pos = cam1.GetPosition()
+        vu = cam1.GetViewUp()
+        return fp, pos, vu
+
+    def set_camera(self, focal_point, position, view_up):
+        cam1 = self.ren.GetActiveCamera()
+        cam1.SetFocalPoint(focal_point)
+        cam1.SetPosition(position)
+        cam1.SetViewUp(view_up)
+
+        self.ren.ResetCameraClippingRange()
+        self.ren_win.Render()
+
+    @property
+    def image_planes(self):
+        return self.__image_planes
+
+    @property
+    def x_image(self):
+        return self.__x_image_manager
+
+    @property
+    def y_image(self):
+        return self.__y_image_manager
+
+    @property
+    def z_image(self):
+        return self.__z_image_manager
+
+
+    @do_and_render
+    def change_space(self, new_space):
+        for im in self.image_planes:
+            im.change_space(new_space, skip_render=True)
+        self.__current_space = new_space
+        self.iren.Render()
+
+    @do_and_render
+    def reset_measure(self):
+        self.measure_widget.Off()
+        self.measure_widget.SetWidgetStateToStart()
+        self.measure_widget.On()
+        self.__placed = False
+
+    def slice_changed(self,axis,slice):
+        print "TODO: update measure"
+
 
 class AdditionalCursors(object):
     def __init__(self, ren):
@@ -1729,6 +1970,46 @@ class SphereProp(object):
         r, g, b = map(lambda x: x / 255.0, (r, g, b))
         self.__actor.GetProperty().SetColor(r, g, b)
 
+
+class QMeasurerWidget(QFrame):
+    slice_changed = pyqtSignal(int)
+    image_window_changed = pyqtSignal(float)
+    image_level_changed = pyqtSignal(float)
+
+    def __init__(self, reader, parent):
+        QFrame.__init__(self, parent)
+        self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
+        filt = FilterArrows(self,(QtCore.Qt.Key_C,))
+        filt.key_pressed.connect(lambda e: self.event(e))
+        self.__qwindow_interactor.installEventFilter(filt)
+        self.__reader = reader
+        self.__vtk_viewer = MeasurerViewer(self.__qwindow_interactor, self.__reader, self)
+        self.__layout = QHBoxLayout()
+        self.__layout.addWidget(self.__qwindow_interactor)
+        self.__layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.__layout)
+
+        # self.subject_viewer.ren_win.Render()
+
+        # self.__qwindow_interactor.show()
+
+    def initialize_widget(self):
+        """call after showing the interface"""
+        self.__qwindow_interactor.Initialize()
+        self.__qwindow_interactor.Start()
+        # self.__subject_viewer.show_cone()
+
+    @property
+    def orthogonal_viewer(self):
+        return self.__vtk_viewer
+
+    def slice_change_handle(self, new_slice):
+        self.slice_changed.emit(new_slice)
+        # print new_slice
+
+    def window_level_change_handle(self, window, level):
+        self.image_window_changed.emit(window)
+        self.image_level_changed.emit(level)
 
 class QOrthogonalPlanesWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -1984,6 +2265,7 @@ class fMRI_viewer(object):
         self.ren_win.Render()
 
 
+
 class FmriContours(object):
     def __init__(self,ren):
         self.__contour_filter = vtk.vtkContourFilter()
@@ -2062,6 +2344,7 @@ class QFmriWidget(QFrame):
 
     def cursor_move_handler(self,coordinates):
         self.cursor_moved.emit(tuple(coordinates))
+
 if __name__ == "__main__":
     import sys
     import PyQt4.QtGui as QtGui
