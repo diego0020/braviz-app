@@ -452,12 +452,12 @@ class BuildRoiApp(QMainWindow):
             idx = self.__subjects_list.index(subj)
             next_idx = (idx+1)%len(self.__subjects_list)
             next_one = self.__subjects_list[next_idx]
-            self.change_subject(next_one)
+            self.select_subject(subj=next_one)
         elif event.key() == QtCore.Qt.Key_Left:
             subj = self.__current_subject
             idx = self.__subjects_list.index(subj)
             prev = self.__subjects_list[idx-1]
-            self.change_subject(prev)
+            self.select_subject(subj=prev)
         elif event.key() == QtCore.Qt.Key_C:
             self.copy_coords_from_cursor()
         else:
@@ -643,8 +643,9 @@ class BuildRoiApp(QMainWindow):
         if event is not None:
             self.vtk_viewer.ren_win.Render()
 
-    def select_subject(self, index):
-        subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
+    def select_subject(self, index=None,subj=None):
+        if subj is None:
+            subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
         if self.__sphere_modified:
             confirmation_dialog = ConfirmSubjectChangeDialog()
             res = confirmation_dialog.exec_()

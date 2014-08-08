@@ -367,14 +367,14 @@
            </property>
           </widget>
          </item>
-         <item row="25" column="0">
+         <item row="28" column="0">
           <widget class="QLabel" name="mean_inside_label">
            <property name="text">
             <string>Mean IMG:</string>
            </property>
           </widget>
          </item>
-         <item row="25" column="1">
+         <item row="28" column="1">
           <widget class="QLineEdit" name="mean_inside_text">
            <property name="enabled">
             <bool>false</bool>
@@ -382,14 +382,70 @@
            <property name="readOnly">
             <bool>true</bool>
            </property>
+           <property name="placeholderText">
+            <string>&lt;Mean Inside Sphere&gt;</string>
+           </property>
           </widget>
          </item>
-         <item row="24" column="0" colspan="2">
+         <item row="27" column="0" colspan="2">
           <widget class="QCheckBox" name="inside_check">
            <property name="text">
             <string>Calculate value inside ROI</string>
            </property>
           </widget>
+         </item>
+         <item row="29" column="0">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>Mean FA:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="29" column="1">
+          <widget class="QLineEdit" name="mean_fa">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="placeholderText">
+            <string>&lt;Mean Inside Sphere&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="30" column="0">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>Mean MD:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="30" column="1">
+          <widget class="QLineEdit" name="mean_md">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="placeholderText">
+            <string>&lt;Mean Inside Sphere&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="26" column="0">
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>
@@ -635,16 +691,7 @@
         <enum>QFrame::Raised</enum>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
+        <property name="margin">
          <number>0</number>
         </property>
         <item>
@@ -721,7 +768,7 @@
      <x>0</x>
      <y>0</y>
      <width>1148</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

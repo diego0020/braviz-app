@@ -268,7 +268,7 @@
          </widget>
         </item>
         <item row="19" column="1">
-         <widget class="QLineEdit" name="length_label">
+         <widget class="QLineEdit" name="measure_label">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -349,16 +349,7 @@
         <enum>QFrame::Raised</enum>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
+        <property name="margin">
          <number>0</number>
         </property>
         <item>
@@ -428,7 +419,7 @@
      <x>0</x>
      <y>0</y>
      <width>1148</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

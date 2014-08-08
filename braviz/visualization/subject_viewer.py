@@ -17,7 +17,7 @@ from functools import wraps
 import numpy as np
 import logging
 
-#TODO: Abstract viewer classes
+# TODO: Abstract viewer classes
 
 def do_and_render(f):
     """requiers the class to have the rendered accesible as self.ren"""
@@ -242,11 +242,13 @@ class SubjectViewer(object):
 
 class FilterArrows(QtCore.QObject):
     key_pressed = pyqtSignal(QtCore.QEvent)
-    def __init__(self,parent=None,other_keys=tuple()):
-        super(FilterArrows,self).__init__(parent)
+
+    def __init__(self, parent=None, other_keys=tuple()):
+        super(FilterArrows, self).__init__(parent)
         keys = {QtCore.Qt.Key_Left, QtCore.Qt.Key_Right}
         keys.update(other_keys)
         self.__filter_keys = frozenset(keys)
+
     def eventFilter(self, QObject, QEvent):
         if QEvent.type() == QEvent.KeyPress:
             q_event_key = QEvent.key()
@@ -255,6 +257,7 @@ class FilterArrows(QtCore.QObject):
                 self.key_pressed.emit(QEvent)
                 return True
         return False
+
 
 class QSubjectViwerWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -299,8 +302,6 @@ class QSubjectViwerWidget(QFrame):
         self.image_level_changed.emit(level)
 
 
-
-
 class ImageManager(object):
     def __init__(self, reader, ren, widget, interactor, initial_subj=None, initial_space="World", picker=None):
         self.ren = ren
@@ -340,7 +341,7 @@ class ImageManager(object):
     @do_and_render
     def show_image(self):
         self.__hidden = False
-        self.change_image_modality(self.__current_image,self.__curent_fmri_paradigm,True,self.__current_contrast)
+        self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, True, self.__current_contrast)
 
     @do_and_render
     def create_image_plane_widget(self):
@@ -393,7 +394,7 @@ class ImageManager(object):
         self.__current_space = new_space
         if not self.__hidden:
             self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
-                                   skip_render=True)
+                                       skip_render=True)
 
     @do_and_render
     def change_image_modality(self, modality, paradigm=None, force_reload=False, contrast=1):
@@ -406,7 +407,7 @@ class ImageManager(object):
             modality = modality.upper()
 
         if (self.__current_image is not None) and (modality == self.__current_image) and (
-                paradigm == self.__curent_fmri_paradigm) and (contrast == self.__current_contrast) and \
+                    paradigm == self.__curent_fmri_paradigm) and (contrast == self.__current_contrast) and \
                 not force_reload:
             # nothing to do
             return
@@ -469,7 +470,7 @@ class ImageManager(object):
                 #we need to load the mri image first to get a valid window_level
                 self.__image_plane_widget.SetLookupTable(self.__mri_lut)
                 self.__image_plane_widget.SetInputData(mri_image)
-                self.__current_mri_window_level=[0,0]
+                self.__current_mri_window_level = [0, 0]
                 self.reset_window_level(skip_render=True)
 
             self.__fmri_blender.set_luts(self.__mri_lut, fmri_lut)
@@ -1079,12 +1080,12 @@ class TractographyManager(object):
                 return structure_metrics.get_scalar_from_fiber_ploydata(pd, scalar)
             elif scalar == "mean_fa":
                 fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                                        db_id=bid, color=None,scalars="fa_p")
+                                        db_id=bid, color=None, scalars="fa_p")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
             elif scalar == "mean_md":
                 fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                                        db_id=bid, color=None,scalars="md_p")
+                                        db_id=bid, color=None, scalars="md_p")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
 
@@ -1102,13 +1103,13 @@ class TractographyManager(object):
             elif scalar == "mean_fa":
                 operation = "and" if self.__ad_hoc_throug_all else "or"
                 fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
-                                        operation=operation, space=self.__current_space, color=None,scalars="fa_p")
+                                        operation=operation, space=self.__current_space, color=None, scalars="fa_p")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
             elif scalar == "mean_md":
                 operation = "and" if self.__ad_hoc_throug_all else "or"
                 fiber = self.reader.get("Fibers", self.__current_subject, waypoint=self.__ad_hock_checkpoints,
-                                        operation=operation, space=self.__current_space, color=None,scalars="md_p")
+                                        operation=operation, space=self.__current_space, color=None, scalars="md_p")
                 n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
                 return n
         except Exception:
@@ -1211,7 +1212,7 @@ class SurfaceManager(object):
             scalars = point_data.GetScalars()
             scalar = self.__current_scalars
             t = scalars.GetTuple(ptId)
-            annotations = {'aparc', 'aparc.a2009s', 'BA',"aparc.DKTatlas40"}
+            annotations = {'aparc', 'aparc.a2009s', 'BA', "aparc.DKTatlas40"}
             if scalar in annotations:
                 label = self.__lut.GetAnnotation(int(t[0]))
                 return "%s-Label: %s" % (scalar, label)
@@ -1479,7 +1480,7 @@ class OrthogonalPlanesViewer(object):
 
     def link_window_level(self):
         "call after initializing the planes"
-        if self.__curent_modality not in ("DTI","FMRI"):
+        if self.__curent_modality not in ("DTI", "FMRI"):
             self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
 
@@ -1559,7 +1560,7 @@ class OrthogonalPlanesViewer(object):
         self.link_window_level()
 
     @do_and_render
-    def change_image_modality(self, mod,contrast=None):
+    def change_image_modality(self, mod, contrast=None):
         mod = mod.upper()
         if contrast is not None:
             pdgm = mod
@@ -1567,7 +1568,7 @@ class OrthogonalPlanesViewer(object):
         else:
             pdgm = None
         for im in self.__image_planes:
-            im.change_image_modality(mod, pdgm,mod,skip_render=True,contrast=contrast)
+            im.change_image_modality(mod, pdgm, mod, skip_render=True, contrast=contrast)
         self.__curent_modality = mod
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
         self.link_window_level()
@@ -1636,6 +1637,7 @@ class OrthogonalPlanesViewer(object):
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
         self.iren.Render()
 
+
 class MeasurerViewer(object):
     def __init__(self, render_window_interactor, reader, widget):
         self.iren = render_window_interactor
@@ -1667,7 +1669,7 @@ class MeasurerViewer(object):
         self.iren.SetPicker(self.picker)
 
         self.__measure_axis = None
-        self.__pax1,self.__pax2 = None, None  # perpendicular to measure axis
+        self.__pax1, self.__pax2 = None, None  # perpendicular to measure axis
         self.set_measure_axis(2)
         # state
         self.__current_subject = None
@@ -1686,8 +1688,8 @@ class MeasurerViewer(object):
         self.x_image.change_image_orientation(0)
         self.y_image.change_image_orientation(1)
         self.z_image.change_image_orientation(2)
-        for pw in self.__image_planes:
-            pw.image_plane_widget.InteractionOff()
+        #for pw in self.__image_planes:
+        #    pw.image_plane_widget.InteractionOff()
         self.hide_image()
 
         self.__placed = False
@@ -1697,14 +1699,19 @@ class MeasurerViewer(object):
         acs = vtk.vtkPropCollection()
         self.measure_repr.GetActors(acs)
         for i in xrange(acs.GetNumberOfItems()):
-            ac =acs.GetItemAsObject(i)
+            ac = acs.GetItemAsObject(i)
             ac.GetProperty().SetLineWidth(2)
+        self.measure_repr.SetLabelFormat("")
+        self.measure_repr.RulerModeOn()
+        self.measure_repr.SetRulerDistance(5.0)
         self.measure_widget.SetRepresentation(self.measure_repr)
         self.measure_widget.SetInteractor(self.iren)
-        self.obs_id=self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent,self.dummy_listener)
-        self.obs_id2=self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent,self.dummy_listener)
+        self.measure_widget.SetPriority(self.x_image.image_plane_widget.GetPriority()+1)
+        self.obs_id = self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent, self.restrict_points_to_plane)
+        self.obs_id2 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.restrict_points_to_plane)
+        self.obs_id3 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.emit_distance_changed_signal)
 
-    def dummy_listener(self,object,event):
+    def restrict_points_to_plane(self, object, event):
         modifiers = QApplication.keyboardModifiers()
         straight = False
         if QtCore.Qt.ControlModifier & modifiers:
@@ -1712,8 +1719,8 @@ class MeasurerViewer(object):
         ax = self.__measure_axis
         slice_coords = self.image_planes[ax].image_plane_widget.GetSlicePosition()
         plane_point = np.zeros(3)
-        plane_point[ax]=slice_coords
-        pa1,pa2 = self.__pax1, self.__pax2
+        plane_point[ax] = slice_coords
+        pa1, pa2 = self.__pax1, self.__pax2
 
         repr = object.GetRepresentation()
         r1 = repr.GetPoint1Representation()
@@ -1722,43 +1729,42 @@ class MeasurerViewer(object):
         r2i = r2.GetInteractionState()
         camera = self.ren.GetActiveCamera()
         view_vec = np.array(camera.GetDirectionOfProjection())
-        if r1i>0 or not self.__placed:
+        if r1i > 0 or not self.__placed:
             p1 = np.zeros(3)
             repr.GetPoint1WorldPosition(p1)
-            if np.dot(view_vec,p1) != 0:
-                t = (slice_coords - p1[ax])/view_vec[ax]
-                p1 = p1 + view_vec*t
+            if np.dot(view_vec, p1) != 0:
+                t = (slice_coords - p1[ax]) / view_vec[ax]
+                p1 = p1 + view_vec * t
             else:
-                p1[ax]=slice_coords
+                p1[ax] = slice_coords
 
             if straight and self.__placed:
                 ref = np.zeros(3)
                 repr.GetPoint2WorldPosition(ref)
                 dif = np.abs(p1 - ref)
-                if dif[pa1]>dif[pa2]:
-                    p1[pa2]=ref[pa2]
+                if dif[pa1] > dif[pa2]:
+                    p1[pa2] = ref[pa2]
                 else:
-                    p1[pa1]=ref[pa1]
+                    p1[pa1] = ref[pa1]
             repr.SetPoint1WorldPosition(p1)
             self.__placed = True
         else:
             p2 = np.zeros(3)
             repr.GetPoint2WorldPosition(p2)
-            if np.dot(view_vec,p2) != 0:
-                t = (slice_coords - p2[ax])/view_vec[ax]
-                p2 = p2 + view_vec*t
+            if np.dot(view_vec, p2) != 0:
+                t = (slice_coords - p2[ax]) / view_vec[ax]
+                p2 = p2 + view_vec * t
             else:
-                p2[ax]=slice_coords
+                p2[ax] = slice_coords
             if straight:
                 ref = np.zeros(3)
                 repr.GetPoint1WorldPosition(ref)
                 dif = np.abs(p2 - ref)
-                if dif[pa1]>dif[pa2]:
-                    p2[pa2]=ref[pa2]
+                if dif[pa1] > dif[pa2]:
+                    p2[pa2] = ref[pa2]
                 else:
-                    p2[pa1]=ref[pa1]
+                    p2[pa1] = ref[pa1]
             repr.SetPoint2WorldPosition(p2)
-
 
 
     def finish_initializing(self):
@@ -1770,7 +1776,7 @@ class MeasurerViewer(object):
 
     def link_window_level(self):
         "call after initializing the planes"
-        if self.__curent_modality not in ("DTI","FMRI"):
+        if self.__curent_modality not in ("DTI", "FMRI"):
             self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
 
@@ -1782,14 +1788,23 @@ class MeasurerViewer(object):
             else:
                 axis = 2
             sl = self.image_planes[axis].get_current_image_slice()
-            self.slice_changed(axis,sl)
+            if axis == self.__measure_axis and self.__placed:
+                c = self.image_planes[axis].image_plane_widget.GetSlicePosition()
+                p1,p2 = np.zeros(3),np.zeros(3)
+                self.measure_repr.GetPoint1WorldPosition(p1)
+                self.measure_repr.GetPoint2WorldPosition(p2)
+                p1[axis] = c
+                p2[axis] = c
+                self.measure_repr.SetPoint1WorldPosition(p1)
+                self.measure_repr.SetPoint2WorldPosition(p2)
+                #self.ren_win.Render()
 
         self.x_image.image_plane_widget.AddObserver(self.x_image.image_plane_widget.slice_change_event, slice_movement)
         self.y_image.image_plane_widget.AddObserver(self.y_image.image_plane_widget.slice_change_event, slice_movement)
         self.z_image.image_plane_widget.AddObserver(self.z_image.image_plane_widget.slice_change_event, slice_movement)
 
-    def set_measure_axis(self,axis):
-        assert axis in {0,1,2}
+    def set_measure_axis(self, axis):
+        assert axis in {0, 1, 2}
         self.__measure_axis = axis
         if axis == 0:
             self.__pax1 = 1
@@ -1800,6 +1815,12 @@ class MeasurerViewer(object):
         else:
             self.__pax1 = 0
             self.__pax2 = 1
+
+    def emit_distance_changed_signal(self,caller,event):
+        d = self.distance
+        self.__widget.distance_changed_handle(d)
+
+
     @do_and_render
     def show_image(self):
         for im in self.__image_planes:
@@ -1821,7 +1842,7 @@ class MeasurerViewer(object):
         self.link_window_level()
 
     @do_and_render
-    def change_image_modality(self, mod,contrast=None):
+    def change_image_modality(self, mod, contrast=None):
         mod = mod.upper()
         if contrast is not None:
             pdgm = mod
@@ -1829,7 +1850,7 @@ class MeasurerViewer(object):
         else:
             pdgm = None
         for im in self.__image_planes:
-            im.change_image_modality(mod, pdgm,mod,skip_render=True,contrast=contrast)
+            im.change_image_modality(mod, pdgm, mod, skip_render=True, contrast=contrast)
         self.__curent_modality = mod
         self.link_window_level()
 
@@ -1888,10 +1909,44 @@ class MeasurerViewer(object):
         self.measure_widget.SetWidgetStateToStart()
         self.measure_widget.On()
         self.__placed = False
+        self.__widget.distance_changed_handle(np.nan)
 
-    def slice_changed(self,axis,slice):
-        print "TODO: update measure"
 
+    @property
+    def distance(self):
+        if not self.__placed:
+            return np.nan
+        else:
+            return self.measure_repr.GetDistance()
+
+    @property
+    def point1(self):
+        if self.__placed:
+            p1 = np.zeros(3)
+            self.measure_repr.GetPoint1WorldPosition(p1)
+            return p1
+        else:
+            return None
+
+    @property
+    def point2(self):
+        if self.__placed:
+            p2 = np.zeros(3)
+            self.measure_repr.GetPoint2WorldPosition(p2)
+            return p2
+        else:
+            return None
+    @do_and_render
+    def set_points(self,p1,p2):
+        self.measure_repr.SetPoint1WorldPosition(p1)
+        self.measure_repr.SetPoint2WorldPosition(p2)
+        if not self.__placed:
+            self.measure_widget.SetWidgetStateToManipulate()
+            acs = vtk.vtkPropCollection()
+            self.measure_repr.GetActors(acs)
+            self.measure_repr.VisibilityOn()
+
+            self.__placed = True
 
 class AdditionalCursors(object):
     def __init__(self, ren):
@@ -1912,7 +1967,7 @@ class AdditionalCursors(object):
         self.__cursors.set_dimensions(*dim)
         self.__cursors.set_spacing(*sp)
         self.__cursors.set_origin(*org)
-        self.__cursors.set_delta(max_sp/5)
+        self.__cursors.set_delta(max_sp / 5)
 
     def get_position(self):
         if self.__coords is None:
@@ -1992,11 +2047,12 @@ class QMeasurerWidget(QFrame):
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
     image_level_changed = pyqtSignal(float)
+    distance_changed = pyqtSignal(float)
 
     def __init__(self, reader, parent):
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
-        filt = FilterArrows(self,(QtCore.Qt.Key_C,))
+        filt = FilterArrows(self, (QtCore.Qt.Key_C,))
         filt.key_pressed.connect(lambda e: self.event(e))
         self.__qwindow_interactor.installEventFilter(filt)
         self.__reader = reader
@@ -2028,6 +2084,9 @@ class QMeasurerWidget(QFrame):
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
+    def distance_changed_handle(self,distance):
+        self.distance_changed.emit(distance)
+
 class QOrthogonalPlanesWidget(QFrame):
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
@@ -2036,7 +2095,7 @@ class QOrthogonalPlanesWidget(QFrame):
     def __init__(self, reader, parent):
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
-        filt = FilterArrows(self,(QtCore.Qt.Key_C,))
+        filt = FilterArrows(self, (QtCore.Qt.Key_C,))
         filt.key_pressed.connect(lambda e: self.event(e))
         self.__qwindow_interactor.installEventFilter(filt)
         self.__reader = reader
@@ -2067,6 +2126,7 @@ class QOrthogonalPlanesWidget(QFrame):
     def window_level_change_handle(self, window, level):
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
+
 
 class fMRI_viewer(object):
     def __init__(self, render_window_interactor, reader, widget):
@@ -2117,15 +2177,15 @@ class fMRI_viewer(object):
         #widget, signal handling
         self.__widget = widget
 
-    def change_orientation(self,orientation_index):
+    def change_orientation(self, orientation_index):
         #find cursor position
         pos = self.__cursor.get_coords()
         self.image.change_image_orientation(orientation_index)
         if pos is None:
-            new_slice = self.image.get_number_of_image_slices()//2
+            new_slice = self.image.get_number_of_image_slices() // 2
         else:
             new_slice = int(pos[orientation_index])
-            self.__cursor.set_axis_coords(orientation_index,pos)
+            self.__cursor.set_axis_coords(orientation_index, pos)
         self.image.set_image_slice(new_slice)
 
 
@@ -2158,9 +2218,9 @@ class fMRI_viewer(object):
         return self.__cursor.get_coords()
 
     @do_and_render
-    def set_cursor_coords(self,coords):
+    def set_cursor_coords(self, coords):
         axis = self.image.image_plane_widget.GetPlaneOrientation()
-        self.__cursor.set_axis_coords(axis,coords)
+        self.__cursor.set_axis_coords(axis, coords)
         slice = coords[axis]
         self.image.set_image_slice(slice)
 
@@ -2173,25 +2233,25 @@ class fMRI_viewer(object):
         return self.__contours
 
     @do_and_render
-    def change_subject(self,new_subj):
+    def change_subject(self, new_subj):
         if self.__current_subject != new_subj:
             self.__current_subject = new_subj
             self.update_view(skip_render=True)
 
     @do_and_render
-    def change_paradigm(self,new_pdgm):
+    def change_paradigm(self, new_pdgm):
         if self.__current_paradigm != new_pdgm:
             self.__current_paradigm = new_pdgm
             self.update_view(skip_render=True)
 
     @do_and_render
-    def change_contrast(self,new_contrast):
+    def change_contrast(self, new_contrast):
         if self.__current_contrast != new_contrast:
             self.__current_contrast = new_contrast
             self.update_view(skip_render=True)
 
     @do_and_render
-    def set_all(self,new_subject,new_pdgm,new_contrast):
+    def set_all(self, new_subject, new_pdgm, new_contrast):
         if self.__current_subject != new_subject:
             self.__current_subject = new_subject
         if self.__current_paradigm != new_pdgm:
@@ -2201,28 +2261,32 @@ class fMRI_viewer(object):
         self.update_view(skip_render=True)
 
     @do_and_render
-    def set_contour_value(self,value):
+    def set_contour_value(self, value):
         self.__contours.set_value(value)
 
     @do_and_render
-    def set_contour_opacity(self,value):
-        self.__contours.actor.GetProperty().SetOpacity(value/100)
+    def set_contour_opacity(self, value):
+        self.__contours.actor.GetProperty().SetOpacity(value / 100)
 
     @do_and_render
-    def set_contour_visibility(self,value):
+    def set_contour_visibility(self, value):
         self.__contours.actor.SetVisibility(value)
 
     @do_and_render
     def update_view(self):
         if self.__current_subject is None or self.__current_paradigm is None or self.__current_contrast is None:
             return
-        try: self.image.change_subject(self.__current_subject)
-        except Exception: pass
+        try:
+            self.image.change_subject(self.__current_subject)
+        except Exception:
+            pass
 
-        try: self.image.change_space("func-%s"%self.__current_paradigm)
-        except Exception : pass
+        try:
+            self.image.change_space("func-%s" % self.__current_paradigm)
+        except Exception:
+            pass
 
-        self.image.change_image_modality("fMRI",self.__current_paradigm,contrast=self.__current_contrast)
+        self.image.change_image_modality("fMRI", self.__current_paradigm, contrast=self.__current_contrast)
         if not self.__image_loaded:
             self.connect_cursors()
             self.__image_loaded = True
@@ -2282,9 +2346,8 @@ class fMRI_viewer(object):
         self.ren_win.Render()
 
 
-
 class FmriContours(object):
-    def __init__(self,ren):
+    def __init__(self, ren):
         self.__contour_filter = vtk.vtkContourFilter()
         self.__contour_filter.UseScalarTreeOn()
         self.__contour_filter.ComputeNormalsOff()
@@ -2297,22 +2360,22 @@ class FmriContours(object):
         ren.AddActor(self.__actor)
 
         self.__value = None
-        self.__contour_filter.SetValue(0,5)
-        self.__contour_filter.SetValue(1,-5)
+        self.__contour_filter.SetValue(0, 5)
+        self.__contour_filter.SetValue(1, -5)
         self.__img = None
         self.__lut = None
 
-    def set_value(self,value):
+    def set_value(self, value):
         self.__value = value
-        self.__contour_filter.SetValue(0,value)
-        self.__contour_filter.SetValue(1,-1*value)
+        self.__contour_filter.SetValue(0, value)
+        self.__contour_filter.SetValue(1, -1 * value)
 
-    def set_image(self,img):
+    def set_image(self, img):
         self.__img = img
         self.__contour_filter.SetInputData(img)
         self.__contour_filter.Update()
 
-    def set_lut(self,lut):
+    def set_lut(self, lut):
         self.__mapper.SetLookupTable(lut)
         self.__mapper.UseLookupTableScalarRangeOn()
 
@@ -2359,8 +2422,9 @@ class QFmriWidget(QFrame):
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
-    def cursor_move_handler(self,coordinates):
+    def cursor_move_handler(self, coordinates):
         self.cursor_moved.emit(tuple(coordinates))
+
 
 if __name__ == "__main__":
     import sys

@@ -125,6 +125,8 @@ class ConfirmSubjectChangeDialog(QDialog):
         self.ui = Ui_RoiConfirmChangeSubject()
         self.ui.setupUi(self)
         self.save_requested = False
+        self.ui.label.setText("Save changes to current measure?")
+        self.setWindowTitle("Measure modified")
         self.ui.buttonBox.button(self.ui.buttonBox.Save).clicked.connect(self.set_save)
         self.ui.buttonBox.button(self.ui.buttonBox.Discard).clicked.connect(self.accept)
 
@@ -204,6 +206,7 @@ class MeasureApp(QMainWindow):
         check.setChecked(True)
         check.setEnabled(False)
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
+        self.vtk_widget.distance_changed.connect(self.update_measure)
         self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
         paradigms = self.reader.get("fMRI",None,index=True)
         for p in paradigms:
@@ -234,12 +237,12 @@ class MeasureApp(QMainWindow):
             idx = self.__subjects_list.index(subj)
             next_idx = (idx+1)%len(self.__subjects_list)
             next_one = self.__subjects_list[next_idx]
-            self.change_subject(next_one)
+            self.select_subject(subj=next_one)
         elif event.key() == QtCore.Qt.Key_Left:
             subj = self.__current_subject
             idx = self.__subjects_list.index(subj)
             prev = self.__subjects_list[idx-1]
-            self.change_subject(prev)
+            self.select_subject(subj=prev)
         else:
             super(MeasureApp,self).keyPressEvent(event)
 
@@ -258,6 +261,12 @@ class MeasureApp(QMainWindow):
 
     def reset_measure(self):
         self.vtk_viewer.reset_measure()
+
+    def update_measure(self,d):
+        self.ui.measure_label.setText("%.3f"%d)
+        self.ui.point_1.setText(point_to_str(self.vtk_viewer.point1))
+        self.ui.point_2.setText(point_to_str(self.vtk_viewer.point2))
+        self.line_just_changed()
 
     def set_image(self, modality,contrast=None):
         self.__current_image_mod = modality
@@ -302,8 +311,9 @@ class MeasureApp(QMainWindow):
         self.vtk_viewer.sphere.set_opacity(opac_val)
         self.vtk_viewer.ren_win.Render()
 
-    def select_subject(self, index):
-        subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
+    def select_subject(self, index=None,subj=None):
+        if subj is None:
+            subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
         if self.__line_modified:
             confirmation_dialog = ConfirmSubjectChangeDialog()
             res = confirmation_dialog.exec_()
@@ -329,7 +339,9 @@ class MeasureApp(QMainWindow):
         print new_subject
 
     def save_line(self):
-        print "Todo"
+        p1 = self.vtk_viewer.point1
+        p2 = self.vtk_viewer.point2
+        geom_db.save_line(self.__roi_id,self.__current_subject,p1,p2)
         self.refresh_checked()
         self.__line_modified = False
         self.ui.save_line.setEnabled(0)
@@ -339,21 +351,18 @@ class MeasureApp(QMainWindow):
         self.ui.save_line.setEnabled(1)
 
     def load_line(self, subj):
-        res = geom_db.load_sphere(self.__roi_id, subj)
+        res = geom_db.load_line(self.__roi_id, subj)
         if res is None:
             return
-        r, x, y, z = res
-        self.ui.sphere_radius.setValue(r)
-        self.ui.sphere_x.setValue(x)
-        self.ui.sphere_y.setValue(y)
-        self.ui.sphere_z.setValue(z)
-        self.update_sphere_radius()
-        self.update_sphere_center()
+        p1 = np.array(res[0:3])
+        p2 = np.array(res[3:6])
+
+        self.vtk_viewer.set_points(p1,p2)
         self.__line_modified = False
         self.ui.save_line.setEnabled(0)
 
     def refresh_checked(self):
-        checked = geom_db.subjects_with_sphere(self.__roi_id)
+        checked = geom_db.subjects_with_line(self.__roi_id)
         self.__subjects_check_model.checked = checked
 
     def select_image_modality(self, dummy_index):
@@ -579,6 +588,12 @@ def run():
         log.exception(e)
         raise
 
+def point_to_str(p):
+    if p is None:
+        return ""
+    else:
+        ss = ",".join(("%.1f"%x for x in p))
+        return " ".join(("(",ss,")"))
 
 if __name__ == '__main__':
     run()
