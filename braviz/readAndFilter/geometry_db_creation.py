@@ -7,8 +7,11 @@ def create_geom_rois_tables():
     """
     geom types
     0 : spheres
-    1 : lines
-
+    1[0|1|2|3] : lines
+        0 : Sagital
+        1 : Coronal
+        2 : Axial
+        3 : Free
     coordiate systems
     0 : World
     1 : Talairach
@@ -17,7 +20,7 @@ def create_geom_rois_tables():
     q="""CREATE TABLE IF NOT EXISTS geom_rois (
     roi_id INTEGER PRIMARY KEY ,
     roi_name TEXT UNIQUE,
-    roi_type INTEGER, -- 0 : sphere
+    roi_type INTEGER, -- 0 : sphere, 1? : line
     roi_desc TEXT,
     roi_coords INT -- 0:World,1:Talairach,2:Dartel
     );"""
@@ -41,6 +44,10 @@ def create_spheres_table():
     conn.commit()
 
 def create_lines_table():
+    """
+    Creates a table for storing measurement lines
+    :return Nothing:
+    """
     q="""CREATE TABLE IF NOT EXISTS geom_lines (
     line_id INTEGER,
     subject REFERENCES subjects(subject),

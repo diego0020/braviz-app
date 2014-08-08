@@ -48,7 +48,7 @@ def get_available_lines_df():
         SELECT roi_id as line_id, 0 as num FROM geom_rois WHERE line_id not in (select line_id FROM geom_lines)
         )
         ON roi_id = line_id
-        WHERE roi_type = 1
+        WHERE roi_type >= 10 and roi_type < 20
         """
     df = sql.read_sql(q, con, index_col="name")
     return df
@@ -84,6 +84,18 @@ def get_roi_name(roi_id):
     cur = con.execute(q, (roi_id,))
     name = cur.fetchone()[0]
     return name
+
+def get_roi_type(name=None, roi_id=None):
+    con = get_connection()
+    if roi_id is None:
+        q = "SELECT roi_type FROM geom_rois WHERE roi_name = ?"
+        cur = con.execute(q, (name,))
+        roi_type = cur.fetchone()[0]
+    else:
+        q = "SELECT roi_type FROM geom_rois WHERE roi_id = ?"
+        cur = con.execute(q, (roi_id,))
+        roi_type = cur.fetchone()[0]
+    return roi_type
 
 def subjects_with_sphere(sphere_id):
     con = get_connection()

@@ -1666,6 +1666,9 @@ class MeasurerViewer(object):
         self.picker.SetTolerance(0.0005)
         self.iren.SetPicker(self.picker)
 
+        self.__measure_axis = None
+        self.__pax1,self.__pax2 = None, None  # perpendicular to measure axis
+        self.set_measure_axis(2)
         # state
         self.__current_subject = None
         self.__current_space = "talairach"
@@ -1685,9 +1688,7 @@ class MeasurerViewer(object):
         self.z_image.change_image_orientation(2)
         for pw in self.__image_planes:
             pw.image_plane_widget.InteractionOff()
-
         self.hide_image()
-
 
         self.__placed = False
         self.measure_widget = vtk.vtkDistanceWidget()
@@ -1704,57 +1705,61 @@ class MeasurerViewer(object):
         self.obs_id2=self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent,self.dummy_listener)
 
     def dummy_listener(self,object,event):
-        z_plane = self.z_image.image_plane_widget.GetSlicePosition()
-
         modifiers = QApplication.keyboardModifiers()
         straight = False
         if QtCore.Qt.ControlModifier & modifiers:
             straight = True
+        ax = self.__measure_axis
+        slice_coords = self.image_planes[ax].image_plane_widget.GetSlicePosition()
+        plane_point = np.zeros(3)
+        plane_point[ax]=slice_coords
+        pa1,pa2 = self.__pax1, self.__pax2
 
         repr = object.GetRepresentation()
         r1 = repr.GetPoint1Representation()
         r2 = repr.GetPoint2Representation()
         r1i = r1.GetInteractionState()
         r2i = r2.GetInteractionState()
-
+        camera = self.ren.GetActiveCamera()
+        view_vec = np.array(camera.GetDirectionOfProjection())
         if r1i>0 or not self.__placed:
-            self.__placed = True
             p1 = np.zeros(3)
             repr.GetPoint1WorldPosition(p1)
-            p1[2]=z_plane
-            repr.SetPoint1WorldPosition(p1)
-            if straight:
+            if np.dot(view_vec,p1) != 0:
+                t = (slice_coords - p1[ax])/view_vec[ax]
+                p1 = p1 + view_vec*t
+            else:
+                p1[ax]=slice_coords
+
+            if straight and self.__placed:
                 ref = np.zeros(3)
                 repr.GetPoint2WorldPosition(ref)
                 dif = np.abs(p1 - ref)
-                if dif[0]>dif[1]:
-                    p1[1]=ref[1]
+                if dif[pa1]>dif[pa2]:
+                    p1[pa2]=ref[pa2]
                 else:
-                    p1[0]=ref[0]
-                repr.SetPoint1WorldPosition(p1)
+                    p1[pa1]=ref[pa1]
+            repr.SetPoint1WorldPosition(p1)
+            self.__placed = True
         else:
             p2 = np.zeros(3)
             repr.GetPoint2WorldPosition(p2)
-            p2[2] = z_plane
-            repr.SetPoint2WorldPosition(p2)
+            if np.dot(view_vec,p2) != 0:
+                t = (slice_coords - p2[ax])/view_vec[ax]
+                p2 = p2 + view_vec*t
+            else:
+                p2[ax]=slice_coords
             if straight:
                 ref = np.zeros(3)
                 repr.GetPoint1WorldPosition(ref)
                 dif = np.abs(p2 - ref)
-                if dif[0]>dif[1]:
-                    p2[1]=ref[1]
+                if dif[pa1]>dif[pa2]:
+                    p2[pa2]=ref[pa2]
                 else:
-                    p2[0]=ref[0]
-                repr.SetPoint2WorldPosition(p2)
-        camera = self.ren.GetActiveCamera()
+                    p2[pa1]=ref[pa1]
+            repr.SetPoint2WorldPosition(p2)
 
 
-
-
-
-
-
-        #print object
 
     def finish_initializing(self):
         self.link_window_level()
@@ -1783,6 +1788,18 @@ class MeasurerViewer(object):
         self.y_image.image_plane_widget.AddObserver(self.y_image.image_plane_widget.slice_change_event, slice_movement)
         self.z_image.image_plane_widget.AddObserver(self.z_image.image_plane_widget.slice_change_event, slice_movement)
 
+    def set_measure_axis(self,axis):
+        assert axis in {0,1,2}
+        self.__measure_axis = axis
+        if axis == 0:
+            self.__pax1 = 1
+            self.__pax2 = 2
+        elif axis == 1:
+            self.__pax1 = 0
+            self.__pax2 = 2
+        else:
+            self.__pax1 = 0
+            self.__pax2 = 1
     @do_and_render
     def show_image(self):
         for im in self.__image_planes:

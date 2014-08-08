@@ -10,7 +10,7 @@ import numpy as np
 import braviz
 from braviz.interaction.qt_guis.ortho_measure import Ui_OrtoMeasure
 from braviz.interaction.qt_guis.ortho_measure_start import Ui_OpenMeasureApp
-from braviz.interaction.qt_guis.new_roi import Ui_NewRoi
+from braviz.interaction.qt_guis.new_orthogonal_measure import Ui_NewRoi
 from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 
@@ -47,7 +47,8 @@ class StartDialog(QDialog):
             self.name = new_roi_dialog.name
             coords = new_roi_dialog.coords
             desc = new_roi_dialog.desc
-            geom_db.create_roi(self.name, 1, coords, desc)
+            code = 10+new_roi_dialog.plane
+            geom_db.create_roi(self.name, code, coords, desc)
             self.accept()
 
     def load_roi(self):
@@ -76,11 +77,10 @@ class NewMeasure(QDialog):
         self.ui.error_msg.setText("")
         self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(0)
         self.ui.roi_name.textChanged.connect(self.check_name)
-        self.ui.roi_space.setCurrentText("Talairach")
-        self.ui.roi_space.setEnabled(0)
         self.name = None
         self.coords = None
         self.desc = None
+        self.plane = None
         self.accepted.connect(self.before_accepting)
 
     def check_name(self):
@@ -98,6 +98,7 @@ class NewMeasure(QDialog):
     def before_accepting(self):
         self.coords = self.ui.roi_space.currentIndex()
         self.desc = unicode(self.ui.roi_desc.toPlainText())
+        self.plane = globals()[str(self.ui.plane_combo.currentText()).upper()]
 
 
 class LoadRoiDialog(QDialog):
@@ -133,6 +134,7 @@ class ConfirmSubjectChangeDialog(QDialog):
 
 class MeasureApp(QMainWindow):
     def __init__(self, roi_name=None):
+        log = logging.getLogger(__name__)
         QMainWindow.__init__(self)
         self.ui = None
         self.__roi_name = roi_name
@@ -154,8 +156,14 @@ class MeasureApp(QMainWindow):
         except Exception:
             self.__curent_space = "Talairach"
         assert self.__curent_space == "Talairach"
+        self.meaure_axis = 0
+        try:
+            self.meaure_axis = (geom_db.get_roi_type(roi_name)) % 10
+        except Exception:
+            log.error("Invalid roi type, unknown measure axis, assuming SAGITAL")
         self.vtk_widget = QMeasurerWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
+        self.vtk_viewer.set_measure_axis(self.meaure_axis)
 
         if self.__roi_id is not None:
             self.__checked_subjects = geom_db.subjects_with_line(self.__roi_id)
@@ -187,6 +195,14 @@ class MeasureApp(QMainWindow):
         self.ui.axial_slice.valueChanged.connect(partial_f(self.set_slice, AXIAL))
         self.ui.coronal_slice.valueChanged.connect(partial_f(self.set_slice, CORONAL))
         self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice, SAGITAL))
+        if self.meaure_axis == AXIAL:
+            check = self.ui.axial_check
+        elif self.meaure_axis == CORONAL:
+            check = self.ui.coronal_check
+        else:
+            check = self.ui.sagital_check
+        check.setChecked(True)
+        check.setEnabled(False)
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
         self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
         paradigms = self.reader.get("fMRI",None,index=True)
