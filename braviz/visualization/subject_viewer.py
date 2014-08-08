@@ -1639,6 +1639,11 @@ class OrthogonalPlanesViewer(object):
 
 
 class MeasurerViewer(object):
+    camera_positions = {
+            0: ((-5.5, -5.5, 4.5), (535,-5.5,4.5), (0, 0, 1)), # SAGITAL
+            1: ((-5.5, -8, 2.8), (-5.5, 530, 2.8), (1, 0, 0)),  #  CORONAL
+            2: ((-3.5, 0, 10), (-3.5, 0, 550), (0, 1, 0)),  #  AXIAL
+    }
     def __init__(self, render_window_interactor, reader, widget):
         self.iren = render_window_interactor
         self.ren_win = render_window_interactor.GetRenderWindow()
@@ -1696,11 +1701,7 @@ class MeasurerViewer(object):
         self.measure_widget = vtk.vtkDistanceWidget()
         self.measure_widget.KeyPressActivationOff()
         self.measure_repr = vtk.vtkDistanceRepresentation3D()
-        acs = vtk.vtkPropCollection()
-        self.measure_repr.GetActors(acs)
-        for i in xrange(acs.GetNumberOfItems()):
-            ac = acs.GetItemAsObject(i)
-            ac.GetProperty().SetLineWidth(2)
+        self.measure_repr.GetLineProperty().SetLineWidth(2)
         self.measure_repr.SetLabelFormat("")
         self.measure_repr.RulerModeOn()
         self.measure_repr.SetRulerDistance(5.0)
@@ -1803,6 +1804,7 @@ class MeasurerViewer(object):
         self.y_image.image_plane_widget.AddObserver(self.y_image.image_plane_widget.slice_change_event, slice_movement)
         self.z_image.image_plane_widget.AddObserver(self.z_image.image_plane_widget.slice_change_event, slice_movement)
 
+    @do_and_render
     def set_measure_axis(self, axis):
         assert axis in {0, 1, 2}
         self.__measure_axis = axis
@@ -1815,6 +1817,7 @@ class MeasurerViewer(object):
         else:
             self.__pax1 = 0
             self.__pax2 = 1
+        self.reset_camera(skip_render = True)
 
     def emit_distance_changed_signal(self,caller,event):
         d = self.distance
@@ -1870,6 +1873,12 @@ class MeasurerViewer(object):
         vu = cam1.GetViewUp()
         return fp, pos, vu
 
+    @do_and_render
+    def reset_camera(self):
+        fp,pos,vu = self.camera_positions[self.__measure_axis]
+        self.set_camera(fp,pos,vu,skip_render = True)
+
+    @do_and_render
     def set_camera(self, focal_point, position, view_up):
         cam1 = self.ren.GetActiveCamera()
         cam1.SetFocalPoint(focal_point)
@@ -1877,7 +1886,6 @@ class MeasurerViewer(object):
         cam1.SetViewUp(view_up)
 
         self.ren.ResetCameraClippingRange()
-        self.ren_win.Render()
 
     @property
     def image_planes(self):
@@ -1947,6 +1955,14 @@ class MeasurerViewer(object):
             self.measure_repr.VisibilityOn()
 
             self.__placed = True
+
+    @do_and_render
+    def set_measure_color(self,r,g,b):
+        r,g,b = r/255,g/255,b/255
+        acs = vtk.vtkPropCollection()
+        self.measure_repr.GetLineProperty().SetColor(r,g,b)
+        self.measure_repr.GetGlyphActor().GetProperty().SetColor(r,g,b)
+        print r,g,b
 
 class AdditionalCursors(object):
     def __init__(self, ren):

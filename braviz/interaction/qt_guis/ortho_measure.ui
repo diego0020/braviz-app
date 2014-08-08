@@ -277,7 +277,7 @@
         <item row="36" column="0" colspan="2">
          <widget class="QPushButton" name="save_line">
           <property name="text">
-           <string>Save</string>
+           <string>Save Measure</string>
           </property>
          </widget>
         </item>
@@ -323,9 +323,29 @@
         <item row="37" column="0" colspan="2">
          <widget class="QPushButton" name="reset_measure">
           <property name="text">
-           <string>Reset</string>
+           <string>Reset Measure</string>
           </property>
          </widget>
+        </item>
+        <item row="39" column="0" colspan="2">
+         <widget class="QPushButton" name="reset_camera_button">
+          <property name="text">
+           <string>Reset Camera</string>
+          </property>
+         </widget>
+        </item>
+        <item row="38" column="0">
+         <spacer name="verticalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>

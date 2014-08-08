@@ -228,6 +228,7 @@ class MeasureApp(QMainWindow):
         self.ui.color_button.clicked.connect(self.set_line_color)
 
         self.ui.reset_measure.clicked.connect(self.reset_measure)
+        self.ui.reset_camera_button.clicked.connect(self.reset_camera)
 
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
@@ -358,12 +359,21 @@ class MeasureApp(QMainWindow):
         p2 = np.array(res[3:6])
 
         self.vtk_viewer.set_points(p1,p2)
+        slice_position = p1[self.meaure_axis]
+        self.vtk_viewer.image_planes[self.meaure_axis].image_plane_widget.SetSlicePosition(slice_position)
         self.__line_modified = False
         self.ui.save_line.setEnabled(0)
 
     def refresh_checked(self):
         checked = geom_db.subjects_with_line(self.__roi_id)
         self.__subjects_check_model.checked = checked
+
+    def reset_camera(self):
+        fp,pos,vu = self.vtk_viewer.get_camera_parameters()
+        print fp
+        print pos
+        print vu
+        self.vtk_viewer.reset_camera()
 
     def select_image_modality(self, dummy_index):
         mod = str(self.ui.image_combo.currentText())
@@ -553,7 +563,7 @@ class MeasureApp(QMainWindow):
     def set_line_color(self):
         color = QtGui.QColorDialog.getColor()
         self.ui.color_button.setStyleSheet("#color_button{color : %s}"%color.name())
-        self.vtk_viewer.sphere.set_color(color.red(),color.green(),color.blue())
+        self.vtk_viewer.set_measure_color(color.red(),color.green(),color.blue())
         self.__line_color = (color.red(),color.green(),color.blue())
         self.vtk_viewer.ren_win.Render()
 
