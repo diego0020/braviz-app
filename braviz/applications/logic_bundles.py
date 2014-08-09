@@ -273,6 +273,9 @@ class LogicBundlesApp(QMainWindow):
     def set_image(self, modality):
         self.vtk_viewer.change_image_modality(modality)
         self.__current_image_mod = modality
+        self.update_slice_maximums()
+
+    def update_slice_maximums(self):
         dims = self.vtk_viewer.get_number_of_slices()
         self.ui.axial_slice.setMaximum(dims[AXIAL])
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
@@ -312,8 +315,10 @@ class LogicBundlesApp(QMainWindow):
         self.vtk_tree.update(new_subject,self.__curent_space)
         try:
             self.vtk_viewer.change_subject(img_id)
+            self.update_slice_maximums()
         except Exception:
             log.warning("Couldnt load data for subject %s",new_subject)
+
         self.update_fibers()
         #self.update_scalar_metric()
 

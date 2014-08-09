@@ -486,6 +486,9 @@ class BuildRoiApp(QMainWindow):
         except Exception as e:
             self.statusBar().showMessage(e.message,500)
             log.warning(e.message)
+        self.update_slice_maximums()
+
+    def update_slice_maximums(self):
         dims = self.vtk_viewer.get_number_of_slices()
         self.ui.axial_slice.setMaximum(dims[AXIAL])
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
@@ -666,6 +669,8 @@ class BuildRoiApp(QMainWindow):
             self.vtk_viewer.change_subject(img_id)
         except Exception:
             log.warning("Couldnt load data for subject %s",new_subject)
+        else:
+            self.update_slice_maximums()
         self.load_sphere(new_subject)
         self.__full_pd = None
         self.show_fibers()

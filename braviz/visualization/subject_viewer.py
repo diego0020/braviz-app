@@ -245,7 +245,7 @@ class FilterArrows(QtCore.QObject):
 
     def __init__(self, parent=None, other_keys=tuple()):
         super(FilterArrows, self).__init__(parent)
-        keys = {QtCore.Qt.Key_Left, QtCore.Qt.Key_Right}
+        keys = {QtCore.Qt.Key_Left, QtCore.Qt.Key_Right,QtCore.Qt.Key_Up,QtCore.Qt.Key_Down}
         keys.update(other_keys)
         self.__filter_keys = frozenset(keys)
 
@@ -1819,6 +1819,13 @@ class MeasurerViewer(object):
             self.__pax2 = 1
         self.reset_camera(skip_render = True)
 
+    @do_and_render
+    def set_slice_coords(self,coords):
+        pw = self.image_planes[self.__measure_axis].image_plane_widget
+        pw.SetSlicePosition(coords)
+        pw.InvokeEvent(pw.slice_change_event)
+
+
     def emit_distance_changed_signal(self,caller,event):
         d = self.distance
         self.__widget.distance_changed_handle(d)
@@ -1858,6 +1865,7 @@ class MeasurerViewer(object):
         self.link_window_level()
 
     def get_number_of_slices(self):
+        #TODO: Something is not working right
         n_slices = self.x_image.image_plane_widget.GetInput().GetDimensions()
         return n_slices
 

@@ -244,6 +244,14 @@ class MeasureApp(QMainWindow):
             idx = self.__subjects_list.index(subj)
             prev = self.__subjects_list[idx-1]
             self.select_subject(subj=prev)
+        elif event.key() == QtCore.Qt.Key_Up:
+            sl = self.vtk_viewer.get_current_slice()[self.meaure_axis]
+            sl += 1
+            self.vtk_viewer.image_planes[self.meaure_axis].set_image_slice(sl)
+        elif event.key() == QtCore.Qt.Key_Down:
+            sl = self.vtk_viewer.get_current_slice()[self.meaure_axis]
+            sl -= 1
+            self.vtk_viewer.image_planes[self.meaure_axis].set_image_slice(sl)
         else:
             super(MeasureApp,self).keyPressEvent(event)
 
@@ -278,7 +286,11 @@ class MeasureApp(QMainWindow):
         except Exception as e:
             self.statusBar().showMessage(e.message,500)
             log.warning(e.message)
+        self.update_slice_maximums()
+
+    def update_slice_maximums(self):
         dims = self.vtk_viewer.get_number_of_slices()
+        print dims
         self.ui.axial_slice.setMaximum(dims[AXIAL])
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
         self.ui.sagital_slice.setMaximum(dims[SAGITAL])
@@ -295,6 +307,7 @@ class MeasureApp(QMainWindow):
     def set_slice(self, axis, index):
         self.vtk_viewer.image_planes[axis].set_image_slice(index)
         self.vtk_viewer.ren_win.Render()
+        self.line_just_changed()
 
     def show_image(self, axis, state):
         if state == QtCore.Qt.Checked:
@@ -335,6 +348,8 @@ class MeasureApp(QMainWindow):
             self.vtk_viewer.change_subject(img_id)
         except Exception:
             log.warning("Couldnt load data for subject %s",new_subject)
+        else:
+            self.update_slice_maximums()
         self.load_line(new_subject)
         self.__line_modified = False
         print new_subject
@@ -360,7 +375,7 @@ class MeasureApp(QMainWindow):
 
         self.vtk_viewer.set_points(p1,p2)
         slice_position = p1[self.meaure_axis]
-        self.vtk_viewer.image_planes[self.meaure_axis].image_plane_widget.SetSlicePosition(slice_position)
+        self.vtk_viewer.set_slice_coords(slice_position)
         self.__line_modified = False
         self.ui.save_line.setEnabled(0)
 
