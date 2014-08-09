@@ -972,7 +972,7 @@ The path containing this structure must be set."""
             return SpmFileReader(spm_file)
         z_map = os.path.join(path, name, 'spmT_0001.hdr')
         nii_z_map = nib.load(z_map)
-        if kw.get('format', 'nifti').lower() == 'nifti':
+        if kw.get('format', 'nifti').lower() in {'nifti',"nii"}:
             return nii_z_map
         vtk_z_map = nibNii2vtk(nii_z_map)
         if space == 'native':

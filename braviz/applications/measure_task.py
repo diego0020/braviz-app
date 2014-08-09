@@ -532,12 +532,13 @@ class MeasureApp(QMainWindow):
         braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
 
     def load_scenario(self):
-        my_name = os.path.splitext(os.path.basename(__file__))[0]
-        dialog = LoadScenarioDialog(my_name,reader=self.reader)
-        res = dialog.exec_()
-        if res == dialog.Accepted:
-            wanted_state = dialog.out_dict
-            self.load_state(wanted_state)
+        if self.action_confirmed():
+            my_name = os.path.splitext(os.path.basename(__file__))[0]
+            dialog = LoadScenarioDialog(my_name,reader=self.reader)
+            res = dialog.exec_()
+            if res == dialog.Accepted:
+                wanted_state = dialog.out_dict
+                self.load_state(wanted_state)
 
 
     def save_line_as(self):

@@ -383,6 +383,8 @@ class BuildRoiApp(QMainWindow):
         self.__sphere_radius = None
         self.__aux_lut = None
         self.__mean_in_img_calculator = AggregateInRoi(self.reader)
+        self.__mean_fa_in_roi_calculator = AggregateInRoi(self.reader)
+        self.__mean_md_in_roi_calculator = AggregateInRoi(self.reader)
         self.vtk_viewer.sphere.show()
         self.update_sphere_radius()
         self.update_sphere_center()
@@ -500,6 +502,10 @@ class BuildRoiApp(QMainWindow):
         if not self.ui.inside_check.isChecked():
             self.ui.mean_inside_text.clear()
             self.ui.mean_inside_text.setEnabled(0)
+            self.ui.mean_fa.clear()
+            self.ui.mean_fa.setEnabled(0)
+            self.ui.mean_md.clear()
+            self.ui.mean_md.setEnabled(0)
             return
 
         modality = self.__current_image_mod
@@ -508,6 +514,8 @@ class BuildRoiApp(QMainWindow):
             self.ui.mean_inside_text.clear()
             return
         self.ui.mean_inside_text.setEnabled(1)
+        self.ui.mean_fa.setEnabled(1)
+        self.ui.mean_md.setEnabled(1)
         if contrast is not None:
             self.ui.mean_inside_label.setText("Mean Z-score")
             self.ui.mean_inside_label.setToolTip("Mean Z-score inside the ROI")
@@ -528,12 +536,14 @@ class BuildRoiApp(QMainWindow):
                 self.ui.mean_inside_label.setText("Mean value")
                 self.ui.mean_inside_label.setToolTip("Mean value of image inside the ROI")
                 self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,modality,mean=True)
-
+        self.__mean_fa_in_roi_calculator.load_image(self.__current_img_id,self.__curent_space,"FA",mean=True)
+        self.__mean_md_in_roi_calculator.load_image(self.__current_img_id,self.__curent_space,"MD",mean=True)
         self.caclulate_image_in_roi()
 
     def caclulate_image_in_roi(self):
         if not self.ui.inside_check.isChecked():
             return
+        #calculate Mean
         try:
             value = self.__mean_in_img_calculator.get_value(self.__sphere_center,self.__sphere_radius)
         except Exception:
@@ -545,6 +555,18 @@ class BuildRoiApp(QMainWindow):
             self.ui.mean_inside_text.setText(label)
         else:
             self.ui.mean_inside_text.setText("%.4g"%value)
+        #calculate FA
+        try:
+            value = self.__mean_fa_in_roi_calculator.get_value(self.__sphere_center,self.__sphere_radius)
+        except Exception:
+            value = np.nan
+        self.ui.mean_fa.setText("%.4g"%value)
+        #calculate MD
+        try:
+            value = self.__mean_md_in_roi_calculator.get_value(self.__sphere_center,self.__sphere_radius)
+        except Exception:
+            value = np.nan
+        self.ui.mean_md.setText("%.4g"%value)
 
     def update_slice_controls(self, new_slice=None):
         curr_slices = self.vtk_viewer.get_current_slice()
@@ -646,17 +668,21 @@ class BuildRoiApp(QMainWindow):
         if event is not None:
             self.vtk_viewer.ren_win.Render()
 
-    def select_subject(self, index=None,subj=None):
-        if subj is None:
-            subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
+    def action_confirmed(self):
         if self.__sphere_modified:
             confirmation_dialog = ConfirmSubjectChangeDialog()
             res = confirmation_dialog.exec_()
             if res == confirmation_dialog.Rejected:
-                return
+                return False
             if confirmation_dialog.save_requested:
                 self.save_sphere()
-        self.change_subject(subj)
+        return True
+
+    def select_subject(self, index=None,subj=None):
+        if subj is None:
+            subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
+        if self.action_confirmed():
+            self.change_subject(subj)
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
@@ -686,11 +712,11 @@ class BuildRoiApp(QMainWindow):
         geom_db.save_sphere(self.__roi_id, self.__current_subject, r, (x, y, z))
         self.refresh_checked()
         self.__sphere_modified = False
-        self.ui.save_line.setEnabled(0)
+        self.ui.save_sphere.setEnabled(0)
 
     def sphere_just_changed(self):
         self.__sphere_modified = True
-        self.ui.save_line.setEnabled(1)
+        self.ui.save_sphere.setEnabled(1)
 
     def load_sphere(self, subj):
         res = geom_db.load_sphere(self.__roi_id, subj)
@@ -704,7 +730,7 @@ class BuildRoiApp(QMainWindow):
         self.update_sphere_radius()
         self.update_sphere_center()
         self.__sphere_modified = False
-        self.ui.save_line.setEnabled(0)
+        self.ui.save_sphere.setEnabled(0)
 
     def refresh_checked(self):
         checked = geom_db.subjects_with_sphere(self.__roi_id)
@@ -903,12 +929,13 @@ class BuildRoiApp(QMainWindow):
         braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
 
     def load_scenario(self):
-        my_name = os.path.splitext(os.path.basename(__file__))[0]
-        dialog = LoadScenarioDialog(my_name,reader=self.reader)
-        res = dialog.exec_()
-        if res == dialog.Accepted:
-            wanted_state = dialog.out_dict
-            self.load_state(wanted_state)
+        if self.action_confirmed():
+            my_name = os.path.splitext(os.path.basename(__file__))[0]
+            dialog = LoadScenarioDialog(my_name,reader=self.reader)
+            res = dialog.exec_()
+            if res == dialog.Accepted:
+                wanted_state = dialog.out_dict
+                self.load_state(wanted_state)
 
 
     def save_sphere_as(self):
