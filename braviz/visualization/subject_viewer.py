@@ -1967,10 +1967,10 @@ class MeasurerViewer(object):
     @do_and_render
     def set_measure_color(self,r,g,b):
         r,g,b = r/255,g/255,b/255
-        acs = vtk.vtkPropCollection()
         self.measure_repr.GetLineProperty().SetColor(r,g,b)
         self.measure_repr.GetGlyphActor().GetProperty().SetColor(r,g,b)
         print r,g,b
+
 
 class AdditionalCursors(object):
     def __init__(self, ren):

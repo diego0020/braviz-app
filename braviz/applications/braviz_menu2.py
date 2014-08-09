@@ -48,6 +48,7 @@ class BravizMenu2(QtGui.QMainWindow):
         self.connect_application_launcher("sample_overview", self.ui.sample_overview)
         self.connect_application_launcher("subject_overview", self.ui.subject_overview)
         self.connect_application_launcher("fmri_explorer", self.ui.fmri_explorer)
+        self.connect_application_launcher("measure", self.ui.measure_app)
         self.connect_application_launcher("excel", self.ui.excel)
         self.connect_application_launcher("export", self.ui.export_2)
 
@@ -70,6 +71,7 @@ class BravizMenu2(QtGui.QMainWindow):
         "excel":"import_from_excel",
         "export":"export_vars",
         "fmri_explorer":"fmri_explorer",
+        "measure":"measure_task"
     }
 
     def connect_application_launcher(self,app,button):

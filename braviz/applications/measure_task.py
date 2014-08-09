@@ -215,7 +215,6 @@ class MeasureApp(QMainWindow):
         self.ui.contrast_combo.setCurrentIndex(0)
         self.ui.contrast_combo.setEnabled(False)
         self.ui.contrast_combo.activated.connect(self.change_contrast)
-        self.ui.line_opac.valueChanged.connect(self.set_line_opac)
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
         self.ui.subjects_list.activated.connect(self.select_subject)
@@ -320,22 +319,22 @@ class MeasureApp(QMainWindow):
             self.vtk_viewer.image_planes[axis].hide_image()
         self.vtk_viewer.ren_win.Render()
 
-
-    def set_line_opac(self, opac_val):
-        self.vtk_viewer.sphere.set_opacity(opac_val)
-        self.vtk_viewer.ren_win.Render()
-
-    def select_subject(self, index=None,subj=None):
-        if subj is None:
-            subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
+    def action_confirmed(self):
         if self.__line_modified:
             confirmation_dialog = ConfirmSubjectChangeDialog()
             res = confirmation_dialog.exec_()
             if res == confirmation_dialog.Rejected:
-                return
+                return False
             if confirmation_dialog.save_requested:
                 self.save_line()
-        self.change_subject(subj)
+        return True
+
+
+    def select_subject(self, index=None,subj=None):
+        if subj is None:
+            subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
+        if self.action_confirmed():
+            self.change_subject(subj)
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
@@ -378,6 +377,7 @@ class MeasureApp(QMainWindow):
         self.vtk_viewer.set_slice_coords(slice_position)
         self.__line_modified = False
         self.ui.save_line.setEnabled(0)
+        self.update_measure(self.vtk_viewer.distance)
 
     def refresh_checked(self):
         checked = geom_db.subjects_with_line(self.__roi_id)
@@ -441,22 +441,14 @@ class MeasureApp(QMainWindow):
         context_dict["axial_slice"] = int(self.ui.axial_slice.value())
         context_dict["coronal_slice"] = int(self.ui.coronal_slice.value())
         context_dict["sagital_slice"] = int(self.ui.sagital_slice.value())
+        state["context"]=context_dict
 
-        context_dict["cortex"] = str(self.ui.surface_combo.currentText())
-        context_dict["surf_scalars"] = str(self.ui.scalar_combo.currentText())
-        context_dict["left_surface"] = self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked
-        context_dict["right_surface"] = self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked
-        context_dict["cortex_opac"] = int(self.ui.cortex_opac.value())
-        state["context"] = context_dict
         #visual
         visual_dict = {}
         visual_dict["coords"] = self.__curent_space
         #camera
         visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
-        visual_dict["spher_rep"] = self.ui.sphere_rep.currentIndex()
-        visual_dict["sphere_opac"] = self.ui.sphere_opac.value()
-        visual_dict["sphere_color"] = self.__line_color
-        visual_dict["show_fibers"] = self.ui.show_fibers_check.checkState() == QtCore.Qt.Checked
+        visual_dict["line_color"] = self.__line_color
         state["visual"] = visual_dict
 
         #subject
@@ -474,20 +466,23 @@ class MeasureApp(QMainWindow):
 
     def load_state(self,state):
         self.__roi_id = state["roi_id"]
+        self.meaure_axis = geom_db.get_roi_type(roi_id=self.__roi_id)%10
+        self.vtk_viewer.set_measure_axis(self.meaure_axis)
         self.__roi_name = geom_db.get_roi_name(self.__roi_id)
-        self.ui.sphere_name.setText(self.__roi_name)
+        self.ui.measure_name.setText(self.__roi_name)
         subjs_state = state["subjects"]
         subjs_state["subject"] = self.__current_subject
         self.vtk_viewer.change_subject(self.__current_subject)
+
         self.__subjects_list = subjs_state["sample"]
         self.__current_subject = subjs_state["subject"]
         self.__current_img_id = subjs_state["img_code"]
         try:
             self.__curent_space = geom_db.get_roi_space(self.__roi_name)
         except Exception:
-            self.__curent_space = "World"
+            self.__curent_space = "Talairach"
         self.vtk_viewer.change_space(self.__curent_space)
-        self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
+        self.__checked_subjects = geom_db.subjects_with_line(self.__roi_id)
         self.__subjects_check_model.checked = self.__checked_subjects
         self.__line_modified = False
 
@@ -506,36 +501,21 @@ class MeasureApp(QMainWindow):
         self.ui.coronal_slice.setValue(context_dict["coronal_slice"])
         self.ui.sagital_slice.setValue(context_dict["sagital_slice"])
 
-        ctx = context_dict["cortex"]
-        idx = self.ui.surface_combo.findText(ctx)
-        assert idx >= 0
-        self.ui.surface_combo.setCurrentIndex(idx)
-
-        csc = context_dict["surf_scalars"]
-        idx = self.ui.scalar_combo.findText(csc)
-        assert idx >= 0
-        self.ui.scalar_combo.setCurrentIndex(idx)
-
-        self.ui.left_cortex_check.setChecked(context_dict["left_surface"])
-        self.ui.right_cortex_check.setChecked(context_dict["right_surface"])
-        self.ui.cortex_opac.setValue(context_dict["cortex_opac"])
-
         #visual
         visual_dict = state["visual"]
-        self.__line_color = visual_dict["sphere_color"]
-        self.vtk_viewer.sphere.set_color(*self.__line_color)
+        self.__line_color = visual_dict["line_color"]
+        self.vtk_viewer.set_measure_color(*self.__line_color)
         fp,pos,vu = visual_dict["camera"]
         self.vtk_viewer.set_camera(fp,pos,vu)
-        self.ui.sphere_rep.setCurrentIndex(visual_dict["spher_rep"])
-        self.ui.sphere_opac.setValue(visual_dict["sphere_opac"])
-        self.ui.show_fibers_check.setChecked(visual_dict.get("show_fibers",False))
 
         self.change_subject(self.__current_subject)
         self.__line_modified = False
+        self.update_slice_maximums()
 
 
     def save_scenario(self):
         state = self.get_state()
+        print state
         app_name = state["meta"]["application"]
         dialog = SaveScenarioDialog(app_name,state)
         res = dialog.exec_()
@@ -561,12 +541,13 @@ class MeasureApp(QMainWindow):
 
 
     def save_line_as(self):
-        dialog = NewMeasure(self.__curent_space)
+        dialog = NewMeasure()
         res = dialog.exec_()
         if res == dialog.Accepted:
             new_name = dialog.name
             desc = dialog.desc
-            new_id = geom_db.create_roi(new_name,0,self.__curent_space,desc)
+            roi_type = 10 + self.meaure_axis
+            new_id = geom_db.create_roi(new_name,roi_type,self.__curent_space,desc)
             geom_db.copy_spheres(self.__roi_id,new_id)
             self.__roi_id=new_id
             self.__roi_name = new_name

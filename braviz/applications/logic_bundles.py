@@ -630,7 +630,7 @@ class LogicBundlesApp(QMainWindow):
         #camera
         fp,pos,vu = visual_dict["camera"]
         self.vtk_viewer.set_camera(fp,pos,vu)
-
+        self.update_slice_maximums()
 
 
     def save_scenario(self):

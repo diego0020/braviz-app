@@ -883,7 +883,7 @@ class BuildRoiApp(QMainWindow):
 
         self.change_subject(self.__current_subject)
         self.__sphere_modified = False
-
+        self.update_slice_maximums()
 
     def save_scenario(self):
         state = self.get_state()

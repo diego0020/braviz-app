@@ -187,30 +187,7 @@ QToolButton:hover{
           <string>Explore Visual Data</string>
          </property>
          <layout class="QGridLayout" name="gridLayout">
-          <item row="0" column="5" rowspan="2">
-           <widget class="QToolButton" name="logic_bundles">
-            <property name="toolTip">
-             <string>Create bundles by combining ROIs and Structures</string>
-            </property>
-            <property name="text">
-             <string>Logic Bundles</string>
-            </property>
-            <property name="icon">
-             <iconset resource="resources.qrc">
-              <normaloff>:/icons/logic.png</normaloff>:/icons/logic.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>120</width>
-              <height>120</height>
-             </size>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0" rowspan="2" colspan="2">
+          <item row="0" column="0">
            <widget class="QToolButton" name="subject_overview">
             <property name="toolTip">
              <string>See images, segmentation, tractography and cortex of a given subject. 
@@ -238,43 +215,7 @@ Export variables to the database</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="3">
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="0" column="4" rowspan="2">
-           <widget class="QToolButton" name="roi_builder">
-            <property name="toolTip">
-             <string>Use spheres to select regions of interest</string>
-            </property>
-            <property name="text">
-             <string>ROI Builder</string>
-            </property>
-            <property name="icon">
-             <iconset resource="resources.qrc">
-              <normaloff>:/icons/roi_builder.png</normaloff>:/icons/roi_builder.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>120</width>
-              <height>120</height>
-             </size>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextUnderIcon</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
+          <item row="0" column="1">
            <widget class="QToolButton" name="sample_overview">
             <property name="toolTip">
              <string>Compare geometric structures across multiple subjects</string>
@@ -298,7 +239,66 @@ Export variables to the database</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="0" column="2">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="3">
+           <widget class="QToolButton" name="roi_builder">
+            <property name="toolTip">
+             <string>Use spheres to select regions of interest</string>
+            </property>
+            <property name="text">
+             <string>ROI Builder</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/roi_builder.png</normaloff>:/icons/roi_builder.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>120</width>
+              <height>120</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QToolButton" name="logic_bundles">
+            <property name="toolTip">
+             <string>Create bundles by combining ROIs and Structures</string>
+            </property>
+            <property name="text">
+             <string>Logic Bundles</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/logic.png</normaloff>:/icons/logic.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>120</width>
+              <height>120</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
            <widget class="QToolButton" name="fmri_explorer">
             <property name="toolTip">
              <string>Visualize fMRI series</string>
@@ -322,6 +322,29 @@ Export variables to the database</string>
             </property>
             <property name="autoRaise">
              <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QToolButton" name="measure_app">
+            <property name="toolTip">
+             <string>Measure distances in orthogonal planes</string>
+            </property>
+            <property name="text">
+             <string>Measure</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/measure.png</normaloff>:/icons/measure.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>120</width>
+              <height>120</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
             </property>
            </widget>
           </item>
