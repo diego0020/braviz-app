@@ -1,6 +1,10 @@
 from __future__ import division
 import logging
 from functools import partial as partial_f
+import datetime
+import platform
+import os
+import sys
 
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import QMainWindow, QDialog
@@ -20,10 +24,7 @@ from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel, Subje
 from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
 from braviz.interaction.structure_metrics import AggregateInRoi
-import datetime
-import platform
-import os
-import sys
+from braviz.interaction.roi import export_roi
 
 __author__ = 'Diego'
 
@@ -44,6 +45,7 @@ SURFACE_SCALARS_DICT = dict(enumerate((
     'BA')
 ))
 
+
 def get_unit_vectors():
     # from http://blog.marmakoide.org/?p=1
     n = 20
@@ -53,15 +55,17 @@ def get_unit_vectors():
     radius = np.sqrt(1 - z * z)
 
     points = np.zeros((n, 3))
-    points[:,0] = radius * np.cos(theta)
-    points[:,1] = radius * np.sin(theta)
-    points[:,2] = z
+    points[:, 0] = radius * np.cos(theta)
+    points[:, 1] = radius * np.sin(theta)
+    points[:, 2] = z
     return points
+
 
 UNIT_VECTORS = get_unit_vectors()
 
+
 class ExtrapolateDialog(QDialog):
-    def __init__(self,initial_source,subjects_list,sphere_id,reader):
+    def __init__(self, initial_source, subjects_list, sphere_id, reader):
         QDialog.__init__(self)
         self.__subjects = subjects_list
         self.__sphere_id = sphere_id
@@ -70,7 +74,7 @@ class ExtrapolateDialog(QDialog):
         self.__reader = reader
         self.spheres_df = None
         data_cols = self.create_data_cols()
-        self.targets_model = SubjectCheckTable(subjects_list,data_cols,("Subject","Sphere R","Sphere Center"))
+        self.targets_model = SubjectCheckTable(subjects_list, data_cols, ("Subject", "Sphere R", "Sphere Center"))
         self.ui = Ui_ExtrapolateSpheres()
         self.ui.setupUi(self)
         self.ui.tableView.setModel(self.targets_model)
@@ -99,15 +103,15 @@ class ExtrapolateDialog(QDialog):
 
     def create_data_cols(self):
         self.spheres_df = geom_db.get_all_spheres(self.__sphere_id)
-        radiuses = [""]*len(self.__subjects)
-        centers = [""]*len(self.__subjects)
+        radiuses = [""] * len(self.__subjects)
+        centers = [""] * len(self.__subjects)
         df2 = self.spheres_df.transpose()
-        for i,s in enumerate(self.__subjects):
+        for i, s in enumerate(self.__subjects):
             row = df2.get(s)
             if row is not None:
-                radiuses[i] = "%.4g"%row.radius
-                centers[i] = "( %.3g , %.3g , %.3g )"%(row.ctr_x,row.ctr_y,row.ctr_z)
-        return radiuses,centers
+                radiuses[i] = "%.4g" % row.radius
+                centers[i] = "( %.3g , %.3g , %.3g )" % (row.ctr_x, row.ctr_y, row.ctr_z)
+        return radiuses, centers
 
     def select_all(self):
         self.targets_model.checked = self.__subjects
@@ -123,44 +127,44 @@ class ExtrapolateDialog(QDialog):
             self.ui.origin_combo.addItem(str(s))
 
 
-    def translate_one_point(self,pt,subj):
+    def translate_one_point(self, pt, subj):
 
-        subj_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj)
-        #link -> world
-        w_pt = self.__reader.transformPointsToSpace(pt,self.__link_space,
-                                            subj_img_id,inverse=True)
+        subj_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, subj)
+        # link -> world
+        w_pt = self.__reader.transformPointsToSpace(pt, self.__link_space,
+                                                    subj_img_id, inverse=True)
         #world -> roi
-        r_pt = self.__reader.transformPointsToSpace(w_pt,self.__roi_space,
-                                            subj_img_id,inverse=False)
+        r_pt = self.__reader.transformPointsToSpace(w_pt, self.__roi_space,
+                                                    subj_img_id, inverse=False)
         return r_pt
 
-    def extrapolate_one(self,target):
+    def extrapolate_one(self, target):
         log = logging.getLogger(__file__)
-        log.debug("extrapolating %s",target)
+        log.debug("extrapolating %s", target)
         if target == self.__origin:
             return
-        #coordinates
+        # coordinates
         if self.__link_space == "None":
             ctr = self.__origin_center
         else:
             try:
-                ctr = self.translate_one_point(self.__center_link,target)
+                ctr = self.translate_one_point(self.__center_link, target)
             except Exception:
-                log.warning("Couldn't extrapolate subject %s",target)
+                log.warning("Couldn't extrapolate subject %s", target)
                 return
 
         #radius
         if self.__scale_radius is False or self.__link_space == "None":
             r = self.__origin_radius
         else:
-            vecs_roi = np.array([self.translate_one_point(r,target) for r in self.__radius_link])
-            r_roi = vecs_roi-ctr
+            vecs_roi = np.array([self.translate_one_point(r, target) for r in self.__radius_link])
+            r_roi = vecs_roi - ctr
             #print r_roi
-            norms_r_roi = np.apply_along_axis(np.linalg.norm,1,r_roi)
+            norms_r_roi = np.apply_along_axis(np.linalg.norm, 1, r_roi)
             #print norms_r_roi
             r = np.mean(norms_r_roi)
 
-        geom_db.save_sphere(self.__sphere_id,target,r,ctr)
+        geom_db.save_sphere(self.__sphere_id, target, r, ctr)
 
 
     def start_button_handle(self):
@@ -181,44 +185,46 @@ class ExtrapolateDialog(QDialog):
         self.__origin = int(self.ui.origin_combo.currentText())
         self.__link_space = str(self.ui.link_combo.currentText())
         self.__scale_radius = (self.ui.radio_combo.currentIndex() == 1)
-        origin_sphere = geom_db.load_sphere(self.__sphere_id,self.__origin)
+        origin_sphere = geom_db.load_sphere(self.__sphere_id, self.__origin)
         self.__origin_radius = origin_sphere[0]
         self.__origin_center = origin_sphere[1:4]
-        self.__origin_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__origin)
+        self.__origin_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, self.__origin)
 
         if self.__link_space != "None":
-            #roi -> world
-            ctr_world = self.__reader.transformPointsToSpace(self.__origin_center,self.__roi_space,
-                                                             self.__origin_img_id,inverse=True)
+            # roi -> world
+            ctr_world = self.__reader.transformPointsToSpace(self.__origin_center, self.__roi_space,
+                                                             self.__origin_img_id, inverse=True)
             #world -> link
-            ctr_link = self.__reader.transformPointsToSpace(ctr_world,self.__link_space,
-                                                             self.__origin_img_id,inverse=False)
+            ctr_link = self.__reader.transformPointsToSpace(ctr_world, self.__link_space,
+                                                            self.__origin_img_id, inverse=False)
             self.__center_link = ctr_link
             if self.__scale_radius is True:
-                rad_vectors = (self.__origin_center+v*self.__origin_radius for v in UNIT_VECTORS)
+                rad_vectors = (self.__origin_center + v * self.__origin_radius for v in UNIT_VECTORS)
                 #roi -> world
-                rad_vectors_world = (self.__reader.transformPointsToSpace(r,self.__roi_space,
-                                                             self.__origin_img_id,inverse=True) for r in rad_vectors)
+                rad_vectors_world = (self.__reader.transformPointsToSpace(r, self.__roi_space,
+                                                                          self.__origin_img_id, inverse=True) for r in
+                                     rad_vectors)
                 #world -> link
-                rad_vectors_link = (self.__reader.transformPointsToSpace(r,self.__link_space,
-                                             self.__origin_img_id,inverse=False) for r in rad_vectors_world)
+                rad_vectors_link = (self.__reader.transformPointsToSpace(r, self.__link_space,
+                                                                         self.__origin_img_id, inverse=False) for r in
+                                    rad_vectors_world)
                 self.__radius_link = list(rad_vectors_link)
 
-        for i,s in enumerate(selected):
+        for i, s in enumerate(selected):
             QtGui.QApplication.instance().processEvents()
             if self.__cancel_flag is True:
                 break
             self.extrapolate_one(s)
-            self.ui.progressBar.setValue((i+1)*100/len(selected))
-        r,c = self.create_data_cols()
-        self.targets_model.set_data_cols((r,c))
+            self.ui.progressBar.setValue((i + 1) * 100 / len(selected))
+        r, c = self.create_data_cols()
+        self.targets_model.set_data_cols((r, c))
         self.__started = False
         self.ui.start_button.setText("Start Extrapolation")
         self.set_controls(1)
-        QtCore.QTimer.singleShot(1000,partial_f(self.ui.start_button.setEnabled,1))
+        QtCore.QTimer.singleShot(1000, partial_f(self.ui.start_button.setEnabled, 1))
 
 
-    def set_controls(self,value):
+    def set_controls(self, value):
         self.ui.select_all_button.setEnabled(value)
         self.ui.select_empty.setEnabled(value)
         self.ui.clear_button.setEnabled(value)
@@ -227,9 +233,6 @@ class ExtrapolateDialog(QDialog):
         self.ui.link_combo.setEnabled(value)
         self.ui.quit_button.setEnabled(value)
         self.ui.radio_combo.setEnabled(value)
-
-
-
 
 
 class StartDialog(QDialog):
@@ -271,8 +274,9 @@ class StartDialog(QDialog):
         else:
             self.scenario_data = None
 
+
 class NewRoi(QDialog):
-    def __init__(self,block_space=None):
+    def __init__(self, block_space=None):
         QDialog.__init__(self)
         self.ui = Ui_NewRoi()
         self.ui.setupUi(self)
@@ -302,7 +306,6 @@ class NewRoi(QDialog):
     def before_accepting(self):
         self.coords = self.ui.roi_space.currentIndex()
         self.desc = unicode(self.ui.roi_desc.toPlainText())
-
 
 
 class LoadRoiDialog(QDialog):
@@ -350,7 +353,7 @@ class BuildRoiApp(QMainWindow):
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
         self.__current_subject = self.__subjects_list[0]
-        self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__current_subject)
+        self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, self.__current_subject)
 
         self.__current_image_mod = "MRI"
         self.__current_contrast = None
@@ -379,7 +382,7 @@ class BuildRoiApp(QMainWindow):
         self.__sphere_modified = True
 
         self.setup_ui()
-        self.__sphere_color = (255,255,255)
+        self.__sphere_color = (255, 255, 255)
         self.__sphere_center = None
         self.__sphere_radius = None
         self.__aux_lut = None
@@ -411,7 +414,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
         self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
-        paradigms = self.reader.get("fMRI",None,index=True)
+        paradigms = self.reader.get("fMRI", None, index=True)
         for p in paradigms:
             self.ui.image_combo.addItem(p.title())
         self.ui.contrast_combo.setEnabled(0)
@@ -444,6 +447,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
         self.ui.actionLoad_Scenario.triggered.connect(self.load_scenario)
         self.ui.actionSave_sphere_as.triggered.connect(self.save_sphere_as)
+        self.ui.actionExport_ROI.triggered.connect(self.export_sphere)
         self.ui.color_button.clicked.connect(self.set_sphere_color)
 
         self.ui.inside_check.clicked.connect(self.caclulate_image_in_roi_pre)
@@ -454,18 +458,18 @@ class BuildRoiApp(QMainWindow):
         if event.key() == QtCore.Qt.Key_Right:
             subj = self.__current_subject
             idx = self.__subjects_list.index(subj)
-            next_idx = (idx+1)%len(self.__subjects_list)
+            next_idx = (idx + 1) % len(self.__subjects_list)
             next_one = self.__subjects_list[next_idx]
             self.select_subject(subj=next_one)
         elif event.key() == QtCore.Qt.Key_Left:
             subj = self.__current_subject
             idx = self.__subjects_list.index(subj)
-            prev = self.__subjects_list[idx-1]
+            prev = self.__subjects_list[idx - 1]
             self.select_subject(subj=prev)
         elif event.key() == QtCore.Qt.Key_C:
             self.copy_coords_from_cursor()
         else:
-            super(BuildRoiApp,self).keyPressEvent(event)
+            super(BuildRoiApp, self).keyPressEvent(event)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -481,14 +485,14 @@ class BuildRoiApp(QMainWindow):
             self.change_subject(self.__current_subject)
         self.select_surface(None)
 
-    def set_image(self, modality,contrast=None):
+    def set_image(self, modality, contrast=None):
         self.__current_image_mod = modality
         self.__current_contrast = contrast
         log = logging.getLogger(__name__)
         try:
-            self.vtk_viewer.change_image_modality(modality,contrast)
+            self.vtk_viewer.change_image_modality(modality, contrast)
         except Exception as e:
-            self.statusBar().showMessage(e.message,500)
+            self.statusBar().showMessage(e.message, 500)
             log.warning(e.message)
         self.update_slice_maximums()
 
@@ -521,54 +525,57 @@ class BuildRoiApp(QMainWindow):
         if contrast is not None:
             self.ui.mean_inside_label.setText("Mean Z-score")
             self.ui.mean_inside_label.setToolTip("Mean Z-score inside the ROI")
-            self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,"FMRI",modality,contrast,
+            self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__curent_space, "FMRI", modality,
+                                                     contrast,
                                                      mean=True)
         else:
             if modality == "DTI":
                 self.ui.mean_inside_label.setText("Mean FA")
                 self.ui.mean_inside_label.setToolTip("Mean FA inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,"FA",mean=True)
-            elif modality in {"APARC","WMPARC"}:
+                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__curent_space, "FA", mean=True)
+            elif modality in {"APARC", "WMPARC"}:
                 self.ui.mean_inside_label.setText("Label Mode")
                 self.ui.mean_inside_label.setToolTip("Mode of labels inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,modality,mean=False)
-                self.__aux_lut = self.reader.get(self.__current_image_mod,None,lut=True)
+                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__curent_space, modality,
+                                                         mean=False)
+                self.__aux_lut = self.reader.get(self.__current_image_mod, None, lut=True)
             else:
                 assert modality == "MRI"
                 self.ui.mean_inside_label.setText("Mean value")
                 self.ui.mean_inside_label.setToolTip("Mean value of image inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id,self.__curent_space,modality,mean=True)
-        self.__mean_fa_in_roi_calculator.load_image(self.__current_img_id,self.__curent_space,"FA",mean=True)
-        self.__mean_md_in_roi_calculator.load_image(self.__current_img_id,self.__curent_space,"MD",mean=True)
+                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__curent_space, modality,
+                                                         mean=True)
+        self.__mean_fa_in_roi_calculator.load_image(self.__current_img_id, self.__curent_space, "FA", mean=True)
+        self.__mean_md_in_roi_calculator.load_image(self.__current_img_id, self.__curent_space, "MD", mean=True)
         self.caclulate_image_in_roi()
 
     def caclulate_image_in_roi(self):
         if not self.ui.inside_check.isChecked():
             return
-        #calculate Mean
+        # calculate Mean
         try:
-            value = self.__mean_in_img_calculator.get_value(self.__sphere_center,self.__sphere_radius)
+            value = self.__mean_in_img_calculator.get_value(self.__sphere_center, self.__sphere_radius)
         except Exception:
             value = np.nan
-        if self.__current_image_mod in {"APARC","WMPARC"}:
+        if self.__current_image_mod in {"APARC", "WMPARC"}:
             int_val = int(value[0])
             idx = self.__aux_lut.GetAnnotatedValueIndex(int_val)
             label = self.__aux_lut.GetAnnotation(idx)
             self.ui.mean_inside_text.setText(label)
         else:
-            self.ui.mean_inside_text.setText("%.4g"%value)
+            self.ui.mean_inside_text.setText("%.4g" % value)
         #calculate FA
         try:
-            value = self.__mean_fa_in_roi_calculator.get_value(self.__sphere_center,self.__sphere_radius)
+            value = self.__mean_fa_in_roi_calculator.get_value(self.__sphere_center, self.__sphere_radius)
         except Exception:
             value = np.nan
-        self.ui.mean_fa.setText("%.4g"%value)
+        self.ui.mean_fa.setText("%.4g" % value)
         #calculate MD
         try:
-            value = self.__mean_md_in_roi_calculator.get_value(self.__sphere_center,self.__sphere_radius)
+            value = self.__mean_md_in_roi_calculator.get_value(self.__sphere_center, self.__sphere_radius)
         except Exception:
             value = np.nan
-        self.ui.mean_md.setText("%.4g"%value)
+        self.ui.mean_md.setText("%.4g" % value)
 
     def update_slice_controls(self, new_slice=None):
         curr_slices = self.vtk_viewer.get_current_slice()
@@ -646,7 +653,7 @@ class BuildRoiApp(QMainWindow):
             self.__fibers_ac.SetVisibility(0)
 
         if self.__full_pd == "Unavailable":
-            #dont try to load again
+            # dont try to load again
             return
 
         assert self.__fibers_map is not None
@@ -680,7 +687,7 @@ class BuildRoiApp(QMainWindow):
                 self.save_sphere()
         return True
 
-    def select_subject(self, index=None,subj=None):
+    def select_subject(self, index=None, subj=None):
         if subj is None:
             subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
         if self.action_confirmed():
@@ -696,7 +703,7 @@ class BuildRoiApp(QMainWindow):
         try:
             self.vtk_viewer.change_subject(img_id)
         except Exception:
-            log.warning("Couldnt load data for subject %s",new_subject)
+            log.warning("Couldnt load data for subject %s", new_subject)
         else:
             self.update_slice_maximums()
         self.load_sphere(new_subject)
@@ -741,58 +748,58 @@ class BuildRoiApp(QMainWindow):
     def select_image_modality(self, dummy_index):
         mod = str(self.ui.image_combo.currentText())
         if self.ui.image_combo.currentIndex() > 3:
-            #functional
+            # functional
             self.ui.contrast_combo.setEnabled(1)
             self.reload_contrast_names(mod)
-            contrast = int(self.ui.contrast_combo.currentIndex())+1
+            contrast = int(self.ui.contrast_combo.currentIndex()) + 1
         else:
             self.ui.contrast_combo.setEnabled(0)
             contrast = None
-        self.set_image(mod,contrast)
+        self.set_image(mod, contrast)
 
-    def reload_contrast_names(self,mod=None):
+    def reload_contrast_names(self, mod=None):
         if mod is None:
             mod = str(self.ui.image_combo.currentText())
-        if mod.upper() not in self.reader.get("FMRI",None,index=True):
+        if mod.upper() not in self.reader.get("FMRI", None, index=True):
             return
         previus_index = self.ui.contrast_combo.currentIndex()
         try:
-            contrasts_dict = self.reader.get("FMRI",self.__current_img_id,name=mod,contrasts_dict=True)
+            contrasts_dict = self.reader.get("FMRI", self.__current_img_id, name=mod, contrasts_dict=True)
         except Exception:
             pass
         else:
             self.ui.contrast_combo.clear()
             for i in xrange(len(contrasts_dict)):
-                self.ui.contrast_combo.addItem(contrasts_dict[i+1])
-            if 0<=previus_index<len(contrasts_dict):
+                self.ui.contrast_combo.addItem(contrasts_dict[i + 1])
+            if 0 <= previus_index < len(contrasts_dict):
                 self.ui.contrast_combo.setCurrentIndex(previus_index)
             else:
                 self.ui.contrast_combo.setCurrentIndex(0)
                 self.change_contrast()
 
 
-    def change_contrast(self,dummy_index=None):
-        new_contrast = self.ui.contrast_combo.currentIndex()+1
+    def change_contrast(self, dummy_index=None):
+        new_contrast = self.ui.contrast_combo.currentIndex() + 1
         mod = str(self.ui.image_combo.currentText())
-        self.set_image(mod,new_contrast)
+        self.set_image(mod, new_contrast)
 
-    def select_surface_scalars(self,index):
+    def select_surface_scalars(self, index):
         scalar_name = SURFACE_SCALARS_DICT[int(index)]
         self.vtk_viewer.cortex.set_scalars(scalar_name)
 
-    def select_surface(self,index):
+    def select_surface(self, index):
         surface_name = str(self.ui.surface_combo.currentText())
         self.vtk_viewer.cortex.set_surface(surface_name)
 
-    def toggle_left_surface(self,status):
+    def toggle_left_surface(self, status):
         b_status = (status == QtCore.Qt.Checked)
         self.vtk_viewer.cortex.set_hemispheres(left=b_status)
 
-    def toggle_right_surface(self,status):
+    def toggle_right_surface(self, status):
         b_status = (status == QtCore.Qt.Checked)
         self.vtk_viewer.cortex.set_hemispheres(right=b_status)
 
-    def set_cortex_opacity(self,int_opac):
+    def set_cortex_opacity(self, int_opac):
         self.vtk_viewer.cortex.set_opacity(int_opac)
 
     def launch_extrapolate_dialog(self):
@@ -803,14 +810,14 @@ class BuildRoiApp(QMainWindow):
                 return
             if check_save.save_requested:
                 self.save_sphere()
-        extrapol_dialog = ExtrapolateDialog(self.__current_subject,self.__subjects_list,self.__roi_id, self.reader)
+        extrapol_dialog = ExtrapolateDialog(self.__current_subject, self.__subjects_list, self.__roi_id, self.reader)
         res = extrapol_dialog.exec_()
         self.refresh_checked()
 
     def get_state(self):
         state = dict()
         state["roi_id"] = self.__roi_id
-        #context
+        # context
         context_dict = {}
         context_dict["image_type"] = self.ui.image_combo.currentText()
         context_dict["axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
@@ -851,7 +858,7 @@ class BuildRoiApp(QMainWindow):
         state["meta"] = meta
         return state
 
-    def load_state(self,state):
+    def load_state(self, state):
         self.__roi_id = state["roi_id"]
         self.__roi_name = geom_db.get_roi_name(self.__roi_id)
         self.ui.sphere_name.setText(self.__roi_name)
@@ -870,7 +877,7 @@ class BuildRoiApp(QMainWindow):
         self.__subjects_check_model.checked = self.__checked_subjects
         self.__sphere_modified = False
 
-        #context
+        # context
         context_dict = state["context"]
         img = context_dict["image_type"]
         idx = self.ui.image_combo.findText(img)
@@ -903,11 +910,11 @@ class BuildRoiApp(QMainWindow):
         visual_dict = state["visual"]
         self.__sphere_color = visual_dict["sphere_color"]
         self.vtk_viewer.sphere.set_color(*self.__sphere_color)
-        fp,pos,vu = visual_dict["camera"]
-        self.vtk_viewer.set_camera(fp,pos,vu)
+        fp, pos, vu = visual_dict["camera"]
+        self.vtk_viewer.set_camera(fp, pos, vu)
         self.ui.sphere_rep.setCurrentIndex(visual_dict["spher_rep"])
         self.ui.sphere_opac.setValue(visual_dict["sphere_opac"])
-        self.ui.show_fibers_check.setChecked(visual_dict.get("show_fibers",False))
+        self.ui.show_fibers_check.setChecked(visual_dict.get("show_fibers", False))
 
         self.change_subject(self.__current_subject)
         self.__sphere_modified = False
@@ -916,24 +923,24 @@ class BuildRoiApp(QMainWindow):
     def save_scenario(self):
         state = self.get_state()
         app_name = state["meta"]["application"]
-        dialog = SaveScenarioDialog(app_name,state)
+        dialog = SaveScenarioDialog(app_name, state)
         res = dialog.exec_()
         if res == dialog.Accepted:
             scn_id = dialog.params["scn_id"]
             self.save_screenshot(scn_id)
 
 
-    def save_screenshot(self,scenario_index):
-        file_name = "scenario_%d.png"%scenario_index
-        file_path = os.path.join(self.reader.getDynDataRoot(), "braviz_data","scenarios",file_name)
+    def save_screenshot(self, scenario_index):
+        file_name = "scenario_%d.png" % scenario_index
+        file_path = os.path.join(self.reader.getDynDataRoot(), "braviz_data", "scenarios", file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
-        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
+        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
 
     def load_scenario(self):
         if self.action_confirmed():
             my_name = os.path.splitext(os.path.basename(__file__))[0]
-            dialog = LoadScenarioDialog(my_name,reader=self.reader)
+            dialog = LoadScenarioDialog(my_name, reader=self.reader)
             res = dialog.exec_()
             if res == dialog.Accepted:
                 wanted_state = dialog.out_dict
@@ -946,21 +953,29 @@ class BuildRoiApp(QMainWindow):
         if res == dialog.Accepted:
             new_name = dialog.name
             desc = dialog.desc
-            new_id = geom_db.create_roi(new_name,0,self.__curent_space,desc)
-            geom_db.copy_spheres(self.__roi_id,new_id)
-            self.__roi_id=new_id
+            new_id = geom_db.create_roi(new_name, 0, self.__curent_space, desc)
+            geom_db.copy_spheres(self.__roi_id, new_id)
+            self.__roi_id = new_id
             self.__roi_name = new_name
             self.refresh_checked()
 
 
-
-
     def set_sphere_color(self):
         color = QtGui.QColorDialog.getColor()
-        self.ui.color_button.setStyleSheet("#color_button{color : %s}"%color.name())
-        self.vtk_viewer.sphere.set_color(color.red(),color.green(),color.blue())
-        self.__sphere_color = (color.red(),color.green(),color.blue())
+        self.ui.color_button.setStyleSheet("#color_button{color : %s}" % color.name())
+        self.vtk_viewer.sphere.set_color(color.red(), color.green(), color.blue())
+        self.__sphere_color = (color.red(), color.green(), color.blue())
         self.vtk_viewer.ren_win.Render()
+
+
+    def export_sphere(self):
+        file_name = unicode(QtGui.QFileDialog.getSaveFileName(self, "Save Shere Image", self.reader.getDynDataRoot(),
+                                                      "Nifti (*.nii.gz)"))
+        if len(file_name)<=5:
+            return
+
+        print "saving to %s" % file_name
+        export_roi(self.__current_subject,self.__roi_id,"world",file_name,self.reader)
 
 
 def run():

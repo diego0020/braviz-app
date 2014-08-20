@@ -2,8 +2,8 @@
 from __future__ import division
 import struct
 import os
-import random
 import functools
+import itertools
 import time
 import copy
 from collections import OrderedDict
@@ -326,6 +326,22 @@ def cache_function(cache_container):
         return cached_f
 
     return decorator
+
+def write_image(image_data,out_file):
+    dx, dy, dz = image_data.GetDimensions()
+    data = np.zeros((dx, dy, dz), np.uint8)
+    for i, j, k in itertools.product(xrange(dx), xrange(dy), xrange(dz)):
+        v = image_data.GetScalarComponentAsDouble(i, j, k, 0)
+        data[i, j, k] = v
+    sx, sy, sz = image_data.GetSpacing()
+    ox, oy, oz = image_data.GetOrigin()
+    af = np.eye(4)
+    af[0, 0], af[1, 1], af[2, 2] = sx, sy, sz
+    af[0, 3], af[1, 3], af[2, 3] = ox, oy, oz
+    nib_img = nib.Nifti1Image(data, affine=af)
+    nib_img.to_filename(out_file)
+
+    return
 
 
 from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, extract_poly_data_subset,\

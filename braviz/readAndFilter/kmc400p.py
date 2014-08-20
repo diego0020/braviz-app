@@ -1086,6 +1086,19 @@ The path containing this structure must be set."""
         img2 = self.__move_img_to_world(subj,img,interpolate,source_space)
         return img2
 
+    def move_img_from_world(self,img,target_space,subj,interpolate=False):
+        """
+        Resample image to the world coordinate system
+        :param img: image
+        :param target_space: target coordinates
+        :param subj: subject
+        :param interpolate: apply interpolation or do nearest neighbours
+        :return: resliced image
+        """
+        subj = str(subj)
+        img2 = self.__move_img_from_world(subj,img,interpolate,target_space)
+        return img2
+
     def __process_key(self, key):
         data_root_length = len(self.getDataRoot())
         key = "%s" % key

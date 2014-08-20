@@ -16,8 +16,6 @@ def export_roi(subject,roi_id,space,out_file,reader=None):
 
     r,x,y,z = geom_db.load_sphere(roi_id,subject)
     sphere_space = geom_db.get_roi_space(roi_id=roi_id)
-    if space.lower() != sphere_space.lower():
-        raise NotImplementedError
     mri = reader.get("mri",subject,space=sphere_space,format="vtk")
     sx,sy,sz = mri.GetSpacing()
     ox,oy,oz = mri.GetOrigin()
@@ -45,10 +43,10 @@ def export_roi(subject,roi_id,space,out_file,reader=None):
     sphere_img_p.SetSpacing(sx,sy,sz)
 
     #move to world
-    sphere_img=reader.move_img_to_world(sphere_img_p,sphere_space,subject)
+    sphere_img_w=reader.move_img_to_world(sphere_img_p,sphere_space,subject)
 
     #move to out
-    #reader.transformPointsToSpace(sphere,space,subject,inverse=False)
+    sphere_img=reader.move_img_from_world(sphere_img_w,space,subject)
 
     viewer = braviz.visualization.simpleVtkViewer()
     viewer.addImg(sphere_img)
