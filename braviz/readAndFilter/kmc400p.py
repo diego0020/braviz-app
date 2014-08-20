@@ -287,6 +287,48 @@ The path containing this structure must be set."""
             log.error('Unknown space %s' % space)
             raise Exception('Unknown space %s' % space)
 
+    def __move_img_to_world(self, subj, img2, interpolate=False, space='world'):
+        "moves an image from the world coordinate space to talairach or dartel spaces"
+        space = space.lower()
+        if space == 'world':
+            return img2
+        ref = self.get("mri",subj,space="world",format="vtk")
+        origin = ref.GetOrigin()
+        spacing = ref.GetSpacing()
+        dims = ref.GetDimensions()
+        if space in ('template', 'dartel'):
+            dartel_warp = self.__get_spm_grid_transform(subj,"dartel","forw")
+            img3 = applyTransform(img2, dartel_warp, origin2=origin, dimension2=dims,
+                                  spacing2=spacing, interpolate=interpolate)
+            #origin, dimension and spacing come from template
+            return img3
+        elif space[:2].lower() == 'ta':
+            talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
+            transform = readFreeSurferTransform(talairach_file)
+            img3 = applyTransform(img2, transform, origin, dims, spacing,
+                                  interpolate=interpolate)
+            return img3
+        elif space[:4] in ('func', 'fmri'):
+            #functional space
+            paradigm = space[5:]
+            #print paradigm
+            paradigm =self.__get_paradigm_name(paradigm)
+            transform = self.__read_func_transform(subj, paradigm, False)
+            img3 = applyTransform(img2, transform, origin2=origin, dimension2=dims,
+                                  spacing2=spacing,
+                                  interpolate=interpolate)
+            return img3
+        elif space == "diff":
+            path = os.path.join(self.getDataRoot(), "tractography", str(subj))
+            # notice we are reading the inverse transform diff -> world
+            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            img3 = applyTransform(img2, trans, interpolate=interpolate)
+            return img3
+        else:
+            log = logging.getLogger(__name__)
+            log.error('Unknown space %s' % space)
+            raise Exception('Unknown space %s' % space)
+
     def __getIds(self):
         "Auxiliary function to get the available ids"
         contents = os.listdir(os.path.join(self.__static_root,"freeSurfer_Tracula"))
@@ -1030,6 +1072,19 @@ The path containing this structure must be set."""
         If inverse is true moves from space to world"""
         subj = str(subj)
         return self.__movePointsToSpace(point_set, space, subj, inverse)
+
+    def move_img_to_world(self,img,source_space,subj,interpolate=False):
+        """
+        Resample image to the world coordinate system
+        :param img: image
+        :param source_space: source coordinates
+        :param subj: subject
+        :param interpolate: apply interpolation or do nearest neighbours
+        :return: resliced image
+        """
+        subj = str(subj)
+        img2 = self.__move_img_to_world(subj,img,interpolate,source_space)
+        return img2
 
     def __process_key(self, key):
         data_root_length = len(self.getDataRoot())

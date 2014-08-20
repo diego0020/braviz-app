@@ -355,8 +355,9 @@ class BuildRoiApp(QMainWindow):
         self.__current_image_mod = "MRI"
         self.__current_contrast = None
         try:
-            self.__curent_space = geom_db.get_roi_space(roi_name)
+            self.__curent_space = geom_db.get_roi_space(name=roi_name)
         except Exception:
+            raise
             self.__curent_space = "World"
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
@@ -385,6 +386,7 @@ class BuildRoiApp(QMainWindow):
         self.__mean_in_img_calculator = AggregateInRoi(self.reader)
         self.__mean_fa_in_roi_calculator = AggregateInRoi(self.reader)
         self.__mean_md_in_roi_calculator = AggregateInRoi(self.reader)
+        self.ui.sphere_space.setText(self.__curent_space)
         self.vtk_viewer.sphere.show()
         self.update_sphere_radius()
         self.update_sphere_center()
