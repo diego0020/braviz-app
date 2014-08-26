@@ -974,8 +974,9 @@ class BuildRoiApp(QMainWindow):
         if len(file_name)<=5:
             return
 
-        print "saving to %s" % file_name
+        self.statusBar().showMessage("saving to %s" % file_name,5000)
         export_roi(self.__current_subject,self.__roi_id,"world",file_name,self.reader)
+        self.statusBar().showMessage("DONE: saved to %s" % file_name,5000)
 
 
 def run():
