@@ -850,6 +850,13 @@ The path containing this structure must be set."""
             if inverse:
                 transform = inv(transform)
             return transformPolyData(point_set, transform)
+        elif space.lower()[:4] == 'diff':
+            path = os.path.join(self.__static_root, 'tractography', str(subj))
+            transform = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz','FA.nii.gz', path)
+            if inverse:
+                transform = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+
+            return transformPolyData(point_set, transform)
         elif space.lower() in ('template', 'dartel'):
             if inverse:
                 dartel_warp = self.__get_spm_grid_transform(subj,"dartel","back")
