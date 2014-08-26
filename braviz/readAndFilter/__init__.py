@@ -17,6 +17,21 @@ import psutil
 from braviz.interaction.config_file import get_config as __get_config
 from scipy import ndimage
 
+def memo_ten(f):
+    f.vals = {}
+    @functools.wraps(f)
+    def wrapped(*args,**kwargs):
+        key = str(args)+str(kwargs)
+        if key not in f.vals:
+            val = f(*args,**kwargs)
+            if len(f.vals)>10:
+                f.vals.clear()
+            f.vals[key]=val
+            return val
+        else:
+            return f.vals[key]
+    return wrapped
+
 def nibNii2vtk(nii):
     """Transform a nifti image read by nibabel into a vtkImageData"""
     d = nii.get_data()
@@ -140,7 +155,7 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
     #print dimension2
     return outImg
 
-
+@memo_ten
 def readFlirtMatrix(file_name, src_img_file, ref_img_file, path=''):
     """read a matrix in fsl flirt format: 
     In order to apply this transformation information about 
@@ -274,6 +289,7 @@ class CacheContainer(object):
         return self.__cache
 
 
+
 def cache_function(cache_container):
     "modified classic python @memo decorator to handle some special cases in braviz"
 
@@ -327,7 +343,7 @@ def cache_function(cache_container):
 
     return decorator
 
-def write_image(image_data,out_file):
+def write_vtk_image(image_data,out_file):
     dx, dy, dz = image_data.GetDimensions()
     data = np.zeros((dx, dy, dz), np.uint8)
     for i, j, k in itertools.product(xrange(dx), xrange(dy), xrange(dz)):
@@ -343,6 +359,11 @@ def write_image(image_data,out_file):
 
     return
 
+def write_nib_image(data,affine,out_file):
+    nib_img = nib.Nifti1Image(data, affine=affine)
+    nib_img.to_filename(out_file)
+    print out_file
+    return
 
 from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, extract_poly_data_subset,\
     filter_polylines_by_scalar

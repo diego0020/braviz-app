@@ -798,6 +798,13 @@ The path containing this structure must be set."""
             if inverse:
                 transform = inv(transform)
             return transformPolyData(point_set, transform)
+        elif space.lower()[:4] == 'diff':
+            path = os.path.join(self.__root, str(subj), 'camino')
+            transform = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz','FA.nii.gz', path)
+            if inverse:
+                transform = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+
+            return transformPolyData(point_set, transform)
         elif space.lower() in ('template', 'dartel'):
             dartel_yfile = os.path.join(self.__root, 'Dartel', "y_%s-forw.nii.gz" % subj)
             if inverse:
