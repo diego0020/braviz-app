@@ -10,6 +10,7 @@ from PyQt4.QtCore import pyqtSignal
 
 from braviz.interaction.structure_metrics import solve_laterality
 import braviz.readAndFilter.tabular_data
+import seaborn as sbs
 from itertools import izip
 import colorbrewer
 from braviz.interaction import structure_metrics
@@ -940,8 +941,7 @@ class TractographyManager(object):
         n = number_of_bundles
         n = max(n, 3)
 
-        colors = colorbrewer.Set1[n]
-        colors = map(lambda x: map(lambda y: y / 255, x), colors)
+        colors = sbs.color_palette("Set1",n)
         self.__bundle_colors = colors
         # print colors
         return colors
