@@ -458,7 +458,7 @@ class LogicBundlesApp(QMainWindow):
             self.read_fibers()
         except Exception:
             logger.warning("Couldn't read fibers")
-            self.ui.scalar_box.setValue(float("nan"))
+            self.ui.scalar_box.setText("")
 
             return
 
@@ -473,7 +473,7 @@ class LogicBundlesApp(QMainWindow):
             logger.warning("Couldnt calculate metric")
             ans = float("nan")
         self.scalar_metric_value = ans
-        self.ui.scalar_box.setValue(ans)
+        self.ui.scalar_box.setText("%.6g"%ans)
 
 
     def set_fiber_color(self,metric):
@@ -488,7 +488,6 @@ class LogicBundlesApp(QMainWindow):
     def get_scalar_metric(self,metric):
 
         fibers = self.__filetred_pd
-        self.ui.scalar_box.setSuffix("")
         if metric == "number":
             return fibers.GetNumberOfLines()
         elif metric == "mean_length":
@@ -496,9 +495,6 @@ class LogicBundlesApp(QMainWindow):
             return np.mean(lengths)
         elif metric in {"mean_fa","mean_md"}:
             ans = get_scalar_from_fiber_ploydata(fibers,"mean_color")
-            if metric=="mean_md":
-                ans *= 10e9
-                self.ui.scalar_box.setSuffix(" x10e9")
             return ans
         else:
             raise Exception("Unknwon metric")

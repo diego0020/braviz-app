@@ -120,7 +120,7 @@ class ExtrapolateDialog(QDialog):
         self.targets_model.checked = tuple()
 
     def select_empty(self):
-        self.targets_model.checked = self.spheres_df.index
+        self.targets_model.checked = set(self.__subjects) - set(self.spheres_df.index)
 
     def populate_origin(self):
         for s in self.spheres_df.index:
@@ -284,7 +284,8 @@ class NewRoi(QDialog):
         self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(0)
         self.ui.roi_name.textChanged.connect(self.check_name)
         if block_space is not None:
-            self.ui.roi_space.setCurrentText(block_space)
+            index = self.ui.roi_space.findText(block_space)
+            self.ui.roi_space.setCurrentIndex(index)
             self.ui.roi_space.setEnabled(0)
         self.name = None
         self.coords = None
