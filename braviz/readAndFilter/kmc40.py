@@ -223,10 +223,12 @@ The path containing this structure must be set."""
 
             img2 = applyTransform(vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
             space = kw.get('space', 'world')
+            space = space.lower()
             if space == "diff" and (data in {"FA", "MD", "DTI"}):
                 return img2
             return self.__move_img_from_world(subj, img2, interpolate, space=space)
         space = kw.get('space', 'native')
+        space = space.lower()
         if space == "diff" and (data in {"FA", "MD", "DTI"}):
             return img
         elif space == "world":
@@ -241,8 +243,9 @@ The path containing this structure must be set."""
             img2 = nib.Nifti1Image(img.get_data(), aff2)
             return img2
         log = logging.getLogger(__file__)
-        log.warning("Returned nifti image is in native space")
-        return img
+        log.error("Returned nifti image is in native space")
+        raise NotImplementedError
+
 
 
     def __move_img_from_world(self, subj, img2, interpolate=False, space='world'):

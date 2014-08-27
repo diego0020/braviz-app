@@ -10,6 +10,7 @@ from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import QMainWindow, QDialog
 import vtk
 import numpy as np
+from scipy import ndimage
 
 import braviz
 from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
@@ -72,6 +73,7 @@ class ExtrapolateDialog(QDialog):
         self.__roi_space = geom_db.get_roi_space(roi_id=sphere_id)
         self.__origin = initial_source
         self.__reader = reader
+        self.__pos_opt = PositionOptimizer(reader)
         self.spheres_df = None
         data_cols = self.create_data_cols()
         self.targets_model = SubjectCheckTable(subjects_list, data_cols, ("Subject", "Sphere R", "Sphere Center"))
@@ -151,6 +153,16 @@ class ExtrapolateDialog(QDialog):
                 ctr = self.translate_one_point(self.__center_link, target)
             except Exception:
                 log.warning("Couldn't extrapolate subject %s", target)
+                return
+
+        max_opt = self.ui.optimize_radius.value()
+        if max_opt>0:
+            try:
+                print "optimizing"
+                subj_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, target)
+                self.__pos_opt.get_optimum(ctr,max_opt,subj_img_id,self.__roi_space,"FA")
+            except Exception:
+                log.warning("Couldn't optimize for subject %s", target)
                 return
 
         #radius
@@ -362,7 +374,7 @@ class BuildRoiApp(QMainWindow):
             self.__curent_space = geom_db.get_roi_space(name=roi_name)
         except Exception:
             raise
-            self.__curent_space = "World"
+
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
 
@@ -388,6 +400,10 @@ class BuildRoiApp(QMainWindow):
         self.__sphere_radius = None
         self.__aux_lut = None
         self.__mean_in_img_calculator = AggregateInRoi(self.reader)
+
+        #for optimization
+        self.__pos_optimizer = PositionOptimizer(self.reader)
+
         self.__mean_fa_in_roi_calculator = AggregateInRoi(self.reader)
         self.__mean_md_in_roi_calculator = AggregateInRoi(self.reader)
         self.ui.sphere_space.setText(self.__curent_space)
@@ -396,6 +412,12 @@ class BuildRoiApp(QMainWindow):
         self.update_sphere_center()
         if self.__roi_id is not None:
             self.load_sphere(self.__current_subject)
+
+        if self.__curent_space.lower() == "dartel":
+            self.ui.optimize_button.setEnabled(0)
+            self.ui.optimize_button.setToolTip("Not possible in dartel space")
+            self.ui.inside_check.setEnabled(0)
+            self.ui.inside_check.setToolTip("Not possible in dartel space")
 
 
     def setup_ui(self):
@@ -427,6 +449,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.sphere_y.valueChanged.connect(self.update_sphere_center)
         self.ui.sphere_z.valueChanged.connect(self.update_sphere_center)
         self.ui.copy_from_cursor_button.clicked.connect(self.copy_coords_from_cursor)
+        self.ui.optimize_button.clicked.connect(self.optimize_sphere_from_button)
         self.ui.sphere_rep.currentIndexChanged.connect(self.set_sphere_representation)
         self.ui.sphere_opac.valueChanged.connect(self.set_sphere_opac)
 
@@ -469,6 +492,8 @@ class BuildRoiApp(QMainWindow):
             self.select_subject(subj=prev)
         elif event.key() == QtCore.Qt.Key_C:
             self.copy_coords_from_cursor()
+        elif event.key() == QtCore.Qt.Key_O:
+            self.optimize_sphere_from_button()
         else:
             super(BuildRoiApp, self).keyPressEvent(event)
 
@@ -712,6 +737,7 @@ class BuildRoiApp(QMainWindow):
         self.show_fibers()
         self.caclulate_image_in_roi_pre()
         self.__sphere_modified = False
+        self.vtk_viewer.ren_win.Render()
         print new_subject
 
     def save_sphere(self):
@@ -748,7 +774,7 @@ class BuildRoiApp(QMainWindow):
 
     def select_image_modality(self, dummy_index):
         mod = str(self.ui.image_combo.currentText())
-        if self.ui.image_combo.currentIndex() > 3:
+        if self.ui.image_combo.currentIndex() > 4:
             # functional
             self.ui.contrast_combo.setEnabled(1)
             self.reload_contrast_names(mod)
@@ -978,6 +1004,75 @@ class BuildRoiApp(QMainWindow):
         self.statusBar().showMessage("saving to %s" % file_name,5000)
         export_roi(self.__current_subject,self.__roi_id,"world",file_name,self.reader)
         self.statusBar().showMessage("DONE: saved to %s" % file_name,5000)
+
+    def optimize_sphere_from_button(self):
+        max_opt = min(10,self.__sphere_radius)
+        opt_ctr = self.__pos_optimizer.get_optimum(self.__sphere_center,max_opt,self.__current_img_id,
+                                                   self.__curent_space,"FA")
+        cx, cy, cz = opt_ctr
+        self.ui.sphere_x.setValue(cx)
+        self.ui.sphere_y.setValue(cy)
+        self.ui.sphere_z.setValue(cz)
+        self.update_sphere_center()
+
+    def get_optimum_position(self,ctr,max_opt):
+        print "optimizing"
+        if self.__fa_smoothed is None :
+            fa_image = self.reader.get("FA",self.__current_img_id,space=self.__curent_space)
+            self.__fa_affine = fa_image.get_affine()
+            print self.__fa_affine
+            self.__fa_i_affine = np.linalg.inv(self.__fa_affine)
+            self.__fa_smoothed = ndimage.gaussian_filter(fa_image.get_data(),3)
+
+        print ctr
+        ctr_h = np.ones(4)
+        ctr_h[:3]=ctr
+        ctr_coords = np.round(self.__fa_i_affine.dot(ctr_h))
+        ctr_coords = ctr_coords[:3]/ctr_coords[3]
+        x0,y0,z0 = ctr_coords-max_opt
+        xn,yn,zn = ctr_coords+max_opt+1
+        mini_fa = self.__fa_smoothed[x0:xn,y0:yn,z0:zn]
+        mini_i = np.unravel_index(mini_fa.argmax(),mini_fa.shape)
+        max_i = np.ones(4)
+        max_i[:3] = mini_i + ctr_coords - max_opt
+        opt_ctr = self.__fa_affine.dot(max_i)
+        opt_ctr = opt_ctr[:3]/opt_ctr[3]
+        return opt_ctr
+
+class PositionOptimizer(object):
+    def __init__(self,reader):
+        self.reader = reader
+        self.__fa_affine = None
+        self.__fa_i_affine = None
+        self.__fa_smoothed = None
+        self.__last_subj = None
+        self.__last_space = None
+        pass
+    def get_optimum(self,ctr,max_opt,img_id,space,img_type="FA"):
+        print "optimizing"
+        if self.__last_subj != img_id or self.__last_space != space:
+            fa_image = self.reader.get(img_type,img_id,space=space)
+            self.__fa_affine = fa_image.get_affine()
+            print self.__fa_affine
+            self.__fa_i_affine = np.linalg.inv(self.__fa_affine)
+            self.__fa_smoothed = ndimage.gaussian_filter(fa_image.get_data(),3)
+            self.__last_subj = img_id
+            self.__last_space = space
+
+        print ctr
+        ctr_h = np.ones(4)
+        ctr_h[:3]=ctr
+        ctr_coords = np.round(self.__fa_i_affine.dot(ctr_h))
+        ctr_coords = ctr_coords[:3]/ctr_coords[3]
+        x0,y0,z0 = ctr_coords-max_opt
+        xn,yn,zn = ctr_coords+max_opt+1
+        mini_fa = self.__fa_smoothed[x0:xn,y0:yn,z0:zn]
+        mini_i = np.unravel_index(mini_fa.argmax(),mini_fa.shape)
+        max_i = np.ones(4)
+        max_i[:3] = mini_i + ctr_coords - max_opt
+        opt_ctr = self.__fa_affine.dot(max_i)
+        opt_ctr = opt_ctr[:3]/opt_ctr[3]
+        return opt_ctr
 
 
 def run():
