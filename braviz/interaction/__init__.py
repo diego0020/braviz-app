@@ -5,7 +5,7 @@ import logging
 
 import vtk
 import numpy as np
-
+from braviz.readAndFilter import numpy_support
 
 def compute_volume_and_area(struct):
     """Returns (volume,surface) of a polydata closed surface"""
@@ -25,7 +25,6 @@ def compute_fiber_lengths(fib):
         log = logging.getLogger(__name__)
         log.error("Error, fib must contain only lines")
         raise Exception("Error, fib must contain only lines")
-    lengths = {}
 
     def line_length(pl):
         """Calculates the length of a polyline"""
@@ -58,7 +57,18 @@ def get_fiber_bundle_descriptors(fib):
     return len(d), np.mean(d), np.max(d), np.min(d), np.std(d)
 
 
-def aggregate_fiber_scalar(fib, component=0, norm_factor=1.0 / 255):
+def aggregate_fiber_scalar(fib, norm_factor=1.0 / 255):
+    """Calculates descriptive statistics (n,mean,max,min,std) from the point scalars in a polydata"""
+    scalars = fib.GetPointData().GetScalars()
+    if scalars is None or scalars.GetNumberOfTuples() == 0:
+        d = [float('nan')]
+    else:
+        d = numpy_support.vtk_to_numpy(scalars)
+
+        d = np.dot(d, norm_factor)
+    return len(d), np.mean(d), np.max(d), np.min(d), np.std(d)
+
+def aggregate_fiber_scalar2(fib, component=0, norm_factor=1.0 / 255):
     """Calculates descriptive statistics (n,mean,max,min,std) from the point scalars in a polydata"""
     scalars = fib.GetPointData().GetScalars()
     if scalars is None or scalars.GetNumberOfTuples() == 0:

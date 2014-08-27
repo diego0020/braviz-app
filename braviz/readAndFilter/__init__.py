@@ -389,6 +389,6 @@ from kmc40 import autoReader as _kmc40AutoReader
 kmc40AutoReader = _kmc40AutoReader
 
 if __name__ == "__main__":
-    root = braviz_auto_data_root()
-    reader=BravizAutoReader()
-    print root
+    __root = braviz_auto_data_root()
+    __reader=BravizAutoReader()
+    print __root
