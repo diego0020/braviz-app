@@ -8,3 +8,5 @@ braviz/applications/braviz.cfg
 sphinx_doc/_build/*
 sphinx_doc/make.bat
 sphinx_doc/Makefile
+braviz/readAndFilter/*.py.orig
+braviz/interaction/qt_guis/*.ui.orig
