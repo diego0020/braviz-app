@@ -231,6 +231,7 @@ The path containing this structure must be set."""
                 return img2
             return self.__move_img_from_world(subj, img2, interpolate, space=space)
         space = kw.get('space', 'native')
+        space = space.lower()
         if space == "diff" and (data in {"FA","MD","DTI"}):
             return img
         elif space == "world":
@@ -244,8 +245,16 @@ The path containing this structure must be set."""
             aff2 = matrix.dot(affine)
             img2=nib.Nifti1Image(img.get_data(),aff2)
             return img2
-        log = logging.getLogger(__file__)
-        log.warning("Returned nifti image is in native space")
+        elif space[:2] == "ta":
+            talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
+            #TODO Test if it is the inverse!!!!!!!
+            print "NOT TESTED, PLEASE TEST kmc400:247"
+            transform = readFreeSurferTransform(talairach_file)
+            affine = img.get_affine()
+            aff2 = transform.dot(affine)
+            img2=nib.Nifti1Image(img.get_data(),aff2)
+            return img2
+        raise NotImplementedError("Returned nifti image is in world space")
         return img
 
 
