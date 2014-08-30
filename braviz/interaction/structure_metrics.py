@@ -8,6 +8,9 @@ import numpy as np
 import braviz
 import braviz.readAndFilter.tabular_data
 import scipy.stats
+
+from braviz.readAndFilter import numpy_support
+
 __author__ = 'Diego'
 
 
@@ -400,9 +403,6 @@ def aggregate_in_roi(reader,subject, roi_ctr,roi_radius,roi_space, img2, paradig
     else:
         ans = scipy.stats.mode(values_inside)[0]
     return ans
-
-
-
 
 
 def get_locations(reader, subject, struct_name):
