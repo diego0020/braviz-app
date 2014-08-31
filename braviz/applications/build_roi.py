@@ -555,7 +555,7 @@ class BuildRoiApp(QMainWindow):
                                                      contrast,
                                                      mean=True)
         else:
-            if modality == "DTI":
+            if modality in {"DTI" , "FA"}:
                 self.ui.mean_inside_label.setText("Mean FA")
                 self.ui.mean_inside_label.setToolTip("Mean FA inside the ROI")
                 self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__curent_space, "FA", mean=True)

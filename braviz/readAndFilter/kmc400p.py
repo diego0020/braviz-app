@@ -247,8 +247,7 @@ The path containing this structure must be set."""
             return img2
         elif space[:2] == "ta":
             talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
-            #TODO Test if it is the inverse!!!!!!!
-            print "NOT TESTED, PLEASE TEST kmc400:247"
+            #TODO needs more testing
             transform = readFreeSurferTransform(talairach_file)
             affine = img.get_affine()
             aff2 = transform.dot(affine)
