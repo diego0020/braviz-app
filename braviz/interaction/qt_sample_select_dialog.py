@@ -315,6 +315,7 @@ class AddFilterDialog(VariableSelectDialog):
         self.ui.setupUi(self)
         self.ui.select_button.clicked.connect(self.save_and_accept)
         self.ui.save_button.setText("Save Meta")
+        self.ui.search_box.returnPressed.connect(self.filter_list)
 
     def update_right_side(self, var_name=None):
         curr_idx = self.ui.tableView.currentIndex()
@@ -429,6 +430,9 @@ class AddFilterDialog(VariableSelectDialog):
                                                      for l in self.params_dict["checked_labels"]]
         self.accept()
 
+    def filter_list(self):
+        mask = "%%%s%%"%self.ui.search_box.text()
+        self.vars_list_model.update_list(mask)
 
 class SubSampleSelectDialog(QtGui.QDialog):
     def __init__(self, original_length):
