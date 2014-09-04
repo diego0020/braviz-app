@@ -43,7 +43,7 @@ def get_agg_descriptor(subj,structures,aseg,reader):
 
 def save_descs_in_db(conn,subj,name,descs):
     vals = (int(subj),name,descs[0],descs[1],descs[2],descs[3],descs[4])
-    q = "INSERT OR IGNORE into descriptors VALUES (?,?, ?,?, ?,?,?)"
+    q = "INSERT OR REPLACE into descriptors VALUES (?,?, ?,?, ?,?,?)"
     conn.execute(q,vals)
     conn.commit()
 
@@ -59,8 +59,8 @@ def save_subj_descs(subj):
     conn = sqlite3.connect(db_name)
     try:
         structs = reader.get("MODEL",subj,index=True)
-        aseg = reader.get("APARC",subj)
-        wmaseg = reader.get("WMPARC",subj)
+        aseg = reader.get("APARC",subj,space="world")
+        wmaseg = reader.get("WMPARC",subj,space="world")
     except Exception as e:
         log.exception(e.message)
         return
