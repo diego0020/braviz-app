@@ -44,11 +44,12 @@ class ImportFromExcel(QtGui.QDialog):
 
 
     def read_excel(self,file_name):
-        df = pd.read_excel(file_name,0,index_col=0)
+        df = pd.read_excel(file_name,0,index_col=0,na_values=["#NULL!"])
         columns = df.columns
         columns = map(remove_non_ascii,columns)
         df.columns = columns
         df = df.convert_objects(convert_numeric=True)
+
         self.__df = df
 
 

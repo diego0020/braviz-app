@@ -1,7 +1,7 @@
 __author__ = 'Diego'
 
 import sqlite3
-from itertools import izip
+from itertools import izip,repeat
 import os
 import platform
 import logging
@@ -14,7 +14,7 @@ from braviz.utilities import remove_non_ascii
 
 from braviz.readAndFilter import PROJECT
 if PROJECT == "kmc400":
-    LATERALITY = 913
+    LATERALITY = 1423
 else:
     LATERALITY = 6
 
@@ -508,20 +508,34 @@ def get_variable_normal_range(var_idx):
     else:
         return values
 
+def float_or_nan(s):
+    try:
+        v = float(s)
+    except ValueError:
+        v = float("nan")
+    return v
+
 def add_data_frame(df):
     conn = get_connection()
-    with conn:
-        columns = df.columns
-        columns = map(remove_non_ascii,columns)
-        df.columns = columns
-        q1 = "INSERT INTO variables (var_name) VALUES (?)"
-        conn.executemany(q1,((c,) for c in columns))
-        df = df.convert_objects(convert_numeric=True)
-        q2 = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
-        VALUES ( (SELECT var_idx FROM variables WHERE var_name = ?),
-        ?,?)"""
-        df2 = df.stack()
-        conn.executemany(q2,((str(i[1]),int(i[0]),float(df2[i])) for i in df2.index))
+    columns = df.columns
+    columns = map(remove_non_ascii,columns)
+    df.columns = columns
+    tot_cols = len(columns)
+    for i, c in enumerate(columns):
+        with conn:
+            print "%d / %d : %s"%(i,tot_cols,c)
+            q1 = "INSERT INTO variables (var_name) VALUES (?)"
+            cur = conn.execute(q1,(c,))
+            var_idx = cur.lastrowid
+            col = df[c]
+            subjs = col.index.get_values().astype(int)
+            try:
+                vals = col.get_values().astype(float)
+            except ValueError:
+                vals = [float_or_nan(s) for s in col.get_values()]
+            q2 = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
+            VALUES ( ?, ?,?)"""
+            conn.executemany(q2,izip(repeat(var_idx),subjs,vals))
 
 def _recursive_delete_variable(var_idx):
     """

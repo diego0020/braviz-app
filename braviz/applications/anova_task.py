@@ -38,8 +38,8 @@ if braviz.readAndFilter.PROJECT == "kmc40":
     INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
     SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
 else:
-    INITIAL_OUTCOMES = (540,) # IHIdurd,IHIlatd
-    SAMPLE_TREE_COLUMNS = ("primipar","sexo5")
+    INITIAL_OUTCOMES = (992,) # IHIdurd,IHIlatd
+    SAMPLE_TREE_COLUMNS = ("ubicac","sexo5")
 
 class AnovaApp(QMainWindow):
     def __init__(self,scenario,server_broadcast_address,server_receive_address):
@@ -250,6 +250,7 @@ class AnovaApp(QMainWindow):
         elif var_name == "(Intercept)":
             data = get_data_frame_by_name(self.outcome_var_name)
             data = data.loc[self.sample]
+            data.dropna(inplace=True)
 
             self.plot_data_frame = data
             data_values = data[self.outcome_var_name].get_values()
@@ -374,7 +375,8 @@ class AnovaApp(QMainWindow):
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
             label_nums = set(data[var_name])
             data = data.loc[self.sample]
-
+            #remove nans
+            data.dropna(inplace=True)
             self.plot_data_frame = data
 
             data_list = []

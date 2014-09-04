@@ -755,6 +755,8 @@ class SampleTree(QAbstractItemModel):
                            (var_name,))
         labels_list = []
         for i, (label, name) in enumerate(cur.fetchall()):
+            if label is None:
+                continue
             lab_id = self.__get_next_id()
             children = self.__data_frame[self.__data_frame[var_name] == label].index
             children_list = []
