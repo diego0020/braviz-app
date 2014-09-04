@@ -182,11 +182,11 @@ The path containing this structure must be set."""
         elif data == "DTI":
             path = os.path.join(self.__static_root, 'tractography',str(subj))
             if kw.get('space','').startswith('diff'):
-                filename = 'rgb_dti.nii.gz'
-                #filename = 'rgb_dti_masked.nii.gz'
+                #filename = 'rgb_dti.nii.gz'
+                filename = 'rgb_dti_masked.nii.gz'
             else:
-                filename = 'rgb_dti_mri.nii.gz'
-                #filename = 'rgb_dti_mri_masked.nii.gz'
+                #filename = 'rgb_dti_mri.nii.gz'
+                filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
             path = os.path.join(self.__static_root, "slicer_models",str(subj))
             if kw.get("wm"):
@@ -783,7 +783,8 @@ The path containing this structure must be set."""
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
             #move to world
-            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
+            #matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', '../orig.nii.gz', path)
             streams_mri = transformPolyData(streams, matrix)
             if kw.get('space', 'world').lower() != 'world':
                 transformed_streams = self.__movePointsToSpace(streams_mri, kw['space'], subj)
