@@ -783,8 +783,8 @@ The path containing this structure must be set."""
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
             #move to world
-            #matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
-            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', '../orig.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
+            #matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', '../orig.nii.gz', path)
             streams_mri = transformPolyData(streams, matrix)
             if kw.get('space', 'world').lower() != 'world':
                 transformed_streams = self.__movePointsToSpace(streams_mri, kw['space'], subj)
