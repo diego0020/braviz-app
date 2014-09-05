@@ -241,8 +241,9 @@ The path containing this structure must be set."""
         elif space == "diff":
             #read transform:
             path = os.path.join(self.getDataRoot(), "tractography",str(subj))
-            #matrix = readFlirtMatrix('surf2diff.mat', 'FA.nii.gz', 'orig.nii.gz', path)
-            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
+            #matrix = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz', 'FA.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            matrix = np.linalg.inv(matrix)
             affine = img.get_affine()
             aff2 = matrix.dot(affine)
             img2=nib.Nifti1Image(img.get_data(),aff2)
@@ -287,6 +288,7 @@ The path containing this structure must be set."""
                                   interpolate=interpolate)
             return img3
         elif space == "diff":
+            #TODO: Check, looks wrong
             path = os.path.join(self.getDataRoot(), "tractography", str(subj))
             # notice we are reading the inverse transform diff -> world
             trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
@@ -575,18 +577,16 @@ The path containing this structure must be set."""
             color = color.lower()
             if color.startswith('orient'):
                 #This one should always exist!!!!!
-                if color.startswith('orient'):
-                    #This one should always exist!!!!!
-                    file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
-                    if not os.path.isfile(file_name):
-                        raise Exception("Fibers file not found")
-                    pd_reader = vtk.vtkPolyDataReader()
-                    pd_reader.SetFileName(file_name)
-                    pd_reader.Update()
-                    fibs = pd_reader.GetOutput()
-                    pd_reader.CloseVTKFile()
-                    #!!! This is the base case
-                    return fibs
+                file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
+                if not os.path.isfile(file_name):
+                    raise Exception("Fibers file not found")
+                pd_reader = vtk.vtkPolyDataReader()
+                pd_reader.SetFileName(file_name)
+                pd_reader.Update()
+                fibs = pd_reader.GetOutput()
+                pd_reader.CloseVTKFile()
+                #!!! This is the base case
+                return fibs
             cache_key = 'streams_%s_%s.vtk' % (subj,color)
         else:
             scalars = scalars.lower()
@@ -598,7 +598,7 @@ The path containing this structure must be set."""
         else:
             #WE ARE IN DIFF SPACE
             #base case
-            fibers = self.__cached_color_fibers(subj, 'orient',space="diff")
+            fibers = self.__cached_color_fibers(subj, 'orient')
             if color == 'orient':
                 return fibers
             elif color == 'y':
@@ -863,6 +863,7 @@ The path containing this structure must be set."""
             return transformPolyData(point_set, transform)
         elif space.lower()[:4] == 'diff':
             path = os.path.join(self.__static_root, 'tractography', str(subj))
+            #TODO: This looks wrong!!!!
             transform = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz','FA.nii.gz', path)
             if inverse:
                 transform = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
