@@ -1039,11 +1039,21 @@ class TractographyManager(object):
 
     def __reload_fibers(self):
         # reload ad_hoc
+        error = False
         if self.__ad_hoc_visibility is True:
-            self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks, self.__ad_hoc_throug_all)
+            try:
+                self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks, self.__ad_hoc_throug_all)
+            except Exception:
+                error = True
+
         # reload db
         for bid in self.__active_db_tracts:
-            self.add_from_database(bid)
+            try:
+                self.add_from_database(bid)
+            except Exception:
+                error = True
+        if error is True:
+            raise Exception("Couldn't load fibers")
 
     @do_and_render
     def set_active_db_tracts(self, new_set):

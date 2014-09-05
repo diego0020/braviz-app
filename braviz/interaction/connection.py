@@ -84,22 +84,23 @@ class MessageClient(QtCore.QObject):
             def receive_loop():
                 while not self._stop:
                     msg = self._receive_socket.recv()
-                    self._last_message = msg
-                    self.message_received.emit(msg)
+                    if msg != self._last_message:
+                        self.message_received.emit(msg)
+                        self._last_message = msg
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
 
     def send_message(self,msg):
         log = logging.getLogger(__file__)
-        if msg == self._last_message:
-            return
+
         if self._send_socket is None:
             log.error("Trying to send message without connection to server")
             return
 
         try:
             #self._send_socket.send(msg,zmq.DONTWAIT)
+            self._last_message = msg
             self._send_socket.send(msg)
         except zmq.Again:
             log.error("Couldn't send message %s",msg)

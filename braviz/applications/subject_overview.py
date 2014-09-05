@@ -224,9 +224,11 @@ class SubjectOverviewApp(QMainWindow):
         try:
             self.vtk_viewer.change_subject(image_code)
         except Exception as e:
-            self.show_error(e.message)
+            self.show_error(new_subject+":"+e.message)
             log.warning(e.message)
             #raise
+        else:
+            self.statusBar().showMessage("%s: ok"%new_subject, 5000)
         self.reload_contrast_names()
         self.reset_image_view_controls()
         #context
