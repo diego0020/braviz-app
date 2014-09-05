@@ -232,7 +232,7 @@ The path containing this structure must be set."""
             if space == "diff" and (data in {"FA","MD","DTI"}):
                 return img2
             return self.__move_img_from_world(subj, img2, interpolate, space=space)
-        space = kw.get('space', 'native')
+        space = kw.get('space', 'world')
         space = space.lower()
         if space == "diff" and (data in {"FA","MD","DTI"}):
             return img
