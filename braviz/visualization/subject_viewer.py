@@ -856,12 +856,13 @@ class TractographyManager(object):
         try:
             poly_data = self.reader.get("Fibers", self.__current_subject, waypoint=checkpoints, operation=operation,
                                         space=self.__current_space, **self.__current_color_parameters)
-        except Exception:
+        except Exception as e:
             actor.SetVisibility(0)
             poly_data = None
             self.__ad_hoc_pd_mp_ac = (poly_data, mapper, actor)
             log = logging.getLogger(__name__)
             log.warning("Fibers not found")
+            log.error(e.message)
             raise
         else:
             actor.GetProperty().SetOpacity(self.__opacity)
@@ -916,8 +917,9 @@ class TractographyManager(object):
         try:
             poly_data = self.get_polydata(b_id)
             mapper.SetInputData(poly_data)
-        except Exception:
+        except Exception as e:
             log = logging.getLogger(__name__)
+            log.error(e.message)
             log.warning("Couldn't load fibers from db")
             actor.SetVisibility(0)
             raise

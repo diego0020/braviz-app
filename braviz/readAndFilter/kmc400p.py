@@ -579,6 +579,7 @@ The path containing this structure must be set."""
                 #This one should always exist!!!!!
                 file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
                 if not os.path.isfile(file_name):
+                    log.error("Fibers file not found")
                     raise Exception("Fibers file not found")
                 pd_reader = vtk.vtkPolyDataReader()
                 pd_reader.SetFileName(file_name)
