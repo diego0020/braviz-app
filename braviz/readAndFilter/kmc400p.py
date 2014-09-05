@@ -182,11 +182,11 @@ The path containing this structure must be set."""
         elif data == "DTI":
             path = os.path.join(self.__static_root, 'tractography',str(subj))
             if kw.get('space','').startswith('diff'):
-                #filename = 'rgb_dti.nii.gz'
-                filename = 'rgb_dti_masked.nii.gz'
+                filename = 'rgb_dti.nii.gz'
+                #filename = 'rgb_dti_masked.nii.gz'
             else:
-                #filename = 'rgb_dti_mri.nii.gz'
-                filename = 'rgb_dti_mri_masked.nii.gz'
+                filename = 'rgb_dti_mri.nii.gz'
+                #filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
             path = os.path.join(self.__static_root, "slicer_models",str(subj))
             if kw.get("wm"):
@@ -598,7 +598,7 @@ The path containing this structure must be set."""
         else:
             #WE ARE IN DIFF SPACE
             #base case
-            fibers = self.__cached_color_fibers(subj, 'orient')
+            fibers = self.__cached_color_fibers(subj, 'orient',space="diff")
             if color == 'orient':
                 return fibers
             elif color == 'y':
