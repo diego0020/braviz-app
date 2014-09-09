@@ -111,6 +111,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
         if len(self.history) > 0:
             self.ui.undo_button.setEnabled(1)
         self.output_model.set_elements(new_set)
+        self.ui.size_label.setText("Size : %d"%len(new_set))
 
     def add_all(self):
         new_set = self.working_model.get_elements().union(self.output_model.get_elements())
@@ -272,11 +273,11 @@ def get_filter_function(params):
     if params["var_real"] is True:
         op = params["operation"]
         if op == "<":
-            f = lambda x: x < params["threshold"]
+            f = lambda x: x < float(params["threshold"])
         elif op == ">":
-            f = lambda x: x > params["threshold"]
+            f = lambda x: x > float(params["threshold"])
         else:
-            f = lambda x: x == params["threshold"]
+            f = lambda x: x == float(params["threshold"])
     else:
         f = lambda x: x in params["checked_labels"]
     #get data
@@ -286,6 +287,7 @@ def get_filter_function(params):
     def filter_func(subj):
         try:
             x = braviz_tab_data.get_var_value(var_idx, subj)
+            x = float(x)
         except Exception:
             return False
         else:

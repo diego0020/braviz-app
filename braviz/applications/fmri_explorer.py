@@ -9,7 +9,7 @@ from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
 from braviz.interaction.connection import MessageClient
-from braviz.interaction.qt_sample_select_dialog import SampleLoadDialog
+from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 
 import pandas as pd
 import seaborn as sns

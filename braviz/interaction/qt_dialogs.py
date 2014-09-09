@@ -144,7 +144,10 @@ class VariableSelectDialog(QtGui.QDialog):
         medi = self.rational["opt"]
         self.details_ui.maximum_val.setValue(maxi)
         self.details_ui.minimum_val.setValue(mini)
-        self.details_ui.optimum_val.setValue(int((medi - mini) / (maxi - mini)*100))
+        try:
+            self.details_ui.optimum_val.setValue(int((medi - mini) / (maxi - mini)*100))
+        except Exception:
+            self.details_ui.optimum_val.setValue(0)
         self.update_optimum_real_value()
 
     def update_optimum_real_value(self, perc_value=None):

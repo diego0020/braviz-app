@@ -19,7 +19,7 @@ import pandas as pd
 
 from braviz.interaction.qt_guis.linear_reg import Ui_LinearModel
 import braviz.interaction.qt_dialogs
-import braviz.interaction.qt_sample_select_dialog
+import braviz.applications.qt_sample_select_dialog
 from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectDialog,
                                            InteractionSelectDialog)
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
@@ -606,7 +606,7 @@ class LinearModelApp(QMainWindow):
 
 
     def load_sample(self):
-        dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
+        dialog = braviz.applications.qt_sample_select_dialog.SampleLoadDialog()
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:

@@ -521,6 +521,13 @@ def add_data_frame(df):
     columns = map(remove_non_ascii,columns)
     df.columns = columns
     tot_cols = len(columns)
+    subjs = df.index.get_values().astype(int)
+    #check if there are new subjects
+    print "updating subjects"
+    with conn:
+        q="INSERT OR IGNORE INTO subjects VALUES(?)"
+        conn.executemany(q,( (s,) for s in subjs))
+
     for i, c in enumerate(columns):
         with conn:
             print "%d / %d : %s"%(i,tot_cols,c)
@@ -528,7 +535,6 @@ def add_data_frame(df):
             cur = conn.execute(q1,(c,))
             var_idx = cur.lastrowid
             col = df[c]
-            subjs = col.index.get_values().astype(int)
             try:
                 vals = col.get_values().astype(float)
             except ValueError:

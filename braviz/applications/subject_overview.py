@@ -19,7 +19,7 @@ from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, Structur
 from braviz.visualization.subject_viewer import QSubjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
-from braviz.interaction.qt_sample_select_dialog import SampleLoadDialog
+from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 import subprocess
 from braviz.interaction.connection import MessageClient
 import cPickle

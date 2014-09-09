@@ -13,11 +13,12 @@ from braviz.interaction.connection import MessageServer
 try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
     import braviz.interaction.qt_dialogs
-    import braviz.interaction.qt_sample_select_dialog
+    import braviz.applications.qt_sample_select_dialog
 except ImportError:
     import braviz.interaction.generate_qt_guis
     braviz.interaction.generate_qt_guis.update_guis()
     print "please try again"
+    raise
     sys.exit()
 
 
@@ -97,7 +98,7 @@ class BravizMenu2(QtGui.QMainWindow):
         dialog.exec_()
 
     def launch_samples_dialog(self):
-        dialog = braviz.interaction.qt_sample_select_dialog.SampleLoadDialog()
+        dialog = braviz.applications.qt_sample_select_dialog.SampleLoadDialog()
         dialog.exec_()
 
     def launch_scenarios_dialog(self):
