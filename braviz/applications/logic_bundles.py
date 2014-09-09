@@ -399,6 +399,7 @@ class LogicBundlesApp(QMainWindow):
             remove_node_from_render(node)
             self.logic_tree.remove_node(selection)
             self.ui.treeView.expandAll()
+            self.update_fibers()
             self.vtk_viewer.ren_win.Render()
 
         remove_action.triggered.connect(remove_item)
@@ -456,8 +457,9 @@ class LogicBundlesApp(QMainWindow):
         self.set_fiber_color(metric)
         try:
             self.read_fibers()
-        except Exception:
+        except Exception as e:
             logger.warning("Couldn't read fibers")
+            logger.exception(e.message)
             self.ui.scalar_box.setText("")
 
             return
