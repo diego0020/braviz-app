@@ -1182,6 +1182,9 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                         value=int(value)
                 #update value
                 braviz_tab_data.updata_variable_value(int(idx),self.__curent_subject,value)
+                #update internal
+                var_name = self.__context_variable_names[idx]
+                self.__internal_df[var_name][int(self.__curent_subject)]=value
                 #check if scenarios exists for this variable
                 if braviz_user_data.count_variable_scenarios(int(idx)) == 0:
                     #save scenario
