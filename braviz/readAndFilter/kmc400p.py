@@ -182,9 +182,11 @@ The path containing this structure must be set."""
         elif data == "DTI":
             path = os.path.join(self.__static_root, 'tractography',str(subj))
             if kw.get('space','').startswith('diff'):
-                filename = 'rgb_dti_masked.nii.gz'
+                filename = 'rgb_dti.nii.gz'
+                #filename = 'rgb_dti_masked.nii.gz'
             else:
-                filename = 'rgb_dti_mri_masked.nii.gz'
+                filename = 'rgb_dti_mri.nii.gz'
+                #filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
             path = os.path.join(self.__static_root, "slicer_models",str(subj))
             if kw.get("wm"):
@@ -230,7 +232,7 @@ The path containing this structure must be set."""
             if space == "diff" and (data in {"FA","MD","DTI"}):
                 return img2
             return self.__move_img_from_world(subj, img2, interpolate, space=space)
-        space = kw.get('space', 'native')
+        space = kw.get('space', 'world')
         space = space.lower()
         if space == "diff" and (data in {"FA","MD","DTI"}):
             return img
@@ -239,8 +241,9 @@ The path containing this structure must be set."""
         elif space == "diff":
             #read transform:
             path = os.path.join(self.getDataRoot(), "tractography",str(subj))
-            #matrix = readFlirtMatrix('surf2diff.mat', 'FA.nii.gz', 'orig.nii.gz', path)
-            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
+            #matrix = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz', 'FA.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            matrix = np.linalg.inv(matrix)
             affine = img.get_affine()
             aff2 = matrix.dot(affine)
             img2=nib.Nifti1Image(img.get_data(),aff2)
@@ -285,6 +288,7 @@ The path containing this structure must be set."""
                                   interpolate=interpolate)
             return img3
         elif space == "diff":
+            #TODO: Check, looks wrong
             path = os.path.join(self.getDataRoot(), "tractography", str(subj))
             # notice we are reading the inverse transform diff -> world
             trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
@@ -573,18 +577,17 @@ The path containing this structure must be set."""
             color = color.lower()
             if color.startswith('orient'):
                 #This one should always exist!!!!!
-                if color.startswith('orient'):
-                    #This one should always exist!!!!!
-                    file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
-                    if not os.path.isfile(file_name):
-                        raise Exception("Fibers file not found")
-                    pd_reader = vtk.vtkPolyDataReader()
-                    pd_reader.SetFileName(file_name)
-                    pd_reader.Update()
-                    fibs = pd_reader.GetOutput()
-                    pd_reader.CloseVTKFile()
-                    #!!! This is the base case
-                    return fibs
+                file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
+                if not os.path.isfile(file_name):
+                    log.error("Fibers file not found")
+                    raise Exception("Fibers file not found")
+                pd_reader = vtk.vtkPolyDataReader()
+                pd_reader.SetFileName(file_name)
+                pd_reader.Update()
+                fibs = pd_reader.GetOutput()
+                pd_reader.CloseVTKFile()
+                #!!! This is the base case
+                return fibs
             cache_key = 'streams_%s_%s.vtk' % (subj,color)
         else:
             scalars = scalars.lower()
@@ -782,6 +785,7 @@ The path containing this structure must be set."""
                 return streams
             #move to world
             matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
+            #matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', '../orig.nii.gz', path)
             streams_mri = transformPolyData(streams, matrix)
             if kw.get('space', 'world').lower() != 'world':
                 transformed_streams = self.__movePointsToSpace(streams_mri, kw['space'], subj)
@@ -860,6 +864,7 @@ The path containing this structure must be set."""
             return transformPolyData(point_set, transform)
         elif space.lower()[:4] == 'diff':
             path = os.path.join(self.__static_root, 'tractography', str(subj))
+            #TODO: This looks wrong!!!!
             transform = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz','FA.nii.gz', path)
             if inverse:
                 transform = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)

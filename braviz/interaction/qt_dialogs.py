@@ -1072,7 +1072,11 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         value_widget.setCursor(QtCore.Qt.IBeamCursor)
         #calculate maximum width
         if is_variable_nominal(idx):
-            longest = max(self.__labels_dict[idx].itervalues(), key=len)
+            lens = [(x,len(x)) for x in self.__labels_dict[idx].itervalues() if x is not None]
+            if len (lens)==0:
+                longest="<Unknown>"
+            else:
+                longest = max(lens,key=lambda x:x[1])[0]
             value_widget.setText(longest)
             longest_size = value_widget.sizeHint()
             value_widget.setFixedWidth(longest_size.width())

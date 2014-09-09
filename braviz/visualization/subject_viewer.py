@@ -856,12 +856,13 @@ class TractographyManager(object):
         try:
             poly_data = self.reader.get("Fibers", self.__current_subject, waypoint=checkpoints, operation=operation,
                                         space=self.__current_space, **self.__current_color_parameters)
-        except Exception:
+        except Exception as e:
             actor.SetVisibility(0)
             poly_data = None
             self.__ad_hoc_pd_mp_ac = (poly_data, mapper, actor)
             log = logging.getLogger(__name__)
             log.warning("Fibers not found")
+            log.error(e.message)
             raise
         else:
             actor.GetProperty().SetOpacity(self.__opacity)
@@ -916,8 +917,9 @@ class TractographyManager(object):
         try:
             poly_data = self.get_polydata(b_id)
             mapper.SetInputData(poly_data)
-        except Exception:
+        except Exception as e:
             log = logging.getLogger(__name__)
+            log.error(e.message)
             log.warning("Couldn't load fibers from db")
             actor.SetVisibility(0)
             raise
@@ -1039,11 +1041,21 @@ class TractographyManager(object):
 
     def __reload_fibers(self):
         # reload ad_hoc
+        error = False
         if self.__ad_hoc_visibility is True:
-            self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks, self.__ad_hoc_throug_all)
+            try:
+                self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks, self.__ad_hoc_throug_all)
+            except Exception:
+                error = True
+
         # reload db
         for bid in self.__active_db_tracts:
-            self.add_from_database(bid)
+            try:
+                self.add_from_database(bid)
+            except Exception:
+                error = True
+        if error is True:
+            raise Exception("Couldn't load fibers")
 
     @do_and_render
     def set_active_db_tracts(self, new_set):

@@ -302,8 +302,13 @@ class AnovaApp(QMainWindow):
             labels = []
             urls = []
             for k, v in top_labels_dict.iteritems():
+                if k is None:
+                    continue
+                if v is None:
+                    v="?"
                 labels.append(v)
                 colors.append(colors_dict[k])
+                #raise NotImplementedError("Error here")
                 datay.append(data[self.outcome_var_name][data[nominal_factors[0]] == k].get_values())
                 datax.append(data[real_factors[0]][data[nominal_factors[0]] == k].get_values())
                 urls.append(data[self.outcome_var_name][data[nominal_factors[0]] == k].index.get_values())

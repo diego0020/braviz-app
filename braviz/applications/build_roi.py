@@ -984,6 +984,7 @@ class BuildRoiApp(QMainWindow):
             geom_db.copy_spheres(self.__roi_id, new_id)
             self.__roi_id = new_id
             self.__roi_name = new_name
+            self.ui.sphere_name.setText(new_name)
             self.refresh_checked()
 
 
