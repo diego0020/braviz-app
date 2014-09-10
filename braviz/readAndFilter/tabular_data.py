@@ -20,6 +20,8 @@ else:
 
 IMAGE_CODE = 273
 
+_connection = None
+
 def get_variables(reader=None,mask=None):
     conn = get_connection(reader)
     if mask is None:
@@ -27,11 +29,13 @@ def get_variables(reader=None,mask=None):
     else:
         data = sql.read_sql("SELECT var_idx, var_name from variables WHERE var_name like ?;", conn,params=(mask,),
                             index_col="var_idx")
-    conn.close()
     return data
 
 
 def get_connection(reader=None):
+    if _connection is not None:
+        return _connection
+
     node = platform.node()
     if node == "archi5":
         path = os.path.join("/home/diego/braviz_data", "tabular_data.sqlite")
@@ -39,6 +43,7 @@ def get_connection(reader=None):
         data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
         path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
     conn = sqlite3.connect(path)
+    __connection = conn
     return conn
 
 
@@ -100,7 +105,6 @@ def get_data_frame_by_index(columns, reader=None,col_name_index=False):
         else:
             data[var_name] = col.astype(pd.np.float64)
 
-    conn.close()
     return data
 
 
