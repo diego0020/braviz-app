@@ -1,6 +1,6 @@
 from __future__ import division
 
-__author__ = 'Diego'
+
 
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
@@ -33,6 +33,8 @@ import platform
 
 import logging
 #TODO: Move all database access to read and filter
+
+__author__ = 'Diego'
 
 if braviz.readAndFilter.PROJECT == "kmc40":
     INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd

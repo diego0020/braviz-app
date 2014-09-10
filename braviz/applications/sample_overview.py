@@ -34,8 +34,8 @@ if braviz.readAndFilter.PROJECT == "kmc40":
     RATIONAL_VARIBLE = 5  # FSIQ
     SAMPLE_SIZE = 0.3
 else:
-    NOMINAL_VARIABLE = 1112  # SEXO5
-    RATIONAL_VARIBLE = 1108  # psnacercorr
+    NOMINAL_VARIABLE = 1982  # SEXO5
+    RATIONAL_VARIBLE = 2008  # psnacercorr
     SAMPLE_SIZE = 0.1
 
 
