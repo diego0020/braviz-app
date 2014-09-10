@@ -720,8 +720,11 @@ class RegressorSelectDialog(VariableSelectDialog):
     def update_plot(self, data):
         regressor_data = data
         if self.outcome_var is not None:
-            outcome_data = get_data_frame_by_name(self.outcome_var)
-            both_data=regressor_data.join(outcome_data)
+            if self.outcome_var in regressor_data.columns:
+                both_data = regressor_data
+            else:
+                outcome_data = get_data_frame_by_name(self.outcome_var)
+                both_data=regressor_data.join(outcome_data)
             both_data.dropna(inplace=True)
 
             self.matplot_widget.compute_scatter(both_data.iloc[:,0].get_values(), both_data.iloc[:,1].get_values(),

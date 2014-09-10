@@ -137,7 +137,7 @@ class VarAndGiniModel(QAbstractTableModel):
                 if int_role == QtCore.Qt.DisplayRole:
                     return df2.iloc[line, 0]
                 elif int_role == QtCore.Qt.ToolTipRole:
-                    return braviz_tab_data.get_var_description(df2[line])
+                    return braviz_tab_data.get_var_description(df2.index[line])
             elif col == 1:
                 if int_role == QtCore.Qt.DisplayRole:
                     return str(df2.iloc[line, 1])

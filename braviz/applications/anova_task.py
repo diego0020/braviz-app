@@ -163,12 +163,13 @@ class AnovaApp(QMainWindow):
         self.ui.outcome_sel.setCurrentIndex(index)
         conn = get_connection()
         try:
-            var_is_real = conn.execute("SELECT is_real FROM variables WHERE var_name = ? ;", (new_bar,)).fetchone()[0]
+            var_is_real = braviz_tab_data.is_variable_name_real(new_bar)
         except TypeError:
             var_type_text = "Type"
         else:
             var_type_text = "Real" if var_is_real else "Nominal"
         self.ui.outcome_type.setText(var_type_text)
+        self.update_main_plot(self.plot_var_name)
         self.check_if_ready()
 
     def launch_add_regressor_dialog(self):
@@ -241,6 +242,8 @@ class AnovaApp(QMainWindow):
         self.plot_z_var = None
         self.plot_color = None
         if self.outcome_var_name is None:
+            return
+        if self.plot_var_name is None:
             return
         if var_name == "Residuals":
             residuals = self.result_model.residuals
