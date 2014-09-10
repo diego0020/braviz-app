@@ -16,7 +16,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
-from braviz.interaction import qt_sample_select_dialog
+from braviz.applications import qt_sample_select_dialog
 
 import numpy as np
 import seaborn as sns

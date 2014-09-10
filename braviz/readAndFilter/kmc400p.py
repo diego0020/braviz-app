@@ -1216,7 +1216,8 @@ known_nodes = {  #
     'ATHPC1304' : (r"Z:",r"F:\ProyectoCanguro\kmc400_braviz",14000),
     'IIND-EML754066' : (r"Z:",r"C:\Users\da.angulo39\Documents\kmc400_braviz",2000),
     #'da-angulo': ("Z:\\","D:\\kmc400-braviz" ,4000),
-    'da-angulo': ("F:\\kmc400","F:\kmc400_braviz" ,4000), # from external drive
+    #'da-angulo': ("F:\\kmc400","F:\kmc400_braviz" ,4000), # from external drive
+    'da-angulo': ("F:\\kmc400","D:\\kmc400-braviz" ,4000), # from external drive
     'ISIS-EML725001': ('G:/kmc400', 'c:/kmc400-braviz',8000),
 }
 

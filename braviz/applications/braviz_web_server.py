@@ -24,7 +24,6 @@ class MainHandler(tornado.web.RequestHandler):
         for k,v in labels.iteritems():
             if v is None:
                 labels[k]="label%s"%k
-        print labels
 
         col0 = cols2[0]
         data[col0]=data[col0].map(labels)
@@ -48,5 +47,8 @@ if __name__ == "__main__":
     (r"/", MainHandler),
     ],
     **settings)
-    application.listen(8100)
-    tornado.ioloop.IOLoop.instance().start()
+    try:
+        application.listen(8100)
+        tornado.ioloop.IOLoop.instance().start()
+    except Exception:
+        print "Couldn't start server, maybe already running?"

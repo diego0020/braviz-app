@@ -28,17 +28,6 @@
   stroke-width: 2px;
 }
 
-.setosa {
-  stroke: #800;
-}
-
-.versicolor {
-  stroke: #080;
-}
-
-.virginica {
-  stroke: #008;
-}
 
 .brush .extent {
   fill-opacity: .3;
@@ -60,9 +49,6 @@
     </style>
 </head>
 <body>
-    <h2>
-      parallel coordinates
-    </h2>
     <script type="text/javascript" src="static/d3/d3.js"></script>
     <script type="text/javascript" src="static/d3/colorbrewer.js"></script>
     <script type="text/javascript">
@@ -70,43 +56,7 @@
 var flowers = {% raw data %} ;
 var species = {% raw caths %} ,
     traits = {% raw vars %};
-/*
-var  flowers=[
-    {
-      "species" : "setosa",
-      "sepal length" : 10 ,
-      "sepal width": 20 ,
-      "petal length" : 26 ,
-      "petal width": 12
-     }
-     ,
-     {
-      "species" : "setosa",
-      "sepal length" : 11 ,
-      "sepal width": 22 ,
-      "petal length" : 21 ,
-      "petal width": 32
-     }
-     ,
-     {
-      "species" : "virginica",
-      "sepal length" : 10 ,
-      "sepal width": 20 ,
-      "petal length" : 26 ,
-      "petal width": 12
-     }
-     ,
-      {
-      "species" : "versicolor",
-      "sepal length" : 10 ,
-      "sepal width": 20 ,
-      "petal length" : 26 ,
-      "petal width": 12
-     }
-    ]
-var species = ["setosa", "versicolor", "virginica"],
-    traits = ["sepal length", "petal length", "sepal width", "petal width"];
-*/
+
 function max(x,y){ return x > y ? x : y ; }
 var colors=d3.scale.ordinal().domain(species).range(colorbrewer.Set1[max(species.length,3)])
 var color_style="";
@@ -121,10 +71,18 @@ sheet.innerHTML=color_style;
 document.body.appendChild(sheet);
 
 
+var width = window.innerWidth*0.95;
+var height = window.innerHeight*0.95;
 
-var m = [80, 160, 200, 160],
-    w = 1280 - m[1] - m[3],
-    h = 800 - m[0] - m[2];
+/*
+var m = [80, 160, 50, 160],
+    w = width - m[1] - m[3],
+    h = height - m[0] - m[2];
+*/
+
+var m = [70, 150, 300, 150],
+    w = width - m[1] - m[3],
+    h = height - m[0] - m[2];
 
 var x = d3.scale.ordinal().domain(traits).rangePoints([0, w]),
     y = {};
@@ -134,13 +92,11 @@ var line = d3.svg.line(),
     foreground;
 
 var svg = d3.select("body").append("svg:svg")
-    .attr("width", w + m[1] + m[3])
-    .attr("height", h + m[0] + m[2])
+    .attr("width", w+m[1]+m[3] )
+    .attr("height", h+m[0]+m[2] )
   .append("svg:g")
     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
-
-//d3.csv("iris.csv", function(flowers) {
 
   // Create a scale and brush for each trait.
   traits.forEach(function(d) {
@@ -162,7 +118,7 @@ var svg = d3.select("body").append("svg:svg")
       .data(species)
     .enter().append("svg:g")
       .attr("class", "legend")
-      .attr("transform", function(d, i) { return "translate(0," + (i * 20 + 584) + ")"; });
+      .attr("transform", function(d, i) { return "translate(0," + (i * 20 + height-300) + ")"; });
 
   legend.append("svg:line")
       .attr("class", String)
