@@ -55,6 +55,7 @@ class LinearModelApp(QMainWindow):
         self.sample = braviz_tab_data.get_subjects()
         self.coefs_df = None
         self.regression_results = None
+        self.missing=None
         self.ui = None
 
         if server_broadcast_address is not None or server_receive_address is not None:
@@ -179,7 +180,18 @@ class LinearModelApp(QMainWindow):
             self.ui.calculate_button.setEnabled(True)
         else:
             self.ui.calculate_button.setEnabled(False)
+        self.get_missing_values()
 
+    def get_missing_values(self):
+        vars = list(self.regressors_model.get_regressors())
+        if self.outcome_var_name is not None:
+            vars.append(self.outcome_var_name)
+        whole_df = braviz_tab_data.get_data_frame_by_name(vars)
+        whole_df = whole_df.loc[self.sample]
+        whole_df.dropna(inplace=True)
+        self.missing = len(self.sample)-len(whole_df)
+
+        self.ui.missing_label.setText("Missing Values: %d"%self.missing)
     def launch_regressors_context_menu(self, pos):
         global_pos = self.ui.reg_table.mapToGlobal(pos)
         selection = self.ui.reg_table.currentIndex()
@@ -616,6 +628,7 @@ class LinearModelApp(QMainWindow):
             self.sample = new_sample
             self.sample_model.set_sample(new_sample)
             self.update_main_plot(self.plot_var_name)
+            self.get_missing_values()
 
     def isolate_one(self, isolating_factor, un_standardize=True):
         standarized_data = self.regression_results["standardized_model"]

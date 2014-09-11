@@ -17,6 +17,7 @@ except AttributeError:
 
 import braviz
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
+from braviz.interaction.qt_guis.outcome_select_multi_plot import Ui_SelectOutcomeMPDialog
 from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
 from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
 from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
@@ -29,6 +30,7 @@ from braviz.interaction.qt_guis.save_logic_fibers_bundle import Ui_SaveLogicBund
 from braviz.interaction.qt_guis.save_scenario_dialog import Ui_SaveScenarioDialog
 from braviz.interaction.qt_guis.load_scenario_dialog import Ui_LoadScenarioDialog
 from braviz.interaction.qt_guis.load_logic_bundle import Ui_LoadLogicDialog
+
 from braviz.interaction.logic_bundle_model import LogicBundleNode,LogicBundleQtTree
 
 import braviz.interaction.qt_models as braviz_models
@@ -144,6 +146,11 @@ class VariableSelectDialog(QtGui.QDialog):
         medi = self.rational["opt"]
         self.details_ui.maximum_val.setValue(maxi)
         self.details_ui.minimum_val.setValue(mini)
+        self.details_ui.minimum_val.setMinimum(min(mini*10,0))
+        self.details_ui.maximum_val.setMinimum(min(mini*10,0))
+
+        self.details_ui.minimum_val.setMaximum(max(maxi*10,1000))
+        self.details_ui.maximum_val.setMaximum(max(maxi*10,1000))
         try:
             self.details_ui.optimum_val.setValue(int((medi - mini) / (maxi - mini)*100))
         except Exception:
@@ -204,6 +211,8 @@ class VariableSelectDialog(QtGui.QDialog):
     def update_limits_in_plot(self, *args):
         if self.ui.var_type_combo.currentIndex() != 0:
             self.matplot_widget.add_max_min_opt_lines(None, None, None)
+            return
+        if self.details_ui is None:
             return
         mini = self.details_ui.minimum_val.value()
         maxi = self.details_ui.maximum_val.value()
@@ -304,6 +313,145 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
         OutcomeSelectDialog.select_and_return(self, *args)
 
 
+class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
+    def __init__(self, params_dict, multiple=False,sample=None,available_plots=None):
+        VariableSelectDialog.__init__(self)
+        self.ui = Ui_SelectOutcomeMPDialog()
+        self.ui.setupUi(self)
+        if available_plots is not None:
+            for k in available_plots.iterkeys():
+                self.ui.plot_type.addItem(k)
+        self.available_plots = available_plots
+        self.finish_ui_setup()
+
+        self.params_dict = params_dict
+
+        self.vars_list_model = braviz_models.VarListModel(checkeable=multiple)
+        self.ui.tableView.setModel(self.vars_list_model)
+        self.ui.tableView.clicked.connect(self.update_right_side)
+        self.ui.tableView.activated.connect(self.update_right_side)
+
+        self.ui.select_button.clicked.connect(self.select_and_return)
+        self.ui.search_box.returnPressed.connect(self.filter_list)
+        self.ui.plot_type.activated.connect(self.update_plot)
+
+    def update_plot(self, data=None):
+        if type(data) == int:
+            data = self.data
+        default_plot = ("scatter",None)
+        if self.available_plots is None:
+            plot_type = default_plot
+        else:
+            plot_str = str(self.ui.plot_type.currentText())
+            plot_type = self.available_plots.get(plot_str,default_plot)
+        print plot_type
+        if plot_type[0]=="scatter":
+            if plot_type[1] is None:
+                self.matplot_widget.compute_scatter(data,x_lab=self.var_name,y_lab="jitter")
+                self.matplot_widget.limits_vertical = True
+            else:
+                x = plot_type[1]
+                y = self.var_name
+                data = braviz_tab_data.get_data_frame_by_name([x,y])
+                data = data.loc[self.sample]
+                data.dropna(inplace=True)
+                self.matplot_widget.compute_scatter(data[x],data[y],x_lab=x,y_lab=y)
+                self.matplot_widget.limits_vertical = False
+        elif plot_type[0]=="box":
+            x = plot_type[1]
+            y = self.var_name
+            data = braviz_tab_data.get_data_frame_by_name([y,x])
+            data = data.loc[self.sample]
+            data.dropna(inplace=True)
+            label_nums = set(data[x])
+            labels_dict = braviz_tab_data.get_names_label_dict(x)
+            data_list = []
+            ticks = []
+            for i in label_nums:
+                data_col = data[y][data[x] == i]
+                data_list.append(data_col.get_values())
+                ticks.append(labels_dict.get(i, str(i)))
+            #print data_list
+            self.matplot_widget.make_box_plot(data_list, x, y, ticks)
+            self.matplot_widget.limits_vertical = False
+        elif plot_type[0]=="interaction":
+            factors = plot_type[1].split("*")
+            self.matplot_widget.limits_vertical = False
+            self.two_factors_plot(factors)
+        QtCore.QTimer.singleShot(10,self.update_limits_in_plot)
+
+    def two_factors_plot(self, factors_list):
+        #copied from anova application... not a good practice
+        nominal_factors = []
+        real_factors = []
+        #classify factors
+        for f in factors_list:
+            is_real = braviz_tab_data.is_variable_name_real(f)
+            if is_real == 0:
+                nominal_factors.append(f)
+            else:
+                real_factors.append(f)
+        if len(real_factors) == 1:
+
+            top_labels_dict = braviz_tab_data.get_names_label_dict(nominal_factors[0])
+            colors = sns.color_palette("Dark2",len(top_labels_dict))
+            #print top_labels_strings
+            colors_dict = dict(izip(top_labels_dict.iterkeys(), colors))
+            plot_color = colors_dict
+            #Get Data
+            data = get_data_frame_by_name([real_factors[0], nominal_factors[0], self.var_name])
+            data = data.loc[self.sample]
+            data.dropna(inplace=True)
+            self.plot_data_frame = data
+
+            datax = []
+            datay = []
+            colors = []
+            labels = []
+            urls = []
+            for k, v in top_labels_dict.iteritems():
+                if k is None:
+                    continue
+                if v is None:
+                    v="?"
+                labels.append(v)
+                colors.append(colors_dict[k])
+                datay.append(data[self.var_name][data[nominal_factors[0]] == k].get_values())
+                datax.append(data[real_factors[0]][data[nominal_factors[0]] == k].get_values())
+                urls.append(data[self.var_name][data[nominal_factors[0]] == k].index.get_values())
+            #print datax
+            self.matplot_widget.compute_scatter(datax, datay, real_factors[0], self.var_name, colors, labels, urls=urls)
+
+
+        elif len(real_factors) == 2:
+            log = logging.getLogger(__name__)
+            log.warning("Not yet implemented")
+            self.matplot_widget.initial_text("Not yet implemented")
+        else:
+            #get data
+            data = get_data_frame_by_name(nominal_factors + [self.var_name])
+            data = data.loc[self.sample]
+            data.dropna(inplace=True)
+            #find number of levels for nominal
+            nlevels = {}
+            for f in nominal_factors:
+                nlevels[f] = len(data[f].unique())
+            #print nlevels
+            nominal_factors.sort(key=nlevels.get, reverse=True)
+            #print nominal_factors
+
+            levels_second_factor = set(data[nominal_factors[1]].get_values())
+            levels_first_factor = set(data[nominal_factors[0]].get_values())
+            data_lists_top = []
+            for i in levels_second_factor:
+                data_list = []
+                for j in levels_first_factor:
+                    data_col = data[self.var_name][(data[nominal_factors[1]] == i) &
+                                                           (data[nominal_factors[0]] == j)].get_values()
+                    data_list.append(data_col)
+                data_lists_top.append(data_list)
+
+            self.matplot_widget.make_linked_box_plot(data, self.var_name, nominal_factors[0], nominal_factors[1])
 class SelectOneVariableWithFilter(OutcomeSelectDialog):
     """
     Derived from Outcome Select Dialog,
@@ -348,6 +496,7 @@ class MatplotWidget(FigureCanvas):
         self.initial_text(initial_message)
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.xlim = self.axes.get_xlim()
+        self.ylim = self.axes.get_ylim()
         #self.mpl_connect("button_press_event",self.generate_tooltip_event)
         self.mpl_connect("pick_event", self.generate_tooltip_event)
         self.setMouseTracking(True)
@@ -358,6 +507,8 @@ class MatplotWidget(FigureCanvas):
         self.last_plot_function = None
         self.last_plot_arguments = None
         self.last_plot_kw_arguments = None
+
+        self.limits_vertical = True
 
 
     def repeatatable_plot(func):
@@ -400,6 +551,7 @@ class MatplotWidget(FigureCanvas):
         self.fig.clear()
         self.axes=self.fig.add_subplot(1,1,1)
         self.axes.clear()
+        self.draw()
         self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off',top="off")
 
         self.axes.yaxis.set_label_position("right")
@@ -433,10 +585,12 @@ class MatplotWidget(FigureCanvas):
             self.axes.set_xlim(xlims2, auto=False)
         else:
             self.axes.set_xlim(auto=True)
+            self.axes.set_ylim(auto=True)
         self.draw()
-        self.xlim = self.axes.get_xlim()
+        self.xlim = None
+        self.ylim = None
         self.x_order = None
-        self.back_fig = self.copy_from_bbox(self.axes.bbox)
+        self.back_fig = None
 
 
     def redraw_last_plot(self):
@@ -446,15 +600,28 @@ class MatplotWidget(FigureCanvas):
             self.last_plot_function(*self.last_plot_arguments, **self.last_plot_kw_arguments)
 
     def add_max_min_opt_lines(self, mini, opti, maxi):
-
-        self.restore_region(self.back_fig)
+        if self.back_fig is None:
+            self.back_fig = self.copy_from_bbox(self.axes.bbox)
+            self.xlim = self.axes.get_xlim()
+            self.ylim = self.axes.get_ylim()
+        else:
+            self.restore_region(self.back_fig)
+        self.axes.set_xlim(self.xlim,auto=False)
+        self.axes.set_ylim(self.ylim,auto=False)
         if mini is None:
             self.blit(self.axes.bbox)
             return
-        opt_line = self.axes.axvline(opti, color="#8da0cb")
-        min_line = self.axes.axvline(mini, color="#fc8d62")
-        max_line = self.axes.axvline(maxi, color="#fc8d62")
-        self.axes.set_xlim(self.xlim)
+        if self.limits_vertical:
+            opt_line = self.axes.axvline(opti, color="#8da0cb")
+            min_line = self.axes.axvline(mini, color="#fc8d62")
+            max_line = self.axes.axvline(maxi, color="#fc8d62")
+
+        else:
+            opt_line = self.axes.axhline(opti, color="#8da0cb")
+            min_line = self.axes.axhline(mini, color="#fc8d62")
+            max_line = self.axes.axhline(maxi, color="#fc8d62")
+
+
         self.axes.draw_artist(min_line)
         self.axes.draw_artist(max_line)
         self.axes.draw_artist(opt_line)
@@ -473,7 +640,7 @@ class MatplotWidget(FigureCanvas):
 
 
     @repeatatable_plot
-    def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims, intercet=None):
+    def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims=None, intercet=None):
         sns.set_style("darkgrid")
         self.fig.clear()
         self.axes=self.fig.add_subplot(1,1,1)
@@ -501,17 +668,20 @@ class MatplotWidget(FigureCanvas):
 
         #if xticks_labels is not None:
         #    self.axes.get_xaxis().set_ticklabels(xticks_labels)
-        yspan = ylims[1] - ylims[0]
-        self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
+        if ylims is not None:
+            yspan = ylims[1] - ylims[0]
+            self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
 
         self.draw()
         if intercet is not None:
             self.add_intercept_line(intercet)
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
         self.x_order = x_permutation
+        self.ylim=None
+        self.xlim=None
 
     @repeatatable_plot
-    def make_linked_box_plot(self, data, outcome, x_name, z_name,ylims):
+    def make_linked_box_plot(self, data, outcome, x_name, z_name,ylims=None):
         sns.set_style("darkgrid")
         self.fig.clear()
         self.axes=self.fig.add_subplot(1,1,1)
@@ -572,8 +742,9 @@ class MatplotWidget(FigureCanvas):
                 ls.set_picker(5)
 
         self.axes.set_ylabel(outcome)
-        yspan = ylims[1] - ylims[0]
-        self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
+        if ylims is not None:
+            yspan = ylims[1] - ylims[0]
+            self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
 

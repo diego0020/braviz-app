@@ -225,6 +225,13 @@
             </layout>
            </widget>
           </item>
+          <item>
+           <widget class="QLabel" name="missing_label">
+            <property name="text">
+             <string>Missing Values:</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

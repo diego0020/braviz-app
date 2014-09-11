@@ -10,7 +10,7 @@ import numpy as np
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 import braviz.interaction.qt_dialogs
 import braviz.applications.qt_sample_select_dialog
-from braviz.interaction.qt_dialogs import OutcomeSelectDialog, RegressorSelectDialog, MatplotWidget,\
+from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, MatplotWidget,\
     InteractionSelectDialog
 
 import braviz.interaction.r_functions
@@ -21,7 +21,7 @@ from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 
-import colorbrewer
+import seaborn as sns
 
 from itertools import izip
 
@@ -60,6 +60,7 @@ class AnovaApp(QMainWindow):
         self.last_viewed_subject = None
         self.mri_viewer_pipe = None
         self.sample = braviz_tab_data.get_subjects()
+        self.missing=None
         self.ui = None
 
         if server_broadcast_address is not None or server_receive_address is not None:
@@ -119,7 +120,8 @@ class AnovaApp(QMainWindow):
         if self.ui.outcome_sel.currentIndex() == self.ui.outcome_sel.count() - 1:
             #print "dispatching dialog"
             params = {}
-            dialog = OutcomeSelectDialog(params,sample=self.sample)
+            plots = self.__create_plots_dictionary()
+            dialog = MultiPlotOutcomeSelectDialog(params,sample=self.sample,available_plots=plots)
             selection = dialog.exec_()
             logger = logging.getLogger(__name__)
             logger.info("Outcome selection %s",params)
@@ -129,6 +131,24 @@ class AnovaApp(QMainWindow):
                 self.set_outcome_var_type(None)
         else:
             self.set_outcome_var_type(self.ui.outcome_sel.itemText(self.ui.outcome_sel.currentIndex()))
+
+    def __create_plots_dictionary(self):
+        regs_df = self.regressors_model.get_data_frame()
+        plots = dict()
+        for i,row in regs_df.iterrows():
+            var_name = row["variable"]
+            interaction = row["Interaction"]
+            if interaction == 0:
+                plots["x = '%s'"%var_name]=("scatter",var_name)
+                var_nominal = braviz_tab_data.is_variable_name_nominal(var_name)
+                if var_nominal:
+                    plots["box (%s)"%var_name]=("box",var_name)
+            else:
+                comps = var_name.split("*")
+                if len(comps) == 2:
+                    plots["Interaction (%s)"%var_name]=("interaction",var_name)
+
+        return plots
 
     def dispatch_interactions_dialog(self):
         interaction_dialog = InteractionSelectDialog(self.regressors_model)
@@ -187,6 +207,17 @@ class AnovaApp(QMainWindow):
             self.ui.calculate_button.setEnabled(True)
         else:
             self.ui.calculate_button.setEnabled(False)
+        self.get_missing_values()
+
+    def get_missing_values(self):
+        vars = list(self.regressors_model.get_regressors())
+        if self.outcome_var_name is not None:
+            vars.append(self.outcome_var_name)
+        whole_df = braviz_tab_data.get_data_frame_by_name(vars)
+        whole_df = whole_df.loc[self.sample]
+        whole_df.dropna(inplace=True)
+        self.missing = len(self.sample)-len(whole_df)
+        self.ui.missing_label.setText("Missing Values: %d"%self.missing)
 
     def launch_regressors_context_menu(self, pos):
         global_pos = self.ui.reg_table.mapToGlobal(pos)
@@ -289,18 +320,16 @@ class AnovaApp(QMainWindow):
         if len(real_factors) == 1:
 
             top_labels_dict = braviz_tab_data.get_names_label_dict(nominal_factors[0])
-            colors = colorbrewer.Dark2[max(len(top_labels_dict), 3)]
+            colors = sns.color_palette("Dark2",len(top_labels_dict))
             #print top_labels_strings
-            if len(top_labels_dict) == 2:
-                colors = colors[:2]
-            colors = [map(lambda x: x / 255, c) for c in colors]
             colors_dict = dict(izip(top_labels_dict.iterkeys(), colors))
             self.plot_color = colors_dict
             #Get Data
             data = get_data_frame_by_name([real_factors[0], nominal_factors[0], self.outcome_var_name])
             data = data.loc[self.sample]
-            self.plot_data_frame = data
             data.dropna(inplace=True)
+            self.plot_data_frame = data
+
             datax = []
             datay = []
             colors = []
@@ -332,6 +361,8 @@ class AnovaApp(QMainWindow):
         else:
             #get data
             data = get_data_frame_by_name(nominal_factors + [self.outcome_var_name])
+            data = data.loc[self.sample]
+            data.dropna(inplace=True)
             #find number of levels for nominal
             nlevels = {}
             for f in nominal_factors:
@@ -339,10 +370,9 @@ class AnovaApp(QMainWindow):
             #print nlevels
             nominal_factors.sort(key=nlevels.get, reverse=True)
             #print nominal_factors
-            data = data.loc[self.sample]
+
             self.plot_data_frame = data
 
-            data.dropna(inplace=True)
             levels_second_factor = set(data[nominal_factors[1]].get_values())
             levels_first_factor = set(data[nominal_factors[0]].get_values())
             data_lists_top = []
@@ -383,10 +413,13 @@ class AnovaApp(QMainWindow):
             #print labels_dict
             #get data from
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
-            label_nums = set(data[var_name])
+
+
             data = data.loc[self.sample]
             #remove nans
             data.dropna(inplace=True)
+
+            label_nums = set(data[var_name])
             self.plot_data_frame = data
 
             data_list = []
@@ -690,6 +723,7 @@ class AnovaApp(QMainWindow):
             self.sample = new_sample
             self.sample_model.set_sample(new_sample)
             self.update_main_plot(self.plot_var_name)
+            self.get_missing_values()
 
     def save_figure(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
