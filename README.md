@@ -4,8 +4,8 @@ Interactive Brain Data Visualization
 Add the location of this directory to PYTHONPATH environment variable.
 Prerequisites:
 
-- Python 2.75
-- VTK 6.0> with Python wrapping
+- Python >2.75
+- VTK >6.0 with Python wrapping
 
 Python packages:
 
@@ -13,10 +13,12 @@ Python packages:
 - colorbrewer
 - numpy
 - scipy
-- rdflib
-- httplib2
-- psutil
+- rdflib*
+- httplib2*
+- psutil*
 - matplotlib
+- seaborn
+- rpy2 (for anova, linear model)
+- tornado (for parallel coordinates)
 
-Subversion repository:
-svn+ssh://imagine@guitaca.uniandes.edu.co/media/DATA/repositories/svn/repos/braviz/
+
