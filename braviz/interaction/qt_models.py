@@ -1515,6 +1515,11 @@ class SamplesSelectionModel(QAbstractTableModel):
             data = braviz_user_data.get_sample_data(int(sample_index))
             return data
 
+    def get_sample_index(self, QModelIndex):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            sample_index = self.data_frame.index[row]
+            return sample_index
 
 class SubjectChecklist(QAbstractListModel):
     def __init__(self, initial_list=tuple(),show_checks=True):

@@ -4,6 +4,7 @@ import tornado.web
 import os
 import braviz
 import braviz.readAndFilter.tabular_data as tab_data
+from braviz.readAndFilter import user_data
 import json
 
 
@@ -12,9 +13,19 @@ __author__ = 'da.angulo39'
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         vars_s = self.get_query_argument("vars","1982,1002,1003,1004")
+        sample = self.get_query_argument("sample",None)
         vars=map(int,vars_s.split(","))
         data = tab_data.get_data_frame_by_index(vars)
-        data.dropna(inplace=True)
+        if sample is not None:
+            subjs = user_data.get_sample_data(sample)
+            data=data.loc[subjs]
+            #print subjs
+
+        data2 = data.dropna()
+        missing = len(data)-len(data2)
+        #print "%d missing values"%missing
+        data = data2
+
         cols = data.columns
         cols2=list(cols)
         cols2[0]="species"
@@ -35,7 +46,8 @@ class MainHandler(tornado.web.RequestHandler):
 
         attrs=list(data.columns[1:])
         attrs_json = json.dumps(attrs)
-        self.render("parallel_coordinates.html",data=json_data,caths=caths_json,vars=attrs_json,cath_name=col0)
+        self.render("parallel_coordinates.html",data=json_data,caths=caths_json,vars=attrs_json,cath_name=col0,
+                    missing=missing)
 
 settings = {
     "static_path":os.path.join(os.path.dirname(braviz.__file__),"visualization/web_static"),

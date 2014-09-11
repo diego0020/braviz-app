@@ -356,7 +356,7 @@ Export variables to the database</string>
          <property name="title">
           <string>Analysis</string>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QToolButton" name="anova">
             <property name="toolTip">
@@ -434,6 +434,33 @@ Export variables to the database</string>
             <property name="icon">
              <iconset>
               <normalon>:/icons/correlations_app.png</normalon>
+             </iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>120</width>
+              <height>120</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="parallel_coordinates">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string>Look at several variables in a parallel coordinates display</string>
+            </property>
+            <property name="text">
+             <string>Parallel Coords</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normalon>:/icons/parallel_coords_logo.png</normalon>
              </iconset>
             </property>
             <property name="iconSize">

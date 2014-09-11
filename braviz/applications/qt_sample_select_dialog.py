@@ -34,6 +34,7 @@ class SampleLoadDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.ui.tableView.setModel(self.model)
         self.current_sample = None
+        self.current_sample_idx = None
         self.ui.tableView.activated.connect(self.load_action)
         if new_button:
             self.new_button = QtGui.QPushButton("New")
@@ -64,6 +65,7 @@ class SampleLoadDialog(QtGui.QDialog):
         else:
             current = index
         self.current_sample = self.model.get_sample(current)
+        self.current_sample_idx = self.model.get_sample_index(current)
         log = logging.getLogger(__name__)
         log.info(self.current_sample)
 

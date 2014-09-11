@@ -8,8 +8,8 @@ import PyQt4.QtCore as QtCore
 from braviz.interaction.qt_guis.parallel_coordinates import Ui_parallel_coordinates
 from braviz.interaction.qt_models import VarListModel
 from braviz.interaction.qt_dialogs import SelectOneVariableWithFilter
+from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 
-from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import subprocess
 import sys
@@ -26,8 +26,10 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
 
         self.cathegorical_var=2014
         self.attributes=[1002,1003,1004,1005]
+        self.sample_id = None
         self.vars_model = VarListModel(checkeable=True)
         self.vars_model.select_items(self.attributes)
+        self.server_process = None
 
         self.generate_url()
         self.setup_ui()
@@ -48,6 +50,7 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         self.ui.cathegory_combo.activated.connect(self.change_cathegory)
         self.ui.cathegory_combo.setCurrentIndex(0)
         self.ui.webView.loadFinished.connect(self.start_web_server)
+        self.ui.actionSelect_Sample.triggered.connect(self.set_sample)
 
         self.refresh_web_view()
 
@@ -61,6 +64,8 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         all_vars=[self.cathegorical_var]+self.attributes
         str_vars = ",".join(map(str,all_vars))
         url = "http://127.0.0.1:8100/?vars=%s"%str_vars
+        if self.sample_id is not None:
+            url+="&sample=%s"%self.sample_id
         self.url=url
         return url
 
@@ -101,13 +106,31 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
     def start_web_server(self,ok):
         #test if already started
         if not ok:
-            interpreter = sys.executable
-            args = [interpreter,"-m","braviz.applications.braviz_web_server"]
-            subprocess.Popen(args)
+            if self.server_process is None:
+                interpreter = sys.executable
+                args = [interpreter,"-m","braviz.applications.braviz_web_server"]
+                self.server_process=subprocess.Popen(args)
+            else:
+                ret = self.server_process.poll()
+                if ret is not None:
+                    print "server has died, restarting"
+                    self.server_process = None
             QtCore.QTimer.singleShot(2000,self.refresh_web_view)
+
+    def set_sample(self):
+        dialog = SampleLoadDialog()
+        res = dialog.exec_()
+        if res==dialog.Accepted:
+            new_sample = dialog.current_sample_idx
+            self.sample_id = new_sample
+        self.generate_url()
+        self.refresh_web_view()
 
 if __name__ == "__main__":
     app = QtGui.QApplication([])
     main_window = ParallelCoordinatesApp()
     main_window.show()
     app.exec_()
+    if main_window.server_process is not None:
+        print "terminating server"
+        main_window.server_process.terminate()

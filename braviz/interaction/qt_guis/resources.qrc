@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>parallel_coords_logo.png</file>
     <file>measure.png</file>
     <file>circle.png</file>
     <file>fmri_explore_small.png</file>

@@ -19,7 +19,7 @@ except ImportError:
     braviz.interaction.generate_qt_guis.update_guis()
     print "please try again"
     raise
-    sys.exit()
+
 
 
 
@@ -52,6 +52,7 @@ class BravizMenu2(QtGui.QMainWindow):
         self.connect_application_launcher("measure", self.ui.measure_app)
         self.connect_application_launcher("excel", self.ui.excel)
         self.connect_application_launcher("export", self.ui.export_2)
+        self.connect_application_launcher("parallel_coordinates", self.ui.parallel_coordinates)
 
         #self.connect_application_launcher("braviz_menu_classic", self.ui.braviz_menu_classic))
         self.ui.variables.clicked.connect(self.launch_variable_management_dialog)
@@ -72,7 +73,8 @@ class BravizMenu2(QtGui.QMainWindow):
         "excel":"import_from_excel",
         "export":"export_vars",
         "fmri_explorer":"fmri_explorer",
-        "measure":"measure_task"
+        "measure":"measure_task",
+        "parallel_coordinates":"parallel_coordinates_app"
     }
 
     def connect_application_launcher(self,app,button):
