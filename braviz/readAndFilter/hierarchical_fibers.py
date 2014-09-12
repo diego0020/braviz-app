@@ -21,7 +21,7 @@ def read_logical_fibers(subj,tree_dict,reader,**kwargs):
         valid_lines = get_valid_lines_from_node(subj,tree_dict,reader)
         fibers=reader.get("FIBERS",subj,space=space,**kwargs)
     except Exception as e:
-        log.error(e.message)
+        log.exception(e)
         raise
     fibers2 = extract_poly_data_subset(fibers, valid_lines)
     return fibers2

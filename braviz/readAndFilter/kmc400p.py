@@ -51,6 +51,11 @@ The path containing this structure must be set."""
         self.__cache_container.max_cache = max_cache
         self.__fmri_LUT = None
 
+    def clear_cache(self):
+        log = logging.getLogger(__name__)
+        log.info("Clearing cache")
+        self.__cache_container.clear()
+
     @cache_function(__cache_container)
     def get(self,data, subj_id=None, **kw):
         """All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
@@ -206,7 +211,7 @@ The path containing this structure must be set."""
             img = nib.load(wholeName)
         except IOError as e:
             log = logging.getLogger(__name__)
-            log.error(e.message)
+            log.exception(e)
             log.error("File %s not found" % wholeName)
             raise (Exception('File not found'))
 
@@ -242,7 +247,7 @@ The path containing this structure must be set."""
             #read transform:
             path = os.path.join(self.getDataRoot(), "tractography",str(subj))
             #matrix = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz', 'FA.nii.gz', path)
-            matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
             matrix = np.linalg.inv(matrix)
             affine = img.get_affine()
             aff2 = matrix.dot(affine)
@@ -579,7 +584,7 @@ The path containing this structure must be set."""
                 #This one should always exist!!!!!
                 file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
                 if not os.path.isfile(file_name):
-                    log.error("Fibers file not found")
+                    log.error("Fibers file not found: %s"%file_name)
                     raise Exception("Fibers file not found")
                 pd_reader = vtk.vtkPolyDataReader()
                 pd_reader.SetFileName(file_name)
@@ -669,7 +674,8 @@ The path containing this structure must be set."""
         else:
             try:
                 fibers = self.get('fibers', subj, space='world',color=None,scalars=img_name)
-            except Exception:
+            except Exception as e:
+                log.exception(e)
                 log.error("%s image not found"%img_name)
                 return set()
             if not hasattr(self,"free_surfer_labels"):
@@ -1203,7 +1209,7 @@ The path containing this structure must be set."""
         reader.Update()
         return reader.GetOutput()
 
-    def clear_cache(self,last_word=False):
+    def clear_cache_dir(self,last_word=False):
         if last_word is True:
             cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
             os.rmdir(cache_dir)
@@ -1218,7 +1224,8 @@ known_nodes = {  #
     'IIND-EML754066' : (r"Z:",r"C:\Users\da.angulo39\Documents\kmc400_braviz",2000),
     #'da-angulo': ("Z:\\","D:\\kmc400-braviz" ,4000),
     #'da-angulo': ("F:\\kmc400","F:\kmc400_braviz" ,4000), # from external drive
-    'da-angulo': ("F:\\kmc400","D:\\kmc400-braviz" ,4000), # from external drive
+    #'da-angulo': ("F:\\kmc400","D:\\kmc400-braviz" ,4000), # from external drive
+    'da-angulo': (r"N:\run\media\imagine\backups\kmc400","D:\\kmc400-braviz" ,4000), # from external drive
     'ISIS-EML725001': ('G:/kmc400', 'c:/kmc400-braviz',8000),
 }
 

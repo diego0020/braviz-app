@@ -288,6 +288,9 @@ class CacheContainer(object):
     def cache(self):
         return self.__cache
 
+    def clear(self):
+        self.__cache.clear()
+
 
 
 def cache_function(cache_container):

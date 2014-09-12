@@ -437,7 +437,8 @@ def register_new_variable(var_name,is_real=1):
     q1 = "SELECT var_idx from VARIABLES where var_name = ?"
     cur=conn.execute(q1,(var_name,))
     if cur.fetchone() is not None:
-        raise Exception("Attempting to add duplicate variable")
+        print "Attempting to add duplicate variable"
+        raise sqlite3.IntegrityError
     if is_real:
         is_real = 1
     else:
