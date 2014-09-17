@@ -477,6 +477,24 @@ class SampleOverview(QtGui.QMainWindow):
             else:
                 viewer.image.hide_image()
         QtGui.QApplication.instance().processEvents()
+        #fmri panel
+        contours_state = wanted_state.get("contour_state")
+        if contours_state is not None:
+            try:
+                pdgm = contours_state["pdgm"]
+                ctrst = contours_state["ctrst"]
+                vis = contours_state["visible"]
+                val = contours_state["value"]
+            except KeyError:
+                log.error("Bad contours data in wanted state %s"%contours_state)
+                viewer.set_contours_visibility(False)
+            else:
+                viewer.set_fmri_contours_image(pdgm,ctrst,skip_render=True)
+                viewer.contours.set_value(val)
+                viewer.set_contours_visibility(vis,skip_render=True)
+        else:
+            viewer.set_contours_visibility(False)
+        QtGui.QApplication.instance().processEvents()
         #segmentation panel
         segmentation_state = wanted_state.get("segmentation_state")
         selected_structs = tuple()
@@ -967,9 +985,9 @@ if __name__ == '__main__':
     #args: [scenario] [server_broadcast] [server_receive]
     import sys
 
-    from braviz.utilities import configure_logger
+    from braviz.utilities import configure_console_logger
 
-    configure_logger("sample_overview")
+    configure_console_logger("sample_overview")
     log = logging.getLogger(__name__)
     log.info(sys.argv)
     scenario = None

@@ -53,9 +53,8 @@ def save_subj_descs(subj):
     print "subject = %s"%subj
     braviz.utilities.configure_console_logger("descriptors")
     log = logging.getLogger(__name__)
-    reader = braviz.readAndFilter.BravizAutoReader(max_cache=500)
+    reader = braviz.readAndFilter.BravizAutoReader(max_cache=1000)
     db_name = os.path.join(reader.getDynDataRoot(),"descriptors.sqlite")
-    create_db(db_name)
     conn = sqlite3.connect(db_name)
     try:
         structs = reader.get("MODEL",subj,index=True)
@@ -67,7 +66,13 @@ def save_subj_descs(subj):
     for s in structs:
         try:
             if s.startswith("wm-"):
+                continue
+                #skip wm
                 d1 =  get_descriptor(subj,s,wmaseg,reader)
+            elif s.startswith("ctx-"):
+                continue
+                #skip ctx
+                d1 =  get_descriptor(subj,s,aseg,reader)
             else:
                 d1 =  get_descriptor(subj,s,aseg,reader)
         except Exception as e:
@@ -80,10 +85,12 @@ def save_subj_descs(subj):
         save_descs_in_db(conn,subj,"CC-Full",d2)
     except Exception as e:
         log.exception(e.message)
+    reader.clear_cache()
 
 def save_for_all(processes=1):
     reader=braviz.readAndFilter.BravizAutoReader(max_cache=500)
-    ids=reader.get('ids')
+    #ids=reader.get('ids')
+    ids=[9, 15, 19, 25, 29, 44, 51, 54, 56, 64, 65, 69, 71, 83, 107, 108, 113, 119, 121, 124, 125, 128, 138, 141, 143, 144, 145, 151, 153, 154, 156, 157, 165, 173, 175, 176, 177, 182, 185, 195, 197, 198, 201, 205, 216, 219, 221, 225, 227, 230, 231, 232, 235, 237, 253, 256, 263, 266, 277, 292, 293, 301, 307, 310, 313, 314, 320, 327, 331, 332, 333, 344, 346, 353, 356, 357, 364, 369, 371, 390, 409, 413, 416, 417, 423, 426, 427, 429, 431, 432, 440, 452, 469, 472, 478, 480, 483, 484, 485, 491, 500, 504, 526, 535, 536, 537, 542, 548, 549, 552, 566, 576, 579, 580, 592, 593, 595, 599, 600, 602, 610, 616, 619, 623, 625, 630, 631, 651, 665, 670, 675, 684, 686, 689, 712, 715, 734, 754, 761, 769, 783, 784, 789, 790, 791, 804, 806, 815, 818, 829, 840, 841, 848, 861, 863, 868, 869, 874, 876, 877, 878, 879, 884, 893, 894, 905, 906, 912, 918, 928, 934, 935, 939, 940, 942, 954, 965, 966, 971, 982, 984, 1005, 1006, 1021, 1026, 1049, 1077, 1212, 1221, 1232, 1242, 1253, 1260, 1265, 1320, 1326, 1333, 1338, 1340, 1357]
     create_db(os.path.join(reader.getDynDataRoot(),"descriptors.sqlite"))
     del reader
     if processes<=1:
@@ -96,7 +103,7 @@ def save_for_all(processes=1):
 if __name__ == "__main__":
     import sys
     braviz.utilities.configure_console_logger("descriptors")
-    procs = 1
+    procs = 2
     if len(sys.argv)>=2:
         procs = int(sys.argv[1])
     save_for_all(procs)

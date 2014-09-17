@@ -434,26 +434,28 @@ def save_var_description(var_idx,description):
 def register_new_variable(var_name,is_real=1):
     var_name = unicode(var_name)
     conn = get_connection()
-    q1 = "SELECT var_idx from VARIABLES where var_name = ?"
-    cur=conn.execute(q1,(var_name,))
-    if cur.fetchone() is not None:
-        print "Attempting to add duplicate variable"
-        raise sqlite3.IntegrityError
-    if is_real:
-        is_real = 1
-    else:
-        is_real = 0
-    q="""INSERT INTO variables (var_name, is_real)
-         Values (? , ?)"""
-    cur = conn.execute(q,(unicode(var_name),is_real))
-    conn.commit()
-    row_id = cur.lastrowid
-    cur=conn.execute(q1,(var_name,))
-    var_idx = cur.fetchone()
-    if var_idx is None:
-        log = logging.getLogger(__name__)
-        log.error("Problem adding to Data Base")
-    assert var_idx[0] == row_id
+    with conn :
+        q1 = "SELECT var_idx from VARIABLES where var_name = ?"
+        cur=conn.execute(q1,(var_name,))
+        if cur.fetchone() is not None:
+            print "Attempting to add duplicate variable"
+            raise sqlite3.IntegrityError
+        if is_real:
+            is_real = 1
+        else:
+            is_real = 0
+        q="""INSERT INTO variables (var_name, is_real)
+             Values (? , ?)"""
+        cur = conn.execute(q,(unicode(var_name),is_real))
+        conn.commit()
+        row_id = cur.lastrowid
+        cur=conn.execute(q1,(var_name,))
+        var_idxs = cur.fetchall()
+        if var_idxs is None:
+            log = logging.getLogger(__name__)
+            log.error("Problem adding to Data Base")
+        assert var_idxs[0][0] == row_id
+        assert len(var_idxs)==1
     return row_id
 
 def update_variable_values(var_idx,tuples):
@@ -491,6 +493,10 @@ def get_var_value(var_idx,subject):
     res=cur.fetchone()
     if res is None:
         log = logging.getLogger(__name__)
+        if var_idx == IMAGE_CODE:
+            log.warning("Not implicit image code found, returning identity")
+            return subject
+
         log.error("%s not found for subject %s"%(var_idx,subject))
         raise Exception("%s not found for subject %s"%(var_idx,subject))
     return res[0]

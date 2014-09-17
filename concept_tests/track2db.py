@@ -58,7 +58,8 @@ def track2db(tracks,sample=None):
     reader.clear_cache()
 
 def proc_batch(b):
-    tracks = (4,5,6,7,9,10,11,12,13,14,15)
+    log = logging.getLogger(__name__)
+    tracks = range(4,16)
     try:
         track2db(tracks,b)
     except Exception as e:

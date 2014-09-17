@@ -265,6 +265,8 @@ def mean_inside(reader,subject, structures, img2, paradigm=None,contrast=1):
     """
     if len(structures) == 0:
         return float("nan")
+    if isinstance(structures,basestring):
+        structures=(structures,)
     #find label
     #print "label:",label
     #find voxels in structure

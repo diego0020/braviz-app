@@ -136,11 +136,20 @@ class SubjectOverviewApp(QMainWindow):
         fmri_paradigms = self.reader.get("fmri", None, index=True)
         for pdg in fmri_paradigms:
             self.ui.image_mod_combo.addItem(pdg.title())
+            self.ui.fmri_paradigm_combo.addItem(pdg.title())
         self.ui.contrast_combo.setEnabled(0)
         self.ui.contrast_combo.setCurrentIndex(0)
         #MRI
         self.ui.image_mod_combo.setCurrentIndex(1)
-        self.ui.contrast_combo.activated.connect(self.change_contrast)
+        self.ui.contrast_combo.activated.connect(self.img_change_contrast)
+
+        #fMRI Contours controls
+        #paradigms combo filled above
+        self.ui.fmri_paradigm_combo.activated.connect(self.fmri_change_pdgm)
+        self.ui.fmri_contrast_combo.activated.connect(self.fmri_change_contrast)
+        self.ui.fmri_show_contours_check.clicked.connect(self.fmri_update_contours)
+        self.ui.fmri_show_contours_value.valueChanged.connect(self.fmri_update_contours)
+
         #segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
@@ -229,7 +238,10 @@ class SubjectOverviewApp(QMainWindow):
             #raise
         else:
             self.statusBar().showMessage("%s: ok"%new_subject, 5000)
-        self.reload_contrast_names()
+        pdgm = str(self.ui.image_mod_combo.currentText())
+        self.reload_contrast_names(self.ui.contrast_combo,pdgm)
+        pdgm2 = str(self.ui.fmri_paradigm_combo.currentText())
+        self.reload_contrast_names(self.ui.fmri_contrast_combo,pdgm2)
         self.reset_image_view_controls()
         #context
         self.update_segmentation_scalar()
@@ -263,8 +275,9 @@ class SubjectOverviewApp(QMainWindow):
                 self.ui.contrast_combo.setEnabled(0)
             else:
                 self.ui.contrast_combo.setEnabled(1)
-
-                self.reload_contrast_names(selection)
+                pdgm = str(self.ui.image_mod_combo.currentText())
+                self.reload_contrast_names(self.ui.contrast_combo,selection)
+                self.img_change_contrast()
                 self.vtk_viewer.image.change_image_modality("FMRI", selection,
                                                             contrast=self.ui.contrast_combo.currentIndex()+1)
             self.vtk_viewer.image.show_image()
@@ -284,31 +297,49 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_level.setEnabled(window_level_control)
         self.ui.reset_window_level.setEnabled(window_level_control)
 
-    def change_contrast(self,dummy_index=None):
+    def img_change_contrast(self,dummy_index=None):
         selection = str(self.ui.image_mod_combo.currentText()).upper()
         if selection not in self.reader.get("fMRI",None,index=True):
             return
         self.vtk_viewer.image.change_image_modality("FMRI", selection,
                     contrast=self.ui.contrast_combo.currentIndex()+1)
 
-    def reload_contrast_names(self,pdgm=None):
+    def fmri_change_pdgm(self):
+        pdgm=str(self.ui.fmri_paradigm_combo.currentText())
+        self.reload_contrast_names(self.ui.fmri_contrast_combo,pdgm)
+        self.fmri_change_contrast()
+
+
+    def fmri_change_contrast(self):
+        pdgm=str(self.ui.fmri_paradigm_combo.currentText())
+        contrast=self.ui.fmri_contrast_combo.currentIndex()+1
+        self.vtk_viewer.set_fmri_contours_image(pdgm,contrast)
+        self.fmri_update_contours()
+
+    def fmri_update_contours(self,dummy=None):
+        visible = self.ui.fmri_show_contours_check.isChecked()
+        self.vtk_viewer.set_contours_visibility(visible)
+        if visible:
+            value = self.ui.fmri_show_contours_value.value()
+            self.vtk_viewer.contours.set_value(value)
+
+    def reload_contrast_names(self,combo,pdgm):
         if pdgm is None:
-            pdgm = str(self.ui.image_mod_combo.currentText())
+            return
         if pdgm.upper() not in self.reader.get("fMRI",None,index=True):
             return
-        previus_contrast = self.ui.contrast_combo.currentIndex()
+        previus_contrast = combo.currentIndex()
         img_code = braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE,self.__curent_subject)
         try:
             available_contrasts = self.reader.get("FMRI",img_code,name=pdgm,contrasts_dict=True)
-            self.ui.contrast_combo.clear()
+            combo.clear()
             for i in xrange(len(available_contrasts)):
                 cont_name = available_contrasts[i+1]
-                self.ui.contrast_combo.addItem(cont_name)
+                combo.addItem(cont_name)
             if 0 <= previus_contrast < len(available_contrasts):
-                self.ui.contrast_combo.setCurrentIndex(previus_contrast)
+                combo.setCurrentIndex(previus_contrast)
             else:
-                self.ui.contrast_combo.setCurrentIndex(0)
-                self.change_contrast()
+                combo.setCurrentIndex(0)
         except Exception:
             pass
 
@@ -743,6 +774,14 @@ class SubjectOverviewApp(QMainWindow):
         image_state["slice"] = float(self.ui.slice_spin.value())
         state["image_state"] = image_state
 
+        #contours panel
+        contours_state=dict()
+        contours_state["pdgm"]=str(self.ui.fmri_paradigm_combo.currentText())
+        contours_state["ctrst"]=self.ui.fmri_contrast_combo.currentIndex()+1
+        contours_state["visible"]=self.ui.fmri_show_contours_check.isChecked()
+        contours_state["value"]=self.ui.fmri_show_contours_value.value()
+        state["contour_state"]=contours_state
+
         #segmentation panel
         segmentation_state = dict()
         segmentation_state["left_right"] = self.ui.left_right_radio.isChecked()
@@ -881,6 +920,25 @@ class SubjectOverviewApp(QMainWindow):
             cont = image_state.get("contrast", 1)
             self.ui.contrast_combo.setCurrentIndex(cont - 1)
 
+        #fmri Contours panel
+        contours_state = wanted_state.get("contour_state")
+        if contours_state is not None:
+            try:
+                pdgm = contours_state["pdgm"]
+                ctrst = contours_state["ctrst"]
+                vis = contours_state["visible"]
+                val = contours_state["value"]
+            except KeyError:
+                log.error("Bad contours data in wanted state %s"%contours_state)
+            else:
+                idx = self.ui.fmri_paradigm_combo.findText(pdgm)
+                self.ui.fmri_paradigm_combo.setCurrentIndex(idx)
+                self.reload_contrast_names(self.ui.fmri_contrast_combo,pdgm)
+                if ctrst is not None:
+                    self.ui.fmri_contrast_combo.setCurrentIndex(ctrst-1)
+                self.ui.fmri_show_contours_check.setChecked(vis)
+                self.ui.fmri_show_contours_value.setValue(val)
+                self.fmri_change_pdgm()
 
         #segmentation panel
         segmentation_state = wanted_state.get("segmentation_state")
@@ -1020,9 +1078,9 @@ if __name__ == '__main__':
     #args: [scenario] [server_broadcast] [server_receive]
     import sys
 
-    from braviz.utilities import configure_logger
-
-    configure_logger("subject_overview")
+    from braviz.utilities import configure_console_logger
+    configure_console_logger("subject_overview")
+    #configure_logger("subject_overview")
     log = logging.getLogger(__name__)
     log.info(sys.argv)
     scenario = None

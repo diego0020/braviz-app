@@ -85,7 +85,13 @@ class SubjectViewer(object):
                                             picker=self.picker)
         self.__surface_manager = SurfaceManager(self.reader, self.ren, self.iren, picker=self.picker)
 
-
+        self.__contours_manager = FmriContours(self.ren)
+        fmri_lut = self.reader.get("fmri",None,lut=True)
+        self.__contours_manager.set_lut(fmri_lut)
+        self.__contours_paradigm = None
+        self.__contours_contrast = None
+        self.set_contours_visibility(False)
+        self.__contours_img = None
         #reset camera and render
         #self.reset_camera(0)
         #        self.ren.Render()
@@ -109,6 +115,10 @@ class SubjectViewer(object):
     def surface(self):
         return self.__surface_manager
 
+    @property
+    def contours(self):
+        return self.__contours_manager
+
     def show_cone(self):
         """Useful for testing"""
         log = logging.getLogger(__name__)
@@ -130,29 +140,36 @@ class SubjectViewer(object):
         try:
             self.image.change_subject(new_subject_img_code, skip_render=True)
         except Exception as e:
-            log.error(e)
+            log.exception(e)
             errors.append("Image")
 
         # update models
         try:
             self.models.reload_models(subj=new_subject_img_code, skip_render=True)
         except Exception as e:
-            log.error(e)
+            log.exception(e)
             errors.append("Models")
 
         # update fibers
         try:
             self.tractography.set_subject(new_subject_img_code, skip_render=True)
         except Exception as e:
-            log.error(e)
+            log.exception(e)
             errors.append("Fibers")
 
         # update surfaces
         try:
             self.surface.set_subject(new_subject_img_code, skip_render=True)
         except Exception as e:
-            log.error(e)
+            log.exception(e)
             errors.append("Surfaces")
+
+        #update fmri
+        try:
+            self.set_fmri_contours_image(skip_render=True)
+        except Exception as e:
+            log.exception(e)
+            errors.append("Contours")
 
         self.ren_win.Render()
         if len(errors) > 0:
@@ -239,6 +256,48 @@ class SubjectViewer(object):
         pos = cam1.GetPosition()
         vu = cam1.GetViewUp()
         return fp, pos, vu
+
+    @do_and_render
+    def set_fmri_contours_image(self,paradigm=None,contrast=None):
+        if paradigm is None:
+            paradigm = self.__contours_paradigm
+        else:
+            self.__contours_paradigm = paradigm
+        if contrast is None:
+            contrast = self.__contours_contrast
+        else:
+            self.__contours_contrast = contrast
+
+        log = logging.getLogger(__name__)
+
+        if paradigm is None:
+            self.__contours_img = None
+        else:
+            try:
+                fmri_img = self.reader.get("fmri",self.__current_subject,space=self.__current_space,
+                                   name=paradigm,contrast=contrast,format="vtk")
+            except Exception as e:
+                self.__contours_img = None
+                log.exception(e)
+            else:
+                self.__contours_img = fmri_img
+
+        if self.__contours_img is None:
+            self.contours.actor.SetVisibility(0)
+        else:
+
+            self.contours.set_image(fmri_img)
+            if not self.__contours_hidden:
+                self.contours.actor.SetVisibility(1)
+
+    @do_and_render
+    def set_contours_visibility(self,visible):
+        self.__contours_hidden = not visible
+        if self.__contours_hidden:
+            self.contours.actor.SetVisibility(0)
+        elif self.__contours_img is not None:
+            self.contours.actor.SetVisibility(1)
+
 
 
 class FilterArrows(QtCore.QObject):
@@ -2418,6 +2477,7 @@ class FmriContours(object):
     @property
     def actor(self):
         return self.__actor
+
 
 
 class QFmriWidget(QFrame):

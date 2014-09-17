@@ -20,10 +20,12 @@ def populate_cache(subj):
         reader2.get('MRI',subj,format='vtk',space='dartel')
     with ignored(Exception):
         reader2.get('fibers',subj,space='dartel')
-
+    reader2.clear_cache()
+    return
     #FreeSurferSurface
     print " %s: Surfaces"%subj
     surfaces=('pial','white','orig','inflated','sphere')
+    #surfaces = []
     hemis=('l','r')
     for s in surfaces:
         for h in hemis:
@@ -31,8 +33,8 @@ def populate_cache(subj):
                 reader2.get('SURF',subj,name=s,hemi=h)
     #Fibers
     print " %s: Colored Fibers"%subj
-    with ignored(Exception):
-        reader2.get('fibers',subj,color='fa')
+    #with ignored(Exception):
+    #    reader2.get('fibers',subj,color='fa')
     # with ignored(Exception):
     #     reader2.get('fibers',subj,color='orient')
     # with ignored(Exception):
