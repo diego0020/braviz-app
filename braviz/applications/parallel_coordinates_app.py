@@ -9,6 +9,7 @@ from braviz.interaction.qt_guis.parallel_coordinates import Ui_parallel_coordina
 from braviz.interaction.qt_models import VarListModel
 from braviz.interaction.qt_dialogs import SelectOneVariableWithFilter
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
+from braviz.interaction.config_file import get_config
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import subprocess
@@ -22,10 +23,17 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
     def __init__(self):
         super(ParallelCoordinatesApp, self).__init__()
         self.ui = None
-        self.url="http://127.0.0.1:8100/?vars=2014,1002,1003,1004,1005"
+        self.url=None
 
-        self.cathegorical_var=2014
-        self.attributes=[1002,1003,1004,1005]
+
+        config = get_config(__file__)
+        def_vars = config.get_default_variables()
+        def_var_codes = map(def_vars.get,("nom2","ratio1","ratio2"))
+        def_var_codes = map(braviz_tab_data.get_var_idx,def_var_codes)
+        def_var_codes = filter(lambda x:x is not None,def_var_codes)
+        self.cathegorical_var=braviz_tab_data.get_var_idx(def_vars["nom1"])
+
+        self.attributes=def_var_codes
         self.sample_id = None
         self.vars_model = VarListModel(checkeable=True)
         self.vars_model.select_items(self.attributes)

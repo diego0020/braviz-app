@@ -15,6 +15,7 @@ from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, Regresso
 
 import braviz.interaction.r_functions
 from braviz.interaction.connection import MessageClient,MessageServer
+from braviz.interaction.config_file import get_config
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
@@ -32,16 +33,17 @@ import os
 import platform
 
 import logging
-#TODO: Move all database access to read and filter
+
 
 __author__ = 'Diego'
 
-if braviz.readAndFilter.PROJECT == "kmc40":
-    INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
-    SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
-else:
-    INITIAL_OUTCOMES = (992,) # IHIdurd,IHIlatd
-    SAMPLE_TREE_COLUMNS = ("ubicac","sexo5")
+config = get_config(__file__)
+def_vars = config.get_default_variables()
+INITIAL_OUTCOMES = map(braviz_tab_data.get_var_idx,[def_vars["ratio1"],def_vars["ratio2"]])
+INITIAL_OUTCOMES = filter(lambda x:x is not None,INITIAL_OUTCOMES)
+
+SAMPLE_TREE_COLUMNS = (def_vars["nom1"],def_vars["nom2"])
+
 
 class AnovaApp(QMainWindow):
     def __init__(self,scenario,server_broadcast_address,server_receive_address):

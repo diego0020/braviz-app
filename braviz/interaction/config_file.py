@@ -31,6 +31,13 @@ class braviz_config(RawConfigParser):
             raise Exception('Erroneous interactor_style value %s'%custom_interactor_style)
         style=vtk_attrs[idx]
         return style
+    def get_default_variables(self):
+        nom1=self.get('Default_Variables','nominal1')
+        nom2=self.get('Default_Variables','nominal2')
+        ratio1=self.get('Default_Variables','numeric1')
+        ratio2=self.get('Default_Variables','numeric2')
+
+        return {"nom1":nom1,"nom2":nom2,"ratio1":ratio1,"ratio2":ratio2}
 
 def get_config(custom_dir=None):
     """A default configuration file is read at the library directory. A secondary configuration file can be set in the custom directory.
@@ -67,7 +74,7 @@ def make_default_config(default_config_name=None):
     braviz_conf.add_section("Default_Variables")
     braviz_conf.set('Default_Variables','nominal1','ubicac')
     braviz_conf.set('Default_Variables','nominal2','sexo5')
-    braviz_conf.set('Default_Variables','numeric1','FSIQ')
+    braviz_conf.set('Default_Variables','numeric1','FSIQ_4')
     braviz_conf.set('Default_Variables','numeric2','peso5')
 
     braviz_conf.add_section('VTK')

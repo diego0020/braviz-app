@@ -20,6 +20,7 @@ from braviz.visualization.subject_viewer import QSubjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
+from braviz.interaction.config_file import get_config
 import subprocess
 from braviz.interaction.connection import MessageClient
 import cPickle
@@ -27,8 +28,8 @@ import functools
 import logging
 
 # TODO only load scalar metrics if visible
-# TODO Arrows to change subject
-# TODO Application to measure in talairach in planes (perpendicular?)
+
+
 
 surfaces_scalars_dict = {0: "curv", 1: "avg_curv", 2: "thickness",
                          3: "sulc", 4: "aparc", 5: "aparc.a2009s", 7: "BA", 6 : "aparc.DKTatlas40"}
@@ -48,14 +49,13 @@ class SubjectOverviewApp(QMainWindow):
             self._messages_client.message_received.connect(self.receive_message)
             log.info( "started messages client")
 
-        if braviz.readAndFilter.PROJECT == "kmc40":
-            initial_vars = (11, 17, 1)
-            self.__context_variables = [11, 6, 17, 1]
-            initial_details_vars = [6, 11, 248, 249, 250, 251, 252, 253, 254, 255]
-        else:
-            initial_vars = (278, 310, 324)
-            self.__context_variables = [276, 310, 324, 359]
-            initial_details_vars = [278, 310, 324, 359]
+        config = get_config(__file__)
+        def_vars = config.get_default_variables()
+        def_var_codes = [braviz_tab_data.get_var_idx(x) for x in def_vars.values()]
+        def_var_codes = filter(lambda x:x is not None,def_var_codes)
+        initial_vars = def_var_codes
+        self.__context_variables=def_var_codes
+        initial_details_vars=def_var_codes
 
         self.vtk_widget = QSubjectViwerWidget(reader=self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer

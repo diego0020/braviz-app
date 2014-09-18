@@ -28,15 +28,16 @@ import braviz.interaction.qt_models as braviz_models
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.connection import MessageClient,MessageServer
+from braviz.interaction.config_file import get_config
 
 __author__ = 'Diego'
 
-if braviz.readAndFilter.PROJECT == "kmc40":
-    INITIAL_OUTCOMES = (254,252) # IHIdurd,IHIlatd
-    SAMPLE_TREE_COLUMNS = ("lat","UBIC3","GENERO")
-else:
-    INITIAL_OUTCOMES = (540,) # IHIdurd,IHIlatd
-    SAMPLE_TREE_COLUMNS = ("primipar","sexo5")
+config = get_config(__file__)
+def_vars = config.get_default_variables()
+INITIAL_OUTCOMES = map(braviz_tab_data.get_var_idx,[def_vars["ratio1"],def_vars["ratio2"]])
+INITIAL_OUTCOMES = filter(lambda x:x is not None,INITIAL_OUTCOMES)
+
+SAMPLE_TREE_COLUMNS = (def_vars["nom1"],def_vars["nom2"])
 
 
 class LinearModelApp(QMainWindow):

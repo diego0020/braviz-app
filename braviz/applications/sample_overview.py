@@ -10,6 +10,7 @@ import braviz
 from braviz.visualization.subject_viewer import QSubjectViwerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
+from braviz.interaction.config_file import get_config
 import braviz.applications.qt_sample_select_dialog
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
@@ -28,14 +29,15 @@ import subprocess
 from braviz.interaction.connection import MessageClient, MessageServer
 
 
+config=get_config(__file__)
+default_vars = config.get_default_variables()
+NOMINAL_VARIABLE = braviz_tab_data.get_var_idx(default_vars["nom1"])
+RATIONAL_VARIBLE = braviz_tab_data.get_var_idx(default_vars["ratio1"])
+
 #SAMPLE_SIZE = 0.5
 if braviz.readAndFilter.PROJECT == "kmc40":
-    NOMINAL_VARIABLE = 11  # GENDER
-    RATIONAL_VARIBLE = 5  # FSIQ
     SAMPLE_SIZE = 0.3
 else:
-    NOMINAL_VARIABLE = 1982  # SEXO5
-    RATIONAL_VARIBLE = 2008  # psnacercorr
     SAMPLE_SIZE = 0.1
 
 
