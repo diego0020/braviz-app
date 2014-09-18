@@ -1065,8 +1065,8 @@ class TractographyManager(object):
                 self.__color_bar_actor = vtk.vtkScalarBarActor()
                 self.__color_bar_actor.SetNumberOfLabels(4)
                 # self.__color_bar_actor.SetMaximumWidthInPixels(100)
-                self.__color_bar_actor.GetTitleTextProperty().SetFontSize(10)
-                self.__color_bar_actor.GetLabelTextProperty().SetFontSize(10)
+                #self.__color_bar_actor.GetTitleTextProperty().SetFontSize(10)
+                #self.__color_bar_actor.GetLabelTextProperty().SetFontSize(10)
                 # self.__color_bar_actor.GetTitleTextProperty().SetColor(1,0,0)
                 # self.__color_bar_actor.GetLabelTextProperty().SetColor(1,0,0)
 
@@ -1076,20 +1076,20 @@ class TractographyManager(object):
                 self.__color_bar_widget.RepositionableOn()
                 iren = self.ren.GetRenderWindow().GetInteractor()
                 self.__color_bar_widget.SetInteractor(iren)
-                self.__color_bar_widget.On()
+
 
                 rep = self.__color_bar_widget.GetRepresentation()
                 coord1 = rep.GetPositionCoordinate()
                 coord2 = rep.GetPosition2Coordinate()
                 # coord1.SetCoordinateSystemToViewport()
                 #coord2.SetCoordinateSystemToViewport()
-                width, height = self.ren.GetRenderWindow().GetSize()
+                #width, height = self.ren.GetRenderWindow().GetSize()
                 #print width, height
                 coord1.SetValue(0.89, 0.05)
                 #coord1.SetValue(width-110,50)
                 coord2.SetValue(0.1, 0.9)
                 #coord2.SetValue(width-10,height-50)
-
+                self.__color_bar_widget.On()
                 #self.ren.AddActor2D(self.__color_bar_actor)
 
             self.__color_bar_actor.SetVisibility(1)

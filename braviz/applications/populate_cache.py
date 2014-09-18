@@ -21,7 +21,6 @@ def populate_cache(subj):
     with ignored(Exception):
         reader2.get('fibers',subj,space='dartel')
     reader2.clear_cache()
-    return
     #FreeSurferSurface
     print " %s: Surfaces"%subj
     surfaces=('pial','white','orig','inflated','sphere')
