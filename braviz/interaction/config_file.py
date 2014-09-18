@@ -60,11 +60,20 @@ def make_default_config(default_config_name=None):
         config_file_name='braviz.cfg'
         default_config_name=os.path.join(config_dir,config_file_name)
     braviz_conf=braviz_config()
+
+    braviz_conf.add_section('Braviz')
+    braviz_conf.set('Braviz','project','kmc400')
+
+    braviz_conf.add_section("Default_Variables")
+    braviz_conf.set('Default_Variables','nominal1','ubicac')
+    braviz_conf.set('Default_Variables','nominal2','sexo5')
+    braviz_conf.set('Default_Variables','numeric1','FSIQ')
+    braviz_conf.set('Default_Variables','numeric2','peso5')
+
     braviz_conf.add_section('VTK')
     braviz_conf.set('VTK','Background','0.1 0.1 0.2')
     braviz_conf.set('VTK','Interaction_Style','TrackballCamera')
-    braviz_conf.add_section('Braviz')
-    braviz_conf.set('Braviz','project','kmc40')
+
     log = logging.getLogger(__name__)
     try:
         with open(default_config_name,'w') as config_file:
@@ -76,3 +85,11 @@ def make_default_config(default_config_name=None):
 
     return braviz_conf
 
+if __name__ == "__main__":
+    config_dir=os.path.dirname(os.path.realpath(__file__))
+    config_file_name='braviz.cfg'
+    default_config_name=os.path.join(config_dir,config_file_name)
+    make_default_config(default_config_name)
+    config_dir=os.path.join(config_dir,"..","applications")
+    default_config_name=os.path.join(config_dir,config_file_name)
+    make_default_config(default_config_name)
