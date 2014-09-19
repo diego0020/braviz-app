@@ -39,7 +39,7 @@ class CheckRegApp(QMainWindow):
 
         #image 1
         self.ui.mod1.activated.connect(self.update_image1)
-        self.ui.con1.activated.connect(self.update_image1)
+        #self.ui.con1.activated.connect(self.update_image1)
 
         self.ui.subj1.editingFinished.connect(self.update_image1)
         self.ui.subj1.setValidator(self.subjs_validator)
@@ -47,7 +47,7 @@ class CheckRegApp(QMainWindow):
 
         #image 2
         self.ui.mod2.activated.connect(self.update_image2)
-        self.ui.con2.activated.connect(self.update_image2)
+        #self.ui.con2.activated.connect(self.update_image2)
 
         self.ui.subj2.editingFinished.connect(self.update_image2)
         self.ui.subj2.setValidator(self.subjs_validator)
