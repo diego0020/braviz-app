@@ -1,7 +1,7 @@
 from __future__ import division
 __author__ = 'Diego'
 
-from PyQt4 import QtCore
+from PyQt4 import QtCore, QtGui
 from PyQt4 import QtGui
 
 
@@ -39,3 +39,22 @@ class RotatedLabel(QtGui.QLabel):
         painter.drawText(QtCore.QPoint(0,0),text)
         painter.restore()
 
+
+class ListValidator(QtGui.QValidator):
+    def __init__(self, valid_options):
+        super(ListValidator, self).__init__()
+        self.valid = frozenset(valid_options)
+
+    def validate(self, QString, p_int):
+        str_value = str(QString)
+        if str_value in self.valid:
+            return QtGui.QValidator.Acceptable, p_int
+        else:
+            if len(str_value) == 0:
+                return QtGui.QValidator.Intermediate, p_int
+            try:
+                i = int(str_value)
+            except Exception:
+                return QtGui.QValidator.Invalid, p_int
+            else:
+                return QtGui.QValidator.Intermediate, p_int

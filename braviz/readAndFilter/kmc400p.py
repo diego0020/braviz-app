@@ -219,6 +219,10 @@ The path containing this structure must be set."""
             if data == "MD":
                 img_data=img.get_data()
                 img_data *= 1e5
+                #remove lower than 0
+                img_data[img_data<0]=0
+                #remove bigger than 1000
+                img_data[img_data>1000]=1000
                 vtkImg = numpy2vtk_img(img_data)
             elif data == "DTI":
                 vtkImg = nifti_rgb2vtk(img)

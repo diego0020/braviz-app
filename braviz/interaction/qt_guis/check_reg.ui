@@ -112,10 +112,18 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QLineEdit" name="subj1"/>
+            <widget class="QLineEdit" name="subj1">
+             <property name="text">
+              <string>119</string>
+             </property>
+            </widget>
            </item>
            <item row="6" column="1">
-            <widget class="QLineEdit" name="subj2"/>
+            <widget class="QLineEdit" name="subj2">
+             <property name="text">
+              <string>119</string>
+             </property>
+            </widget>
            </item>
            <item row="2" column="1">
             <widget class="QComboBox" name="mod1">
@@ -132,6 +140,11 @@
              <item>
               <property name="text">
                <string>FA</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>MD</string>
               </property>
              </item>
              <item>
@@ -171,6 +184,11 @@
              <item>
               <property name="text">
                <string>MD</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>DTI</string>
               </property>
              </item>
              <item>
@@ -271,7 +289,7 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QSpinBox" name="divisions_combo">
+            <widget class="QSpinBox" name="divisions_box">
              <property name="value">
               <number>3</number>
              </property>
@@ -314,7 +332,7 @@
      <x>0</x>
      <y>0</y>
      <width>1122</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

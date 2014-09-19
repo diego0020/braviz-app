@@ -4,12 +4,15 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt4 import QtCore
 from PyQt4.QtGui import QFrame, QHBoxLayout, QApplication
 from PyQt4.QtCore import pyqtSignal
+import logging
 
 from braviz.visualization.subject_viewer import do_and_render
 
 __author__ = 'Diego'
 
 _NOMINAL_MODS={"APARC","WMPARC"}
+_COLORED_MODS={"DTI","NONE"}
+_WL_MODS={"MRI","FA","MD"}
 
 class CheckbordView(object):
     def __init__(self, render_window_interactor, reader, widget):
@@ -42,14 +45,19 @@ class CheckbordView(object):
 
         self.__color_wl1 = vtk.vtkImageMapToWindowLevelColors()
         self.__color_wl2 = vtk.vtkImageMapToWindowLevelColors()
+        self.__color_wl1.SetOutputFormatToRGB()
+        self.__color_wl2.SetOutputFormatToRGB()
         self.__lut = self.reader.get("APARC",None,lut=True)
         self.__color_labels1 = vtk.vtkImageMapToColors()
         self.__color_labels2 = vtk.vtkImageMapToColors()
         self.__color_labels1.SetLookupTable(self.__lut)
         self.__color_labels2.SetLookupTable(self.__lut)
+        self.__color_labels1.SetOutputFormatToRGB()
+        self.__color_labels2.SetOutputFormatToRGB()
 
-        self.__color1_nominal = False
-        self.__color2_nominal = False
+        #WL : Window Level, NOM: Nominal, PT: Pass Throug (no lut)
+        self.__color1_type = "WL"
+        self.__color2_type = "WL"
 
 
         self.__reslice2 = vtk.vtkImageReslice()
@@ -57,8 +65,9 @@ class CheckbordView(object):
         self.__plane_widget = None
         self.__current_space = "World"
         self.__orientation = 2
-        self.__img1_params=None
-        self.__img2_params=None
+        self.__divs = 3
+        self.__img1_params=(None,"None",None)
+        self.__img2_params=(None,"None",None)
 
         self.__outline = vtk.vtkOutlineFilter()
         self.__outline_mapper = vtk.vtkPolyDataMapper()
@@ -67,6 +76,7 @@ class CheckbordView(object):
         self.__outline_actor.SetMapper(self.__outline_mapper)
         self.ren.AddActor(self.__outline_actor)
         self.reset_camera(0)
+        self.set_number_of_divisions(self.__divs,skip_render=True)
 
     __camera_positions_dict = {
         0: ((-3.5, 0, 13), (157, 154, 130), (0, 0, 1)),
@@ -110,14 +120,15 @@ class CheckbordView(object):
 
         if self.__img1 is not None:
             self.__outline.SetInputData(self.__img1)
-            if self.__color1_nominal:
+            if self.__color1_type == "NOM":
                 self.__color_labels1.SetInputData(self.__img1)
                 if self.__img2 is None:
-                    self.__plane_widget.SetInputConnection(self.__color_labels1.GetOutputPort())
+                    self.__color_labels1.Update()
+                    self.__plane_widget.SetInputData(self.__color_labels1.GetOutput())
                 else:
                     self.__color_labels1.Update()
                     self.__checkboard_view.SetInput1Data(self.__color_labels1.GetOutput())
-            else:
+            elif self.__color1_type == "WL":
                 self.__color_wl1.SetInputData(self.__img1)
                 w,l = get_window_level(self.__img1)
                 self.__color_wl1.SetWindow(w)
@@ -129,13 +140,20 @@ class CheckbordView(object):
                 else:
                     self.__color_wl1.Update()
                     self.__checkboard_view.SetInput1Data(self.__color_wl1.GetOutput())
+            elif self.__color1_type == "PT":
+                if self.__img2 is None:
+                    self.__plane_widget.SetInputData(self.__img1)
+                else:
+                    self.__checkboard_view.SetInput1Data(self.__img1)
+            else:
+                raise ValueError
 
         if self.__img2 is not None:
             if self.__img1 is not None:
                 self.__reslice2.SetOutputOrigin(self.__img1.GetOrigin())
                 self.__reslice2.SetOutputSpacing(self.__img1.GetSpacing())
                 self.__reslice2.SetOutputExtent(self.__img1.GetExtent())
-                if self.__color2_nominal:
+                if self.__color2_type:
                     self.__reslice2.SetInterpolationModeToNearestNeighbor()
                 else:
                     self.__reslice2.SetInterpolationModeToCubic()
@@ -145,25 +163,36 @@ class CheckbordView(object):
 
 
             #----------------------------------
-            if self.__color2_nominal:
+            if self.__color2_type == "NOM":
                 if self.__img1 is None:
                     self.__color_labels2.SetInputData(self.__img2)
-                    self.__plane_widget.SetInputConnection(self.__color_labels2.GetOutputPort())
+                    self.__color_labels2.Update()
+                    self.__plane_widget.SetInputData(self.__color_labels2.GetOutput())
                 else:
                     self.__color_labels2.SetInputConnection(self.__reslice2.GetOutputPort())
                     self.__color_labels2.Update()
                     self.__checkboard_view.SetInput2Data(self.__color_labels2.GetOutput())
-            else:
+            elif self.__color2_type == "WL":
                 w,l = get_window_level(self.__img2)
                 self.__color_wl2.SetWindow(w)
                 self.__color_wl2.SetLevel(l)
                 if self.__img1 is None:
                     self.__color_wl2.SetInputData(self.__img2)
-                    self.__plane_widget.SetInputConnection(self.__color_wl2.GetOutputPort())
+                    self.__color_wl2.Update()
+                    self.__plane_widget.SetInputData(self.__color_wl2.GetOutput())
                 else:
                     self.__color_wl2.SetInputConnection(self.__reslice2.GetOutputPort())
                     self.__color_wl2.Update()
                     self.__checkboard_view.SetInput2Data(self.__color_wl2.GetOutput())
+            elif self.__color2_type == "PT":
+                if self.__img1 is None:
+                    self.__plane_widget.SetInputData(self.__img2)
+                else:
+                    self.__reslice2.Update()
+                    self.__checkboard_view.SetInput2Data(self.__reslice2.GetOutput())
+
+            else:
+                raise ValueError
         if self.__img1 is not None and self.__img2 is not None:
             self.__checkboard_view.Update()
             #print self.__checkboard_view.GetOutput()
@@ -179,35 +208,63 @@ class CheckbordView(object):
 
 
     @do_and_render
-    def set_img1(self,subj,mod,contrast=None):
+    def set_img1(self,subj,mod,contrast=None,force=False):
         params = (subj,mod.upper(),contrast)
-        if params == self.__img1_params:
+        if params == self.__img1_params and not force:
             return
         self.__img1_params = params
-        if contrast is not None:
+        modality = params[1]
+        if modality == "NONE":
+            self.__img1 = None
+        elif contrast is not None:
             raise NotImplementedError
-        self.__img1 = self.reader.get(mod,subj,format="vtk",space=self.__current_space)
-        if params[1] in _NOMINAL_MODS:
-            self.__color1_nominal = True
         else:
-            self.__color1_nominal = False
+            try:
+                self.__img1 = self.reader.get(mod,subj,format="vtk",space=self.__current_space)
+            except Exception as e:
+                log = logging.getLogger(__name__)
+                log.exception(e)
+                self.__img1 = None
+
+        if modality in _NOMINAL_MODS:
+            self.__color1_type = "NOM"
+        elif modality in _COLORED_MODS:
+            self.__color1_type = "PT"
+        elif modality in _WL_MODS:
+            self.__color1_type = "WL"
+        else:
+            raise  NotImplementedError
 
         self.update_pipeline()
 
 
     @do_and_render
-    def set_img2(self,subj,mod,contrast=None):
+    def set_img2(self,subj,mod,contrast=None, force=False):
         params = (subj,mod.upper(),contrast)
-        if params == self.__img2_params:
+        if params == self.__img2_params and not force:
             return
         self.__img2_params = params
-        if contrast is not None:
+        modality = params[1]
+        if modality == "NONE":
+            self.__img2 = None
+        elif contrast is not None:
             raise NotImplementedError
-        self.__img2 = self.reader.get(mod,subj,format="vtk",space=self.__current_space)
-        if params[1] in _NOMINAL_MODS:
-            self.__color2_nominal = True
         else:
-            self.__color2_nominal = False
+            try:
+                self.__img2 = self.reader.get(mod,subj,format="vtk",space=self.__current_space)
+            except Exception as e:
+                log = logging.getLogger(__name__)
+                log.exception(e)
+                self.__img1 = None
+
+        if modality in _NOMINAL_MODS:
+            self.__color2_type = "NOM"
+        elif modality in _COLORED_MODS:
+            self.__color2_type = "PT"
+        elif modality in _WL_MODS:
+            self.__color2_type = "WL"
+        else:
+            raise  NotImplementedError
 
         self.update_pipeline()
 
@@ -215,10 +272,33 @@ class CheckbordView(object):
     def set_orientation(self,orientation_int):
         pass
 
+    @do_and_render
+    def set_number_of_divisions(self,divs):
+        divs_ar = [divs]*3
+        divs_ar[self.__orientation]=1
+        self.__checkboard_view.SetNumberOfDivisions(divs_ar)
+        self.__divs = divs
+        if self.__img1 is not None and self.__img2 is not None:
+            self.__checkboard_view.Update()
+            self.__plane_widget.SetInputData(self.__checkboard_view.GetOutput())
+
+    @do_and_render
+    def set_orientation(self,orientation_int):
+        self.__plane_widget.set_orientation(orientation_int)
+        self.__orientation = orientation_int
+        self.set_number_of_divisions(self.__divs,skip_render=True)
+
     def load_test_view(self):
         self.set_img1(119,"MRI")
-        self.set_img2(119,"FA")
+        self.set_img2(119,"APARC")
 
+    @do_and_render
+    def change_space(self,new_space):
+        self.__current_space=new_space
+        p1=self.__img1_params
+        p2=self.__img2_params
+        self.set_img1(*p1,force=True,skip_render=True)
+        self.set_img2(*p2,force=True,skip_render=True)
 
 def get_window_level(img):
     stats = vtk.vtkImageHistogramStatistics()

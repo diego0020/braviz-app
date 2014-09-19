@@ -1,46 +1,26 @@
 from __future__ import division
-from PyQt4 import QtCore, QtGui
 from itertools import izip,repeat
+import logging
+
+from PyQt4 import QtCore, QtGui
+import pandas as pd
+import seaborn as sns
+import numpy as np
+
 import braviz
+from braviz.interaction.qt_widgets import ListValidator
 import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
-from braviz.readAndFilter import user_data as braviz_user_data
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
 from braviz.interaction.connection import MessageClient
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
-
-import pandas as pd
-import seaborn as sns
-
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
-import logging
 
-import numpy as np
 
 # todo: receive messages and send, connect to menu
 __author__ = 'Diego'
-
-
-class ListValidator(QtGui.QValidator):
-    def __init__(self, valid_options):
-        super(ListValidator, self).__init__()
-        self.valid = frozenset(valid_options)
-
-    def validate(self, QString, p_int):
-        str_value = str(QString)
-        if str_value in self.valid:
-            return QtGui.QValidator.Acceptable, p_int
-        else:
-            if len(str_value) == 0:
-                return QtGui.QValidator.Intermediate, p_int
-            try:
-                i = int(str_value)
-            except Exception:
-                return QtGui.QValidator.Invalid, p_int
-            else:
-                return QtGui.QValidator.Intermediate, p_int
 
 
 class FmriExplorer(QtGui.QMainWindow):
@@ -638,7 +618,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
 def run():
     import sys
-    from braviz.utilities import configure_logger, configure_console_logger
+    from braviz.utilities import configure_console_logger
 
     configure_console_logger("fmri")
     args = sys.argv

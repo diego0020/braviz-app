@@ -6,7 +6,10 @@ from PyQt4.QtGui import QMainWindow
 
 from braviz.interaction.qt_guis.check_reg import Ui_check_reg_app
 from braviz.visualization.checkerboard_view import QCheckViewer
-from itertools import izip
+from braviz.interaction.qt_widgets import ListValidator
+from braviz.readAndFilter import tabular_data
+
+
 import braviz
 
 import logging
@@ -16,25 +19,73 @@ class CheckRegApp(QMainWindow):
         QMainWindow.__init__(self)
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.ui = None
+        self.vtk_widget = None
         self.vtk_viewer = None
+        self.valid_ids = [str(i) for i in tabular_data.get_subjects()]
+        self.subjs_validator = ListValidator(self.valid_ids)
+        self.completer =  QtGui.QCompleter(list(self.valid_ids))
         self.setup_gui()
 
     def setup_gui(self):
         self.ui = Ui_check_reg_app()
         self.ui.setupUi(self)
-        self.vtk_viewer = QCheckViewer(self.reader,self.ui.vtk_frame)
+        self.vtk_widget = QCheckViewer(self.reader,self.ui.vtk_frame)
+        self.vtk_viewer = self.vtk_widget.viewer
         #view frame
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
-        self.ui.vtk_frame_layout.addWidget(self.vtk_viewer)
+        self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
         self.ui.vtk_frame_layout.setContentsMargins(0, 0, 0, 0)
 
+        #image 1
+        self.ui.mod1.activated.connect(self.update_image1)
+        self.ui.con1.activated.connect(self.update_image1)
+
+        self.ui.subj1.editingFinished.connect(self.update_image1)
+        self.ui.subj1.setValidator(self.subjs_validator)
+        self.ui.subj1.setCompleter(self.completer)
+
+        #image 2
+        self.ui.mod2.activated.connect(self.update_image2)
+        self.ui.con2.activated.connect(self.update_image2)
+
+        self.ui.subj2.editingFinished.connect(self.update_image2)
+        self.ui.subj2.setValidator(self.subjs_validator)
+        self.ui.subj2.setCompleter(self.completer)
+
+        #join controls
+        self.ui.divisions_box.valueChanged.connect(self.set_divs)
+        self.ui.orientation_combo.activated.connect(self.set_orientation)
+        self.ui.coords_combo.activated.connect(self.change_space)
+
     def start(self):
-        self.vtk_viewer.initialize_widget()
-        #load initial
-        self.vtk_viewer.viewer.load_test_view()
+        self.vtk_widget.initialize_widget()
+        #load test
+        #self.vtk_viewer.viewer.load_test_view()
+
+    def update_image1(self,dummy=None):
+        subj = int(self.ui.subj1.text())
+        mod = str(self.ui.mod1.currentText())
+        self.vtk_viewer.set_img1(subj,mod)
+
+    def update_image2(self,dummy=None):
+        subj = int(self.ui.subj2.text())
+        mod = str(self.ui.mod2.currentText())
+        self.vtk_viewer.set_img2(subj,mod)
+
+    def set_divs(self,divs):
+        self.vtk_viewer.set_number_of_divisions(divs)
 
 
+    def set_orientation(self):
+        orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
+        selection = str(self.ui.orientation_combo.currentText())
+        orientation_val = orientation_dict[selection]
+        self.vtk_viewer.set_orientation(orientation_val)
+
+    def change_space(self):
+        space = str(self.ui.coords_combo.currentText())
+        self.vtk_viewer.change_space(space)
 
 def run():
     from braviz.utilities import configure_console_logger
