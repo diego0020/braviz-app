@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>check_reg.png</file>
     <file>parallel_coords_logo.png</file>
     <file>measure.png</file>
     <file>circle.png</file>
