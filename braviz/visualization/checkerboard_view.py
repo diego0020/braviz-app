@@ -205,6 +205,10 @@ class CheckbordView(object):
             self.__plane_widget.SetInteractor(self.iren)
             self.__plane_widget.GetColorMap().SetLookupTable(None)
             self.__plane_widget.On()
+            def slice_change_handler(source, event):
+                new_slice = self.__plane_widget.GetSliceIndex()
+                self.widget.slice_change_handle(new_slice)
+            self.__plane_widget.AddObserver(self.__plane_widget.slice_change_event, slice_change_handler)
 
 
     @do_and_render
@@ -300,12 +304,31 @@ class CheckbordView(object):
         self.set_img1(*p1,force=True,skip_render=True)
         self.set_img2(*p2,force=True,skip_render=True)
 
+    @do_and_render
+    def set_image_slice(self, new_slice):
+        if self.__plane_widget is None:
+            return
+        self.__plane_widget.SetSliceIndex(int(new_slice))
+        self.__plane_widget.InvokeEvent(self.__plane_widget.slice_change_event)
+
+    def get_number_of_image_slices(self):
+        if self.__plane_widget is None:
+            return 0
+        img = self.__plane_widget.GetInput()
+        if img is None:
+            return 0
+        dimensions = img.GetDimensions()
+
+        return dimensions[self.__orientation]
+
+
 def get_window_level(img):
     stats = vtk.vtkImageHistogramStatistics()
     stats.SetInputData(img)
     stats.Update()
     _,w = stats.GetAutoRange()
     return w,w/2
+
 
 
 class QCheckViewer(QFrame):

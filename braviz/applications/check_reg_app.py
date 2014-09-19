@@ -57,6 +57,8 @@ class CheckRegApp(QMainWindow):
         self.ui.divisions_box.valueChanged.connect(self.set_divs)
         self.ui.orientation_combo.activated.connect(self.set_orientation)
         self.ui.coords_combo.activated.connect(self.change_space)
+        self.ui.slice_slider.valueChanged.connect(self.change_slice)
+        self.vtk_widget.slice_changed.connect(self.ui.slice_slider.setValue)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -67,11 +69,13 @@ class CheckRegApp(QMainWindow):
         subj = int(self.ui.subj1.text())
         mod = str(self.ui.mod1.currentText())
         self.vtk_viewer.set_img1(subj,mod)
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
 
     def update_image2(self,dummy=None):
         subj = int(self.ui.subj2.text())
         mod = str(self.ui.mod2.currentText())
         self.vtk_viewer.set_img2(subj,mod)
+        self.ui.slice_slider.setMaximum(self.vtk_viewer.get_number_of_image_slices())
 
     def set_divs(self,divs):
         self.vtk_viewer.set_number_of_divisions(divs)
@@ -86,6 +90,9 @@ class CheckRegApp(QMainWindow):
     def change_space(self):
         space = str(self.ui.coords_combo.currentText())
         self.vtk_viewer.change_space(space)
+
+    def change_slice(self,slice):
+        self.vtk_viewer.set_image_slice(slice)
 
 def run():
     from braviz.utilities import configure_console_logger
