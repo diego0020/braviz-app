@@ -912,7 +912,11 @@ class SubjectsTable(QAbstractTableModel):
                 if self.__is_var_real[col]:
                     return str(datum)
                 else:
-                    return self.__labels[col][int(datum)]
+                    try:
+                        label = self.__labels[col][int(datum)]
+                    except ValueError:
+                        label = "?"
+                    return label
 
         else:
             return QtCore.QVariant()

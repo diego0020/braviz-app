@@ -11,14 +11,12 @@ import pandas as pd
 
 import braviz
 from braviz.utilities import remove_non_ascii
+from braviz.interaction.config_file import get_config
 
-from braviz.readAndFilter import PROJECT
-if PROJECT == "kmc400":
-    LATERALITY = 1423
-else:
-    LATERALITY = 6
+LATERALITY = None
+LEFT_HANDED = None
 
-IMAGE_CODE = 273
+IMAGE_CODE = 273 # DEPRECATED
 
 _connection = None
 
@@ -33,17 +31,22 @@ def get_variables(reader=None,mask=None):
 
 
 def get_connection(reader=None):
+    global _connection
+    global LATERALITY, LEFT_HANDED
     if _connection is not None:
         return _connection
 
-    node = platform.node()
-    if node == "archi5":
-        path = os.path.join("/home/diego/braviz_data", "tabular_data.sqlite")
-    else:
-        data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
-        path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
+    data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
+    path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
     conn = sqlite3.connect(path)
-    __connection = conn
+    _connection = conn
+    if LATERALITY is None:
+        _conf = get_config("../applications")
+        _lat_name,_left_labell = _conf.get_laterality()
+        cur = _connection.execute("SELECT var_idx from variables where var_name = ?",(_lat_name,))
+        res = cur.fetchone()
+        LATERALITY = res[0]
+        LEFT_HANDED = _left_labell
     return conn
 
 
@@ -54,7 +57,7 @@ def get_laterality(subj_id):
     res = cur.fetchone()
     if res is None:
         raise Exception("Unknown laterality")
-    if res[0]==1:
+    if res[0] != LEFT_HANDED:
         return 'r'
     else:
         return 'l'
@@ -583,6 +586,4 @@ def _recursive_delete_variable(var_idx):
         print "DataBase not modified"
     else:
         print "Done"
-
-
 

@@ -11,7 +11,7 @@ import logging
 import vtk
 
 from braviz.readAndFilter.tabular_data import get_var_value as __get_var_value
-from braviz.readAndFilter.tabular_data import LATERALITY
+from braviz.readAndFilter.tabular_data import LATERALITY,LEFT_HANDED
 from braviz.interaction.structure_metrics import get_right_or_left_hemisphere as __get_right_or_left_hemisphere
 
 
@@ -110,7 +110,7 @@ def cortico_spinal_d(reader, subject, color,scalars, get_out_space=False):
     if get_out_space is True:
         return 'dartel'
     laterality = __get_var_value(LATERALITY, int(subject))
-    if laterality == 1:
+    if laterality != LEFT_HANDED:
         lat = 'r'
     else:
         lat = 'l'
@@ -127,7 +127,7 @@ def cortico_spinal_n(reader, subject, color,scalars, get_out_space=False):
     if get_out_space is True:
         return 'dartel'
     laterality = __get_var_value(LATERALITY, int(subject))
-    if laterality == 1:
+    if laterality != LEFT_HANDED:
         lat = 'r'
     else:
         lat = 'l'

@@ -36,8 +36,15 @@ class braviz_config(RawConfigParser):
         nom2=self.get('Default_Variables','nominal2')
         ratio1=self.get('Default_Variables','numeric1')
         ratio2=self.get('Default_Variables','numeric2')
+        lat=self.get('Default_Variables','laterality')
 
-        return {"nom1":nom1,"nom2":nom2,"ratio1":ratio1,"ratio2":ratio2}
+        return {"nom1":nom1,"nom2":nom2,"ratio1":ratio1,"ratio2":ratio2,"lat":lat}
+
+    def get_laterality(self):
+        lat = self.get('Default_Variables','laterality')
+        left = self.getint('Default_Variables','left_handed_label')
+        return lat,left
+
 
 def get_config(custom_dir=None):
     """A default configuration file is read at the library directory. A secondary configuration file can be set in the custom directory.
@@ -76,6 +83,8 @@ def make_default_config(default_config_name=None):
     braviz_conf.set('Default_Variables','nominal2','sexo5')
     braviz_conf.set('Default_Variables','numeric1','FSIQ_4')
     braviz_conf.set('Default_Variables','numeric2','peso5')
+    braviz_conf.set('Default_Variables','laterality','EdinburgHandedness')
+    braviz_conf.set('Default_Variables','left_handed_label',3)
 
     braviz_conf.add_section('VTK')
     braviz_conf.set('VTK','Background','0.1 0.1 0.2')

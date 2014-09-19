@@ -63,7 +63,6 @@ def get_struct_metric(reader, struct_name, code, metric='volume'):
     fa_fibers: Mean fa of fibers crossing the structure or in bundle
     """
     #print "calculating %s for %s (%s)"%(metric,struct_name,code)
-
     if metric == 'volume':
         try:
             return reader.get('model', code, name=struct_name, volume=1)
@@ -231,7 +230,7 @@ def get_right_or_left_hemisphere(hemisphere, laterality):
 
 def solve_laterality(laterality, names):
     """translates dominant and nondominant freesurfer names into right and left names,
-    laterality should be  (right handed) or l (left handed)
+    laterality should be r (right handed) or l (left handed)
     names is a list of names to translate
     currently wm-[d|n|r|l]h-* , ctx-[d|n|r|l]h-* and fiber bundles ending in '_[d|n|r|l]' are supported"""
     #TODO: Support Left-Amygdala

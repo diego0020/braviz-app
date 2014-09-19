@@ -710,14 +710,16 @@ class ModelManager(object):
 
     def __get_laterality(self):
         lat_var_idx = braviz.readAndFilter.tabular_data.LATERALITY
-        lat_dict = {1: 'r', 2: 'l'}
         log = logging.getLogger(__file__)
         try:
             label = braviz.readAndFilter.tabular_data.get_var_value(lat_var_idx, self.__current_subject)
         except Exception:
             log.warning("Laterality no found for subject %s, assuming right handed" % self.__current_subject)
             label = 1
-        return lat_dict.get(label, 'r')
+        if int(label) == braviz.readAndFilter.tabular_data.LEFT_HANDED:
+            return "l"
+        else:
+            return "r"
 
     @do_and_render
     def reload_models(self, subj=None, space=None):
@@ -846,8 +848,10 @@ class ModelManager(object):
                 prop.SetColor(self.__current_color)
 
     def get_scalar_metrics(self, metric_name):
+        models = self.__active_models_set
+        rl_models = [solve_laterality(self.__laterality, m) for m in models]
         try:
-            value = structure_metrics.get_mult_struct_metric(self.__reader, self.__active_models_set,
+            value = structure_metrics.get_mult_struct_metric(self.__reader,rl_models ,
                                                              self.__current_subject, metric_name)
         except Exception as e:
             log = logging.getLogger(__name__)
