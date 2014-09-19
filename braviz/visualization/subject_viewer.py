@@ -1,7 +1,5 @@
 from __future__ import division
 
-__author__ = 'Diego'
-
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt4 import QtCore
@@ -12,11 +10,12 @@ from braviz.interaction.structure_metrics import solve_laterality
 import braviz.readAndFilter.tabular_data
 import seaborn as sbs
 from itertools import izip
-import colorbrewer
 from braviz.interaction import structure_metrics
 from functools import wraps
 import numpy as np
 import logging
+
+__author__ = 'Diego'
 
 # TODO: Abstract viewer classes
 
