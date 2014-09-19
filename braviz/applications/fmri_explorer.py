@@ -17,7 +17,7 @@ from braviz.interaction import qt_dialogs
 from braviz.interaction.connection import MessageClient
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
-
+from braviz.interaction.config_file import get_config
 
 # todo: receive messages and send, connect to menu
 __author__ = 'Diego'
@@ -27,11 +27,12 @@ class FmriExplorer(QtGui.QMainWindow):
     def __init__(self, scenario, server_broadcast_address, server_receive_address):
         super(FmriExplorer, self).__init__()
         log = logging.getLogger(__name__)
+        config = get_config(__file__)
 
         self.__reader = braviz.readAndFilter.BravizAutoReader()
 
         self.__valid_ids = frozenset(str(i) for i in braviz_tab_data.get_subjects())
-        self.__current_subject = None
+        self.__current_subject = config.get_default_subject()
         self.__current_paradigm = None
         self.__current_contrast = 1
 
@@ -143,7 +144,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
 
     def load_initial_view(self):
-        self.__current_subject = braviz_tab_data.get_subjects()[0]
+
         self.ui.subject_edit.setText(str(self.__current_subject))
         self.update_fmri_data_view()
 

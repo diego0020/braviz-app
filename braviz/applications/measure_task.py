@@ -22,6 +22,7 @@ import datetime
 import platform
 import os
 import sys
+from braviz.interaction.config_file import get_config
 
 __author__ = 'Diego'
 
@@ -137,6 +138,7 @@ class ConfirmSubjectChangeDialog(QDialog):
 class MeasureApp(QMainWindow):
     def __init__(self, roi_name=None):
         log = logging.getLogger(__name__)
+        config = get_config(__file__)
         QMainWindow.__init__(self)
         self.ui = None
         self.__roi_name = roi_name
@@ -148,7 +150,7 @@ class MeasureApp(QMainWindow):
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
-        self.__current_subject = self.__subjects_list[0]
+        self.__current_subject = config.get_default_subject()
         self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__current_subject)
 
         self.__current_image_mod = "MRI"

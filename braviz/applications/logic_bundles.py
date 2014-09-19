@@ -27,7 +27,7 @@ from braviz.interaction import compute_fiber_lengths
 from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
 from braviz.interaction.qt_dialogs import SaveScenarioDialog,LoadScenarioDialog, SaveLogicFibersBundleDialog, LoadLogicBundle
 from braviz.readAndFilter import user_data as braviz_user_data
-
+from braviz.interaction.config_file import get_config
 
 __author__ = 'Diego'
 
@@ -103,12 +103,13 @@ class ConfirmExitDialog(QDialog):
 class LogicBundlesApp(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
+        config = get_config(__file__)
         self.ui = None
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.subjects_list = tabular_data.get_subjects()
 
-        self.__current_subject = self.subjects_list[0]
+        self.__current_subject = config.get_default_subject()
         self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__current_subject)
 
         self.__current_image_mod = "MRI"

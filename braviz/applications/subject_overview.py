@@ -39,9 +39,11 @@ class SubjectOverviewApp(QMainWindow):
     def __init__(self, server_broadcast_address=None, server_receive_address=None, scenario=None,subject=None):
         #Super init
         QMainWindow.__init__(self)
+
         #Internal initialization
+        config = get_config(__file__)
         self.reader = braviz.readAndFilter.BravizAutoReader()
-        self.__curent_subject = None
+        self.__curent_subject = config.get_default_subject()
         log = logging.getLogger(__name__)
         self._messages_client = None
         if server_broadcast_address is not None or server_receive_address is not None:
@@ -49,7 +51,6 @@ class SubjectOverviewApp(QMainWindow):
             self._messages_client.message_received.connect(self.receive_message)
             log.info( "started messages client")
 
-        config = get_config(__file__)
         def_vars = config.get_default_variables()
         def_var_codes = [braviz_tab_data.get_var_idx(x) for x in def_vars.values()]
         def_var_codes = filter(lambda x:x is not None,def_var_codes)
@@ -67,10 +68,7 @@ class SubjectOverviewApp(QMainWindow):
 
 
         #select first subject
-        if subject is None:
-            index = self.subjects_model.index(0, 0)
-            self.__curent_subject = self.subjects_model.data(index, QtCore.Qt.DisplayRole)
-        else:
+        if subject is not None:
             self.__curent_subject = subject
 
         self.subject_details_model = SubjectDetails(initial_vars=initial_details_vars,

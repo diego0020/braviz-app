@@ -8,6 +8,7 @@ from braviz.interaction.qt_guis.check_reg import Ui_check_reg_app
 from braviz.visualization.checkerboard_view import QCheckViewer
 from braviz.interaction.qt_widgets import ListValidator
 from braviz.readAndFilter import tabular_data
+from braviz.interaction.config_file import get_config
 
 
 import braviz
@@ -27,6 +28,9 @@ class CheckRegApp(QMainWindow):
         self.setup_gui()
 
     def setup_gui(self):
+        conf = get_config(__file__)
+        initial_subj = conf.get_default_subject()
+
         self.ui = Ui_check_reg_app()
         self.ui.setupUi(self)
         self.vtk_widget = QCheckViewer(self.reader,self.ui.vtk_frame)
@@ -42,6 +46,7 @@ class CheckRegApp(QMainWindow):
         #self.ui.con1.activated.connect(self.update_image1)
 
         self.ui.subj1.editingFinished.connect(self.update_image1)
+        self.ui.subj1.setText("%s"%initial_subj)
         self.ui.subj1.setValidator(self.subjs_validator)
         self.ui.subj1.setCompleter(self.completer)
 
@@ -52,6 +57,7 @@ class CheckRegApp(QMainWindow):
         self.ui.subj2.editingFinished.connect(self.update_image2)
         self.ui.subj2.setValidator(self.subjs_validator)
         self.ui.subj2.setCompleter(self.completer)
+        self.ui.subj2.setText("%s"%initial_subj)
 
         #join controls
         self.ui.divisions_box.valueChanged.connect(self.set_divs)
