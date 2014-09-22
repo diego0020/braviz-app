@@ -59,7 +59,7 @@ def track2db(tracks,sample=None):
 
 def proc_batch(b):
     log = logging.getLogger(__name__)
-    tracks = range(4,16)
+    tracks = range(19,26)
     try:
         track2db(tracks,b)
     except Exception as e:

@@ -437,28 +437,16 @@ def save_var_description(var_idx,description):
 def register_new_variable(var_name,is_real=1):
     var_name = unicode(var_name)
     conn = get_connection()
+    row_id = None
     with conn :
-        q1 = "SELECT var_idx from VARIABLES where var_name = ?"
-        cur=conn.execute(q1,(var_name,))
-        if cur.fetchone() is not None:
-            print "Attempting to add duplicate variable"
-            raise sqlite3.IntegrityError
         if is_real:
             is_real = 1
         else:
             is_real = 0
         q="""INSERT INTO variables (var_name, is_real)
              Values (? , ?)"""
-        cur = conn.execute(q,(unicode(var_name),is_real))
-        conn.commit()
+        cur = conn.execute(q,(var_name,is_real))
         row_id = cur.lastrowid
-        cur=conn.execute(q1,(var_name,))
-        var_idxs = cur.fetchall()
-        if var_idxs is None:
-            log = logging.getLogger(__name__)
-            log.error("Problem adding to Data Base")
-        assert var_idxs[0][0] == row_id
-        assert len(var_idxs)==1
     return row_id
 
 def update_variable_values(var_idx,tuples):

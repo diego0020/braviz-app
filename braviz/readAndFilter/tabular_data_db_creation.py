@@ -56,7 +56,7 @@ def create_data_base(path=None):
     #create variables table
     query = """CREATE TABLE IF NOT EXISTS variables
     (var_idx INTEGER PRIMARY KEY,
-    var_name  TEXT,
+    var_name  TEXT UNIQUE,
     is_real INTEGER -- 0 if nominal, 1 if real
     );
     """
