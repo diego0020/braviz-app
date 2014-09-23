@@ -1,7 +1,7 @@
 """Braviz is a library for facilitating integrated visual analysis of brain data
 The readAndFilter module contains several functions for reading different brain data formats and tabular data
 The visualization module contains functions for displaying physical structures and charts of scalar values in the screen
-The interaction module contains functions for performing common interactions with the data"""
+The interaction module contains functions for performing common interactions with the data and creating graphical interfaces"""
 #'braviz v2.01'
 
 import platform

@@ -1,6 +1,7 @@
 from __future__ import division
 
-__author__ = 'Diego'
+
+import braviz
 
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
@@ -11,7 +12,6 @@ import datetime
 import platform
 import os
 
-import braviz
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
@@ -26,6 +26,8 @@ from braviz.interaction.connection import MessageClient
 import cPickle
 import functools
 import logging
+
+__author__ = 'Diego'
 
 # TODO only load scalar metrics if visible
 
