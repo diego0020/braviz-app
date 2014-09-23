@@ -29,12 +29,12 @@ def create_directories():
     path = os.path.join(braviz.readAndFilter.braviz_auto_dynamic_data_root(), "braviz_data")
     try:
         os.mkdir(path)
-    except WindowsError:
+    except Exception:
         pass
     scenarios = os.path.join("scenarios")
     try:
         os.mkdir(scenarios)
-    except WindowsError:
+    except Exception:
         pass
 
 def create_data_base(path=None):

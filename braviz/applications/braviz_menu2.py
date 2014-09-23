@@ -136,8 +136,13 @@ class BravizMenu2(QtGui.QMainWindow):
 def run():
     import sys
     from braviz.utilities import configure_logger
+    from braviz.readAndFilter import check_db
     configure_logger("menu2")
     log = logging.getLogger(__name__)
+
+    #verify database
+    check_db.verify_db_completeness()
+
     app = QtGui.QApplication(sys.argv)
     main_window = BravizMenu2()
     main_window.show()
