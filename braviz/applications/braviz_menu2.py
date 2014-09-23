@@ -4,10 +4,11 @@ import subprocess
 import sys
 import logging
 
+from braviz.interaction.connection import MessageServer
+
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
-from braviz.interaction.connection import MessageServer
 
 
 try:
