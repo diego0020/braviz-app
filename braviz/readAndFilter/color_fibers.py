@@ -226,5 +226,5 @@ def get_md_lut():
     return lut
 
 def get_length_lut():
-    lut = braviz.visualization.get_colorbrewer_lut(41,125,"YlOrBr",9,invert=False)
+    lut = braviz.visualization.get_colorbrewer_lut(41,125,"YlOrBr",9,invert=True)
     return lut
