@@ -8,10 +8,10 @@ __author__ = 'diego'
 def verify_db_completeness():
     conn = tabular_data.get_connection()
     #user db
-    if not check_tables(conn,("applications","scenarios","vars_scenarios","subj_samples")):
-        from braviz.readAndFilter import user_data_db_creation
+    from braviz.readAndFilter import user_data_db_creation
+    if not check_tables(conn,("applications","scenarios","vars_scenarios","subj_samples","subj_comments")):
         user_data_db_creation.create_tables()
-        user_data_db_creation.add_current_applications()
+    user_data_db_creation.update_current_applications()
 
     if not check_application_names():
         from braviz.readAndFilter import user_data_db_creation

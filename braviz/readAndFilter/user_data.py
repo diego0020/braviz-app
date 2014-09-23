@@ -113,6 +113,22 @@ def save_sub_sample(name, elements, description):
     conn.commit()
     pass
 
+def get_comment(subj):
+    conn = get_connection()
+    q = "SELECT comment FROM subj_comments WHERE subject = ?"
+    cur = conn.execute(q,(subj,))
+    res = cur.fetchone()
+    if res is None:
+        return ""
+    return res[0]
+
+def update_comment(subj,comment):
+    conn = get_connection()
+    q = "INSERT OR REPLACE into subj_comments (subject,comment) VALUES (?,?)"
+    with conn:
+        cur = conn.execute(q,(subj,comment))
+
+
 def get_samples_df():
     conn = get_connection()
     q = "SELECT sample_idx, sample_name, sample_desc, sample_size FROM subj_samples"

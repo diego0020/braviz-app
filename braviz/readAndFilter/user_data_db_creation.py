@@ -59,6 +59,16 @@ def create_tables():
     conn.execute(q)
     conn.commit()
 
+    q = """
+    CREATE TABLE IF NOT EXISTS subj_comments (
+    subject INTEGER PRIMARY KEY,
+    comment TEXT
+    );
+    """
+
+    conn.execute(q)
+    conn.commit()
+
 
 def update_current_applications():
     applications = {

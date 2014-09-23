@@ -123,6 +123,9 @@ class SubjectOverviewApp(QMainWindow):
         #subject details
         self.ui.subject_details_table.setModel(self.subject_details_model)
         self.ui.select_details_button.clicked.connect(self.launch_details_variable_select_dialog)
+
+        self.ui.comments_save.clicked.connect(self.save_comments)
+
         #image controls
         self.ui.image_mod_combo.activated.connect(self.image_modality_change)
         self.ui.image_orientation.activated.connect(self.image_orientation_change)
@@ -222,6 +225,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.subject_id2.setText("%s" % new_subject)
         #details
         self.subject_details_model.change_subject(new_subject)
+        self.reload_comments()
         #image
         image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(new_subject)))
 
@@ -1057,6 +1061,19 @@ class SubjectOverviewApp(QMainWindow):
         if msg.startswith("subject"):
             subj = msg.split()[1]
             self.change_subject(subj)
+
+    def reload_comments(self):
+        comment = braviz_user_data.get_comment(self.__curent_subject)
+        if len(comment) == 0:
+            self.ui.comments_box.clear()
+        else:
+            self.ui.comments_box.setPlainText(comment)
+
+
+    def save_comments(self):
+        comment = unicode(self.ui.comments_box.toPlainText())
+        braviz_user_data.update_comment(self.__curent_subject,comment)
+        self.statusBar().showMessage("comments saved",2000)
 
 
 
