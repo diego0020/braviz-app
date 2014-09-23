@@ -75,7 +75,7 @@ class CheckbordView(object):
         self.__outline_actor= vtk.vtkActor()
         self.__outline_actor.SetMapper(self.__outline_mapper)
         self.ren.AddActor(self.__outline_actor)
-        self.reset_camera(0)
+        self.reset_camera(0,skip_render=True)
         self.set_number_of_divisions(self.__divs,skip_render=True)
 
     __camera_positions_dict = {
@@ -88,6 +88,7 @@ class CheckbordView(object):
         6: ((-3, 0, 3), (-3, 0, -252), (0, 1, 0)),
     }
 
+    @do_and_render
     def reset_camera(self, position):
         """resets the current camera to standard locations. Position may be:
         0: initial 3d view
@@ -106,7 +107,7 @@ class CheckbordView(object):
         cam1.SetViewUp(viewup)
 
         self.ren.ResetCameraClippingRange()
-        self.ren_win.Render()
+
 
     def update_pipeline(self):
         if self.__plane_widget is None:

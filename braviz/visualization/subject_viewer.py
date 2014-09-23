@@ -89,7 +89,7 @@ class SubjectViewer(object):
         self.__contours_manager.set_lut(fmri_lut)
         self.__contours_paradigm = None
         self.__contours_contrast = None
-        self.set_contours_visibility(False)
+        self.set_contours_visibility(False,skip_render=True)
         self.__contours_img = None
         #reset camera and render
         #self.reset_camera(0)
@@ -1534,10 +1534,10 @@ class OrthogonalPlanesViewer(object):
         self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
         self.__image_planes = (self.__x_image_manager, self.__y_image_manager, self.__z_image_manager)
-        self.x_image.change_image_orientation(0)
-        self.y_image.change_image_orientation(1)
-        self.z_image.change_image_orientation(2)
-        self.hide_image()
+        self.x_image.change_image_orientation(0,skip_render=True)
+        self.y_image.change_image_orientation(1,skip_render=True)
+        self.z_image.change_image_orientation(2,skip_render=True)
+        self.hide_image(skip_render=True)
 
         self.__sphere = SphereProp(self.ren)
         self.__cortex = SurfaceManager(self.reader, self.ren, self.iren, self.__current_subject, self.__current_space,
@@ -1749,7 +1749,7 @@ class MeasurerViewer(object):
 
         self.__measure_axis = None
         self.__pax1, self.__pax2 = None, None  # perpendicular to measure axis
-        self.set_measure_axis(2)
+        self.set_measure_axis(2,skip_render=True)
         # state
         self.__current_subject = None
         self.__current_space = "talairach"
@@ -1764,12 +1764,12 @@ class MeasurerViewer(object):
         self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
         self.__image_planes = (self.__x_image_manager, self.__y_image_manager, self.__z_image_manager)
-        self.x_image.change_image_orientation(0)
-        self.y_image.change_image_orientation(1)
-        self.z_image.change_image_orientation(2)
+        self.x_image.change_image_orientation(0,skip_render=True)
+        self.y_image.change_image_orientation(1,skip_render=True)
+        self.z_image.change_image_orientation(2,skip_render=True)
         #for pw in self.__image_planes:
         #    pw.image_plane_widget.InteractionOff()
-        self.hide_image()
+        self.hide_image(skip_render=True)
 
         self.__placed = False
         self.measure_widget = vtk.vtkDistanceWidget()
@@ -1781,10 +1781,9 @@ class MeasurerViewer(object):
         self.measure_repr.SetRulerDistance(5.0)
         self.measure_widget.SetRepresentation(self.measure_repr)
         self.measure_widget.SetInteractor(self.iren)
-        self.measure_widget.SetPriority(self.x_image.image_plane_widget.GetPriority()+1)
-        self.obs_id = self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent, self.restrict_points_to_plane)
-        self.obs_id2 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.restrict_points_to_plane)
-        self.obs_id3 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.emit_distance_changed_signal)
+
+        self.obs_id, self.obs_id2, self.obs_id3 = None, None, None
+
 
     def restrict_points_to_plane(self, object, event):
         modifiers = QApplication.keyboardModifiers()
@@ -1843,6 +1842,10 @@ class MeasurerViewer(object):
 
 
     def finish_initializing(self):
+        self.measure_widget.SetPriority(self.x_image.image_plane_widget.GetPriority()+1)
+        self.obs_id = self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent, self.restrict_points_to_plane)
+        self.obs_id2 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.restrict_points_to_plane)
+        self.obs_id3 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.emit_distance_changed_signal)
         self.link_window_level()
         self.ren.ResetCameraClippingRange()
         self.ren.ResetCamera()
@@ -2271,7 +2274,7 @@ class fMRI_viewer(object):
 
         self.__image_loaded = False
         #reset camera and render
-        self.reset_camera(0)
+        self.reset_camera(0,skip_render=True)
         #widget, signal handling
         self.__widget = widget
 
@@ -2407,6 +2410,7 @@ class fMRI_viewer(object):
         6: ((-3, 0, 3), (-3, 0, -252), (0, 1, 0)),
     }
 
+    @do_and_render
     def reset_camera(self, position):
         """resets the current camera to standard locations. Position may be:
         0: initial 3d view
@@ -2425,7 +2429,7 @@ class fMRI_viewer(object):
         cam1.SetViewUp(viewup)
 
         self.ren.ResetCameraClippingRange()
-        self.ren_win.Render()
+
 
     def get_camera_parameters(self):
         cam1 = self.ren.GetActiveCamera()

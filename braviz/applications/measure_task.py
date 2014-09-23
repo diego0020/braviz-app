@@ -167,7 +167,7 @@ class MeasureApp(QMainWindow):
             log.error("Invalid roi type, unknown measure axis, assuming SAGITAL")
         self.vtk_widget = QMeasurerWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
-        self.vtk_viewer.set_measure_axis(self.meaure_axis)
+        self.vtk_viewer.set_measure_axis(self.meaure_axis,skip_render=True)
 
         if self.__roi_id is not None:
             self.__checked_subjects = geom_db.subjects_with_line(self.__roi_id)
