@@ -17,7 +17,7 @@ import vtk
 
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
     readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk, \
-    CacheContainer
+    CacheContainer,memo_ten
 
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
     surfLUT2VTK
@@ -107,6 +107,13 @@ The path containing this structure must be set."""
                 named tracts call index=True
                 Use db_id = 'id' to read a fiber stored in the braviz data base
 
+        TRACULA: The default space is world, use space='diff' to get fibers in diffusion space.
+                 Requires name = <track-name>. Use Index = True to get a list of available bundles.
+                 The default returns contours at 0.20 of the maximum aposteriori probability.
+                 Use contour = <percentage> to get different contours
+                 Use map = True to get the probability map as an image.
+                 Use color=True to get the default color for the structure
+
         TENSORS: Get an unstructured grid containing tensors at the points where they are available
                  and scalars representing the orientation of the main eigenvector
                  Use space=world to get output in world coordinates [experimental]
@@ -161,6 +168,8 @@ The path containing this structure must be set."""
             return self.__read_func(subj, **kw)
         elif data == 'BOLD':
             return self.__read_bold(subj, kw['name'])
+        elif data == "TRACULA":
+            return self.__read_tracula(subj,**kw)
         else:
             log = logging.getLogger(__name__)
             log.error("Data type not available")
@@ -343,7 +352,7 @@ The path containing this structure must be set."""
             path = os.path.join(self.getDataRoot(), "tractography", str(subj))
             # notice we are reading the inverse transform diff -> world
             trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
-            img3 = applyTransform(img2, trans, interpolate=interpolate)
+            img3 = applyTransform(img2, trans, interpolate=interpolate,origin2=origin,spacing2=spacing,dimension2=dims)
             return img3
         else:
             log = logging.getLogger(__name__)
@@ -842,6 +851,79 @@ The path containing this structure must be set."""
                 filtered_fibers = self.get('fibers', subj, **kw)
                 transformed_streams = self.__movePointsToSpace(filtered_fibers, target_space, subj)
                 return transformed_streams
+
+    def __read_tracula(self,subj,**kw):
+        "Read tracula files"
+        if kw.get("index",False):
+            labels = ['CC-ForcepsMajor', 'CC-ForcepsMinor', 'LAntThalRadiation', 'LCingulumAngBundle', 'LCingulumCingGyrus', 'LCorticospinalTract', 'LInfLongFas', 'LSupLongFasParietal', 'LSupLongFasTemporal', 'LUncinateFas', 'RAntThalRadiation', 'RCingulumAngBundle', 'RCingulumCingGyrus', 'RCorticospinalTract', 'RInfLongFas', 'RSupLongFasParietal', 'RSupLongFasTemporal', 'RUncinateFas']
+            return labels
+        log= logging.getLogger(__name__)
+        track_name = kw.get("name")
+        space = kw.get("space","world")
+        if track_name is None:
+            log.error("Name is required")
+            raise ValueError
+        self.__parse_fs_color_file()
+        if kw.get("color",False):
+            col = self.free_surfer_LUT[track_name]
+            return col
+        idx = int(self.free_surfer_labels[track_name])
+        idx %= 100
+
+        if kw.get("map",False):
+            format = kw.get("format","nii")
+            map = self.__read_tracula_map(subj,idx,format=format)
+            if space in {"diff","native"}:
+                return map
+            else:
+                if format == "vtk":
+                    w_img = self.move_img_to_world(map,"diff",subj,interpolate=True)
+                    s_img = self.move_img_from_world(w_img,space,subj,interpolate=True)
+                    return s_img
+                else:
+                    raise NotImplementedError
+
+        map = self.__read_tracula_map(subj,idx,format="vtk")
+        smooth = vtk.vtkImageGaussianSmooth()
+        smooth.SetDimensionality(3)
+        smooth.SetStandardDeviation(1)
+        smooth.SetInputData(map)
+        smooth.Update()
+
+        maxi_val=smooth.GetOutput().GetScalarRange()[1]
+        thr = maxi_val*kw.get("contour",0.2)
+
+        contours = vtk.vtkContourFilter()
+        contours.SetInputConnection(smooth.GetOutputPort())
+        contours.SetNumberOfContours(1)
+        contours.SetValue(0,thr)
+        contours.Update()
+        cont = contours.GetOutput()
+
+        if space in {"diff","native"}:
+            return cont
+        cont_w = self.__movePointsToSpace(cont,"diff",subj,inverse=True)
+        cont_s = self.__movePointsToSpace(cont_w,space,subj,inverse=False)
+        return cont_s
+
+    def __read_tracula_map(self,subj,index,format="nii"):
+        affine,img_data = self.__get_full_tracula_map(subj)
+        data2 = img_data[:,:,:,index]
+        if format == "nii":
+            return nib.Nifti1Image(data2,affine)
+        elif format == "vtk":
+            vtk_img = numpy2vtk_img(data2,data_type=np.float64)
+            vtk_img2 = braviz.readAndFilter.applyTransform(vtk_img,np.linalg.inv(affine))
+            return vtk_img2
+    @memo_ten
+    def __get_full_tracula_map(self,subj):
+        data_dir = os.path.join(self.getDataRoot(),"freeSurfer_Tracula","%s"%subj,"dpath")
+        tracks_file = "merged_avg33_mni_bbr.mgz"
+        tracks_full_file = os.path.join(data_dir,tracks_file)
+        tracks_img = nib.load(tracks_full_file)
+        affine = tracks_img.get_affine()
+        img_data = tracks_img.get_data()
+        return affine,img_data
 
     def __readTensors(self, subj, **kw):
         "Internal function to read a tensor file"

@@ -38,21 +38,23 @@ def nibNii2vtk(nii):
     return numpy2vtk_img(d)
 
 
-def numpy2vtk_img(d):
+def numpy2vtk_img(d,data_type=None):
     """Transform a 3d numpy array into a vtk image data object"""
     data_type = d.dtype
     importer = vtk.vtkImageImport()
     assert isinstance(d,np.ndarray)
     importer.SetDataScalarTypeToShort() # default
-    if data_type.type == np.float64:
+    if data_type is None:
+        data_type = data_type.type
+    if data_type == np.float64:
         importer.SetDataScalarTypeToDouble()
-    elif data_type.type == np.float32:
+    elif data_type == np.float32:
         importer.SetDataScalarTypeToFloat()
-    elif data_type.type == np.int32:
+    elif data_type == np.int32:
         importer.SetDataScalarTypeToInt()
-    elif data_type.type == np.int16:
+    elif data_type == np.int16:
         importer.SetDataScalarTypeToShort()
-    elif data_type.type == np.uint8:
+    elif data_type == np.uint8:
         importer.SetDataScalarTypeToUnsignedChar()
     else:
         log = logging.getLogger(__name__)

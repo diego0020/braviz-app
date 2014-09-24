@@ -6,6 +6,7 @@ import os
 import vtk
 import logging
 import struct
+from scipy import ndimage
 from itertools import izip
 from braviz.readAndFilter import numpy_support
 
@@ -17,7 +18,7 @@ braviz.utilities.configure_console_logger("tracula")
 
 assert braviz.readAndFilter.PROJECT == "kmc400"
 SUBJ = 119
-THRESHOLD = 30
+THRESHOLD = 0.2
 
 reader = braviz.readAndFilter.BravizAutoReader()
 
@@ -67,25 +68,44 @@ for i in xrange(img_data.shape[3]):
     vtk_img = numpy2vtk_img(img_0)
     vtk_img2 = braviz.readAndFilter.applyTransform(vtk_img,np.linalg.inv(affine))
 
+
+
+    smooth = vtk.vtkImageGaussianSmooth()
+    smooth.SetDimensionality(3)
+    smooth.SetStandardDeviation(1)
+    smooth.SetInputData(vtk_img2)
+    smooth.Update()
+
+    print smooth.GetOutput().GetScalarRange()
+    maxi_val=smooth.GetOutput().GetScalarRange()[1]
+    thr = maxi_val*0.2
     contours = vtk.vtkContourFilter()
-    contours.SetInputData(vtk_img2)
+    contours.SetInputConnection(smooth.GetOutputPort())
     contours.SetNumberOfContours(1)
-    contours.SetValue(0,THRESHOLD)
+    contours.SetValue(0,thr)
     contours.Update()
 
     cont = contours.GetOutput()
+
+    cont2 = reader.transformPointsToSpace(cont,"diff",SUBJ,inverse=True)
+
     ac = viewer.addPolyData(cont)
     key = str(5100+i)
+    key2 = str(5200+i)
     label = labels[key]
+    label2 = labels[key2]
     col = colors[label]
     print label,col
+    print label2, thr
+    print
+
     c2 = map(lambda x:x*255,col[:3])
     mp = ac.GetMapper()
     mp.ScalarVisibilityOff()
-    ac.GetProperty().SetColor(col[:3])
+    ac.GetProperty().SetColor((255,0,0))
 
 #viewer.addImg(vtk_img2)
 
-fa_img = reader.get("fa",SUBJ,space="diff",format="vtk")
+fa_img = reader.get("MRI",SUBJ,space="world",format="vtk")
 viewer.addImg(fa_img)
 viewer.start()
