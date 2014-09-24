@@ -1435,6 +1435,57 @@ class SimpleSetModel(QAbstractListModel):
         self.__internal_list = sorted(list(set))
         self.modelReset.emit()
 
+class SimpleCheckModel(QAbstractListModel):
+    def __init__(self,choices):
+        super(SimpleCheckModel, self).__init__()
+        self.choices_list = list(choices)
+        self.__selected = set()
+
+    def get_selected(self):
+        return tuple(self.__selected)
+
+    def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
+        return len(self.choices_list)
+
+    def data(self, QModelIndex, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if 0 <= row < len(self.choices_list):
+                item = self.choices_list[row]
+                if int_role == QtCore.Qt.DisplayRole:
+                    return item
+                if int_role == QtCore.Qt.CheckStateRole:
+                    if item in self.__selected:
+                        return QtCore.Qt.Checked
+                    else:
+                        return QtCore.Qt.Unchecked
+        return QtCore.QVariant()
+
+    def headerData(self, p_int, Qt_Orientation, int_role=None):
+        return QtCore.QVariant()
+
+    def flags(self, QModelIndex):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if 0 <= row < len(self.choices_list):
+                flag = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsUserCheckable
+                return flag
+        return QtCore.Qt.NoItemFlags
+
+    def setData(self, QModelIndex, QVariant, int_role=None):
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            if int_role == QtCore.Qt.CheckStateRole:
+                if 0 <= row < len(self.choices_list):
+                    value = QVariant.toBool()
+                    item = self.choices_list[row]
+                    if value:
+                        self.__selected.add(item)
+                    else:
+                        self.__selected.discard(item)
+                    self.dataChanged.emit(QModelIndex,QModelIndex)
+                    return True
+        return False
 
 class SamplesFilterModel(QAbstractListModel):
     def __init__(self):

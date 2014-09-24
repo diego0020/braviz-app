@@ -85,6 +85,7 @@ class SubjectViewer(object):
         self.__surface_manager = SurfaceManager(self.reader, self.ren, self.iren, picker=self.picker)
 
         self.__contours_manager = FmriContours(self.ren)
+        self.__tracula_manager = TraculaManager(self.reader,self.ren,self.__current_subject,self.__current_space)
         fmri_lut = self.reader.get("fmri",None,lut=True)
         self.__contours_manager.set_lut(fmri_lut)
         self.__contours_paradigm = None
@@ -117,6 +118,10 @@ class SubjectViewer(object):
     @property
     def contours(self):
         return self.__contours_manager
+
+    @property
+    def tracula(self):
+        return self.__tracula_manager
 
     def show_cone(self):
         """Useful for testing"""
@@ -169,6 +174,11 @@ class SubjectViewer(object):
         except Exception as e:
             log.exception(e)
             errors.append("Contours")
+        try:
+            self.tracula.reload_bundles(self.__current_subject,self.__current_space,skip_render=True)
+        except Exception as e:
+            log.exception(e)
+            errors.append("Tracula")
 
         self.ren_win.Render()
         if len(errors) > 0:
@@ -195,6 +205,10 @@ class SubjectViewer(object):
             log.error(e)
         try:
             self.surface.set_space(new_space, skip_render=True)
+        except Exception as e:
+            log.error(e)
+        try:
+            self.tracula.reload_bundles(self.__current_subject,new_space, skip_render=True)
         except Exception as e:
             log.error(e)
 
@@ -1179,6 +1193,80 @@ class TractographyManager(object):
             return float("nan")
         return float("nan")
 
+
+class TraculaManager(object):
+    def __init__(self,reader,ren,initial_subj=None,initial_space="World"):
+        self.ren = ren
+        if initial_subj is None:
+            initial_subj = reader.get("ids", None)[0]
+        self.__active_bundles_set = set()
+        self.__pd_map_act = dict()
+        self.__current_subject = initial_subj
+        self.__reader = reader
+        self.__current_space = initial_space
+        self.__actor_to_model = {}  # for picking
+
+        # visual attributes
+        self.__opacity = 1
+
+        self.reload_bundles(subj=initial_subj, space=initial_space, skip_render=True)
+
+    @do_and_render
+    def reload_bundles(self,subj,space):
+        self.__current_subject = subj
+        self.__current_space = space
+        log = logging.getLogger(__name__)
+        for b in self.__active_bundles_set:
+            try:
+                self.__load_bundle(b)
+            except Exception as e:
+                log.exception(e)
+                self.__hide_bundle(b)
+
+    @do_and_render
+    def set_bundles(self,bundle_names):
+        wanted_bundles = frozenset(bundle_names)
+        to_add = wanted_bundles - self.__active_bundles_set
+        to_hide = self.__active_bundles_set - wanted_bundles
+
+        for b in to_add:
+            self.__load_bundle(b)
+
+        for b in to_hide:
+            self.__hide_bundle(b)
+
+        self.__active_bundles_set = wanted_bundles
+    @do_and_render
+    def set_opacity(self,int_opacity):
+        for b in self.__active_bundles_set:
+            _,_,ac = self.__pd_map_act[b]
+            ac.GetProperty().SetOpacity(int_opacity/100)
+
+    def __load_bundle(self,bundle_name):
+        trio = self.__pd_map_act.get(bundle_name)
+        if trio is None:
+            pd = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,space=self.__current_space)
+            color = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,color=True)
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.ScalarVisibilityOff()
+            mapper.SetInputData(pd)
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            actor.GetProperty().SetColor(color)
+            self.ren.AddActor(actor)
+        else:
+            pd,mapper,actor = trio
+            pd = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,space=self.__current_space)
+            mapper.SetInputData(pd)
+        actor.SetVisibility(1)
+        self.__pd_map_act[bundle_name]=(pd,mapper,actor)
+
+    def __hide_bundle(self,bundle_name):
+        trio = self.__pd_map_act.get(bundle_name)
+        if trio is None:
+            return
+        ac= trio[2]
+        ac.SetVisibility(0)
 
 class SurfaceManager(object):
     def __init__(self, reader, ren, iren, initial_subj=None, initial_space="World", picker=None,

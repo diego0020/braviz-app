@@ -866,7 +866,7 @@ The path containing this structure must be set."""
         self.__parse_fs_color_file()
         if kw.get("color",False):
             col = self.free_surfer_LUT[track_name]
-            return col
+            return col[:3]
         idx = int(self.free_surfer_labels[track_name])
         idx %= 100
 

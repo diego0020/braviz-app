@@ -15,7 +15,8 @@ import os
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
-from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList
+from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList, \
+    SimpleCheckModel
 from braviz.visualization.subject_viewer import QSubjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
@@ -82,7 +83,9 @@ class SubjectOverviewApp(QMainWindow):
         #Fibers list model
         self.fibers_list_model = SimpleBundlesList()
         self.current_fibers = None
-
+        #tracula model
+        bundles = self.reader.get("TRACULA",None,index=True)
+        self.tracula_model = SimpleCheckModel(bundles)
         #surfaces_state
         self.surfaces_state = dict()
 
@@ -175,6 +178,10 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.bundles_list.clicked.connect(self.update_current_bundle)
         self.ui.fibers_scalar_combo.currentIndexChanged.connect(self.update_fiber_scalars)
         self.ui.export_fiber_scalars_to_db.clicked.connect(self.export_fiber_scalars_to_db)
+        #tracula panel
+        self.ui.tracula_list.setModel(self.tracula_model)
+        self.tracula_model.dataChanged.connect(self.update_tracula)
+        self.ui.tracula_opac.valueChanged.connect(self.update_tracula_opacity)
         #surface panel
         self.ui.surface_left_check.toggled.connect(self.update_surfaces_from_gui)
         self.ui.surface_right_check.toggled.connect(self.update_surfaces_from_gui)
@@ -446,6 +453,13 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_viewer.models.set_models(selected_structures)
         self.update_segmentation_scalar()
         self.show_fibers_from_segment(self.ui.fibers_from_segments_box.currentIndex())
+
+    def update_tracula(self):
+        selected=self.tracula_model.get_selected()
+        self.vtk_viewer.tracula.set_bundles(selected)
+
+    def update_tracula_opacity(self,int_opac):
+        self.vtk_viewer.tracula.set_opacity(int_opac)
 
 
     def update_segmentation_scalar(self, scalar_index=None):

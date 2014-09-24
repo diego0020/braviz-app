@@ -19,7 +19,7 @@ for t0 in tracks:
     ac=v.addPolyData(cont)
     mp = ac.GetMapper()
     mp.ScalarVisibilityOff()
-    ac.GetProperty().SetColor(col[:3])
+    ac.GetProperty().SetColor(col)
 
 
 v.addImg(img2)
