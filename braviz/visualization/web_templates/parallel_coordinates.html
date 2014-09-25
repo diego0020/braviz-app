@@ -197,7 +197,43 @@ function path(d) {
   return line(traits.map(function(p) { return [x(p), y[p](d[p])]; }));
 }
 
+
+function tabulate(data, columns) {
+    var table = d3.select("#selected").html("").append("table"),
+        thead = table.append("thead"),
+        tbody = table.append("tbody");
+
+    // append the header row
+    thead.append("tr")
+        .selectAll("th")
+        .data(columns)
+        .enter()
+        .append("th")
+            .text(function(column) { return column; });
+
+    // create a row for each object in the data
+    var rows = tbody.selectAll("tr")
+        .data(data)
+        .enter()
+        .append("tr");
+
+    // create a cell in each row for each column
+    var cells = rows.selectAll("td")
+        .data(function(row) {
+            return columns.map(function(column) {
+                return {column: column, value: row[column]};
+            });
+        })
+        .enter()
+        .append("td")
+            .text(function(d) { return d.value; });
+
+    return table;
+}
+
 // Handles a brush event, toggling the display of foreground lines.
+
+var make_table_timeout;
 function brush() {
   var actives = traits.filter(function(p) { return !y[p].brush.empty(); }),
       extents = actives.map(function(p) { return y[p].brush.extent(); });
@@ -206,7 +242,7 @@ function brush() {
       return extents[i][0] <= d[p] && d[p] <= extents[i][1];
     });
   });
-  var selected_codes="";
+  var selected_codes=[];
   var f2 = foreground[0];
   for (i=0;i<f2.length;i++){
   var p=f2[i];
@@ -214,13 +250,27 @@ function brush() {
   {
   var t = p.children[0];
   var code = t.textContent;
-  selected_codes+=code+" ";
+  selected_codes.push(i);
   }
   }
     console.log(selected_codes);
-  var selection_div = document.getElementById("selected");
-  selection_div.innerHTML=selected_codes;
+  //var selection_div = document.getElementById("selected");
+  //selection_div.innerHTML=selected_codes;
+  if (make_table_timeout){
+    window.clearTimeout(make_table_timeout);
+  }
+  make_table_timeout=window.setTimeout(function(){
+  var data2 = [];
+  for(i=0; i<selected_codes.length; i++)
+  {
+  var j=selected_codes[i];
+  data2.push(flowers[j]);
+  }
+  tabulate(data2,["code","category"].concat(traits));
+  }
+  , 1000);
 }
+
 
     </script>
 <div class="missing">
@@ -229,8 +279,8 @@ function brush() {
 
 <div id="selection_div">
 <h3>Selection:</h3>
-<p id="selected">
-</p>
+<div id="selected">
+</div>
 </div>
 
 </body>
