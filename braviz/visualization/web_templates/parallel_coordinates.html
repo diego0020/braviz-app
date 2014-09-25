@@ -62,6 +62,22 @@
         color:white;
         }
 
+#save_sample{
+        float:right;
+        margin-right:10%;
+        }
+#save_sample textarea{
+        width:100%;
+        box-sizing:border-box;
+        }
+#save_sample input{
+        width:100%;
+        box-sizing:border-box;
+        }
+.error{
+        color:red;
+        }
+
     </style>
 </head>
 <body>
@@ -251,6 +267,7 @@ function brush() {
     });
   });
   var selected_codes=[];
+  var selected_indeces=[];
   var f2 = foreground[0];
   for (i=0;i<f2.length;i++){
   var p=f2[i];
@@ -258,26 +275,82 @@ function brush() {
   {
   var t = p.children[0];
   var code = t.textContent;
-  selected_codes.push(i);
+  selected_indeces.push(i);
+  selected_codes.push(code);
   }
   }
     console.log(selected_codes);
-  //var selection_div = document.getElementById("selected");
-  //selection_div.innerHTML=selected_codes;
+  document.save_sample["sample_subjects"].value=selected_codes;
   if (make_table_timeout){
     window.clearTimeout(make_table_timeout);
   }
   make_table_timeout=window.setTimeout(function(){
   var data2 = [];
-  for(i=0; i<selected_codes.length; i++)
+  for(i=0; i<selected_indeces.length; i++)
   {
-  var j=selected_codes[i];
+  var j=selected_indeces[i];
   data2.push(flowers[j]);
   }
   tabulate(data2,["code","category"].concat(traits));
   }
   , 1000);
 }
+
+function send_sample(data){
+
+  var XHR = new XMLHttpRequest();
+  var urlEncodedData = "";
+  var urlEncodedDataPairs = [];
+  var name;
+
+  // We turn the data object into an array of URL encoded key value pairs.
+  var fields=["sample_name","sample_desc","sample_subjects"];
+  for(i=0;i<fields.length;i++) {
+    name=fields[i];
+    urlEncodedDataPairs.push(encodeURIComponent(name) + '=' + encodeURIComponent(data[name].value));
+  }
+
+  // We combine the pairs into a single string and replace all encoded spaces to
+  // the plus character to match the behaviour of the web browser form submit.
+  urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
+
+  // We define what will happen if the data is successfully sent
+  XHR.addEventListener('load', function(event) {
+    if(200==XHR.status){
+    document.getElementById("result").innerText="saved!";
+    document.getElementById("result").className="";
+    }else{
+    document.getElementById("result").innerText="Name is not Unique";
+    document.getElementById("result").className="error";
+    alert('A sample with this name already exists, try again');
+    }
+  });
+
+  // We define what will happen in case of error
+  XHR.addEventListener('error', function(event) {
+    alert('Couldn\'t contact server');
+  });
+
+  // We setup our request
+  XHR.open('POST', '/');
+
+  // We add the required HTTP header to handle a form data POST request
+  XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  //XHR.setRequestHeader('Content-Length', urlEncodedData.length);
+
+  // And finally, We send our data.
+  XHR.send(urlEncodedData);
+
+return false;
+}
+
+  window.onload=function(){
+  var data2 = [];
+  tabulate(data2,["code","category"].concat(traits));
+
+
+  };
+
 
 
     </script>
@@ -286,10 +359,28 @@ function brush() {
 </div>
 
 <div id="selection_div">
-<h3>Selection:</h3>
+
+<h3>Selection
+</h3>
+<div id="save_sample">
+    <h3>Save selection</h3>
+    <form name="save_sample" action="#saved" onsubmit="return send_sample(this)">
+        <p>Name: <input type="text" name="sample_name" required></p>
+        <p>Description:<br>
+        <textarea name="sample_desc"></textarea><br>
+        </p>
+        <input type="hidden" name="sample_subjects" value="">
+        <input type="submit">
+    </form>
+    <p id="result">....</p>
+</div>
 <div id="selected">
+    <p>Nothing yet</p>
 </div>
+
 </div>
+
+
 
 </body>
 </html>

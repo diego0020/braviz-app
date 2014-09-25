@@ -51,6 +51,25 @@ class MainHandler(tornado.web.RequestHandler):
         self.render("parallel_coordinates.html",data=json_data,caths=caths_json,vars=attrs_json,cath_name=col0,
                     missing=missing)
 
+    def post(self, *args, **kwargs):
+        print "got post"
+        name=self.get_body_argument("sample_name")
+        desc=self.get_body_argument("sample_desc","")
+        subjs=self.get_body_argument("sample_subjects")
+        print name
+        print desc
+        print subjs
+        if user_data.sample_name_existst(name):
+            print "Name already exists"
+            self.send_error(409)
+        else:
+            print "Name is unique"
+            subj_list=map(int,subjs.split(","))
+            print subj_list
+            user_data.save_sub_sample(name,subj_list,desc)
+            self.write("ok")
+
+
 settings = {
     "static_path":os.path.join(os.path.dirname(braviz.__file__),"visualization/web_static"),
     "template_path":os.path.join(os.path.dirname(braviz.__file__),"visualization/web_templates")
