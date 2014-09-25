@@ -824,7 +824,7 @@ class SubjectOverviewApp(QMainWindow):
         tracula_state = dict()
         tracula_state["bundles"]=self.vtk_viewer.tracula.active_bundles
         tracula_state["opacity"]=self.ui.tracula_opac.value()
-        state["traucula_state"]=tracula_state
+        state["tracula_state"]=tracula_state
 
         #surface panel
         surfaces_state = self.surfaces_state

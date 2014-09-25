@@ -1490,7 +1490,8 @@ class SimpleCheckModel(QAbstractListModel):
     def set_selection(self,selection):
         self.__selected=set(selection)
         self.modelReset.emit()
-        self.dataChanged.emit()
+        self.dataChanged.emit(self.index(0,0),self.index(self.rowCount(),0))
+
 
 class SamplesFilterModel(QAbstractListModel):
     def __init__(self):

@@ -553,6 +553,17 @@ class SampleOverview(QtGui.QMainWindow):
                     viewer.tractography.set_opacity(opac / 100, skip_render=True)
                 except Exception as e:
                     log.warning(e.message)
+
+        #tracula panel
+        tracula_state = wanted_state.get("tracula_state")
+        if tracula_state is not None:
+            try:
+                bundles = tracula_state["bundles"]
+                opac = tracula_state["opacity"]
+                viewer.tracula.set_bundles(bundles)
+                viewer.tracula.set_opacity(opac)
+            except Exception as e:
+                log.warning(e.message)
         #surfaces panel
         surf_state = wanted_state.get("surf_state")
         if surf_state is not None:

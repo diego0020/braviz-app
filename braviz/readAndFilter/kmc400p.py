@@ -958,9 +958,9 @@ The path containing this structure must be set."""
         elif space.lower()[:4] == 'diff':
             path = os.path.join(self.__static_root, 'tractography', str(subj))
             #TODO: This looks wrong!!!!
-            transform = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz','FA.nii.gz', path)
+            transform = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz','fa.nii.gz', path)
             if inverse:
-                transform = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+                transform = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
 
             return transformPolyData(point_set, transform)
         elif space.lower() in ('template', 'dartel'):
