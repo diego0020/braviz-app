@@ -53,6 +53,14 @@
 .missing {
         text-align:center;
 }
+#selected table tr, td {
+        padding-left: 1em;
+        padding-right: 1em;
+        }
+#selected table tr:hover{
+        background:DarkSlateGray ;
+        color:white;
+        }
 
     </style>
 </head>
@@ -63,14 +71,14 @@
     <script type="text/javascript">
 
 var flowers = {% raw data %} ;
-var species = {% raw caths %} ,
+var categories = {% raw caths %} ,
     traits = {% raw vars %};
 
 function max(x,y){ return x > y ? x : y ; }
-var colors=d3.scale.ordinal().domain(species).range(colorbrewer.Set1[max(species.length,3)])
+var colors=d3.scale.ordinal().domain(categories).range(colorbrewer.Set1[max(categories.length,3)])
 var color_style="";
-for (i in species){
-var sp=species[i];
+for (i in categories){
+var sp=categories[i];
 var c = colors(sp);
 line = "."+sp+" { stroke : "+c+" ; }"+"\n";
 color_style+=line;
@@ -84,7 +92,7 @@ var width = window.innerWidth*0.95;
 var height = window.innerHeight*0.90;
 
 var m = [50, 100, 50, 100];
-m[2] = m[2]+30*species.length;
+m[2] = m[2]+30*categories.length;
 m[3] += window.innerWidth*0.05*0.5
 var w = width - m[1] - m[3],
     h = height - m[0] - m[2];
@@ -120,7 +128,7 @@ var svg = d3.select("body").append("svg:svg")
 
   // Add a legend.
   var legend = svg.selectAll("g.legend")
-      .data(species)
+      .data(categories)
     .enter().append("svg:g")
       .attr("class", "legend")
       .attr("transform", function(d, i) { return "translate(0," + (i * 20 + height-m[2]) + ")"; });
@@ -141,7 +149,7 @@ var svg = d3.select("body").append("svg:svg")
       .data(flowers)
     .enter().append("svg:path")
       .attr("d", path)
-      .attr("class", function(d) { return d.species; });
+      .attr("class", function(d) { return d.category; });
       foreground.append("svg:title").text(function(x) {return x.code;});
 
   // Add a group element for each trait.

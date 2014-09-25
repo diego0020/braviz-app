@@ -28,7 +28,7 @@ class MainHandler(tornado.web.RequestHandler):
 
         cols = data.columns
         cols2=list(cols)
-        cols2[0]="species"
+        cols2[0]="category"
         data.columns=cols2
         col0 = cols[0]
         labels = tab_data.get_labels_dict(vars[0])
