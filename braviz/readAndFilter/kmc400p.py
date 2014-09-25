@@ -490,19 +490,20 @@ The path containing this structure must be set."""
         cached = self.load_from_cache('free_surfer_color_lut_internal')
         cached2 = self.load_from_cache('free_surfer_labels_dict_internal')
         if (cached is not None) and (cached2 is not None):
-            self.free_surfer_LUT = cached
-            self.free_surfer_labels = cached2
-            return
+            if len(cached) > 1266:
+                self.free_surfer_LUT = cached
+                self.free_surfer_labels = cached2
+                return
         color_file_name = os.path.join(self.__static_root,"freeSurfer_Tracula", 'FreeSurferColorLUT.txt')
 
         with open(color_file_name) as color_file:
             color_lines = color_file.readlines()
             color_file.close()
             color_lists = [l.split() for l in color_lines if l[0] not in ('#', '\n', ' ') ]
-            color_tuples = ((l[1], tuple([float(c) / 256 for c in l[2:]])) for l in color_lists)
+            color_tuples = ((l[1], tuple([float(c) / 256 for c in l[2:]])) for l in color_lists if len(l)>0)
             color_dict = dict(color_tuples)
             self.save_into_cache('free_surfer_color_lut_internal', color_dict)
-            labels_tuples = ((l[1],l[0]) for l in color_lists )
+            labels_tuples = ((l[1],l[0]) for l in color_lists if len(l)>0)
             labels_dict=dict(labels_tuples)
             self.save_into_cache('free_surfer_labels_dict_internal',labels_dict)
 

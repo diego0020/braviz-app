@@ -2,7 +2,7 @@
 import tornado.ioloop
 import tornado.web
 import os
-#import braviz
+import braviz
 import braviz.readAndFilter.tabular_data as tab_data
 from braviz.readAndFilter import user_data
 import json
@@ -38,13 +38,15 @@ class MainHandler(tornado.web.RequestHandler):
 
         col0 = cols2[0]
         data[col0]=data[col0].map(labels)
+        data["code"]=data.index
 
         json_data = data.to_json(orient="records")
 
         caths = data[col0].unique()
         caths_json = json.dumps(list(caths))
 
-        attrs=list(data.columns[1:])
+        #1: cathegories, 2: code
+        attrs=list(data.columns[1:-1])
         attrs_json = json.dumps(attrs)
         self.render("parallel_coordinates.html",data=json_data,caths=caths_json,vars=attrs_json,cath_name=col0,
                     missing=missing)
