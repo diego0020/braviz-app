@@ -2,7 +2,7 @@
 import tornado.ioloop
 import tornado.web
 import os
-import braviz
+#import braviz
 import braviz.readAndFilter.tabular_data as tab_data
 from braviz.readAndFilter import user_data
 import json

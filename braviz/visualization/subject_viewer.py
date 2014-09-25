@@ -1088,11 +1088,12 @@ class TractographyManager(object):
                 self.__color_bar_widget.RepositionableOn()
                 iren = self.ren.GetRenderWindow().GetInteractor()
                 self.__color_bar_widget.SetInteractor(iren)
+                self.__color_bar_widget.On()
 
                 rep = self.__color_bar_widget.GetRepresentation()
                 coord1 = rep.GetPositionCoordinate()
                 coord2 = rep.GetPosition2Coordinate()
-                coord1.SetValue(0.89, 0.05)
+                coord1.SetValue(0.85, 0.05)
                 coord2.SetValue(0.1, 0.9)
 
 
@@ -1267,6 +1268,10 @@ class TraculaManager(object):
             return
         ac= trio[2]
         ac.SetVisibility(0)
+
+    @property
+    def active_bundles(self):
+        return self.__active_bundles_set
 
 class SurfaceManager(object):
     def __init__(self, reader, ren, iren, initial_subj=None, initial_space="World", picker=None,
