@@ -141,7 +141,8 @@ var svg = d3.select("body").append("svg:svg")
       .data(flowers)
     .enter().append("svg:path")
       .attr("d", path)
-      .attr("class", function(d) { return d.species; }).append("svg:title").text(function(x) {return x.code;});
+      .attr("class", function(d) { return d.species; });
+      foreground.append("svg:title").text(function(x) {return x.code;});
 
   // Add a group element for each trait.
   var g = svg.selectAll(".trait")
