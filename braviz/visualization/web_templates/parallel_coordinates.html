@@ -206,15 +206,31 @@ function brush() {
       return extents[i][0] <= d[p] && d[p] <= extents[i][1];
     });
   });
+  var selected_codes="";
+  var f2 = foreground[0];
+  for (i=0;i<f2.length;i++){
+  var p=f2[i];
+  if (! p.classList.contains("fade"))
+  {
+  var t = p.children[0];
+  var code = t.textContent;
+  selected_codes+=code+" ";
+  }
+  }
+    console.log(selected_codes);
+  var selection_div = document.getElementById("selected");
+  selection_div.innerHTML=selected_codes;
 }
-
-
-
-
 
     </script>
 <div class="missing">
     Missing Values: {{missing}}
+</div>
+
+<div id="selection_div">
+<h3>Selection:</h3>
+<p id="selected">
+</p>
 </div>
 
 </body>
