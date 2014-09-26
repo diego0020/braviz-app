@@ -1,5 +1,7 @@
 from __future__ import division
 
+__author__ = 'Diego'
+
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt4 import QtCore
@@ -10,12 +12,11 @@ from braviz.interaction.structure_metrics import solve_laterality
 import braviz.readAndFilter.tabular_data
 import seaborn as sbs
 from itertools import izip
+import colorbrewer
 from braviz.interaction import structure_metrics
 from functools import wraps
 import numpy as np
 import logging
-
-__author__ = 'Diego'
 
 # TODO: Abstract viewer classes
 
@@ -85,12 +86,11 @@ class SubjectViewer(object):
         self.__surface_manager = SurfaceManager(self.reader, self.ren, self.iren, picker=self.picker)
 
         self.__contours_manager = FmriContours(self.ren)
-        self.__tracula_manager = TraculaManager(self.reader,self.ren,self.__current_subject,self.__current_space)
         fmri_lut = self.reader.get("fmri",None,lut=True)
         self.__contours_manager.set_lut(fmri_lut)
         self.__contours_paradigm = None
         self.__contours_contrast = None
-        self.set_contours_visibility(False,skip_render=True)
+        self.set_contours_visibility(False)
         self.__contours_img = None
         #reset camera and render
         #self.reset_camera(0)
@@ -118,10 +118,6 @@ class SubjectViewer(object):
     @property
     def contours(self):
         return self.__contours_manager
-
-    @property
-    def tracula(self):
-        return self.__tracula_manager
 
     def show_cone(self):
         """Useful for testing"""
@@ -174,11 +170,6 @@ class SubjectViewer(object):
         except Exception as e:
             log.exception(e)
             errors.append("Contours")
-        try:
-            self.tracula.reload_bundles(self.__current_subject,self.__current_space,skip_render=True)
-        except Exception as e:
-            log.exception(e)
-            errors.append("Tracula")
 
         self.ren_win.Render()
         if len(errors) > 0:
@@ -205,10 +196,6 @@ class SubjectViewer(object):
             log.error(e)
         try:
             self.surface.set_space(new_space, skip_render=True)
-        except Exception as e:
-            log.error(e)
-        try:
-            self.tracula.reload_bundles(self.__current_subject,new_space, skip_render=True)
         except Exception as e:
             log.error(e)
 
@@ -724,16 +711,14 @@ class ModelManager(object):
 
     def __get_laterality(self):
         lat_var_idx = braviz.readAndFilter.tabular_data.LATERALITY
+        lat_dict = {1: 'r', 2: 'l'}
         log = logging.getLogger(__file__)
         try:
             label = braviz.readAndFilter.tabular_data.get_var_value(lat_var_idx, self.__current_subject)
         except Exception:
             log.warning("Laterality no found for subject %s, assuming right handed" % self.__current_subject)
             label = 1
-        if int(label) == braviz.readAndFilter.tabular_data.LEFT_HANDED:
-            return "l"
-        else:
-            return "r"
+        return lat_dict.get(label, 'r')
 
     @do_and_render
     def reload_models(self, subj=None, space=None):
@@ -862,10 +847,8 @@ class ModelManager(object):
                 prop.SetColor(self.__current_color)
 
     def get_scalar_metrics(self, metric_name):
-        models = self.__active_models_set
-        rl_models = [solve_laterality(self.__laterality, m) for m in models]
         try:
-            value = structure_metrics.get_mult_struct_metric(self.__reader,rl_models ,
+            value = structure_metrics.get_mult_struct_metric(self.__reader, self.__active_models_set,
                                                              self.__current_subject, metric_name)
         except Exception as e:
             log = logging.getLogger(__name__)
@@ -900,7 +883,6 @@ class TractographyManager(object):
         self.__bundle_labels = None
 
         self.__color_bar_actor = None
-        self.__color_bar_widget = None
 
     @do_and_render
     def set_subject(self, subj):
@@ -1082,27 +1064,38 @@ class TractographyManager(object):
             if self.__color_bar_actor is None:
                 self.__color_bar_actor = vtk.vtkScalarBarActor()
                 self.__color_bar_actor.SetNumberOfLabels(4)
+                # self.__color_bar_actor.SetMaximumWidthInPixels(100)
+                #self.__color_bar_actor.GetTitleTextProperty().SetFontSize(10)
+                #self.__color_bar_actor.GetLabelTextProperty().SetFontSize(10)
+                # self.__color_bar_actor.GetTitleTextProperty().SetColor(1,0,0)
+                # self.__color_bar_actor.GetLabelTextProperty().SetColor(1,0,0)
+
 
                 self.__color_bar_widget = vtk.vtkScalarBarWidget()
                 self.__color_bar_widget.SetScalarBarActor(self.__color_bar_actor)
                 self.__color_bar_widget.RepositionableOn()
                 iren = self.ren.GetRenderWindow().GetInteractor()
                 self.__color_bar_widget.SetInteractor(iren)
-                self.__color_bar_widget.On()
+
 
                 rep = self.__color_bar_widget.GetRepresentation()
                 coord1 = rep.GetPositionCoordinate()
                 coord2 = rep.GetPosition2Coordinate()
-                coord1.SetValue(0.85, 0.05)
+                # coord1.SetCoordinateSystemToViewport()
+                #coord2.SetCoordinateSystemToViewport()
+                #width, height = self.ren.GetRenderWindow().GetSize()
+                #print width, height
+                coord1.SetValue(0.89, 0.05)
+                #coord1.SetValue(width-110,50)
                 coord2.SetValue(0.1, 0.9)
-
-
+                #coord2.SetValue(width-10,height-50)
+                self.__color_bar_widget.On()
+                #self.ren.AddActor2D(self.__color_bar_actor)
 
             self.__color_bar_actor.SetVisibility(1)
             self.__color_bar_actor.SetLookupTable(self.__lut)
             # self.__color_bar_actor.SetTitle(scalars[:2].upper())
             self.__color_bar_actor.SetTitle("")
-            self.__color_bar_widget.On()
 
 
     def __reload_fibers(self):
@@ -1194,84 +1187,6 @@ class TractographyManager(object):
             return float("nan")
         return float("nan")
 
-
-class TraculaManager(object):
-    def __init__(self,reader,ren,initial_subj=None,initial_space="World"):
-        self.ren = ren
-        if initial_subj is None:
-            initial_subj = reader.get("ids", None)[0]
-        self.__active_bundles_set = set()
-        self.__pd_map_act = dict()
-        self.__current_subject = initial_subj
-        self.__reader = reader
-        self.__current_space = initial_space
-        self.__actor_to_model = {}  # for picking
-
-        # visual attributes
-        self.__opacity = 1
-
-        self.reload_bundles(subj=initial_subj, space=initial_space, skip_render=True)
-
-    @do_and_render
-    def reload_bundles(self,subj,space):
-        self.__current_subject = subj
-        self.__current_space = space
-        log = logging.getLogger(__name__)
-        for b in self.__active_bundles_set:
-            try:
-                self.__load_bundle(b)
-            except Exception as e:
-                log.exception(e)
-                self.__hide_bundle(b)
-
-    @do_and_render
-    def set_bundles(self,bundle_names):
-        wanted_bundles = frozenset(bundle_names)
-        to_add = wanted_bundles - self.__active_bundles_set
-        to_hide = self.__active_bundles_set - wanted_bundles
-
-        for b in to_add:
-            self.__load_bundle(b)
-
-        for b in to_hide:
-            self.__hide_bundle(b)
-
-        self.__active_bundles_set = wanted_bundles
-    @do_and_render
-    def set_opacity(self,int_opacity):
-        for b in self.__active_bundles_set:
-            _,_,ac = self.__pd_map_act[b]
-            ac.GetProperty().SetOpacity(int_opacity/100)
-
-    def __load_bundle(self,bundle_name):
-        trio = self.__pd_map_act.get(bundle_name)
-        if trio is None:
-            pd = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,space=self.__current_space)
-            color = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,color=True)
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.ScalarVisibilityOff()
-            mapper.SetInputData(pd)
-            actor = vtk.vtkActor()
-            actor.SetMapper(mapper)
-            actor.GetProperty().SetColor(color)
-            self.ren.AddActor(actor)
-        else:
-            pd,mapper,actor = trio
-            pd = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,space=self.__current_space)
-            mapper.SetInputData(pd)
-        actor.SetVisibility(1)
-        self.__pd_map_act[bundle_name]=(pd,mapper,actor)
-
-    def __hide_bundle(self,bundle_name):
-        trio = self.__pd_map_act.get(bundle_name)
-        if trio is None:
-            return
-        ac= trio[2]
-        ac.SetVisibility(0)
-
-    @property
-    def active_bundles(self):
-        return self.__active_bundles_set
 
 class SurfaceManager(object):
     def __init__(self, reader, ren, iren, initial_subj=None, initial_space="World", picker=None,
@@ -1616,10 +1531,10 @@ class OrthogonalPlanesViewer(object):
         self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
         self.__image_planes = (self.__x_image_manager, self.__y_image_manager, self.__z_image_manager)
-        self.x_image.change_image_orientation(0,skip_render=True)
-        self.y_image.change_image_orientation(1,skip_render=True)
-        self.z_image.change_image_orientation(2,skip_render=True)
-        self.hide_image(skip_render=True)
+        self.x_image.change_image_orientation(0)
+        self.y_image.change_image_orientation(1)
+        self.z_image.change_image_orientation(2)
+        self.hide_image()
 
         self.__sphere = SphereProp(self.ren)
         self.__cortex = SurfaceManager(self.reader, self.ren, self.iren, self.__current_subject, self.__current_space,
@@ -1831,7 +1746,7 @@ class MeasurerViewer(object):
 
         self.__measure_axis = None
         self.__pax1, self.__pax2 = None, None  # perpendicular to measure axis
-        self.set_measure_axis(2,skip_render=True)
+        self.set_measure_axis(2)
         # state
         self.__current_subject = None
         self.__current_space = "talairach"
@@ -1846,12 +1761,12 @@ class MeasurerViewer(object):
         self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
         self.__image_planes = (self.__x_image_manager, self.__y_image_manager, self.__z_image_manager)
-        self.x_image.change_image_orientation(0,skip_render=True)
-        self.y_image.change_image_orientation(1,skip_render=True)
-        self.z_image.change_image_orientation(2,skip_render=True)
+        self.x_image.change_image_orientation(0)
+        self.y_image.change_image_orientation(1)
+        self.z_image.change_image_orientation(2)
         #for pw in self.__image_planes:
         #    pw.image_plane_widget.InteractionOff()
-        self.hide_image(skip_render=True)
+        self.hide_image()
 
         self.__placed = False
         self.measure_widget = vtk.vtkDistanceWidget()
@@ -1863,9 +1778,10 @@ class MeasurerViewer(object):
         self.measure_repr.SetRulerDistance(5.0)
         self.measure_widget.SetRepresentation(self.measure_repr)
         self.measure_widget.SetInteractor(self.iren)
-
-        self.obs_id, self.obs_id2, self.obs_id3 = None, None, None
-
+        self.measure_widget.SetPriority(self.x_image.image_plane_widget.GetPriority()+1)
+        self.obs_id = self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent, self.restrict_points_to_plane)
+        self.obs_id2 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.restrict_points_to_plane)
+        self.obs_id3 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.emit_distance_changed_signal)
 
     def restrict_points_to_plane(self, object, event):
         modifiers = QApplication.keyboardModifiers()
@@ -1924,10 +1840,6 @@ class MeasurerViewer(object):
 
 
     def finish_initializing(self):
-        self.measure_widget.SetPriority(self.x_image.image_plane_widget.GetPriority()+1)
-        self.obs_id = self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent, self.restrict_points_to_plane)
-        self.obs_id2 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.restrict_points_to_plane)
-        self.obs_id3 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.emit_distance_changed_signal)
         self.link_window_level()
         self.ren.ResetCameraClippingRange()
         self.ren.ResetCamera()
@@ -2356,7 +2268,7 @@ class fMRI_viewer(object):
 
         self.__image_loaded = False
         #reset camera and render
-        self.reset_camera(0,skip_render=True)
+        self.reset_camera(0)
         #widget, signal handling
         self.__widget = widget
 
@@ -2492,7 +2404,6 @@ class fMRI_viewer(object):
         6: ((-3, 0, 3), (-3, 0, -252), (0, 1, 0)),
     }
 
-    @do_and_render
     def reset_camera(self, position):
         """resets the current camera to standard locations. Position may be:
         0: initial 3d view
@@ -2511,7 +2422,7 @@ class fMRI_viewer(object):
         cam1.SetViewUp(viewup)
 
         self.ren.ResetCameraClippingRange()
-
+        self.ren_win.Render()
 
     def get_camera_parameters(self):
         cam1 = self.ren.GetActiveCamera()

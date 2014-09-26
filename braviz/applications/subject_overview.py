@@ -820,6 +820,12 @@ class SubjectOverviewApp(QMainWindow):
         tractography_state["active_bundle"] = self.current_fibers
         state["tractography_state"] = tractography_state
 
+        #tracula
+        tracula_state = dict()
+        tracula_state["bundles"]=self.vtk_viewer.tracula.active_bundles
+        tracula_state["opacity"]=self.ui.tracula_opac.value()
+        state["tracula_state"]=tracula_state
+
         #surface panel
         surfaces_state = self.surfaces_state
         state["surf_state"] = surfaces_state
@@ -1030,6 +1036,15 @@ class SubjectOverviewApp(QMainWindow):
                     name = self.fibers_list_model.get_bundle_name(current)
                     self.ui.current_bundle_tag.setText(name)
                 self.update_fiber_scalars()
+
+        #tracula_panel
+        tracula_state = wanted_state.get("tracula_state")
+        if tracula_state is not None:
+            bundles = tracula_state["bundles"]
+            opac = tracula_state["opacity"]
+            self.tracula_model.set_selection(bundles)
+            self.ui.tracula_opac.setValue(opac)
+            self.vtk_viewer.tracula.set_opacity(opac)
 
         #surface panel
         surface_state = wanted_state.get("surf_state")

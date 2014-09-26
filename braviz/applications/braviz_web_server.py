@@ -28,7 +28,7 @@ class MainHandler(tornado.web.RequestHandler):
 
         cols = data.columns
         cols2=list(cols)
-        cols2[0]="species"
+        cols2[0]="category"
         data.columns=cols2
         col0 = cols[0]
         labels = tab_data.get_labels_dict(vars[0])
@@ -38,16 +38,37 @@ class MainHandler(tornado.web.RequestHandler):
 
         col0 = cols2[0]
         data[col0]=data[col0].map(labels)
+        data["code"]=data.index
 
         json_data = data.to_json(orient="records")
 
         caths = data[col0].unique()
         caths_json = json.dumps(list(caths))
 
-        attrs=list(data.columns[1:])
+        #1: cathegories, 2: code
+        attrs=list(data.columns[1:-1])
         attrs_json = json.dumps(attrs)
         self.render("parallel_coordinates.html",data=json_data,caths=caths_json,vars=attrs_json,cath_name=col0,
                     missing=missing)
+
+    def post(self, *args, **kwargs):
+        print "got post"
+        name=self.get_body_argument("sample_name")
+        desc=self.get_body_argument("sample_desc","")
+        subjs=self.get_body_argument("sample_subjects")
+        print name
+        print desc
+        print subjs
+        if user_data.sample_name_existst(name):
+            print "Name already exists"
+            self.send_error(409)
+        else:
+            print "Name is unique"
+            subj_list=map(int,subjs.split(","))
+            print subj_list
+            user_data.save_sub_sample(name,subj_list,desc)
+            self.write("ok")
+
 
 settings = {
     "static_path":os.path.join(os.path.dirname(braviz.__file__),"visualization/web_static"),

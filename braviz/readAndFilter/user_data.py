@@ -135,6 +135,13 @@ def get_samples_df():
     data = sql.read_sql(q, conn, index_col="sample_idx", coerce_float=False)
     return data
 
+def sample_name_existst(sample_name):
+    conn = get_connection()
+    q="SELECT count(*) FROM subj_samples WHERE sample_name = ?"
+    cur = conn.execute(q,(sample_name,))
+    res = cur.fetchone()
+    return res[0] > 0
+
 def get_sample_data(sample_idx):
     conn=get_connection()
     q = "SELECT sample_data FROM subj_samples WHERE sample_idx = ?"

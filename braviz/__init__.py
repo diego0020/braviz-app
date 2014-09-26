@@ -7,6 +7,7 @@ The interaction module contains functions for performing common interactions wit
 import platform
 import logging
 
+
 import vtk
 
 
@@ -29,7 +30,6 @@ if platform.system() == 'Windows':
         __fow.FlushOn();
         log = logging.getLogger(__name__)
         log.info("vtk errors going to %s"%os.path.realpath(__error_file))
-
 
 
 import readAndFilter
