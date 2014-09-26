@@ -41,12 +41,15 @@ def get_connection(reader=None):
     conn = sqlite3.connect(path)
     _connection = conn
     if LATERALITY is None:
-        _conf = get_config("../applications")
-        _lat_name,_left_labell = _conf.get_laterality()
-        cur = _connection.execute("SELECT var_idx from variables where var_name = ?",(_lat_name,))
-        res = cur.fetchone()
-        LATERALITY = res[0]
-        LEFT_HANDED = _left_labell
+        try:
+            _conf = get_config("../applications")
+            _lat_name,_left_labell = _conf.get_laterality()
+            cur = _connection.execute("SELECT var_idx from variables where var_name = ?",(_lat_name,))
+            res = cur.fetchone()
+            LATERALITY = res[0]
+            LEFT_HANDED = _left_labell
+        except Exception as e:
+            pass
     return conn
 
 
