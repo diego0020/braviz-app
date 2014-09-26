@@ -5,14 +5,28 @@ import os
 import braviz
 import braviz.readAndFilter.tabular_data as tab_data
 from braviz.readAndFilter import user_data
+from braviz.interaction.config_file import get_config
 import json
 
 
 __author__ = 'da.angulo39'
 
+default_variables=None
+
+def get_default_vars():
+    global default_variables
+    conf = get_config(__file__)
+    vars=conf.get_default_variables()
+    var_keys=("nom1","nom2","ratio1","ratio2")
+    all_vars=map(vars.get,var_keys)
+    codes=map(tab_data.get_var_idx,all_vars)
+    def_vars=",".join(map(str,codes))
+    default_variables=def_vars
+
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        vars_s = self.get_query_argument("vars","1982,1002,1003,1004")
+
+        vars_s = self.get_query_argument("vars",default_variables)
         sample = self.get_query_argument("sample",None)
         vars=map(int,vars_s.split(","))
         data = tab_data.get_data_frame_by_index(vars)
@@ -76,6 +90,7 @@ settings = {
 }
 
 if __name__ == "__main__":
+    get_default_vars()
     application = tornado.web.Application([
     (r"/", MainHandler),
     ],
