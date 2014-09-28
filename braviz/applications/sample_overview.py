@@ -251,7 +251,11 @@ class SampleOverview(QtGui.QMainWindow):
 
     def add_subject_viewers(self, scenario=None):
         #create parents:
-        for level in self.scalar_data[self.nominal_name].unique():
+        levels = self.scalar_data[self.nominal_name].unique()
+        print levels
+        for level in levels:
+            if np.isnan(level):
+                level = "nan"
             row_frame = QtGui.QFrame(self.ui.view)
             self.ui.row_layout.addWidget(row_frame, 1)
             row_lay = QtGui.QHBoxLayout()
@@ -285,6 +289,8 @@ class SampleOverview(QtGui.QMainWindow):
 
         for subj in self.sample:
             level = self.scalar_data.ix[subj, self.nominal_name]
+            if np.isnan(level):
+                level = "nan"
             contents = self.row_widget_contents[level]
             viewer = self.__create_viewer(subj, contents)
             self.viewers_dict[subj] = viewer.subject_viewer
@@ -295,6 +301,8 @@ class SampleOverview(QtGui.QMainWindow):
         for subj in self.sample:
             viewer = self.widgets_dict[subj]
             level = self.scalar_data.ix[subj, self.nominal_name]
+            if np.isnan(level):
+                level = "nan"
             i = self.inside_layouts[level].columnCount()
             self.inside_layouts[level].addWidget(viewer, 0, i)
             self.inside_layouts[level].setColumnMinimumWidth(i, 400)

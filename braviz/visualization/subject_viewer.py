@@ -730,7 +730,7 @@ class ModelManager(object):
         except Exception:
             log.warning("Laterality no found for subject %s, assuming right handed" % self.__current_subject)
             label = 1
-        if int(label) == braviz.readAndFilter.tabular_data.LEFT_HANDED:
+        if label is None or (int(label) == braviz.readAndFilter.tabular_data.LEFT_HANDED):
             return "l"
         else:
             return "r"
