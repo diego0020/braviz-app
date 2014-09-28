@@ -170,7 +170,8 @@ class VarAndGiniModel(QAbstractTableModel):
                 self.calculate_gini_indexes()
                 self.ginni_calculated = True
             self.data_frame.sort("Ginni", ascending=reverse, inplace=True)
-            df2 = self.data_frame[self.filtered_index]
+            index2 = [i for i in self.data_frame.index  if i in self.filtered_index]
+            df2 = self.data_frame.loc[index2]
             df2.sort("Ginni", ascending=reverse, inplace=True)
             self.filtered_index = df2.index
         self.modelReset.emit()

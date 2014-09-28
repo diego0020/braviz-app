@@ -51,7 +51,8 @@ def calculate_ginni_index(outcome, data_frame):
     permutation = np.random.permutation(range(len(values_data_frame)))
     values_data_frame = values_data_frame.iloc[permutation]
     values_data_frame.fillna(method="pad", inplace=True)
-    values_data_frame = values_data_frame.iloc[reversed(permutation)]
+    rev_perm = list(reversed(permutation))
+    values_data_frame = values_data_frame.iloc[rev_perm]
     values_data_frame.fillna(method="pad", inplace=True)
     #just in case there are still nas
     values_data_frame.dropna(0, inplace=True)
