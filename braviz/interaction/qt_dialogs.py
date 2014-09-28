@@ -5,6 +5,7 @@ from functools import wraps
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 import numpy as np
+import pandas as pd
 import itertools
 import cPickle
 import logging
@@ -274,8 +275,9 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
 
     def update_plot(self, data):
-        self.matplot_widget.compute_scatter(data.get_values(),
-                                            x_lab=self.var_name, y_lab="jitter",urls=data.index.get_values())
+        data2=data.dropna()
+        self.matplot_widget.compute_scatter(data2.get_values(),
+                                            x_lab=self.var_name, y_lab="jitter",urls=data2.index.get_values())
 
 
     def select_and_return(self, *args):
@@ -338,6 +340,8 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
     def update_plot(self, data=None):
         if type(data) == int:
             data = self.data
+        else:
+            data=data.dropna()
         default_plot = ("scatter",None)
         if self.available_plots is None:
             plot_type = default_plot
@@ -347,7 +351,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
         print plot_type
         if plot_type[0]=="scatter":
             if plot_type[1] is None:
-                self.matplot_widget.compute_scatter(data,x_lab=self.var_name,y_lab="jitter")
+                self.matplot_widget.compute_scatter(data,x_lab=self.var_name,y_lab="jitter",urls=data.index)
                 self.matplot_widget.limits_vertical = True
             else:
                 x = plot_type[1]
@@ -355,7 +359,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
                 data = braviz_tab_data.get_data_frame_by_name([x,y])
                 data = data.loc[self.sample]
                 data.dropna(inplace=True)
-                self.matplot_widget.compute_scatter(data[x],data[y],x_lab=x,y_lab=y)
+                self.matplot_widget.compute_scatter(data[x],data[y],x_lab=x,y_lab=y,urls=data.index)
                 self.matplot_widget.limits_vertical = False
         elif plot_type[0]=="box":
             x = plot_type[1]
@@ -372,7 +376,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
                 data_list.append(data_col.get_values())
                 ticks.append(labels_dict.get(i, str(i)))
             #print data_list
-            self.matplot_widget.make_box_plot(data_list, x, y, ticks)
+            self.matplot_widget.make_box_plot(data_list, x, y, ticks,url=data.index)
             self.matplot_widget.limits_vertical = False
         elif plot_type[0]=="interaction":
             factors = plot_type[1].split("*")
@@ -548,7 +552,15 @@ class MatplotWidget(FigureCanvas):
     def compute_scatter(self, data, data2=None, x_lab=None, y_lab=None, colors=None, labels=None, urls=None,
                         xlims=None):
         sns.set_style("darkgrid")
+
+
         self.fig.clear()
+        if len(data) == 0:
+            return
+        if isinstance(data,pd.DataFrame):
+            assert pd.isnull(data).sum().sum() == 0
+        else:
+            assert np.sum(np.isnan(data))==0
         self.axes=self.fig.add_subplot(1,1,1)
         self.axes.clear()
         self.draw()
@@ -902,7 +914,8 @@ class RegressorSelectDialog(VariableSelectDialog):
                                                 x_lab=self.var_name, y_lab=self.outcome_var,
                                                 urls=both_data.index.get_values())
         else:
-            self.matplot_widget.compute_scatter(data.get_values(),urls=data.index.get_values())
+            data2=data.dropna()
+            self.matplot_widget.compute_scatter(data2.get_values(),urls=data2.index.get_values())
 
     def finish_close(self):
         self.done(self.Accepted)
@@ -1100,6 +1113,7 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
 
 
     def update_plot(self, data):
+        data=data.dropna()
         self.jitter = np.random.random(len(data))
         data_values = data.get_values()
         xlimits = get_min_max_values_by_name(self.var_name)
