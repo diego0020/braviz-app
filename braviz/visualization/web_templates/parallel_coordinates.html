@@ -131,9 +131,12 @@ var svg = d3.select("body").append("svg:svg")
   traits.forEach(function(d) {
     // Coerce values to numbers.
     flowers.forEach(function(p) { p[d] = +p[d]; });
-
+    var ex = d3.extent(flowers, function(p) { return p[d]; });
+    var range = ex[1]-ex[0];
+    ex[0] = ex[0]-0.02*range;
+    ex[1] = ex[1]+0.02*range;
     y[d] = d3.scale.linear()
-        .domain(d3.extent(flowers, function(p) { return p[d]; }))
+        .domain(ex)
         .range([h, 0]);
 
     y[d].brush = d3.svg.brush()
