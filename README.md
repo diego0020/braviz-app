@@ -20,5 +20,7 @@ Python packages:
 - seaborn
 - rpy2 (for anova, linear model)
 - tornado (for parallel coordinates)
+- xlrd (to read excel files)
+- XlsxWriter (to write excel files)
 
 

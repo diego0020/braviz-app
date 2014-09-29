@@ -42,7 +42,7 @@ def get_connection(reader=None):
     _connection = conn
     if LATERALITY is None:
         try:
-            _conf = get_config("../applications")
+            _conf = get_config(os.path.join(os.path.dirname(__file__),"../applications"))
             _lat_name,_left_labell = _conf.get_laterality()
             cur = _connection.execute("SELECT var_idx from variables where var_name = ?",(_lat_name,))
             res = cur.fetchone()
