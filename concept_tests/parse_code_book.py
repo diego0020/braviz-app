@@ -1,9 +1,10 @@
-__author__ = 'Diego'
 import os
 from bs4 import BeautifulSoup
 
-# Prerequisite: Export the codebook as an xhtml file using libre office (ms could produce a different xhtml structure)
+__author__ = 'Diego'
 
+# Prerequisite: Export the codebook as an xhtml file using libre office (ms could produce a different xhtml structure)
+# NOTE: consider using parse spss instead
 
 def get_row_tokens(r):
     cols = r.find_all("span")
@@ -52,16 +53,10 @@ def send_to_db(var_name,var_desc,var_real,labels=None):
         if labels is  not None:
             print "CodeBook: %s"%labels
             #save from codebook?
-<<<<<<< local
-            #ans = raw_input("Save code book labels [y/N]? ")
-            #if True or ans.startswith("y"):
-            tabular_data.save_nominal_labels(var_idx,labels.items())
-=======
             ans = raw_input("Save code book labels [y/N]? ")
             if ans.startswith("y"):
                 pass
                 #tabular_data.save_nominal_labels(var_idx,labels.items())
->>>>>>> other
 
 
 def parse_int(s):
@@ -69,13 +64,8 @@ def parse_int(s):
     return int(f)
 
 def process_code_book():
-<<<<<<< local
     os.chdir("/home/diego/Downloads")
     with open("libro de codigos.xhtml") as html_file:
-=======
-    os.chdir(r"C:\Users\da.angulo39\Documents")
-    with open("librodecodigos49_f.htm") as html_file:
->>>>>>> other
         soup = BeautifulSoup(html_file,"xml")
 
     tables = soup.find_all("table")
