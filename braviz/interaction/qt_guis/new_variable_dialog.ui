@@ -131,31 +131,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QFrame" name="details_frame">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>125</height>
-         </size>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <widget class="QWidget" name="verticalLayoutWidget">
-         <property name="geometry">
-          <rect>
-           <x>30</x>
-           <y>40</y>
-           <width>160</width>
-           <height>80</height>
-          </rect>
-         </property>
-         <layout class="QVBoxLayout" name="details_layout"/>
-        </widget>
-       </widget>
+       <widget class="QFrame" name="details_frame"/>
       </item>
       <item>
        <widget class="QFrame" name="frame_4">
@@ -166,7 +142,16 @@
          <enum>QFrame::Raised</enum>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <property name="margin">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
           <number>0</number>
          </property>
          <item>

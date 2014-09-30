@@ -500,7 +500,7 @@ class NominalVariablesMeta(QAbstractTableModel):
             return
         self.var_name = var_name
         self.names_dict = braviz_tab_data.get_names_label_dict(var_name)
-        self.labels_list = list(self.names_dict.iterkeys())
+        self.labels_list = self.names_dict.keys()
 
     def save_into_db(self, var_idx=None):
         tuples = ( (k, v) for k, v in self.names_dict.iteritems())
@@ -513,6 +513,11 @@ class NominalVariablesMeta(QAbstractTableModel):
 
     def add_label(self):
         self.labels_list.append(len(self.labels_list) + 1)
+        self.modelReset.emit()
+
+    def set_labels_dict(self,labels_dict):
+        self.labels_list = labels_dict.keys()
+        self.names_dict = labels_dict
         self.modelReset.emit()
 
     def set_checkeable(self, checkeable):
@@ -1245,6 +1250,10 @@ class NewVariableValues(QAbstractTableModel):
         value_tuples = ((s, self.values_dict.get(s, "nan")) for s in self.subjects_list)
         braviz_tab_data.update_variable_values(var_idx, value_tuples)
 
+    def set_values_dict(self,values_dict):
+        self.modelAboutToBeReset.emit()
+        self.values_dict = values_dict
+        self.modelReset.emit()
 
 class SimpleBundlesList(QAbstractListModel):
     def __init__(self):

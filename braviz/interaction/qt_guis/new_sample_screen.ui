@@ -243,7 +243,7 @@
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,4,0,0,1,0">
+      <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,4,0,0,1,0,0">
        <item>
         <widget class="QLabel" name="label_2">
          <property name="text">
@@ -333,6 +333,13 @@
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="create_ind_variable">
+         <property name="text">
+          <string>Create indicator variable</string>
+         </property>
         </widget>
        </item>
       </layout>

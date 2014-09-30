@@ -962,8 +962,11 @@ class NewVariableDialog(QtGui.QDialog):
         self.ui.var_type_combo.currentIndexChanged.connect(self.create_meta_data_frame)
         self.details_ui = None
         self.nominal_model = None
-        self.rational = {}
-        self.create_meta_data_frame(0)
+        #self.clear_details_frame():
+        initial_nominal = 0
+        self.create_real_details()
+        self.ui.var_type_combo.setCurrentIndex(initial_nominal)
+        #self.create_meta_data_frame(initial_nominal)
         self.values_model = braviz_models.NewVariableValues()
         self.ui.values_table.setModel(self.values_model)
         self.ui.var_name_input.editingFinished.connect(self.activate_save_button)
@@ -997,6 +1000,7 @@ class NewVariableDialog(QtGui.QDialog):
             self.nominal_model.update_model(None)
         details_ui = Ui_nominal_details_frame()
         details_ui.setupUi(self.ui.details_frame)
+
         details_ui.labels_names_table.setModel(self.nominal_model)
         add_label_button = QtGui.QPushButton("Add Label")
         details_ui.verticalLayout.addWidget(add_label_button)

@@ -17,7 +17,7 @@ from braviz.interaction.qt_models import SimpleSetModel, SamplesFilterModel, Sam
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.readAndFilter import user_data as braviz_user_data
 from PyQt4 import QtGui, QtCore
-from braviz.interaction.qt_dialogs import VariableSelectDialog
+from braviz.interaction.qt_dialogs import VariableSelectDialog, NewVariableDialog
 import braviz.interaction.qt_models as braviz_models
 import subprocess
 
@@ -104,6 +104,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
         self.ui.add_subset_button.clicked.connect(self.add_subset)
         self.ui.save_button.clicked.connect(self.show_save_dialog)
         self.ui.load_button.clicked.connect(self.show_load_sample)
+        self.ui.create_ind_variable.clicked.connect(self.create_indicator_variable)
 
 
     def change_output_sample(self, new_set):
@@ -257,6 +258,31 @@ class SampleCreateDilog(QtGui.QMainWindow):
         action.triggered.connect(remove_filter)
         global_pos = self.ui.filters.mapToGlobal(pos)
         menu.exec_(global_pos)
+
+    def create_indicator_variable(self):
+        dialog = NewVariableDialog()
+
+        def set_values():
+            all_subjs = braviz_tab_data.get_subjects()
+            values = {}
+            sample = self.output_model.get_elements()
+            for s in all_subjs:
+                values[s] = 1 if s in sample else 0
+            dialog.nominal_model.set_labels_dict({0: "Out",1:"In"})
+            dialog.values_model.set_values_dict(values)
+
+        def change_to_nominal_and_freeze():
+            dialog.nominal_model = braviz_models.NominalVariablesMeta(None)
+            dialog.ui.var_type_combo.setCurrentIndex(1)
+            dialog.create_meta_data_frame(1)
+            dialog.ui.var_type_combo.setEnabled(0)
+            QtCore.QTimer.singleShot(10,set_values)
+
+        QtCore.QTimer.singleShot(0,change_to_nominal_and_freeze)
+
+
+        dialog.exec_()
+        print "wololo"
 
 
 def get_filter_name(params):
@@ -470,6 +496,7 @@ class SaveSubSampleDialog(QtGui.QDialog):
     def before_exiting(self):
         self.name = self.ui.sample_name.text()
         self.description = self.ui.sample_description.toPlainText()
+
 
 
 if __name__ == "__main__":
