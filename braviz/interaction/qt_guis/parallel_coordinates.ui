@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Braviz - Parallel Coordinates</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/icons/parallel_coords_logo.png</normaloff>:/icons/parallel_coords_logo.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
@@ -79,8 +83,8 @@
          </widget>
         </item>
         <item>
-         <widget class="QWebView" name="webView">
-          <property name="url">
+         <widget class="QWebView" name="webView" native="true">
+          <property name="url" stdset="0">
            <url>
             <string>about:blank</string>
            </url>
@@ -99,7 +103,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>26</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -124,6 +128,8 @@
    <header>QtWebKitWidgets/QWebView</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
