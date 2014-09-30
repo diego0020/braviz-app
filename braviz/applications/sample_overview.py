@@ -388,14 +388,24 @@ class SampleOverview(QtGui.QMainWindow):
         self.rational_name = self.scalar_data.columns[0]
         self.nominal_name = self.scalar_data.columns[1]
         self.scalar_data = self.scalar_data.loc[self.sample]
-        self.scalar_data[np.isnan(self.scalar_data[self.rational_name])][self.rational_name]=np.inf
-        self.scalar_data.sort(self.rational_name, inplace=True, ascending=False)
-        self.sample = list(reversed(self.scalar_data.index))
-        log.debug("sample: ")
-        log.debug(self.sample)
+        #self.scalar_data[np.isnan(self.scalar_data[self.rational_name])][self.rational_name]=np.inf
         labels_dict = braviz_tab_data.get_labels_dict(nominal_var_index)
         self.labels_dict = labels_dict
         self.plot_widget.draw_bars(self.scalar_data, orientation="horizontal", group_labels=labels_dict)
+
+        sample_order=list(self.plot_widget.painted_plot.data.index)
+        sample_order+=list(self.scalar_data.index[np.where(np.isnan(self.scalar_data[self.rational_name]))])
+        print sample_order
+        print len(sample_order)
+        print len(self.sample)
+        print self.plot_widget.painted_plot.data
+        self.scalar_data.sort(self.rational_name, inplace=True, ascending=False)
+        self.sample = sample_order
+        log.debug("sample: ")
+        log.debug(self.sample)
+
+
+
 
 
     def select_from_bar(self, subj_id):
