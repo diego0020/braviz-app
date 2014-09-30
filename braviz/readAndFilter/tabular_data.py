@@ -579,3 +579,21 @@ def _recursive_delete_variable(var_idx):
     else:
         print "Done"
 
+def _recursive_delete_subject(subject):
+    """
+    Warning... scenario files and samples may become invalid, this is not reversible
+    """
+    conn = get_connection()
+    try:
+        with conn:
+            #delete values
+            q = "DELETE FROM var_values WHERE subject = ?"
+            conn.execute(q,(subject,))
+            #delete subject
+            q = "DELETE FROM subjects WHERE subject = ?"
+            conn.execute(q,(subject,))
+    except sqlite3.IntegrityError as e:
+        print e.message
+        print "DataBase not modified"
+    else:
+        print "Done"
