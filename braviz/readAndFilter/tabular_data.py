@@ -178,9 +178,7 @@ def get_labels_dict(var_idx):
     """
     cur = conn.execute(q, (int(var_idx),int(var_idx),))
     ans_dict = dict(cur)
-    for k,v in ans_dict.iteritems():
-        if v is None:
-            ans_dict[k]=""
+
     return ans_dict
 
 
