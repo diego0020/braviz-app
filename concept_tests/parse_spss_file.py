@@ -11,8 +11,8 @@ def parse_spss_file(file_name):
     info=reader.getSavFileInfo()
     descriptions = info[5]
     labels =info[6]
-    #for k,v in descriptions.iteritems():
-    #    save_description(k,v)
+    for k,v in descriptions.iteritems():
+        save_description(k,v)
     for k,v in labels.iteritems():
         save_labels(k,v)
 
@@ -20,9 +20,12 @@ def parse_spss_file(file_name):
 def save_description(var_name,desc):
     print "%s : %s"%(var_name,desc)
     try:
-        tabular_data.save_var_description_by_name(var_name,desc)
+        desc2 = unicode(desc,errors="ignore")
+        tabular_data.save_var_description_by_name(var_name,desc2)
     except Exception as e:
+
         print e.message
+        raise
 
 def save_labels(var_name,labels):
     print "==============="

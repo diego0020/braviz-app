@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>631</width>
-    <height>951</height>
+    <height>745</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -60,23 +60,10 @@ QToolButton:hover{
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="2,0,2,0,0,4,0">
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0">
        <property name="margin">
         <number>0</number>
        </property>
-       <item>
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
        <item>
         <widget class="QFrame" name="frame">
          <property name="frameShape">
@@ -158,19 +145,6 @@ QToolButton:hover{
           </item>
          </layout>
         </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item>
         <widget class="QGroupBox" name="groupBox_2">
@@ -493,19 +467,6 @@ Export variables to the database</string>
           </item>
          </layout>
         </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item>
         <widget class="QGroupBox" name="groupBox_4">

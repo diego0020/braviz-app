@@ -401,16 +401,17 @@ class AddFilterDialog(VariableSelectDialog):
 
     def update_plot(self, data, direct=True):
         np.random.seed(982356032)
-        jitter = np.random.rand(len(data))
+        data2 = data.dropna()
+        jitter = np.random.rand(len(data2))
 
-        self.data = data
-        self.data_vals = np.squeeze(data.get_values())
+        self.data = data2
+        self.data_vals = np.squeeze(data2.get_values())
         #print self.data_vals.shape
         self.jitter = jitter
 
-        self.matplot_widget.compute_scatter(data.get_values(), jitter,
+        self.matplot_widget.compute_scatter(data2.get_values(), jitter,
                                             x_lab=self.var_name, y_lab="jitter",
-                                            urls=data.index.get_values())
+                                            urls=data2.index.get_values())
 
     def save_and_accept(self):
         if self.var_name is not None:
