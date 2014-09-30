@@ -1316,6 +1316,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
 
                 if isinstance(value_widget, QtGui.QLabel):
                     label = self.__labels_dict[idx].get(value, "?")
+                    if label is None:
+                        label = "?"
                     value_widget.setText(label)
                 elif isinstance(value_widget, QtGui.QComboBox):
                     label = self.__labels_dict[idx].get(value, "<Unknown>")

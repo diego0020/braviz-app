@@ -78,7 +78,7 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         return url
 
     def vars_changed(self):
-        self.attributes = [braviz_tab_data.get_var_idx(v) for v in self.vars_model.checked_set]
+        self.attributes = [braviz_tab_data.get_var_idx(v) for v in sorted(self.vars_model.checked_set)]
         self.generate_url()
         self.refresh_web_view()
 
