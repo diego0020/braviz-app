@@ -283,6 +283,9 @@ class SubjectViewer(object):
 
         log = logging.getLogger(__name__)
 
+        if self.__contours_hidden:
+            return
+
         if paradigm is None:
             self.__contours_img = None
         else:
@@ -308,7 +311,8 @@ class SubjectViewer(object):
         self.__contours_hidden = not visible
         if self.__contours_hidden:
             self.contours.actor.SetVisibility(0)
-        elif self.__contours_img is not None:
+        else:
+            self.set_fmri_contours_image(self.__contours_paradigm,self.__contours_contrast,skip_render = True)
             self.contours.actor.SetVisibility(1)
 
 

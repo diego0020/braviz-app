@@ -13,6 +13,7 @@ Python packages:
 - colorbrewer
 - numpy
 - scipy
+- pandas
 - rdflib*
 - httplib2*
 - psutil*
@@ -23,4 +24,9 @@ Python packages:
 - xlrd (to read excel files)
 - XlsxWriter (to write excel files)
 
+R packages:
+
+- RandomForest
+- ARM
+- car
 
