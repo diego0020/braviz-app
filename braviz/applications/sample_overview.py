@@ -509,9 +509,10 @@ class SampleOverview(QtGui.QMainWindow):
                 log.error("Bad contours data in wanted state %s"%contours_state)
                 viewer.set_contours_visibility(False)
             else:
-                viewer.set_fmri_contours_image(pdgm,ctrst,skip_render=True)
-                viewer.contours.set_value(val)
                 viewer.set_contours_visibility(vis,skip_render=True)
+                if vis:
+                    viewer.set_fmri_contours_image(pdgm,ctrst,skip_render=True)
+                    viewer.contours.set_value(val)
         else:
             viewer.set_contours_visibility(False)
         QtGui.QApplication.instance().processEvents()
@@ -918,6 +919,8 @@ class SampleOverview(QtGui.QMainWindow):
         for os in old_sample[len(new_sample):]:
             widget = self.widgets_dict.pop(os)
             level = self.scalar_data.ix[os, self.nominal_name]
+            if np.isnan(level):
+                level = "nan"
             lay = self.inside_layouts[level]
             lay.removeWidget(widget)
             widget.deleteLater()
