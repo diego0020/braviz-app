@@ -59,6 +59,13 @@
         <item>
          <widget class="QListView" name="vars_list"/>
         </item>
+        <item>
+         <widget class="QPushButton" name="clear_button">
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QFrame" name="frame_2">
@@ -83,8 +90,8 @@
          </widget>
         </item>
         <item>
-         <widget class="QWebView" name="webView" native="true">
-          <property name="url" stdset="0">
+         <widget class="QWebView" name="webView">
+          <property name="url">
            <url>
             <string>about:blank</string>
            </url>
@@ -103,7 +110,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

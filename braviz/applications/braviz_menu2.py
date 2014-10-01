@@ -15,11 +15,13 @@ try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
     import braviz.interaction.qt_dialogs
     import braviz.applications.qt_sample_select_dialog
-except ImportError:
+except ImportError as e:
     import braviz.interaction.generate_qt_guis
     braviz.interaction.generate_qt_guis.update_guis()
     print "please try again"
-    raise
+    print e.message
+
+
 
 
 
@@ -157,3 +159,4 @@ if __name__ == '__main__':
     import braviz.interaction.generate_qt_guis
     braviz.interaction.generate_qt_guis.update_guis()
     run()
+    dummy_input = raw_input("Press enter to close window")

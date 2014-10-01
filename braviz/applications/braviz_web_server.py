@@ -44,12 +44,17 @@ class MainHandler(tornado.web.RequestHandler):
         cols2=list(cols)
         cols2[0]="category"
         data.columns=cols2
-        col0 = cols[0]
         labels = tab_data.get_labels_dict(vars[0])
+
         for k,v in labels.iteritems():
             if v is None:
                 labels[k]="label%s"%k
+            if v[0].isdigit():
+                v = "c_"+v
+            labels[k]=v.replace(' ','_')
 
+
+        #sanitize label name
         col0 = cols2[0]
         data[col0]=data[col0].map(labels)
         data["code"]=data.index

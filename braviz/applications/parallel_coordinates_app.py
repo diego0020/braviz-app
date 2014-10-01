@@ -59,6 +59,7 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         self.ui.cathegory_combo.setCurrentIndex(0)
         self.ui.webView.loadFinished.connect(self.start_web_server)
         self.ui.actionSelect_Sample.triggered.connect(self.set_sample)
+        self.ui.clear_button.clicked.connect(self.clear_selection)
 
         self.refresh_web_view()
 
@@ -133,6 +134,9 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
             self.sample_id = new_sample
         self.generate_url()
         self.refresh_web_view()
+
+    def clear_selection(self):
+        self.vars_model.clear_selection()
 
 if __name__ == "__main__":
     app = QtGui.QApplication([])

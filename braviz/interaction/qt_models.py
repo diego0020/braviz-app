@@ -112,6 +112,11 @@ class VarListModel(QAbstractListModel):
     def set_highlighted(self,highlighted_name=None):
         self.highlighted_name = highlighted_name
 
+    def clear_selection(self):
+        self.checked_set.clear()
+        self.dataChanged.emit(self.index(0),self.index(self.rowCount()))
+        self.CheckedChanged.emit(sorted(self.checked_set))
+
 class VarAndGiniModel(QAbstractTableModel):
     def __init__(self, outcome_var=None, parent=None):
         QAbstractTableModel.__init__(self, parent)
