@@ -18,7 +18,12 @@ def configure_logger(app_name):
         os.mkdir(path_root)
     log_file = os.path.join(path_root,"%s_%s.txt"%(app_name,time_str))
     format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
-    logging.basicConfig(filename=log_file,level=logging.INFO,format=format_str)
+    try:
+        logging.basicConfig(filename=log_file,level=logging.INFO,format=format_str)
+    except Exception:
+        print "couldnt create file logger in file %s"%log_file
+        print "falling back to console logger"
+        logging.basicConfig(level=logging.INFO,format=format_str)
     logging.captureWarnings(True)
 
 def configure_console_logger(app_name):
