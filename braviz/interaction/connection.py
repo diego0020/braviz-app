@@ -22,7 +22,8 @@ class MessageServer(QtCore.QObject):
 
     def start_server(self):
         context = zmq.Context()
-        context.setsockopt(zmq.IMMEDIATE,1)
+        if zmq.zmq_version_info()[0]>=4:
+            context.setsockopt(zmq.IMMEDIATE,1)
         base_address = "tcp://127.0.0.1" if self._local_only else "tcp://*"
         self._listen_socket = context.socket(zmq.PULL)
         self._listen_socket.bind("%s:*"%base_address)
@@ -72,7 +73,8 @@ class MessageClient(QtCore.QObject):
 
     def connect_to_server(self):
         context = zmq.Context()
-        context.setsockopt(zmq.IMMEDIATE,1)
+        if zmq.zmq_version_info()[0]>=4:
+            context.setsockopt(zmq.IMMEDIATE,1)
         if self._server_pull is not None:
             self._send_socket = context.socket(zmq.PUSH)
             server_address = self._server_pull

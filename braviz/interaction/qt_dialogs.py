@@ -1,6 +1,6 @@
 from __future__ import division
 
-__author__ = 'Diego'
+
 from functools import wraps
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
@@ -53,7 +53,7 @@ import os
 from itertools import izip
 
 import seaborn as sns
-
+__author__ = 'Diego'
 
 class VariableSelectDialog(QtGui.QDialog):
     """Implement common features for Oucome and Regressor Dialogs"""
