@@ -36,6 +36,7 @@ class SampleLoadDialog(QtGui.QDialog):
         self.current_sample = None
         self.current_sample_idx = None
         self.ui.tableView.activated.connect(self.load_action)
+        self.ui.tableView.clicked.connect(self.load_action)
         if new_button:
             self.new_button = QtGui.QPushButton("New")
             self.ui.buttonBox.addButton(self.new_button, QtGui.QDialogButtonBox.ActionRole)

@@ -102,7 +102,8 @@ class SubjectOverviewApp(QMainWindow):
     def start(self):
         self.vtk_widget.initialize_widget()
         #load initial
-        self.vtk_viewer.image.change_image_modality("MRI")
+        self.vtk_viewer.change_current_space("Talairach",skip_render=True)
+        self.vtk_viewer.image.change_image_modality("MRI",skip_render=True)
         self.change_subject(self.__curent_subject)
         #self.vtk_viewer.show_cone()
 
@@ -114,6 +115,7 @@ class SubjectOverviewApp(QMainWindow):
         #view controls
         self.ui.camera_pos.activated.connect(self.position_camera)
         self.ui.space_combo.activated.connect(self.space_change)
+        self.ui.space_combo.setCurrentIndex(1)
 
         #Subject selection
         self.ui.subjects_table.setModel(self.subjects_model)

@@ -15,6 +15,7 @@ from braviz.interaction.config_file import get_config
 
 LATERALITY = None
 LEFT_HANDED = None
+UBICAC = 3143
 
 IMAGE_CODE = 273 # DEPRECATED
 
@@ -501,13 +502,16 @@ def get_image_code(subject):
 
 def get_variable_normal_range(var_idx):
     conn = get_connection()
+    log=logging.getLogger(__name__)
+    #TODO Add ubicac and normal range to configuration file
+    log.warning("This variable code is hardcoded, needs to be generalized")
     #minimum,maximum
     # 10 = UBIC3
     q = """SELECT min(var_values.value), max(cast( var_values.value as numeric)) from var_values JOIN var_values as var_values2
-     WHERE var_values.subject == var_values2.subject and var_values2.var_idx == 10 and var_values2.value == 3
+     WHERE var_values.subject == var_values2.subject and var_values2.var_idx == ? and var_values2.value == 3
      and var_values.var_idx = ?
         """
-    c=conn.execute(q,(var_idx,))
+    c=conn.execute(q,(UBICAC,var_idx))
     values = c.fetchone()
     if values is None:
         return (float("nan"),float("nan"))

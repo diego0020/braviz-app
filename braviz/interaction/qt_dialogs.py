@@ -559,8 +559,23 @@ class MatplotWidget(FigureCanvas):
             return
         if isinstance(data,pd.DataFrame):
             assert pd.isnull(data).sum().sum() == 0
-        else:
+        elif isinstance(data,np.ndarray):
             assert np.sum(np.isnan(data))==0
+        elif isinstance(data,list):
+            for each in data:
+                assert np.sum(np.isnan(each))==0
+        else:
+            raise  ValueError
+        if data2 is not None:
+            if isinstance(data2,pd.DataFrame):
+                assert pd.isnull(data2).sum().sum() == 0
+            elif isinstance(data2,np.ndarray):
+                assert np.sum(np.isnan(data2))==0
+            elif isinstance(data2,list):
+                for each in data2:
+                    assert np.sum(np.isnan(each))==0
+            else:
+                raise  ValueError
         self.axes=self.fig.add_subplot(1,1,1)
         self.axes.clear()
         self.draw()

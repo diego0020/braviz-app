@@ -52,7 +52,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.viewers_dict = {}
         self.widgets_dict = {}
         self.widget_observers = {}
-        self.current_space = "World"
+        self.current_space = "Talairach"
 
         self.inside_layouts = dict()
         self.row_scroll_widgets = dict()
@@ -108,6 +108,8 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.progress_bar = QtGui.QProgressBar()
         self.ui.camera_combo.currentIndexChanged.connect(self.camera_combo_handle)
         self.ui.space_combo.currentIndexChanged.connect(self.set_space_from_menu)
+        self.ui.space_combo.setCurrentIndex(1)
+
         self.ui.action_load_visualization.triggered.connect(self.load_visualization)
         self.ui.nomina_combo.addItem(braviz_tab_data.get_var_name(NOMINAL_VARIABLE))
         self.ui.nomina_combo.setCurrentIndex(1)
