@@ -1,10 +1,9 @@
 from __future__ import division
 import random
-import multiprocessing
-import multiprocessing.connection
+
 import subprocess
 import sys
-import binascii
+
 import datetime
 import os
 import platform
@@ -327,6 +326,7 @@ class LinearModelApp(QMainWindow):
 
     def draw_simple_scatter_plot(self, regressor_name):
         df = braviz_tab_data.get_data_frame_by_name([self.outcome_var_name, regressor_name])
+        df = df.loc[self.sample]
         df.dropna(inplace=True)
         if braviz_tab_data.is_variable_name_real(regressor_name):
             reg_line = True
@@ -394,6 +394,7 @@ class LinearModelApp(QMainWindow):
 
     def draw_two_vars_scatter_plot(self, regressor1, regressor2):
         df = braviz_tab_data.get_data_frame_by_name([regressor1, regressor2, self.outcome_var_name])
+        df = df.loc[self.sample]
         df.dropna(inplace=True)
         df,x_var,hue_var,outcome,labels,qualitative_map,x_labels = self.cut_and_sort(regressor1,regressor2,df)
         if qualitative_map is False:
@@ -628,7 +629,8 @@ class LinearModelApp(QMainWindow):
             log.info(new_sample)
             self.sample = new_sample
             self.sample_model.set_sample(new_sample)
-            self.update_main_plot(self.plot_var_name)
+            self.update_main_plot_from_regressors(self.regressors_model.index(self.plot_name[0],0)
+                                                  ,var_name=self.plot_name[1])
             self.get_missing_values()
 
     def isolate_one(self, isolating_factor, un_standardize=True):

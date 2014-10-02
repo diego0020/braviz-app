@@ -312,10 +312,10 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     robjects.r("f_pval_r <- pf(sum_r$fstatistic[1],sum_r$fstatistic[2],sum_r$fstatistic[3],lower.tail=FALSE)")
     robjects.r("lm_ci_r <- confint(s_lm_r)")
     conf_intervals = r_environment["lm_ci_r"]
-    ses_r = fit_summary.rx2("coefficients").rx[True, 2]
-    cof_t_r = fit_summary.rx2("coefficients").rx[True, 3]
-    cof_p_r = fit_summary.rx2("coefficients").rx[True, 4]
-    conf_95_std = dict((k,(l,h)) for k,l,h in izip(conf_intervals.rx[True,1].names,conf_intervals.rx[True,1],conf_intervals.rx[True,2])  )
+    ses_r = fit_summary.rx2("coefficients").rx(True,2)
+    cof_t_r = fit_summary.rx2("coefficients").rx(True,3)
+    cof_p_r = fit_summary.rx2("coefficients").rx(True,4)
+    conf_95_std = dict((k,(l,h)) for k,l,h in izip(conf_intervals.rx(True,1).names,conf_intervals.rx(True,1),conf_intervals.rx(True,2))  )
 
     #now we have to extract the results
     print standardized_model
