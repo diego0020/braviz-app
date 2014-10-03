@@ -340,8 +340,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
     def update_plot(self, data=None):
         if type(data) == int:
             data = self.data
-        else:
-            data=data.dropna()
+
         default_plot = ("scatter",None)
         if self.available_plots is None:
             plot_type = default_plot
@@ -351,6 +350,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
         print plot_type
         if plot_type[0]=="scatter":
             if plot_type[1] is None:
+                data=data.dropna()
                 self.matplot_widget.compute_scatter(data,x_lab=self.var_name,y_lab="jitter",urls=data.index)
                 self.matplot_widget.limits_vertical = True
             else:
@@ -376,7 +376,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
                 data_list.append(data_col.get_values())
                 ticks.append(labels_dict.get(i, str(i)))
             #print data_list
-            self.matplot_widget.make_box_plot(data_list, x, y, ticks,url=data.index)
+            self.matplot_widget.make_box_plot(data_list, x, y, ticks)
             self.matplot_widget.limits_vertical = False
         elif plot_type[0]=="interaction":
             factors = plot_type[1].split("*")
@@ -553,11 +553,11 @@ class MatplotWidget(FigureCanvas):
                         xlims=None):
         sns.set_style("darkgrid")
 
-
+        log = logging.getLogger(__name__)
         self.fig.clear()
         if len(data) == 0:
-            return
-        if isinstance(data,pd.DataFrame):
+            log.warning("Data Frame is empty")
+        if isinstance(data,(pd.DataFrame,pd.Series)):
             assert pd.isnull(data).sum().sum() == 0
         elif isinstance(data,np.ndarray):
             assert np.sum(np.isnan(data))==0
@@ -567,7 +567,7 @@ class MatplotWidget(FigureCanvas):
         else:
             raise  ValueError
         if data2 is not None:
-            if isinstance(data2,pd.DataFrame):
+            if isinstance(data2,(pd.DataFrame,pd.Series)):
                 assert pd.isnull(data2).sum().sum() == 0
             elif isinstance(data2,np.ndarray):
                 assert np.sum(np.isnan(data2))==0

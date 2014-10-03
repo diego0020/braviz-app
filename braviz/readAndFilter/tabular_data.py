@@ -15,7 +15,7 @@ from braviz.interaction.config_file import get_config
 
 LATERALITY = None
 LEFT_HANDED = None
-UBICAC = 3143
+UBICAC = 5028
 
 IMAGE_CODE = 273 # DEPRECATED
 

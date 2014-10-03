@@ -404,7 +404,7 @@ class AnovaApp(QMainWindow):
 
         is_reg_real = braviz_tab_data.is_variable_name_real(var_name)
         #get outcome min and max values
-        #TODO This has to be updatede when implementing logistic regression
+        #TODO This has to be updated when implementing logistic regression
         miny, maxy = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
         self.plot_x_var = var_name
 
@@ -412,6 +412,9 @@ class AnovaApp(QMainWindow):
             #is nominal
             #create whisker plot
             labels_dict = braviz_tab_data.get_names_label_dict(var_name)
+            for k,v in labels_dict.iteritems():
+                if v is None or len(v)==0:
+                    labels_dict[k]="level_%s"%k
             #print labels_dict
             #get data from
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
@@ -741,8 +744,8 @@ class AnovaApp(QMainWindow):
 
 def run():
     import sys
-    from braviz.utilities import configure_logger
-    configure_logger("anova_app")
+    from braviz.utilities import configure_logger,configure_console_logger
+    configure_console_logger("anova_app")
     args = sys.argv
     scenario = None
     server_broadcast_address = None
