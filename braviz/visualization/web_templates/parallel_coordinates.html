@@ -272,21 +272,25 @@ function brush() {
       return extents[i][0] <= d[p] && d[p] <= extents[i][1];
     });
   });
+
   var selected_codes=[];
   var selected_indeces=[];
   var f2 = foreground[0];
+
   for (i=0;i<f2.length;i++){
   var p=f2[i];
+
   if (! p.classList.contains("fade"))
   {
-  var t = p.children[0];
+  var t=p.getElementsByTagName("title")[0]
   var code = t.textContent;
   selected_indeces.push(i);
   selected_codes.push(code);
   }
   }
-    console.log(selected_codes);
+
   document.save_sample["sample_subjects"].value=selected_codes;
+
   if (make_table_timeout){
     window.clearTimeout(make_table_timeout);
   }
@@ -297,9 +301,11 @@ function brush() {
   var j=selected_indeces[i];
   data2.push(flowers[j]);
   }
+
   tabulate(data2,["code","category"].concat(traits));
   }
   , 1000);
+
 }
 
 function send_sample(data){
