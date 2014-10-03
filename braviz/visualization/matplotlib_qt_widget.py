@@ -61,6 +61,7 @@ class MatplotWidget(FigureCanvas):
 
         self.colors_dict = None
         self.__title = None
+        self.__title_text = None
 
 
     def __get_one_axis(self):
@@ -126,6 +127,8 @@ class MatplotWidget(FigureCanvas):
 
     def refresh_last_plot(self):
         self.painted_plot.redraw()
+        if self.__title_text is not None:
+            self.__title = self.axes.set_title(self.__title_text)
         self.draw()
 
     def show_tooltip(self,event):
@@ -163,6 +166,7 @@ class MatplotWidget(FigureCanvas):
         #if self.__title is not None:
         #    self.__title.remove()
         self.__title = self.axes.set_title(title)
+        self.__title_text = title
         self.draw()
     @property
     def last_viewed_subject(self):
@@ -474,6 +478,7 @@ class ScatterPlot(_AbstractPlot):
         self.x_ticks = x_ticks
         self.subject_markers = None
         self.last_id = None
+        self.to_highlight = None
         self.redraw()
 
     def redraw(self):
@@ -508,10 +513,15 @@ class ScatterPlot(_AbstractPlot):
             keys,labels = zip(*self.x_ticks.iteritems())
             self.axes.set_xticks(keys)
             self.axes.set_xticklabels(labels)
+        if self.to_highlight is not None:
+            self.add_subjects(self.to_highlight)
 
     def add_subjects(self, subjs):
         if self.subject_markers is not None:
-            self.subject_markers.remove()
+            try:
+                self.subject_markers.remove()
+            except ValueError:
+                pass
         subjs_df = self.df.loc[subjs]
         x_coords = subjs_df[self.x_name]
         y_coords = subjs_df[self.y_name]
@@ -522,6 +532,7 @@ class ScatterPlot(_AbstractPlot):
 
     def highlight(self, subj):
         _AbstractPlot.highlight(self, subj)
+        self.to_highlight = [subj]
 
     def get_tooltip(self, event):
         if event.mouseevent.inaxes == self.axes:
