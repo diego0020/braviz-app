@@ -15,7 +15,7 @@ from braviz.interaction.config_file import get_config
 
 LATERALITY = None
 LEFT_HANDED = None
-UBICAC = 5028
+UBICAC = None
 
 IMAGE_CODE = 273 # DEPRECATED
 
@@ -501,17 +501,23 @@ def get_image_code(subject):
     return get_var_value(IMAGE_CODE,subject)
 
 def get_variable_normal_range(var_idx):
+    global UBICAC
     conn = get_connection()
     log=logging.getLogger(__name__)
-    #TODO Add ubicac and normal range to configuration file
-    log.warning("This variable code is hardcoded, needs to be generalized")
     #minimum,maximum
     # 10 = UBIC3
     q = """SELECT min(var_values.value), max(cast( var_values.value as numeric)) from var_values JOIN var_values as var_values2
-     WHERE var_values.subject == var_values2.subject and var_values2.var_idx == ? and var_values2.value == 3
+     WHERE var_values.subject == var_values2.subject and var_values2.var_idx == ? and var_values2.value == ?
      and var_values.var_idx = ?
         """
-    c=conn.execute(q,(UBICAC,var_idx))
+    if UBICAC is None:
+        apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
+        conf = get_config(apps_dir)
+        var_name, label = conf.get_reference_population()
+        u_var_idx = get_var_idx(var_name)
+        UBICAC = (u_var_idx,label)
+
+    c=conn.execute(q,(UBICAC[0],UBICAC[1],var_idx))
     values = c.fetchone()
     if values is None:
         return (float("nan"),float("nan"))

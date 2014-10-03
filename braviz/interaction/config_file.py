@@ -48,6 +48,12 @@ class braviz_config(RawConfigParser):
     def get_default_subject(self):
         return self.getint('Defaults','default_subject')
 
+    def get_reference_population(self):
+        var = self.get('Default_Variables','reference_pop_var')
+        label = self.getint('Default_Variables','reference_pop_label')
+        return var,label
+
+
 
 def get_config(custom_dir=None):
     """A default configuration file is read at the library directory. A secondary configuration file can be set in the custom directory.
@@ -83,11 +89,13 @@ def make_default_config(default_config_name=None):
 
     braviz_conf.add_section("Default_Variables")
     braviz_conf.set('Default_Variables','nominal1','ubicac')
-    braviz_conf.set('Default_Variables','nominal2','sexo5')
-    braviz_conf.set('Default_Variables','numeric1','FSIQ_4')
-    braviz_conf.set('Default_Variables','numeric2','peso5')
-    braviz_conf.set('Default_Variables','laterality','EdinburgHandedness')
+    braviz_conf.set('Default_Variables','nominal2','BIRTH_sexo5')
+    braviz_conf.set('Default_Variables','numeric1','WASI_FSIQ_4')
+    braviz_conf.set('Default_Variables','numeric2','BIRTH_peso5')
+    braviz_conf.set('Default_Variables','laterality','LAT_EdinburgHandedness')
     braviz_conf.set('Default_Variables','left_handed_label',3)
+    braviz_conf.set('Default_Variables','reference_pop_var','ubicac')
+    braviz_conf.set('Default_Variables','reference_pop_label',3)
 
     braviz_conf.add_section("Defaults")
     braviz_conf.set('Defaults','default_subject',119)
