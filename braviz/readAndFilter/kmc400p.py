@@ -28,6 +28,7 @@ import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter import bundles_db
 from hierarchical_fibers import read_logical_fibers
 from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
+from braviz.interaction import config_file
 
 class kmc400Reader(object):
     """
@@ -241,7 +242,7 @@ The path containing this structure must be set."""
                 return vtkImg
 
             interpolate = True
-            if data in {'APARC': 'WMPARC'}:
+            if data in {'APARC', 'WMPARC'}:
                 interpolate = False
                 #print "turning off interpolate"
 
@@ -997,13 +998,14 @@ The path containing this structure must be set."""
 
     def __create_surfer_lut(self):
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
-        #Based on subject 119
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
         if color_dict is not None and len(color_dict)<180:
+            #pass
             color_dict = None
         #color_dict = None
         if color_dict is None:
-            ref = self.get("ids")[0]
+            conf = config_file.get_config(__file__)
+            ref = conf.get_default_subject()
             aparc_img = self.get('APARC', ref)
             aparc_data = aparc_img.get_data()
             aparc_values = set(np.unique(aparc_data.flat))
