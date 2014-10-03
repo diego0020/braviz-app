@@ -85,14 +85,14 @@ class SubjectViewer(object):
         self.__surface_manager = SurfaceManager(self.reader, self.ren, self.iren, picker=self.picker)
 
         self.__contours_manager = FmriContours(self.ren)
-        self.__tracula_manager = TraculaManager(self.reader,self.ren,self.__current_subject,self.__current_space)
-        fmri_lut = self.reader.get("fmri",None,lut=True)
+        self.__tracula_manager = TraculaManager(self.reader, self.ren, self.__current_subject, self.__current_space)
+        fmri_lut = self.reader.get("fmri", None, lut=True)
         self.__contours_manager.set_lut(fmri_lut)
         self.__contours_paradigm = None
         self.__contours_contrast = None
-        self.set_contours_visibility(False,skip_render=True)
+        self.set_contours_visibility(False, skip_render=True)
         self.__contours_img = None
-        #reset camera and render
+        # reset camera and render
         #self.reset_camera(0)
         #        self.ren.Render()
 
@@ -168,14 +168,14 @@ class SubjectViewer(object):
             log.exception(e)
             errors.append("Surfaces")
 
-        #update fmri
+        # update fmri
         try:
             self.set_fmri_contours_image(skip_render=True)
         except Exception as e:
             log.exception(e)
             errors.append("Contours")
         try:
-            self.tracula.reload_bundles(self.__current_subject,self.__current_space,skip_render=True)
+            self.tracula.reload_bundles(self.__current_subject, self.__current_space, skip_render=True)
         except Exception as e:
             log.exception(e)
             errors.append("Tracula")
@@ -208,7 +208,7 @@ class SubjectViewer(object):
         except Exception as e:
             log.error(e)
         try:
-            self.tracula.reload_bundles(self.__current_subject,new_space, skip_render=True)
+            self.tracula.reload_bundles(self.__current_subject, new_space, skip_render=True)
         except Exception as e:
             log.error(e)
 
@@ -271,7 +271,7 @@ class SubjectViewer(object):
         return fp, pos, vu
 
     @do_and_render
-    def set_fmri_contours_image(self,paradigm=None,contrast=None):
+    def set_fmri_contours_image(self, paradigm=None, contrast=None):
         if paradigm is None:
             paradigm = self.__contours_paradigm
         else:
@@ -290,8 +290,8 @@ class SubjectViewer(object):
             self.__contours_img = None
         else:
             try:
-                fmri_img = self.reader.get("fmri",self.__current_subject,space=self.__current_space,
-                                   name=paradigm,contrast=contrast,format="vtk")
+                fmri_img = self.reader.get("fmri", self.__current_subject, space=self.__current_space,
+                                           name=paradigm, contrast=contrast, format="vtk")
             except Exception as e:
                 self.__contours_img = None
                 log.exception(e)
@@ -307,14 +307,13 @@ class SubjectViewer(object):
                 self.contours.actor.SetVisibility(1)
 
     @do_and_render
-    def set_contours_visibility(self,visible):
+    def set_contours_visibility(self, visible):
         self.__contours_hidden = not visible
         if self.__contours_hidden:
             self.contours.actor.SetVisibility(0)
         else:
-            self.set_fmri_contours_image(self.__contours_paradigm,self.__contours_contrast,skip_render = True)
+            self.set_fmri_contours_image(self.__contours_paradigm, self.__contours_contrast, skip_render=True)
             self.contours.actor.SetVisibility(1)
-
 
 
 class FilterArrows(QtCore.QObject):
@@ -322,7 +321,7 @@ class FilterArrows(QtCore.QObject):
 
     def __init__(self, parent=None, other_keys=tuple()):
         super(FilterArrows, self).__init__(parent)
-        keys = {QtCore.Qt.Key_Left, QtCore.Qt.Key_Right,QtCore.Qt.Key_Up,QtCore.Qt.Key_Down}
+        keys = {QtCore.Qt.Key_Left, QtCore.Qt.Key_Right, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down}
         keys.update(other_keys)
         self.__filter_keys = frozenset(keys)
 
@@ -330,7 +329,7 @@ class FilterArrows(QtCore.QObject):
         if QEvent.type() == QEvent.KeyPress:
             q_event_key = QEvent.key()
             if q_event_key in self.__filter_keys:
-                #print "intercepted key"
+                # print "intercepted key"
                 self.key_pressed.emit(QEvent)
                 return True
         return False
@@ -540,11 +539,11 @@ class ImageManager(object):
 
             if fmri_image is None:
                 self.image_plane_widget.Off()
-                #raise
+                # raise
                 raise Exception("%s not available for subject %s" % (paradigm, self.__current_subject))
             fmri_lut = self.reader.get("fMRI", self.__current_subject, lut=True)
             if self.__current_mri_window_level is None:
-                #we need to load the mri image first to get a valid window_level
+                # we need to load the mri image first to get a valid window_level
                 self.__image_plane_widget.SetLookupTable(self.__mri_lut)
                 self.__image_plane_widget.SetInputData(mri_image)
                 self.__current_mri_window_level = [0, 0]
@@ -607,7 +606,7 @@ class ImageManager(object):
                 self.__image_plane_widget.SetWindowLevel(*self.__current_mri_window_level)
         elif modality == "FA":
             # lut = self.reader.get("FA", self.__current_subject, lut=True)
-            #self.__image_plane_widget.SetLookupTable(lut)
+            # self.__image_plane_widget.SetLookupTable(lut)
             lut = self.__mri_lut
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
@@ -760,7 +759,7 @@ class ModelManager(object):
         if len(self.__available_models) == 0:
             log = logging.getLogger(__name__)
             log.warning("No models found")
-            #raise Exception("No models found")
+            # raise Exception("No models found")
 
     def __addModel(self, model_name):
         # if already exists make visible
@@ -798,7 +797,7 @@ class ModelManager(object):
 
                 # actor=self.__pd_map_act[model_name][2]
                 # model_volume=self.__reader.get('model',self.currSubj,name=model_name,volume=1)
-                #add_solid_balloon(balloon_widget, actor, model_name,model_volume)
+                # add_solid_balloon(balloon_widget, actor, model_name,model_volume)
 
     def __removeModel(self, model_name):
         """Deletes internal data structures
@@ -869,7 +868,7 @@ class ModelManager(object):
         models = self.__active_models_set
         rl_models = [solve_laterality(self.__laterality, m) for m in models]
         try:
-            value = structure_metrics.get_mult_struct_metric(self.__reader,rl_models ,
+            value = structure_metrics.get_mult_struct_metric(self.__reader, rl_models,
                                                              self.__current_subject, metric_name)
         except Exception as e:
             log = logging.getLogger(__name__)
@@ -1024,7 +1023,7 @@ class TractographyManager(object):
         n = number_of_bundles
         n = max(n, 3)
 
-        colors = sbs.color_palette("Set1",n)
+        colors = sbs.color_palette("Set1", n)
         self.__bundle_colors = colors
         # print colors
         return colors
@@ -1099,8 +1098,6 @@ class TractographyManager(object):
                 coord2 = rep.GetPosition2Coordinate()
                 coord1.SetValue(0.85, 0.05)
                 coord2.SetValue(0.1, 0.9)
-
-
 
             self.__color_bar_actor.SetVisibility(1)
             self.__color_bar_actor.SetLookupTable(self.__lut)
@@ -1200,7 +1197,7 @@ class TractographyManager(object):
 
 
 class TraculaManager(object):
-    def __init__(self,reader,ren,initial_subj=None,initial_space="World"):
+    def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
         self.ren = ren
         if initial_subj is None:
             initial_subj = reader.get("ids", None)[0]
@@ -1217,7 +1214,7 @@ class TraculaManager(object):
         self.reload_bundles(subj=initial_subj, space=initial_space, skip_render=True)
 
     @do_and_render
-    def reload_bundles(self,subj,space):
+    def reload_bundles(self, subj, space):
         self.__current_subject = subj
         self.__current_space = space
         log = logging.getLogger(__name__)
@@ -1229,7 +1226,7 @@ class TraculaManager(object):
                 self.__hide_bundle(b)
 
     @do_and_render
-    def set_bundles(self,bundle_names):
+    def set_bundles(self, bundle_names):
         wanted_bundles = frozenset(bundle_names)
         to_add = wanted_bundles - self.__active_bundles_set
         to_hide = self.__active_bundles_set - wanted_bundles
@@ -1241,17 +1238,18 @@ class TraculaManager(object):
             self.__hide_bundle(b)
 
         self.__active_bundles_set = wanted_bundles
-    @do_and_render
-    def set_opacity(self,int_opacity):
-        for b in self.__active_bundles_set:
-            _,_,ac = self.__pd_map_act[b]
-            ac.GetProperty().SetOpacity(int_opacity/100)
 
-    def __load_bundle(self,bundle_name):
+    @do_and_render
+    def set_opacity(self, int_opacity):
+        for b in self.__active_bundles_set:
+            _, _, ac = self.__pd_map_act[b]
+            ac.GetProperty().SetOpacity(int_opacity / 100)
+
+    def __load_bundle(self, bundle_name):
         trio = self.__pd_map_act.get(bundle_name)
         if trio is None:
-            pd = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,space=self.__current_space)
-            color = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,color=True)
+            pd = self.__reader.get("TRACULA", self.__current_subject, name=bundle_name, space=self.__current_space)
+            color = self.__reader.get("TRACULA", self.__current_subject, name=bundle_name, color=True)
             mapper = vtk.vtkPolyDataMapper()
             mapper.ScalarVisibilityOff()
             mapper.SetInputData(pd)
@@ -1260,22 +1258,23 @@ class TraculaManager(object):
             actor.GetProperty().SetColor(color)
             self.ren.AddActor(actor)
         else:
-            pd,mapper,actor = trio
-            pd = self.__reader.get("TRACULA",self.__current_subject,name=bundle_name,space=self.__current_space)
+            pd, mapper, actor = trio
+            pd = self.__reader.get("TRACULA", self.__current_subject, name=bundle_name, space=self.__current_space)
             mapper.SetInputData(pd)
         actor.SetVisibility(1)
-        self.__pd_map_act[bundle_name]=(pd,mapper,actor)
+        self.__pd_map_act[bundle_name] = (pd, mapper, actor)
 
-    def __hide_bundle(self,bundle_name):
+    def __hide_bundle(self, bundle_name):
         trio = self.__pd_map_act.get(bundle_name)
         if trio is None:
             return
-        ac= trio[2]
+        ac = trio[2]
         ac.SetVisibility(0)
 
     @property
     def active_bundles(self):
         return self.__active_bundles_set
+
 
 class SurfaceManager(object):
     def __init__(self, reader, ren, iren, initial_subj=None, initial_space="World", picker=None,
@@ -1559,7 +1558,9 @@ class SurfaceManager(object):
         self.__opacity = new_opacity
         for trio in self.__surf_trios.itervalues():
             ac = trio[2]
-            ac.GetProperty().SetOpacity(self.__opacity / 100)
+            opac = self.__opacity / 100
+            print opac
+            ac.GetProperty().SetOpacity(opac)
 
     def hide_cone(self):
         self.__cone_trio[2].SetVisibility(0)
@@ -1620,9 +1621,9 @@ class OrthogonalPlanesViewer(object):
         self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
         self.__image_planes = (self.__x_image_manager, self.__y_image_manager, self.__z_image_manager)
-        self.x_image.change_image_orientation(0,skip_render=True)
-        self.y_image.change_image_orientation(1,skip_render=True)
-        self.z_image.change_image_orientation(2,skip_render=True)
+        self.x_image.change_image_orientation(0, skip_render=True)
+        self.y_image.change_image_orientation(1, skip_render=True)
+        self.z_image.change_image_orientation(2, skip_render=True)
         self.hide_image(skip_render=True)
 
         self.__sphere = SphereProp(self.ren)
@@ -1800,10 +1801,11 @@ class OrthogonalPlanesViewer(object):
 
 class MeasurerViewer(object):
     camera_positions = {
-            0: ((-5.5, -5.5, 4.5), (535,-5.5,4.5), (0, 0, 1)), # SAGITAL
-            1: ((-5.5, -8, 2.8), (-5.5, 530, 2.8), (1, 0, 0)),  #  CORONAL
-            2: ((-3.5, 0, 10), (-3.5, 0, 550), (0, 1, 0)),  #  AXIAL
+        0: ((-5.5, -5.5, 4.5), (535, -5.5, 4.5), (0, 0, 1)),  # SAGITAL
+        1: ((-5.5, -8, 2.8), (-5.5, 530, 2.8), (1, 0, 0)),  # CORONAL
+        2: ((-3.5, 0, 10), (-3.5, 0, 550), (0, 1, 0)),  #  AXIAL
     }
+
     def __init__(self, render_window_interactor, reader, widget):
         self.iren = render_window_interactor
         self.ren_win = render_window_interactor.GetRenderWindow()
@@ -1835,7 +1837,7 @@ class MeasurerViewer(object):
 
         self.__measure_axis = None
         self.__pax1, self.__pax2 = None, None  # perpendicular to measure axis
-        self.set_measure_axis(2,skip_render=True)
+        self.set_measure_axis(2, skip_render=True)
         # state
         self.__current_subject = None
         self.__current_space = "talairach"
@@ -1850,10 +1852,10 @@ class MeasurerViewer(object):
         self.__z_image_manager = ImageManager(self.reader, self.ren, widget=widget, interactor=self.iren,
                                               picker=self.picker)
         self.__image_planes = (self.__x_image_manager, self.__y_image_manager, self.__z_image_manager)
-        self.x_image.change_image_orientation(0,skip_render=True)
-        self.y_image.change_image_orientation(1,skip_render=True)
-        self.z_image.change_image_orientation(2,skip_render=True)
-        #for pw in self.__image_planes:
+        self.x_image.change_image_orientation(0, skip_render=True)
+        self.y_image.change_image_orientation(1, skip_render=True)
+        self.z_image.change_image_orientation(2, skip_render=True)
+        # for pw in self.__image_planes:
         #    pw.image_plane_widget.InteractionOff()
         self.hide_image(skip_render=True)
 
@@ -1928,10 +1930,11 @@ class MeasurerViewer(object):
 
 
     def finish_initializing(self):
-        self.measure_widget.SetPriority(self.x_image.image_plane_widget.GetPriority()+1)
+        self.measure_widget.SetPriority(self.x_image.image_plane_widget.GetPriority() + 1)
         self.obs_id = self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent, self.restrict_points_to_plane)
         self.obs_id2 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.restrict_points_to_plane)
-        self.obs_id3 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.emit_distance_changed_signal)
+        self.obs_id3 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent,
+                                                       self.emit_distance_changed_signal)
         self.link_window_level()
         self.ren.ResetCameraClippingRange()
         self.ren.ResetCamera()
@@ -1954,14 +1957,14 @@ class MeasurerViewer(object):
             sl = self.image_planes[axis].get_current_image_slice()
             if axis == self.__measure_axis and self.__placed:
                 c = self.image_planes[axis].image_plane_widget.GetSlicePosition()
-                p1,p2 = np.zeros(3),np.zeros(3)
+                p1, p2 = np.zeros(3), np.zeros(3)
                 self.measure_repr.GetPoint1WorldPosition(p1)
                 self.measure_repr.GetPoint2WorldPosition(p2)
                 p1[axis] = c
                 p2[axis] = c
                 self.measure_repr.SetPoint1WorldPosition(p1)
                 self.measure_repr.SetPoint2WorldPosition(p2)
-                #self.ren_win.Render()
+                # self.ren_win.Render()
 
         self.x_image.image_plane_widget.AddObserver(self.x_image.image_plane_widget.slice_change_event, slice_movement)
         self.y_image.image_plane_widget.AddObserver(self.y_image.image_plane_widget.slice_change_event, slice_movement)
@@ -1980,16 +1983,16 @@ class MeasurerViewer(object):
         else:
             self.__pax1 = 0
             self.__pax2 = 1
-        self.reset_camera(skip_render = True)
+        self.reset_camera(skip_render=True)
 
     @do_and_render
-    def set_slice_coords(self,coords):
+    def set_slice_coords(self, coords):
         pw = self.image_planes[self.__measure_axis].image_plane_widget
         pw.SetSlicePosition(coords)
         pw.InvokeEvent(pw.slice_change_event)
 
 
-    def emit_distance_changed_signal(self,caller,event):
+    def emit_distance_changed_signal(self, caller, event):
         d = self.distance
         self.__widget.distance_changed_handle(d)
 
@@ -2028,7 +2031,7 @@ class MeasurerViewer(object):
         self.link_window_level()
 
     def get_number_of_slices(self):
-        #TODO: Something is not working right
+        # TODO: Something is not working right
         n_slices = self.x_image.image_plane_widget.GetInput().GetDimensions()
         return n_slices
 
@@ -2046,8 +2049,8 @@ class MeasurerViewer(object):
 
     @do_and_render
     def reset_camera(self):
-        fp,pos,vu = self.camera_positions[self.__measure_axis]
-        self.set_camera(fp,pos,vu,skip_render = True)
+        fp, pos, vu = self.camera_positions[self.__measure_axis]
+        self.set_camera(fp, pos, vu, skip_render=True)
 
     @do_and_render
     def set_camera(self, focal_point, position, view_up):
@@ -2115,8 +2118,9 @@ class MeasurerViewer(object):
             return p2
         else:
             return None
+
     @do_and_render
-    def set_points(self,p1,p2):
+    def set_points(self, p1, p2):
         self.measure_repr.SetPoint1WorldPosition(p1)
         self.measure_repr.SetPoint2WorldPosition(p2)
         if not self.__placed:
@@ -2128,11 +2132,11 @@ class MeasurerViewer(object):
             self.__placed = True
 
     @do_and_render
-    def set_measure_color(self,r,g,b):
-        r,g,b = r/255,g/255,b/255
-        self.measure_repr.GetLineProperty().SetColor(r,g,b)
-        self.measure_repr.GetGlyphActor().GetProperty().SetColor(r,g,b)
-        print r,g,b
+    def set_measure_color(self, r, g, b):
+        r, g, b = r / 255, g / 255, b / 255
+        self.measure_repr.GetLineProperty().SetColor(r, g, b)
+        self.measure_repr.GetGlyphActor().GetProperty().SetColor(r, g, b)
+        print r, g, b
 
 
 class AdditionalCursors(object):
@@ -2271,8 +2275,9 @@ class QMeasurerWidget(QFrame):
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
-    def distance_changed_handle(self,distance):
+    def distance_changed_handle(self, distance):
         self.distance_changed.emit(distance)
+
 
 class QOrthogonalPlanesWidget(QFrame):
     slice_changed = pyqtSignal(int)
@@ -2282,7 +2287,7 @@ class QOrthogonalPlanesWidget(QFrame):
     def __init__(self, reader, parent):
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
-        filt = FilterArrows(self, (QtCore.Qt.Key_C,QtCore.Qt.Key_O))
+        filt = FilterArrows(self, (QtCore.Qt.Key_C, QtCore.Qt.Key_O))
         filt.key_pressed.connect(lambda e: self.event(e))
         self.__qwindow_interactor.installEventFilter(filt)
         self.__reader = reader
@@ -2359,13 +2364,13 @@ class fMRI_viewer(object):
         self.__contours.set_lut(fmri_lut)
 
         self.__image_loaded = False
-        #reset camera and render
-        self.reset_camera(0,skip_render=True)
+        # reset camera and render
+        self.reset_camera(0, skip_render=True)
         #widget, signal handling
         self.__widget = widget
 
     def change_orientation(self, orientation_index):
-        #find cursor position
+        # find cursor position
         pos = self.__cursor.get_coords()
         self.image.change_image_orientation(orientation_index)
         if pos is None:
@@ -2453,7 +2458,8 @@ class fMRI_viewer(object):
 
     @do_and_render
     def set_contour_opacity(self, value):
-        self.__contours.actor.GetProperty().SetOpacity(value / 100)
+        opac = value / 100
+        self.__contours.actor.GetProperty().SetOpacity(opac)
 
     @do_and_render
     def set_contour_visibility(self, value):
@@ -2570,7 +2576,6 @@ class FmriContours(object):
     @property
     def actor(self):
         return self.__actor
-
 
 
 class QFmriWidget(QFrame):

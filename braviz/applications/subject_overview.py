@@ -1,6 +1,5 @@
 from __future__ import division
 
-
 import braviz
 
 import PyQt4.QtGui as QtGui
