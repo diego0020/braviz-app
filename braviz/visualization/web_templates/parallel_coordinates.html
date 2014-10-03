@@ -226,6 +226,9 @@ function path(d) {
 
 
 function tabulate(data, columns) {
+    var sel_title=document.getElementById("selection_div").getElementsByTagName("H3")[0]
+    var title_name = "Selection "+data.length+"/"+flowers.length
+    sel_title.innerText = title_name
     var table = d3.select("#selected").html("").append("table"),
         thead = table.append("thead"),
         tbody = table.append("tbody");
@@ -350,8 +353,9 @@ return false;
   window.onload=function(){
   var data2 = [];
   tabulate(data2,["code","category"].concat(traits));
-
-
+  var sel_title=document.getElementById("selection_div").getElementsByTagName("H3")[0]
+  var title = "Selection 0/"+flowers.length
+  sel_title.innerText=title
   };
 
 
