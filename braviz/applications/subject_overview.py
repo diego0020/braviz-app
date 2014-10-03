@@ -829,6 +829,7 @@ class SubjectOverviewApp(QMainWindow):
         state["tracula_state"]=tracula_state
 
         #surface panel
+        self.update_surfaces_from_gui()
         surfaces_state = self.surfaces_state
         state["surf_state"] = surfaces_state
 
@@ -1051,23 +1052,25 @@ class SubjectOverviewApp(QMainWindow):
         #surface panel
         surface_state = wanted_state.get("surf_state")
         if surface_state is not None:
-            self.surfaces_state = surface_state
+            self.surfaces_state = dict(surface_state)
 
             #update gui
             try:
-                left_active = self.surfaces_state["left"]
+                left_active = surface_state["left"]
                 self.ui.surface_left_check.setChecked(left_active)
-                right_active = self.surfaces_state["right"]
+                right_active = surface_state["right"]
                 self.ui.surface_right_check.setChecked(right_active)
-                surface = self.surfaces_state["surf"]
+                surface = surface_state["surf"]
                 index = self.ui.surface_select_combo.findText(surface)
                 self.ui.surface_select_combo.setCurrentIndex(index)
-                scalar_index = self.surfaces_state["scalar_idx"]
+                scalar_index = surface_state["scalar_idx"]
                 self.ui.surface_scalars_combo.setCurrentIndex(scalar_index)
-                color_bar = self.surfaces_state["color_bar"]
+                color_bar = surface_state["color_bar"]
                 self.ui.surface_color_bar_check.setChecked(color_bar)
-                opacity = self.surfaces_state["opacity"]
+                opacity = surface_state["opacity"]
                 self.ui.surf_opacity_slider.setValue(opacity)
+                self.surfaces_state = surface_state
+
             except KeyError:
                 pass
             else:

@@ -617,7 +617,7 @@ class SampleOverview(QtGui.QMainWindow):
         try:
             viewer.change_subject(img_code)
         except Exception as e:
-            log.warning(e.message)
+            log.exception(e)
         #camera panel
         self.__load_camera_from_scenario(viewer)
         return
