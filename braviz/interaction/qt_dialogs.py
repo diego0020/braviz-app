@@ -596,10 +596,10 @@ class MatplotWidget(FigureCanvas):
 
         if colors is None:
             colors = "#2ca25f"
-            self.axes.scatter(data, data2, color=colors, picker=5, urls=urls)
+            self.axes.scatter(data, data2, color=colors, picker=5, urls=urls, alpha=0.8)
         else:
             for c, d, d2, lbl, url in zip(colors, data, data2, labels, urls):
-                self.axes.scatter(d, d2, color=c, label=lbl, picker=5, urls=url)
+                self.axes.scatter(d, d2, color=c, label=lbl, picker=5, urls=url, alpha=0.8)
             self.axes.legend(numpoints=1, fancybox=True, fontsize="small", )
             self.axes.get_legend().draggable(True, update="loc")
 
