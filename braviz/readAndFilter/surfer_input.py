@@ -250,6 +250,28 @@ def surfLUT2VTK(ctab,names=None):
     for i in xrange(ctab.shape[0]):
         out_lut.SetTableValue(i,(ctab[i,0:4]/255) )
     return out_lut
+
+
+def getBrewerColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
+    """Creates a vtkLookUpTable from color0 to color1 or from color0 to color2 passing by color1
+    The range of the LUT will be (start,end)
+    midpoint and sharpness can be used to change the characteristics of the function between colors
+    (see vtkPiecewiseFunction)
+    if three colors are used, the resulting function will be symmetric, this means the actual midpoint for the second half will be 1-midpoint"""
+    lut=vtk.vtkColorTransferFunction()
+    lut.SetColorSpaceToRGB()
+    if color2:
+        mid=(start+end)/2
+    else:
+        mid=end
+    lut.SetRange(start, end )
+    lut.AddRGBPoint(start, color0[0],color0[1],color0[2],    midpoint,sharpness)
+    lut.AddRGBPoint(mid,   color1[0],color1[1],color1[2], 1 - midpoint,sharpness)
+    if color2:
+        lut.AddRGBPoint(end,   color2[0],color2[1],color2[2],      midpoint,sharpness) #midpoint and sharpness ignored for last point
+    return lut
+
+
 def getColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
     """Creates a vtkLookUpTable from color0 to color1 or from color0 to color2 passing by color1
     The range of the LUT will be (start,end)
@@ -268,23 +290,7 @@ def getColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
     if color2:
         lut.AddRGBPoint(end,   color2[0],color2[1],color2[2],      midpoint,sharpness) #midpoint and sharpness ignored for last point
     return lut
-    
-def getMorphLUT(name):
-    "Returns a LUT appropriate for the display of the given scalars.\nName must be 'curv', 'sulc', 'thickness', 'volume' or 'area'"
-    parameters_d={'curv' : (-2 ,2 , 0.9, 0.0,      (0,1,0)  ,   (0.5,0.5,0.5),   (1,0,0)),
-                  'avg_curv' : (-2 ,2 , 0.9, 0.0,      (0,1,0)  ,   (0.5,0.5,0.5),   (1,0,0)),
-                  'area' : (0 ,2 , 0.5, 0.0,    (0.5,0.5,0.5), (0,1,0) ),
-                  'thickness': (0 ,5 , 0.5, 0.0,    (1,0,0)  ,   (0.5,0.5,0.5),   (0,1,0)),
-                  'volume' : (0 ,5 , 0.5, 0.0,    (0.5,0.5,0.5), (0,1,0) ),
-                  'sulc' : (-2 ,2 , 0.5, 0.0,      (0,1,0)  ,   (0.5,0.5,0.5),   (1,0,0))            
-                  }
-    try:
-        out_lut=getColorTransferLUT(*parameters_d[name])
-    except KeyError:
-        log = logging.getLogger(__name__)
-        log.error('Unkown scalar type')
-        raise (Exception('unknown scalar type'))
-    return out_lut
+
 
 def get_free_surfer_lut(name):
     parameters_d={'curv' : (-0.5 ,0.5 , "RdYlGn", 11,True),

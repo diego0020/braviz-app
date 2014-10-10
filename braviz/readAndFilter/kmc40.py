@@ -152,6 +152,10 @@ The path containing this structure must be set."""
             return self.__read_func(subj, **kw)
         elif data == 'BOLD':
             return self.__read_bold(subj, kw['name'])
+        elif data == 'TRACULA':
+            if kw.get('index',False):
+                return []
+            raise ValueError("Data not available")
         else:
             log = logging.getLogger(__name__)
             log.error("Data type not available")
