@@ -2,10 +2,6 @@ from __future__ import division
 
 __author__ = 'Diego'
 
-from mpltools import style
-
-style.use('ggplot')
-
 from braviz.interaction.qt_guis.new_sample_screen import Ui_NewSampleWindow
 from braviz.interaction.qt_guis.add_filter_dialog import Ui_AddFilterDialog
 from braviz.interaction.qt_guis.rational_details_frame_filtering import Ui_rational_details

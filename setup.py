@@ -21,8 +21,9 @@ setup(
     url = "imagine.uniandes.edu.co",
     packages=['braviz', 'braint'],
     long_description=read('README.md'),
-    install_requires=['nibabel','colorbrewer','numpy',
-                      'scipy','rdflib','httplib2','psutil',
-                      'matplotlib','PyQt4','sip','pandas', 'mpltools', 'seaborn','rpy2'],
+    install_requires=['vtk','nibabel','colorbrewer','numpy',
+                      'scipy','pandas','psutil',
+                      'matplotlib','PyQt4','sip','pandas', 'seaborn','rpy2','tornado',
+                      ],
     r_libraries=["car","randomforest"],
 )

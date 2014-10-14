@@ -1,13 +1,14 @@
 import os
 import logging
-
-from kernel.RDFDBManagerClass import RDFDBManager
 from braviz.utilities import working_directory, recursive_default_dict
+
 
 __author__ = 'Diego'
 
 
 def get_free_surfer_pretty_names_dict():
+    from kernel.RDFDBManagerClass import RDFDBManager
+
     yoyis_dir = os.path.abspath(os.path.dirname(__file__))
     yoyis_dir = os.path.join(yoyis_dir, '..', '..', 'braint')
     log = logging.getLogger(__name__)
@@ -43,6 +44,7 @@ def cached_get_free_surfer_dict(reader=None):
 
 
 def get_braint_hierarchy():
+    from kernel.RDFDBManagerClass import RDFDBManager
     yoyis_dir = os.path.abspath(os.path.dirname(__file__))
     yoyis_dir = os.path.join(yoyis_dir, '..', '..', 'braint')
     with working_directory(yoyis_dir):
