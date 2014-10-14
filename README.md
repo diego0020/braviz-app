@@ -16,7 +16,8 @@ Python packages:
 - pandas
 - rdflib*
 - httplib2*
-- psutil*
+- psutil
+- mpltools*
 - matplotlib
 - seaborn
 - rpy2 (for anova, linear model)
@@ -29,4 +30,3 @@ R packages:
 - RandomForest
 - ARM
 - car
-
