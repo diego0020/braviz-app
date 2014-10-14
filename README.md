@@ -17,6 +17,7 @@ Python packages:
 - psutil
 - matplotlib
 - seaborn
+- pyzmq
 - rpy2 (for anova, linear model)
 - tornado (for parallel coordinates)
 - xlrd (to read excel files)
