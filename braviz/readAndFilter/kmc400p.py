@@ -1318,6 +1318,7 @@ known_nodes = {  #
     #'da-angulo': ("F:\\kmc400","D:\\kmc400-braviz" ,4000), # from external drive
     #'da-angulo': (r"N:\run\media\imagine\backups\kmc400","D:\\kmc400-braviz" ,4000), # from external drive
     'ISIS-EML725001': ('G:/kmc400', 'G:/kmc400-braviz',8000),
+    'Echer': ('H:/kmc400', 'H:/kmc400-braviz',8000),
     'colivri1-homeip-net' : ('/media/DATAPART5/kmc400','/home/canguro/kmc400-braviz',50000)
 }
 
