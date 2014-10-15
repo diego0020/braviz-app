@@ -10,7 +10,7 @@ from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.readAndFilter import bundles_db
-from braviz.interaction.r_functions import calculate_ginni_index
+
 from braviz.interaction.qt_structures_model import StructureTreeModel
 
 
@@ -182,6 +182,7 @@ class VarAndGiniModel(QAbstractTableModel):
         self.modelReset.emit()
 
     def calculate_gini_indexes(self):
+        from braviz.interaction.r_functions import calculate_ginni_index
         # get outcome var:
         if self.outcome is None:
             log = logging.getLogger(__name__)
