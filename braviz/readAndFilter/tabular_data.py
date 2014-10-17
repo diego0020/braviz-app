@@ -546,7 +546,7 @@ def add_data_frame(df):
 
     for i, c in enumerate(columns):
         with conn:
-            print "%d / %d : %s"%(i,tot_cols,c)
+            print "%d / %d : %s"%(i+1,tot_cols,c)
             q1 = "INSERT INTO variables (var_name) VALUES (?)"
             cur = conn.execute(q1,(c,))
             var_idx = cur.lastrowid
@@ -558,6 +558,7 @@ def add_data_frame(df):
             q2 = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
             VALUES ( ?, ?,?)"""
             conn.executemany(q2,izip(repeat(var_idx),subjs,vals))
+    print "done"
 
 def _recursive_delete_variable(var_idx):
     """
