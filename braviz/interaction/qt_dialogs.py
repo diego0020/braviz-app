@@ -208,6 +208,7 @@ class VariableSelectDialog(QtGui.QDialog):
         self.ui.save_button.clicked.connect(self.save_meta_data)
         self.ui.var_type_combo.currentIndexChanged.connect(self.update_details)
         self.matplot_widget.scatter_pick_signal.connect(self.show_plot_tooltip)
+        self.ui.tableView.customContextMenuRequested.connect(self.show_delete_menu)
 
     def update_limits_in_plot(self, *args):
         if self.ui.var_type_combo.currentIndex() != 0:
@@ -249,6 +250,31 @@ class VariableSelectDialog(QtGui.QDialog):
         message = "Subject: %s" % subj
         QtGui.QToolTip.showText(self.matplot_widget.mapToGlobal(QtCore.QPoint(*position)), message, self.matplot_widget)
 
+    def show_delete_menu(self,pos):
+        print "showing menu"
+        menu = QtGui.QMenu()
+        mod = self.ui.tableView.model()
+        cur_idx=self.ui.tableView.currentIndex()
+        idx2 = mod.index(cur_idx.row(),0)
+        var_name = mod.data(idx2,QtCore.Qt.DisplayRole)
+        def delete_var():
+            confirm = QtGui.QMessageBox.question(self,
+                "Confirm delete variable","Are you sure you want to delete \n%s ?\nThis is not reversible"%var_name,
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,QtGui.QMessageBox.Cancel)
+            if confirm == QtGui.QMessageBox.Yes:
+                print "deleting"
+                var_idx = braviz_tab_data.get_var_idx(var_name)
+                if var_idx is not None:
+                    braviz_tab_data.recursive_delete_variable(var_idx)
+                mod.update_list(None)
+            else:
+                "cancelled"
+        action = QtGui.QAction("Delete %s"%var_name,menu)
+        menu.addAction(action)
+        action.triggered.connect(delete_var)
+        global_pos = self.ui.tableView.mapToGlobal(pos)
+        menu.exec_(global_pos)
+
 
 class OutcomeSelectDialog(VariableSelectDialog):
     def __init__(self, params_dict, multiple=False,sample=None):
@@ -266,6 +292,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
         self.ui.select_button.clicked.connect(self.select_and_return)
         self.ui.search_box.returnPressed.connect(self.filter_list)
+
 
     def update_right_side(self, var_name=None):
         curr_idx = self.ui.tableView.currentIndex()
@@ -290,6 +317,8 @@ class OutcomeSelectDialog(VariableSelectDialog):
     def filter_list(self):
         mask = "%%%s%%"%self.ui.search_box.text()
         self.vars_list_model.update_list(mask)
+
+
 
 class GenericVariableSelectDialog(OutcomeSelectDialog):
     """

@@ -158,7 +158,13 @@ def run():
         raise
 
 if __name__ == '__main__':
+    import traceback
     import braviz.interaction.generate_qt_guis
     braviz.interaction.generate_qt_guis.update_guis()
-    run()
+    try:
+        run()
+    except Exception as e:
+        print "ERROR"
+        traceback.print_exc()
+
     dummy_input = raw_input("Press enter to close window")
