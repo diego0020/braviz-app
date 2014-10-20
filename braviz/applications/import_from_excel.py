@@ -36,7 +36,9 @@ class ImportFromExcel(QtGui.QDialog):
             cols2 = filter(lambda x: not tabular_data.does_variable_name_exists(x),cols)
             df = self.__df[cols2]
         else:
-            df = self.__df
+            cols2 = [mingle_name(n) for n in cols]
+            df = self.__df.copy()
+            df.columns = cols2
         self.__model = DataFrameModel(df, index_as_column=False)
         self.ui.tableView.setModel(self.__model)
         self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(1)
@@ -70,6 +72,11 @@ class ImportFromExcel(QtGui.QDialog):
         QtGui.QApplication.instance().processEvents()
         tabular_data.add_data_frame(self.__df2)
 
+def mingle_name(n):
+    if tabular_data.does_variable_name_exists(n):
+        n += "2"
+        return mingle_name(n)
+    return n
 
 def run():
     import sys

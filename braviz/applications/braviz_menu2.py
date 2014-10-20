@@ -1,10 +1,11 @@
 __author__ = 'Diego'
 
+
+
 import subprocess
 import sys
 import logging
 
-from braviz.interaction.connection import MessageServer
 
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -15,18 +16,19 @@ try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
     import braviz.interaction.qt_dialogs
     import braviz.applications.qt_sample_select_dialog
+    from braviz.interaction.connection import MessageServer
 except ImportError as e:
     import braviz.interaction.generate_qt_guis
     braviz.interaction.generate_qt_guis.update_guis()
-    print "please try again"
     print e.message
-
-
+    print "Maybe needs to update gui, please try to load again"
+    dummy_in = raw_input("press enter to quit")
 
 
 
 
 class BravizMenu2(QtGui.QMainWindow):
+
     def __init__(self):
         super(BravizMenu2,self).__init__()
         self.reader = None
