@@ -12,6 +12,8 @@ class RotatedLabel(QtGui.QLabel):
 
     def set_color(self,color):
         if color is not None:
+            if type(color[0]) is float:
+                color = [c*256 for c in color]
             self.color = color
         else:
             self.color = (0,0,0)
@@ -30,12 +32,12 @@ class RotatedLabel(QtGui.QLabel):
         g=self.rect()
         x=g.width()/2  + (fm.ascent()/2)
         #-10 is for the square
-        y=g.height()/2 + fm.width(text)/2-10
+        y=g.height()/2 + fm.width(text)/2-15
         #print "x:",x
         painter.translate(x,y)
         painter.rotate(270)
-        qcolor = QtGui.QColor(color)
-        painter.fillRect(QtCore.QRect(-1*fm.height(),-1*fm.ascent()+2,20,20),qcolor)
+        qcolor = QtGui.QColor.fromRgb(*color)
+        painter.fillRect(QtCore.QRect(-1*fm.height()-10,-1*fm.ascent()+2,20,20),qcolor)
         painter.drawText(QtCore.QPoint(0,0),text)
         painter.restore()
 
