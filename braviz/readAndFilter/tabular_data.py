@@ -608,3 +608,9 @@ def _recursive_delete_subject(subject):
         print "DataBase not modified"
     else:
         print "Done"
+
+def recursive_delete_variable(var_idx):
+    """
+    Public access to delete variable
+    """
+    _recursive_delete_variable(var_idx)

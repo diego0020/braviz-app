@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>631</width>
-    <height>745</height>
+    <height>816</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -55,7 +55,7 @@ QToolButton:hover{
        </sizepolicy>
       </property>
       <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
+       <enum>QFrame::NoFrame</enum>
       </property>
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
@@ -636,7 +636,7 @@ Export variables to the database</string>
      <x>0</x>
      <y>0</y>
      <width>631</width>
-     <height>21</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>
