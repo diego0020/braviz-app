@@ -10,7 +10,7 @@ from pandas.io import sql
 import pandas as pd
 
 import braviz
-from braviz.utilities import remove_non_ascii
+from braviz.utilities import remove_non_ascii,show_error
 from braviz.interaction.config_file import get_config
 
 LATERALITY = None
@@ -39,6 +39,11 @@ def get_connection(reader=None):
 
     data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
     path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
+    if not os.path.isfile(path):
+        show_error("Couldn't open database file\n%s"%path)
+        raise Exception("Couldn't open database")
+
+
     conn = sqlite3.connect(path)
     _connection = conn
     if LATERALITY is None:

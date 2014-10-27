@@ -25,8 +25,8 @@ from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
-from braviz.readAndFilter import bundles_db
-from hierarchical_fibers import read_logical_fibers
+
+
 from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
 from braviz.interaction import config_file
 
@@ -708,6 +708,8 @@ The path containing this structure must be set."""
         return self.__cached_filter_fibers(subj,struct)
 
     def __readFibers_from_db(self,subj,db_id,**kw):
+        from braviz.readAndFilter import bundles_db
+        from hierarchical_fibers import read_logical_fibers
         log = logging.getLogger(__name__)
         try:
             _, bundle_type, data = bundles_db.get_bundle_details(db_id)

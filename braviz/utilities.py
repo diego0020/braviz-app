@@ -78,3 +78,13 @@ def get_leafs(rec_dict,name):
 
 def remove_non_ascii(s):
     return str("".join(i for i in s if ord(i)<128))
+
+def show_error(error_message):
+    from PyQt4 import QtGui
+    app = QtGui.QApplication([])
+    dialog = QtGui.QMessageBox(QtGui.QMessageBox.Critical,"Braviz",error_message,QtGui.QMessageBox.Abort)
+    dialog.show()
+    app.exec_()
+    print "ya"
+
+
