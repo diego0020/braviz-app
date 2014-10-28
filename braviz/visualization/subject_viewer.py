@@ -1459,6 +1459,7 @@ class SurfaceManager(object):
         surf = self.reader.get("surf", self.__subject, name=self.__current_surface, hemi=h,
                                scalars=self.__current_scalars,
                                space=self.__current_space)
+
         mapper.SetInputData(surf)
         actor.SetVisibility(1)
         actor.GetProperty().SetOpacity(self.__opacity / 100)

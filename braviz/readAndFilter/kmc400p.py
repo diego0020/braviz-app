@@ -91,6 +91,7 @@ The path containing this structure must be set."""
         SURF: Use name=<surface> and hemi=<r|h> to get the vtkPolyData of a free surfer surface reconstruction,
               use scalars to add scalars to the data
               surface must be orig pial white smoothwm inflated sphere
+              us normals = 0 to avoid calculating normals
 
         SURF_SCALAR: Use scalar=<name> and hemi=<l|r> to get scalar data associated to a SURF.
                      Use index=True to get a list of available scalars,
@@ -537,13 +538,29 @@ The path containing this structure must be set."""
         if not 'scalars' in kw:
 
             output = self._cached_surface_read(subj,name)
+            if kw.get("normals",True):
+                normal_f = vtk.vtkPolyDataNormals()
+                normal_f.AutoOrientNormalsOn()
+                normal_f.SetInputData(output)
+                normal_f.Update()
+                normal_f.SplittingOff()
+                output = normal_f.GetOutput()
             return self.__movePointsToSpace(output, kw.get('space', 'world'), subj)
         else:
             scalars = self.get('SURF_SCALAR', subj, hemi=name[0], scalars=kw['scalars'])
             #Take advantage of cache
             kw.pop('scalars')
+            normals = kw.get('normals',True)
+            kw["normals"]=False
             orig = self.get('SURF', subj, **kw)
             addScalars(orig, scalars)
+            if normals:
+                normal_f = vtk.vtkPolyDataNormals()
+                normal_f.AutoOrientNormalsOn()
+                normal_f.SetInputData(orig)
+                normal_f.Update()
+                normal_f.SetFeatureAngle(60)
+                orig = normal_f.GetOutput()
             return orig
 
     def __loadFreeSurferScalar(self, subj, **kw):
