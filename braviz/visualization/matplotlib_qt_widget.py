@@ -472,7 +472,7 @@ class ScatterPlot(_AbstractPlot):
         self.axes.set_xlabel(xlabel)
         self.axes.set_xlim(auto=True)
         self.axes.set_ylim(auto=True)
-        self.color = matplotlib.rcParams['axes.color_cycle'][1]
+        self.color = matplotlib.rcParams['axes.color_cycle'][0]
         self.hue_labels = hue_labels
         self.qualitative_map = qualitative_map
         self.x_ticks = x_ticks
