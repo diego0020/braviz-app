@@ -10,8 +10,7 @@ import numpy as np
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 import braviz.interaction.qt_dialogs
 import braviz.applications.qt_sample_select_dialog
-from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, MatplotWidget,\
-    InteractionSelectDialog
+from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, InteractionSelectDialog
 
 import braviz.interaction.r_functions
 from braviz.interaction.connection import MessageClient,MessageServer
@@ -33,6 +32,7 @@ import os
 import platform
 
 import logging
+from interaction.qt_widgets import MatplotWidget
 
 
 __author__ = 'Diego'

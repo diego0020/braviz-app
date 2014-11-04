@@ -239,8 +239,9 @@ class MatplotBarPlot(_AbstractPlot):
         #self.colors = colors
 
         groups = self.data.groupby(self.data.columns[1])
-        colors_list=matplotlib.rcParams['axes.color_cycle']
-        self.colors_dict = dict((n,colors_list[i]) for i, (n,g) in enumerate(groups) if len(g)>0)
+
+        self.colors_list=sns.color_palette('Set1',len(groups))
+        self.colors_dict = dict((n,self.colors_list[i]) for i, (n,g) in enumerate(groups) if len(g)>0)
         self.last_id = None
         self.redraw()
 
@@ -250,7 +251,7 @@ class MatplotBarPlot(_AbstractPlot):
         ###################
         self.axes.cla()
         log = logging.getLogger(__name__)
-        colors_list=matplotlib.rcParams['axes.color_cycle']
+        colors_list=self.colors_list
         if self.grouped is False:
             self.__draw_bars_and_higlight(self.data,"_nolegend_",colors_list[0])
         else:
