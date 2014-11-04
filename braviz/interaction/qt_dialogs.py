@@ -145,8 +145,8 @@ class VariableSelectDialog(QtGui.QDialog):
         medi = self.rational["opt"]
         self.details_ui.maximum_val.setValue(maxi)
         self.details_ui.minimum_val.setValue(mini)
-        self.details_ui.minimum_val.setMinimum(min(mini*10,0))
-        self.details_ui.maximum_val.setMinimum(min(mini*10,0))
+        self.details_ui.minimum_val.setMinimum(min(mini*10,-100))
+        self.details_ui.maximum_val.setMinimum(min(mini*10,-100))
 
         self.details_ui.minimum_val.setMaximum(max(maxi*10,1000))
         self.details_ui.maximum_val.setMaximum(max(maxi*10,1000))
