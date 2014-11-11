@@ -164,7 +164,17 @@ class LinearModelApp(QMainWindow):
         else:
             var_type_text = "Real" if var_is_real else "Nominal"
         self.ui.outcome_type.setText(var_type_text)
+        #update plot
+        if self.plot_name is not None:
+            plot_type,var_name = self.plot_name
+            if plot_type == 2:
+                self.update_main_plot_from_regressors(None,var_name)
+            else:
+                self.plot.draw_message("Click on a regressor to see a plot")
+            self.clear_regression_results()
+
         self.check_if_ready()
+
 
     def launch_add_regressor_dialog(self):
         reg_dialog = RegressorSelectDialog(self.outcome_var_name, self.regressors_model, sample=self.sample)
@@ -242,6 +252,16 @@ class LinearModelApp(QMainWindow):
             self.ui.calculate_button.setEnabled(1)
             return
 
+    def clear_regression_results(self):
+        self.ui.r_squared_label.setText("R<sup>2</sup> = ")
+        self.ui.f_value_label.setText("F = ")
+        self.ui.p_value_label.setText("P = ")
+        empty_df = pd.DataFrame(columns=self.__table_cols)
+        empty_df.index.name = "Coefficient"
+        self.result_model.set_df(empty_df)
+        self.coefs_df = None
+        self.regression_results = None
+
 
     def update_main_plot_from_results(self, index,var_name=None):
         if var_name is None:
@@ -296,6 +316,7 @@ class LinearModelApp(QMainWindow):
             self.draw_two_vars_scatter_plot(factors[0], factors[1])
         else:
             self.draw_simple_scatter_plot(var_name)
+
 
 
 
