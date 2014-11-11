@@ -70,7 +70,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.image_view = self.three_d_widget.viewer
         self.three_d_widget.cursor_moved.connect(self.handle_cursor_move)
 
-        #timeserios frame
+        #timeseries frame
         self.time_plot = braviz.visualization.fmri_timeseries.TimeseriesPlot(self.ui.timeline_frame)
         self.ui.timeline_frame_layout = QtGui.QVBoxLayout(self.ui.timeline_frame)
         self.ui.timeline_frame.setLayout(self.ui.timeline_frame_layout)

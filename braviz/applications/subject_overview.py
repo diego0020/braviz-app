@@ -21,6 +21,7 @@ from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVa
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 from braviz.interaction.config_file import get_config
+from braviz.interaction.qt_widgets import ListValidator
 import subprocess
 from braviz.interaction.connection import MessageClient
 import cPickle
@@ -65,6 +66,8 @@ class SubjectOverviewApp(QMainWindow):
         self.subjects_model = SubjectsTable(initial_vars)
         self.sample = braviz_tab_data.get_subjects()
 
+        self.__frozen_subject = False
+
         #context panel
         self.context_frame = None
 
@@ -96,7 +99,6 @@ class SubjectOverviewApp(QMainWindow):
             scn_data = braviz_user_data.get_scenario_data_dict(scenario)
             if subject is not None:
                 scn_data["subject_state"]["current_subject"]=subject
-            print scn_data
             load_scn = functools.partial(self.load_scenario, scn_data)
             QtCore.QTimer.singleShot(0, load_scn)
 
@@ -118,13 +120,24 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.space_combo.activated.connect(self.space_change)
         self.ui.space_combo.setCurrentIndex(1)
 
+        #subject fast controls
+        self.ui.subject_completer = QtGui.QCompleter([str(s) for s in self.sample])
+        self.ui.subject_id.setCompleter(self.ui.subject_completer)
+        self.ui.subj_validator = ListValidator([str(s) for s in self.sample])
+        self.ui.subject_id.setValidator(self.ui.subj_validator)
+        self.ui.subject_id.editingFinished.connect(self.subject_from_subj_id_editor)
+        self.ui.next_subject.clicked.connect(self.go_to_next_subject)
+        self.ui.previus_subject.clicked.connect(self.go_to_previus_subject)
+
+        self.ui.freeze_subject.toggled.connect(self.toggle_subject_freeze)
+
         #Subject selection
         self.ui.subjects_table.setModel(self.subjects_model)
         self.ui.select_subject_table_vars.clicked.connect(self.launch_subject_variable_select_dialog)
         self.ui.subjects_table.activated.connect(self.change_subject)
-        self.ui.next_subject.clicked.connect(self.go_to_next_subject)
-        self.ui.previus_subject.clicked.connect(self.go_to_previus_subject)
         self.ui.select_sample_button.clicked.connect(self.show_select_sample_dialog)
+
+
 
         #subject details
         self.ui.subject_details_table.setModel(self.subject_details_model)
@@ -219,7 +232,23 @@ class SubjectOverviewApp(QMainWindow):
         else:
             super(SubjectOverviewApp,self).keyPressEvent(event)
 
+    def toggle_subject_freeze(self):
+        self.__frozen_subject =  self.ui.freeze_subject.isChecked()
+        enable = not self.__frozen_subject
+        self.ui.subject_id.setEnabled(enable)
+        self.ui.next_subject.setEnabled(enable)
+        self.ui.previus_subject.setEnabled(enable)
+
+
+    def subject_from_subj_id_editor(self):
+        new_subj = int(self.ui.subject_id.text())
+        self.change_subject(new_subj)
+
     def change_subject(self, new_subject=None):
+        logger = logging.getLogger(__name__)
+        if self.__frozen_subject:
+            logger.info("Frozen subject, ignoring change")
+            return
         if isinstance(new_subject, QtCore.QModelIndex):
             selected_index = new_subject
             subj_code_index = self.subjects_model.index(selected_index.row(), 0)
@@ -228,7 +257,7 @@ class SubjectOverviewApp(QMainWindow):
         if self._messages_client is not None and new_subject != self.__curent_subject:
             self._messages_client.send_message('subject %s' % new_subject)
         #label
-        logger = logging.getLogger(__name__)
+
         logger.info("Changing subject to %s" % new_subject)
         self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
@@ -419,7 +448,15 @@ class SubjectOverviewApp(QMainWindow):
 
     def change_sample(self, new_sample):
         self.sample = sorted(new_sample)
+
+        #update subject selection widget
+        self.ui.subject_completer = QtGui.QCompleter([str(s) for s in self.sample])
+        self.ui.subject_id.setCompleter(self.ui.subject_completer)
+        self.ui.subj_validator = ListValidator([str(s) for s in self.sample])
+        self.ui.subject_id.setValidator(self.ui.subj_validator)
+
         self.subjects_model.set_sample(self.sample)
+        #update context frame
         self.context_frame.set_sample(self.sample)
 
     def launch_details_variable_select_dialog(self):
