@@ -93,8 +93,10 @@ class SubjectOverviewApp(QMainWindow):
         self.setup_gui()
 
         if scenario is not None:
-            scn_data_str = braviz_user_data.get_scenario_data(scenario)
-            scn_data = cPickle.loads(str(scn_data_str))
+            scn_data = braviz_user_data.get_scenario_data_dict(scenario)
+            if subject is not None:
+                scn_data["subject_state"]["current_subject"]=subject
+            print scn_data
             load_scn = functools.partial(self.load_scenario, scn_data)
             QtCore.QTimer.singleShot(0, load_scn)
 
@@ -1125,7 +1127,7 @@ def run(server_broadcast=None, server_receive=None, scenario=None,subject=None):
 
 
 if __name__ == '__main__':
-    #args: [scenario] [server_broadcast] [server_receive]
+    #args: [scenario] [server_broadcast] [server_receive] [subject]
     import sys
 
     from braviz.utilities import configure_console_logger
