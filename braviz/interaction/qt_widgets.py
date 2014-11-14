@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from readAndFilter import tabular_data as braviz_tab_data, tabular_data
+from braviz.readAndFilter import tabular_data as braviz_tab_data, tabular_data
 
 __author__ = 'Diego'
 
