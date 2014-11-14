@@ -8,7 +8,7 @@ import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 import numpy as np
 
-from interaction.qt_widgets import MatplotWidget
+from braviz.interaction.qt_widgets import MatplotWidget
 
 
 try:
