@@ -32,7 +32,7 @@ import os
 import platform
 
 import logging
-from interaction.qt_widgets import MatplotWidget
+from braviz.interaction.qt_widgets import MatplotWidget
 
 
 __author__ = 'Diego'
