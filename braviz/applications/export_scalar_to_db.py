@@ -26,7 +26,8 @@ class ExportScalarToDataBase(QtGui.QDialog):
         self.ui = None
         self.progress = 0
         self.timer = None
-        self.structs = list(set(structures_list)) # remove duplicates
+        if structs is not None:
+            self.structs = list(set(structures_list)) # remove duplicates
         log = logging.getLogger(__name__)
         log.info(structures_list)
         self.fibers_mode = fibers
@@ -124,6 +125,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
             braviz_user_data.link_var_scenario(self.var_idx,self.scenario_id)
 
         #add values
+        braviz_tab_data.reset_connection()
         self.timer = QtCore.QTimer()
         self.timer.start(1000)
         self.timer.timeout.connect(self.poll_progress)
@@ -193,7 +195,6 @@ class ExportScalarToDataBase(QtGui.QDialog):
 
 
 def run(fibers=False, structures_list=tuple(), metric="volume", db_id=None, operation="and",scenario_id=None):
-
     app = QtGui.QApplication([])
     main_window = ExportScalarToDataBase(fibers, structures_list, metric, db_id, operation,scenario_id=scenario_id)
     main_window.show()
@@ -211,8 +212,8 @@ if __name__ == "__main__":
     #arguments <scn_id> <fibers=False> <metric> <structs0> <struct1> ....
     #            1           2           3         4          5         6
     import sys
-    from braviz.utilities import configure_logger
-    configure_logger("export_scalars_to_db")
+    from braviz.utilities import configure_console_logger
+    configure_console_logger("export_scalars_to_db")
     log = logging.getLogger(__name__)
     log.info(sys.argv)
     if len(sys.argv)<4:

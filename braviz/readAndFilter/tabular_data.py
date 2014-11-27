@@ -58,6 +58,18 @@ def get_connection(reader=None):
             pass
     return conn
 
+def reset_connection():
+    global _connection
+    log = logging.getLogger(__name__)
+    if _connection is None:
+        return
+    else:
+        try:
+            _connection.close()
+        except Exception as e:
+            log.exception(e)
+        _connection = None
+
 
 def get_laterality(subj_id):
     conn = get_connection()

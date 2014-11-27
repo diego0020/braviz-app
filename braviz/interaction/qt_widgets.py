@@ -13,7 +13,7 @@ from braviz.readAndFilter import tabular_data as braviz_tab_data, tabular_data
 
 __author__ = 'Diego'
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 
