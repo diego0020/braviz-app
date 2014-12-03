@@ -409,7 +409,7 @@ def aggregate_in_roi(reader,subject, roi_ctr,roi_radius,roi_space, img2, paradig
 def get_locations(reader, subject, struct_name):
     label = int(reader.get("Model", subject, name=struct_name, label=True))
     if struct_name.startswith("wm"):
-        aparc_img = reader.get("APARC", subject, space="world", format="nii", wm=True)
+        aparc_img = reader.get("WMPARC", subject, space="world", format="nii")
     else:
         aparc_img = reader.get("APARC", subject, space="world", format="nii")
     aparc_data = aparc_img.get_data()

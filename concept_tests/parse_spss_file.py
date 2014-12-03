@@ -55,5 +55,5 @@ def save_labels(var_name,labels):
 
 if __name__ == "__main__":
     os.chdir(r"C:\Users\da.angulo39\Downloads")
-    file_name = "base RCT 59 con neuroimagenes.sav"
+    file_name = "basepilotoTMScondatospernitales.sav"
     parse_spss_file(file_name)

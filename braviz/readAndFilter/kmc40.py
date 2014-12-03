@@ -13,6 +13,7 @@ import logging
 import nibabel as nib
 import numpy as np
 from numpy.linalg import inv
+from scipy.stats._continuous_distns import loggamma_gen
 import vtk
 
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
@@ -188,7 +189,9 @@ The path containing this structure must be set."""
         elif data == 'APARC':
             path = os.path.join(self.__root, str(subj), 'Models')
             if kw.get("wm"):
-                print "Warning... deprecated, use WMPARC instead"
+                log = logging.getLogger(__name__)
+                log.warning("deprecated, use WMPARC instead")
+                path = os.path.join(self.__root, str(subj), 'Models3')
                 filename = 'wmparc.nii.gz'
             else:
                 filename = 'aparc+aseg.nii.gz'
