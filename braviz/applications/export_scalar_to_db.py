@@ -125,7 +125,6 @@ class ExportScalarToDataBase(QtGui.QDialog):
             braviz_user_data.link_var_scenario(self.var_idx,self.scenario_id)
 
         #add values
-        braviz_tab_data.reset_connection()
         self.timer = QtCore.QTimer()
         self.timer.start(1000)
         self.timer.timeout.connect(self.poll_progress)

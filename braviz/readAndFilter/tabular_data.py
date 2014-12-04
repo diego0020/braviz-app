@@ -3,7 +3,7 @@ __author__ = 'Diego'
 import sqlite3
 from itertools import izip,repeat
 import os
-import platform
+import threading
 import logging
 
 from pandas.io import sql
@@ -19,7 +19,7 @@ UBICAC = None
 
 IMAGE_CODE = 273 # DEPRECATED
 
-_connection = None
+_connections = dict()
 
 def get_variables(reader=None,mask=None):
     conn = get_connection(reader)
@@ -32,10 +32,13 @@ def get_variables(reader=None,mask=None):
 
 
 def get_connection(reader=None):
-    global _connection
+    global _connections
     global LATERALITY, LEFT_HANDED
-    if _connection is not None:
-        return _connection
+
+    thread_id = threading.current_thread()
+    connection_obj = _connections.get(thread_id)
+    if connection_obj is not None:
+        return connection_obj
 
     data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
     path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
@@ -45,12 +48,12 @@ def get_connection(reader=None):
 
 
     conn = sqlite3.connect(path)
-    _connection = conn
+    _connections[thread_id] = conn
     if LATERALITY is None:
         try:
             _conf = get_config(os.path.join(os.path.dirname(__file__),"../applications"))
             _lat_name,_left_labell = _conf.get_laterality()
-            cur = _connection.execute("SELECT var_idx from variables where var_name = ?",(_lat_name,))
+            cur = conn.execute("SELECT var_idx from variables where var_name = ?",(_lat_name,))
             res = cur.fetchone()
             LATERALITY = res[0]
             LEFT_HANDED = _left_labell
@@ -59,16 +62,18 @@ def get_connection(reader=None):
     return conn
 
 def reset_connection():
-    global _connection
+    global _connections
     log = logging.getLogger(__name__)
-    if _connection is None:
+    thread_id = threading.current_thread()
+    connection_obj = _connections.get(thread_id)
+    if connection_obj is None:
         return
     else:
         try:
-            _connection.close()
+            connection_obj.close()
         except Exception as e:
             log.exception(e)
-        _connection = None
+        del _connections[thread_id]
 
 
 def get_laterality(subj_id):
