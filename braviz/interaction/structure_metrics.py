@@ -21,7 +21,7 @@ def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
     if metric is nfiber,lfibers or fa_fibers get_fibers_metric is used"""
     values = []
     if metric in ('lfibers', 'fa_fibers', 'nfibers'):
-        #we need to get all the fibers
+        # we need to get all the fibers
         if metric == 'nfibers':
             result = get_fibers_metric(reader, struct_names, code, 'number')
         elif metric == 'lfibers':
@@ -40,10 +40,10 @@ def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
     elif metric in ("fa_inside", "md_inside"):
         if metric == "fa_inside":
             img2 = "FA"
-            result = mean_inside(reader,code, struct_names, img2)
+            result = mean_inside(reader, code, struct_names, img2)
         else:
             img2 = "MD"
-            result = mean_inside(reader,code, struct_names, img2)
+            result = mean_inside(reader, code, struct_names, img2)
             result *= 1e12
     else:
         log = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def get_struct_metric(reader, struct_name, code, metric='volume'):
     lfibers: Mean length of fibers going through structure or in bundle
     fa_fibers: Mean fa of fibers crossing the structure or in bundle
     """
-    #print "calculating %s for %s (%s)"%(metric,struct_name,code)
+    # print "calculating %s for %s (%s)"%(metric,struct_name,code)
     if metric == 'volume':
         try:
             return reader.get('model', code, name=struct_name, volume=1)
@@ -98,7 +98,7 @@ def get_fibers_metric(reader, struct_name, code, metric='number', ):
 
     metrics are number, mean_length and mean_fa
     """
-    #print "calculating for subject %s"%code
+    # print "calculating for subject %s"%code
     n = 0
     if hasattr(struct_name, "__iter__") and len(struct_name) == 1:
         struct_name = iter(struct_name).next()
@@ -153,7 +153,7 @@ def cached_get_struct_metric_col(reader, codes, struct_name, metric,
     'number_requested' : number of metrics requested (length of codes list)
     'cancel' : Set this to True, to cancel the operation and return before the next iteration
     """
-    #global struct_metrics_col, temp_struct_metrics_col, processing, cancel_calculation_flag, struct_name, metric
+    # global struct_metrics_col, temp_struct_metrics_col, processing, cancel_calculation_flag, struct_name, metric
     state_variables['struct_name'] = struct_name
     state_variables['metric'] = metric
     state_variables['working'] = True
@@ -204,7 +204,7 @@ def cached_get_struct_metric_col(reader, codes, struct_name, metric,
 
 
 laterality_lut = {
-    #dominant or non_dominant, right_handed or left_handed : resulting hemisphere
+    # dominant or non_dominant, right_handed or left_handed : resulting hemisphere
     ('d', 'r'): 'l',
     ('d', 'l'): 'r',
     ('n', 'r'): 'r',
@@ -233,7 +233,7 @@ def solve_laterality(laterality, names):
     laterality should be r (right handed) or l (left handed)
     names is a list of names to translate
     currently wm-[d|n|r|l]h-* , ctx-[d|n|r|l]h-* and fiber bundles ending in '_[d|n|r|l]' are supported"""
-    #TODO: Support Left-Amygdala
+    # TODO: Support Left-Amygdala
     new_names = []
     if type(names) == str:
         names2 = (names,)
@@ -257,16 +257,16 @@ def solve_laterality(laterality, names):
         return new_names
 
 
-def mean_inside(reader,subject, structures, img2, paradigm=None,contrast=1):
+def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
     """
     Calculate the mean value of img2 modality inside of the structures listed
     img2 must be FA, MD, MRI or fMRI
     """
     if len(structures) == 0:
         return float("nan")
-    if isinstance(structures,basestring):
-        structures=(structures,)
-    #find label
+    if isinstance(structures, basestring):
+        structures = (structures,)
+    # find label
     #print "label:",label
     #find voxels in structure
     try:
@@ -294,7 +294,7 @@ def mean_inside(reader,subject, structures, img2, paradigm=None,contrast=1):
     if paradigm is None:
         target_img = reader.get(img2, subject, space="world", format="nii")
     else:
-        target_img = reader.get(img2, subject, space="world", format="nii", name=paradigm,contrast=contrast)
+        target_img = reader.get(img2, subject, space="world", format="nii", name=paradigm, contrast=contrast)
     t2 = target_img.get_affine()
     t2i = np.linalg.inv(t2)
     fa_coords = mm_coords.dot(t2i.T)
@@ -311,18 +311,18 @@ def mean_inside(reader,subject, structures, img2, paradigm=None,contrast=1):
 
 
 class AggregateInRoi(object):
-    def __init__(self,reader):
+    def __init__(self, reader):
         self.reader = reader
         self.img_values = None
         self.mean = True
         self.img = None
 
-    def load_image(self,subject,space,modality,paradigm=None,contrast=1,mean=True):
+    def load_image(self, subject, space, modality, paradigm=None, contrast=1, mean=True):
         reader = self.reader
         if paradigm is None:
             target_img = reader.get(modality, subject, space=space, format="nii")
         else:
-            target_img = reader.get(modality, subject, space=space, format="nii", name=paradigm,contrast=contrast)
+            target_img = reader.get(modality, subject, space=space, format="nii", name=paradigm, contrast=contrast)
 
         all_values = target_img.get_data()
 
@@ -331,74 +331,75 @@ class AggregateInRoi(object):
 
         self.mean = mean
 
-    def get_value(self,roi_ctr,roi_radius):
+    def get_value(self, roi_ctr, roi_radius):
         target_img = self.img
         shape = target_img.get_shape()
         affine = target_img.get_affine()
 
-        #Calculate bounding box for sphere
+        # Calculate bounding box for sphere
         i_affine = np.linalg.inv(affine)
-        ctr_h = np.ones((4,1))
-        ctr_h[0:3,0]=roi_ctr
-        ctr_img_h = np.dot(i_affine,ctr_h)
-        ctr_img = ctr_img_h[0:3]/ctr_img_h[3]
-        max_factor = np.max(np.abs(i_affine.diagonal()))*roi_radius
-        bb_x0 = max(0,int(ctr_img[0]-max_factor))
-        bb_x1 = int(np.ceil(ctr_img[0]+max_factor))
+        ctr_h = np.ones((4, 1))
+        ctr_h[0:3, 0] = roi_ctr
+        ctr_img_h = np.dot(i_affine, ctr_h)
+        ctr_img = ctr_img_h[0:3] / ctr_img_h[3]
+        max_factor = np.max(np.abs(i_affine.diagonal())) * roi_radius
+        bb_x0 = max(0, int(ctr_img[0] - max_factor))
+        bb_x1 = int(np.ceil(ctr_img[0] + max_factor))
 
-        bb_y0 = max(0,ctr_img[1]-max_factor)
-        bb_y1 = int(np.ceil(ctr_img[1]+max_factor))
+        bb_y0 = max(0, ctr_img[1] - max_factor)
+        bb_y1 = int(np.ceil(ctr_img[1] + max_factor))
 
-        bb_z0 = max(0,ctr_img[2]-max_factor)
-        bb_z1 = int(np.ceil(ctr_img[2]+max_factor))
+        bb_z0 = max(0, ctr_img[2] - max_factor)
+        bb_z1 = int(np.ceil(ctr_img[2] + max_factor))
         #create numpy grid
-        grid = np.mgrid[bb_x0:bb_x1,bb_y0:bb_y1,bb_z0:bb_z1]
-        grid = np.rollaxis(grid,0,4)
-        points = grid.reshape((-1,3))
-        points_h = np.hstack((points,np.ones((points.shape[0],1))))
-        points_world_h = np.dot(affine,points_h.T).T
-        points_world = points_world_h[:,:3]
-        divisor = np.repeat(points_world_h[:,3:],3,1)
-        points_world = points_world/divisor
-        r_sq = roi_radius**2
+        grid = np.mgrid[bb_x0:bb_x1, bb_y0:bb_y1, bb_z0:bb_z1]
+        grid = np.rollaxis(grid, 0, 4)
+        points = grid.reshape((-1, 3))
+        points_h = np.hstack((points, np.ones((points.shape[0], 1))))
+        points_world_h = np.dot(affine, points_h.T).T
+        points_world = points_world_h[:, :3]
+        divisor = np.repeat(points_world_h[:, 3:], 3, 1)
+        points_world = points_world / divisor
+        r_sq = roi_radius ** 2
         offsets = points_world - roi_ctr
-        dist_sq = np.sum(offsets*offsets,1)
+        dist_sq = np.sum(offsets * offsets, 1)
         inside = (dist_sq <= r_sq)
 
-        points_inside = points[inside,:]
+        points_inside = points[inside, :]
         all_values = self.img_values
-        values_inside = all_values[points_inside[:,0],points_inside[:,1],points_inside[:,2]]
+        values_inside = all_values[points_inside[:, 0], points_inside[:, 1], points_inside[:, 2]]
         if self.mean is True:
             ans = np.mean(values_inside)
         else:
             ans = scipy.stats.mode(values_inside)[0]
         return ans
 
-def aggregate_in_roi(reader,subject, roi_ctr,roi_radius,roi_space, img2, paradigm=None,contrast=None,mean=True):
+
+def aggregate_in_roi(reader, subject, roi_ctr, roi_radius, roi_space, img2, paradigm=None, contrast=None, mean=True):
     if paradigm is None:
         target_img = reader.get(img2, subject, space=roi_space, format="nii")
     else:
-        target_img = reader.get(img2, subject, space=roi_space, format="nii", name=paradigm,contrast=contrast)
-    r_sq = roi_radius**2
+        target_img = reader.get(img2, subject, space=roi_space, format="nii", name=paradigm, contrast=contrast)
+    r_sq = roi_radius ** 2
     shape = target_img.get_shape()
     affine = target_img.get_affine()
-    #create numpy grid
-    grid = np.mgrid[0:shape[0],0:shape[1],0:shape[2]]
-    grid = np.rollaxis(grid,0,4)
-    points = grid.reshape((np.prod(shape),3))
-    points_h = np.hstack((points,np.ones((points.shape[0],1))))
-    points_world_h = np.dot(affine,points_h.T).T
-    points_world = points_world_h[:,:3]
-    divisor = np.repeat(points_world_h[:,3:],3,1)
-    points_world = points_world/divisor
+    # create numpy grid
+    grid = np.mgrid[0:shape[0], 0:shape[1], 0:shape[2]]
+    grid = np.rollaxis(grid, 0, 4)
+    points = grid.reshape((np.prod(shape), 3))
+    points_h = np.hstack((points, np.ones((points.shape[0], 1))))
+    points_world_h = np.dot(affine, points_h.T).T
+    points_world = points_world_h[:, :3]
+    divisor = np.repeat(points_world_h[:, 3:], 3, 1)
+    points_world = points_world / divisor
 
     offsets = points_world - roi_ctr
-    dist_sq = np.sum(offsets*offsets,1)
+    dist_sq = np.sum(offsets * offsets, 1)
     inside = (dist_sq <= r_sq)
 
-    points_inside = points[inside,:]
+    points_inside = points[inside, :]
     all_values = target_img.get_data()
-    values_inside = all_values[points_inside[:,0],points_inside[:,1],points_inside[:,2]]
+    values_inside = all_values[points_inside[:, 0], points_inside[:, 1], points_inside[:, 2]]
     if mean is True:
         ans = np.mean(values_inside)
     else:
@@ -426,7 +427,7 @@ def get_scalar_from_fiber_ploydata(poly_data, scalar):
         n = np.mean(lengths)
         return n
     elif scalar == "mean_color":
-        desc = braviz.interaction.aggregate_fiber_scalar(pd,  norm_factor=1)
+        desc = braviz.interaction.aggregate_fiber_scalar(pd, norm_factor=1)
         n = float(desc[1])
         return n
     else:
@@ -437,26 +438,46 @@ def get_scalar_from_fiber_ploydata(poly_data, scalar):
 
 
 def get_fiber_scalars_from_db(reader, subj_id, db_id, scalar):
-    color = "orient"
-    if scalar == "mean_fa":
-        color = "FA"
-        scalar = "mean_color"
     try:
-        pd = reader.get("FIBERS", subj_id, color=color, db_id=db_id)
-    except Exception:
+        if scalar in ("number", "mean_length"):
+            pd = reader.get("FIBERS", subj_id, db_id=db_id)
+            return get_scalar_from_fiber_ploydata(pd, scalar)
+        elif scalar == "mean_fa":
+            fiber = reader.get("FIBERS", subj_id,
+                               db_id=db_id, color=None, scalars="fa_p")
+            n = get_scalar_from_fiber_ploydata(fiber, "mean_color")
+            return n
+        elif scalar == "mean_md":
+            fiber = reader.get("FIBERS", subj_id,
+                               db_id=db_id, color=None, scalars="md_p")
+            n = get_scalar_from_fiber_ploydata(fiber, "mean_color")
+            return n
+    except Exception as e:
+        log = logging.getLogger(__name__)
+        log.error("Couldn't calculate %s for subject %s"%(scalar,subj_id))
+        log.exception(e)
         return float("nan")
-    return get_scalar_from_fiber_ploydata(pd, scalar)
 
 
 def get_fiber_scalars_from_waypoints(reader, subj_id, waypoints, operation, scalar):
-    color = "orient"
-    lat = braviz.readAndFilter.tabular_data.get_laterality(subj_id)
-    waypoints2 = solve_laterality(lat, waypoints)
-    if scalar == "mean_fa":
-        color = "FA"
-        scalar = "mean_color"
     try:
-        pd = reader.get("FIBERS", subj_id, color=color, waypoint=waypoints2, operation=operation)
-    except Exception:
+        lat = braviz.readAndFilter.tabular_data.get_laterality(subj_id)
+        waypoints2 = solve_laterality(lat, waypoints)
+        if scalar in ("number", "mean_length"):
+            pd = reader.get("FIBERS", subj_id, waypoint=waypoints2, operation=operation)
+            return get_scalar_from_fiber_ploydata(pd, scalar)
+        elif scalar == "mean_fa":
+            fiber = reader.get("FIBERS", subj_id,
+                               waypoint=waypoints2, operation=operation, color=None, scalars="fa_p")
+            n = get_scalar_from_fiber_ploydata(fiber, "mean_color")
+            return n
+        elif scalar == "mean_md":
+            fiber = reader.get("FIBERS", subj_id,
+                               waypoint=waypoints2, operation=operation, color=None, scalars="md_p")
+            n = get_scalar_from_fiber_ploydata(fiber, "mean_color")
+            return n
+    except Exception as e:
+        log = logging.getLogger(__name__)
+        log.error("Couldn't calculate %s for subject %s"%(scalar,subj_id))
+        log.exception(e)
         return float("nan")
-    return get_scalar_from_fiber_ploydata(pd, scalar)
