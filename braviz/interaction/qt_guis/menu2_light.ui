@@ -61,7 +61,16 @@ QToolButton:hover{
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0">
-       <property name="margin">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
         <number>0</number>
        </property>
        <item>
@@ -94,8 +103,6 @@ QToolButton:hover{
             <property name="font">
              <font>
               <pointsize>16</pointsize>
-              <weight>50</weight>
-              <bold>false</bold>
              </font>
             </property>
             <property name="text">
@@ -636,7 +643,7 @@ Export variables to the database</string>
      <x>0</x>
      <y>0</y>
      <width>631</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

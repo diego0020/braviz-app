@@ -53,6 +53,9 @@ class braviz_config(RawConfigParser):
         label = self.getint('Default_Variables','reference_pop_label')
         return var,label
 
+    def get_project_name(self):
+        return self.get("Braviz","project")
+
 
 
 def get_config(custom_dir=None):

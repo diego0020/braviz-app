@@ -377,7 +377,7 @@ from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, e
 
 #read configuration file and decide which project to expose
 __config = __get_config(os.path.join(os.path.dirname(__file__),"..","applications"))
-PROJECT = __config.get("Braviz","project")
+PROJECT = __config.get_project_name()
 if PROJECT == "kmc400":
     import kmc400p as project_reader
 else:
