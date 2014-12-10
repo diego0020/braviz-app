@@ -1135,6 +1135,7 @@ known_nodes = {  #
                  'ATHPC1304': (r"F:\ProyectoCanguro\KAB-db", 14000),
                  'IIND-EML754066': (r"C:\Users\da.angulo39\Documents\KAB-db", 2000),
                  'da-angulo': (r"D:\KAB-db", 4000),
+                 'Echer': ('H:/KAB-db',8000),
 }
 
 

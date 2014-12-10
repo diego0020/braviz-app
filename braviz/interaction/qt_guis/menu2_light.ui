@@ -103,10 +103,11 @@ QToolButton:hover{
             <property name="font">
              <font>
               <pointsize>16</pointsize>
+              <underline>false</underline>
              </font>
             </property>
             <property name="text">
-             <string>Welcome to Braviz</string>
+             <string>Welcome to Braviz&lt;br&gt;&lt;br&gt;Project</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
