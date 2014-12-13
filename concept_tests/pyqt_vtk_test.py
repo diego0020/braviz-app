@@ -27,11 +27,11 @@ if __name__ == '__main__':
     ren = vtk.vtkRenderer()
     widget.GetRenderWindow().AddRenderer(ren)
 
-    cone = vtk.vtkConeSource()
-    cone.SetResolution(8)
+    surface = vtk.vtkConeSource()
+    surface.SetResolution(8)
 
     coneMapper = vtk.vtkPolyDataMapper()
-    coneMapper.SetInputConnection(cone.GetOutputPort())
+    coneMapper.SetInputConnection(surface.GetOutputPort())
 
     coneActor = vtk.vtkActor()
     coneActor.SetMapper(coneMapper)

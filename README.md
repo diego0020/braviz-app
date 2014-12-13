@@ -10,7 +10,7 @@ Prerequisites:
 Python packages:
 
 - nibabel
-- colorbrewer
+- colorbrewer*
 - numpy
 - scipy
 - pandas

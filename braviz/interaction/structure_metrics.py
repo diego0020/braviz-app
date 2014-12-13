@@ -9,7 +9,7 @@ import braviz
 import braviz.readAndFilter.tabular_data
 import scipy.stats
 
-from braviz.readAndFilter import numpy_support
+from vtk.util import numpy_support
 
 __author__ = 'Diego'
 

@@ -5,7 +5,8 @@ import logging
 
 import vtk
 import numpy as np
-from braviz.readAndFilter import numpy_support
+# from braviz.readAndFilter import numpy_support
+from vtk.util import numpy_support
 
 def compute_volume_and_area(struct):
     """Returns (volume,surface) of a polydata closed surface"""

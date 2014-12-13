@@ -8,7 +8,7 @@ import logging
 import struct
 from scipy import ndimage
 from itertools import izip
-from braviz.readAndFilter import numpy_support
+from vtk.util import numpy_support
 
 __author__ = 'Diego'
 

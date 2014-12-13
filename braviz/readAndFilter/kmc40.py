@@ -1136,6 +1136,7 @@ known_nodes = {  #
                  'IIND-EML754066': (r"C:\Users\da.angulo39\Documents\KAB-db", 2000),
                  'da-angulo': (r"D:\KAB-db", 4000),
                  'Echer': ('H:/KAB-db',8000),
+                 'imagine-PC' : ("E:\\KAB-db",50000)
 }
 
 
