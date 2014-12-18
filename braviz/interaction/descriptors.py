@@ -4,6 +4,8 @@ import os
 import braviz
 import numpy as np
 import scipy.spatial
+
+
 import nibabel
 
 __author__ = 'da.angulo39'
@@ -28,6 +30,7 @@ def _get_descriptors(aseg,labels,draw=False):
 
     points = mm.T
     hull = scipy.spatial.ConvexHull(points)
+
     verts = points[hull.vertices]
 
     m_p=scipy.spatial.distance.pdist(verts)

@@ -82,7 +82,7 @@ def save_subj_descs(subj):
 
         if descs is not None:
             try:
-                conn = sqlite3.connect(db_name,timeout=60)
+                conn = sqlite3.connect(db_name,timeout=600,isolation_level="EXCLUSIVE")
                 save_descs_in_db(conn,subj,s,descs)
                 conn.close()
             except Exception as e:
@@ -91,7 +91,7 @@ def save_subj_descs(subj):
     cc = ['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior']
     try:
         d2 = get_agg_descriptor(subj,cc,aseg,reader)
-        conn = sqlite3.connect(db_name,timeout=60)
+        conn = sqlite3.connect(db_name,timeout=600,isolation_level="EXCLUSIVE")
         save_descs_in_db(conn,subj,"CC-Full",d2)
         conn.close()
     except Exception as e:
