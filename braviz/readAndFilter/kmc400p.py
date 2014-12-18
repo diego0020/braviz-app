@@ -1299,13 +1299,14 @@ The path containing this structure must be set."""
             with open(cache_file, 'rb') as cache_descriptor:
                 try:
                     ans = cPickle.load(cache_descriptor)
-                except cPickle.UnpicklingError:
+                except (cPickle.UnpicklingError,EOFError):
                     log.error("File %s is corrupted " % cache_file)
                     return None
                 else:
                     return ans
-        except (IOError,EOFError):
+        except IOError:
             pass
+
 
         cache_file = os.path.join(cache_dir, "%s.vtk" % key)
         if not os.path.isfile(cache_file):
