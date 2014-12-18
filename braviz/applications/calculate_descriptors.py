@@ -55,7 +55,6 @@ def save_subj_descs(subj):
     log = logging.getLogger(__name__)
     reader = braviz.readAndFilter.BravizAutoReader(max_cache=1000)
     db_name = os.path.join(reader.getDynDataRoot(),"descriptors.sqlite")
-    conn = sqlite3.connect(db_name)
     try:
         structs = reader.get("MODEL",subj,index=True)
         aseg = reader.get("APARC",subj,space="world")
@@ -66,25 +65,35 @@ def save_subj_descs(subj):
     for s in structs:
         try:
             if s.startswith("wm-"):
-                continue
+                dl = None
                 #skip wm
-                d1 =  get_descriptor(subj,s,wmaseg,reader)
+                #d1 =  get_descriptor(subj,s,wmaseg,reader)
             elif s.startswith("ctx-"):
-                continue
-                #skip ctx
+                #continue
+                # not skip ctx
                 d1 =  get_descriptor(subj,s,aseg,reader)
             else:
                 d1 =  get_descriptor(subj,s,aseg,reader)
         except Exception as e:
             log.exception(e.message)
         else:
-            save_descs_in_db(conn,subj,s,d1)
+            dl = None
+        if dl is not None:
+            try:
+                conn = sqlite3.connect(db_name,timeout=60)
+                save_descs_in_db(conn,subj,s,d1)
+                conn.close()
+            except Exception as e:
+                log.exception(e)
+
     cc = ['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior']
     try:
         d2 = get_agg_descriptor(subj,cc,aseg,reader)
+        conn = sqlite3.connect(db_name,timeout=60)
         save_descs_in_db(conn,subj,"CC-Full",d2)
+        conn.close()
     except Exception as e:
-        log.exception(e.message)
+        log.exception(e)
     reader.clear_cache()
 
 def save_for_all(processes=1):
