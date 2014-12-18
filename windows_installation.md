@@ -31,7 +31,9 @@ Pure python, install using [pip](https://pip.pypa.io/en/latest/installing.html)
 2. seaborn
 3. xlrd
 4. XlsxWriter
-5. colorbrewer
+5. colorbrewer*
+6. rdflib*
+7. httplib2*
 
 ## R-packages
 
@@ -39,7 +41,8 @@ Pure python, install using [pip](https://pip.pypa.io/en/latest/installing.html)
 2. arm
 3. car
 
-
+# Initial setup
+Configure projects and populate cache
 
 
 
