@@ -58,7 +58,7 @@ def save_subj_descs(subj):
     try:
         structs = reader.get("MODEL",subj,index=True)
         aseg = reader.get("APARC",subj,space="world")
-        wmaseg = reader.get("WMPARC",subj,space="world")
+        #wmaseg = reader.get("WMPARC",subj,space="world")
     except Exception as e:
         log.exception(e.message)
         return
