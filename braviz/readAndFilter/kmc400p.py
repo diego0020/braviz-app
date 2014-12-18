@@ -1304,7 +1304,7 @@ The path containing this structure must be set."""
                     return None
                 else:
                     return ans
-        except IOError:
+        except (IOError,EOFError):
             pass
 
         cache_file = os.path.join(cache_dir, "%s.vtk" % key)
