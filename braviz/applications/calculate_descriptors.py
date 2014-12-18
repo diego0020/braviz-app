@@ -63,6 +63,7 @@ def save_subj_descs(subj):
         log.exception(e.message)
         return
     for s in structs:
+        dl = None
         try:
             if s.startswith("wm-"):
                 dl = None
@@ -76,8 +77,8 @@ def save_subj_descs(subj):
                 d1 =  get_descriptor(subj,s,aseg,reader)
         except Exception as e:
             log.exception(e.message)
-        else:
             dl = None
+
         if dl is not None:
             try:
                 conn = sqlite3.connect(db_name,timeout=60)
