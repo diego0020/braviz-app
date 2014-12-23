@@ -47,8 +47,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
         self.__fmri_LUT = None
         self.__fa_lut = None
         self.__free_surfer_aparc_lut = None
-        self.free_surfer_lut = None
-        self.free_surfer_labels = None
+        self.__free_surfer_lut = None
+        self.__free_surfer_labels = None
 
         self._functional_paradigms=frozenset()
 
@@ -405,9 +405,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
         name = kw.get('name')
         if name is not None:
             if kw.get('color'):
-                if self.free_surfer_lut is None:
+                if self.__free_surfer_lut is None:
                     self.__parse_fs_color_file()
-                colors = self.free_surfer_lut
+                colors = self.__free_surfer_lut
                 if name.endswith('-SPHARM'):
                     return colors[name[:-7]]
                 else:
@@ -421,9 +421,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 if name.endswith('-SPHARM'):
                     log.warning("Warning, spharm structure treated as non-spharm equivalent")
                     name = name[:-7]
-                if self.free_surfer_labels is None:
+                if self.__free_surfer_labels is None:
                     self.__parse_fs_color_file()
-                return self.free_surfer_labels.get(name)
+                return self.__free_surfer_labels.get(name)
             else:
                 available = self._load_free_surfer_model(subject, index='T')
                 if not name in available:
@@ -482,8 +482,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
         cached2 = self.load_from_cache('free_surfer_labels_dict_internal')
         if (cached is not None) and (cached2 is not None):
             if len(cached) > 1266:
-                self.free_surfer_lut = cached
-                self.free_surfer_labels = cached2
+                self.__free_surfer_lut = cached
+                self.__free_surfer_labels = cached2
                 return
         color_file_name = self._get_freesurfer_lut_name()
 
@@ -498,8 +498,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
             labels_dict=dict(labels_tuples)
             self.save_into_cache('free_surfer_labels_dict_internal',labels_dict)
 
-        self.free_surfer_lut = color_dict
-        self.free_surfer_labels = labels_dict
+        self.__free_surfer_lut = color_dict
+        self.__free_surfer_labels = labels_dict
 
     def _get_freesurfer_surf_name(self,subj,name):
         raise NotImplementedError
@@ -701,9 +701,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 log.exception(e)
                 log.error("%s image not found"%img_name)
                 return set()
-            if self.free_surfer_labels is None:
+            if self.__free_surfer_labels is None:
                 self._parse_fs_color_file()
-            lbl = self.free_surfer_labels.get(waypoint)
+            lbl = self.__free_surfer_labels.get(waypoint)
             if lbl is None:
                 raise Exception("Unknown structure")
             ids = braviz.readAndFilter.filter_polylines_by_scalar(fibers,int(lbl))
@@ -873,9 +873,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
             raise ValueError
         self._parse_fs_color_file()
         if kw.get("color",False):
-            col = self.free_surfer_lut[track_name]
+            col = self.__free_surfer_lut[track_name]
             return col[:3]
-        idx = int(self.free_surfer_labels[track_name])
+        idx = int(self.__free_surfer_labels[track_name])
         idx %= 100
 
         if kw.get("map",False):

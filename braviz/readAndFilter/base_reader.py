@@ -96,66 +96,17 @@ always return empty lists for indexes and raise a IOError.
                  Use space=world to get output in world coordinates [experimental]
 
         """
-        subj_id = self._decode_subject(subj_id)
+        subj_id = self.decode_subject(subj_id)
         return self._get(data, subj_id, **kw)
 
-    #============================end of public API==========================================
+    def get_filtered_polydata_ids(self,subj,struct):
+        self.__raise_error()
 
-    def _decode_subject(self,subj):
+    def decode_subject(self,subj):
         """
         Transforms the subject into the standard format
         """
         return int(subj)
-
-    def __raise_error(self):
-        """
-        Raises an IOError
-        """
-        raise IOError("Data not available in BaseReader")
-
-    def _get(self, data, subj=None, **kw):
-        "Internal: decode instruction and dispatch"
-        data = data.upper()
-        if data == 'MRI':
-            self.__raise_error()
-        elif data == "MD":
-            self.__raise_error()
-        elif data == "DTI":
-            self.__raise_error()
-        elif data == 'FA':
-            self.__raise_error()
-        elif data == 'IDS':
-            return []
-        elif data == 'MODEL':
-            if kw.get("index"):
-                return []
-            self.__raise_error()
-        elif data == 'SURF':
-            self.__raise_error()
-        elif data == 'SURF_SCALAR':
-            if kw.get("index"):
-                return []
-            self.__raise_error()
-        elif data == 'FIBERS':
-            self.__raise_error()
-        elif data == 'TENSORS':
-            self.__raise_error()
-        elif data in {"APARC","WMPARC"}:
-            self.__raise_error()
-        elif data == "FMRI":
-            if kw.get("index"):
-                return frozenset()
-            self.__raise_error()
-        elif data == 'BOLD':
-            self.__raise_error()
-        elif data == "TRACULA":
-            if kw.get("index"):
-                return []
-            self.__raise_error()
-        else:
-            log = logging.getLogger(__name__)
-            log.error("Data type not available")
-            raise (Exception("Data type not available"))
 
     def move_img_to_world(self,img,source_space,subj,interpolate=False):
         """
@@ -166,7 +117,7 @@ always return empty lists for indexes and raise a IOError.
         :param interpolate: apply interpolation or do nearest neighbours
         :return: resliced image
         """
-        subj = self._decode_subject(subj)
+        subj = self.decode_subject(subj)
         self.__raise_error()
 
     def move_img_from_world(self,img,target_space,subj,interpolate=False):
@@ -178,31 +129,14 @@ always return empty lists for indexes and raise a IOError.
         :param interpolate: apply interpolation or do nearest neighbours
         :return: resliced image
         """
-        subj = self._decode_subject(subj)
+        subj = self.decode_subject(subj)
         self.__raise_error()
 
-
-    def transformPointsToSpace(self, point_set, space, subj, inverse=False):
+    def transform_points_to_space(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space.
         If inverse is true moves from space to world"""
-        subj = self._decode_subject(subj)
+        subj = self.decode_subject(subj)
         self.__raise_error()
-
-
-    def _process_key(self, key):
-        """
-        Creates a suitable key for a cache file
-        """
-        data_root_length = len(self.get_dyn_data_root())
-        key = "%s" % key
-        if len(key) + data_root_length > 250:
-            key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
-        else:
-            ilegal = ['_','<', '>', ':', '"', '/', "\\", '|', '?', '*']
-            for i,il in enumerate(ilegal):
-                key = key.replace(il, '%d_'%i)
-        return key
-
 
     def save_into_cache(self, key, data):
         """
@@ -282,3 +216,69 @@ always return empty lists for indexes and raise a IOError.
     def get_auto_reader(**kw_args):
         """Initialized a based on known nodes file"""
         return BaseReader()
+
+    #======================END OF PUBLIC API===============================
+
+    def _process_key(self, key):
+        """
+        Creates a suitable key for a cache file
+        """
+        data_root_length = len(self.get_dyn_data_root())
+        key = "%s" % key
+        if len(key) + data_root_length > 250:
+            key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
+        else:
+            ilegal = ['_','<', '>', ':', '"', '/', "\\", '|', '?', '*']
+            for i,il in enumerate(ilegal):
+                key = key.replace(il, '%d_'%i)
+        return key
+
+    def __raise_error(self):
+        """
+        Raises an IOError
+        """
+        raise IOError("Data not available in BaseReader")
+
+    def _get(self, data, subj=None, **kw):
+        "Internal: decode instruction and dispatch"
+        data = data.upper()
+        if data == 'MRI':
+            self.__raise_error()
+        elif data == "MD":
+            self.__raise_error()
+        elif data == "DTI":
+            self.__raise_error()
+        elif data == 'FA':
+            self.__raise_error()
+        elif data == 'IDS':
+            return []
+        elif data == 'MODEL':
+            if kw.get("index"):
+                return []
+            self.__raise_error()
+        elif data == 'SURF':
+            self.__raise_error()
+        elif data == 'SURF_SCALAR':
+            if kw.get("index"):
+                return []
+            self.__raise_error()
+        elif data == 'FIBERS':
+            self.__raise_error()
+        elif data == 'TENSORS':
+            self.__raise_error()
+        elif data in {"APARC","WMPARC"}:
+            self.__raise_error()
+        elif data == "FMRI":
+            if kw.get("index"):
+                return frozenset()
+            self.__raise_error()
+        elif data == 'BOLD':
+            self.__raise_error()
+        elif data == "TRACULA":
+            if kw.get("index"):
+                return []
+            self.__raise_error()
+        else:
+            log = logging.getLogger(__name__)
+            log.error("Data type not available")
+            raise (Exception("Data type not available"))
