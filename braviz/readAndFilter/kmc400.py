@@ -13,7 +13,7 @@ from numpy.linalg import inv
 
 
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix,readFreeSurferTransform,  numpy2vtk_img,\
-    nifti_rgb2vtk
+    nifti_rgb2vtk, memo_ten
 
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 
@@ -312,6 +312,52 @@ The path containing this structure must be set."""
         T1_world = os.path.join(path, 'T1', 'T1.nii')
         return self._read_func_transform_internal(subject,paradigm_name,inverse,path,T1_func,T1_world)
 
+    @staticmethod
+    @memo_ten
+    def get_auto_data_root():
+        node_id = platform.node()
+        node = known_nodes.get(node_id)
+        if node is not None:
+            return node[0]
+        log = logging.getLogger(__name__)
+        log.error("Unknown node")
+        raise Exception("Unkown node")
+
+    @staticmethod
+    @memo_ten
+    def get_dyn_data_root():
+        node_id = platform.node()
+        node = known_nodes.get(node_id)
+        if node is not None:
+            return node[1]
+        log = logging.getLogger(__name__)
+        log.error("Unknown node")
+        raise Exception("Unkown node")
+
+    @staticmethod
+    def autoReader(**kw_args):
+        """Initialized a kmc400Reader based on the computer name"""
+        node_id = platform.node()
+        node = known_nodes.get(node_id)
+        log = logging.getLogger(__name__)
+        if node is not None:
+            static_data_root = node[0]
+            dyn_data_root = node[1]
+
+            if kw_args.get('max_cache', 0) > 0:
+                max_cache = kw_args.pop('max_cache')
+
+                log.info("Max cache set to %.2f MB" % max_cache)
+            else:
+                max_cache = node[2]
+            return kmc400Reader(static_data_root,dyn_data_root, max_cache=max_cache)
+        else:
+            print "Unknown node %s, please enter route to data" % node_id
+            path = raw_input('KMC_root: ')
+            return kmc400Reader(path, **kw_args)
+            # add other strategies to find the project __root
+    
+    
 known_nodes = {  #
     # Name          :  ( static data root, dyn data root , cache size in MB)
     'gambita.uniandes.edu.co': ('/media/DATAPART5/kmc400','/media/DATAPART5/kmc400_braviz', 4000),
@@ -332,46 +378,3 @@ known_nodes = {  #
 
 }
 
-
-def get_data_root():
-    node_id = platform.node()
-    node = known_nodes.get(node_id)
-    if node is not None:
-        return node[0]
-    log = logging.getLogger(__name__)
-    log.error("Unknown node")
-    raise Exception("Unkown node")
-
-def get_dyn_data_root():
-    node_id = platform.node()
-    node = known_nodes.get(node_id)
-    if node is not None:
-        return node[1]
-    log = logging.getLogger(__name__)
-    log.error("Unknown node")
-    raise Exception("Unkown node")
-
-#===============================================================================================
-def autoReader(**kw_args):
-    """Initialized a kmc400Reader based on the computer name"""
-    node_id = platform.node()
-    node = known_nodes.get(node_id)
-    log = logging.getLogger(__name__)
-    if node is not None:
-        static_data_root = node[0]
-        dyn_data_root = node[1]
-
-        if kw_args.get('max_cache', 0) > 0:
-            max_cache = kw_args.pop('max_cache')
-
-            log.info("Max cache set to %.2f MB" % max_cache)
-        else:
-            max_cache = node[2]
-        return kmc400Reader(static_data_root,dyn_data_root, max_cache=max_cache)
-    else:
-        print "Unknown node %s, please enter route to data" % node_id
-        path = raw_input('KMC_root: ')
-        return kmc400Reader(path, **kw_args)
-        # add other strategies to find the project __root
-    
-    
