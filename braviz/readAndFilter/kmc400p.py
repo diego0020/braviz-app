@@ -246,6 +246,9 @@ The path containing this structure must be set."""
     def _get_free_surfer_labels_path(self,subj):
         return os.path.join(self.getDataRoot(), "freeSurfer_Tracula",str(subj), 'label')
 
+    def _get_freesurfer_surf_name(self,subj,name):
+        return os.path.join(self.getDataRoot(),"freeSurfer_Tracula",str(subj),"surf",name )
+
     def _get_tracula_map_name(self,subj):
         data_dir = os.path.join(self.getDataRoot(),"freeSurfer_Tracula","%s"%subj,"dpath")
         tracks_file = "merged_avg33_mni_bbr.mgz"
@@ -262,6 +265,11 @@ The path containing this structure must be set."""
         """
         return os.path.join(self.getDataRoot(), "tractography",subj)
 
+    def _get_fa_img_name(self):
+        return "fa.nii.gz"
+
+    def _get_orig_img_name(self):
+        return "orig.nii.gz"
     #==========SPM================
     def _get_paradigm_name(self,paradigm_name):
         if paradigm_name.endswith("SENSE"):
@@ -296,6 +304,13 @@ The path containing this structure must be set."""
             y_file = os.path.join(self.getDataRoot(),"spm", subject,paradigm, "y_seg_%s.nii.gz" % direction)
 
         return dartel2GridTransform_cached(y_file,cache_key,self,assume_bad_matrix)
+
+    def _read_func_transform(self,subject,paradigm_name,inverse=False):
+        paradigm_name = self._get_paradigm_name(paradigm_name)
+        path = os.path.join(self.getDataRoot(), 'spm',subject )
+        T1_func = os.path.join(path, paradigm_name, 'T1.nii')
+        T1_world = os.path.join(path, 'T1', 'T1.nii')
+        return self._read_func_transform_internal(subject,paradigm_name,inverse,path,T1_func,T1_world)
 
 known_nodes = {  #
     # Name          :  ( static data root, dyn data root , cache size in MB)

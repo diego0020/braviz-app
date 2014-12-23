@@ -1,34 +1,20 @@
 from __future__ import division
 
-import base64
 import os
 import re
 import platform  # for the autoReader
-import cPickle
-import hashlib
-import types
-import pickle
 import logging
 
 import nibabel as nib
-import numpy as np
-from numpy.linalg import inv
-from scipy.stats._continuous_distns import loggamma_gen
-import vtk
 
-from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
-    readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk, \
-    CacheContainer
-from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, \
-    get_free_surfer_lut, \
-    surfLUT2VTK
-from braviz.readAndFilter.read_tensor import cached_readTensorImage
+from numpy.linalg import inv
+
+
+from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, \
+    readFreeSurferTransform,  numpy2vtk_img, nifti_rgb2vtk
+
 from braviz.readAndFilter.readDartelTransform import  dartel2GridTransform_cached
-from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
-import braviz.readAndFilter.color_fibers
-from braviz.readAndFilter import bundles_db
-from hierarchical_fibers import read_logical_fibers
-from braviz.readAndFilter.read_spm import SpmFileReader, get_contrasts_dict
+
 
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 
@@ -40,7 +26,7 @@ The path containing this structure must be set."""
     def __init__(self, path, max_cache=2000):
         "The path pointing to the __root of the file structure must be set here"
         KmcAbstractReader.__init__(self,path,path,max_cache)
-        self.__functional_paradigms = frozenset(("PRECISION", "POWERGRIP"))
+        self._functional_paradigms = frozenset(("PRECISION", "POWERGRIP"))
 
     def _getIds(self):
         "Auxiliary function to get the available ids"
@@ -128,7 +114,7 @@ The path containing this structure must be set."""
             if space == "diff" and (data in {"FA", "MD", "DTI"}):
                 return img2
             return self._move_img_from_world(subj, img2, interpolate, space=space)
-        space = kw.get('space', 'native')
+        space = kw.get('space', 'world')
         space = space.lower()
         if space == "diff" and (data in {"FA", "MD", "DTI"}):
             return img
@@ -244,6 +230,9 @@ The path containing this structure must be set."""
     def _get_free_surfer_labels_path(self,subj):
         return os.path.join(self.getDataRoot(), str(subj), 'Surf')
 
+    def _get_freesurfer_surf_name(self,subj,name):
+        return os.path.join(self.getDataRoot(),str(subj),"Surf",name )
+
     def _get_tracula_map_name(self,subj):
         raise IOError("Tracula data not available")
 
@@ -255,7 +244,13 @@ The path containing this structure must be set."""
         """
         Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
         """
-        os.path.join(self.getDataRoot(), subj, 'camino')
+        return os.path.join(self.getDataRoot(), subj, 'camino')
+
+    def _get_fa_img_name(self):
+        return "FA.nii.gz"
+
+    def _get_orig_img_name(self):
+        return "orig.nii.gz"
 
     #==========SPM================
     def _get_paradigm_name(self,paradigm_name):
@@ -281,7 +276,12 @@ The path containing this structure must be set."""
             y_file = os.path.join(self.getDataRoot(), subject, 'spm',paradigm,'y_seg_%s.nii.gz' % direction)
         return dartel2GridTransform_cached(y_file,cache_key,self,assume_bad_matrix)
 
-
+    def _read_func_transform(self,subject,paradigm_name,inverse=False):
+        paradigm_name = self._get_paradigm_name(paradigm_name)
+        path = os.path.join(self.getDataRoot(),subject,"spm" )
+        T1_func = os.path.join(path, paradigm_name, 'T1.nii.gz')
+        T1_world = os.path.join(path, 'T1', 'T1.nii.gz')
+        return self._read_func_transform_internal(subject,paradigm_name,inverse,path,T1_func,T1_world)
 
 known_nodes = {  #
                  # Name          :  ( data root                   , cache size in MB)

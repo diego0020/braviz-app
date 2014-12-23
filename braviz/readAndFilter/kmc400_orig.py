@@ -289,7 +289,7 @@ The path containing this structure must be set."""
             dartel_warp = self.__get_spm_grid_transform(subj,"dartel","back")
             img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
                                   spacing2=(-1.5, 1.5, 1.5), interpolate=interpolate)
-            #origin, dimension and spacing come from template 
+            #origin, dimension and spacing come from template
             return img3
         elif space[:2].lower() == 'ta':
             talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
@@ -1022,7 +1022,8 @@ The path containing this structure must be set."""
             color_dict = None
         #color_dict = None
         if color_dict is None:
-            conf = config_file.get_config(__file__)
+            apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
+            conf = config_file.get_config(apps_dir)
             ref = conf.get_default_subject()
             aparc_img = self.get('APARC', ref)
             aparc_data = aparc_img.get_data()

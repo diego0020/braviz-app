@@ -290,6 +290,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
     def _get_free_surfer_labels_path(self,subj):
         raise NotImplementedError
 
+    def _get_freesurfer_surf_name(self,subj,name):
+        raise NotImplementedError
+
     def _get_tracula_map_name(self,subj):
         raise NotImplementedError
 
@@ -299,8 +302,15 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
     def _get_base_fibs_dir_name(self,subj):
         """
-        Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
+        Must contain 'diff2surf.mat', '<fa_img>', '<orig_img>'
+        where fa_img and orig_img are defined by the following functions
         """
+        raise NotImplementedError
+
+    def _get_fa_img_name(self):
+        raise NotImplementedError
+
+    def _get_orig_img_name(self):
         raise NotImplementedError
 
     #==========SPM================
@@ -319,6 +329,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
         """
         raise NotImplementedError
 
+    def _read_func_transform(self,subject,paradigm_name,inverse=False):
+        raise NotImplementedError
 #==========================end of virtual methods=======================================
 
 #==============================common methods===========================================
@@ -502,8 +514,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
         self._free_surfer_lut = color_dict
         self._free_surfer_labels = labels_dict
 
-    def _get_freesurfer_surf_name(self,subj,name):
-        raise NotImplementedError
 
     def _cached_surface_read(self,subj,name):
         "cached function to read a freesurfer surface file"
@@ -812,7 +822,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
             #move to world
-            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
+            matrix = readFlirtMatrix('diff2surf.mat', self._get_fa_img_name(), self._get_orig_img_name(), path)
             #matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', '../orig.nii.gz', path)
             streams_mri = transformPolyData(streams, matrix)
             if kw.get('space', 'world').lower() != 'world':
@@ -951,9 +961,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
         elif space.lower()[:4] == 'diff':
             path = self._get_base_fibs_dir_name()
             #TODO: This looks wrong!!!!
-            transform = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz','fa.nii.gz', path)
+            transform = readFlirtMatrix('surf2diff.mat', self._get_orig_img_name(),self._get_fa_img_name(), path)
             if inverse:
-                transform = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
+                transform = readFlirtMatrix('diff2surf.mat', self._get_fa_img_name(), self._get_orig_img_name(), path)
 
             return transformPolyData(point_set, transform)
         elif space.lower() in ('template', 'dartel'):
@@ -996,7 +1006,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
             color_dict = None
         #color_dict = None
         if color_dict is None:
-            conf = config_file.get_config(__file__)
+            apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
+            conf = config_file.get_config(apps_dir)
             ref = conf.get_default_subject()
             aparc_img = self.get('APARC', ref)
             aparc_data = aparc_img.get_data()
@@ -1058,12 +1069,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
         return fmri_color_int
 
-    def _read_func_transform(self,subject,paradigm_name,inverse=False):
-        paradigm_name = self._get_paradigm_name(paradigm_name)
-        path = os.path.join(self.getDataRoot(), 'spm',subject )
-        T1_func = os.path.join(path, paradigm_name, 'T1.nii')
-        T1_world = os.path.join(path, 'T1', 'T1.nii')
-        return self._read_func_transform_internal(subject,paradigm_name,inverse,path,T1_func,T1_world)
 
     def _read_func_transform_internal(self,subject, paradigm_name, inverse, path, T1_func, T1_world,  ):
         "reads the transform from world to functional space"
