@@ -382,15 +382,14 @@ The path containing this structure must be set."""
         Use paradigm=dartel to get the transform associated to the dartel normalization
         """
         assert direction in {"forw","back"}
+        cache_key = "y_%s_%s_%s.vtk"%(paradigm,subject,direction)
         if paradigm=="dartel":
             y_file = os.path.join(self.getDataRoot(),"spm",subject,"T1", "y_dartel_%s.nii" % direction)
-            cache_name=os.path.join(self.__dynaimc_data_root,".braviz_cache",
-                                    "y_%s_%s_%s.vtk"%(paradigm,subject,direction))
+
         else:
             y_file = os.path.join(self.getDataRoot(),"spm", subject,paradigm, "y_seg_%s.nii.gz" % direction)
-            cache_name=os.path.join(self.__dynaimc_data_root,".braviz_cache",
-                                    "y_%s_%s_%s.vtk"%(paradigm,subject,direction))
-        return dartel2GridTransform_cached(y_file,assume_bad_matrix,cache_file_name=cache_name)
+
+        return dartel2GridTransform_cached(y_file,cache_key,self,assume_bad_matrix)
 
 
     def __load_free_surfer_model(self, subject, **kw):

@@ -78,18 +78,10 @@ def check_matrix(m):
                     log.warning("WARNING: Matrix contains rotations or shears, this is not tested")
                     return False
     return True
-def dartel2GridTransform_cached(y_file,assume_bad_matrix=False,cache_file_name=None):
+def dartel2GridTransform_cached(y_file,cache_key,reader,assume_bad_matrix=False):
     "Cached version of dartel2GridTransform"
     log = logging.getLogger(__name__)
-    if cache_file_name is None:
-        if y_file[-2:]=='gz':
-            base_name=y_file[:-7] # remove .nii.gz
-        else:
-            base_name=y_file[:-4] # remove .nii
-        cache_name=base_name+'.vtk'
-    else:
-        cache_name = cache_file_name
-    cache=os.path.isfile(cache_name)
+    cache=reader.load_from_cache(cache_key)
     if not cache:
         log.info("importing dartel warp field... this will take a while")
         trans=dartel2GridTransform(y_file,assume_bad_matrix)
@@ -114,22 +106,10 @@ def dartel2GridTransform_cached(y_file,assume_bad_matrix=False,cache_file_name=N
         else:
             log.error('Unknown transform type')
             raise Exception('Unknown transform type')
-        writer=vtk.vtkDataSetWriter()
-        writer.SetFileTypeToBinary()
-        writer.SetFileName(cache_name)
-        writer.SetInputData(g)
-        try:
-            writer.Update()
-            if writer.GetErrorCode()!=0:
-                log.warning('cache write failed')
-        except Exception:
-            log.warning("Cache write failed")
+        reader.save_into_cache(cache_key,g)
         return trans
     else:
-        reader=vtk.vtkDataSetReader()
-        reader.SetFileName(cache_name)
-        reader.Update()
-        g=reader.GetOutput()
+        g=cache
         matrix_array=g.GetFieldData().GetArray('matrix')
         if matrix_array is not None:
             #"we are dealing with a composed transform"

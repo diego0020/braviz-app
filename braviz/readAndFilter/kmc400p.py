@@ -38,7 +38,7 @@ The path containing this structure must be set."""
 
     def __init__(self, static_root,dynamic_route, max_cache=2000):
         "The path pointing to the __root of the file structure must be set here"
-        KmcAbstractReader.__init__(static_root,dynamic_route,max_cache)
+        KmcAbstractReader.__init__(self,static_root,dynamic_route,max_cache)
 
         self._functional_paradigms=frozenset(('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION'))
 
@@ -54,26 +54,107 @@ The path containing this structure must be set."""
     def decode_subject(self,subj):
         return str(subj)
 
-    def __getImg(self, data, subj, **kw):
+    def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
+        "moves an image from the world coordinate space to talairach or dartel spaces"
+        space = space.lower()
+        if space == 'world':
+            return img2
+        elif space in ('template', 'dartel'):
+            dartel_warp = self._get_spm_grid_transform(subj,"dartel","back")
+            img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
+                                  spacing2=(-1.5, 1.5, 1.5), interpolate=interpolate)
+            #origin, dimension and spacing come from template
+            return img3
+        elif space[:2].lower() == 'ta':
+            talairach_file = self._get_talairach_transform_name(subj)
+            transform = readFreeSurferTransform(talairach_file)
+            img3 = applyTransform(img2, inv(transform), (-100, -120, -110), (190, 230, 230), (1, 1, 1),
+                                  interpolate=interpolate)
+            return img3
+        elif space[:4] in ('func', 'fmri'):
+            #functional space
+            paradigm = space[5:]
+            #print paradigm
+            paradigm =self._get_paradigm_name(paradigm)
+            transform = self._read_func_transform(subj, paradigm, True)
+            img3 = applyTransform(img2, transform, origin2=(78, -112, -50), dimension2=(79, 95, 68),
+                                  spacing2=(-2, 2, 2),
+                                  interpolate=interpolate)
+            return img3
+        elif space == "diff":
+            #TODO: Check, looks wrong
+            path = self._get_base_fibs_dir_name(subj)
+            # notice we are reading the inverse transform diff -> world
+            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            img3 = applyTransform(img2, trans, interpolate=interpolate)
+            return img3
+        else:
+            log = logging.getLogger(__name__)
+            log.error('Unknown space %s' % space)
+            raise Exception('Unknown space %s' % space)
+
+    def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
+        "moves an image from the world coordinate space to talairach or dartel spaces"
+        space = space.lower()
+        if space == 'world':
+            return img2
+        ref = self.get("mri",subj,space="world",format="vtk")
+        origin = ref.GetOrigin()
+        spacing = ref.GetSpacing()
+        dims = ref.GetDimensions()
+        if space in ('template', 'dartel'):
+            dartel_warp = self._get_spm_grid_transform(subj,"dartel","forw")
+            img3 = applyTransform(img2, dartel_warp, origin2=origin, dimension2=dims,
+                                  spacing2=spacing, interpolate=interpolate)
+            #origin, dimension and spacing come from template
+            return img3
+        elif space[:2].lower() == 'ta':
+            talairach_file = self._get_talairach_transform_name(subj)
+            transform = readFreeSurferTransform(talairach_file)
+            img3 = applyTransform(img2, transform, origin, dims, spacing,
+                                  interpolate=interpolate)
+            return img3
+        elif space[:4] in ('func', 'fmri'):
+            #functional space
+            paradigm = space[5:]
+            #print paradigm
+            paradigm =self._get_paradigm_name(paradigm)
+            transform = self._read_func_transform(subj, paradigm, False)
+            img3 = applyTransform(img2, transform, origin2=origin, dimension2=dims,
+                                  spacing2=spacing,
+                                  interpolate=interpolate)
+            return img3
+        elif space == "diff":
+            path = self._get_base_fibs_dir_name(subj)
+            # notice we are reading the inverse transform diff -> world
+            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            img3 = applyTransform(img2, trans, interpolate=interpolate,origin2=origin,spacing2=spacing,dimension2=dims)
+            return img3
+        else:
+            log = logging.getLogger(__name__)
+            log.error('Unknown space %s' % space)
+            raise Exception('Unknown space %s' % space)
+
+    def _getImg(self, data, subj, **kw):
         "Auxiliary function to read nifti images"
         #path=self.__root+'/'+str(subj)+'/MRI'
         if data == 'MRI':
-            path = os.path.join(self.__static_root, "nii",str(subj))
+            path = os.path.join(self.getDataRoot(), "nii",str(subj))
             filename = 'MPRAGEmodifiedSENSE.nii.gz'
         elif data == 'FA':
-            path = os.path.join(self.__static_root, 'tractography',str(subj))
+            path = os.path.join(self.getDataRoot(), 'tractography',str(subj))
             if kw.get('space',"").startswith('diff'):
                 filename = 'fa.nii.gz'
             else:
                 filename = 'fa_mri.nii.gz'
         elif data == "MD":
-            path = os.path.join(self.__static_root, 'tractography',str(subj))
+            path = os.path.join(self.getDataRoot(), 'tractography',str(subj))
             if kw.get('space',"").startswith('diff'):
                 filename = 'md.nii.gz'
             else:
                 filename = 'md_mri.nii.gz'
         elif data == "DTI":
-            path = os.path.join(self.__static_root, 'tractography',str(subj))
+            path = os.path.join(self.getDataRoot(), 'tractography',str(subj))
             if kw.get('space','').startswith('diff'):
                 filename = 'rgb_dti.nii.gz'
                 #filename = 'rgb_dti_masked.nii.gz'
@@ -81,14 +162,14 @@ The path containing this structure must be set."""
                 filename = 'rgb_dti_mri.nii.gz'
                 #filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
-            path = os.path.join(self.__static_root, "slicer_models",str(subj))
+            path = os.path.join(self.getDataRoot(), "slicer_models",str(subj))
             if kw.get("wm"):
                 filename = 'wmparc.nii.gz'
                 print "Warning... deprecated, use WMPARC instead"
             else:
                 filename = 'aparc+aseg.nii.gz'
         elif data == "WMPARC":
-            path = os.path.join(self.__static_root, "slicer_models",str(subj))
+            path = os.path.join(self.getDataRoot(), "slicer_models",str(subj))
             filename = 'wmparc.nii.gz'
         else:
             log = logging.getLogger(__name__)
@@ -162,7 +243,7 @@ The path containing this structure must be set."""
 
     def _get_talairach_transform_name(self,subject):
         """xfm extension"""
-        os.path.join(self.getDataRoot(), "freeSurfer_Tracula", subject, "mri","transforms",'talairach.xfm')
+        return os.path.join(self.getDataRoot(), "freeSurfer_Tracula", subject, "mri","transforms",'talairach.xfm')
 
     def _get_free_surfer_stats_dir_name(self,subject):
         return os.path.join(self.getDataRoot(), 'freeSurfer_Tracula',subject, 'stats')
@@ -184,29 +265,48 @@ The path containing this structure must be set."""
 
     #=============Camino==================
     def _get_base_fibs_name(self,subj):
-        raise NotImplementedError
+        return os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
 
     def _get_base_fibs_dir_name(self,subj):
         """
         Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
         """
-        raise NotImplementedError
+        return os.path.join(self.getDataRoot(), "tractography",subj)
 
     #==========SPM================
     def _get_paradigm_name(self,paradigm_name):
-        raise NotImplementedError
+        if paradigm_name.endswith("SENSE"):
+            return paradigm_name
+        paradigm_name = paradigm_name.upper()
+        assert paradigm_name in self._functional_paradigms
+
+        if paradigm_name=="MIEDO":
+            paradigm_name="MIEDOSofTone"
+        paradigm_name +="SENSE"
+        return paradigm_name
 
     def _get_paradigm_dir(self,subject,name,spm=False):
         "If spm is True return the direcory containing spm.mat, else return its parent"
-        raise NotImplementedError
+        if not spm:
+            return os.path.join(self.getDataRoot(),"spm", subject,name)
+        else:
+            return os.path.join(self.getDataRoot(), "spm",subject,name,"FirstLevel")
 
     def _get_spm_grid_transform(self,subject,paradigm,direction,assume_bad_matrix=False):
-        #TODO: Cache shouldn't be here
         """
         Get the spm non linear registration transform grid associated to the paradigm
         Use paradigm=dartel to get the transform associated to the dartel normalization
         """
-        raise NotImplementedError
+        assert direction in {"forw","back"}
+        cache_key = "y_%s_%s_%s.vtk"%(paradigm,subject,direction)
+        if paradigm=="dartel":
+            y_file = os.path.join(self.getDataRoot(),"spm",subject,"T1", "y_dartel_%s.nii" % direction)
+
+
+        else:
+            y_file = os.path.join(self.getDataRoot(),"spm", subject,paradigm, "y_seg_%s.nii.gz" % direction)
+
+        return dartel2GridTransform_cached(y_file,cache_key,self,assume_bad_matrix)
 
 known_nodes = {  #
     # Name          :  ( static data root, dyn data root , cache size in MB)

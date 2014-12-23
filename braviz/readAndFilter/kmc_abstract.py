@@ -262,6 +262,14 @@ A read and filter class designed to work with kmc projects. Implements common fu
         "Auxiliary function to read nifti images"
         raise NotImplementedError
 
+    def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
+        "moves an image from the world coordinate space to talairach or dartel spaces"
+        raise NotImplementedError
+
+    def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
+        "moves an image from the world coordinate space to talairach or dartel spaces"
+        raise  NotImplementedError
+
     #==========Free Surfer================
     def _get_free_surfer_models_dir_name(self,subject):
         raise NotImplementedError
@@ -310,6 +318,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         Use paradigm=dartel to get the transform associated to the dartel normalization
         """
         raise NotImplementedError
+
 #==========================end of virtual methods=======================================
 
 #==============================common methods===========================================
@@ -365,14 +374,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
             log = logging.getLogger(__name__)
             log.error("Data type not available")
             raise (Exception("Data type not available"))
-
-    def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
-        "moves an image from the world coordinate space to talairach or dartel spaces"
-        raise NotImplementedError
-
-    def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
-        "moves an image from the world coordinate space to talairach or dartel spaces"
-        raise  NotImplementedError
 
 
     _spharm_models = {'Left-Amygdala': 'l_amygdala',
@@ -557,8 +558,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
     def _loadFreeSurferScalar(self, subj, **kw):
         "Auxiliary function to read free surfer scalars"
         morph = {'area', 'curv', 'avg_curv', 'thickness', 'volume', 'sulc'}
-        morph_path = self._get_free_surfer_morph_path()
-        labels_path = self._get_free_surfer_labels_path()
+        morph_path = self._get_free_surfer_morph_path(subj)
+        labels_path = self._get_free_surfer_labels_path(subj)
         log = logging.getLogger(__name__)
         try:
             hemisphere = kw['hemi']
@@ -605,7 +606,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             color = color.lower()
             if color.startswith('orient'):
                 #This one should always exist!!!!!
-                file_name = self._get_base_fibs_name()
+                file_name = self._get_base_fibs_name(subj)
                 if not os.path.isfile(file_name):
                     log.error("Fibers file not found: %s"%file_name)
                     raise Exception("Fibers file not found")
@@ -806,7 +807,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 return transformed_streams
             return fibers
         if 'waypoint' not in kw:
-            path = self._get_base_fibs_dir_name()
+            path = self._get_base_fibs_dir_name(subj)
             streams = self._cached_color_fibers(subj, kw.get('color'),kw.get("scalars"))
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
@@ -942,7 +943,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if space.lower()[:2] == 'wo':
             return point_set
         elif space.lower()[:2] == 'ta':
-            talairach_file = self._get_talairach_transform_name()
+            talairach_file = self._get_talairach_transform_name(subj)
             transform = readFreeSurferTransform(talairach_file)
             if inverse:
                 transform = inv(transform)
