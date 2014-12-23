@@ -296,7 +296,7 @@ The path containing this structure must be set."""
 
     @staticmethod
     @memo_ten
-    def get_dyn_data_root():
+    def get_auto_dyn_data_root():
         return kmc40Reader.get_auto_data_root()
 
     @staticmethod

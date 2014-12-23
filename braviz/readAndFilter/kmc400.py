@@ -325,7 +325,7 @@ The path containing this structure must be set."""
 
     @staticmethod
     @memo_ten
-    def get_dyn_data_root():
+    def get_auto_dyn_data_root():
         node_id = platform.node()
         node = known_nodes.get(node_id)
         if node is not None:

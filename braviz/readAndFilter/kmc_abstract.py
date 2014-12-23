@@ -251,6 +251,20 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
 #============================virtual methods============================================
 
+    @staticmethod
+    @memo_ten
+    def get_auto_data_root():
+        raise NotImplementedError
+
+    @staticmethod
+    @memo_ten
+    def get_auto_dyn_data_root():
+        raise NotImplementedError
+
+    @staticmethod
+    def autoReader(**kw_args):
+        raise NotImplementedError
+
     def _getIds(self):
         "Auxiliary function to get the available ids"
         raise NotImplementedError
