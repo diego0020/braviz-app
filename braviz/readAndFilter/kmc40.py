@@ -29,7 +29,7 @@ The path containing this structure must be set."""
 
     def _getIds(self):
         "Auxiliary function to get the available ids"
-        contents = os.listdir(self.getDataRoot())
+        contents = os.listdir(self.get_data_root())
         numbers = re.compile('[0-9]+$')
         ids = [c for c in contents if numbers.match(c) is not None]
         ids.sort(key=int)
@@ -45,37 +45,37 @@ The path containing this structure must be set."""
         "Auxiliary function to read nifti images"
         #path=self.getDataRoot()+'/'+subj+'/MRI'
         if data == 'MRI':
-            path = os.path.join(self.getDataRoot(), subj, 'MRI')
+            path = os.path.join(self.get_data_root(), subj, 'MRI')
             filename = '%s-MRI-full.nii.gz' % subj
         elif data == 'FA':
-            path = os.path.join(self.getDataRoot(), subj, 'camino')
+            path = os.path.join(self.get_data_root(), subj, 'camino')
             if kw.get('space', "").startswith('diff'):
                 filename = 'FA_masked.nii.gz'
             else:
                 filename = 'FA_mri_masked.nii.gz'
         elif data == "MD":
-            path = os.path.join(self.getDataRoot(), subj, 'camino')
+            path = os.path.join(self.get_data_root(), subj, 'camino')
             if kw.get('space', "").startswith('diff'):
                 filename = 'MD_masked.nii.gz'
             else:
                 filename = 'MD_mri_masked.nii.gz'
         elif data == "DTI":
-            path = os.path.join(self.getDataRoot(), subj, 'camino')
+            path = os.path.join(self.get_data_root(), subj, 'camino')
             if kw.get('space', '').startswith('diff'):
                 filename = 'rgb_dti_masked.nii.gz'
             else:
                 filename = 'rgb_dti_mri_masked.nii.gz'
         elif data == 'APARC':
-            path = os.path.join(self.getDataRoot(), subj, 'Models')
+            path = os.path.join(self.get_data_root(), subj, 'Models')
             if kw.get("wm"):
                 log = logging.getLogger(__name__)
                 log.warning("deprecated, use WMPARC instead")
-                path = os.path.join(self.getDataRoot(), subj, 'Models3')
+                path = os.path.join(self.get_data_root(), subj, 'Models3')
                 filename = 'wmparc.nii.gz'
             else:
                 filename = 'aparc+aseg.nii.gz'
         elif data == "WMPARC":
-            path = os.path.join(self.getDataRoot(), subj, 'Models3')
+            path = os.path.join(self.get_data_root(), subj, 'Models3')
             filename = 'wmparc.nii.gz'
         else:
             log = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ The path containing this structure must be set."""
             return img
         elif space == "diff":
             #read transform:
-            path = os.path.join(self.getDataRoot(), subj, 'camino')
+            path = os.path.join(self.get_data_root(), subj, 'camino')
             #matrix = readFlirtMatrix('surf2diff.mat', 'FA.nii.gz', 'orig.nii.gz', path)
             matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
             affine = img.get_affine()
@@ -211,39 +211,39 @@ The path containing this structure must be set."""
 
     #==========Free Surfer================
     def _get_free_surfer_models_dir_name(self,subject):
-        return os.path.join(self.getDataRoot(), subject, 'Models3')
+        return os.path.join(self.get_data_root(), subject, 'Models3')
 
     def _get_talairach_transform_name(self,subject):
         """xfm extension"""
-        return os.path.join(self.getDataRoot(), subject, 'Surf', 'talairach.xfm')
+        return os.path.join(self.get_data_root(), subject, 'Surf', 'talairach.xfm')
 
     def _get_free_surfer_stats_dir_name(self,subject):
-        return os.path.join(self.getDataRoot(), subject, 'Models', 'stats')
+        return os.path.join(self.get_data_root(), subject, 'Models', 'stats')
 
     def _get_freesurfer_lut_name(self):
-        return os.path.join(self.getDataRoot(), 'FreeSurferColorLUT.txt')
+        return os.path.join(self.get_data_root(), 'FreeSurferColorLUT.txt')
 
     def _get_free_surfer_morph_path(self,subj):
-        return os.path.join(self.getDataRoot(), str(subj), 'Surf')
+        return os.path.join(self.get_data_root(), str(subj), 'Surf')
 
     def _get_free_surfer_labels_path(self,subj):
-        return os.path.join(self.getDataRoot(), str(subj), 'Surf')
+        return os.path.join(self.get_data_root(), str(subj), 'Surf')
 
     def _get_freesurfer_surf_name(self,subj,name):
-        return os.path.join(self.getDataRoot(),str(subj),"Surf",name )
+        return os.path.join(self.get_data_root(),str(subj),"Surf",name )
 
     def _get_tracula_map_name(self,subj):
         raise IOError("Tracula data not available")
 
     #=============Camino==================
     def _get_base_fibs_name(self,subj):
-        return os.path.join(self.getDataRoot(), subj, 'camino', 'streams.vtk')
+        return os.path.join(self.get_data_root(), subj, 'camino', 'streams.vtk')
 
     def _get_base_fibs_dir_name(self,subj):
         """
         Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
         """
-        return os.path.join(self.getDataRoot(), subj, 'camino')
+        return os.path.join(self.get_data_root(), subj, 'camino')
 
     def _get_fa_img_name(self):
         return "FA.nii.gz"
@@ -258,9 +258,9 @@ The path containing this structure must be set."""
     def _get_paradigm_dir(self,subject,name,spm=False):
         "If spm is True return the direcory containing spm.mat, else return its parent"
         if not spm:
-            return os.path.join(self.getDataRoot(), subject, 'spm', name)
+            return os.path.join(self.get_data_root(), subject, 'spm', name)
         else:
-            return os.path.join(self.getDataRoot(), subject, 'spm', name)
+            return os.path.join(self.get_data_root(), subject, 'spm', name)
 
     def _get_spm_grid_transform(self,subject,paradigm,direction,assume_bad_matrix=False):
         """
@@ -270,14 +270,14 @@ The path containing this structure must be set."""
         assert direction in {"forw","back"}
         cache_key = "y_%s_%s_%s.vtk"%(paradigm,subject,direction)
         if paradigm=="dartel":
-            y_file = os.path.join(self.getDataRoot(), 'Dartel', "y_%s-%s.nii.gz" % (subject,direction))
+            y_file = os.path.join(self.get_data_root(), 'Dartel', "y_%s-%s.nii.gz" % (subject,direction))
         else:
-            y_file = os.path.join(self.getDataRoot(), subject, 'spm',paradigm,'y_seg_%s.nii.gz' % direction)
+            y_file = os.path.join(self.get_data_root(), subject, 'spm',paradigm,'y_seg_%s.nii.gz' % direction)
         return dartel2GridTransform_cached(y_file,cache_key,self,assume_bad_matrix)
 
     def _read_func_transform(self,subject,paradigm_name,inverse=False):
         paradigm_name = self._get_paradigm_name(paradigm_name)
-        path = os.path.join(self.getDataRoot(),subject,"spm" )
+        path = os.path.join(self.get_data_root(),subject,"spm" )
         T1_func = os.path.join(path, paradigm_name, 'T1.nii.gz')
         T1_world = os.path.join(path, 'T1', 'T1.nii.gz')
         return self._read_func_transform_internal(subject,paradigm_name,inverse,path,T1_func,T1_world)

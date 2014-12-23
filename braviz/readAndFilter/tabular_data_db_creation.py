@@ -13,7 +13,7 @@ def read_csv_file(path=None):
         import braviz
 
         dummy_reader = braviz.readAndFilter.BravizAutoReader()
-        path = os.path.join(dummy_reader.getDataRoot(), "test_small.csv")
+        path = os.path.join(dummy_reader.get_data_root(), "test_small.csv")
     #Replace , for .
     with open(path) as csv_file:
         file_buffer = csv_file.read()

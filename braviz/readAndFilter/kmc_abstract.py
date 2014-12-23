@@ -240,7 +240,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             os.rmdir(cache_dir)
             os.mkdir(cache_dir)
 
-    def getDataRoot(self):
+    def get_data_root(self):
         """Returns the data_root of this reader"""
         return self.__static_root
 
@@ -1179,7 +1179,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         return img_4d
 
     def _process_key(self, key):
-        data_root_length = len(self.getDataRoot())
+        data_root_length = len(self.get_data_root())
         key = "%s" % key
         if len(key) + data_root_length > 250:
             key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())

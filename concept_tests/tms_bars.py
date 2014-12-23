@@ -20,7 +20,7 @@ invert_data=True #perform 100 - tms_data
 genre='1' #1=girls, 2=boys
 
 reader=braviz.readAndFilter.BravizAutoReader()
-csv_file=os.path.join(reader.getDataRoot(),'baseFinal_TMS.csv')
+csv_file=os.path.join(reader.get_data_root(),'baseFinal_TMS.csv')
 codes=get_column(csv_file,'CODE')
 genres=get_column(csv_file,'GENDE')
 grupo=get_column(csv_file,'UBICA') #1=canguro, 2=control, 3=gorditos

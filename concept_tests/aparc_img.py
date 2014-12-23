@@ -15,7 +15,7 @@ reader=braviz.readAndFilter.BravizAutoReader()
 aparc_img=reader.get('aparc','144',format='vtk',space='dartel')
 
 
-color_file_name=os.path.join(reader.getDataRoot(),'FreeSurferColorLUT.txt')
+color_file_name=os.path.join(reader.get_data_root(),'FreeSurferColorLUT.txt')
 try:
     color_file=open(color_file_name)
 except IOError as e:

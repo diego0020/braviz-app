@@ -8,7 +8,7 @@ import braviz
 
 
 reader=braviz.readAndFilter.BravizAutoReader()
-data_root=reader.getDataRoot()
+data_root=reader.get_data_root()
 file_name=path_join(data_root,'test_small2.csv')
 
 #file_name = 'File\\testPacientes.csv'

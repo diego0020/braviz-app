@@ -22,7 +22,7 @@ THRESHOLD = 0.2
 
 reader = braviz.readAndFilter.BravizAutoReader()
 
-data_dir = os.path.join(reader.getDataRoot(),"freeSurfer_Tracula","%s"%SUBJ,"dpath")
+data_dir = os.path.join(reader.get_data_root(),"freeSurfer_Tracula","%s"%SUBJ,"dpath")
 tracks_file = "merged_avg33_mni_bbr.mgz"
 tracks_full_file = os.path.join(data_dir,tracks_file)
 

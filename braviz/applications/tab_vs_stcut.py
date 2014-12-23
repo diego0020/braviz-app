@@ -18,7 +18,7 @@ from braviz.interaction.structure_metrics import cached_get_struct_metric_col
 
 if __name__ == "__main__":
     reader=braviz.readAndFilter.BravizAutoReader()
-    data_root=reader.getDataRoot()
+    data_root=reader.get_data_root()
     file_name=path_join(data_root,'test_small.csv')
     cancel_calculation_flag=False
     named_fibers=set(reader.get('fibers','093',index=1))
