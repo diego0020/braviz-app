@@ -27,10 +27,12 @@ import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
 from braviz.interaction import config_file
 
-class KmcAbstractReader(object):
+from braviz.readAndFilter.base_reader import BaseReader
+
+class KmcAbstractReader(BaseReader):
     """
 A read and filter class designed to work with kmc projects. Implements common functionality in kmc40 and kmc400."""
-    _cache_container = CacheContainer()
+
 
     def __init__(self, static_root,dynamic_route, max_cache=2000):
         "The path pointing to the __root of the file structure must be set here"
@@ -43,7 +45,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if self.__dynaimc_data_root[-1]==":":
             self.__dynaimc_data_root+="\\"
 
-        self._cache_container.max_cache = max_cache
+        BaseReader.__init__(self,max_cache)
         self._fmri_LUT = None
         self._fa_lut = None
         self._free_surfer_aparc_lut = None
@@ -57,79 +59,11 @@ A read and filter class designed to work with kmc projects. Implements common fu
         log.info("Clearing cache")
         self._cache_container.clear()
 
-    @cache_function(_cache_container)
-    def get(self,data, subj_id=None, **kw):
-        """All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
-        Available spaces for all data are: world, talairach and dartel. Some data may support additional values
-        data should be one of:
-        IDS: Return the ids of all subjects in the study as a list
-
-        MRI: By default returns a nibnii object, use format='VTK' to get a vtkImageData object.
-             Additionally use space='native' to ignore the nifti transform.
-
-        FA:  Same options as MRI, but space also accepts 'diffusion', also accepts 'lut'
-
-        MD:  Same options as MRI, but space also accepts 'diffusion'
-
-        DTI: Same options as MRI, but space also accepts 'diffusion'
-
-        APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
-
-        WMPARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
-
-        FMRI: requires name=<Paradigm>, may also receive contrast to indicate a specific contrast (the defautl is 1)
-              Use contrasts_dict = True togethet with paradigms to get the names of the contrasts
-              Use SPM = True to get a representation of the corresponding spm file
-
-        BOLD: requires name=<Paradigm>, only nifti format is available
-
-        MODEL:Use name=<model> to get the vtkPolyData. Use index='T' to get a list of the available models for a subject.
-              Use color=True to get the standard color associated to the structure
-              Use volume=True to get the volume of the structure
-              Use label=True to get the label corresponding to the structure
-
-        SURF: Use name=<surface> and hemi=<r|h> to get the vtkPolyData of a free surfer surface reconstruction,
-              use scalars to add scalars to the data
-              surface must be orig pial white smoothwm inflated sphere
-              us normals = 0 to avoid calculating normals
-
-        SURF_SCALAR: Use scalar=<name> and hemi=<l|r> to get scalar data associated to a SURF.
-                     Use index=True to get a list of available scalars,
-                     Use lut=True to get the associated lookUpTable for Annotations and a standard LUT for morphology
-
-        FIBERS: The default space is world, use space='diff' to get fibers in diffusion space.
-                Use waypoint=<model-name> to restrict to fibers passing through a given MODEL as indicated above.
-                waypoint may also be a list of models. In this case you will by default get tracts that pass through all
-                the models if the list. This can be changed by setting operation='or', to get tracts which pass through
-                any of the models.
-                Can accept color=<orient|fa|curv|y|rand> to get different color scalars
-                Otherwise can acecpt scalars=<fa_p|fa_l|md_p|md_l|length>
-                In this case you may use lut=T to get the corresponding LUT
-                'Name' can be provided instead of waypoint to get custom tracts, to get a list of currently available
-                named tracts call index=True
-                Use db_id = 'id' to read a fiber stored in the braviz data base
-
-        TRACULA: The default space is world, use space='diff' to get fibers in diffusion space.
-                 Requires name = <track-name>. Use Index = True to get a list of available bundles.
-                 The default returns contours at 0.20 of the maximum aposteriori probability.
-                 Use contour = <percentage> to get different contours
-                 Use map = True to get the probability map as an image.
-                 Use color=True to get the default color for the structure
-
-        TENSORS: Get an unstructured grid containing tensors at the points where they are available
-                 and scalars representing the orientation of the main eigenvector
-                 Use space=world to get output in world coordinates [experimental]
-
-        """
-        subj_id = self.decode_subject(subj_id)
-
-        return self._get(data, subj_id, **kw)
-
     def get_filtered_polydata_ids(self,subj,struct):
         subj = self.decode_subject(subj)
         return self._cached_filter_fibers(subj,struct)
 
-    def transformPointsToSpace(self, point_set, space, subj, inverse=False):
+    def transform_points_to_space(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space.
         If inverse is true moves from space to world"""
         subj = self.decode_subject(subj)
@@ -233,7 +167,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
         reader.Update()
         return reader.GetOutput()
 
-
     def clear_cache_dir(self,last_word=False):
         if last_word is True:
             cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
@@ -262,7 +195,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         raise NotImplementedError
 
     @staticmethod
-    def autoReader(**kw_args):
+    def get_auto_reader(**kw_args):
         raise NotImplementedError
 
     def _getIds(self):
@@ -825,7 +758,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             if target_space == result_space:
                 return fibers
             if result_space != 'world':
-                fibers = self.transformPointsToSpace(fibers, result_space, subj, inverse=True)
+                fibers = self.transform_points_to_space(fibers, result_space, subj, inverse=True)
             if target_space != 'world':
                 transformed_streams = self._movePointsToSpace(fibers, kw['space'], subj, inverse=False)
                 return transformed_streams
@@ -1177,18 +1110,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
         route = os.path.join(path,'smoothed.nii.gz')
         img_4d = nib.load(route)
         return img_4d
-
-    def _process_key(self, key):
-        data_root_length = len(self.get_data_root())
-        key = "%s" % key
-        if len(key) + data_root_length > 250:
-            key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
-        else:
-            ilegal = ['_','<', '>', ':', '"', '/', "\\", '|', '?', '*']
-            for i,il in enumerate(ilegal):
-                key = key.replace(il, '%d_'%i)
-        return key
-
 
 #=========================end of common methods===========================================
 

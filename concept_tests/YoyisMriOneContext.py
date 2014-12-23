@@ -427,9 +427,9 @@ def translateMeasure(previous_space,new_space):
     pts.SetPoint(1, x2)
     poly_data=vtk.vtkPolyData()
     poly_data.SetPoints(pts)
-    poly_data2=reader.transformPointsToSpace(poly_data, previous_space,currSubj , True)
+    poly_data2=reader.transform_points_to_space(poly_data, previous_space,currSubj , True)
     #Poly Data 2 is in world coordinates
-    poly_data3=reader.transformPointsToSpace(poly_data2, new_space,currSubj , False)
+    poly_data3=reader.transform_points_to_space(poly_data2, new_space,currSubj , False)
     y1=poly_data3.GetPoint(0)
     y2=poly_data3.GetPoint(1)
     

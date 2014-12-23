@@ -393,7 +393,7 @@ def get_reader_class(project):
 
 project_reader = get_reader_class(PROJECT)
 
-BravizAutoReader = project_reader.autoReader
+BravizAutoReader = project_reader.get_auto_reader
 braviz_auto_data_root = project_reader.get_auto_data_root
 braviz_auto_dynamic_data_root = project_reader.get_auto_dyn_data_root
 

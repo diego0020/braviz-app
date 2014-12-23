@@ -87,7 +87,7 @@ for i in xrange(img_data.shape[3]):
 
     cont = contours.GetOutput()
 
-    cont2 = reader.transformPointsToSpace(cont,"diff",SUBJ,inverse=True)
+    cont2 = reader.transform_points_to_space(cont,"diff",SUBJ,inverse=True)
 
     ac = viewer.addPolyData(cont)
     key = str(5100+i)

@@ -133,10 +133,10 @@ class ExtrapolateDialog(QDialog):
 
         subj_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, subj)
         # link -> world
-        w_pt = self.__reader.transformPointsToSpace(pt, self.__link_space,
+        w_pt = self.__reader.transform_points_to_space(pt, self.__link_space,
                                                     subj_img_id, inverse=True)
         #world -> roi
-        r_pt = self.__reader.transformPointsToSpace(w_pt, self.__roi_space,
+        r_pt = self.__reader.transform_points_to_space(w_pt, self.__roi_space,
                                                     subj_img_id, inverse=False)
         return r_pt
 
@@ -204,20 +204,20 @@ class ExtrapolateDialog(QDialog):
 
         if self.__link_space != "None":
             # roi -> world
-            ctr_world = self.__reader.transformPointsToSpace(self.__origin_center, self.__roi_space,
+            ctr_world = self.__reader.transform_points_to_space(self.__origin_center, self.__roi_space,
                                                              self.__origin_img_id, inverse=True)
             #world -> link
-            ctr_link = self.__reader.transformPointsToSpace(ctr_world, self.__link_space,
+            ctr_link = self.__reader.transform_points_to_space(ctr_world, self.__link_space,
                                                             self.__origin_img_id, inverse=False)
             self.__center_link = ctr_link
             if self.__scale_radius is True:
                 rad_vectors = (self.__origin_center + v * self.__origin_radius for v in UNIT_VECTORS)
                 #roi -> world
-                rad_vectors_world = (self.__reader.transformPointsToSpace(r, self.__roi_space,
+                rad_vectors_world = (self.__reader.transform_points_to_space(r, self.__roi_space,
                                                                           self.__origin_img_id, inverse=True) for r in
                                      rad_vectors)
                 #world -> link
-                rad_vectors_link = (self.__reader.transformPointsToSpace(r, self.__link_space,
+                rad_vectors_link = (self.__reader.transform_points_to_space(r, self.__link_space,
                                                                          self.__origin_img_id, inverse=False) for r in
                                     rad_vectors_world)
                 self.__radius_link = list(rad_vectors_link)

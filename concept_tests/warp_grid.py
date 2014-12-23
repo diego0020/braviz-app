@@ -67,7 +67,7 @@ def add_grid(slice_idx):
     if pd_act is not None:
         viewer.ren.RemoveActor(pd_act)
     test_grid=build_grid(orig_img,slice_idx)
-    dertel_grid=reader.transformPointsToSpace(test_grid,target_space,subject)
+    dertel_grid=reader.transform_points_to_space(test_grid,target_space,subject)
     pd_act=viewer.addPolyData(dertel_grid)
 
 add_grid(128)
@@ -77,7 +77,7 @@ def get_orig_slice_index():
     p1 = pw.GetPoint1()
     p2 = pw.GetPoint2()
     center=(np.array(p1)+np.array(p2))/2
-    orig_center=reader.transformPointsToSpace(center, target_space, subject, True)
+    orig_center=reader.transform_points_to_space(center, target_space, subject, True)
     orig_img_center=(np.array(orig_center)-orig_img.GetOrigin())/orig_img.GetSpacing()
     orig_slice=round(orig_img_center[0])
     #print orig_slice

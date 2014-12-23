@@ -341,7 +341,7 @@ The path containing this structure must be set."""
         return data_root
 
     @staticmethod
-    def autoReader(**kw_args):
+    def get_auto_reader(**kw_args):
         """Initialized a kmc400Reader based on the computer name"""
         project_name = os.path.basename(__file__).split('.')[0]
         log = logging.getLogger(__name__)
