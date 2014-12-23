@@ -1,34 +1,23 @@
 from __future__ import division
 
-import base64
+
 import os
 import re
 import platform  # for the autoReader
-import cPickle
-import hashlib
-import types
-import pickle
+
 import logging
 
 import nibabel as nib
 import numpy as np
 from numpy.linalg import inv
-import vtk
 
-from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
-    readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk, \
-    CacheContainer,memo_ten
+
+from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix,readFreeSurferTransform,  numpy2vtk_img,\
+    nifti_rgb2vtk
 
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 
-from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
-    surfLUT2VTK
-from braviz.readAndFilter.read_tensor import cached_readTensorImage
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
-from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
-import braviz.readAndFilter.color_fibers
-from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
-from braviz.interaction import config_file
 
 class kmc400Reader(KmcAbstractReader):
     """

@@ -190,12 +190,21 @@ always return empty lists for indexes and raise a IOError.
         return _auto_temp_dir
 
     @staticmethod
-    def _clear_dynamic_data_dir():
+    def _clear_dynamic_data_dir(dir_name):
         """
-        Clears the contents of the dynamic data directory
+        Clears braviz dynamic content from dir_name
         """
         try:
-            os.rmdir(_auto_temp_dir)
+            os.walk(os.path.join(dir_name,"logs"))
+            os.walk(os.path.join(dir_name,".braviz_cache"))
+            os.walk(os.path.join(dir_name,"braviz_data","scenarios"))
+            for sub_dir in ("logs",".braviz_cache","braviz_data"):
+                top = os.path.join(dir_name,sub_dir)
+                for root, dirs, files in os.walk(top, topdown=False):
+                    for name in files:
+                        os.remove(os.path.join(root, name))
+                    for name in dirs:
+                        os.rmdir(os.path.join(root, name))
         except OSError:
             pass
 
@@ -207,9 +216,9 @@ always return empty lists for indexes and raise a IOError.
         from braviz.readAndFilter import check_db
         if dir_name is None:
             dir_name = BaseReader.get_auto_dyn_data_root()
-        os.walk(os.path.join(dir_name,"logs"))
-        os.walk(os.path.join(dir_name,".braviz_cache"))
-        os.walk(os.path.join(dir_name,"braviz_data","scenarios"))
+        os.makedirs(os.path.join(dir_name,"logs"))
+        os.makedirs(os.path.join(dir_name,".braviz_cache"))
+        os.makedirs(os.path.join(dir_name,"braviz_data","scenarios"))
         check_db.verify_db_completeness()
 
     @staticmethod
