@@ -124,11 +124,11 @@ def get_host_config(project,hostname=None):
         hostname = platform.node()
     config = RawConfigParser()
     file_name = os.path.join(os.path.dirname(__file__),"..","applications","%s_hosts.cfg"%project)
-    print file_name
     config.read(file_name)
     if not config.has_section(hostname):
-        raise KeyError("Unknown host %s" %hostname)
-    items = config.items(hostname)
+        apps_dir=os.path.normpath(os.path.dirname(file_name))
+        raise KeyError("Unknown host %s\nPlease modify the %s_hosts.cfg file in %s" % (hostname,project,apps_dir ))
+    items = dict(config.items(hostname))
     return items
 
 if __name__ == "__main__":

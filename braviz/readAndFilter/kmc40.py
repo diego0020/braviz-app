@@ -2,7 +2,7 @@ from __future__ import division
 
 import os
 import re
-import platform  # for the autoReader
+from braviz.interaction.config_file import get_host_config
 import logging
 
 import nibabel as nib
@@ -286,13 +286,16 @@ The path containing this structure must be set."""
     @staticmethod
     @memo_ten
     def get_auto_data_root():
-        node_id = platform.node()
-        node = known_nodes.get(node_id)
-        if node is not None:
-            return node[0]
+        project_name = os.path.basename(__file__).split('.')[0]
         log = logging.getLogger(__name__)
-        log.error("Unknown node")
-        raise Exception("Unkown node")
+        try:
+            config = get_host_config(project_name)
+        except KeyError as e:
+            log.exception(e)
+            print e.message
+            raise
+        data_root = config["data root"]
+        return data_root
 
     @staticmethod
     @memo_ten
@@ -302,40 +305,23 @@ The path containing this structure must be set."""
     @staticmethod
     def autoReader(**kw_args):
         """Initialized a kmc40Reader based on the computer name"""
-        node_id = platform.node()
-        node = known_nodes.get(node_id)
+        project_name = os.path.basename(__file__).split('.')[0]
         log = logging.getLogger(__name__)
-        if node is not None:
-            data_root = node[0]
-            if kw_args.get('max_cache', 0) > 0:
-                max_cache = kw_args.pop('max_cache')
+        try:
+            config = get_host_config(project_name)
+        except KeyError as e:
+            log.exception(e)
+            print e.message
+            raise
+        data_root = config["data root"]
+        if kw_args.get('max_cache', 0) > 0:
+            max_cache = kw_args.pop('max_cache')
 
-                log.info("Max cache set to %.2f MB" % max_cache)
-            else:
-                max_cache = node[1]
-            return kmc40Reader(data_root, max_cache=max_cache)
+            log.info("Max cache set to %.2f MB" % max_cache)
         else:
-            print "Unknown node %s, please enter route to data" % node_id
-            path = raw_input('KMC_root: ')
-            return kmc40Reader(path, **kw_args)
-            # add other strategies to find the project __root
+            max_cache = config["memory (mb)"]
+        return kmc40Reader(data_root, max_cache=max_cache)
 
 
-known_nodes = {  #
-                 # Name          :  ( data root                   , cache size in MB)
-                 'gambita.uniandes.edu.co': ('/media/DATAPART5/KAB-db', 4000),
-                 'Unidelosandes': ('K:\\JohanaForero\\KAB-db', 1200),
-                 'dieg8': (r'C:\Users\Diego\Documents\kmc40-db\KAB-db', 4000),
-                 'TiberioHernande': (r'E:\KAB-db', 1100),
-                 'localhost.localdomain': ('/home/diego/braviz/subjects', 1000),
-                 'ISIS-EML725001': (r'C:\KAB-db', 8000),
-                 'archi5': (r"/mnt/win/Users/Diego/Documents/kmc40-db/KAB-db", 4000),
-                 'dellingr.vrac.iastate.edu': (r"/Volumes/diegoa/KAB-db", 14000),
-                 'MacAirCyril-S.local': ("/Users/CS/Desktop/diego_data", 7000),
-                 'ATHPC1304': (r"F:\ProyectoCanguro\KAB-db", 14000),
-                 'IIND-EML754066': (r"C:\Users\da.angulo39\Documents\KAB-db", 2000),
-                 'da-angulo': (r"D:\KAB-db", 4000),
-                 'Echer': ('H:/KAB-db',8000),
-                 'imagine-PC' : ("E:\\KAB-db",50000)
-}
+
 
