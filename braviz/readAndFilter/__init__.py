@@ -384,9 +384,11 @@ PROJECT = __config.get_project_name()
 def get_reader_class(project):
     import importlib
     import inspect
+    from braviz.readAndFilter.base_reader import BaseReader
     #todo filter by being instance of base_reader
     module = importlib.import_module('braviz.readAndFilter.%s'%project)
-    candidate_classes = [c[1] for c in inspect.getmembers(module,inspect.isclass)]
+    pred = lambda c: inspect.isclass(c) and issubclass(c,BaseReader)
+    candidate_classes = [c[1] for c in inspect.getmembers(module,pred)]
     candidate_classes.sort(key=lambda  c:len(inspect.getmro(c)))
     #return the last one in the hierarchy
     return candidate_classes[-1]
