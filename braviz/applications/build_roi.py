@@ -960,7 +960,7 @@ class BuildRoiApp(QMainWindow):
 
     def save_screenshot(self, scenario_index):
         file_name = "scenario_%d.png" % scenario_index
-        file_path = os.path.join(self.reader.getDynDataRoot(), "braviz_data", "scenarios", file_name)
+        file_path = os.path.join(self.reader.get_dyn_data_root(), "braviz_data", "scenarios", file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
         braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
@@ -998,7 +998,7 @@ class BuildRoiApp(QMainWindow):
 
 
     def export_sphere(self):
-        file_name = unicode(QtGui.QFileDialog.getSaveFileName(self, "Save Shere Image", self.reader.getDynDataRoot(),
+        file_name = unicode(QtGui.QFileDialog.getSaveFileName(self, "Save Shere Image", self.reader.get_dyn_data_root(),
                                                       "Nifti (*.nii.gz)"))
         if len(file_name)<=5:
             return

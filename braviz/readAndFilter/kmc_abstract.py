@@ -244,7 +244,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         """Returns the data_root of this reader"""
         return self.__static_root
 
-    def getDynDataRoot(self):
+    def get_dyn_data_root(self):
         """Returns the dynamic data_root of this reader"""
         return self.__dynaimc_data_root
 #============================end of public API==========================================

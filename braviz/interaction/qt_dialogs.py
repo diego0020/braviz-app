@@ -1235,7 +1235,7 @@ class LoadScenarioDialog(QtGui.QDialog):
         if self.reader is None:
             data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
         else:
-            data_root = self.reader.getDynDataRoot()
+            data_root = self.reader.get_dyn_data_root()
         image_file = os.path.join(data_root,"braviz_data","scenarios","scenario_%d.png"%index)
         if os.path.isfile(image_file):
             image = QtGui.QImage(image_file)

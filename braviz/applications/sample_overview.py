@@ -802,7 +802,7 @@ class SampleOverview(QtGui.QMainWindow):
         pixmap = QtGui.QPixmap.grabWindow(QtGui.QApplication.desktop().winId(), geom.x(), geom.y(), geom.width(),
                                           geom.height())
         file_name = "scenario_%d.png" % scenario_index
-        file_path = os.path.join(self.reader.getDynDataRoot(), "braviz_data", "scenarios", file_name)
+        file_path = os.path.join(self.reader.get_dyn_data_root(), "braviz_data", "scenarios", file_name)
         pixmap.save(file_path, "png")
         log = logging.getLogger(__name__)
         log.info("chick %s" % file_path)
