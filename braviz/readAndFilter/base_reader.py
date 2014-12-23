@@ -18,21 +18,21 @@ The base class for Braviz project readers
 Project readers provide a common interface to each projects underlying data structure. An instance of this class will
 always return empty lists for indexes and raise a IOError.
 ."""
-    __cache_container = CacheContainer()
+    _memory_cache_container = CacheContainer()
 
-    def __init__(self):
+    def __init__(self,max_cache=100):
         """Reader parameters, like root data directories, should be set here"""
 
-        self.__cache_container.max_cache = 100
+        self._memory_cache_container.max_cache = max_cache
         self.__static_root = _auto_temp_dir
         return
 
     def clear_cache(self):
         log = logging.getLogger(__name__)
         log.info("Clearing cache")
-        self.__cache_container.clear()
+        self._memory_cache_container.clear()
 
-    @cache_function(__cache_container)
+    @cache_function(_memory_cache_container)
     def get(self,data, subj_id=None, **kw):
         """All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
         Available spaces for all data are: world, talairach and dartel. Some data may support additional values
@@ -96,7 +96,7 @@ always return empty lists for indexes and raise a IOError.
                  Use space=world to get output in world coordinates [experimental]
 
         """
-        #All cache moved to decorator @cache_function
+        subj_id = self._decode_subject(subj_id)
         return self._get(data, subj_id, **kw)
 
     #============================end of public API==========================================
@@ -115,8 +115,6 @@ always return empty lists for indexes and raise a IOError.
 
     def _get(self, data, subj=None, **kw):
         "Internal: decode instruction and dispatch"
-        if subj is not None:
-            subj = self._decode_subject(subj)
         data = data.upper()
         if data == 'MRI':
             self.__raise_error()
@@ -168,6 +166,7 @@ always return empty lists for indexes and raise a IOError.
         :param interpolate: apply interpolation or do nearest neighbours
         :return: resliced image
         """
+        subj = self._decode_subject(subj)
         self.__raise_error()
 
     def move_img_from_world(self,img,target_space,subj,interpolate=False):
@@ -179,12 +178,14 @@ always return empty lists for indexes and raise a IOError.
         :param interpolate: apply interpolation or do nearest neighbours
         :return: resliced image
         """
+        subj = self._decode_subject(subj)
         self.__raise_error()
 
 
     def transformPointsToSpace(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space.
         If inverse is true moves from space to world"""
+        subj = self._decode_subject(subj)
         self.__raise_error()
 
 

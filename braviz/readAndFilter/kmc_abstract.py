@@ -3,7 +3,6 @@ from __future__ import division
 import base64
 import os
 import re
-import platform  # for the autoReader
 import cPickle
 import hashlib
 import types
@@ -15,14 +14,12 @@ import numpy as np
 from numpy.linalg import inv
 import vtk
 
-from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData, transformGeneralData, \
-    readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img, nifti_rgb2vtk, \
+from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData,  \
+    readFreeSurferTransform, cache_function, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img,  \
     CacheContainer,memo_ten
 
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
     surfLUT2VTK
-from braviz.readAndFilter.read_tensor import cached_readTensorImage
-from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 
@@ -30,11 +27,9 @@ import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
 from braviz.interaction import config_file
 
-class kmc400Reader(object):
+class KmcAbstractReader(object):
     """
-A read and filter class designed to work with the file structure and data from the KMC pilot project which contains 40 subjects.
-Data is organized into folders, and path and names for the different files can be derived from data type and id.
-The path containing this structure must be set."""
+A read and filter class designed to work with kmc projects. Implements common functionality in kmc40 and kmc400."""
     __cache_container = CacheContainer()
 
     def __init__(self, static_root,dynamic_route, max_cache=2000):
@@ -48,9 +43,14 @@ The path containing this structure must be set."""
         if self.__dynaimc_data_root[-1]==":":
             self.__dynaimc_data_root+="\\"
 
-        self.__functional_paradigms=frozenset(('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION'))
         self.__cache_container.max_cache = max_cache
         self.__fmri_LUT = None
+        self.__fa_lut = None
+        self.__free_surfer_aparc_lut = None
+        self.free_surfer_lut = None
+        self.free_surfer_labels = None
+
+        self._functional_paradigms=frozenset()
 
     def clear_cache(self):
         log = logging.getLogger(__name__)
@@ -121,33 +121,222 @@ The path containing this structure must be set."""
                  Use space=world to get output in world coordinates [experimental]
 
         """
-        #All cache moved to decorator @cache_function
-        return self.__get(data, subj_id, **kw)
+        subj_id = self.decode_subject(subj_id)
 
-    #============================end of public API==========================================
-    def __get(self, data, subj=None, **kw):
+        return self._get(data, subj_id, **kw)
+
+    def decode_subject(self):
+        raise NotImplementedError
+
+    def get_filtered_polydata_ids(self,subj,struct):
+        subj = self.decode_subject(subj)
+        return self._cached_filter_fibers(subj,struct)
+
+    def transformPointsToSpace(self, point_set, space, subj, inverse=False):
+        """Access to the internal coordinate transform function. Moves from world to space.
+        If inverse is true moves from space to world"""
+        subj = self.decode_subject(subj)
+        return self.__movePointsToSpace(point_set, space, subj, inverse)
+
+    def move_img_to_world(self,img,source_space,subj,interpolate=False):
+        """
+        Resample image to the world coordinate system
+        :param img: image
+        :param source_space: source coordinates
+        :param subj: subject
+        :param interpolate: apply interpolation or do nearest neighbours
+        :return: resliced image
+        """
+        subj = self.decode_subject(subj)
+        img2 = self.__move_img_to_world(subj,img,interpolate,source_space)
+        return img2
+
+    def move_img_from_world(self,img,target_space,subj,interpolate=False):
+        """
+        Resample image to the world coordinate system
+        :param img: image
+        :param target_space: target coordinates
+        :param subj: subject
+        :param interpolate: apply interpolation or do nearest neighbours
+        :return: resliced image
+        """
+        subj = self.decode_subject(subj)
+        img2 = self.__move_img_from_world(subj,img,interpolate,target_space)
+        return img2
+
+    def save_into_cache(self, key, data):
+        """
+        Saves some data into a cache, can deal with vtkData and python objects which can be pickled
+
+        key should be printable by %s, and it can be used to later retrive the data using load_from_cache
+        you should not use the same key for python objects and vtk objects
+        returnt true if success, and false if failure
+        WARNING: Long keys are hashed using sha1: Low risk of collisions, no checking is done
+        """
+        key = self._process_key(key)
+        cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
+        if not os.path.isdir(cache_dir):
+            os.mkdir(cache_dir)
+        if isinstance(data, vtk.vtkObject):
+            cache_file = os.path.join(cache_dir, "%s.vtk" % key)
+            writer = vtk.vtkGenericDataObjectWriter()
+            writer.SetInputData(data)
+            writer.SetFileName(cache_file)
+            writer.SetFileTypeToBinary()
+            res = writer.Write()
+            if res == 1:
+                return True
+            else:
+                return False
+        else:
+            # Python object, try to pickle
+            cache_file = os.path.join(cache_dir, "%s.pickle" % key)
+            try:
+                with open(cache_file, 'wb') as cache_descriptor:
+                    try:
+                        cPickle.dump(data, cache_descriptor, -1)
+                    except cPickle.PicklingError:
+                        return False
+            except OSError:
+                log = logging.getLogger(__name__)
+                log.error("couldn't open file %s" % cache_file)
+                return False
+            return True
+
+    def load_from_cache(self, key):
+        """
+        Loads data stored into cache with the function save_into_cache
+
+        Data can be a vtkobject or a python structure, if both were stored with the same key, python object will be returned
+        returns None if object not found
+        """
+        key = self._process_key(key)
+        cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
+        cache_file = os.path.join(cache_dir, "%s.pickle" % key)
+        log = logging.getLogger(__name__)
+        try:
+            with open(cache_file, 'rb') as cache_descriptor:
+                try:
+                    ans = cPickle.load(cache_descriptor)
+                except (cPickle.UnpicklingError,EOFError):
+                    log.error("File %s is corrupted " % cache_file)
+                    return None
+                else:
+                    return ans
+        except IOError:
+            pass
+
+        cache_file = os.path.join(cache_dir, "%s.vtk" % key)
+        if not os.path.isfile(cache_file):
+            return None
+        reader = vtk.vtkGenericDataObjectReader()
+        reader.SetFileName(cache_file)
+        if reader.ReadOutputType() < 0:
+            return None
+        reader.Update()
+        return reader.GetOutput()
+
+
+    def clear_cache_dir(self,last_word=False):
+        if last_word is True:
+            cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
+            os.rmdir(cache_dir)
+            os.mkdir(cache_dir)
+
+    def getDataRoot(self):
+        """Returns the data_root of this reader"""
+        return self.__static_root
+
+    def getDynDataRoot(self):
+        """Returns the dynamic data_root of this reader"""
+        return self.__dynaimc_data_root
+#============================end of public API==========================================
+
+#============================virtual methods============================================
+
+    def _getIds(self):
+        "Auxiliary function to get the available ids"
+        raise NotImplementedError
+
+    def _getImg(self, data, subj, **kw):
+        "Auxiliary function to read nifti images"
+        raise NotImplementedError
+
+    #==========Free Surfer================
+    def _get_free_surfer_models_dir_name(self,subject):
+        raise NotImplementedError
+
+    def _get_talairach_transform_name(self):
+        """xfm extension"""
+        raise  NotImplementedError
+
+    def _get_free_surfer_stats_dir_name(self,subject):
+        raise NotImplementedError
+
+    def _get_freesurfer_lut_name(self):
+        raise NotImplementedError
+
+    def _get_free_surfer_morph_path(self,subj):
+        raise NotImplementedError
+
+    def _get_free_surfer_labels_path(self,subj):
+        raise NotImplementedError
+
+    def _get_tracula_map_name(self,subj):
+        raise NotImplementedError
+
+    #=============Camino==================
+    def _get_base_fibs_name(self,subj):
+        raise NotImplementedError
+
+    def _get_base_fibs_dir_name(self,subj):
+        """
+        Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
+        """
+        raise NotImplementedError
+
+    #==========SPM================
+    def _get_paradigm_name(self,paradigm_name):
+        raise NotImplementedError
+
+    def _get_paradigm_dir(self,subject,name,spm=False):
+        "If spm is True return the direcory containing spm.mat, else return its parent"
+        raise NotImplementedError
+
+    def _get_spm_grid_transform(self,subject,paradigm,direction,assume_bad_matrix=False):
+        #TODO: Cache shouldn't be here
+        """
+        Get the spm non linear registration transform grid associated to the paradigm
+        Use paradigm=dartel to get the transform associated to the dartel normalization
+        """
+        raise NotImplementedError
+#==========================end of virtual methods=======================================
+
+#==============================common methods===========================================
+
+    def _get(self, data, subj=None, **kw):
         "Internal: decode instruction and dispatch"
         data = data.upper()
         if subj is not None:
             subj = str(subj)
         if data == 'MRI':
-            return self.__getImg(data, subj, **kw)
+            return self._getImg(data, subj, **kw)
         elif data == "MD":
-            return self.__getImg(data, subj, **kw)
+            return self._getImg(data, subj, **kw)
         elif data == "DTI":
-            return self.__getImg(data, subj, **kw)
+            return self._getImg(data, subj, **kw)
         elif data == 'FA':
             if kw.get('lut'):
-                if not hasattr(self, 'fa_LUT'):
-                    self.fa_LUT = self.__create_fa_lut()
-                return self.fa_LUT
-            return self.__getImg(data, subj, **kw)
+                if self.__fa_lut is None:
+                    self.__fa_lut = self.__create_fa_lut()
+                return self.__fa_lut
+            return self._getImg(data, subj, **kw)
         elif data == 'IDS':
             return self.__getIds()
         elif data == 'MODEL':
             return self.__load_free_surfer_model(subj, **kw)
         elif data == 'SURF':
-            return self.__loadFreeSurferSurf(subj, **kw)
+            return self._load_free_surfer_surf(subj, **kw)
         elif data == 'SURF_SCALAR':
             return self.__loadFreeSurferScalar(subj, **kw)
         elif data == 'FIBERS':
@@ -156,17 +345,17 @@ The path containing this structure must be set."""
             return self.__readTensors(subj, **kw)
         elif data in {"APARC","WMPARC"}:
             if kw.get('lut'):
-                if not hasattr(self, 'free_surfer_aparc_LUT'):
-                    self.free_surfer_aparc_LUT = self.__create_surfer_lut()
-                return self.free_surfer_aparc_LUT
-            return self.__getImg(data, subj, **kw)
+                if self.__free_surfer_aparc_lut is None:
+                    self.__free_surfer_aparc_lut = self.__create_surfer_lut()
+                return self.__free_surfer_aparc_lut
+            return self._getImg(data, subj, **kw)
         elif data == "FMRI":
             if kw.get('lut'):
                 if self.__fmri_LUT is None:
                     self.__fmri_LUT = self.__create_fmri_lut()
                 return self.__fmri_LUT
             if kw.get("index"):
-                return self.__functional_paradigms
+                return self._functional_paradigms
             return self.__read_func(subj, **kw)
         elif data == 'BOLD':
             return self.__read_bold(subj, kw['name'])
@@ -177,228 +366,28 @@ The path containing this structure must be set."""
             log.error("Data type not available")
             raise (Exception("Data type not available"))
 
-    def __getImg(self, data, subj, **kw):
-        "Auxiliary function to read nifti images"
-        #path=self.__root+'/'+str(subj)+'/MRI'
-        if data == 'MRI':
-            path = os.path.join(self.__static_root, "nii",str(subj))
-            filename = 'MPRAGEmodifiedSENSE.nii.gz'
-        elif data == 'FA':
-            path = os.path.join(self.__static_root, 'tractography',str(subj))
-            if kw.get('space',"").startswith('diff'):
-                filename = 'fa.nii.gz'
-            else:
-                filename = 'fa_mri.nii.gz'
-        elif data == "MD":
-            path = os.path.join(self.__static_root, 'tractography',str(subj))
-            if kw.get('space',"").startswith('diff'):
-                filename = 'md.nii.gz'
-            else:
-                filename = 'md_mri.nii.gz'
-        elif data == "DTI":
-            path = os.path.join(self.__static_root, 'tractography',str(subj))
-            if kw.get('space','').startswith('diff'):
-                filename = 'rgb_dti.nii.gz'
-                #filename = 'rgb_dti_masked.nii.gz'
-            else:
-                filename = 'rgb_dti_mri.nii.gz'
-                #filename = 'rgb_dti_mri_masked.nii.gz'
-        elif data == 'APARC':
-            path = os.path.join(self.__static_root, "slicer_models",str(subj))
-            if kw.get("wm"):
-                filename = 'wmparc.nii.gz'
-                print "Warning... deprecated, use WMPARC instead"
-            else:
-                filename = 'aparc+aseg.nii.gz'
-        elif data == "WMPARC":
-            path = os.path.join(self.__static_root, "slicer_models",str(subj))
-            filename = 'wmparc.nii.gz'
-        else:
-            log = logging.getLogger(__name__)
-            log.error('Unknown image type %s' % data)
-            raise Exception('Unknown image type %s' % data)
-        wholeName = os.path.join(path, filename)
-        try:
-            img = nib.load(wholeName)
-        except IOError as e:
-            log = logging.getLogger(__name__)
-            log.exception(e)
-            log.error("File %s not found" % wholeName)
-            raise (Exception('File not found'))
-
-        if kw.get('format', '').upper() == 'VTK':
-            if data == "MD":
-                img_data=img.get_data()
-                img_data *= 1e5
-                #remove lower than 0
-                img_data[img_data<0]=0
-                #remove bigger than 1000
-                img_data[img_data>1000]=1000
-                vtkImg = numpy2vtk_img(img_data)
-            elif data == "DTI":
-                vtkImg = nifti_rgb2vtk(img)
-            else:
-                vtkImg = nibNii2vtk(img)
-            if kw.get('space', '').lower() == 'native':
-                return vtkImg
-
-            interpolate = True
-            if data in {'APARC', 'WMPARC'}:
-                interpolate = False
-                #print "turning off interpolate"
-
-            img2 = applyTransform(vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
-            space = kw.get('space', 'world')
-            if space == "diff" and (data in {"FA","MD","DTI"}):
-                return img2
-            return self.__move_img_from_world(subj, img2, interpolate, space=space)
-        space = kw.get('space', 'world')
-        space = space.lower()
-        if space == "diff" and (data in {"FA","MD","DTI"}):
-            return img
-        elif space == "world":
-            return img
-        elif space == "diff":
-            #read transform:
-            path = os.path.join(self.getDataRoot(), "tractography",str(subj))
-            #matrix = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz', 'FA.nii.gz', path)
-            matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz', path)
-            matrix = np.linalg.inv(matrix)
-            affine = img.get_affine()
-            aff2 = matrix.dot(affine)
-            img2=nib.Nifti1Image(img.get_data(),aff2)
-            return img2
-        elif space[:2] == "ta":
-            talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
-            #TODO needs more testing
-            transform = readFreeSurferTransform(talairach_file)
-            affine = img.get_affine()
-            aff2 = transform.dot(affine)
-            img2=nib.Nifti1Image(img.get_data(),aff2)
-            return img2
-        raise NotImplementedError("Returned nifti image is in world space")
-        return img
-
-
-    def __move_img_from_world(self, subj, img2, interpolate=False, space='world'):
+    def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
         "moves an image from the world coordinate space to talairach or dartel spaces"
-        space = space.lower()
-        if space == 'world':
-            return img2
-        elif space in ('template', 'dartel'):
-            dartel_warp = self.__get_spm_grid_transform(subj,"dartel","back")
-            img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
-                                  spacing2=(-1.5, 1.5, 1.5), interpolate=interpolate)
-            #origin, dimension and spacing come from template 
-            return img3
-        elif space[:2].lower() == 'ta':
-            talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
-            transform = readFreeSurferTransform(talairach_file)
-            img3 = applyTransform(img2, inv(transform), (-100, -120, -110), (190, 230, 230), (1, 1, 1),
-                                  interpolate=interpolate)
-            return img3
-        elif space[:4] in ('func', 'fmri'):
-            #functional space
-            paradigm = space[5:]
-            #print paradigm
-            paradigm =self.__get_paradigm_name(paradigm)
-            transform = self.__read_func_transform(subj, paradigm, True)
-            img3 = applyTransform(img2, transform, origin2=(78, -112, -50), dimension2=(79, 95, 68),
-                                  spacing2=(-2, 2, 2),
-                                  interpolate=interpolate)
-            return img3
-        elif space == "diff":
-            #TODO: Check, looks wrong
-            path = os.path.join(self.getDataRoot(), "tractography", str(subj))
-            # notice we are reading the inverse transform diff -> world
-            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
-            img3 = applyTransform(img2, trans, interpolate=interpolate)
-            return img3
-        else:
-            log = logging.getLogger(__name__)
-            log.error('Unknown space %s' % space)
-            raise Exception('Unknown space %s' % space)
+        raise NotImplementedError
 
-    def __move_img_to_world(self, subj, img2, interpolate=False, space='world'):
+    def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
         "moves an image from the world coordinate space to talairach or dartel spaces"
-        space = space.lower()
-        if space == 'world':
-            return img2
-        ref = self.get("mri",subj,space="world",format="vtk")
-        origin = ref.GetOrigin()
-        spacing = ref.GetSpacing()
-        dims = ref.GetDimensions()
-        if space in ('template', 'dartel'):
-            dartel_warp = self.__get_spm_grid_transform(subj,"dartel","forw")
-            img3 = applyTransform(img2, dartel_warp, origin2=origin, dimension2=dims,
-                                  spacing2=spacing, interpolate=interpolate)
-            #origin, dimension and spacing come from template
-            return img3
-        elif space[:2].lower() == 'ta':
-            talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula", subj, "mri","transforms",'talairach.xfm')
-            transform = readFreeSurferTransform(talairach_file)
-            img3 = applyTransform(img2, transform, origin, dims, spacing,
-                                  interpolate=interpolate)
-            return img3
-        elif space[:4] in ('func', 'fmri'):
-            #functional space
-            paradigm = space[5:]
-            #print paradigm
-            paradigm =self.__get_paradigm_name(paradigm)
-            transform = self.__read_func_transform(subj, paradigm, False)
-            img3 = applyTransform(img2, transform, origin2=origin, dimension2=dims,
-                                  spacing2=spacing,
-                                  interpolate=interpolate)
-            return img3
-        elif space == "diff":
-            path = os.path.join(self.getDataRoot(), "tractography", str(subj))
-            # notice we are reading the inverse transform diff -> world
-            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
-            img3 = applyTransform(img2, trans, interpolate=interpolate,origin2=origin,spacing2=spacing,dimension2=dims)
-            return img3
-        else:
-            log = logging.getLogger(__name__)
-            log.error('Unknown space %s' % space)
-            raise Exception('Unknown space %s' % space)
+        raise  NotImplementedError
 
-    def __getIds(self):
-        "Auxiliary function to get the available ids"
-        contents = os.listdir(os.path.join(self.__static_root,"freeSurfer_Tracula"))
-        numbers = re.compile('[0-9]+$')
-        ids = [c for c in contents if numbers.match(c) is not None]
-        ids.sort(key=int)
-        return ids
 
-    __spharm_models = {'Left-Amygdala': 'l_amygdala',
+    _spharm_models = {'Left-Amygdala': 'l_amygdala',
                        'Left-Caudate': 'l_caudate',
                        'Left-Hippocampus': 'l_hippocampus',
                        'Right-Amygdala': 'r_amygdala',
                        'Right-Caudate': 'r_caudate',
                        'Right-Hippocampus': 'r_hippocampus'}
 
-    def __get_spm_grid_transform(self,subject,paradigm,direction,assume_bad_matrix=False):
-        """
-        Get the spm non linear registration transform grid associated to the paradigm
-        Use paradigm=dartel to get the transform associated to the dartel normalization
-        """
-        assert direction in {"forw","back"}
-        if paradigm=="dartel":
-            y_file = os.path.join(self.getDataRoot(),"spm",subject,"T1", "y_dartel_%s.nii" % direction)
-            cache_name=os.path.join(self.__dynaimc_data_root,".braviz_cache",
-                                    "y_%s_%s_%s.vtk"%(paradigm,subject,direction))
-        else:
-            y_file = os.path.join(self.getDataRoot(),"spm", subject,paradigm, "y_seg_%s.nii.gz" % direction)
-            cache_name=os.path.join(self.__dynaimc_data_root,".braviz_cache",
-                                    "y_%s_%s_%s.vtk"%(paradigm,subject,direction))
-        return dartel2GridTransform_cached(y_file,assume_bad_matrix,cache_file_name=cache_name)
-
-
-    def __load_free_surfer_model(self, subject, **kw):
+    def _load_free_surfer_model(self, subject, **kw):
         """Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"""
         #path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
         #path=self.__root+'/'+str(subject)+'/Models2'
         if subject is not None:
-            path = os.path.join(self.__static_root, 'slicer_models',subject)
+            path = self._get_free_surfer_models_dir_name(subject)
         else:
             path = None
         #todo
@@ -409,16 +398,16 @@ The path containing this structure must be set."""
             pattern = re.compile(r'.*\.vtk$')
             models = [m[0:-4] for m in contents if pattern.match(m) is not None]
             #look for spharm_models
-            for k, val in self.__spharm_models.iteritems():
+            for k, val in self._spharm_models.iteritems():
                 if os.path.isfile(os.path.join(spharm_path, "%sSPHARM.vtk" % val)):
                     models.append(k + '-SPHARM')
             return models
         name = kw.get('name')
         if name is not None:
             if kw.get('color'):
-                if not hasattr(self, 'free_surfer_LUT'):
+                if self.free_surfer_lut is None:
                     self.__parse_fs_color_file()
-                colors = self.free_surfer_LUT
+                colors = self.free_surfer_lut
                 if name.endswith('-SPHARM'):
                     return colors[name[:-7]]
                 else:
@@ -432,16 +421,16 @@ The path containing this structure must be set."""
                 if name.endswith('-SPHARM'):
                     log.warning("Warning, spharm structure treated as non-spharm equivalent")
                     name = name[:-7]
-                if not hasattr(self,"free_surfer_labels"):
+                if self.free_surfer_labels is None:
                     self.__parse_fs_color_file()
                 return self.free_surfer_labels.get(name)
             else:
-                available = self.__load_free_surfer_model(subject, index='T')
+                available = self._load_free_surfer_model(subject, index='T')
                 if not name in available:
                     log.warning( 'Model %s not available' % name)
                     raise Exception('Model %s not available' % name)
                 if name.endswith('-SPHARM'):
-                    spharm_name = self.__spharm_models[name[:-7]]
+                    spharm_name = self._spharm_models[name[:-7]]
                     filename = os.path.join(spharm_path, spharm_name + 'SPHARM.vtk')
                     reader = vtk.vtkPolyDataReader()
                     reader.SetFileName(filename)
@@ -462,9 +451,9 @@ The path containing this structure must be set."""
             log.error('Either "index" or "name" is required.')
             raise (Exception('Either "index" or "name" is required.'))
 
-    def __get_volume(self, subject, model_name):
-        data_root = self.getDataRoot()
-        data_dir = os.path.join(data_root, 'freeSurfer_Tracula',subject, 'stats')
+    def _get_volume(self, subject, model_name):
+
+        data_dir = self._get_free_surfer_stats_dir_name(subject)
         if model_name[:2] == 'wm':
             #we are dealing with white matter
             file_name = 'wmparc.stats'
@@ -487,16 +476,16 @@ The path containing this structure must be set."""
             vol = 'nan'
         return float(vol)
 
-    def __parse_fs_color_file(self):
+    def _parse_fs_color_file(self):
         "Creates an inernal representation of the freesurfer color LUT"
         cached = self.load_from_cache('free_surfer_color_lut_internal')
         cached2 = self.load_from_cache('free_surfer_labels_dict_internal')
         if (cached is not None) and (cached2 is not None):
             if len(cached) > 1266:
-                self.free_surfer_LUT = cached
+                self.free_surfer_lut = cached
                 self.free_surfer_labels = cached2
                 return
-        color_file_name = os.path.join(self.__static_root,"freeSurfer_Tracula", 'FreeSurferColorLUT.txt')
+        color_file_name = self._get_freesurfer_lut_name()
 
         with open(color_file_name) as color_file:
             color_lines = color_file.readlines()
@@ -509,23 +498,25 @@ The path containing this structure must be set."""
             labels_dict=dict(labels_tuples)
             self.save_into_cache('free_surfer_labels_dict_internal',labels_dict)
 
-        self.free_surfer_LUT = color_dict
+        self.free_surfer_lut = color_dict
         self.free_surfer_labels = labels_dict
 
+    def _get_freesurfer_surf_name(self,subj,name):
+        raise NotImplementedError
+
     def _cached_surface_read(self,subj,name):
-        "cached function to read a freesurfer structure file"
+        "cached function to read a freesurfer surface file"
         #check cache
         key = "surf_%s_%s"%(name,subj)
         poly = self.load_from_cache(key)
         #print 'reading from surfer file'
         if poly is None:
-            path = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'surf')
-            filename = os.path.join(path,name)
+            filename = self._get_freesurfer_surf_name(subj,name)
             poly=surface2vtkPolyData(filename)
             self.save_into_cache(key,poly)
         return poly
 
-    def __loadFreeSurferSurf(self, subj, **kw):
+    def _load_free_surfer_surf(self, subj, **kw):
         """Auxiliary function to read the corresponding surface file for hemi and name.
         Scalars can be added to the output surface"""
         if 'name' in  kw and 'hemi' in kw:
@@ -563,11 +554,11 @@ The path containing this structure must be set."""
                 orig = normal_f.GetOutput()
             return orig
 
-    def __loadFreeSurferScalar(self, subj, **kw):
+    def _loadFreeSurferScalar(self, subj, **kw):
         "Auxiliary function to read free surfer scalars"
         morph = {'area', 'curv', 'avg_curv', 'thickness', 'volume', 'sulc'}
-        morph_path = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'surf')
-        labels_path = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'label')
+        morph_path = self._get_free_surfer_morph_path()
+        labels_path = self._get_free_surfer_labels_path()
         log = logging.getLogger(__name__)
         try:
             hemisphere = kw['hemi']
@@ -601,7 +592,7 @@ The path containing this structure must be set."""
                 return surfLUT2VTK(ctab, names)
             return labels
 
-    def __cached_color_fibers(self, subj, color=None,scalars=None):
+    def _cached_color_fibers(self, subj, color=None,scalars=None):
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
 
@@ -614,7 +605,7 @@ The path containing this structure must be set."""
             color = color.lower()
             if color.startswith('orient'):
                 #This one should always exist!!!!!
-                file_name = os.path.join(self.getDataRoot(), "tractography",subj, 'CaminoTracts.vtk')
+                file_name = self._get_base_fibs_name()
                 if not os.path.isfile(file_name):
                     log.error("Fibers file not found: %s"%file_name)
                     raise Exception("Fibers file not found")
@@ -681,7 +672,7 @@ The path containing this structure must be set."""
             self.save_into_cache(cache_key,fibers)
             return fibers
 
-    def __cached_filter_fibers(self, subj, waypoint):
+    def _cached_filter_fibers(self, subj, waypoint):
         "Only one waypoint, returns a set"
         #print "filtering for model "+waypoint
         cache_key = 'fibers_%s_%s' % (subj, waypoint)
@@ -710,8 +701,8 @@ The path containing this structure must be set."""
                 log.exception(e)
                 log.error("%s image not found"%img_name)
                 return set()
-            if not hasattr(self,"free_surfer_labels"):
-                self.__parse_fs_color_file()
+            if self.free_surfer_labels is None:
+                self._parse_fs_color_file()
             lbl = self.free_surfer_labels.get(waypoint)
             if lbl is None:
                 raise Exception("Unknown structure")
@@ -720,11 +711,7 @@ The path containing this structure must be set."""
         self.save_into_cache(cache_key,ids)
         return ids
 
-    def get_filtered_polydata_ids(self,subj,struct):
-        subj = str(subj)
-        return self.__cached_filter_fibers(subj,struct)
-
-    def __readFibers_from_db(self,subj,db_id,**kw):
+    def _readFibers_from_db(self,subj,db_id,**kw):
         from braviz.readAndFilter import bundles_db
         from hierarchical_fibers import read_logical_fibers
         log = logging.getLogger(__name__)
@@ -756,7 +743,7 @@ The path containing this structure must be set."""
             log.error("Unknown data type")
             raise Exception("Unknown fibers")
 
-    def __readFibers(self, subj, **kw):
+    def _readFibers(self, subj, **kw):
         """Auxiliary function for reading fibers, uses all the cache available.
         First reades the correct color file,
         afterwards the lists for the corresponding waypoints from which an intersection is calculated,
@@ -796,7 +783,7 @@ The path containing this structure must be set."""
         #deal with database tracts:
         if "db_id" in kw:
             db_id = kw.pop("db_id")
-            poly = self.__readFibers_from_db(subj,db_id,**kw)
+            poly = self._readFibers_from_db(subj,db_id,**kw)
             return poly
 
         if 'name' in kw:
@@ -815,12 +802,12 @@ The path containing this structure must be set."""
             if result_space != 'world':
                 fibers = self.transformPointsToSpace(fibers, result_space, subj, inverse=True)
             if target_space != 'world':
-                transformed_streams = self.__movePointsToSpace(fibers, kw['space'], subj, inverse=False)
+                transformed_streams = self._movePointsToSpace(fibers, kw['space'], subj, inverse=False)
                 return transformed_streams
             return fibers
         if 'waypoint' not in kw:
-            path = os.path.join(self.getDataRoot(),'tractography', str(subj))
-            streams = self.__cached_color_fibers(subj, kw.get('color'),kw.get("scalars"))
+            path = self._get_base_fibs_dir_name()
+            streams = self._cached_color_fibers(subj, kw.get('color'),kw.get("scalars"))
             if kw.get('space', 'world').lower() in {'diff', 'native'}:
                 return streams
             #move to world
@@ -873,7 +860,7 @@ The path containing this structure must be set."""
                 transformed_streams = self.__movePointsToSpace(filtered_fibers, target_space, subj)
                 return transformed_streams
 
-    def __read_tracula(self,subj,**kw):
+    def _read_tracula(self,subj,**kw):
         "Read tracula files"
         if kw.get("index",False):
             labels = ['CC-ForcepsMajor', 'CC-ForcepsMinor', 'LAntThalRadiation', 'LCingulumAngBundle', 'LCingulumCingGyrus', 'LCorticospinalTract', 'LInfLongFas', 'LSupLongFasParietal', 'LSupLongFasTemporal', 'LUncinateFas', 'RAntThalRadiation', 'RCingulumAngBundle', 'RCingulumCingGyrus', 'RCorticospinalTract', 'RInfLongFas', 'RSupLongFasParietal', 'RSupLongFasTemporal', 'RUncinateFas']
@@ -884,16 +871,16 @@ The path containing this structure must be set."""
         if track_name is None:
             log.error("Name is required")
             raise ValueError
-        self.__parse_fs_color_file()
+        self._parse_fs_color_file()
         if kw.get("color",False):
-            col = self.free_surfer_LUT[track_name]
+            col = self.free_surfer_lut[track_name]
             return col[:3]
         idx = int(self.free_surfer_labels[track_name])
         idx %= 100
 
         if kw.get("map",False):
             format = kw.get("format","nii")
-            map = self.__read_tracula_map(subj,idx,format=format)
+            map = self._read_tracula_map(subj,idx,format=format)
             if space in {"diff","native"}:
                 return map
             else:
@@ -904,7 +891,7 @@ The path containing this structure must be set."""
                 else:
                     raise NotImplementedError
 
-        map = self.__read_tracula_map(subj,idx,format="vtk")
+        map = self._read_tracula_map(subj,idx,format="vtk")
         smooth = vtk.vtkImageGaussianSmooth()
         smooth.SetDimensionality(3)
         smooth.SetStandardDeviation(1)
@@ -927,8 +914,8 @@ The path containing this structure must be set."""
         cont_s = self.__movePointsToSpace(cont_w,space,subj,inverse=False)
         return cont_s
 
-    def __read_tracula_map(self,subj,index,format="nii"):
-        affine,img_data = self.__get_full_tracula_map(subj)
+    def _read_tracula_map(self,subj,index,format="nii"):
+        affine,img_data = self._get_full_tracula_map(subj)
         data2 = img_data[:,:,:,index]
         if format == "nii":
             return nib.Nifti1Image(data2,affine)
@@ -936,9 +923,10 @@ The path containing this structure must be set."""
             vtk_img = numpy2vtk_img(data2,data_type=np.float64)
             vtk_img2 = braviz.readAndFilter.applyTransform(vtk_img,np.linalg.inv(affine))
             return vtk_img2
+
     @memo_ten
-    def __get_full_tracula_map(self,subj):
-        data_dir = os.path.join(self.getDataRoot(),"freeSurfer_Tracula","%s"%subj,"dpath")
+    def _get_full_tracula_map(self,subj):
+        data_dir = self._get_tracula_map_name(subj)
         tracks_file = "merged_avg33_mni_bbr.mgz"
         tracks_full_file = os.path.join(data_dir,tracks_file)
         tracks_img = nib.load(tracks_full_file)
@@ -946,37 +934,23 @@ The path containing this structure must be set."""
         img_data = tracks_img.get_data()
         return affine,img_data
 
-    def __readTensors(self, subj, **kw):
+    def _readTensors(self, subj, **kw):
         "Internal function to read a tensor file"
         raise NotImplementedError
-        path = os.path.join(self.__root, str(subj), 'camino')
-        tensor_file = os.path.join(path, 'camino_dt.nii.gz')
-        if kw.get('space') == 'world':
-            tensor_file = os.path.join(path, 'camino2_dt.nii.gz')
-        fa_file = os.path.join(path, 'FA_masked.nii.gz')
-        #tensor_data=readTensorImage(tensor_file, fa_file)
-        tensor_data = cached_readTensorImage(tensor_file, fa_file)
-        #tensor_data=readTensorImage(tensor_file)
-        if kw.get('space') == 'world':
-            matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
-            tensors_mri = transformGeneralData(tensor_data, matrix)
-            return tensors_mri
-        return tensor_data
 
-    def __movePointsToSpace(self, point_set, space, subj, inverse=False):
+    def _movePointsToSpace(self, point_set, space, subj, inverse=False):
         """Transforms a set of points in 'world' space to the talairach or template spaces
         If inverse is True, the points will be moved from 'space' to world"""
         if space.lower()[:2] == 'wo':
             return point_set
         elif space.lower()[:2] == 'ta':
-            talairach_file = os.path.join(self.__static_root, "freeSurfer_Tracula",str(subj), 'mri',"transforms",
-                                          'talairach.xfm')
+            talairach_file = self._get_talairach_transform_name()
             transform = readFreeSurferTransform(talairach_file)
             if inverse:
                 transform = inv(transform)
             return transformPolyData(point_set, transform)
         elif space.lower()[:4] == 'diff':
-            path = os.path.join(self.__static_root, 'tractography', str(subj))
+            path = self._get_base_fibs_dir_name()
             #TODO: This looks wrong!!!!
             transform = readFlirtMatrix('surf2diff.mat', 'orig.nii.gz','fa.nii.gz', path)
             if inverse:
@@ -985,14 +959,14 @@ The path containing this structure must be set."""
             return transformPolyData(point_set, transform)
         elif space.lower() in ('template', 'dartel'):
             if inverse:
-                dartel_warp = self.__get_spm_grid_transform(subj,"dartel","back")
+                dartel_warp = self._get_spm_grid_transform(subj,"dartel","back")
             else:
-                dartel_warp = self.__get_spm_grid_transform(subj,"dartel","forw")
+                dartel_warp = self._get_spm_grid_transform(subj,"dartel","forw")
             return transformPolyData(point_set, dartel_warp)
         elif space[:4] in ('func', 'fmri'):
             #functional space
             paradigm = space[5:]
-            trans = self.__read_func_transform(subj, paradigm, inverse)
+            trans = self._read_func_transform(subj, paradigm, inverse)
             return transformPolyData(point_set, trans)
         elif space.lower() == 'spharm':
             #This is very hacky.... but works well, not explanation available :S
@@ -1015,7 +989,7 @@ The path containing this structure must be set."""
             log.error('Unknown Space %s' % space)
             raise Exception('Unknown Space %s' % space)
 
-    def __create_surfer_lut(self):
+    def _create_surfer_lut(self):
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
         if color_dict is not None and len(color_dict)<180:
@@ -1032,7 +1006,7 @@ The path containing this structure must be set."""
             wmparc_data = wmparc_img.get_data()
             wmparc_values = np.unique(wmparc_data.flat)
             aparc_values.update(wmparc_values)
-            color_file_name = os.path.join(self.getDataRoot(),"freeSurfer_Tracula", 'FreeSurferColorLUT.txt')
+            color_file_name = self._get_freesurfer_lut_name()
             try:
                 color_file = open(color_file_name)
             except IOError as e:
@@ -1060,7 +1034,7 @@ The path containing this structure must be set."""
         #self.save_into_cache('free_surfer_vtk_color_lut',out_lut)
         return out_lut
 
-    def __create_fa_lut(self):
+    def _create_fa_lut(self):
         fa_lut = vtk.vtkLookupTable()
         fa_lut.SetRampToLinear()
         fa_lut.SetTableRange(0.0, 1.0)
@@ -1070,7 +1044,7 @@ The path containing this structure must be set."""
         fa_lut.Build()
         return fa_lut
 
-    def __create_fmri_lut(self):
+    def _create_fmri_lut(self):
         fmri_color_int = vtk.vtkColorTransferFunction()
         fmri_color_int.ClampingOn()
         fmri_color_int.SetColorSpaceToRGB()
@@ -1085,25 +1059,18 @@ The path containing this structure must be set."""
 
         return fmri_color_int
 
-    def __get_paradigm_name(self,paradigm_name):
-        if paradigm_name.endswith("SENSE"):
-            return paradigm_name
-        paradigm_name = paradigm_name.upper()
-        assert paradigm_name in self.__functional_paradigms
-
-        if paradigm_name=="MIEDO":
-            paradigm_name="MIEDOSofTone"
-        paradigm_name +="SENSE"
-        return paradigm_name
-
-    def __read_func_transform(self, subject, paradigm_name, inverse=False):
-        "reads the transform from world to functional space"
-        paradigm_name = self.__get_paradigm_name(paradigm_name)
+    def _read_func_transform(self,subject,paradigm_name,inverse=False):
+        paradigm_name = self._get_paradigm_name(paradigm_name)
         path = os.path.join(self.getDataRoot(), 'spm',subject )
+        T1_func = os.path.join(path, paradigm_name, 'T1.nii')
+        T1_world = os.path.join(path, 'T1', 'T1.nii')
+        return self._read_func_transform_internal(subject,paradigm_name,inverse,path,T1_func,T1_world)
+
+    def _read_func_transform_internal(self,subject, paradigm_name, inverse, path, T1_func, T1_world,  ):
+        "reads the transform from world to functional space"
         if inverse is False:
-            T1_func = os.path.join(path, paradigm_name, 'T1.nii')
-            T1_world = os.path.join(path, 'T1', 'T1.nii')
-            dartel_trans = self.__get_spm_grid_transform(subject,paradigm_name,"forw", True)
+
+            dartel_trans = self._get_spm_grid_transform(subject,paradigm_name,"forw", True)
             T1_func_img = nib.load(T1_func)
             T1_world_img = nib.load(T1_world)
             Tf = T1_func_img.get_affine()
@@ -1122,7 +1089,7 @@ The path containing this structure must be set."""
         else:
             T1_func = os.path.join(path, paradigm_name, 'T1.nii')
             T1_world = os.path.join(path, 'T1', 'T1.nii')
-            dartel_trans = self.__get_spm_grid_transform(subject,paradigm_name,"back", True)
+            dartel_trans = self._get_spm_grid_transform(subject,paradigm_name,"back", True)
             T1_func_img = nib.load(T1_func)
             T1_world_img = nib.load(T1_world)
             Tf = T1_func_img.get_affine()
@@ -1140,7 +1107,7 @@ The path containing this structure must be set."""
 
             return concatenated_trans
 
-    def __read_func(self, subject, **kw):
+    def _read_func(self, subject, **kw):
         "Internal function to read functional images, deals with the SPM transforms"
         log = logging.getLogger(__name__)
         try:
@@ -1151,11 +1118,11 @@ The path containing this structure must be set."""
         space = kw.get('space', 'world')
         name = name.upper()
         space = space.lower()
-        if name not in self.__functional_paradigms:
+        if name not in self._functional_paradigms:
             log.warning(" functional paradigm %s not available" % name)
             return None
-        name = self.__get_paradigm_name(name)
-        path = os.path.join(self.getDataRoot(), "spm",subject,name,"FirstLevel")
+        name = self._get_paradigm_name(name)
+        path = self._get_paradigm_dir(subject,name,spm=True)
         if "contrasts_dict" in kw:
             spm_file_path = os.path.join(path,"SPM.mat")
             return get_contrasts_dict(spm_file_path)
@@ -1180,60 +1147,20 @@ The path containing this structure must be set."""
         origin2 = T1_world.GetOrigin()
         dimension2 = T1_world.GetDimensions()
         spacing2 = T1_world.GetSpacing()
-        fmri_trans = self.__read_func_transform(subject, name)
+        fmri_trans = self._read_func_transform(subject, name)
         log.info("attempting to move to world")
         world_z_map = applyTransform(vtk_z_map, fmri_trans, origin2, dimension2, spacing2)
 
-        return self.__move_img_from_world(subject, world_z_map, True, kw.get('space', 'world'))
+        return self._move_img_from_world(subject, world_z_map, True, kw.get('space', 'world'))
 
-    def __read_bold(self, subj, paradigm):
-        paradigm = self.__get_paradigm_name(paradigm)
-        route = os.path.join(self.getDataRoot(), 'spm',subj, paradigm, 'smoothed.nii.gz')
+    def _read_bold(self, subj, paradigm):
+        paradigm = self._get_paradigm_name(paradigm)
+        path = self._get_paradigm_dir(subj,paradigm)
+        route = os.path.join(path,'smoothed.nii.gz')
         img_4d = nib.load(route)
         return img_4d
 
-
-    def getDataRoot(self):
-        """Returns the data_root of this reader"""
-        return self.__static_root
-
-    def getDynDataRoot(self):
-        """Returns the dynamic data_root of this reader"""
-        return self.__dynaimc_data_root
-
-    def transformPointsToSpace(self, point_set, space, subj, inverse=False):
-        """Access to the internal coordinate transform function. Moves from world to space. 
-        If inverse is true moves from space to world"""
-        subj = str(subj)
-        return self.__movePointsToSpace(point_set, space, subj, inverse)
-
-    def move_img_to_world(self,img,source_space,subj,interpolate=False):
-        """
-        Resample image to the world coordinate system
-        :param img: image
-        :param source_space: source coordinates
-        :param subj: subject
-        :param interpolate: apply interpolation or do nearest neighbours
-        :return: resliced image
-        """
-        subj = str(subj)
-        img2 = self.__move_img_to_world(subj,img,interpolate,source_space)
-        return img2
-
-    def move_img_from_world(self,img,target_space,subj,interpolate=False):
-        """
-        Resample image to the world coordinate system
-        :param img: image
-        :param target_space: target coordinates
-        :param subj: subject
-        :param interpolate: apply interpolation or do nearest neighbours
-        :return: resliced image
-        """
-        subj = str(subj)
-        img2 = self.__move_img_from_world(subj,img,interpolate,target_space)
-        return img2
-
-    def __process_key(self, key):
+    def _process_key(self, key):
         data_root_length = len(self.getDataRoot())
         key = "%s" % key
         if len(key) + data_root_length > 250:
@@ -1245,145 +1172,7 @@ The path containing this structure must be set."""
         return key
 
 
-    def save_into_cache(self, key, data):
-        """
-        Saves some data into a cache, can deal with vtkData and python objects which can be pickled
-
-        key should be printable by %s, and it can be used to later retrive the data using load_from_cache
-        you should not use the same key for python objects and vtk objects
-        returnt true if success, and false if failure
-        WARNING: Long keys are hashed using sha1: Low risk of collisions, no checking is done
-        """
-        key = self.__process_key(key)
-        cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
-        if not os.path.isdir(cache_dir):
-            os.mkdir(cache_dir)
-        if isinstance(data, vtk.vtkObject):
-            cache_file = os.path.join(cache_dir, "%s.vtk" % key)
-            writer = vtk.vtkGenericDataObjectWriter()
-            writer.SetInputData(data)
-            writer.SetFileName(cache_file)
-            writer.SetFileTypeToBinary()
-            res = writer.Write()
-            if res == 1:
-                return True
-            else:
-                return False
-        else:
-            # Python object, try to pickle
-            cache_file = os.path.join(cache_dir, "%s.pickle" % key)
-            try:
-                with open(cache_file, 'wb') as cache_descriptor:
-                    try:
-                        cPickle.dump(data, cache_descriptor, -1)
-                    except cPickle.PicklingError:
-                        return False
-            except OSError:
-                log = logging.getLogger(__name__)
-                log.error("couldn't open file %s" % cache_file)
-                return False
-            return True
-
-    def load_from_cache(self, key):
-        """
-        Loads data stored into cache with the function save_into_cache
-
-        Data can be a vtkobject or a python structure, if both were stored with the same key, python object will be returned
-        returns None if object not found
-        """
-        key = self.__process_key(key)
-        cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
-        cache_file = os.path.join(cache_dir, "%s.pickle" % key)
-        log = logging.getLogger(__name__)
-        try:
-            with open(cache_file, 'rb') as cache_descriptor:
-                try:
-                    ans = cPickle.load(cache_descriptor)
-                except (cPickle.UnpicklingError,EOFError):
-                    log.error("File %s is corrupted " % cache_file)
-                    return None
-                else:
-                    return ans
-        except IOError:
-            pass
+#=========================end of common methods===========================================
 
 
-        cache_file = os.path.join(cache_dir, "%s.vtk" % key)
-        if not os.path.isfile(cache_file):
-            return None
-        reader = vtk.vtkGenericDataObjectReader()
-        reader.SetFileName(cache_file)
-        if reader.ReadOutputType() < 0:
-            return None
-        reader.Update()
-        return reader.GetOutput()
 
-    def clear_cache_dir(self,last_word=False):
-        if last_word is True:
-            cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
-            os.rmdir(cache_dir)
-            os.mkdir(cache_dir)
-
-known_nodes = {  #
-    # Name          :  ( static data root, dyn data root , cache size in MB)
-    'gambita.uniandes.edu.co': ('/media/DATAPART5/kmc400','/media/DATAPART5/kmc400_braviz', 4000),
-    #'dieg8': (r'E:\kmc400',"E:/kmc400_braviz", 4000),
-    'dieg8': (r'C:\Users\Diego\Documents\kmc400',r"C:\Users\Diego\Documents/kmc400_braviz", 4000),
-    'archi5': ('/mnt/win/Users/Diego/Documents/kmc400',"/mnt/win/Users/Diego/Documents/kmc400_braviz", 4000),
-    'ATHPC1304' : (r"Z:",r"F:\ProyectoCanguro\kmc400_braviz",14000),
-    'IIND-EML754066' : (r"Z:",r"C:\Users\da.angulo39\Documents\kmc400_braviz",2000),
-    #'da-angulo': ("Z:\\","D:\\kmc400-braviz" ,4000),
-    'da-angulo': ("X:\\","D:\\kmc400-braviz" ,4000),
-    #'da-angulo': ("F:\\kmc400","F:\kmc400_braviz" ,4000), # from external drive
-    #'da-angulo': ("F:\\kmc400","D:\\kmc400-braviz" ,4000), # from external drive
-    #'da-angulo': (r"N:\run\media\imagine\backups\kmc400","D:\\kmc400-braviz" ,4000), # from external drive
-    'ISIS-EML725001': ('G:/kmc400', 'G:/kmc400-braviz',8000),
-    'Echer': ('H:/kmc400', 'H:/kmc400-braviz',8000),
-    'colivri1-homeip-net' : ('/home/canguro/kmc400-braviz','/media/external2/canguro_win/kmc_400_braviz',50000),
-    'imagine-PC' : ("Z:\\","E:\\kmc_400_braviz",50000)
-
-}
-
-
-def get_data_root():
-    node_id = platform.node()
-    node = known_nodes.get(node_id)
-    if node is not None:
-        return node[0]
-    log = logging.getLogger(__name__)
-    log.error("Unknown node")
-    raise Exception("Unkown node")
-
-def get_dyn_data_root():
-    node_id = platform.node()
-    node = known_nodes.get(node_id)
-    if node is not None:
-        return node[1]
-    log = logging.getLogger(__name__)
-    log.error("Unknown node")
-    raise Exception("Unkown node")
-
-#===============================================================================================
-def autoReader(**kw_args):
-    """Initialized a kmc400Reader based on the computer name"""
-    node_id = platform.node()
-    node = known_nodes.get(node_id)
-    log = logging.getLogger(__name__)
-    if node is not None:
-        static_data_root = node[0]
-        dyn_data_root = node[1]
-
-        if kw_args.get('max_cache', 0) > 0:
-            max_cache = kw_args.pop('max_cache')
-
-            log.info("Max cache set to %.2f MB" % max_cache)
-        else:
-            max_cache = node[2]
-        return kmc400Reader(static_data_root,dyn_data_root, max_cache=max_cache, **kw_args)
-    else:
-        print "Unknown node %s, please enter route to data" % node_id
-        path = raw_input('KMC_root: ')
-        return kmc400Reader(path, **kw_args)
-        # add other strategies to find the project __root
-    
-    
