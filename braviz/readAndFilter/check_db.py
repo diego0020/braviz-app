@@ -1,21 +1,18 @@
-from braviz.readAndFilter import tabular_data
-import logging
-
-
 __author__ = 'diego'
+
+from braviz.readAndFilter import tabular_data
+
+import logging
 
 
 def verify_db_completeness():
     conn = tabular_data.get_connection()
     #user db
     from braviz.readAndFilter import user_data_db_creation
+
     if not check_tables(conn,("applications","scenarios","vars_scenarios","subj_samples","subj_comments")):
         user_data_db_creation.create_tables()
     user_data_db_creation.update_current_applications()
-
-    if not check_application_names():
-        from braviz.readAndFilter import user_data_db_creation
-        user_data_db_creation.update_current_applications()
 
     #bundles db
     if not check_tables(conn,("fiber_bundles",)):
@@ -44,8 +41,6 @@ def check_tables(conn,tables):
             return False
     return True
 
-def check_application_names():
-    pass
 
 if __name__ == "__main__":
     from braviz.utilities import configure_console_logger
