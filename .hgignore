@@ -5,8 +5,6 @@ braviz/vtkError.log
 braviz/interaction/qt_guis/*.py
 braviz/applications/braviz.cfg
 */Thumbs.db
-sphinx_doc/_build/*
-sphinx_doc/make.bat
-sphinx_doc/Makefile
+sphinx_doc/build/*
 braviz/readAndFilter/*.py.orig
 braviz/interaction/qt_guis/*.ui.orig
