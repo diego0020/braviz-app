@@ -37,7 +37,7 @@ data is requested. To get a more useful class you should create your own subclas
         self._memory_cache_container.clear()
 
     @cache_function(_memory_cache_container)
-    def get(self,data, subj_id=None, space='world'):
+    def get(self,data, subj_id=None, space='world', **kw):
         """
         Provides access to geometric data in an specified coordinate system.
 

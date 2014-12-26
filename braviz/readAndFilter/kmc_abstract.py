@@ -386,7 +386,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                     self._parse_fs_color_file()
                 return self._free_surfer_labels.get(name)
             else:
-                available = self._load_free_surfer_model(subject, index='T')
+                available = self._load_free_surfer_model(subject, space=None, index='T')
                 if not name in available:
                     log.warning( 'Model %s not available' % name)
                     raise Exception('Model %s not available' % name)
@@ -692,7 +692,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             assert "operation" not in kw
             operation = "and" if bundle_type == 1 else "or"
             checkpoints = pickle.loads(data)
-            poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation,space, **kw)
+            poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation,space=space, **kw)
             return poly
         elif bundle_type == 10:
             tree_dict = pickle.loads(data)
@@ -742,7 +742,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         #deal with database tracts:
         if "db_id" in kw:
             db_id = kw.pop("db_id")
-            poly = self._readFibers_from_db(subj,db_id,**kw)
+            poly = self._readFibers_from_db(subj,db_id,space=space,**kw)
             return poly
 
         if 'name' in kw:

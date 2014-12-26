@@ -2,7 +2,7 @@
 import contextlib
 import os
 from collections import defaultdict
-
+import logging
 
 def configure_logger(app_name):
     """
@@ -55,7 +55,9 @@ def ignored(*exceptions):
     """A context manager which ignores exceptions of specific types"""
     try:
         yield
-    except exceptions:
+    except exceptions as e:
+        log = logging.getLogger(__name__)
+        log.exception(e)
         pass
 
 

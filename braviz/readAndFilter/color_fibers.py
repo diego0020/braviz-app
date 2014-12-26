@@ -93,7 +93,7 @@ def line_curvature(line):
     return color_dict
         
 
-def scalars_from_image(fibers,nifti_image,order=1):
+def scalars_from_image(fibers,nifti_image):
 
     affine = nifti_image.get_affine()
     iaffine = np.linalg.inv(affine)
@@ -109,13 +109,14 @@ def scalars_from_image(fibers,nifti_image,order=1):
     new_array.SetNumberOfTuples(npoints)
     new_array.SetNumberOfComponents(1)
 
+
+    coords = np.array([fibers.GetPoint(i) + (1,) for i in xrange(npoints)])
+    coords = np.dot(iaffine,coords.T)
+    coords = coords[:3]/coords[3]
+    coords = coords.reshape(3, -1)
+    image_val = ndimage.map_coordinates(data,coords,mode="nearest")
     for i in xrange(npoints):
-        coords = fibers.GetPoint(i) + (1,)
-        coords = np.dot(iaffine,coords)
-        coords = coords[:3]/coords[3]
-        coords = coords.reshape(3, 1)
-        image_val = ndimage.map_coordinates(data,coords,order=order,mode="nearest")
-        new_array.SetComponent(i,0,image_val[0])
+        new_array.SetComponent(i,0,image_val[i])
 
     pd.SetScalars(new_array)
 
@@ -136,16 +137,19 @@ def scalars_from_image_int(fibers,nifti_image):
     new_array.SetNumberOfTuples(npoints)
     new_array.SetNumberOfComponents(1)
 
+
+    coords = np.array([fibers.GetPoint(i) + (1,) for i in xrange(npoints)])
+    coords = np.dot(iaffine,coords.T)
+    coords = coords[:3]/coords[3]
+    coords = coords.reshape(3, -1)
+    coords = coords.astype(np.int)
+
+    image_val = data[coords[0],coords[1],coords[2]]
     for i in xrange(npoints):
-        coords = fibers.GetPoint(i) + (1,)
-        coords = np.dot(iaffine,coords)
-        coords = coords[:3]/coords[3]
-        coords = coords.reshape(3, 1)
-        coords = coords.astype(np.int)
-        image_val = data[coords[0],coords[1],coords[2]]
-        new_array.SetComponent(i,0,image_val[0])
+        new_array.SetComponent(i,0,image_val[i])
 
     pd.SetScalars(new_array)
+
 
 def scalars_lines_from_image(fibers,nifti_image):
 
@@ -163,21 +167,19 @@ def scalars_lines_from_image(fibers,nifti_image):
     new_array = vtk.vtkDoubleArray()
     new_array.SetNumberOfTuples(ncells)
     new_array.SetNumberOfComponents(1)
+
+    npoints = fibers.GetNumberOfPoints()
+    coords = np.array([fibers.GetPoint(i) + (1,) for i in xrange(npoints)])
+    coords = np.dot(iaffine,coords.T)
+    coords = coords[:3]/coords[3]
+    coords = coords.reshape(3, -1)
+    image_val = ndimage.map_coordinates(data,coords,mode="nearest")
+
     for i in xrange(ncells):
         c = fibers.GetCell(i)
         npts = c.GetNumberOfPoints()
-
-        point_values = np.zeros(npts)
-        for j in xrange(npts):
-            p_id = c.GetPointId(j)
-            coords = fibers.GetPoint(p_id) + (1,)
-            coords = np.dot(iaffine,coords)
-            coords = coords[:3]/coords[3]
-            coords = coords.reshape(3, 1)
-            image_val = ndimage.map_coordinates(data,coords,order=1)
-            point_values[j]=image_val
-
-        value = point_values.mean()
+        point_values = [image_val[c.GetPointId(j)] for j in xrange(npts)]
+        value = np.mean(point_values)
         new_array.SetComponent(i,0,value)
 
     cd.SetScalars(new_array)
@@ -217,6 +219,7 @@ def get_fa_lut():
     return lut
 
 def get_md_lut():
+    #todo this should be moved to the reader
     if braviz.readAndFilter.PROJECT == "kmc40":
         lut = braviz.visualization.get_colorbrewer_lut(6e-10, 11e-10,"YlGnBu",9,invert=True)
     elif braviz.readAndFilter.PROJECT == "kmc400":
@@ -228,3 +231,21 @@ def get_md_lut():
 def get_length_lut():
     lut = braviz.visualization.get_colorbrewer_lut(41,125,"YlOrBr",9,invert=True)
     return lut
+
+if __name__ == "__main__":
+    import braviz
+    import os
+    from braviz.utilities import configure_console_logger
+    import logging
+    configure_console_logger(__file__)
+    reader = braviz.readAndFilter.BravizAutoReader()
+    apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
+    conf = braviz.interaction.get_config(apps_dir)
+    subj=conf.get_default_subject()
+    log = logging.getLogger(__name__)
+    log.info("md_p")
+    pd = reader.get("fibers",subj,scalars="md_p")
+    log.info("md_l")
+    pd = reader.get("fibers",subj,scalars="md_l")
+    log.info("aparc")
+    pd = reader.get("fibers",subj,scalars="aparc")

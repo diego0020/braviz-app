@@ -12,11 +12,11 @@ r=r=braviz.readAndFilter.BravizAutoReader()
 subjects_list=reader.get('ids')
 
 # Sacar lista de estructuras para el 093
-model_list=reader.get('model','093',index=1)
+model_list=reader.get('model','144',index=1)
 print(model_list)
 
 #leer putamen
-putamen=reader.get('model','093',name='Left-Putamen')
+putamen=reader.get('model','144',name='Left-Putamen')
 
 #crear visualizador
 viewer=braviz.visualization.simpleVtkViewer()
@@ -29,12 +29,12 @@ viewer.addPolyData(putamen)
 viewer.start()
 
 #Agregar amygdala
-amygdala=reader.get('model','093',name='Right-Amygdala')
+amygdala=reader.get('model','144',name='Right-Amygdala')
 viewer.addPolyData(amygdala)
 viewer.start()
 
 #Agregar imagen
-mri=reader.get('mri','093',format='vtk')
+mri=reader.get('mri','144',format='vtk')
 viewer.addImg(mri)
 viewer.start()
 
