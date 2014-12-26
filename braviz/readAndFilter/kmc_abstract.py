@@ -257,6 +257,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
     def _get_orig_img_name(self):
         raise NotImplementedError
 
+    def _get_md_lut(self):
+        raise NotImplementedError
+
     #==========SPM================
     def _get_paradigm_name(self,paradigm_name):
         raise NotImplementedError
@@ -729,7 +732,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 lut = braviz.readAndFilter.color_fibers.get_fa_lut()
                 return lut
             elif scalars[:2]=="md":
-                lut = braviz.readAndFilter.color_fibers.get_md_lut()
+                lut = self._get_md_lut()
                 return lut
         #named tracts index
         if kw.get('index', False):

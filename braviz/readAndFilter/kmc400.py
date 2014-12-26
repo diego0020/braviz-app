@@ -18,6 +18,7 @@ from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix,rea
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
+from braviz.visualization import get_colorbrewer_lut
 
 class kmc400Reader(KmcAbstractReader):
     """
@@ -270,6 +271,11 @@ The path containing this structure must be set."""
 
     def _get_orig_img_name(self):
         return "orig.nii.gz"
+
+    def _get_md_lut(self):
+        lut = get_colorbrewer_lut(491e-6, 924e-6, "YlGnBu",9, invert=True)
+        return lut
+
     #==========SPM================
     def _get_paradigm_name(self,paradigm_name):
         if paradigm_name.endswith("SENSE"):

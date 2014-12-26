@@ -218,15 +218,6 @@ def get_fa_lut():
     lut = braviz.visualization.get_colorbrewer_lut(0.35,0.82,"YlGn",9,invert=True,continuous=True,skip=1)
     return lut
 
-def get_md_lut():
-    #todo this should be moved to the reader
-    if braviz.readAndFilter.PROJECT == "kmc40":
-        lut = braviz.visualization.get_colorbrewer_lut(6e-10, 11e-10,"YlGnBu",9,invert=True)
-    elif braviz.readAndFilter.PROJECT == "kmc400":
-        lut = braviz.visualization.get_colorbrewer_lut(491e-6, 924e-6, "YlGnBu",9, invert=True)
-    else:
-        raise Exception("Wrong project")
-    return lut
 
 def get_length_lut():
     lut = braviz.visualization.get_colorbrewer_lut(41,125,"YlOrBr",9,invert=True)
