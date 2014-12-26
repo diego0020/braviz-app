@@ -378,14 +378,26 @@ from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, e
 #read configuration file and decide which project to expose
 __config = __get_config(os.path.join(os.path.dirname(__file__),"..","applications"))
 PROJECT = __config.get_project_name()
-if PROJECT == "kmc400":
-    import kmc400p as project_reader
-else:
-    import kmc40 as project_reader
 
-BravizAutoReader = project_reader.autoReader
-braviz_auto_data_root = project_reader.get_data_root
-braviz_auto_dynamic_data_root = project_reader.get_dyn_data_root
+
+
+def get_reader_class(project):
+    import importlib
+    import inspect
+    from braviz.readAndFilter.base_reader import BaseReader
+    #todo filter by being instance of base_reader
+    module = importlib.import_module('braviz.readAndFilter.%s'%project)
+    pred = lambda c: inspect.isclass(c) and issubclass(c,BaseReader)
+    candidate_classes = [c[1] for c in inspect.getmembers(module,pred)]
+    candidate_classes.sort(key=lambda  c:len(inspect.getmro(c)))
+    #return the last one in the hierarchy
+    return candidate_classes[-1]
+
+project_reader = get_reader_class(PROJECT)
+
+BravizAutoReader = project_reader.get_auto_reader
+braviz_auto_data_root = project_reader.get_auto_data_root
+braviz_auto_dynamic_data_root = project_reader.get_auto_dyn_data_root
 
 
 if __name__ == "__main__":

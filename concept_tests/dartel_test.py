@@ -9,7 +9,7 @@ import numpy as np
 import braviz
 
 reader=braviz.readAndFilter.BravizAutoReader()
-data_root=reader.getDataRoot()
+data_root=reader.get_data_root()
 os.chdir(os.path.join(data_root,'Dartel'))
 
 patient='911'

@@ -45,7 +45,7 @@ for subj in subj_ids:
     subj_dir[subj]=actor
 
 #color
-csv_file=path_join(reader.getDataRoot(),'test_small.csv')
+csv_file=path_join(reader.get_data_root(),'test_small.csv')
 csv_codes=braviz.readAndFilter.read_csv.get_column(csv_file,'code')
 csv_data=braviz.readAndFilter.read_csv.get_column(csv_file,scalar_column,True)
 #build dict

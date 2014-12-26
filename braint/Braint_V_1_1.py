@@ -338,7 +338,7 @@ class MainFrame(Frame):
 
     def create_plot_test(self):
         
-        data_root=self.reader.getDataRoot()
+        data_root=self.reader.get_data_root()
         self.file_name=path_join(data_root,'test_small2.csv')
         self.scatterPlot = ScatterPlotClass(500,500)
         self.codes = self.scatterPlot.get_columnFromCSV(self.file_name, 'CODE', False)
@@ -421,7 +421,7 @@ class MainFrame(Frame):
         
     def create_plot_test_minus_one(self):
         self.reader=braviz.readAndFilter.BravizAutoReader()
-        data_root=self.reader.getDataRoot()
+        data_root=self.reader.get_data_root()
         self.file_name=path_join(data_root,'test_small2.csv')
         
         

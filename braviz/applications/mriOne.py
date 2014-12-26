@@ -242,9 +242,9 @@ if __name__ == "__main__":
         else:
             orig_img = reader.get(image_var.get(), subj, format='vtk', **orig_img_desc)
         #target_space -> world
-        orig_center = reader.transformPointsToSpace(center, space_var.get(), subj, True)
+        orig_center = reader.transform_points_to_space(center, space_var.get(), subj, True)
         #world-> orig_space
-        orig_center = reader.transformPointsToSpace(orig_center, orig_img_desc['space'], subj, False)
+        orig_center = reader.transform_points_to_space(orig_center, orig_img_desc['space'], subj, False)
         #to image coordinates
         orig_img_center = (np.array(orig_center) - orig_img.GetOrigin()) / orig_img.GetSpacing()
         orig_slice = round(orig_img_center[0])
@@ -253,9 +253,9 @@ if __name__ == "__main__":
         grid = braviz.visualization.build_grid(orig_img, orig_slice, 5)
         #transform to current space
         #orig_space -> world
-        grid = reader.transformPointsToSpace(grid, orig_img_desc['space'], subj, True)
+        grid = reader.transform_points_to_space(grid, orig_img_desc['space'], subj, True)
         #world -> current space
-        grid = reader.transformPointsToSpace(grid, space_var.get(), subj, False)
+        grid = reader.transform_points_to_space(grid, space_var.get(), subj, False)
         if space_var.get().lower() == 'dartel':
             grid = braviz.visualization.remove_nan_from_grid(grid)
         #paint grid

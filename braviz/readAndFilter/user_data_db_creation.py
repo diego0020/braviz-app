@@ -70,8 +70,7 @@ def create_tables():
     conn.commit()
 
 
-def update_current_applications():
-    applications = {
+_applications_dir = {
         1: "subject_overview",
         2: "anova_task",
         3: "sample_overview",
@@ -81,6 +80,9 @@ def update_current_applications():
         7: "fmri_explorer",
         8: "measure_task",
         }
+
+def update_current_applications():
+    applications = _applications_dir
     conn = get_connection()
     q = "SELECT app_idx, exec_name FROM applications ORDER BY app_idx"
     cur = conn.execute(q)

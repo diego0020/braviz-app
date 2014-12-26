@@ -155,7 +155,7 @@ class TestVis:
     
     def get_struct_metrics_col(self, struct_name, metric,codes):
         key='column_%s_%s'%(struct_name,metric)
-        cache_file_name=path_join(reader.getDataRoot(),'pickles','%s.pickle'%key)
+        cache_file_name=path_join(reader.get_data_root(),'pickles','%s.pickle'%key)
         try:
             cachef=open(cache_file_name,'rb')
         except IOError:
@@ -209,7 +209,7 @@ class TestVis:
         return self.myManager
      
 reader=braviz.readAndFilter.BravizAutoReader(max_cache=500)
-data_root=reader.getDataRoot()
+data_root=reader.get_data_root()
 myVis=TestVis('File\\baseFinal.csv') ##Crear objeto del tipo TestVis 
 #print myVis.get_headers()
 #print myVis.get_column('GENDE', numeric=True)

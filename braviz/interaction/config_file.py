@@ -118,6 +118,19 @@ def make_default_config(default_config_name=None):
 
     return braviz_conf
 
+def get_host_config(project,hostname=None):
+    if hostname is None:
+        import platform
+        hostname = platform.node()
+    config = RawConfigParser()
+    file_name = os.path.join(os.path.dirname(__file__),"..","applications","%s_hosts.cfg"%project)
+    config.read(file_name)
+    if not config.has_section(hostname):
+        apps_dir=os.path.normpath(os.path.dirname(file_name))
+        raise KeyError("Unknown host %s\nPlease modify the %s_hosts.cfg file in %s" % (hostname,project,apps_dir ))
+    items = dict(config.items(hostname))
+    return items
+
 if __name__ == "__main__":
     config_dir=os.path.dirname(os.path.realpath(__file__))
     config_file_name='braviz.cfg'

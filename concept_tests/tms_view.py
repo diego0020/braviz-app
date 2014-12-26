@@ -55,7 +55,7 @@ fibers_actor.SetMapper(fibers_mapper)
 ren.AddActor(fibers_actor)
 #________TMS_DATA_________________
 
-csv_file = os.path.join(reader.getDataRoot(), 'baseFinal_TMS.csv')
+csv_file = os.path.join(reader.get_data_root(), 'baseFinal_TMS.csv')
 #--------------------------------------------------------
 #create_chart_1
 bars_view1=BarPlot()

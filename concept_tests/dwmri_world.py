@@ -11,7 +11,7 @@ v=braviz.visualization.simpleVtkViewer()
 
 #os.chdir(r'C:\Users\da.angulo39\Documents\Kanguro\093\camino')
 reader=braviz.readAndFilter.BravizAutoReader()
-data_root=reader.getDataRoot()
+data_root=reader.get_data_root()
 os.chdir(os.path.join(data_root,subject,'camino'))
 
 img=nib.load('FA_mri_masked.nii.gz')

@@ -10,7 +10,7 @@ import braviz
 
 
 kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
-root_path=kmc_40_reader.getDataRoot()
+root_path=kmc_40_reader.get_data_root()
 image_path=os.path.join(root_path,'911','camino','camino_dt.nii.gz')
 output_path=os.path.join(root_path,'911','camino','camino_dt.vtk')
 img=nib.load(image_path)

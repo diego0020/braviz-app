@@ -18,7 +18,7 @@ print read_free_surfer_csv_file(file_name2,'cuneus','StructName','GrayVol')
 
 reader=braviz.readAndFilter.BravizAutoReader()
 def get_volume(subject,model_name):
-    data_root=reader.getDataRoot()
+    data_root=reader.get_data_root()
     data_dir=os.path.join(data_root,subject,'Models','stats')
     if model_name[:3] =='ctx':
         #we are dealing with a cortex structure

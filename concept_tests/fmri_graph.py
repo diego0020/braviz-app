@@ -32,7 +32,7 @@ current_mode='space' #time or space
 
 #====================BOLD IMAGE==================
 
-root_dir=reader.getDataRoot()
+root_dir=reader.get_data_root()
 test_dir=os.path.join(root_dir,'%s\spm\POWERGRIP'%subject)
 os.chdir(test_dir)
 img_4d=nib.load('smoothed.nii.gz')

@@ -7,7 +7,7 @@ import braviz
 
 
 kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
-root_path=kmc_40_reader.getDataRoot()
+root_path=kmc_40_reader.get_data_root()
 
 
 os.chdir(os.path.join(root_path,'093','camino'))

@@ -20,7 +20,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw()
     reader=braviz.readAndFilter.BravizAutoReader()
-    data_root=reader.getDataRoot()
+    data_root=reader.get_data_root()
     file_name=path_join(data_root,'test_small.csv')
     id_list=reader.get('ids')
     models_set=set()

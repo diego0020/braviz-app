@@ -115,7 +115,7 @@ class VariableSelectFrame(tkFrame):
         super_tree=self.__super_tree
         message_dict=self.__super_tree_message_dict
         #TABLE
-        table_file=os.path.join(self.__reader.getDataRoot(),'test_small.csv')
+        table_file=os.path.join(self.__reader.get_data_root(),'test_small.csv')
         table_headers=get_headers(table_file)
         table_dict=dict(((hdr,{}) for hdr in table_headers ))
         super_tree.insert('', tk.END, 'table', text='Table')
@@ -662,7 +662,7 @@ class DataFetcher(object):
         self.__codes=codes
         self.__struct_hierarchy = get_structural_hierarchy(self.__reader,'144')
         self.__laterality=None
-        self.__tms_file=os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
+        self.__tms_file=os.path.join(self.__reader.get_data_root(), 'baseFinal_TMS.csv')
 
     def get_data(self,data_variables,state_dict={}):
         #decode
@@ -692,7 +692,7 @@ class DataFetcher(object):
 
     def get_tms_data_col(self,col):
 
-        tms_csv_file=os.path.join(self.__reader.getDataRoot(), self.__tms_file)
+        tms_csv_file=os.path.join(self.__reader.get_data_root(), self.__tms_file)
         tokens=col.split(':')
         hemisphere=tokens[-1]
         if hemisphere=='Dominant':
@@ -715,13 +715,13 @@ class DataFetcher(object):
         if self.__codes is not None:
             return self.__codes
         else:
-            tms_csv_file = os.path.join(self.__reader.getDataRoot(), 'baseFinal_TMS.csv')
+            tms_csv_file = os.path.join(self.__reader.get_data_root(), 'baseFinal_TMS.csv')
             codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
             return codes_col
 
     def get_ubica_dict(self):
 
-        tms_csv_file = os.path.join(self.__reader.getDataRoot(), self.__tms_file)
+        tms_csv_file = os.path.join(self.__reader.get_data_root(), self.__tms_file)
         codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
         ubica_col = get_column(tms_csv_file, 'UBICA', numeric=False)
         return dict(izip(codes_col,ubica_col))
@@ -729,7 +729,7 @@ class DataFetcher(object):
     def get_later_dict(self):
         if self.__laterality is not None:
             return self.__laterality
-        tms_csv_file = os.path.join(self.__reader.getDataRoot(), self.__tms_file)
+        tms_csv_file = os.path.join(self.__reader.get_data_root(), self.__tms_file)
         codes_col = get_column(tms_csv_file, 'CODE', numeric=False)
         ubica_col = get_column(tms_csv_file, 'LATER', numeric=False)
         #1: Right Handed
@@ -790,7 +790,7 @@ class DataFetcher(object):
         return result_dict,names,fibers
 
     def get_matrix_data_col(self,col):
-        matrix_file=os.path.join(self.__reader.getDataRoot(), 'test_small.csv')
+        matrix_file=os.path.join(self.__reader.get_data_root(), 'test_small.csv')
         tokens=col.split(':')
         decoded_col = tokens[-1]
         data_col=get_column(matrix_file,decoded_col,numeric=True)

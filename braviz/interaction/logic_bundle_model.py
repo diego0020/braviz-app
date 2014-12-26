@@ -146,10 +146,10 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
                 # coordinates
                 source_coords = geom_db.get_roi_space(roi_id=extra_data)
                 # source -> world
-                self.__sphere_world = reader.transformPointsToSpace(self.__sphere_source.GetOutput(), source_coords,
+                self.__sphere_world = reader.transform_points_to_space(self.__sphere_source.GetOutput(), source_coords,
                                                                     subj_img, inverse=True)
                 # world -> current
-                self.__sphere_current = reader.transformPointsToSpace(self.__sphere_world, self.space,
+                self.__sphere_current = reader.transform_points_to_space(self.__sphere_world, self.space,
                                                                       subj_img, inverse=False)
                 self.__mapper.SetInputData(self.__sphere_current)
         else:
@@ -181,11 +181,11 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
             try:
                 source_coords = geom_db.get_roi_space(roi_id=self.__roi_id)
                 # source -> world
-                self.__sphere_world = reader.transformPointsToSpace(self.__sphere_source.GetOutput(), source_coords,
+                self.__sphere_world = reader.transform_points_to_space(self.__sphere_source.GetOutput(), source_coords,
                                                                     subj_img, inverse=True)
 
                 # world -> current
-                self.__sphere_current = reader.transformPointsToSpace(self.__sphere_world, self.space,
+                self.__sphere_current = reader.transform_points_to_space(self.__sphere_world, self.space,
 
                                                                       subj_img, inverse=False)
             except Exception:

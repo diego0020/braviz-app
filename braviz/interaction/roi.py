@@ -49,8 +49,8 @@ def generate_roi_image(subject, roi_id, space, reader=None):
     pd = vtk.vtkPolyData()
     pd.SetPoints(points)
     print "bu"
-    pp_w = reader.transformPointsToSpace(pd,"diff",subject_id,inverse=True)
-    pp_s = reader.transformPointsToSpace(pp_w,sphere_space,subject_id,inverse=False)
+    pp_w = reader.transform_points_to_space(pd,"diff",subject_id,inverse=True)
+    pp_s = reader.transform_points_to_space(pp_w,sphere_space,subject_id,inverse=False)
     points_sphere = pp_s.GetPoints()
     print "ba"
     j = 0

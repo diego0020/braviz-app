@@ -69,5 +69,5 @@ if test=='measure':
     pts.SetPoint(0,x)
     pd=vtk.vtkPolyData()
     pd.SetPoints(pts)
-    pd2=r.transformPointsToSpace(pd,'talairach','093')
+    pd2=r.transform_points_to_space(pd,'talairach','093')
     pd2.GetPoint(0)

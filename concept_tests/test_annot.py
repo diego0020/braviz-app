@@ -3,7 +3,7 @@ import os
 import braviz
 
 kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
-root_path=kmc_40_reader.getDataRoot()
+root_path=kmc_40_reader.get_data_root()
 os.chdir(os.path.join(root_path,'232','Surf'))
 #'c:/Users/da.angulo39/Documents/Kanguro/232/Surf/'
 v=braviz.visualization.simpleVtkViewer()

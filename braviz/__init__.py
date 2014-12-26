@@ -39,4 +39,5 @@ import interaction
 if __name__ == "__main__":
     viewer = visualization.simpleVtkViewer()
     reader = readAndFilter.BravizAutoReader()
-    get_conf = interaction.get_config()
+    apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
+    get_conf = interaction.get_config(apps_dir)
