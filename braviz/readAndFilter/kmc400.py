@@ -54,7 +54,7 @@ The path containing this structure must be set."""
                                   spacing2=(-1.5, 1.5, 1.5), interpolate=interpolate)
             #origin, dimension and spacing come from template
             return img3
-        elif space[:2].lower() == 'ta':
+        elif space[:2] == 'ta':
             talairach_file = self._get_talairach_transform_name(subj)
             transform = readFreeSurferTransform(talairach_file)
             img3 = applyTransform(img2, inv(transform), (-100, -120, -110), (190, 230, 230), (1, 1, 1),
@@ -124,7 +124,7 @@ The path containing this structure must be set."""
             log.error('Unknown space %s' % space)
             raise Exception('Unknown space %s' % space)
 
-    def _getImg(self, data, subj, **kw):
+    def _getImg(self, data, subj, space, **kw):
         "Auxiliary function to read nifti images"
         #path=self.__root+'/'+str(subj)+'/MRI'
         if data == 'MRI':
@@ -132,19 +132,19 @@ The path containing this structure must be set."""
             filename = 'MPRAGEmodifiedSENSE.nii.gz'
         elif data == 'FA':
             path = os.path.join(self.get_data_root(), 'tractography',str(subj))
-            if kw.get('space',"").startswith('diff'):
+            if space.startswith('diff'):
                 filename = 'fa.nii.gz'
             else:
                 filename = 'fa_mri.nii.gz'
         elif data == "MD":
             path = os.path.join(self.get_data_root(), 'tractography',str(subj))
-            if kw.get('space',"").startswith('diff'):
+            if space.startswith('diff'):
                 filename = 'md.nii.gz'
             else:
                 filename = 'md_mri.nii.gz'
         elif data == "DTI":
             path = os.path.join(self.get_data_root(), 'tractography',str(subj))
-            if kw.get('space','').startswith('diff'):
+            if space.startswith('diff'):
                 filename = 'rgb_dti.nii.gz'
                 #filename = 'rgb_dti_masked.nii.gz'
             else:
@@ -186,7 +186,7 @@ The path containing this structure must be set."""
                 vtkImg = nifti_rgb2vtk(img)
             else:
                 vtkImg = nibNii2vtk(img)
-            if kw.get('space', '').lower() == 'native':
+            if space == 'native':
                 return vtkImg
 
             interpolate = True
@@ -195,12 +195,12 @@ The path containing this structure must be set."""
                 #print "turning off interpolate"
 
             img2 = applyTransform(vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
-            space = kw.get('space', 'world')
+
             if space == "diff" and (data in {"FA","MD","DTI"}):
                 return img2
             return self._move_img_from_world(subj, img2, interpolate, space=space)
-        space = kw.get('space', 'world')
-        space = space.lower()
+
+
         if space == "diff" and (data in {"FA","MD","DTI"}):
             return img
         elif space == "world":

@@ -41,7 +41,7 @@ The path containing this structure must be set."""
             subj = "0" * (3 - len(subj)) + subj
         return subj
 
-    def _getImg(self, data, subj, **kw):
+    def _getImg(self, data, subj, space,  **kw):
         "Auxiliary function to read nifti images"
         #path=self.getDataRoot()+'/'+subj+'/MRI'
         if data == 'MRI':
@@ -49,19 +49,19 @@ The path containing this structure must be set."""
             filename = '%s-MRI-full.nii.gz' % subj
         elif data == 'FA':
             path = os.path.join(self.get_data_root(), subj, 'camino')
-            if kw.get('space', "").startswith('diff'):
+            if space.startswith('diff'):
                 filename = 'FA_masked.nii.gz'
             else:
                 filename = 'FA_mri_masked.nii.gz'
         elif data == "MD":
             path = os.path.join(self.get_data_root(), subj, 'camino')
-            if kw.get('space', "").startswith('diff'):
+            if space.startswith('diff'):
                 filename = 'MD_masked.nii.gz'
             else:
                 filename = 'MD_mri_masked.nii.gz'
         elif data == "DTI":
             path = os.path.join(self.get_data_root(), subj, 'camino')
-            if kw.get('space', '').startswith('diff'):
+            if space.startswith('diff'):
                 filename = 'rgb_dti_masked.nii.gz'
             else:
                 filename = 'rgb_dti_mri_masked.nii.gz'
@@ -99,7 +99,7 @@ The path containing this structure must be set."""
                 vtkImg = nifti_rgb2vtk(img)
             else:
                 vtkImg = nibNii2vtk(img)
-            if kw.get('space', '').lower() == 'native':
+            if space == 'native':
                 return vtkImg
 
             interpolate = True
@@ -108,13 +108,11 @@ The path containing this structure must be set."""
                 #print "turning off interpolate"
 
             img2 = applyTransform(vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
-            space = kw.get('space', 'world')
-            space = space.lower()
+
             if space == "diff" and (data in {"FA", "MD", "DTI"}):
                 return img2
             return self._move_img_from_world(subj, img2, interpolate, space=space)
-        space = kw.get('space', 'world')
-        space = space.lower()
+
         if space == "diff" and (data in {"FA", "MD", "DTI"}):
             return img
         elif space == "world":
@@ -134,7 +132,7 @@ The path containing this structure must be set."""
 
     def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
         "moves an image from the world coordinate space to talairach or dartel spaces"
-        space = space.lower()
+
         if space == 'world':
             return img2
         elif space in ('template', 'dartel'):
@@ -173,7 +171,7 @@ The path containing this structure must be set."""
 
     def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
         "moves an image from the world coordinate space to talairach or dartel spaces"
-        space = space.lower()
+
         if space == 'world':
             return img2
         elif space in ('template', 'dartel'):

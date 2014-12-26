@@ -13,10 +13,14 @@ _auto_temp_dir = os.path.join(tempfile.gettempdir(),"braviz_temp")
 
 class BaseReader(object):
     """
-The base class for Braviz project readers
+Provide access to projects' non-tabular data
 
-Project readers provide a common interface to each projects underlying data structure. An instance of this class will
-always return empty lists for indexes and raise a IOError.
+Project readers provide a common interface to each projects underlying data. All project readers should be inherited
+from this class. Most data access is carried out through the :meth:`get` method. Underneath this method locates the
+appropriate data files and transformations, and returns the requested data in the requested coordinates system.
+
+An instance of this class will always return empty lists when indexes are requested and raise exceptions when
+data is requested. To get a more useful class you should create your own subclass.
 ."""
     _memory_cache_container = CacheContainer()
 
@@ -33,11 +37,73 @@ always return empty lists for indexes and raise a IOError.
         self._memory_cache_container.clear()
 
     @cache_function(_memory_cache_container)
-    def get(self,data, subj_id=None, **kw):
-        """All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
+    def get(self,data, subj_id=None, space='world'):
+        """
+        Provides access to geometric data in an specified coordinate system.
+
+        All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
         Available spaces for all data are: world, talairach and dartel. Some data may support additional values
         data should be one of:
-        IDS: Return the ids of all subjects in the study as a list
+
+        Args:
+            data (str): Case insensitive, the type of data requested. Currently the possible values are
+
+                ===========  =====================================================
+                Ids          ids of all subjects in the study as a list
+
+                             *returns* a list of ids
+                -----------  -----------------------------------------------------
+                MRI          structural image of the given subject
+
+                             returns a nibabel image object, use ``format="VTK"`` to
+                             receive a vtkImageData instead.
+
+                -----------  -----------------------------------------------------
+                FA           fractional anisotropy image
+
+                             returns a nibabel image object, use ``format="VTK"`` to
+                             receive a vtkImageData instead.
+                -----------  -----------------------------------------------------
+                MD           Mean diffusivity image
+
+                             returns a nibabel image object, use ``format="VTK"`` to
+                             receive a vtkImageData instead.
+                -----------  -----------------------------------------------------
+                DTI          RGB DTI image
+
+                             returns a nibabel image object, use ``format="VTK"`` to
+                             receive a vtkImageData instead.
+                -----------  -----------------------------------------------------
+                Aparc        FreeSurfer Aparc (Auto Parcelation) image
+
+                             returns a nibabel image object, use ``format="VTK"`` to
+                             receive a vtkImageData instead.
+                -----------  -----------------------------------------------------
+                WMparc       FreeSurfer WMParc (White Matter Parcelation) image
+
+                             returns a nibabel image object, use ``format="VTK"`` to
+                             receive a vtkImageData instead.
+                -----------  -----------------------------------------------------
+                fMRI         SPM t-score map
+
+                             returns a nibabel image object, use ``format="VTK"`` to
+                             receive a vtkImageData instead.
+                -----------  -----------------------------------------------------
+                BOLD         SPM, pre-processed bold series
+
+                             returns a nibabel image object, use ``format="VTK"`` to
+                             receive a vtkImageData instead.
+                -----------  -----------------------------------------------------
+                Model        Reconstruction of FreeSurfer segmented structure
+                -----------  -----------------------------------------------------
+                Surf         FreeSurfer brain cortex surface reconstruction
+                -----------  -----------------------------------------------------
+                Surf_Scalar  Scalars for a FreeSurfer surfaces
+                -----------  -----------------------------------------------------
+                Fibers       Tractography
+                -----------  -----------------------------------------------------
+                Tracula      Tracula probabilistic tractography
+                ===========  =====================================================
 
         MRI: By default returns a nibnii object, use format='VTK' to get a vtkImageData object.
              Additionally use space='native' to ignore the nifti transform.
@@ -97,7 +163,7 @@ always return empty lists for indexes and raise a IOError.
 
         """
         subj_id = self.decode_subject(subj_id)
-        return self._get(data, subj_id, **kw)
+        return self._get(data, subj_id,space, **kw)
 
     def get_filtered_polydata_ids(self,subj,struct):
         self.__raise_error()
@@ -248,7 +314,7 @@ always return empty lists for indexes and raise a IOError.
         """
         raise IOError("Data not available in BaseReader")
 
-    def _get(self, data, subj=None, **kw):
+    def _get(self, data, subj=None, space='world', **kw):
         "Internal: decode instruction and dispatch"
         data = data.upper()
         if data == 'MRI':
