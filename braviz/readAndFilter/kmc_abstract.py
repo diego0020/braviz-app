@@ -307,7 +307,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         elif data == 'SURF':
             return self._load_free_surfer_surf(subj, space, **kw)
         elif data == 'SURF_SCALAR':
-            return self._loadFreeSurferScalar(subj, **kw)
+            return self._load_free_surfer_scalar(subj, **kw)
         elif data == 'FIBERS':
             return self._readFibers(subj, space, **kw)
         elif data == 'TENSORS':
@@ -516,18 +516,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 orig = normal_f.GetOutput()
             return orig
 
-    def _loadFreeSurferScalar(self, subj, **kw):
+    def _load_free_surfer_scalar(self, subj, **kw):
         "Auxiliary function to read free surfer scalars"
         morph = {'area', 'curv', 'avg_curv', 'thickness', 'volume', 'sulc'}
         morph_path = self._get_free_surfer_morph_path(subj)
         labels_path = self._get_free_surfer_labels_path(subj)
         log = logging.getLogger(__name__)
-        try:
-            hemisphere = kw['hemi']
-            hs = hemisphere + 'h'
-        except KeyError:
-            log.error("hemi is required")
-            raise (Exception("hemi is required"))
         if kw.get('index'):
             contents = os.listdir(morph_path)
             contents.extend(os.listdir(labels_path))
@@ -535,6 +529,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
             annots = [m[3:-6] for m in contents if pattern.match(m) is not None]
             morfs = [m for m in morph if hs + '.' + m in contents]
             return morfs + annots
+        try:
+            hemisphere = kw['hemi']
+            hs = hemisphere + 'h'
+        except KeyError:
+            log.error("hemi is required")
+            raise (Exception("hemi is required"))
         try:
             scalar_name = kw['scalars']
         except KeyError:

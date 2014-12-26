@@ -37,13 +37,9 @@ data is requested. To get a more useful class you should create your own subclas
         self._memory_cache_container.clear()
 
     @cache_function(_memory_cache_container)
-    def get(self,data, subj_id=None, space='world', **kw):
+    def get(self,data, subj_id=None, space='world', **kwargs):
         """
         Provides access to geometric data in an specified coordinate system.
-
-        All vtkStructures can use an additional 'space' argument to specify the space of the output coordinates.
-        Available spaces for all data are: world, talairach and dartel. Some data may support additional values
-        data should be one of:
 
         Args:
             data (str): Case insensitive, the type of data requested. Currently the possible values are
@@ -95,7 +91,8 @@ data is requested. To get a more useful class you should create your own subclas
 
                              Requires ``name=<paradigm>``
 
-                             Optionally you may specify ``contrast=<int>``.
+                             Optionally you may specify ``contrast=<int>``
+
                              ``contrasts_dict`` = True will return a dictionary with
                              the available for contrasts for the specified paradigm.
 
@@ -107,75 +104,105 @@ data is requested. To get a more useful class you should create your own subclas
                              Only available as a 4d nibabel object
                 -----------  -----------------------------------------------------
                 Model        Reconstruction of FreeSurfer segmented structure
+
+                             ``index=True`` returns a list of available models
+
+                             ``name=<model>`` returns a vtkPolyData, unless one of the
+                             following options is also specified
+
+                             ``color=True`` returns the standard FreeSurfer color
+                             associated with the given model
+
+                             ``volume=True`` returns the volume of the given structure
+                             read from the FreeSurfer stats files
+
+                             ``label=True`` returns the integer which identifies the
+                             structure in the Aparc or WMparc image
                 -----------  -----------------------------------------------------
                 Surf         FreeSurfer brain cortex surface reconstruction
+
+                             Requires ``name=<surface>`` and ``hemi=<r|l>`` where
+                             surface is *orig, pial, white, smoothwm, inflated or sphere*
+
+                             ``normals=False`` returns a polydata without normals
+
+                             ``scalars=<name>`` add the given scalars to the polydata
+                             (look Surf_Scalar)
                 -----------  -----------------------------------------------------
                 Surf_Scalar  Scalars for a FreeSurfer surfaces
+
+                             ``index = True`` returns a list of available scalars
+
+                             ``scalars=<name>`` and ``hemi=<'r'|'l'>`` will return a numpy array with the
+                             scalar data.
+
+                             ``lut=True`` will return a vtkLookupTable appropriate for the given scalars.
                 -----------  -----------------------------------------------------
                 Fibers       Tractography
+
+                             Returns a polydata containing polylines. The following options are available
+
+                             ``color=<'orient'|'rand'|None>`` By default fibers are colored according to the
+                             direction. 'rand' will give a different color for each polyline so that they can be
+                             distinguished. Use None when you intend to display the fibers using scalar data and
+                             a lookup table
+
+                             ``scalars=<'fa_p','fa_l','md_p','md_l','length','aparc','wmparc'>`` will attach the
+                             given scalar data to the polydata. fa stands for Fractional Anisotropy and md for
+                             mean diffusivity. _p stands for a value for each point, while _l will create a value for
+                             each line equal to the mean across the line. aparc and wmpar will attach the integer label
+                             of the nearest voxel in the corresponding image.
+
+                             ``lut=True`` can be used together with ``scalars`` to get an appropriate lookup table
+
+                             ``waypoint = <model>`` will filter the tractography to the lines that pass through the
+                             given structure
+
+                             ``waypoint = <model-list>`` will filter the tractography to the lines that pass through
+                             all models in the list. If ``operation='or'`` is also specified the behaviour changes to
+                             the lines that pass through at least one of the models in the list.
+
+                             ``name=<tract-name>`` can be used to access tracts defined through python functions. To get
+                             a list of such available tracts add ``index=True``
+
+                             ``db-id=<id>`` returns a tract stored in the database with the given index
                 -----------  -----------------------------------------------------
                 Tracula      Tracula probabilistic tractography
+
+                             ``index=True`` returns a list of available bundles
+
+                             ``name=<bundle>`` returns the isosurface at 0.20 of the maximum aposteriori probability
+                             for the given bundle. Use ``contour=<percentage>`` to change this value.
+
+                             ``map=True`` returns the probability map as an image
+
+                             ``color=True`` returns the standard FreeSurfer color associated with the bundle.
                 ===========  =====================================================
 
-        MRI: By default returns a nibnii object, use format='VTK' to get a vtkImageData object.
-             Additionally use space='native' to ignore the nifti transform.
+            subj_id: The id of the subject whose data is requested. Use data='ids' to get a list of available subjects
 
-        FA:  Same options as MRI, but space also accepts 'diffusion', also accepts 'lut'
+            space (str): The coordinate systems in which the result is requested. Available spaces are
 
-        MD:  Same options as MRI, but space also accepts 'diffusion'
+                ===============   ==================================
+                world             Defined by the MRI image
 
-        DTI: Same options as MRI, but space also accepts 'diffusion'
+                talairach         MRI image after applying an affine transformation to the Talairach coordinates
 
-        APARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
+                dartel            Non-linear warp towards a template
 
-        WMPARC: Same options as MRI, but also accepts 'lut' to get the corresponding look up table
+                diff              Defined by the diffusion images
 
-        FMRI: requires name=<Paradigm>, may also receive contrast to indicate a specific contrast (the defautl is 1)
-              Use contrasts_dict = True togethet with paradigms to get the names of the contrasts
-              Use SPM = True to get a representation of the corresponding spm file
+                fmri-<pdgm>       Defined by the SPM results
 
-        BOLD: requires name=<Paradigm>, only nifti format is available
+                native            Ignores all transformations, raw voxels data
+                ===============   ==================================
 
-        MODEL:Use name=<model> to get the vtkPolyData. Use index=True to get a list of the available models for a subject.
-              Use color=True to get the standard color associated to the structure
-              Use volume=True to get the volume of the structure
-              Use label=True to get the label corresponding to the structure
+                Notice that some data types are not available in every space, in this case an exception will be risen.
 
-        SURF: Use name=<surface> and hemi=<r|h> to get the vtkPolyData of a free surfer surface reconstruction,
-              use scalars to add scalars to the data
-              surface must be orig pial white smoothwm inflated sphere
-              us normals = 0 to avoid calculating normals
-
-        SURF_SCALAR: Use scalar=<name> and hemi=<l|r> to get scalar data associated to a SURF.
-                     Use index=True to get a list of available scalars,
-                     Use lut=True to get the associated lookUpTable for Annotations and a standard LUT for morphology
-
-        FIBERS: The default space is world, use space='diff' to get fibers in diffusion space.
-                Use waypoint=<model-name> to restrict to fibers passing through a given MODEL as indicated above.
-                waypoint may also be a list of models. In this case you will by default get tracts that pass through all
-                the models if the list. This can be changed by setting operation='or', to get tracts which pass through
-                any of the models.
-                Can accept color=<orient|fa|curv|y|rand> to get different color scalars
-                Otherwise can acecpt scalars=<fa_p|fa_l|md_p|md_l|length>
-                In this case you may use lut=T to get the corresponding LUT
-                'Name' can be provided instead of waypoint to get custom tracts, to get a list of currently available
-                named tracts call index=True
-                Use db_id = 'id' to read a fiber stored in the braviz data base
-
-        TRACULA: The default space is world, use space='diff' to get fibers in diffusion space.
-                 Requires name = <track-name>. Use Index = True to get a list of available bundles.
-                 The default returns contours at 0.20 of the maximum aposteriori probability.
-                 Use contour = <percentage> to get different contours
-                 Use map = True to get the probability map as an image.
-                 Use color=True to get the default color for the structure
-
-        TENSORS: Get an unstructured grid containing tensors at the points where they are available
-                 and scalars representing the orientation of the main eigenvector
-                 Use space=world to get output in world coordinates [experimental]
 
         """
         subj_id = self.decode_subject(subj_id)
-        return self._get(data, subj_id,space, **kw)
+        return self._get(data, subj_id,space, **kwargs)
 
     def get_filtered_polydata_ids(self,subj,struct):
         self.__raise_error()

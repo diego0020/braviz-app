@@ -9,6 +9,7 @@ Reader
 The get method
 --------------
 
-    .. automethod:: BaseReader.get(self,data, subj_id=None, **kw)
+    .. automethod:: BaseReader.get(self,data, subj_id=None, **kwargs)
+
 
 
