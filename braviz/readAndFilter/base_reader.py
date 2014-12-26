@@ -78,21 +78,33 @@ data is requested. To get a more useful class you should create your own subclas
 
                              returns a nibabel image object, use ``format="VTK"`` to
                              receive a vtkImageData instead.
+
+                             use ``lut=True`` to get a vtkLookupTable
                 -----------  -----------------------------------------------------
                 WMparc       FreeSurfer WMParc (White Matter Parcelation) image
 
                              returns a nibabel image object, use ``format="VTK"`` to
                              receive a vtkImageData instead.
+
+                             use ``lut=True`` to get a vtkLookupTable
                 -----------  -----------------------------------------------------
                 fMRI         SPM t-score map
 
                              returns a nibabel image object, use ``format="VTK"`` to
                              receive a vtkImageData instead.
+
+                             Requires ``name=<paradigm>``
+
+                             Optionally you may specify ``contrast=<int>``.
+                             ``contrasts_dict`` = True will return a dictionary with
+                             the available for contrasts for the specified paradigm.
+
+                             ``SPM = True`` will return a dictionary with the data contained
+                             in the *spm.mat* file.
                 -----------  -----------------------------------------------------
                 BOLD         SPM, pre-processed bold series
 
-                             returns a nibabel image object, use ``format="VTK"`` to
-                             receive a vtkImageData instead.
+                             Only available as a 4d nibabel object
                 -----------  -----------------------------------------------------
                 Model        Reconstruction of FreeSurfer segmented structure
                 -----------  -----------------------------------------------------
