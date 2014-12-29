@@ -55,7 +55,7 @@ def track2db(tracks,sample=None):
                     tabular_data.updata_variable_value(var_id,subj,v)
                 except Exception as e:
                     log.exception(e)
-    reader.clear_cache()
+    reader.clear_mem_cache()
 
 def proc_batch(b):
     log = logging.getLogger(__name__)

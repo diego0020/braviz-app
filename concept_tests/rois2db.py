@@ -43,7 +43,7 @@ def roi2db(roi_ids,subj):
                     tabular_data.updata_variable_value(var_id,subj,float(v))
                 except Exception as e:
                     print e.message
-    reader.clear_cache()
+    reader.clear_mem_cache()
 
 if __name__ == "__main__":
     configure_console_logger("roi2db")

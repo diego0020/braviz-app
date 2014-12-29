@@ -8,7 +8,7 @@ from braviz.utilities import ignored, configure_console_logger
 
 def clear_cache():
     reader = BravizAutoReader(max_cache=500)
-    reader.clear_cache(True)
+    reader.clear_mem_cache(True)
 
 
 def populate_cache(subj):
@@ -20,7 +20,7 @@ def populate_cache(subj):
         reader2.get('MRI',subj,format='vtk',space='dartel')
     with ignored(Exception):
         reader2.get('fibers',subj,space='dartel')
-    reader2.clear_cache()
+    reader2.clear_mem_cache()
     #FreeSurferSurface
     print " %s: Surfaces"%subj
     surfaces=('pial','white','orig','inflated','sphere')

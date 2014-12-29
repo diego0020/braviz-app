@@ -96,7 +96,7 @@ def save_subj_descs(subj):
         conn.close()
     except Exception as e:
         log.exception(e)
-    reader.clear_cache()
+    reader.clear_mem_cache()
 
 def save_for_all(processes=1):
     reader=braviz.readAndFilter.BravizAutoReader(max_cache=500)

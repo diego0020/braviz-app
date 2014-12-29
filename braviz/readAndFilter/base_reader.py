@@ -31,15 +31,14 @@ data is requested. To get a more useful class you should create your own subclas
         self.__static_root = _auto_temp_dir
         return
 
-    def clear_cache(self):
+    def clear_mem_cache(self):
         log = logging.getLogger(__name__)
         log.info("Clearing cache")
         self._memory_cache_container.clear()
 
     @cache_function(_memory_cache_container)
     def get(self,data, subj_id=None, space='world', **kwargs):
-        """
-        Provides access to geometric data in an specified coordinate system.
+        """Provides access to geometric data in an specified coordinate system.
 
         Args:
             data (str): Case insensitive, the type of data requested. Currently the possible values are
@@ -198,13 +197,14 @@ data is requested. To get a more useful class you should create your own subclas
                 ===============   ==================================
 
                 Notice that some data types are not available in every space, in this case an exception will be risen.
-
+            **kwargs: Arguments specific to each data type
 
         """
         subj_id = self.decode_subject(subj_id)
         return self._get(data, subj_id,space, **kwargs)
 
     def get_filtered_polydata_ids(self,subj,struct):
+        #todo: move to a get('fibers',_,ids=True)
         self.__raise_error()
 
     def decode_subject(self,subj):
@@ -295,7 +295,7 @@ data is requested. To get a more useful class you should create your own subclas
         return _auto_temp_dir
 
     @staticmethod
-    def _clear_dynamic_data_dir(dir_name):
+    def clear_dynamic_data_dir(dir_name):
         """
         Clears braviz dynamic content from dir_name
         """
