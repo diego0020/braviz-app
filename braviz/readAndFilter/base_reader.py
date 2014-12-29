@@ -161,6 +161,9 @@ data is requested. To get a more useful class you should create your own subclas
                              all models in the list. If ``operation='or'`` is also specified the behaviour changes to
                              the lines that pass through at least one of the models in the list.
 
+                             ``ids=True`` will return the ids of the polylines, based in the whole tractography, that
+                             cross the specified waypoints.
+
                              ``name=<tract-name>`` can be used to access tracts defined through python functions. To get
                              a list of such available tracts add ``index=True``
 

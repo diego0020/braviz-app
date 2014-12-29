@@ -782,11 +782,20 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return streams_mri
         else:
             #dealing with waypoints
+            if kw.get('ids',False):
+                models = kw['waypoint']
+                if isinstance(models, basestring):
+                    return self._cached_filter_fibers(subj,models)
+                sub_ids = [self._cached_filter_fibers(subj,m) for m in models]
+                if (kw.get('operation', 'and') == 'and'):
+                    return set.intersection(*sub_ids)
+                else:
+                    return set.union(*sub_ids)
 
             if space == 'world':
                 #Do filtering in world coordinates
                 models = kw.pop('waypoint')
-                if isinstance(models, str) or isinstance(models, unicode):
+                if isinstance(models, basestring):
                     models = (models,)
                 if (kw.get('operation', 'and') == 'and') and len(models) == 0:
                     #return all fibers
