@@ -3,7 +3,7 @@ from multiprocessing import Pool
 
 import braviz
 from braviz.readAndFilter import BravizAutoReader
-from braviz.utilities import ignored, configure_console_logger
+from braviz.utilities import ignored, configure_logger_from_conf
 
 
 def clear_cache():
@@ -86,7 +86,7 @@ def populate_all(processes=1):
         proc_pool.map(populate_cache,ids)
 
 if __name__=='__main__':
-    configure_console_logger("populate_cache")
+    configure_logger_from_conf("populate_cache")
     if len(sys.argv)<2:
         processes=1
     else:

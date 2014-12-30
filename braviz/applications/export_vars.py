@@ -31,10 +31,10 @@ class ExportVariables(GenericVariableSelectDialog):
 
 def run():
     import sys
-    from braviz.utilities import configure_console_logger
+    from braviz.utilities import configure_logger_from_conf
 
     # configure_logger("build_roi")
-    configure_console_logger("export_data")
+    configure_logger_from_conf("export_data")
     app = QtGui.QApplication(sys.argv)
     log = logging.getLogger(__name__)
     log.info("started")

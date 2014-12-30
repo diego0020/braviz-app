@@ -41,7 +41,7 @@ The path containing this structure must be set."""
         ids.sort(key=int)
         return ids
 
-    def decode_subject(self,subj):
+    def _decode_subject(self,subj):
         return str(subj)
 
     def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):

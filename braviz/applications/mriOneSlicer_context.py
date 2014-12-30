@@ -11,10 +11,10 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz.readAndFilter
 from braviz.visualization import add_solid_balloon,add_fibers_balloon
 from braviz.interaction.tkSimpleDialog import Dialog as simpleDialog
-from braviz.utilities import configure_console_logger
+from braviz.utilities import configure_logger_from_conf
 
 if __name__ == "__main__":
-    configure_console_logger("mriOneSlicer_context")
+    configure_logger_from_conf("mriOneSlicer_context")
     currSpace='World'
     current_models=[]
     #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')

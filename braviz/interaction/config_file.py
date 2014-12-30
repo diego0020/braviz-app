@@ -57,6 +57,12 @@ class braviz_config(RawConfigParser):
         return self.get("Braviz","project")
 
 
+def get_apps_config():
+    """
+    Convenience function to read configuration from the 'applications' directory
+    """
+    apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
+    return get_config(apps_dir)
 
 def get_config(custom_dir=None):
     """A default configuration file is read at the library directory. A secondary configuration file can be set in the custom directory.
@@ -88,7 +94,8 @@ def make_default_config(default_config_name=None):
     braviz_conf=braviz_config()
 
     braviz_conf.add_section('Braviz')
-    braviz_conf.set('Braviz','project','kmc400')
+    braviz_conf.set('Braviz', 'project', 'kmc400')
+    braviz_conf.set('Braviz', 'logger', 'console')
 
     braviz_conf.add_section("Default_Variables")
     braviz_conf.set('Default_Variables','nominal1','ubicac')

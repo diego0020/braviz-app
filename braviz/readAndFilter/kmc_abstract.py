@@ -53,14 +53,10 @@ A read and filter class designed to work with kmc projects. Implements common fu
         self._functional_paradigms=frozenset()
 
 
-    def get_filtered_polydata_ids(self,subj,struct):
-        subj = self.decode_subject(subj)
-        return self._cached_filter_fibers(subj,struct)
-
     def transform_points_to_space(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space.
         If inverse is true moves from space to world"""
-        subj = self.decode_subject(subj)
+        subj = self._decode_subject(subj)
         space = space.lower()
         return self._movePointsToSpace(point_set, space, subj, inverse)
 
@@ -73,7 +69,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         :param interpolate: apply interpolation or do nearest neighbours
         :return: resliced image
         """
-        subj = self.decode_subject(subj)
+        subj = self._decode_subject(subj)
         source_space = source_space.lower()
         img2 = self._move_img_to_world(subj,img,interpolate,source_space)
         return img2
@@ -87,7 +83,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         :param interpolate: apply interpolation or do nearest neighbours
         :return: resliced image
         """
-        subj = self.decode_subject(subj)
+        subj = self._decode_subject(subj)
         target_space = target_space.lower()
         img2 = self._move_img_from_world(subj,img,interpolate,target_space)
         return img2
@@ -199,7 +195,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         "Auxiliary function to get the available ids"
         raise NotImplementedError
 
-    def decode_subject(self,subj):
+    def _decode_subject(self,subj):
         raise NotImplementedError
 
     def _getImg(self, data, subj, space, **kw):

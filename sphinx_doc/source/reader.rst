@@ -42,11 +42,7 @@ File System
     .. automethod:: BaseReader.initialize_dynamic_data_dir(dir_name=None)
     .. automethod:: BaseReader.clear_dynamic_data_dir(dir_name)
 
-Other
------
 
-    .. automethod:: BaseReader.decode_subject(self,subj)
-    .. automethod:: BaseReader.get_filtered_polydata_ids(self,subj,struct)
 
 
 

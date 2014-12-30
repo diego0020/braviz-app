@@ -38,8 +38,8 @@ import interaction
 
 if __name__ == "__main__":
     import os
-    from braviz.utilities import configure_console_logger
-    configure_console_logger(__name__)
+    from braviz.utilities import configure_logger_from_conf
+    configure_logger_from_conf(__name__)
     viewer = visualization.simpleVtkViewer()
     reader = readAndFilter.BravizAutoReader()
     apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")

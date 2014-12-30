@@ -8,12 +8,12 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 
 import braviz.readAndFilter
 from braviz.visualization import add_solid_balloon
-from braviz.utilities import configure_console_logger
+from braviz.utilities import configure_logger_from_conf
 
 
 class MriMultSlicerApp(object):
     def __init__(self,pipe=None):
-        configure_console_logger("mriMultSlicer")
+        configure_logger_from_conf("mriMultSlicer")
         self.pipe=pipe
 
         chosen_models= {'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'}

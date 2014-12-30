@@ -35,7 +35,7 @@ The path containing this structure must be set."""
         ids.sort(key=int)
         return ids
 
-    def decode_subject(self,subj):
+    def _decode_subject(self,subj):
         subj = str(subj)
         if len(subj) < 3:
             subj = "0" * (3 - len(subj)) + subj

@@ -744,8 +744,8 @@ class AnovaApp(QMainWindow):
 
 def run():
     import sys
-    from braviz.utilities import configure_logger,configure_console_logger
-    configure_console_logger("anova_app")
+    from braviz.utilities import configure_logger_from_conf
+    configure_logger_from_conf("anova_app")
     args = sys.argv
     scenario = None
     server_broadcast_address = None

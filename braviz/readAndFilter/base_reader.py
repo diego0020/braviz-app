@@ -203,18 +203,14 @@ data is requested. To get a more useful class you should create your own subclas
             **kwargs: Arguments specific to each data type
 
         """
-        subj_id = self.decode_subject(subj_id)
+        subj_id = self._decode_subject(subj_id)
         return self._get(data, subj_id,space, **kwargs)
 
-    def get_filtered_polydata_ids(self,subj,struct):
-        #todo: move to a get('fibers',_,ids=True)
-        self.__raise_error()
-
-    def decode_subject(self,subj):
+    def _decode_subject(self,subj):
         """
         Transforms the subject into the standard format
         """
-        return int(subj)
+        return subj
 
     def move_img_to_world(self,img,source_space,subj,interpolate=False):
         """
@@ -225,7 +221,7 @@ data is requested. To get a more useful class you should create your own subclas
         :param interpolate: apply interpolation or do nearest neighbours
         :return: resliced image
         """
-        subj = self.decode_subject(subj)
+        subj = self._decode_subject(subj)
         self.__raise_error()
 
     def move_img_from_world(self,img,target_space,subj,interpolate=False):
@@ -237,13 +233,13 @@ data is requested. To get a more useful class you should create your own subclas
         :param interpolate: apply interpolation or do nearest neighbours
         :return: resliced image
         """
-        subj = self.decode_subject(subj)
+        subj = self._decode_subject(subj)
         self.__raise_error()
 
     def transform_points_to_space(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space.
         If inverse is true moves from space to world"""
-        subj = self.decode_subject(subj)
+        subj = self._decode_subject(subj)
         self.__raise_error()
 
     def save_into_cache(self, key, data):

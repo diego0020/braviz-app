@@ -1001,9 +1001,9 @@ def say_ciao():
 
 def run(server_broadcast=None, server_receive=None, scenario=None):
     import sys
-    from braviz.utilities import configure_logger
+    from braviz.utilities import configure_logger_from_conf
 
-    configure_logger("sample_overview")
+    configure_logger_from_conf("sample_overview")
     log = logging.getLogger(__name__)
     app = QtGui.QApplication([])
     main_window = SampleOverview(server_broadcast, server_receive, scenario)
@@ -1021,9 +1021,9 @@ if __name__ == '__main__':
     #args: [scenario] [server_broadcast] [server_receive]
     import sys
 
-    from braviz.utilities import configure_console_logger
+    from braviz.utilities import configure_logger_from_conf
 
-    configure_console_logger("sample_overview")
+    configure_logger_from_conf("sample_overview")
     log = logging.getLogger(__name__)
     log.info(sys.argv)
     scenario = None

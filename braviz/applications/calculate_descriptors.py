@@ -115,7 +115,7 @@ def save_for_all(processes=1):
 
 if __name__ == "__main__":
     import sys
-    braviz.utilities.configure_console_logger("descriptors")
+    braviz.utilities.configure_logger_from_conf("descriptors")
     procs = 2
     if len(sys.argv)>=2:
         procs = int(sys.argv[1])

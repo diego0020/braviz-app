@@ -43,6 +43,6 @@ def check_tables(conn,tables):
 
 
 if __name__ == "__main__":
-    from braviz.utilities import configure_console_logger
-    configure_console_logger("check_db_integrity")
+    from braviz.utilities import configure_logger_from_conf
+    configure_logger_from_conf("check_db_integrity")
     verify_db_completeness()

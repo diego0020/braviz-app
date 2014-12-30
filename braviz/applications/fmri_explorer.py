@@ -619,9 +619,9 @@ class FmriExplorer(QtGui.QMainWindow):
 
 def run():
     import sys
-    from braviz.utilities import configure_console_logger
+    from braviz.utilities import configure_logger_from_conf
 
-    configure_console_logger("fmri")
+    configure_logger_from_conf("fmri")
     args = sys.argv
     scenario = None
     server_broadcast_address = None

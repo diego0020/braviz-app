@@ -1167,8 +1167,8 @@ if __name__ == '__main__':
     #args: [scenario] [server_broadcast] [server_receive] [subject]
     import sys
 
-    from braviz.utilities import configure_console_logger
-    configure_console_logger("subject_overview")
+    from braviz.utilities import configure_logger_from_conf
+    configure_logger_from_conf("subject_overview")
     #configure_logger("subject_overview")
     log = logging.getLogger(__name__)
     log.info(sys.argv)

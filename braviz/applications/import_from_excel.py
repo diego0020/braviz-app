@@ -80,10 +80,10 @@ def mingle_name(n):
 
 def run():
     import sys
-    from braviz.utilities import configure_console_logger
+    from braviz.utilities import configure_logger_from_conf
 
     # configure_logger("build_roi")
-    configure_console_logger("import_from_excel")
+    configure_logger_from_conf("import_from_excel")
     app = QtGui.QApplication(sys.argv)
     log = logging.getLogger(__name__)
     log.info("started")

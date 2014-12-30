@@ -497,9 +497,9 @@ class SaveSubSampleDialog(QtGui.QDialog):
 
 
 if __name__ == "__main__":
-    from braviz.utilities import configure_logger
+    from braviz.utilities import configure_logger_from_conf
 
-    configure_logger("sample_creation")
+    configure_logger_from_conf("sample_creation")
     app = QtGui.QApplication([])
     main_window = SampleCreateDilog()
     main_window.show()

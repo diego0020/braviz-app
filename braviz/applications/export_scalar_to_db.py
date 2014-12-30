@@ -211,8 +211,8 @@ if __name__ == "__main__":
     #arguments <scn_id> <fibers=False> <metric> <structs0> <struct1> ....
     #            1           2           3         4          5         6
     import sys
-    from braviz.utilities import configure_console_logger
-    configure_console_logger("export_scalars_to_db")
+    from braviz.utilities import configure_logger_from_conf
+    configure_logger_from_conf("export_scalars_to_db")
     log = logging.getLogger(__name__)
     log.info(sys.argv)
     if len(sys.argv)<4:

@@ -145,10 +145,10 @@ class BravizMenu2(QtGui.QMainWindow):
 
 def run():
     import sys
-    from braviz.utilities import configure_console_logger
+    from braviz.utilities import configure_logger_from_conf
     from braviz.readAndFilter import check_db
 
-    configure_console_logger("menu2")
+    configure_logger_from_conf("menu2")
     log = logging.getLogger(__name__)
 
     # verify database

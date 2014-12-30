@@ -68,7 +68,6 @@ def get_all_lines(subj,reader):
 
 def get_valid_lines_from_struct(subj,struct,reader):
     img_subj = str(tabular_data.get_var_value(tabular_data.IMAGE_CODE,subj))
-    #valid_ids = reader.get_filtered_polydata_ids(img_subj,struct)
     valid_ids = reader.get('fibers',img_subj,waypoint=struct,ids=True)
     return set(valid_ids)
 

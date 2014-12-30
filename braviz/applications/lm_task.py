@@ -898,9 +898,9 @@ class LinearModelApp(QMainWindow):
 
 def run():
     import sys
-    from braviz.utilities import configure_console_logger
+    from braviz.utilities import configure_logger_from_conf
     #configure_logger("lm_task")
-    configure_console_logger("lm_task")
+    configure_logger_from_conf("lm_task")
     args = sys.argv
     scenario = None
     server_broadcast_address = None

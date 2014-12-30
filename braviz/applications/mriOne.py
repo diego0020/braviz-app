@@ -11,7 +11,7 @@ import braviz
 import braviz.utilities
 
 if __name__ == "__main__":
-    braviz.utilities.configure_console_logger("mriOne")
+    braviz.utilities.configure_logger_from_conf("mriOne")
 
 
     reader = braviz.readAndFilter.BravizAutoReader()

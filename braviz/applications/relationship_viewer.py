@@ -255,9 +255,9 @@ class RelationShipViewer(QMainWindow):
 
 def run():
     import sys
-    from braviz.utilities import configure_logger
+    from braviz.utilities import configure_logger_from_conf
 
-    configure_logger("anova_app")
+    configure_logger_from_conf("anova_app")
     app = QtGui.QApplication(sys.argv)
     log = logging.getLogger(__name__)
     log.info("started")

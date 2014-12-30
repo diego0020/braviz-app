@@ -12,14 +12,13 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz
 import braviz.visualization.fmri_view
 import braviz.visualization.vtk_charts
-from braviz.utilities import configure_console_logger
+from braviz.utilities import configure_logger_from_conf
+
+__author__ = 'Diego'
 
 if __name__ == "__main__":
 
-
-    configure_console_logger("explore_fmri")
-
-    __author__ = 'Diego'
+    configure_logger_from_conf("explore_fmri")
 
     # ====================global variables===========
 

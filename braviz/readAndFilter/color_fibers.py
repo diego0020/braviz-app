@@ -226,9 +226,9 @@ def get_length_lut():
 if __name__ == "__main__":
     import braviz
     import os
-    from braviz.utilities import configure_console_logger
+    from braviz.utilities import configure_logger_from_conf
     import logging
-    configure_console_logger(__file__)
+    configure_logger_from_conf(__file__)
     reader = braviz.readAndFilter.BravizAutoReader()
     apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
     conf = braviz.interaction.get_config(apps_dir)

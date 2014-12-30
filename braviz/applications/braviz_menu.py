@@ -7,7 +7,7 @@ import sys
 import tkFont
 import logging
 
-from braviz.utilities import configure_logger
+from braviz.utilities import configure_logger_from_conf
 
 __author__ = 'Diego'
 
@@ -49,7 +49,7 @@ applications_dict={
 
 
 if __name__=="__main__":
-    configure_logger("classic_menu")
+    configure_logger_from_conf("classic_menu")
     log = logging.getLogger("classuc_menu")
     log.info("Launching classic menu")
     root=tk.Tk()

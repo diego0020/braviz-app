@@ -101,8 +101,8 @@ class CheckRegApp(QMainWindow):
         self.vtk_viewer.set_image_slice(slice)
 
 def run():
-    from braviz.utilities import configure_console_logger
-    configure_console_logger("check_reg")
+    from braviz.utilities import configure_logger_from_conf
+    configure_logger_from_conf("check_reg")
     app = QtGui.QApplication([])
     log = logging.getLogger(__name__)
     log.info("started")

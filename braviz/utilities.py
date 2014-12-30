@@ -4,6 +4,15 @@ import os
 from collections import defaultdict
 import logging
 
+def configure_logger_from_conf(app_name="Braviz"):
+    from braviz.interaction.config_file import get_apps_config
+    conf = get_apps_config()
+    log_out=conf.get("Braviz","logger")
+    if log_out[0]=='c':
+        configure_console_logger(app_name)
+    else:
+        configure_logger(app_name)
+
 def configure_logger(app_name):
     """
     Helper function to configure loggers in similar ways from all the applications
