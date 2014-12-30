@@ -113,7 +113,9 @@ pygments_style = 'sphinx'
 
 html_theme = 'agogo_braviz'
 
+
 #html_theme = 'default'
+#html_theme = 'basic'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -160,6 +162,11 @@ html_static_path = ['_static']
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
 
+html_sidebars = {
+   'index': ['globaltoc.html',  'searchbox.html'],
+   '*': ['localtoc.html',  'searchbox.html'],
+}
+
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}
@@ -194,7 +201,7 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'Bravizdoc'
 
-html_compact_lists  = False
+#html_compact_lists  = False
 
 # -- Options for LaTeX output ---------------------------------------------
 

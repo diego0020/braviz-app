@@ -1,8 +1,21 @@
-Reader
-==================
+
+**************
+Braviz Readers
+**************
 
 .. currentmodule:: braviz.readAndFilter.base_reader
 
+In braviz scripts and applications should not have to deal with individual files or directory structures.
+All access to this data should be done through to the functions and classes in the :mod:`braviz.readAndFilter` module.
+The objective behind this is to isolate the applications code from the underlying file system. In this way it is
+easy to adapt to different projects with different data structures.
+
+Project readers should be derived from :class:`.BaseReader` , which describes the behaviour that they should provide.
+
+
+
+BaseReader
+===========
 
 .. autoclass:: BaseReader
 
@@ -42,7 +55,12 @@ File System
     .. automethod:: BaseReader.initialize_dynamic_data_dir(dir_name=None)
     .. automethod:: BaseReader.clear_dynamic_data_dir(dir_name)
 
+Custom Readers
+==============
 
+    .. autoclass:: braviz.readAndFilter.kmc40.Kmc40Reader
+
+    .. autoclass:: braviz.readAndFilter.kmc400.Kmc400Reader
 
 
 

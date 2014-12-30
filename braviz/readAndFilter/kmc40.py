@@ -17,11 +17,14 @@ from braviz.readAndFilter.readDartelTransform import  dartel2GridTransform_cache
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 from braviz.visualization import get_colorbrewer_lut
 
-class kmc40Reader(KmcAbstractReader):
+class Kmc40Reader(KmcAbstractReader):
     """
-A read and filter class designed to work with the file structure and data from the KMC pilot project which contains 40 subjects.
+Braviz reader class designed to work with the file structure and data from the KMC pilot
+
+This project contains 50 subjects (40 preterms).
 Data is organized into folders, and path and names for the different files can be derived from data type and id.
-The path containing this structure must be set."""
+The constructor requires the root to this structure
+"""
     def __init__(self, path, max_cache=2000):
         "The path pointing to the __root of the file structure must be set here"
         KmcAbstractReader.__init__(self,path,path,max_cache)

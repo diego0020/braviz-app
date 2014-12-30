@@ -9,9 +9,10 @@ Welcome to Braviz's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    reader
+   tabular
 
 Indices and tables
 ==================

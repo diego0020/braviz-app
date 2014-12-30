@@ -17,20 +17,24 @@ import psutil
 from braviz.interaction.config_file import get_config as __get_config
 from scipy import ndimage
 
+
 def memo_ten(f):
     f.vals = {}
+
     @functools.wraps(f)
-    def wrapped(*args,**kwargs):
-        key = str(args)+str(kwargs)
+    def wrapped(*args, **kwargs):
+        key = str(args) + str(kwargs)
         if key not in f.vals:
-            val = f(*args,**kwargs)
-            if len(f.vals)>10:
+            val = f(*args, **kwargs)
+            if len(f.vals) > 10:
                 f.vals.clear()
-            f.vals[key]=val
+            f.vals[key] = val
             return val
         else:
             return f.vals[key]
+
     return wrapped
+
 
 def nibNii2vtk(nii):
     """Transform a nifti image read by nibabel into a vtkImageData"""
@@ -38,11 +42,11 @@ def nibNii2vtk(nii):
     return numpy2vtk_img(d)
 
 
-def numpy2vtk_img(d,data_type=None):
+def numpy2vtk_img(d, data_type=None):
     """Transform a 3d numpy array into a vtk image data object"""
     data_type = d.dtype
     importer = vtk.vtkImageImport()
-    assert isinstance(d,np.ndarray)
+    assert isinstance(d, np.ndarray)
     importer.SetDataScalarTypeToShort() # default
     if data_type is None:
         data_type = data_type.type
@@ -60,7 +64,7 @@ def numpy2vtk_img(d,data_type=None):
         log = logging.getLogger(__name__)
         log.warning("casting to float64")
         importer.SetDataScalarTypeToDouble()
-        d=d.astype(np.float64)
+        d = d.astype(np.float64)
         #======================================
     dstring = d.flatten(order='F').tostring()
     if data_type.byteorder == '>':
@@ -81,9 +85,10 @@ def numpy2vtk_img(d,data_type=None):
     out_img.DeepCopy(imgData)
     return out_img
 
+
 def nifti_rgb2vtk(nifti_rgb):
-    data=nifti_rgb.get_data()
-    data2=np.rollaxis(data,3,0)
+    data = nifti_rgb.get_data()
+    data2 = np.rollaxis(data, 3, 0)
     importer = vtk.vtkImageImport()
 
     importer.SetDataScalarTypeToUnsignedChar()
@@ -95,7 +100,7 @@ def nifti_rgb2vtk(nifti_rgb):
     importer.SetWholeExtent(0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
 
     importer.Update()
-    img=importer.GetOutput()
+    img = importer.GetOutput()
 
     out_img = vtk.vtkImageData()
     out_img.DeepCopy(img)
@@ -157,6 +162,7 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
     #print dimension2
     return outImg
 
+
 @memo_ten
 def readFlirtMatrix(file_name, src_img_file, ref_img_file, path=''):
     """read a matrix in fsl flirt format: 
@@ -207,7 +213,7 @@ def transformGeneralData(data, transform):
         vtkTrans.SetInput(transform)
     elif isinstance(transform, vtk.vtkAbstractTransform):
         vtkTrans = transform
-        if isinstance(vtkTrans,vtk.vtkGridTransform):
+        if isinstance(vtkTrans, vtk.vtkGridTransform):
             vtkTrans.SetInterpolationModeToCubic()
     else:
         log = logging.getLogger(__name__)
@@ -215,7 +221,7 @@ def transformGeneralData(data, transform):
         raise Exception("Method not implemented for %s transform" % type(transform))
     if isinstance(data, vtk.vtkPolyData):
         transFilter = vtk.vtkTransformPolyDataFilter()
-    elif isinstance(data,vtk.vtkDataSet):
+    elif isinstance(data, vtk.vtkDataSet):
         transFilter = vtk.vtkTransformFilter()
     else:
         return vtkTrans.TransformPoint(data)
@@ -224,8 +230,6 @@ def transformGeneralData(data, transform):
     transFilter.Update()
     output = transFilter.GetOutput()
     return output
-
-
 
 
 def boundingBoxIntesection(box1, box2):
@@ -252,7 +256,7 @@ def readFreeSurferTransform(filename):
             trans = [l.split() for l in trans]
             trans = [l[0:4] for l in trans]
             #possible semicolomg in the last term
-            trans[2][3]=trans[2][3].rstrip(";")
+            trans[2][3] = trans[2][3].rstrip(";")
             trans_f = [map(float, l) for l in trans]
             trans_f.append([0] * 3 + [1])
             np.array(trans_f)
@@ -273,8 +277,9 @@ class LastUpdatedOrderedDict(OrderedDict):
             del self[key]
         OrderedDict.__setitem__(self, key, value)
 
+
 class CacheContainer(object):
-    def __init__(self,max_cache=500):
+    def __init__(self, max_cache=500):
         self.__cache = LastUpdatedOrderedDict()
         self.__max_cache = max_cache
 
@@ -283,7 +288,7 @@ class CacheContainer(object):
         return self.__max_cache
 
     @max_cache.setter
-    def max_cache(self,val):
+    def max_cache(self, val):
         self.__max_cache = val
 
     @property
@@ -292,7 +297,6 @@ class CacheContainer(object):
 
     def clear(self):
         self.__cache.clear()
-
 
 
 def cache_function(cache_container):
@@ -313,15 +317,15 @@ def cache_function(cache_container):
                 output = f(*args, **kw_args)
                 if output is not None:
                     #new method to test memory in cache
-                    process_id=psutil.Process(os.getpid())
-                    mem=process_id.get_memory_info()[0]/(2**20)
+                    process_id = psutil.Process(os.getpid())
+                    mem = process_id.get_memory_info()[0] / (2 ** 20)
                     if mem >= f.cache_container.max_cache:
                         log = logging.getLogger(__name__)
                         log.info("freeing cache")
                         try:
-                            while mem > 0.9*f.cache_container.max_cache:
-                                for i in xrange(len(f.cache)//10+1):
-                                    rem_key,val=f.cache.popitem(last=False)
+                            while mem > 0.9 * f.cache_container.max_cache:
+                                for i in xrange(len(f.cache) // 10 + 1):
+                                    rem_key, val = f.cache.popitem(last=False)
                                     #print "removing %s with access time= %s"%(rem_key,val[1])
                                 mem = process_id.get_memory_info()[0] / (2 ** 20)
                         except KeyError:
@@ -348,7 +352,8 @@ def cache_function(cache_container):
 
     return decorator
 
-def write_vtk_image(image_data,out_file):
+
+def write_vtk_image(image_data, out_file):
     dx, dy, dz = image_data.GetDimensions()
     data = np.zeros((dx, dy, dz), np.uint8)
     for i, j, k in itertools.product(xrange(dx), xrange(dy), xrange(dz)):
@@ -364,21 +369,22 @@ def write_vtk_image(image_data,out_file):
 
     return
 
-def write_nib_image(data,affine,out_file):
+
+def write_nib_image(data, affine, out_file):
     nib_img = nib.Nifti1Image(data, affine=affine)
     nib_img.to_filename(out_file)
     print out_file
     return
 
-from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, extract_poly_data_subset,\
+
+from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, extract_poly_data_subset, \
     filter_polylines_by_scalar
 
 #Easy access to kmc readers
 
 #read configuration file and decide which project to expose
-__config = __get_config(os.path.join(os.path.dirname(__file__),"..","applications"))
+__config = __get_config(os.path.join(os.path.dirname(__file__), "..", "applications"))
 PROJECT = __config.get_project_name()
-
 
 
 def get_reader_class(project):
@@ -386,12 +392,15 @@ def get_reader_class(project):
     import inspect
     from braviz.readAndFilter.base_reader import BaseReader
     #todo filter by being instance of base_reader
-    module = importlib.import_module('braviz.readAndFilter.%s'%project)
-    pred = lambda c: inspect.isclass(c) and issubclass(c,BaseReader)
-    candidate_classes = [c[1] for c in inspect.getmembers(module,pred)]
-    candidate_classes.sort(key=lambda  c:len(inspect.getmro(c)))
-    #return the last one in the hierarchy
-    return candidate_classes[-1]
+    module = importlib.import_module('braviz.readAndFilter.%s' % project)
+    pred = lambda c: inspect.isclass(c) and issubclass(c, BaseReader)
+    candidate_classes = [c for c in inspect.getmembers(module, pred)]
+    project_upper = project.upper()
+    candidate_classes2 = sorted([c for c in candidate_classes if c[0].upper().startswith(project_upper)],
+                                key=lambda x: x[0])
+
+    return candidate_classes2[0][1]
+
 
 project_reader = get_reader_class(PROJECT)
 
@@ -399,8 +408,7 @@ BravizAutoReader = project_reader.get_auto_reader
 braviz_auto_data_root = project_reader.get_auto_data_root
 braviz_auto_dynamic_data_root = project_reader.get_auto_dyn_data_root
 
-
 if __name__ == "__main__":
     __root = braviz_auto_data_root()
-    __reader=BravizAutoReader()
+    __reader = BravizAutoReader()
     print __root

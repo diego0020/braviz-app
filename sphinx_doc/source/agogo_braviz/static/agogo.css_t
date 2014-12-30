@@ -514,3 +514,44 @@ div.document td.field-body table.docutils tr {
 div.document td.field-body table.docutils td:first-of-type{
     padding-right: 1em;
 }
+
+
+/* Sidebar */
+
+
+div.sidebar ul {
+  list-style-type: none;
+}
+
+div.sidebar div.sphinxsidebarwrapper > ul > li a {
+  display: block;
+  padding: 1px;
+  border: 1px solid #dddddd;
+  background-color: #eeeeec;
+  margin-bottom: .4em;
+  padding-left: 3px;
+  color: #2e3436;
+}
+
+div.sidebar div.sphinxsidebarwrapper > ul > li >ul > li  a {
+  background-color: transparent;
+  border: none;
+  margin-left: 1em;
+  border-bottom: 1px solid #dddddd;
+}
+
+div.sidebar div.sphinxsidebarwrapper > ul > li >ul > li > ul > li  a {
+  background-color: transparent;
+  border: none;
+  margin-left: 2em;
+  border-bottom: 1px solid #dddddd;
+}
+
+div.sidebar div.sphinxsidebarwrapper > ul > li >ul > li:last-child a {
+  border-bottom: none;
+}
+
+
+
+
+
