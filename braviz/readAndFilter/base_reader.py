@@ -21,20 +21,24 @@ appropriate data files and transformations, and returns the requested data in th
 
 An instance of this class will always return empty lists when indexes are requested and raise exceptions when
 data is requested. To get a more useful class you should create your own subclass.
-."""
+"""
     _memory_cache_container = CacheContainer()
 
-    def __init__(self,max_cache=100):
-        """Reader parameters, like root data directories, should be set here"""
+    def __init__(self,max_cache=100,**kwargs):
+        """
+        The base reader handles a memory cache for speeding repeated access for the same data.
+
+        Args:
+            max_cache (int) : The maximum amount of memory in MB that can be used for cache
+            **kwargs : Ignored, maybe used by derived classes
+
+        Note that subclasses may have more arguments in their constructors.
+        """
 
         self._memory_cache_container.max_cache = max_cache
         self.__static_root = _auto_temp_dir
         return
 
-    def clear_mem_cache(self):
-        log = logging.getLogger(__name__)
-        log.info("Clearing cache")
-        self._memory_cache_container.clear()
 
     @cache_function(_memory_cache_container)
     def get(self,data, subj_id=None, space='world', **kwargs):
@@ -208,61 +212,105 @@ data is requested. To get a more useful class you should create your own subclas
 
     def _decode_subject(self,subj):
         """
-        Transforms the subject into the standard format
+        Transforms the subject into the standard format, should be called at the start of all public methods
         """
         return subj
 
     def move_img_to_world(self,img,source_space,subj,interpolate=False):
         """
-        Resample image to the world coordinate system
-        :param img: image
-        :param source_space: source coordinates
-        :param subj: subject
-        :param interpolate: apply interpolation or do nearest neighbours
-        :return: resliced image
+        Resamples an image into the world coordinate system
+
+        Args:
+            img (vtkImageData): source image
+            source_space (str): source image coordinate system
+            subj: Subject to whom the image belongs
+            interpolate (bool): If False nearest neighbours interpolation is applied, useful for label maps
+        Returns:
+            Resliced image in world coordinate system
         """
         subj = self._decode_subject(subj)
         self.__raise_error()
 
     def move_img_from_world(self,img,target_space,subj,interpolate=False):
         """
-        Resample image to the world coordinate system
-        :param img: image
-        :param target_space: target coordinates
-        :param subj: subject
-        :param interpolate: apply interpolation or do nearest neighbours
-        :return: resliced image
+        Resamples an image from the world coordinates into some other coordinate system
+
+        Args:
+            img (vtkImageData): source image
+            target_space (str): destination coordinate system
+            subj: Subject to whom the image belongs
+            interpolate (bool): If False nearest neighbours interpolation is applied, useful for label maps
+        Returns:
+            Resliced image in *target_space* coordinates
         """
         subj = self._decode_subject(subj)
         self.__raise_error()
 
     def transform_points_to_space(self, point_set, space, subj, inverse=False):
-        """Access to the internal coordinate transform function. Moves from world to space.
-        If inverse is true moves from space to world"""
+        """
+        Transforms a set of points into another coordinate system
+
+        By defaults moves from world coordinates to another system, but these behaviour is reversed if the
+        *inverse* parameter is True. At the moment, to move from an arbitrary coordinate system to another it is
+        necessary to use the world coordinates as stopover
+
+        Args:
+            point_set (vtkPolyData,vtkPoints,vtkDataSet): source points
+            space (str): origin or destination coordinate system, depending on *inverse*
+            subj: Subject to whom the points belong
+            inverse (bool): If false points are moved from world to *space*, else the points are moved from
+            *space* to world.
+        Returns:
+            Transformed points
+        """
         subj = self._decode_subject(subj)
         self.__raise_error()
 
+    def clear_mem_cache(self):
+        """
+        Clears the contents of the memory cache
+        """
+        log = logging.getLogger(__name__)
+        log.info("Clearing cache")
+        self._memory_cache_container.clear()
+
     def save_into_cache(self, key, data):
         """
-        Saves some data into a cache, can deal with vtkData and python objects which can be pickled
+        Saves some data into a cache, uses vtkDataWriter or :mod:`cPickle` for python objects.
 
-        key should be printable by %s, and it can be used to later retrive the data using load_from_cache
-        you should not use the same key for python objects and vtk objects
-        returnt true if success, and false if failure
-        WARNING: Long keys are hashed using sha1: Low risk of collisions, no checking is done
+        Data is stored using a *key*. This value is required to retrieve the data or to overwrite it.
+        To retrieve data use :func:`load_from_cache`.
+
+        Args:
+            key(str): Unique value used to reference the data into the cache,
+                if data with the same key exists it will be overwritten
+            data: Data object to store
+        Returns:
+            True if the value was successfully saved, False if there was a problem
         """
         return False
 
     def load_from_cache(self, key):
         """
-        Loads data stored into cache with the function save_into_cache
+        Loads data stored into cache with :func:`save_into_cache`
 
-        Data can be a vtkobject or a python structure, if both were stored with the same key, python object will be returned
-        returns None if object not found
+        Args:
+            key(str): Key used to store the object
+
+        Returns:
+            If successful returns the object as it was previously stored.
+
+            In case of failure returns `None`
         """
         return None
 
     def clear_cache_dir(self,last_word=False):
+        """
+        Clears all the contents of the disk cache
+
+        Args:
+            last_word (bool) : If True goes on to clear the cache, otherwise does nothing
+        """
         if last_word is True:
             cache_dir = os.path.join(self.get_dyn_data_root(), '.braviz_cache')
             try:
@@ -272,31 +320,41 @@ data is requested. To get a more useful class you should create your own subclas
             os.mkdir(cache_dir)
 
     def get_data_root(self):
-        """Returns the data_root of this reader, this directory needs to be readable"""
+        """Returns the root directory from which this instance reads data
+
+        This directory should be readable by the current user
+        """
         return self.__static_root
 
     def get_dyn_data_root(self):
-        """Returns the dynamic data_root of this reader, this directory should be writable"""
+        """Returns the root directory into which this instance stores cache and data
+
+        This directory should be writable by the current user
+        """
         return self.__static_root
 
     @staticmethod
     def get_auto_data_root():
         """
-        Data directory used by auto_readers
+        Returns the root directory that would be used by an auto_reader to read data
         """
         return _auto_temp_dir
 
     @staticmethod
     def get_auto_dyn_data_root():
         """
-        Dynamic data directory used by auto_readers
+        Returns the root directory that would be used by an auto_reader to store data
         """
         return _auto_temp_dir
 
     @staticmethod
     def clear_dynamic_data_dir(dir_name):
         """
-        Clears braviz dynamic content from dir_name
+        Clears data written by braviz from a directory
+
+        Args:
+            dir_name (str) : Path to the root location where data was written, this is,
+                the value returned by :meth:`get_dyn_data_root` in the reader that stored the data.
         """
         try:
             os.walk(os.path.join(dir_name,"logs"))
@@ -315,7 +373,11 @@ data is requested. To get a more useful class you should create your own subclas
     @staticmethod
     def initialize_dynamic_data_dir(dir_name=None):
         """
-        Initializes the dynamic data directory
+        Creates the basic directory structure used for braviz starting at the specified path.
+
+        Args:
+            dir_name(str): The path where the structure will be created.
+                If None, the value returned by :meth:`get_auto_dyn_data_root` will be used
         """
         from braviz.readAndFilter import check_db
         if dir_name is None:

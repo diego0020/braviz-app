@@ -9,7 +9,7 @@ Reader
 Constructors
 ------------
 
-    .. automethod:: BaseReader.__init__(self,max_cache=100)
+    .. automethod:: BaseReader.__init__(self,max_cache=100,**kwargs)
     .. automethod:: BaseReader.get_auto_reader(**kw_args)
 
 The get method

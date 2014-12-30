@@ -32,7 +32,7 @@ class KmcAbstractReader(BaseReader):
 A read and filter class designed to work with kmc projects. Implements common functionality in kmc40 and kmc400."""
 
 
-    def __init__(self, static_root,dynamic_route, max_cache=2000):
+    def __init__(self, static_root,dynamic_route, max_cache=2000,**kwargs):
         "The path pointing to the __root of the file structure must be set here"
         self.__static_root = os.path.normcase(static_root)
         #Remove trailing slashes

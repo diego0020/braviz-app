@@ -172,6 +172,13 @@ Args:
 
 """
 
-res=sphinxcontrib.napoleon.GoogleDocstring(docstring,config,what="method",obj=BaseReader.get)
+
+docstring2 = """Creates the basic directory structure used for braviz starting at the specified path.
+
+Args:
+    dir_name(str): The path where the structure will be created.
+        If None, the value returned by :meth:`get_auto_dyn_data_root` will be used
+"""
+res=sphinxcontrib.napoleon.GoogleDocstring(docstring2,config,what="method")
 print res
 

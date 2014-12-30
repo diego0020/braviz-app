@@ -36,7 +36,10 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinxcontrib.napoleon',
+    'sphinx.ext.intersphinx',
 ]
+
+intersphinx_mapping = {'python': ('http://docs.python.org/2', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -107,7 +110,10 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin
 # themes.
-html_theme = 'agogo'
+
+html_theme = 'agogo_braviz'
+
+#html_theme = 'default'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -115,7 +121,7 @@ html_theme = 'agogo'
 #html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
+html_theme_path = ["."]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -184,9 +190,11 @@ html_static_path = ['_static']
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 #html_file_suffix = None
 
+
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'Bravizdoc'
 
+html_compact_lists  = False
 
 # -- Options for LaTeX output ---------------------------------------------
 
