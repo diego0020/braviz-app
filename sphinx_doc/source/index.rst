@@ -96,20 +96,20 @@ Dependencies
 --------------
 
 The focus of Braviz is providing useful interactive visualizations for domain experts. As such it can be considered
-a high level library, focusing on the end user. For lower level operation it relies on some great open source projects.
-Specifically braviz relies on the following libraries
+a high level library, focusing on the end user. For calculations, processing, data access and visualization;
+it relies in the following projects
 
-- `vtk <http://vtk.org/>`_
-- `numpy <http://www.numpy.org/>`_
-- `scipy <http://www.scipy.org/>`_
 - `matplotlib <http://matplotlib.org/>`_
 - `nibabel <http://nipy.org/nibabel/>`_
+- `numpy <http://www.numpy.org/>`_
 - `pandas <http://pandas.pydata.org/>`_
 - `psutil <https://pypi.python.org/pypi/psutil>`_
 - `PyQt4 <http://www.riverbankcomputing.co.uk/software/pyqt/intro>`_
-- `seaborn <http://stanford.edu/~mwaskom/software/seaborn/>`_
 - `rpy2 <http://rpy.sourceforge.net/>`_
+- `scipy <http://www.scipy.org/>`_
+- `seaborn <http://stanford.edu/~mwaskom/software/seaborn/>`_
 - `tornado <http://www.tornadoweb.org/en/stable/>`_
+- `vtk <http://vtk.org/>`_
 
 Thanks a lot to all for making this project possible.
 
