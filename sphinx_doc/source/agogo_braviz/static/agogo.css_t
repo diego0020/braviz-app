@@ -551,7 +551,17 @@ div.sidebar div.sphinxsidebarwrapper > ul > li >ul > li:last-child a {
   border-bottom: none;
 }
 
+div.document div.toctree-wrapper compound ul.simple:empty {
+    margin:0px;
+}
 
 
+div#agogo-sidebar {
+    position: fixed;
+    float: right;
+    overflow: auto;
+    height: auto;
+    right: 50px;
+}
 
 

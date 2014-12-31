@@ -160,12 +160,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
         reader.Update()
         return reader.GetOutput()
 
-    def clear_cache_dir(self,last_word=False):
-        if last_word is True:
-            cache_dir = os.path.join(self.__dynaimc_data_root, '.braviz_cache')
-            os.rmdir(cache_dir)
-            os.mkdir(cache_dir)
-
     def get_data_root(self):
         """Returns the data_root of this reader"""
         return self.__static_root

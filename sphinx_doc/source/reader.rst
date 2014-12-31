@@ -1,7 +1,7 @@
 
-**************
-Braviz Readers
-**************
+************************
+Reading geometric data
+************************
 
 .. currentmodule:: braviz.readAndFilter.base_reader
 

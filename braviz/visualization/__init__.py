@@ -28,7 +28,7 @@ class simpleVtkViewer(object):
         self.iren.SetRenderWindow(self.renWin)
         self.renWin.AddRenderer(self.ren)
         self.renWin.SetSize(600, 400)
-        self.renWin.Initialize()
+        #self.renWin.Initialize()
         self.iren.Initialize()
         self.ren.Render()
         self.picker = vtk.vtkCellPicker()

@@ -120,7 +120,7 @@ html_theme = 'agogo_braviz'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+#html_theme_options = {'stickysidebar':True}
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ["."]
@@ -163,7 +163,7 @@ html_static_path = ['_static']
 #html_sidebars = {}
 
 html_sidebars = {
-   'index': ['globaltoc.html',  'searchbox.html'],
+   #'index': ['globaltoc.html',  'searchbox.html'],
    '*': ['localtoc.html',  'searchbox.html'],
 }
 

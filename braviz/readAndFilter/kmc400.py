@@ -369,5 +369,5 @@ This is done to protect raw data and to allow to share it between different user
             log.info("Max cache set to %.2f MB" % max_cache)
         else:
             max_cache = config["memory (mb)"]
-        return kmc400Reader(static_data_root,dyn_data_root, max_cache=max_cache)
+        return Kmc400Reader(static_data_root,dyn_data_root, max_cache=max_cache)
 

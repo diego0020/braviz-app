@@ -311,10 +311,11 @@ data is requested. To get a more useful class you should create your own subclas
         Args:
             last_word (bool) : If True goes on to clear the cache, otherwise does nothing
         """
+        import shutil
         if last_word is True:
             cache_dir = os.path.join(self.get_dyn_data_root(), '.braviz_cache')
             try:
-                os.rmdir(cache_dir)
+                shutil.rmtree(cache_dir)
             except OSError:
                 pass
             os.mkdir(cache_dir)
