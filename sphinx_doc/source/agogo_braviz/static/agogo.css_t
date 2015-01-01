@@ -489,7 +489,19 @@ div.document td.field-body table.docutils tr .docutils.literal{
     border: 1px solid #eaeaea;
     background-color: #f8f8f8;
     border-radius: 3px;
+    border-radius-webkit: 3px;
+    border-radius-moz: 3px;
+}
 
+div.documentwrapper tt.docutils.literal {
+    margin: 0.2px;
+    padding: 0.5px;
+    white-space: nowrap;
+    border: 1px solid #eaeaea;
+    background-color: #f8f8f8;
+    border-radius: 3px;
+    border-radius-webkit: 3px;
+    border-radius-moz: 3px;
 }
 
 div.document td.field-body table.docutils tr:hover {
@@ -565,3 +577,15 @@ div#agogo-sidebar {
 }
 
 
+div.deprecated {
+    background-color: rgba(206, 92, 0, 0.19);
+    border: solid;
+    border-color: rgb(206, 92, 0);
+    border-radius: 1em;
+    padding: 0.5em;
+    margin: 1em 0em 1em 0;
+}
+
+div.bodywrapper dt {
+    text-align: left;
+}

@@ -10,3 +10,5 @@ Contents:
    reader
    tabular
    configuring
+   low level functions <other_read>
+
