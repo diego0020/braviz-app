@@ -589,3 +589,7 @@ div.deprecated {
 div.bodywrapper dt {
     text-align: left;
 }
+
+dl.method, dl.staticmethod, dl.function, dl.class {
+    padding-bottom: 3em;
+}

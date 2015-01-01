@@ -87,9 +87,11 @@ exclude_patterns = []
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
 
+nitpicky=True
+
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
-#add_module_names = True
+add_module_names = False
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
@@ -99,7 +101,7 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
-#modindex_common_prefix = []
+modindex_common_prefix = ["braviz"]
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
@@ -112,9 +114,9 @@ pygments_style = 'sphinx'
 # themes.
 
 html_theme = 'agogo_braviz'
-
-
 #html_theme = 'default'
+#html_theme = 'sphinxdoc'
+#html_theme = 'pyramid'
 #html_theme = 'basic'
 
 # Theme options are theme-specific and customize the look and feel of a theme
