@@ -9,3 +9,4 @@ Contents:
 
    reader
    tabular
+   configuring

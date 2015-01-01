@@ -17,7 +17,7 @@ from braviz.interaction import qt_dialogs
 from braviz.interaction.connection import MessageClient
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 
 # todo: receive messages and send, connect to menu
 __author__ = 'Diego'

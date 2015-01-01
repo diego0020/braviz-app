@@ -14,7 +14,7 @@ from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, Regresso
 
 import braviz.interaction.r_functions
 from braviz.interaction.connection import MessageClient,MessageServer
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name

@@ -14,8 +14,8 @@ import vtk
 import numpy as np
 import psutil
 
-from braviz.interaction.config_file import get_config as __get_config
-from scipy import ndimage
+from braviz.readAndFilter.config_file import get_apps_config as __get_config
+
 
 
 def memo_ten(f):
@@ -383,7 +383,7 @@ from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, e
 #Easy access to kmc readers
 
 #read configuration file and decide which project to expose
-__config = __get_config(os.path.join(os.path.dirname(__file__), "..", "applications"))
+__config = __get_config()
 PROJECT = __config.get_project_name()
 
 

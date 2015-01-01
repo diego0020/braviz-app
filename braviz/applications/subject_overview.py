@@ -20,7 +20,7 @@ from braviz.visualization.subject_viewer import QSubjectViwerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 from braviz.interaction.qt_widgets import ListValidator
 import subprocess
 from braviz.interaction.connection import MessageClient

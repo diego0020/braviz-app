@@ -27,7 +27,7 @@ from braviz.interaction import compute_fiber_lengths
 from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
 from braviz.interaction.qt_dialogs import SaveScenarioDialog,LoadScenarioDialog, SaveLogicFibersBundleDialog, LoadLogicBundle
 from braviz.readAndFilter import user_data as braviz_user_data
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 
 __author__ = 'Diego'
 

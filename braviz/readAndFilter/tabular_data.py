@@ -11,7 +11,7 @@ import pandas as pd
 
 import braviz
 from braviz.utilities import remove_non_ascii,show_error
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_apps_config
 
 LATERALITY = None
 LEFT_HANDED = None
@@ -51,7 +51,7 @@ def get_connection(reader=None):
     _connections[thread_id] = conn
     if LATERALITY is None:
         try:
-            _conf = get_config(os.path.join(os.path.dirname(__file__),"../applications"))
+            _conf = get_apps_config()
             _lat_name,_left_labell = _conf.get_laterality()
             cur = conn.execute("SELECT var_idx from variables where var_name = ?",(_lat_name,))
             res = cur.fetchone()
@@ -534,7 +534,7 @@ def get_variable_normal_range(var_idx):
         """
     if UBICAC is None:
         apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
-        conf = get_config(apps_dir)
+        conf = get_apps_config()
         var_name, label = conf.get_reference_population()
         u_var_idx = get_var_idx(var_name)
         UBICAC = (u_var_idx,label)

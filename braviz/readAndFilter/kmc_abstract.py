@@ -14,7 +14,7 @@ import vtk
 
 from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData,  \
     readFreeSurferTransform, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img,  \
-    memo_ten
+    memo_ten, config_file
 
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
     surfLUT2VTK
@@ -23,7 +23,6 @@ import braviz.readAndFilter.color_fibers
 
 
 from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
-from braviz.interaction import config_file
 
 from braviz.readAndFilter.base_reader import BaseReader
 
@@ -954,8 +953,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             color_dict = None
         #color_dict = None
         if color_dict is None:
-            apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
-            conf = config_file.get_config(apps_dir)
+            conf = config_file.get_apps_config()
             ref = conf.get_default_subject()
             aparc_img = self.get('APARC', ref)
             aparc_data = aparc_img.get_data()
@@ -973,7 +971,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 raise
             color_lines = color_file.readlines()
             color_file.close()
-            color_lists = (l.split() for l in color_lines if l[0] not in ['#', '\n', ' '] )
+            color_lists = (l.split() for l in color_lines if l[0] not in ['#', '\n', ' ','\r'] )
             color_tuples = ((int(l[0]),
                              ( tuple([float(c) / 256 for c in l[2:2 + 3]] + [1.0])
                                , l[1]) )

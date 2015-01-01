@@ -22,6 +22,7 @@ The library is organized into the following modules
     read_and_filter
     visualization
     interaction
+    applications
 
 The :doc:`read_and_filter` module simplifies reading and manipulating geometric and tabular data.
 The :doc:`visualization` module provides common geometric and spatial data visualization.
@@ -111,7 +112,7 @@ it relies in the following projects
 - `tornado <http://www.tornadoweb.org/en/stable/>`_
 - `vtk <http://vtk.org/>`_
 
-Thanks a lot to all for making this project possible.
+Thanks a lot to all for making braviz possible.
 
 Indices and tables
 ==================

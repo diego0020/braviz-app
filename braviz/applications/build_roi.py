@@ -26,7 +26,7 @@ from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
 from braviz.interaction.structure_metrics import AggregateInRoi
 from braviz.interaction.roi import export_roi
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 __author__ = 'Diego'
 
 AXIAL = 2

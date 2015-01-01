@@ -10,7 +10,7 @@ import braviz
 from braviz.visualization.subject_viewer import QSubjectViwerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 import braviz.applications.qt_sample_select_dialog
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data

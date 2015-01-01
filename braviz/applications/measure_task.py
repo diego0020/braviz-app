@@ -22,7 +22,7 @@ import datetime
 import platform
 import os
 import sys
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 
 __author__ = 'Diego'
 

@@ -61,9 +61,9 @@ class BravizMenu2(QtGui.QMainWindow):
         self.ui.samples.clicked.connect(self.launch_samples_dialog)
         self.ui.help_button.clicked.connect(self.open_help)
 
-        import braviz.interaction.config_file
+        import braviz.readAndFilter.config_file
 
-        config = braviz.interaction.get_config(__file__)
+        config = braviz.readAndFilter.config_file.get_config(__file__)
         project = config.get_project_name()
         self.ui.label.setText("Welcome to Braviz<small><br><br>%s</small>" % project)
 

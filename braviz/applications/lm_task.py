@@ -27,7 +27,7 @@ import braviz.interaction.qt_models as braviz_models
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.connection import MessageClient,MessageServer
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 
 __author__ = 'Diego'
 

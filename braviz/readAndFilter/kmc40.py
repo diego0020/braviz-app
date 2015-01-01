@@ -2,7 +2,7 @@ from __future__ import division
 
 import os
 import re
-from braviz.interaction.config_file import get_host_config
+from braviz.readAndFilter.config_file import get_host_config
 import logging
 
 import nibabel as nib

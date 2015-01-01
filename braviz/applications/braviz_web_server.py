@@ -5,7 +5,7 @@ import os
 import braviz
 import braviz.readAndFilter.tabular_data as tab_data
 from braviz.readAndFilter import user_data
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 import json
 
 

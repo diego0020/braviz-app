@@ -5,7 +5,7 @@ from collections import defaultdict
 import logging
 
 def configure_logger_from_conf(app_name="Braviz"):
-    from braviz.interaction.config_file import get_apps_config
+    from braviz.readAndFilter.config_file import get_apps_config
     conf = get_apps_config()
     log_out=conf.get("Braviz","logger")
     if log_out[0]=='c':

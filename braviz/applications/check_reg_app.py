@@ -8,7 +8,7 @@ from braviz.interaction.qt_guis.check_reg import Ui_check_reg_app
 from braviz.visualization.checkerboard_view import QCheckViewer
 from braviz.interaction.qt_widgets import ListValidator
 from braviz.readAndFilter import tabular_data
-from braviz.interaction.config_file import get_config
+from braviz.readAndFilter.config_file import get_config
 
 
 import braviz
