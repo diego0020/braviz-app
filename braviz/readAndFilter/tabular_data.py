@@ -21,6 +21,9 @@ UBICAC = None
 _connections = dict()
 
 def get_variables(mask=None):
+    """
+    
+    """
     conn = _get_connection()
     if mask is None:
         data = sql.read_sql("SELECT var_idx, var_name from variables;", conn,index_col="var_idx")
@@ -60,7 +63,7 @@ def _get_connection():
             pass
     return conn
 
-def reset_connection():
+def _reset_connection():
     global _connections
     log = logging.getLogger(__name__)
     thread_id = threading.current_thread()
@@ -259,7 +262,7 @@ def get_maximum_value(var_idx):
     return res
 
 
-def get_minumum_value(var_idx):
+def get_minimum_value(var_idx):
     conn = _get_connection()
     cur = conn.execute("SELECT min_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
