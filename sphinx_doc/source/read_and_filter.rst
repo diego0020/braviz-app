@@ -8,7 +8,7 @@ Contents:
    :maxdepth: 2
 
    reader
-   tabular
+   braviz_db
    configuring
    low level functions <other_read>
 

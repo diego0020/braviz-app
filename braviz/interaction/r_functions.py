@@ -33,7 +33,7 @@ def import_or_install(lib_name):
 def calculate_ginni_index(outcome, data_frame):
     #construct data frame
     is_nominal = False
-    conn = braviz_tab_data.get_connection()
+    conn = braviz_tab_data._get_connection()
     res = conn.execute("SELECT is_real FROM variables WHERE var_name = ?", (outcome,))
     outcome_idx = braviz_tab_data.get_var_idx(outcome)
     is_real = res.fetchone()

@@ -2,7 +2,7 @@ __author__ = 'Diego'
 
 import sys
 
-from braviz.readAndFilter.tabular_data import get_connection
+from braviz.readAndFilter.tabular_data import _get_connection
 
 if __name__ == "__main__":
     print "This file is not meant to be executed"
@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
 
 def create_tables():
-    conn = get_connection()
+    conn = _get_connection()
 
     #applications table
     q = """CREATE TABLE IF NOT EXISTS applications (
@@ -83,7 +83,7 @@ _applications_dir = {
 
 def update_current_applications():
     applications = _applications_dir
-    conn = get_connection()
+    conn = _get_connection()
     q = "SELECT app_idx, exec_name FROM applications ORDER BY app_idx"
     cur = conn.execute(q)
     db_tuples = cur.fetchall()

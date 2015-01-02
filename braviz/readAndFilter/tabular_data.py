@@ -17,12 +17,12 @@ LATERALITY = None
 LEFT_HANDED = None
 UBICAC = None
 
-IMAGE_CODE = 273 # DEPRECATED
+IMAGE_CODE = -999
 
 _connections = dict()
 
 def get_variables(reader=None,mask=None):
-    conn = get_connection(reader)
+    conn = _get_connection(reader)
     if mask is None:
         data = sql.read_sql("SELECT var_idx, var_name from variables;", conn,index_col="var_idx")
     else:
@@ -31,7 +31,7 @@ def get_variables(reader=None,mask=None):
     return data
 
 
-def get_connection(reader=None):
+def _get_connection():
     global _connections
     global LATERALITY, LEFT_HANDED
 
@@ -77,7 +77,7 @@ def reset_connection():
 
 
 def get_laterality(subj_id):
-    conn = get_connection()
+    conn = _get_connection()
     subj_id = int(subj_id)
     cur = conn.execute("SELECT value FROM var_values WHERE var_idx = ? and subject = ?",(LATERALITY,subj_id))
     res = cur.fetchone()
@@ -93,7 +93,7 @@ def get_data_frame_by_name(columns, reader=None):
     """Warning, names may change, consider using get_data_frame_by_index"""
     if isinstance(columns, basestring):
         columns = (columns,)
-    conn = get_connection(reader)
+    conn = _get_connection(reader)
     data = sql.read_sql("SELECT subject from SUBJECTS", conn, index_col="subject")
     for var in columns:
         # language=SQLite
@@ -111,7 +111,7 @@ def get_data_frame_by_index(columns, reader=None,col_name_index=False):
     if not hasattr(columns, "__iter__"):
         columns = (columns,)
 
-    conn = get_connection(reader)
+    conn = _get_connection(reader)
     data = sql.read_sql("SELECT subject from SUBJECTS", conn, index_col="subject")
     col_names = []
     for i in columns:
@@ -141,7 +141,7 @@ def is_variable_real(var_idx):
     """
     All variables are assumed real by default
     """
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT is_real FROM variables WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
     if res is None:
@@ -149,7 +149,7 @@ def is_variable_real(var_idx):
     return False if res[0] == 0 else True
 
 def does_variable_name_exists(var_name):
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT count(*) FROM variables WHERE var_name = ?", (var_name,))
     return False if cur.fetchone()[0] == 0 else True
 def is_variable_nominal(var_idx):
@@ -157,7 +157,7 @@ def is_variable_nominal(var_idx):
 
 
 def is_variable_name_real(var_name):
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT is_real FROM variables  WHERE var_name = ?", (unicode(var_name),))
     return False if cur.fetchone()[0] == 0 else True
 
@@ -183,7 +183,7 @@ def are_variables_names_nominal(var_names):
 
 
 def get_labels_dict(var_idx):
-    conn = get_connection()
+    conn = _get_connection()
     q="""
     SELECT label2, name
     from
@@ -206,7 +206,7 @@ def get_labels_dict(var_idx):
 
 
 def get_names_label_dict(var_name):
-    conn = get_connection()
+    conn = _get_connection()
     q="""
         SELECT label2, name
         from
@@ -228,7 +228,7 @@ def get_names_label_dict(var_name):
 
 
 def get_var_name(var_idx):
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (int(var_idx),))
     ans = cur.fetchone()
     if ans is None:
@@ -240,7 +240,7 @@ def get_var_idx(var_name):
     """
     Gets the index corresponding to the first occurrence of a given variable name, if it doesn't exist returns None
     """
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT var_idx FROM variables WHERE var_name = ?", (unicode(var_name),))
     res = cur.fetchone()
     if res is None:
@@ -249,7 +249,7 @@ def get_var_idx(var_name):
 
 
 def get_maximum_value(var_idx):
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT max_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
     if res is None:
@@ -261,7 +261,7 @@ def get_maximum_value(var_idx):
 
 
 def get_minumum_value(var_idx):
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT min_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
     if res is None:
@@ -273,7 +273,7 @@ def get_minumum_value(var_idx):
 
 
 def get_min_max_values(var_idx):
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT min_val, max_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
     if res is None:
@@ -285,7 +285,7 @@ def get_min_max_values(var_idx):
 
 
 def get_min_max_values_by_name(var_name):
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
                        (unicode(var_name),))
     res = cur.fetchone()
@@ -297,7 +297,7 @@ def get_min_max_values_by_name(var_name):
     return res
 
 def get_min_max_opt_values_by_name(var_name):
-    conn = get_connection()
+    conn = _get_connection()
     cur = conn.execute("SELECT min_val, max_val, optimum_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
                        (unicode(var_name),))
     res = cur.fetchone()
@@ -312,7 +312,7 @@ def get_subject_variables(subj_code, var_codes):
     """Returns a data frame with two columns, variable_name, value... with var_codes as index,
      the values are for the current subject, or NAN if subj is invalid
     """
-    conn = get_connection()
+    conn = _get_connection()
     names = []
     values = []
     for idx in var_codes:
@@ -347,13 +347,13 @@ def get_subject_variables(subj_code, var_codes):
     return output
 
 def get_subjects():
-    conn = get_connection()
+    conn = _get_connection()
     cur=conn.execute("SELECT subject FROM subjects ORDER BY subject")
     subj_list = [ t[0] for t in cur.fetchall()]
     return subj_list
 
 def get_var_description(var_idx):
-    conn = get_connection()
+    conn = _get_connection()
     q = "SELECT description FROM var_descriptions WHERE var_idx = ?"
     cur = conn.execute(q, (int(var_idx),))
     res = cur.fetchone()
@@ -363,7 +363,7 @@ def get_var_description(var_idx):
 
 
 def get_var_description_by_name(var_name):
-    conn = get_connection()
+    conn = _get_connection()
     q = "SELECT description FROM var_descriptions NATURAL JOIN variables WHERE var_name = ?"
     cur = conn.execute(q, (unicode(var_name),))
     res = cur.fetchone()
@@ -373,21 +373,21 @@ def get_var_description_by_name(var_name):
 
 
 def save_is_real_by_name(var_name, is_real):
-    conn = get_connection()
+    conn = _get_connection()
     query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
     conn.execute(query, (is_real, unicode(var_name)))
     conn.commit()
 
 
 def save_is_real(var_idx, is_real):
-    conn = get_connection()
+    conn = _get_connection()
     query = "UPDATE variables SET is_real = ? WHERE var_idx = ?"
     conn.execute(query, (is_real, int(var_idx)))
     conn.commit()
 
 
 def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
-    conn = get_connection()
+    conn = _get_connection()
     query = """INSERT OR REPLACE INTO ratio_meta
     VALUES(
     (SELECT var_idx FROM variables WHERE var_name = ?),
@@ -404,7 +404,7 @@ def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
         conn.commit()
 
 def save_real_meta(var_idx, min_value, max_value, opt_value):
-    conn = get_connection()
+    conn = _get_connection()
     query = """INSERT OR REPLACE INTO ratio_meta
     VALUES(?, ? , ? , ? );
     """
@@ -419,7 +419,7 @@ def save_real_meta(var_idx, min_value, max_value, opt_value):
         conn.commit()
 def save_nominal_labels_by_name(var_name,label_name_tuples):
     mega_tuple=( (var_name, label, name) for label, name in label_name_tuples)
-    con = get_connection()
+    con = _get_connection()
     query = """INSERT OR REPLACE INTO nom_meta
     VALUES (
     (SELECT var_idx FROM variables WHERE var_name = ?),
@@ -432,7 +432,7 @@ def save_nominal_labels_by_name(var_name,label_name_tuples):
 
 def save_nominal_labels(var_idx,label_name_tuples):
     mega_tuple=( (var_idx, label, name) for label,name in label_name_tuples)
-    con = get_connection()
+    con = _get_connection()
     query = """INSERT OR REPLACE INTO nom_meta
     VALUES (
     ?, --idx
@@ -444,7 +444,7 @@ def save_nominal_labels(var_idx,label_name_tuples):
     con.commit()
 
 def save_var_description_by_name(var_name,description):
-    conn = get_connection()
+    conn = _get_connection()
     query = """INSERT OR REPLACE INTO var_descriptions
     VALUES
     ((SELECT var_idx FROM variables WHERE var_name = ?), -- var_idx
@@ -453,7 +453,7 @@ def save_var_description_by_name(var_name,description):
     conn.commit()
 
 def save_var_description(var_idx,description):
-    conn = get_connection()
+    conn = _get_connection()
     query = """INSERT OR REPLACE INTO var_descriptions
     VALUES
     (?, -- var_idx
@@ -463,7 +463,7 @@ def save_var_description(var_idx,description):
 
 def register_new_variable(var_name,is_real=1):
     var_name = unicode(var_name)
-    conn = get_connection()
+    conn = _get_connection()
     row_id = None
     with conn :
         if is_real:
@@ -480,7 +480,7 @@ def update_variable_values(var_idx,tuples):
     """
     Tuples should be [(subj1,value1),(subj2,value2) ....]
     """
-    conn=get_connection()
+    conn=_get_connection()
     super_tuples=((var_idx,s,v) for s,v in tuples)
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.executemany(q,super_tuples)
@@ -490,7 +490,7 @@ def update_multiple_variable_values(idx_subject_value_tuples):
     """
     idx_subject_value_tuples is an iterable containing tuples of the form (var_idx,subj,value)
     """
-    conn=get_connection()
+    conn=_get_connection()
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.executemany(q,idx_subject_value_tuples)
     conn.commit()
@@ -499,32 +499,31 @@ def updata_variable_value(var_idx,subject,new_value):
     """
     Updates a single value for variable var_idx and subject
     """
-    conn=get_connection()
+    conn=_get_connection()
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.execute(q,(int(var_idx),int(subject),new_value))
     conn.commit()
 
 def get_var_value(var_idx,subject):
-    conn = get_connection()
+    conn = _get_connection()
     q="SELECT value FROM var_values WHERE var_idx = ? and subject = ?"
     cur=conn.execute(q,(var_idx,subject))
     res=cur.fetchone()
+    if var_idx == IMAGE_CODE:
+        raise DeprecationWarning
+        return subject
     if res is None:
         log = logging.getLogger(__name__)
-        if var_idx == IMAGE_CODE:
-            log.warning("Not implicit image code found, returning identity")
-            return subject
-
         log.error("%s not found for subject %s"%(var_idx,subject))
         raise Exception("%s not found for subject %s"%(var_idx,subject))
     return res[0]
 
 def get_image_code(subject):
-    return get_var_value(IMAGE_CODE,subject)
+    raise NotImplementedError
 
 def get_variable_normal_range(var_idx):
     global UBICAC
-    conn = get_connection()
+    conn = _get_connection()
     log=logging.getLogger(__name__)
     #minimum,maximum
     # 10 = UBIC3
@@ -546,7 +545,7 @@ def get_variable_normal_range(var_idx):
     else:
         return values
 
-def float_or_nan(s):
+def _float_or_nan(s):
     try:
         v = float(s)
     except ValueError:
@@ -554,7 +553,7 @@ def float_or_nan(s):
     return v
 
 def add_data_frame(df):
-    conn = get_connection()
+    conn = _get_connection()
     columns = df.columns
     columns = map(remove_non_ascii,columns)
     df.columns = columns
@@ -576,17 +575,17 @@ def add_data_frame(df):
             try:
                 vals = col.get_values().astype(float)
             except ValueError:
-                vals = [float_or_nan(s) for s in col.get_values()]
+                vals = [_float_or_nan(s) for s in col.get_values()]
             q2 = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
             VALUES ( ?, ?,?)"""
             conn.executemany(q2,izip(repeat(var_idx),subjs,vals))
     print "done"
 
-def _recursive_delete_variable(var_idx):
+def recursive_delete_variable(var_idx):
     """
     Warning... scenario files may become invalid, this is not reversible
     """
-    conn = get_connection()
+    conn = _get_connection()
     try:
         with conn:
             #delete values
@@ -612,11 +611,11 @@ def _recursive_delete_variable(var_idx):
     else:
         print "Done"
 
-def _recursive_delete_subject(subject):
+def recursive_delete_subject(subject):
     """
     Warning... scenario files and samples may become invalid, this is not reversible
     """
-    conn = get_connection()
+    conn = _get_connection()
     try:
         with conn:
             #delete values
@@ -631,8 +630,3 @@ def _recursive_delete_subject(subject):
     else:
         print "Done"
 
-def recursive_delete_variable(var_idx):
-    """
-    Public access to delete variable
-    """
-    _recursive_delete_variable(var_idx)

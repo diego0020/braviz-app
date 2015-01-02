@@ -8,7 +8,7 @@ import cPickle
 import logging
 import os
 import braviz.readAndFilter
-from braviz.readAndFilter.tabular_data import get_connection
+from braviz.readAndFilter.tabular_data import _get_connection
 import sqlite3
 
 
@@ -23,7 +23,7 @@ def save_scenario(application, scenario_name, scenario_description, scenario_dat
     if not isinstance(scenario_data,basestring):
         scenario_data=cPickle.dumps(scenario_data,2)
     scenario_data = buffer(scenario_data)
-    conn = get_connection()
+    conn = _get_connection()
     q = """INSERT  OR ABORT INTO scenarios
     (app_idx,scn_name,scn_desc,scn_data)
     VALUES ( (SELECT app_idx FROM applications WHERE exec_name == ?),
@@ -35,7 +35,7 @@ def save_scenario(application, scenario_name, scenario_description, scenario_dat
 
 
 def update_scenario(scenario_id, name=None, description=None, scenario_data=None, application=None):
-    conn = get_connection()
+    conn = _get_connection()
     if name is not None:
         conn.execute("UPDATE scenarios SET scn_name = ? WHERE scn_id = ?", (name, scenario_id))
     if description is not None:
@@ -50,7 +50,7 @@ def update_scenario(scenario_id, name=None, description=None, scenario_data=None
 
 
 def get_scenarios_data_frame(app_name):
-    conn = get_connection()
+    conn = _get_connection()
     if app_name is None:
         q = "SELECT scn_id,datetime(scn_date,'localtime') as scn_date,scn_name,scn_desc FROM scenarios"
         data = sql.read_sql(q, conn, index_col="scn_id", coerce_float=False)
@@ -65,7 +65,7 @@ def get_scenarios_data_frame(app_name):
 
 
 def get_scenario_data(scn_id):
-    conn = get_connection()
+    conn = _get_connection()
     q = "SELECT scn_data FROM scenarios WHERE scn_id = ?"
     res = conn.execute(q, (scn_id,))
     res = res.fetchone()
@@ -81,21 +81,21 @@ def get_scenario_data_dict(scn_id):
     return scn_dict
 
 def link_var_scenario(var_idx, scn_idx):
-    conn = get_connection()
+    conn = _get_connection()
     q = "INSERT INTO vars_scenarios VALUES (?,?)"
     conn.execute(q, (var_idx, scn_idx))
     conn.commit()
 
 
 def get_variable_scenarios(var_idx):
-    conn = get_connection()
+    conn = _get_connection()
     q = "SELECT scn_id,scn_name FROM scenarios NATURAL JOIN vars_scenarios WHERE var_idx = ?"
     cur = conn.execute(q, (var_idx,))
     return dict(cur.fetchall())
 
 
 def count_variable_scenarios(var_idx):
-    conn = get_connection()
+    conn = _get_connection()
     q = "SELECT count(*) FROM vars_scenarios WHERE var_idx == ?;"
     cur = conn.execute(q, (var_idx,))
     return cur.fetchone()[0]
@@ -107,14 +107,14 @@ def save_sub_sample(name, elements, description):
     size = len(elements)
     str_data = cPickle.dumps(elements, 2)
     str_data = buffer(str_data)
-    conn = get_connection()
+    conn = _get_connection()
     q = "INSERT INTO subj_samples (sample_name, sample_desc, sample_data, sample_size) VALUES (?,?,?,?)"
     conn.execute(q, (name, description, str_data,size))
     conn.commit()
     pass
 
 def get_comment(subj):
-    conn = get_connection()
+    conn = _get_connection()
     q = "SELECT comment FROM subj_comments WHERE subject = ?"
     cur = conn.execute(q,(subj,))
     res = cur.fetchone()
@@ -123,27 +123,27 @@ def get_comment(subj):
     return res[0]
 
 def update_comment(subj,comment):
-    conn = get_connection()
+    conn = _get_connection()
     q = "INSERT OR REPLACE into subj_comments (subject,comment) VALUES (?,?)"
     with conn:
         cur = conn.execute(q,(subj,comment))
 
 
 def get_samples_df():
-    conn = get_connection()
+    conn = _get_connection()
     q = "SELECT sample_idx, sample_name, sample_desc, sample_size FROM subj_samples"
     data = sql.read_sql(q, conn, index_col="sample_idx", coerce_float=False)
     return data
 
 def sample_name_existst(sample_name):
-    conn = get_connection()
+    conn = _get_connection()
     q="SELECT count(*) FROM subj_samples WHERE sample_name = ?"
     cur = conn.execute(q,(sample_name,))
     res = cur.fetchone()
     return res[0] > 0
 
 def get_sample_data(sample_idx):
-    conn=get_connection()
+    conn=_get_connection()
     q = "SELECT sample_data FROM subj_samples WHERE sample_idx = ?"
     cur = conn.execute(q,(sample_idx,))
     res = cur.fetchone()
@@ -154,7 +154,7 @@ def get_sample_data(sample_idx):
     return data
 
 def delete_scenario(scn_id):
-    conn = get_connection()
+    conn = _get_connection()
     try:
         with conn:
             #delete vars_scenarios

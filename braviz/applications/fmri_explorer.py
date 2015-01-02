@@ -163,7 +163,7 @@ class FmriExplorer(QtGui.QMainWindow):
                 ix = self.ui.paradigm_combo.findText(self.__current_paradigm)
                 self.ui.paradigm_combo.setCurrentIndex(ix)
                 return
-        image_code = braviz_tab_data.get_image_code(self.__current_subject)
+        image_code = self.__current_subject
         self.__current_paradigm = new_paradigm
         self.__current_contrast = self.ui.contrast_combo.currentIndex() + 1
 
@@ -304,7 +304,7 @@ class FmriExplorer(QtGui.QMainWindow):
             cont_number = self.ui.contrast_combo.findText(cont)+1
             sbj = int(i[0])
             cx,cy,cz = i[1:4]
-            s_img = braviz_tab_data.get_image_code(sbj)
+            s_img = sbj
             progress = j / (len(self.__valid_ids)) * 100
             self.ui.progressBar.setValue(progress)
             QtCore.QCoreApplication.instance().processEvents()

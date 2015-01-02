@@ -17,7 +17,7 @@ from braviz.interaction.connection import MessageClient,MessageServer
 from braviz.readAndFilter.config_file import get_config
 
 import braviz.interaction.qt_models as braviz_models
-from braviz.readAndFilter.tabular_data import get_connection, get_data_frame_by_name
+from braviz.readAndFilter.tabular_data import get_data_frame_by_name
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 
@@ -185,7 +185,6 @@ class AnovaApp(QMainWindow):
             pass
         self.outcome_var_name = new_bar
         self.ui.outcome_sel.setCurrentIndex(index)
-        conn = get_connection()
         try:
             var_is_real = braviz_tab_data.is_variable_name_real(new_bar)
         except TypeError:

@@ -104,7 +104,7 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
         self.subj = subj
         self.space = space
         self.__value = value
-        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE, subj)
+        subj_img = subj
         if node_type == self.LOGIC:
             self.__prop = None
         elif node_type == self.STRUCT:
@@ -168,7 +168,7 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
     def __update_sphere(self, subj, space):
         sphere_data = geom_db.load_sphere(self.__roi_id, subj)
         reader = self.__reader
-        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE, subj)
+        subj_img = subj
         self.space = space
         if sphere_data is None:
             self.prop.SetVisibility(0)
@@ -196,7 +196,7 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
 
     def __update_struct(self, subj, space):
         reader = self.__reader
-        subj_img = tabular_data.get_var_value(tabular_data.IMAGE_CODE, subj)
+        subj_img = subj
         try:
             self.__pd = reader.get("MODEL", subj_img, name=self.__value, space=space)
         except Exception:

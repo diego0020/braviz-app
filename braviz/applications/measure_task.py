@@ -151,7 +151,7 @@ class MeasureApp(QMainWindow):
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
         self.__current_subject = config.get_default_subject()
-        self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__current_subject)
+        self.__current_img_id = self.__current_subject
 
         self.__current_image_mod = "MRI"
         self.__current_contrast = None
@@ -341,7 +341,7 @@ class MeasureApp(QMainWindow):
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
         self.ui.subject_line_label.setText("Subject %s" % self.__current_subject)
-        img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE, new_subject)
+        img_id = new_subject
         self.__current_img_id = img_id
         self.reload_contrast_names()
         log = logging.getLogger(__file__)

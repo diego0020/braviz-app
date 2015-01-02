@@ -163,7 +163,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
         self.progress = 100
 
     def get_scalar_value(self, subj):
-        image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, subj))
+        image_code = subj
         if self.fibers_mode is False:
             val = braviz_struct_metrics.get_mult_struct_metric(self.reader, self.structs, image_code, self.metric_code)
             return val

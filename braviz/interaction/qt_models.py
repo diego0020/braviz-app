@@ -762,11 +762,9 @@ class SampleTree(QAbstractItemModel):
 
     def populate_aspect(self, var_name, aspect_id):
         # get labels
-        conn = braviz_tab_data.get_connection()
-        cur = conn.execute("SELECT label,name FROM nom_meta NATURAL JOIN variables WHERE var_name=?",
-                           (var_name,))
+        d=braviz_tab_data.get_names_label_dict(var_name)
         labels_list = []
-        for i, (label, name) in enumerate(cur.fetchall()):
+        for i, (label, name) in enumerate(d.iteritems()):
             if label is None:
                 continue
             lab_id = self.__get_next_id()
@@ -976,7 +974,6 @@ class ContextVariablesModel(QAbstractTableModel):
     def __init__(self, context_vars_list=None, parent=None, editable_dict=None):
         QAbstractTableModel.__init__(self, parent)
         self.data_type_dict = dict()
-        self.conn = braviz_tab_data.get_connection()
         if context_vars_list is not None:
             self.data_frame = pd.DataFrame(
                 [(braviz_tab_data.get_var_name(idx), self.get_type(idx)) for idx in context_vars_list],

@@ -1,9 +1,9 @@
-from braviz.readAndFilter.tabular_data import get_connection
+from braviz.readAndFilter.tabular_data import _get_connection
 from itertools import izip
 __author__ = 'Diego'
 
 def create_braint_db():
-    conn = get_connection()
+    conn = _get_connection()
     q="""CREATE TABLE IF NOT EXISTS hierarchy_levels
       (level_id INTEGER PRIMARY KEY ,
       level_name TEXT)"""

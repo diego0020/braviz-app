@@ -29,7 +29,7 @@ def generate_roi_image(subject, roi_id, space, reader=None):
     r, x, y, z = geom_db.load_sphere(roi_id, subject)
     r2 = r*r
     sphere_space = geom_db.get_roi_space(roi_id=roi_id)
-    subject_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,subject)
+    subject_id = subject
     fa = reader.get("fa", subject_id, space="diff")
 
     affine = fa.get_affine()

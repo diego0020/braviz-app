@@ -346,7 +346,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def load_initial_view(self, subject, viewer):
         log = logging.getLogger(__name__)
-        img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(subject)))
+        img_code = subject
         try:
             viewer.change_subject(img_code)
         except Exception as e:
@@ -445,7 +445,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.reload_viewers(scenario=return_dict)
 
     def load_scenario_in_viewer(self, viewer, scenario_dict, subj):
-        img_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(subj)))
+        img_code = subj
         wanted_state = scenario_dict
 
         #set space

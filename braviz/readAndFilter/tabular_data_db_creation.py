@@ -186,7 +186,7 @@ def tms_vars_descriptions():
         (254,r"Duration (duration of the inhibition triggered by the other hemisphere)"),
         (255,r"Duration (duration of the inhibition triggered by the other hemisphere)"),
     ]
-    conn=braviz.readAndFilter.tabular_data.get_connection()
+    conn=braviz.readAndFilter.tabular_data._get_connection()
     q="""INSERT OR REPLACE INTO var_descriptions (var_idx,description)
         VALUES (?,? )"""
     conn.executemany(q,description_tuples)

@@ -110,7 +110,7 @@ class LogicBundlesApp(QMainWindow):
         self.subjects_list = tabular_data.get_subjects()
 
         self.__current_subject = config.get_default_subject()
-        self.__current_img_id = tabular_data.get_var_value(tabular_data.IMAGE_CODE,self.__current_subject)
+        self.__current_img_id = self.__current_subject
 
         self.__current_image_mod = "MRI"
         self.__curent_space = "World"
@@ -310,7 +310,7 @@ class LogicBundlesApp(QMainWindow):
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
-        img_id = str(tabular_data.get_var_value(tabular_data.IMAGE_CODE, new_subject))
+        img_id = new_subject
         self.__current_img_id = img_id
         log = logging.getLogger(__file__)
         self.vtk_tree.update(new_subject,self.__curent_space)

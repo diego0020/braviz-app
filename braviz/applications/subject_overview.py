@@ -266,7 +266,7 @@ class SubjectOverviewApp(QMainWindow):
         self.subject_details_model.change_subject(new_subject)
         self.reload_comments()
         #image
-        image_code = str(braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE, int(new_subject)))
+        image_code = new_subject
 
 
         # if len(image_code) < 3:
@@ -372,7 +372,7 @@ class SubjectOverviewApp(QMainWindow):
         if pdgm.upper() not in self.reader.get("fMRI",None,index=True):
             return
         previus_contrast = combo.currentIndex()
-        img_code = braviz_tab_data.get_var_value(braviz_tab_data.IMAGE_CODE,self.__curent_subject)
+        img_code = self.__curent_subject
         try:
             available_contrasts = self.reader.get("FMRI",img_code,name=pdgm,contrasts_dict=True)
             combo.clear()

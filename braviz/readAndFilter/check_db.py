@@ -6,7 +6,7 @@ import logging
 
 
 def verify_db_completeness():
-    conn = tabular_data.get_connection()
+    conn = tabular_data._get_connection()
     #user db
     from braviz.readAndFilter import user_data_db_creation
 
