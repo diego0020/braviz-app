@@ -17,12 +17,11 @@ LATERALITY = None
 LEFT_HANDED = None
 UBICAC = None
 
-IMAGE_CODE = -999
 
 _connections = dict()
 
-def get_variables(reader=None,mask=None):
-    conn = _get_connection(reader)
+def get_variables(mask=None):
+    conn = _get_connection()
     if mask is None:
         data = sql.read_sql("SELECT var_idx, var_name from variables;", conn,index_col="var_idx")
     else:
@@ -89,11 +88,11 @@ def get_laterality(subj_id):
         return 'l'
 
 
-def get_data_frame_by_name(columns, reader=None):
+def get_data_frame_by_name(columns, ):
     """Warning, names may change, consider using get_data_frame_by_index"""
     if isinstance(columns, basestring):
         columns = (columns,)
-    conn = _get_connection(reader)
+    conn = _get_connection()
     data = sql.read_sql("SELECT subject from SUBJECTS", conn, index_col="subject")
     for var in columns:
         # language=SQLite
@@ -107,11 +106,11 @@ def get_data_frame_by_name(columns, reader=None):
     return data
 
 
-def get_data_frame_by_index(columns, reader=None,col_name_index=False):
+def get_data_frame_by_index(columns,col_name_index=False):
     if not hasattr(columns, "__iter__"):
         columns = (columns,)
 
-    conn = _get_connection(reader)
+    conn = _get_connection()
     data = sql.read_sql("SELECT subject from SUBJECTS", conn, index_col="subject")
     col_names = []
     for i in columns:
@@ -509,17 +508,11 @@ def get_var_value(var_idx,subject):
     q="SELECT value FROM var_values WHERE var_idx = ? and subject = ?"
     cur=conn.execute(q,(var_idx,subject))
     res=cur.fetchone()
-    if var_idx == IMAGE_CODE:
-        raise DeprecationWarning
-        return subject
     if res is None:
         log = logging.getLogger(__name__)
         log.error("%s not found for subject %s"%(var_idx,subject))
         raise Exception("%s not found for subject %s"%(var_idx,subject))
     return res[0]
-
-def get_image_code(subject):
-    raise NotImplementedError
 
 def get_variable_normal_range(var_idx):
     global UBICAC
