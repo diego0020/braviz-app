@@ -22,7 +22,13 @@ _connections = dict()
 
 def get_variables(mask=None):
     """
-    
+    Gets available variables
+
+    Args:
+        mask (str) : If not None, limit answer to results whose name match the given mask (sql ``like`` syntax)
+
+    Returns:
+        A :class:`pandas.DataFrame` with variable indexes as index, and a single column with variable names
     """
     conn = _get_connection()
     if mask is None:
@@ -34,6 +40,11 @@ def get_variables(mask=None):
 
 
 def _get_connection():
+    """
+    Gets the sqlite3 connection object for this thread.
+
+    Also initializes module variables LATERALITY, LEFT_HANDED and UBICAC
+    """
     global _connections
     global LATERALITY, LEFT_HANDED
 
@@ -64,6 +75,9 @@ def _get_connection():
     return conn
 
 def _reset_connection():
+    """
+    Resests existing connection for this thread
+    """
     global _connections
     log = logging.getLogger(__name__)
     thread_id = threading.current_thread()
@@ -79,6 +93,15 @@ def _reset_connection():
 
 
 def get_laterality(subj_id):
+    """
+    Gets the laterality for a given subject
+
+    Args:
+        subj_id : The id of the subject
+
+    Returns:
+        "l" for a left handed subject, "r" otherwise
+    """
     conn = _get_connection()
     subj_id = int(subj_id)
     cur = conn.execute("SELECT value FROM var_values WHERE var_idx = ? and subject = ?",(LATERALITY,subj_id))
@@ -92,7 +115,16 @@ def get_laterality(subj_id):
 
 
 def get_data_frame_by_name(columns, ):
-    """Warning, names may change, consider using get_data_frame_by_index"""
+    """
+    A data frame containing one column for each variable name in columns
+
+    Args:
+        columns (list) : Variable names
+
+    Returns:
+        A :class:`pandas.DataFrame` with subject ids as index and one column for each variable
+
+    """
     if isinstance(columns, basestring):
         columns = (columns,)
     conn = _get_connection()
@@ -110,6 +142,16 @@ def get_data_frame_by_name(columns, ):
 
 
 def get_data_frame_by_index(columns,col_name_index=False):
+    """
+    A data frame containing one column for each variable index in columns
+
+    Args:
+        columns (list) : Variable indexes
+
+    Returns:
+        A :class:`pandas.DataFrame` with subject ids as index and one column for each variable
+
+    """
     if not hasattr(columns, "__iter__"):
         columns = (columns,)
 
@@ -141,7 +183,15 @@ def get_data_frame_by_index(columns,col_name_index=False):
 
 def is_variable_real(var_idx):
     """
-    All variables are assumed real by default
+    Find if the variable is real or nominal
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        ``False`` if the variable is Nominal,
+        ``True`` otherwise
+
     """
     conn = _get_connection()
     cur = conn.execute("SELECT is_real FROM variables WHERE var_idx = ?", (int(var_idx),))
@@ -151,40 +201,137 @@ def is_variable_real(var_idx):
     return False if res[0] == 0 else True
 
 def does_variable_name_exists(var_name):
+    """
+    Find if the a variable with the given name exists in the database
+
+    Args:
+        var_name (str) : Variable name
+
+    Returns:
+        ``True`` if a variable with the given name exists,
+        ``False`` otherwise
+    """
     conn = _get_connection()
     cur = conn.execute("SELECT count(*) FROM variables WHERE var_name = ?", (var_name,))
     return False if cur.fetchone()[0] == 0 else True
+
 def is_variable_nominal(var_idx):
+    """
+    Find if the variable is real or nominal
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        ``True`` if the variable is Nominal,
+        ``False`` otherwise
+
+    """
+
     return not is_variable_real(var_idx)
 
 
 def is_variable_name_real(var_name):
+    """
+    Find if the variable is real or nominal
+
+    Args:
+        var_name (str) : Variable name
+
+    Returns:
+        ``False`` if the variable is Nominal,
+        ``True`` otherwise
+
+    """
     conn = _get_connection()
     cur = conn.execute("SELECT is_real FROM variables  WHERE var_name = ?", (unicode(var_name),))
     return False if cur.fetchone()[0] == 0 else True
 
 
 def is_variable_name_nominal(var_name):
+    """
+    Find if the variable is real or nominal
+
+    Args:
+        var_name (str) : Variable name
+
+    Return:
+        ``True`` if the variable is Nominal,
+        ``False`` otherwise
+
+    """
     return not is_variable_name_real(var_name)
 
 
 def are_variables_real(var_idxs):
+    """
+    For each variable in a list, find if it is real
+
+    Args:
+        var_idxs (list) : variable indexes
+
+    Returns:
+        A dictionary with variable indexes as keys, and booleans as values as in
+        :func:`~.is_variable_real`
+
+    """
     return dict((idx, is_variable_real(idx)) for idx in var_idxs)
 
 
 def are_variables_nominal(var_idxs):
+    """
+    For each variable in a list, find if it is real
+
+    Args:
+        var_idxs (list) : variable indexes
+
+    Returns:
+        A dictionary with variable indexes as keys, and booleans as values as in
+        :func:`~.is_variable_nominal`
+
+    """
     return dict((idx, not is_variable_real(idx)) for idx in var_idxs)
 
 
 def are_variables_names_real(var_names):
+    """
+    For each variable in a list, find if it is real
+
+    Args:
+        var_names (list) : variable names
+
+    Returns:
+        A dictionary with variable names as keys, and booleans as values as in
+        :func:`~.is_variable_name_real`
+    """
     return dict((name, is_variable_name_real(name)) for name in var_names)
 
 
 def are_variables_names_nominal(var_names):
+    """
+    For each variable in a list, find if it is real
+
+    Args:
+        var_names (list) : variable names
+
+    Returns:
+        A dictionary with variable names as keys, and booleans as values as in
+        :func:`~.is_variable_name_nominal`
+    """
     return dict((name, not is_variable_name_nominal(name)) for name in var_names)
 
 
 def get_labels_dict(var_idx):
+    """
+    Map numerical labels to strings in nominal variables
+
+    Args:
+        var_idx (int) : Variable Index
+
+    Returns:
+        A dictionary with numerical labels as keys, and the text for each label as
+        values.
+    """
     conn = _get_connection()
     q="""
     SELECT label2, name

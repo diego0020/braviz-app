@@ -10,6 +10,21 @@ Data is stored in a structure that can be viewed as a table. The first column wo
 in the study, and the first row would contain the variable names. The values of the variables would be stored in the
 rest of the table.
 
+Real variables are stored as float numbers, and the metadata contains the minimum, maximum and optimal value for each
+variable. This parameters can be modified by the subject, and it is not enforced that values lay in this range, however
+applications may check this and give warnings if there is an inconsistency. This metadata is also useful for plotting.
+
+Nominal variables are stored as numerical labels. Metadata contains a table that maps numerical labels to strings. Which
+can be accessed with the function :func:`~.get_labels_dict`, for example
+
+::
+
+    >>> get_labels_dict(4)
+    {
+        1 : "male" ,
+        2 : "female" ,
+    }
+
 Several of the functions in this module return instances of :class:`pandas.DataFrame`.
 
 Subjects
