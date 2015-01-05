@@ -17,6 +17,7 @@ given task.
 The library is organized into the following modules
 
 .. toctree::
+    :includehidden:
     :maxdepth: 2
 
     read_and_filter

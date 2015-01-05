@@ -477,7 +477,7 @@ div.document td.field-body table.docutils {
 border-style: none;
 }
 
-div.document td.field-body table.docutils td {
+div.document td.field-body table.docutils td,th {
     border-style: none;
 }
 
@@ -525,6 +525,29 @@ div.document td.field-body table.docutils tr {
 }
 div.document td.field-body table.docutils td:first-of-type{
     padding-right: 1em;
+}
+
+div.document td.field-body table.docutils{
+    width: 100%
+}
+
+
+
+div.deprecated {
+    background-color: rgba(206, 92, 0, 0.19);
+    border: solid;
+    border-color: rgb(206, 92, 0);
+    border-radius: 1em;
+    padding: 0.5em;
+    margin: 1em 0em 1em 0;
+}
+
+div.bodywrapper dt {
+    text-align: left;
+}
+
+dl.method, dl.staticmethod, dl.function, dl.class {
+    padding-bottom: 3em;
 }
 
 
@@ -577,19 +600,4 @@ div#agogo-sidebar {
 }
 
 
-div.deprecated {
-    background-color: rgba(206, 92, 0, 0.19);
-    border: solid;
-    border-color: rgb(206, 92, 0);
-    border-radius: 1em;
-    padding: 0.5em;
-    margin: 1em 0em 1em 0;
-}
 
-div.bodywrapper dt {
-    text-align: left;
-}
-
-dl.method, dl.staticmethod, dl.function, dl.class {
-    padding-bottom: 3em;
-}

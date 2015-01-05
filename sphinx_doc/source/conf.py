@@ -167,6 +167,7 @@ html_static_path = ['_static']
 
 html_sidebars = {
    #'index': ['globaltoc.html',  'searchbox.html'],
+   #'*': ['globaltoc.html','localtoc.html',  'searchbox.html'],
    '*': ['localtoc.html',  'searchbox.html'],
 }
 
