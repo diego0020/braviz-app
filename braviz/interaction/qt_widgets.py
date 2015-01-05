@@ -317,8 +317,8 @@ class MatplotWidget(FigureCanvas):
 
         x_levels = list(data[x_name].unique())
         z_levels = list(data[z_name].unique())
-        x_labels = braviz_tab_data.get_names_label_dict(x_name)
-        z_labels = braviz_tab_data.get_names_label_dict(z_name)
+        x_labels = braviz_tab_data.get_labels_dict_by_name(x_name)
+        z_labels = braviz_tab_data.get_labels_dict_by_name(z_name)
 
         palette = sns.color_palette("deep")
         z_colors = dict(izip(z_levels,palette))

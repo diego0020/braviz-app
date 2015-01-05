@@ -28,7 +28,7 @@ def get_variables(mask=None):
         mask (str) : If not None, limit answer to results whose name match the given mask (sql ``like`` syntax)
 
     Returns:
-        A :class:`pandas.DataFrame` with variable indexes as index, and a single column with variable names
+        :class:`pandas.DataFrame` with variable indexes as index, and a single column with variable names
     """
     conn = _get_connection()
     if mask is None:
@@ -122,7 +122,7 @@ def get_data_frame_by_name(columns, ):
         columns (list) : Variable names
 
     Returns:
-        A :class:`pandas.DataFrame` with subject ids as index and one column for each variable
+        :class:`pandas.DataFrame` with subject ids as index and one column for each variable
 
     """
     if isinstance(columns, basestring):
@@ -149,7 +149,7 @@ def get_data_frame_by_index(columns,col_name_index=False):
         columns (list) : Variable indexes
 
     Returns:
-        A :class:`pandas.DataFrame` with subject ids as index and one column for each variable
+        :class:`pandas.DataFrame` with subject ids as index and one column for each variable
 
     """
     if not hasattr(columns, "__iter__"):
@@ -354,7 +354,17 @@ def get_labels_dict(var_idx):
     return ans_dict
 
 
-def get_names_label_dict(var_name):
+def get_labels_dict_by_name(var_name):
+    """
+    Map numerical labels to strings in nominal variables
+
+    Args:
+        var_name (str) : Variable name
+
+    Returns:
+        A dictionary with numerical labels as keys, and the text for each label as
+        values.
+    """
     conn = _get_connection()
     q="""
         SELECT label2, name
@@ -377,6 +387,16 @@ def get_names_label_dict(var_name):
 
 
 def get_var_name(var_idx):
+    """
+    Name of variable with given index
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        Variable name if it exists, ``"?"`` otherwise
+
+    """
     conn = _get_connection()
     cur = conn.execute("SELECT var_name FROM variables WHERE var_idx = ?", (int(var_idx),))
     ans = cur.fetchone()
@@ -387,7 +407,14 @@ def get_var_name(var_idx):
 
 def get_var_idx(var_name):
     """
-    Gets the index corresponding to the first occurrence of a given variable name, if it doesn't exist returns None
+    Index of variable with given name
+
+    Args:
+        var_name (str) : Variable name
+
+    Returns:
+        Index of variable with the given name if it exists, ``None`` otherwise
+
     """
     conn = _get_connection()
     cur = conn.execute("SELECT var_idx FROM variables WHERE var_name = ?", (unicode(var_name),))
@@ -398,6 +425,19 @@ def get_var_idx(var_name):
 
 
 def get_maximum_value(var_idx):
+    """
+    Gets the maximum value for a real variable as recorded in meta-data
+
+    If there is no metadata, it is calculated from the existing values
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        Maximum values as recorded in the metadata,
+         if there is no metadata, maximum from existing values.
+
+    """
     conn = _get_connection()
     cur = conn.execute("SELECT max_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
@@ -410,6 +450,19 @@ def get_maximum_value(var_idx):
 
 
 def get_minimum_value(var_idx):
+    """
+    Gets the minimum value for a real variable as recorded in meta-data
+
+    If there is no metadata, it is calculated from the existing values
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        Minimum values as recorded in the metadata,
+         if there is no metadata, minimum from existing values.
+
+    """
     conn = _get_connection()
     cur = conn.execute("SELECT min_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
@@ -422,6 +475,19 @@ def get_minimum_value(var_idx):
 
 
 def get_min_max_values(var_idx):
+    """
+    Gets the minimum and maximum values for a real variable as recorded in meta-data
+
+    If there is no metadata, they are calculated from the existing values
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        ``(min_val, max_val)``  values as recorded in the metadata,
+         if there is no metadata, they are calculated from existing values
+
+    """
     conn = _get_connection()
     cur = conn.execute("SELECT min_val, max_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
@@ -434,6 +500,19 @@ def get_min_max_values(var_idx):
 
 
 def get_min_max_values_by_name(var_name):
+    """
+    Gets the minimum and maximum values for a real variable as recorded in meta-data
+
+    If there is no metadata, they are calculated from the existing values
+
+    Args:
+        var_name (str) : Variable name
+
+    Returns:
+        ``(min_val, max_val)``  values as recorded in the metadata,
+         if there is no metadata, they are calculated from existing values
+
+    """
     conn = _get_connection()
     cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
                        (unicode(var_name),))
@@ -446,6 +525,20 @@ def get_min_max_values_by_name(var_name):
     return res
 
 def get_min_max_opt_values_by_name(var_name):
+    """
+    Gets the minimum, maximum and optimal values for a real variable as recorded in meta-data
+
+    If there is no metadata, they are calculated from the existing values
+
+    Args:
+        var_name (str) : Variable name
+
+    Returns:
+        ``(min_val, max_val, optimum_val)``  values as recorded in the metadata,
+         if there is no metadata, they are calculated from existing values. In this case the optimum will
+         be the mean of existing values.
+
+    """
     conn = _get_connection()
     cur = conn.execute("SELECT min_val, max_val, optimum_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
                        (unicode(var_name),))
@@ -458,8 +551,17 @@ def get_min_max_opt_values_by_name(var_name):
     return res
 
 def get_subject_variables(subj_code, var_codes):
-    """Returns a data frame with two columns, variable_name, value... with var_codes as index,
-     the values are for the current subject, or NAN if subj is invalid
+    """
+    Get several values for one subjects
+
+    Args:
+        subj_code : Subject id
+        var_codes (list) : Variable codes
+
+    Returns:
+        :class:`pandas.DataFrame` with two columns: Variable name, and variable value; for each index in var_codes,
+        which will be used as indexes in the DataFrame.
+
     """
     conn = _get_connection()
     names = []
@@ -496,12 +598,24 @@ def get_subject_variables(subj_code, var_codes):
     return output
 
 def get_subjects():
+    """
+    Get a list subjects which exist in the database
+    """
     conn = _get_connection()
     cur=conn.execute("SELECT subject FROM subjects ORDER BY subject")
     subj_list = [ t[0] for t in cur.fetchall()]
     return subj_list
 
 def get_var_description(var_idx):
+    """
+    Get description for a variable
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        A string containing the description of the variable.
+    """
     conn = _get_connection()
     q = "SELECT description FROM var_descriptions WHERE var_idx = ?"
     cur = conn.execute(q, (int(var_idx),))
@@ -512,6 +626,15 @@ def get_var_description(var_idx):
 
 
 def get_var_description_by_name(var_name):
+    """
+    Get description for a variable
+
+    Args:
+        var_name (str) : Variable name
+
+    Returns:
+        A string containing the description of the variable.
+    """
     conn = _get_connection()
     q = "SELECT description FROM var_descriptions NATURAL JOIN variables WHERE var_name = ?"
     cur = conn.execute(q, (unicode(var_name),))
@@ -522,6 +645,13 @@ def get_var_description_by_name(var_name):
 
 
 def save_is_real_by_name(var_name, is_real):
+    """
+    Update variable type in the metadata
+
+    Args:
+        var_name (str) :  Variable name
+        is_real (bool) : If True the variable will be registered as real, otherwise it will be registered as nominal.
+    """
     conn = _get_connection()
     query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
     conn.execute(query, (is_real, unicode(var_name)))
@@ -529,6 +659,13 @@ def save_is_real_by_name(var_name, is_real):
 
 
 def save_is_real(var_idx, is_real):
+    """
+    Update variable type in the metadata
+
+    Args:
+        var_idx (int) :  Variable index
+        is_real (bool) : If True the variable will be registered as real, otherwise it will be registered as nominal.
+    """
     conn = _get_connection()
     query = "UPDATE variables SET is_real = ? WHERE var_idx = ?"
     conn.execute(query, (is_real, int(var_idx)))
@@ -536,6 +673,15 @@ def save_is_real(var_idx, is_real):
 
 
 def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
+    """
+    Update real variables' meta data
+
+    Args:
+        var_name (str) :  Variable name
+        min_value (float) : Variables minimum value
+        man_value (float) : Variables maximum value
+        opt_value (float) : Variables optimum value
+    """
     conn = _get_connection()
     query = """INSERT OR REPLACE INTO ratio_meta
     VALUES(
@@ -553,6 +699,15 @@ def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
         conn.commit()
 
 def save_real_meta(var_idx, min_value, max_value, opt_value):
+    """
+    Update real variables' meta data
+
+    Args:
+        var_idx (int) :  Variable index
+        min_value (float) : Variables minimum value
+        man_value (float) : Variables maximum value
+        opt_value (float) : Variables optimum value
+    """
     conn = _get_connection()
     query = """INSERT OR REPLACE INTO ratio_meta
     VALUES(?, ? , ? , ? );
@@ -567,6 +722,15 @@ def save_real_meta(var_idx, min_value, max_value, opt_value):
     else:
         conn.commit()
 def save_nominal_labels_by_name(var_name,label_name_tuples):
+    """
+    Update nominal variable labels
+
+    Args:
+        var_name (str) :  Variable name
+        label_name_tuples (list) : List of tuples, the first component of each tuple is the numeric label, and the
+            second component its meaning. For example ``(1, "male")``
+
+    """
     mega_tuple=( (var_name, label, name) for label, name in label_name_tuples)
     con = _get_connection()
     query = """INSERT OR REPLACE INTO nom_meta
@@ -580,6 +744,15 @@ def save_nominal_labels_by_name(var_name,label_name_tuples):
     con.commit()
 
 def save_nominal_labels(var_idx,label_name_tuples):
+    """
+    Update nominal variable labels
+
+    Args:
+        var_idx (int) :  Variable index
+        label_name_tuples (list) : List of tuples, the first component of each tuple is the numeric label, and the
+            second component its meaning. For example ``(1, "male")``
+
+    """
     mega_tuple=( (var_idx, label, name) for label,name in label_name_tuples)
     con = _get_connection()
     query = """INSERT OR REPLACE INTO nom_meta
@@ -593,6 +766,13 @@ def save_nominal_labels(var_idx,label_name_tuples):
     con.commit()
 
 def save_var_description_by_name(var_name,description):
+    """
+    Save or overwrite description for a variable
+
+    Args:
+        var_name (str) : Variable Name
+        description (str) : Variable description
+    """
     conn = _get_connection()
     query = """INSERT OR REPLACE INTO var_descriptions
     VALUES
@@ -602,6 +782,13 @@ def save_var_description_by_name(var_name,description):
     conn.commit()
 
 def save_var_description(var_idx,description):
+    """
+    Save or overwrite description for a variable
+
+    Args:
+        var_idx (int) : Variable index
+        description (str) : Variable description
+    """
     conn = _get_connection()
     query = """INSERT OR REPLACE INTO var_descriptions
     VALUES
@@ -611,6 +798,16 @@ def save_var_description(var_idx,description):
     conn.commit()
 
 def register_new_variable(var_name,is_real=1):
+    """
+    Adds a new variable to the database
+
+    Args:
+        var_name (str) : Name for the new variable, should be unique
+        is_real (bool) : Type of the new variable, ``True`` if it is real, ``False`` if it is nominal
+
+    Returns:
+        Database index of the new variable
+    """
     var_name = unicode(var_name)
     conn = _get_connection()
     row_id = None
@@ -627,7 +824,12 @@ def register_new_variable(var_name,is_real=1):
 
 def update_variable_values(var_idx,tuples):
     """
-    Tuples should be [(subj1,value1),(subj2,value2) ....]
+    Updates values for one variable and some subjects
+
+    Args:
+        var_idx (int) : Variable index
+        tuples (list) : Tuples of the form ``(subject,value)`` where subject is the subject id, and value
+            is the new value for the variable.
     """
     conn=_get_connection()
     super_tuples=((var_idx,s,v) for s,v in tuples)
@@ -637,7 +839,11 @@ def update_variable_values(var_idx,tuples):
 
 def update_multiple_variable_values(idx_subject_value_tuples):
     """
-    idx_subject_value_tuples is an iterable containing tuples of the form (var_idx,subj,value)
+    Updates values for variables and subjects
+
+    Args:
+        idx_subject_value_tuples (list) : Tuples of the form ``(var_idx, subject, value)`` where var_idx and subject
+            are the variable and subject for whom the new value will be set.
     """
     conn=_get_connection()
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
@@ -646,7 +852,12 @@ def update_multiple_variable_values(idx_subject_value_tuples):
 
 def updata_variable_value(var_idx,subject,new_value):
     """
-    Updates a single value for variable var_idx and subject
+    Updates a single value for a variable and a subject
+
+    Args:
+        var_idx (int) : Variable index
+        subject : Subject id
+        new_value : Value to be saved
     """
     conn=_get_connection()
     q="""INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
@@ -654,6 +865,16 @@ def updata_variable_value(var_idx,subject,new_value):
     conn.commit()
 
 def get_var_value(var_idx,subject):
+    """
+    Gets a single variable value
+
+    Args:
+        var_idx (int) : Variable index
+        subject : Subject id
+
+    Returns:
+        The numerical value for the given variable and subject
+    """
     conn = _get_connection()
     q="SELECT value FROM var_values WHERE var_idx = ? and subject = ?"
     cur=conn.execute(q,(var_idx,subject))
@@ -665,17 +886,23 @@ def get_var_value(var_idx,subject):
     return res[0]
 
 def get_variable_normal_range(var_idx):
+    """
+    Get the range of a given variable for the reference population
+
+    Args:
+        var_idx : Variable index
+
+    Returns:
+        ``(min_val, max_val)`` calculated over the values the variable takes in the reference population.
+    """
     global UBICAC
     conn = _get_connection()
-    log=logging.getLogger(__name__)
     #minimum,maximum
-    # 10 = UBIC3
     q = """SELECT min(var_values.value), max(cast( var_values.value as numeric)) from var_values JOIN var_values as var_values2
      WHERE var_values.subject == var_values2.subject and var_values2.var_idx == ? and var_values2.value == ?
      and var_values.var_idx = ?
         """
     if UBICAC is None:
-        apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
         conf = get_apps_config()
         var_name, label = conf.get_reference_population()
         u_var_idx = get_var_idx(var_name)
@@ -696,6 +923,12 @@ def _float_or_nan(s):
     return v
 
 def add_data_frame(df):
+    """
+    Inserts a whole dataframe into the database
+
+    Args:
+        df ( pandas.DataFrame ) : DataFrame with subject ids as index, and one column for each new variable.
+    """
     conn = _get_connection()
     columns = df.columns
     columns = map(remove_non_ascii,columns)
@@ -726,7 +959,16 @@ def add_data_frame(df):
 
 def recursive_delete_variable(var_idx):
     """
-    Warning... scenario files may become invalid, this is not reversible
+    Deletes a variable from all tables
+
+    .. warning::
+
+        This may affect large amounts of information and can't be reversed
+
+    Some references to the variable may remain in scenario data or outside the database.
+
+    Args:
+        var_idx (int) : Variable index
     """
     conn = _get_connection()
     try:
@@ -756,7 +998,18 @@ def recursive_delete_variable(var_idx):
 
 def recursive_delete_subject(subject):
     """
-    Warning... scenario files and samples may become invalid, this is not reversible
+    Deletes a subject from the database
+
+    .. warning::
+
+        This may affect large amounts of information and can't be reversed
+
+    Some references to the variable may remain in scenario data, subsamples or outside the database.
+    There must not exist any geometrical structure (see :mod:`~braviz.readAndFilter.geom_db`) associated with
+    the subject, if that is the case the operation will be aborted without modifying the database.
+
+    Args:
+        var_idx (int) : Variable index
     """
     conn = _get_connection()
     try:

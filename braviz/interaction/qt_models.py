@@ -334,7 +334,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
         is_real = braviz_tab_data.is_variable_name_real(var_name)
         if is_real is None or is_real == 1:
             return 1
-        labels = braviz_tab_data.get_names_label_dict(var_name)
+        labels = braviz_tab_data.get_labels_dict_by_name(var_name)
         return len(labels) - 1
 
     def get_regressors(self):
@@ -505,7 +505,7 @@ class NominalVariablesMeta(QAbstractTableModel):
             self.names_dict = {}
             return
         self.var_name = var_name
-        self.names_dict = braviz_tab_data.get_names_label_dict(var_name)
+        self.names_dict = braviz_tab_data.get_labels_dict_by_name(var_name)
         self.labels_list = self.names_dict.keys()
 
     def save_into_db(self, var_idx=None):
@@ -762,7 +762,7 @@ class SampleTree(QAbstractItemModel):
 
     def populate_aspect(self, var_name, aspect_id):
         # get labels
-        d=braviz_tab_data.get_names_label_dict(var_name)
+        d=braviz_tab_data.get_labels_dict_by_name(var_name)
         labels_list = []
         for i, (label, name) in enumerate(d.iteritems()):
             if label is None:

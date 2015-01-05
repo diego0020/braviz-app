@@ -320,7 +320,7 @@ class AnovaApp(QMainWindow):
         #print real_factors
         if len(real_factors) == 1:
 
-            top_labels_dict = braviz_tab_data.get_names_label_dict(nominal_factors[0])
+            top_labels_dict = braviz_tab_data.get_labels_dict_by_name(nominal_factors[0])
             colors = sns.color_palette("Dark2",len(top_labels_dict))
             #print top_labels_strings
             colors_dict = dict(izip(top_labels_dict.iterkeys(), colors))
@@ -410,7 +410,7 @@ class AnovaApp(QMainWindow):
         if is_reg_real == 0:
             #is nominal
             #create whisker plot
-            labels_dict = braviz_tab_data.get_names_label_dict(var_name)
+            labels_dict = braviz_tab_data.get_labels_dict_by_name(var_name)
             for k,v in labels_dict.iteritems():
                 if v is None or len(v)==0:
                     labels_dict[k]="level_%s"%k

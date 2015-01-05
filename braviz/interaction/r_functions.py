@@ -263,10 +263,10 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             # in the real case we divide by 2$\sigma$, so the final sd is 0.5
             std = np.max(data_frame[var])-np.min(data_frame[var])
             mean_sigma[var] = (m, std)
-            labels = braviz_tab_data.get_names_label_dict(var)
+            labels = braviz_tab_data.get_labels_dict_by_name(var)
             labels_dicts[var] = labels
         elif t == "n":
-            labels = braviz_tab_data.get_names_label_dict(var)
+            labels = braviz_tab_data.get_labels_dict_by_name(var)
             labels_dicts[var] = labels
         else:
             assert False

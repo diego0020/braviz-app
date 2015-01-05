@@ -297,7 +297,7 @@ class LinearModelApp(QMainWindow):
                 elif target_type == "r":
                     self.plot.draw_scatter(df2, target_var, self.outcome_var_name, reg_line=True)
                 else:
-                    x_labels = braviz_tab_data.get_names_label_dict(target_var)
+                    x_labels = braviz_tab_data.get_labels_dict_by_name(target_var)
                     self.plot.draw_scatter(df2, target_var, self.outcome_var_name, reg_line=True,x_labels=x_labels)
                 self.plot.set_figure_title("Mean effect of %s" % target_var)
         return
@@ -354,7 +354,7 @@ class LinearModelApp(QMainWindow):
             labels_dict = None
             self.plot.draw_scatter(df, regressor_name, self.outcome_var_name, reg_line=reg_line, x_labels=labels_dict)
         else:
-            labels_dict = braviz_tab_data.get_names_label_dict(regressor_name)
+            labels_dict = braviz_tab_data.get_labels_dict_by_name(regressor_name)
             if len(labels_dict) == 2:
                 self.plot.draw_scatter(df, regressor_name, self.outcome_var_name, reg_line=True, x_labels=labels_dict)
             else:
@@ -376,7 +376,7 @@ class LinearModelApp(QMainWindow):
                 #var 1 is nominal
                 hue_var = regressor1
                 x_var = regressor2
-                labels = braviz_tab_data.get_names_label_dict(hue_var)
+                labels = braviz_tab_data.get_labels_dict_by_name(hue_var)
             else:
                 #both are real
                 #cut var2
@@ -393,8 +393,8 @@ class LinearModelApp(QMainWindow):
         else:
             if not var_1_real:
                 #both are nominal
-                labels_1 = braviz_tab_data.get_names_label_dict(regressor1)
-                labels_2 = braviz_tab_data.get_names_label_dict(regressor2)
+                labels_1 = braviz_tab_data.get_labels_dict_by_name(regressor1)
+                labels_2 = braviz_tab_data.get_labels_dict_by_name(regressor2)
                 if len(labels_1)<len(labels_2):
                     x_var=regressor1
                     x_labels=labels_1
@@ -762,7 +762,7 @@ class LinearModelApp(QMainWindow):
 
     def plot_nominal_intercepts(self, df, var_name):
         # df = braviz_tab_data.get_data_frame_by_name((self.outcome_var_name,var_name))
-        group_labels = braviz_tab_data.get_names_label_dict(var_name)
+        group_labels = braviz_tab_data.get_labels_dict_by_name(var_name)
         df[var_name]=df[var_name].astype(np.int)
         self.plot.draw_intercept(df, self.outcome_var_name, var_name, group_labels=group_labels)
 

@@ -15,10 +15,17 @@ import sqlite3
 
 def save_scenario(application, scenario_name, scenario_description, scenario_data):
     """
-    application: Name of executable
-    scenario_name :  Name for the current scenario, may already exist, the date will differentiate them
-    scenario_description: Description of the current scenario
-    scenario_data : Binary data for the current scenario
+    Save application state
+
+    Args:
+        application (str) : Name of application script (without extension)
+        scenario_name (str) : Name for the scenario
+        scenario_description (str) : Description for the scenario
+        scenario_data (dict) : Appliation state
+
+    Returns:
+        The database id of the saved scenario. Use this to save the corresponding screen-shot
+
     """
     if not isinstance(scenario_data,basestring):
         scenario_data=cPickle.dumps(scenario_data,2)
@@ -35,13 +42,23 @@ def save_scenario(application, scenario_name, scenario_description, scenario_dat
 
 
 def update_scenario(scenario_id, name=None, description=None, scenario_data=None, application=None):
+    """
+    Update scenario information in the database
+
+    Args:
+        scenario_id (int) : Scenario id
+        name (str) : Optional, new name for the scenario
+        description (str) : Optional, new description for the scenario
+        scenario_data (dict) : Optional, new application state dictionary
+        application (str) : Optional, new application script name, without extension
+    """
     conn = _get_connection()
     if name is not None:
         conn.execute("UPDATE scenarios SET scn_name = ? WHERE scn_id = ?", (name, scenario_id))
     if description is not None:
         conn.execute("UPDATE scenarios SET scn_desc = ? WHERE scn_id = ?", (description, scenario_id))
     if scenario_data is not None:
-        scenario_data = buffer(scenario_data)
+        scenario_data = buffer(cPickle.dumps(scenario_data))
         conn.execute("UPDATE scenarios SET scn_data = ? WHERE scn_id = ?", (scenario_data, scenario_id))
     if application is not None:
         q = "UPDATE scenarios SET app_idx = (SELECT app_idx FROM applications WHERE exec_name == ?) WHERE scn_id = ?"
@@ -49,7 +66,16 @@ def update_scenario(scenario_id, name=None, description=None, scenario_data=None
     conn.commit()
 
 
-def get_scenarios_data_frame(app_name):
+def get_scenarios_data_frame(app_name=None):
+    """
+    Get available scenarios
+
+    Args:
+        app_name (str) : Optional, restrict list to a given application, it should be the base name of the
+            application script
+    Returns:
+        :class:`~pandas.DataFrame` with columns for date, name and description. The index will be scenario indexes
+    """
     conn = _get_connection()
     if app_name is None:
         q = "SELECT scn_id,datetime(scn_date,'localtime') as scn_date,scn_name,scn_desc FROM scenarios"
@@ -64,7 +90,7 @@ def get_scenarios_data_frame(app_name):
     return data
 
 
-def get_scenario_data(scn_id):
+def _get_scenario_data(scn_id):
     conn = _get_connection()
     q = "SELECT scn_data FROM scenarios WHERE scn_id = ?"
     res = conn.execute(q, (scn_id,))
@@ -76,11 +102,27 @@ def get_scenario_data(scn_id):
     return res[0]
 
 def get_scenario_data_dict(scn_id):
-    res = get_scenario_data(scn_id)
+    """
+    Get application state dict from the database
+
+    Args:
+        scn_id (int) : Scenario id
+
+    Returns:
+        Dictionary with application state
+    """
+    res = _get_scenario_data(scn_id)
     scn_dict = cPickle.loads(str(res))
     return scn_dict
 
 def link_var_scenario(var_idx, scn_idx):
+    """
+    Links a variable to a scenario
+
+    Args:
+        var_idx (int) : Variable index
+        scn_idx (int) : Scenario index
+    """
     conn = _get_connection()
     q = "INSERT INTO vars_scenarios VALUES (?,?)"
     conn.execute(q, (var_idx, scn_idx))
@@ -88,6 +130,16 @@ def link_var_scenario(var_idx, scn_idx):
 
 
 def get_variable_scenarios(var_idx):
+    """
+    Get scenarios linked to a variable
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        A dictionary whose keys are scenario ids and values are scenario_names for scenarios linked to the
+            given variable
+    """
     conn = _get_connection()
     q = "SELECT scn_id,scn_name FROM scenarios NATURAL JOIN vars_scenarios WHERE var_idx = ?"
     cur = conn.execute(q, (var_idx,))
@@ -95,6 +147,15 @@ def get_variable_scenarios(var_idx):
 
 
 def count_variable_scenarios(var_idx):
+    """
+    Get the amount of scenarios linked to a given variable
+
+    Args:
+        var_idx (int) : Variable index
+
+    Returns:
+        The number of scenarios linked to the given variable
+    """
     conn = _get_connection()
     q = "SELECT count(*) FROM vars_scenarios WHERE var_idx == ?;"
     cur = conn.execute(q, (var_idx,))
@@ -102,6 +163,14 @@ def count_variable_scenarios(var_idx):
 
 
 def save_sub_sample(name, elements, description):
+    """
+    Save a sub sample into the database
+
+    Args:
+        name (str) : Name for the subsample
+        elements (set) : Subjects in the subsample
+        description (str) : Description of the subsample
+    """
     name = str(name)
     description = str(description)
     size = len(elements)
@@ -111,9 +180,18 @@ def save_sub_sample(name, elements, description):
     q = "INSERT INTO subj_samples (sample_name, sample_desc, sample_data, sample_size) VALUES (?,?,?,?)"
     conn.execute(q, (name, description, str_data,size))
     conn.commit()
-    pass
+
 
 def get_comment(subj):
+    """
+    Retrieve the comment about a subject
+
+    Args:
+        subj : Subject id
+
+    Returns:
+        A string with the comment about the subject
+    """
     conn = _get_connection()
     q = "SELECT comment FROM subj_comments WHERE subject = ?"
     cur = conn.execute(q,(subj,))
@@ -123,6 +201,14 @@ def get_comment(subj):
     return res[0]
 
 def update_comment(subj,comment):
+    """
+    Update the comment about a subject
+
+    Args:
+        subj : Subject id
+        comment (str) : subject comment
+
+    """
     conn = _get_connection()
     q = "INSERT OR REPLACE into subj_comments (subject,comment) VALUES (?,?)"
     with conn:
@@ -130,12 +216,29 @@ def update_comment(subj,comment):
 
 
 def get_samples_df():
+    """
+    Get available samples
+
+    Returns:
+        A class:`~pandas.DataFrame` with columns for sample name, sample description, and sample size;
+         indexed by the sample index
+
+    """
     conn = _get_connection()
     q = "SELECT sample_idx, sample_name, sample_desc, sample_size FROM subj_samples"
     data = sql.read_sql(q, conn, index_col="sample_idx", coerce_float=False)
     return data
 
 def sample_name_existst(sample_name):
+    """
+    Check if a sample with a given name exists
+
+    Args:
+        sample_name (str) : Sample name
+
+    Returns:
+        ``True`` if a sample with this name exists in the database, ``False`` otherwise.
+    """
     conn = _get_connection()
     q="SELECT count(*) FROM subj_samples WHERE sample_name = ?"
     cur = conn.execute(q,(sample_name,))
@@ -143,6 +246,15 @@ def sample_name_existst(sample_name):
     return res[0] > 0
 
 def get_sample_data(sample_idx):
+    """
+    Retrieve the sample data from the database
+
+    Args:
+        sample_idx (int) :  Sample id
+
+    Returns:
+        The set of subjects in the sample
+    """
     conn=_get_connection()
     q = "SELECT sample_data FROM subj_samples WHERE sample_idx = ?"
     cur = conn.execute(q,(sample_idx,))
@@ -154,6 +266,15 @@ def get_sample_data(sample_idx):
     return data
 
 def delete_scenario(scn_id):
+    """
+    Delete a scenario from the database
+
+    It is also unlinked from variables, and if a screenshot is found it is deleted. This is not reversible.
+
+    Args:
+        scn_id (int) :  Scenario id
+
+    """
     conn = _get_connection()
     try:
         with conn:

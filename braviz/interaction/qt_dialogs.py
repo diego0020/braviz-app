@@ -395,7 +395,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
             data = data.loc[self.sample]
             data.dropna(inplace=True)
             label_nums = set(data[x])
-            labels_dict = braviz_tab_data.get_names_label_dict(x)
+            labels_dict = braviz_tab_data.get_labels_dict_by_name(x)
             data_list = []
             ticks = []
             for i in label_nums:
@@ -424,7 +424,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
                 real_factors.append(f)
         if len(real_factors) == 1:
 
-            top_labels_dict = braviz_tab_data.get_names_label_dict(nominal_factors[0])
+            top_labels_dict = braviz_tab_data.get_labels_dict_by_name(nominal_factors[0])
             colors = sns.color_palette("Dark2",len(top_labels_dict))
             #print top_labels_strings
             colors_dict = dict(izip(top_labels_dict.iterkeys(), colors))
@@ -1245,8 +1245,7 @@ class LoadScenarioDialog(QtGui.QDialog):
 
     def load_data(self):
         scn_id = int(self.model.get_index(self.current_row))
-        data = braviz_user_data.get_scenario_data(scn_id)
-        parameters_dict=cPickle.loads(str(data))
+        parameters_dict=braviz_user_data.get_scenario_data_dict(scn_id)
         parameters_dict["meta"]["scn_id"] = scn_id
         self.out_dict.update(parameters_dict)
         self.accept()

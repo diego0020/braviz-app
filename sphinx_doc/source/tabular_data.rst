@@ -88,24 +88,24 @@ Metadata
 Read
 ^^^^^
 
-.. autofunction:: are_variables_names_nominal
-.. autofunction:: are_variables_names_real
-.. autofunction:: are_variables_nominal
+.. autofunction:: is_variable_real
+.. autofunction:: is_variable_nominal
+.. autofunction:: is_variable_name_real
+.. autofunction:: is_variable_name_nominal
 .. autofunction:: are_variables_real
+.. autofunction:: are_variables_nominal
+.. autofunction:: are_variables_names_real
+.. autofunction:: are_variables_names_nominal
 .. autofunction:: get_labels_dict
+.. autofunction:: get_labels_dict_by_name
+.. autofunction:: get_minimum_value
 .. autofunction:: get_maximum_value
-.. autofunction:: get_min_max_opt_values_by_name
 .. autofunction:: get_min_max_values
 .. autofunction:: get_min_max_values_by_name
-.. autofunction:: get_minumum_value
-.. autofunction:: get_names_label_dict
+.. autofunction:: get_min_max_opt_values_by_name
 .. autofunction:: get_var_description
 .. autofunction:: get_var_description_by_name
 .. autofunction:: get_variable_normal_range
-.. autofunction:: is_variable_name_nominal
-.. autofunction:: is_variable_name_real
-.. autofunction:: is_variable_nominal
-.. autofunction:: is_variable_real
 
 Modify
 ^^^^^^

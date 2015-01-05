@@ -6,6 +6,7 @@ Braviz Data Base
     :hidden:
 
     tabular_data
+    user_data
 
 Braviz uses a database to store analysis variables, data saved by users, and small geometric structures.
 In the current implementation this database is `sqlite <slite.org>`_, but this may change in the future.
@@ -13,7 +14,9 @@ The database file is located on
 
 ``<dynaimc data root> / braviz_data / tabular_data.sqlite``
 
-where dynamic data root is the path returned by :func:`braviz.readAndFilter.braviz_auto_dynamic_data_root`
+where dynamic data root is the path returned by
+
+:func:`braviz.readAndFilter.braviz_auto_dynamic_data_root`
 
 
 Variables

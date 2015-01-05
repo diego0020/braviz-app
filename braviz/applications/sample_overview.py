@@ -88,8 +88,7 @@ class SampleOverview(QtGui.QMainWindow):
             QtCore.QTimer.singleShot(100, self.add_subject_viewers)
         else:
             self.sample = []
-            state_str = braviz_user_data.get_scenario_data(initial_scenario)
-            state = cPickle.loads(str(state_str))
+            state = braviz_user_data.get_scenario_data_dict(initial_scenario)
             load_scn_funct = functools.partial(self.load_scenario, state, False)
             QtCore.QTimer.singleShot(100, load_scn_funct)
 
