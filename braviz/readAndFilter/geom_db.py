@@ -37,13 +37,13 @@ _COORDINATES = {
 
 def roi_name_exists(name):
     """
-    Check if a roi with the given name exists
+    Check if a ROI with the given name exists
 
     Args:
-        name (str) : Roi name
+        name (str) : ROI name
 
     Returns:
-        ``True`` if a roi with the given name exists in the database, ``False`` otherwise.
+        ``True`` if a ROI with the given name exists in the database, ``False`` otherwise.
     """
     con = _get_connection()
     cur = con.execute("SELECT count(*) FROM geom_rois WHERE roi_name = ?", (name,))
@@ -53,11 +53,11 @@ def roi_name_exists(name):
 
 def create_roi(name, roi_type, coords, desc=""):
     """
-    Creates a new roi
+    Creates a new ROI
 
     Args:
-        name (str) : Roi Name
-        roi_type (str) : Roi type, current options are
+        name (str) : ROI Name
+        roi_type (str) : ROI type, current options are
 
             - sphere
             - line_sagital
@@ -71,10 +71,10 @@ def create_roi(name, roi_type, coords, desc=""):
             - talairach
             - dartel
 
-        desc (str) : Roi description
+        desc (str) : ROI description
 
     Returns:
-        Id of roi in the database
+        Id of ROI in the database
 
     """
     con = _get_connection()
@@ -92,7 +92,7 @@ def get_available_spheres_df():
     Get available spheres
 
     Returns:
-        :class:`~pandas.DataFrame` with columns for sphere id, and number of subjects with the roi defined; indexed
+        :class:`~pandas.DataFrame` with columns for sphere id, and number of subjects with the ROI defined; indexed
         by name
     """
     con = _get_connection()
@@ -115,7 +115,7 @@ def get_available_lines_df():
     Get available lines
 
     Returns:
-        :class:`~pandas.DataFrame` with columns for line id, and number of subjects with the roi defined; indexed
+        :class:`~pandas.DataFrame` with columns for line id, and number of subjects with the ROI defined; indexed
         by name
     """
     con = _get_connection()
@@ -135,13 +135,13 @@ def get_available_lines_df():
 
 def get_roi_space(name=None, roi_id=None):
     """
-    Retrieve the coordinate systems of a Roi
+    Retrieve the coordinate systems of a ROI
 
     Only one of the two arguments is required, roi_id is preferred
 
     Args:
-        name (str) : Roi name
-        roi_id (int) : Roi id
+        name (str) : ROI name
+        roi_id (int) : ROI id
 
     Returns:
         coordinate system as a string, see :func:`create_roi` for options
@@ -161,13 +161,13 @@ def get_roi_space(name=None, roi_id=None):
 
 def get_roi_id(roi_name):
     """
-    Find the id of a Roi
+    Find the id of a ROI
 
     Args:
-        roi_name (str) :  Roi Name
+        roi_name (str) :  ROI Name
 
     Returns:
-        Roi id in the database
+        ROI id in the database
     """
     con = _get_connection()
     q = "SELECT roi_id FROM geom_rois WHERE roi_name = ?"
@@ -178,13 +178,13 @@ def get_roi_id(roi_name):
 
 def get_roi_name(roi_id):
     """
-    Find the name of a roi
+    Find the name of a ROI
 
     Args:
-        roi_id (int) : Roi id
+        roi_id (int) : ROI id
 
     Returns:
-        roi name
+        ROI name
     """
     con = _get_connection()
     q = "SELECT roi_name FROM geom_rois WHERE roi_id = ?"
@@ -195,16 +195,16 @@ def get_roi_name(roi_id):
 
 def get_roi_type(name=None, roi_id=None):
     """
-    Get the type of a roi
+    Get the type of a ROI
 
     Only one of the two arguments is required, roi_id is preferred
 
     Args:
-        name (str) : Roi name
-        roi_id (int) : Roi id
+        name (str) : ROI name
+        roi_id (int) : ROI id
 
     Returns:
-        roi type as a string, see :func:`create_roi` for options
+        ROI type as a string, see :func:`create_roi` for options
     """
     con = _get_connection()
     if roi_id is None:
@@ -223,7 +223,7 @@ def subjects_with_sphere(sphere_id):
     Get subjects who have a certain sphere defined
 
     Args:
-        sphere_id (int) :  Roi id
+        sphere_id (int) :  ROI id
 
     Returns:
         A set of subjects with the sphere defined
@@ -241,7 +241,7 @@ def subjects_with_line(line_id):
     Get subjects who have a certain line defined
 
     Args:
-        sphere_id (int) :  Roi id
+        sphere_id (int) :  ROI id
 
     Returns:
         A set of subjects with the line defined
@@ -259,7 +259,7 @@ def save_sphere(sphere_id, subject, radius, center):
     Save a sphere for a given subject into the database
 
     Args:
-        sphere_id (int) : Roi id
+        sphere_id (int) : ROI id
         subject  : subject id
         radius (float) : sphere radius in mm.
         center (tuple) : The three coordinates for the sphere center in mm.
@@ -276,11 +276,11 @@ def load_sphere(sphere_id, subject):
     Loads a sphere for a subject
 
     Args:
-        sphere_id (int) :  Roi  id
+        sphere_id (int) :  ROI  id
         subject : subject id
 
     Returns:
-        ``(r,x,y,z)`` where r is the radius of the sphere and (x,y,z) is its center.
+        ``(r,x,y,z)`` where ``r`` is the radius of the sphere and ``(x,y,z)`` is its center.
     """
     q = "SELECT radius,ctr_x,ctr_y,ctr_z FROM geom_spheres WHERE sphere_id = ? and subject = ?"
     con = _get_connection()
@@ -294,7 +294,7 @@ def get_all_spheres(sphere_id):
     Get a DataFrame of all the subjects spheres with a given id
 
     Args:
-        sphere_id (int) :  Roi id
+        sphere_id (int) :  ROI id
 
     Returns:
         :class:`pandas.DataFrame` with columns for radius, center x, center y and center z; indexed by subject
@@ -310,7 +310,7 @@ def save_line(line_id, subject, point1, point2):
     Save a line from a given subject into the database
 
     Args:
-        line_id (int) :  Roi id
+        line_id (int) :  ROI id
         subject : subject id
         point1 (tuple) : coordinates (xo,yo,zo) of the line origin
         point2 (tuple) : coordinates (xf,yf,zf) of the line end
@@ -330,11 +330,11 @@ def load_line(line_id, subject):
     Retrieves a line for a given subject
 
     Args:
-        line_id (int) : Roi id
+        line_id (int) : ROI id
         subject : subject id
 
     Returns
-        ``(xo,yo,zo,xf,yf,zf)`` where (xo,yo,zo) is the line origin and (xf,yf,zf) is the end.
+        ``(xo,yo,zo,xf,yf,zf)`` where ``(xo,yo,zo)`` is the line origin and ``(xf,yf,zf)`` is the end.
     """
     q = "SELECT p1_x,p1_y,p1_z,p2_x,p2_y,p2_z FROM geom_lines WHERE line_id = ? and subject = ?"
     con = _get_connection()
@@ -345,13 +345,13 @@ def load_line(line_id, subject):
 
 def copy_spheres(orig_id, dest_id):
     """
-    Copies spheres from one roi to another
+    Copies spheres from one ROI to another
 
-    Copies the definitions of spheres for each subject from one roi to another roi
+    Copies the definitions of spheres for each subject from one ROI to another ROI
 
     Args:
-        origi_id (int) : roi id of the source spheres
-        dest_id (int) : roi id into which the spheres will be copied
+        origi_id (int) : ROI id of the source spheres
+        dest_id (int) : ROI id into which the spheres will be copied
     """
     q = """INSERT OR REPLACE INTO geom_spheres
     SELECT ? as sphere_id , subject, radius, ctr_x, ctr_y, ctr_z
