@@ -9,6 +9,21 @@ __author__ = 'Diego'
 
 
 def get_column(file_name, name, numeric=False,nan_value=float('nan')):
+    """
+    Reads a column from a csv file
+
+    .. deprecated:: 3.0b
+        Use :mod:`braviz.readAndFilter.tabular_data` instead
+
+    Args:
+        file_name (str) : csv file path
+        name (str) : header of column
+        numeric (bool) : if True cast the data to float
+        nan_value : Value to use for missing data
+
+    Returns:
+        A list with the values in the column
+    """
     log = logging.getLogger(__name__)
     try:
         with open(file_name) as csv_file:
@@ -42,6 +57,22 @@ def get_column(file_name, name, numeric=False,nan_value=float('nan')):
     return column
 
 def get_tuples_dict(file_name,key_col,columns,numeric=False,nan_value=float('nan')):
+    """
+    Reads multiple columns from a csv file
+
+    .. deprecated:: 3.0b
+        Use :mod:`braviz.readAndFilter.tabular_data` instead
+
+    Args:
+        file_name (str) : csv file path
+        key_col (str) : name of column to be used as key
+        columns (list) : list of column headers to get as values
+        numeric (bool) : if True cast the data to float
+        nan_value : Value to use for missing data
+
+    Returns:
+        A dictionary with values from *key_col* as keys, and tuples from the values in *columns*
+    """
     output_dict={}
     if type(numeric) is bool:
         numeric=[numeric]*len(columns)
@@ -91,6 +122,15 @@ def get_tuples_dict(file_name,key_col,columns,numeric=False,nan_value=float('nan
     return output_dict
 
 def get_headers(file_name):
+    """
+    Get the headers of a csv file
+
+    Args:
+        file_name (str) : csv file path
+
+    Returns:
+        A list of headers in the file
+    """
     try:
         with open(file_name) as csv_file:
             headers = csv_file.readline()
@@ -104,6 +144,16 @@ def get_headers(file_name):
 
 
 def column_to_vtk_array(col, name='unknown'):
+    """
+    Transforms a list of values into a vtkArray, useful for feedint into vtk Data Viz functions
+
+    Args:
+        col (list) : List of values
+        name (str) : Name for the array
+
+    Returns:
+        A vtkDataArray with the values in *col*
+    """
     if not isinstance(col[0], str):
         array = vtk.vtkFloatArray()
         array.InsertNextValue(col[0])
@@ -118,10 +168,24 @@ def column_to_vtk_array(col, name='unknown'):
 
 
 def read_free_surfer_csv_file(file_name, row, search_col=None, col=None):
-    """reads from a free surfer stats file. If row is headers returns a list of file headers
+    """
+    Read data from freeSurfer stats file
+
+    If row is headers returns a list of file headers
     Otherwise: a single row will be selected based on the row value and the search_col value.
     The function will return the row where the value under column with header search_col matches row
-    if col is given, only the value under the column with this header will be returned"""
+    if col is given, only the value under the column with this header will be returned
+
+    Args:
+        file_name (str) : csv file path
+        row (str) : identifier for the row of interest
+        search_col (str) :  header of the column where row identifiers will appear
+        col (str) : header for the column of the value of interest
+
+    Returns:
+        If *col* is ``None`` the whole row that contains *row* in column *search_col*; otherwise, the value under
+        *col* for that row.
+    """
     log = logging.getLogger(__name__)
     try:
         with open(file_name) as fs_file:

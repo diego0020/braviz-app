@@ -32,11 +32,15 @@ Use custom python functions to filter tractographies
 read_csv
 -------------
 
+Parse data from csv files
+
 .. automodule:: braviz.readAndFilter.read_csv
     :members:
 
 read_spm
 -------------
+
+Read data from ``spm.mat`` files
 
 .. automodule:: braviz.readAndFilter.read_spm
     :members:

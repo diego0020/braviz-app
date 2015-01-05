@@ -7,6 +7,15 @@ import numpy as np
 __author__ = 'Diego'
 
 def get_contrasts_dict(spm_file_path):
+    """
+    Parse information about existing contrasts from an spm file
+
+    Args:
+        spm_file_path (str) : Path to ``spm.mat`` file
+
+    Returns:
+        A dictionary with contrast indexes (starting at 1) for keys, and contrast names for values
+    """
     spm_file = sio.loadmat(spm_file_path)
     spm_struct = spm_file["SPM"][0,0]
     contrasts_info = spm_struct["xCon"]
@@ -20,7 +29,15 @@ ContrastInfo = namedtuple("ContrastInfo",("name","design"))
 ConditionInfo = namedtuple("CondisionInfo",("name","onsets","durations"))
 
 class SpmFileReader(object):
+    "Helper class to read data from an SPM file"
+
     def __init__(self,spm_file_path):
+        """
+        Helper class to read data from an SPM file"
+
+        Args:
+            spm_file_path (str) : Path to ``spm.mat`` file
+        """
         self.spm = sio.loadmat(spm_file_path)["SPM"][0,0]
         self.__units = self.spm["xBF"]["UNITS"][0,0][0]
         self.__time_bin= float(self.spm["xBF"][0,0]["dt"][0,0])
@@ -59,26 +76,52 @@ class SpmFileReader(object):
 
     @property
     def contrasts(self):
+        """
+        Existing contrast design arrays
+
+        Returns:
+            A named tuple (see :func:`collections.namedtuple`) with contrast name as first component (str), and
+            the contrast design array as second component (numpy.array)
+        """
         if self.__constrasts is None:
             self.__parse_contrasts()
         return self.__constrasts
 
     @property
     def tr(self):
+        """
+        The TR time in the experiment
+        """
         return self.__tr
 
     @property
     def n_scans(self):
+        """
+        The number of scans in the experiment
+        """
         return self.__n_scans
 
     @property
     def conditions(self):
+        """
+        Experimental conditions in the paradigm
+
+        Returns:
+            A named tuple (see :func:`collections.namedtuple`) with condition name as first component (str),
+            onsets (numpy.ndarray) as second argument, and durations (numpy.array) as third argument
+        """
         if self.__conditions is None:
             self.__parse_conditions()
         return self.__conditions
 
     def get_time_vector(self):
-        #TODO: Decreaser resolution
+        """
+        Gets a vector containing time values for the duration of the experiment
+
+        Returns:
+            :class:`numpy.ndarray` with time values across the duration of the experiment
+        """
+        #TODO: Decrease resolution
         tr = self.tr
         n_scans = self.n_scans
         time_bin = self.__time_bin
@@ -88,6 +131,13 @@ class SpmFileReader(object):
         return time_vec
 
     def get_condition_block(self,index):
+        """
+        Gets a block signal representing a condition
+
+        Returns:
+            :class:`numpy.ndarray` of the same length as the one returned by :meth:`get_time_vector`, it will be 1 when
+            the condition is active, and 0 otherwise
+        """
         cond = self.conditions[index]
         cond_onsets = cond.onsets
         cond_durations = cond.durations
@@ -107,6 +157,12 @@ class SpmFileReader(object):
         return condition
 
     def get_contrast_names(self):
+        """
+        A dictionary with contrast names
+
+        Returns:
+            A dictionary with contrast indexes (starting at 1) for keys and contrast names for values
+        """
         contrasts = self.contrasts
         contrast_names = dict(( (k,v.name) for k,v in contrasts.iteritems()))
         return contrast_names

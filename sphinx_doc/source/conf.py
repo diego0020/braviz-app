@@ -43,6 +43,7 @@ intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
                        'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None),
                        'nipy': ('http://nipy.org', None),
                        'nibabel': ('http://nipy.org/nibabel', None),
+                       'numpy': ('http://docs.scipy.org/doc/numpy', None),
                        }
 
 # Add any paths that contain templates here, relative to this directory.
