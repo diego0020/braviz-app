@@ -12,7 +12,10 @@ __author__ = 'Diego'
 class BravizConfig(RawConfigParser):
     """Holds Braviz configuration"""
     def get_background(self):
-        """**Deprecated** Background color from a configuration file
+        """Background color from a configuration file
+
+        .. deprecated:: 3.0b
+           Use a gray or degraded gray background
 
         Returns:
             RGB value as a float tuple
@@ -22,7 +25,10 @@ class BravizConfig(RawConfigParser):
         back_nums=map(float,back_list)
         return tuple(back_nums)
     def get_interaction_style(self):
-        """**Deprecated** Interaction style from a configuration file
+        """Interaction style from a configuration file
+
+        .. deprecated:: 3.0b
+           Use TrackballCamera
 
         Checks if the intraction style is a valid vtk interaction style and returns vtk name
 
@@ -100,7 +106,7 @@ def get_apps_config():
     Reads configuration from the 'braviz.applications' directory
 
     Returns:
-        An instance of :class:`braviz_config`
+        An instance of :class:`BravizConfig`
     """
     apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
     return get_config(apps_dir)
@@ -117,7 +123,7 @@ def get_config(custom_dir=None):
             For convenience a file can also be passed and the directory containing it will be used
 
     Returns:
-        An instance of :class:`braviz_config`
+        An instance of :class:`BravizConfig`
     """
     config_dir=os.path.dirname(os.path.realpath(__file__))
     config_file_name='braviz.cfg'
@@ -188,7 +194,7 @@ def get_host_config(project,hostname=None):
 
     Args:
         project (str) : The name of the project. This function will look for a file called ``<project>_hosts.cfg``
-            in the directory containing the module :mod:`braviz.readAndFilter.applications`
+            in the directory containing the module :mod:`braviz.applications`
         hostname (str) : Name of host to get configuration. If ``None`` the name of the current host,
             as returned by :func:`platform.node` will be used
 

@@ -533,13 +533,24 @@ div.document td.field-body table.docutils{
 
 
 
-div.deprecated {
+div.section > div.deprecated {
     background-color: rgba(206, 92, 0, 0.19);
     border: solid;
     border-color: rgb(206, 92, 0);
     border-radius: 1em;
     padding: 0.5em;
     margin: 1em 0em 1em 0;
+}
+
+dd div.deprecated {
+    /* background-color: rgb(247, 204, 119); */
+    border-left-style: solid;
+    border-color: rgb(206, 92, 0);
+    padding-left: 1em;
+}
+
+dd span.versionmodified {
+    font-weight: bold;
 }
 
 div.bodywrapper dt {

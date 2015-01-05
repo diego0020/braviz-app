@@ -58,7 +58,7 @@ Host Configuration
 
 Host configuration files contain information for configuring auto readers (see :doc:`reader`). This files are named
 after the project they belongs to. For example the file for the *kmc* project would be named *kmc_hosts.cfg*. This
-files use the same syntax as the standard configuration files (:mod:`ConfigFile`).
+files use the same syntax as the standard configuration files (:mod:`~braviz.readAndFilter.config_file`).
 
 This file contains the parameters required to create a reader in specific hosts. This allows using the same installation
 in different machines. When creating an autoreader the hostname is found using :func:`platform.node`, afterwards
