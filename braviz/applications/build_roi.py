@@ -46,6 +46,12 @@ SURFACE_SCALARS_DICT = dict(enumerate((
     'BA')
 ))
 
+COORDS = {
+    0 : "world",
+    1 : "talairach",
+    2 : "dartel"
+}
+
 
 def get_unit_vectors():
     # from http://blog.marmakoide.org/?p=1
@@ -263,9 +269,10 @@ class StartDialog(QDialog):
         res = new_roi_dialog.exec_()
         if res == new_roi_dialog.Accepted:
             self.name = new_roi_dialog.name
-            coords = new_roi_dialog.coords
+            coords_key = new_roi_dialog.coords
+            coords = COORDS[coords_key]
             desc = new_roi_dialog.desc
-            geom_db.create_roi(self.name, 0, coords, desc)
+            geom_db.create_roi(self.name, "sphere", coords, desc)
             self.accept()
 
     def load_roi(self):
@@ -899,7 +906,7 @@ class BuildRoiApp(QMainWindow):
         try:
             self.__curent_space = geom_db.get_roi_space(self.__roi_name)
         except Exception:
-            self.__curent_space = "World"
+            self.__curent_space = "world"
         self.vtk_viewer.change_space(self.__curent_space)
         self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
         self.__subjects_check_model.checked = self.__checked_subjects
@@ -981,7 +988,8 @@ class BuildRoiApp(QMainWindow):
         if res == dialog.Accepted:
             new_name = dialog.name
             desc = dialog.desc
-            new_id = geom_db.create_roi(new_name, 0, self.__curent_space, desc)
+            space = COORDS[self.__curent_space]
+            new_id = geom_db.create_roi(new_name, "sphere", space, desc)
             geom_db.copy_spheres(self.__roi_id, new_id)
             self.__roi_id = new_id
             self.__roi_name = new_name

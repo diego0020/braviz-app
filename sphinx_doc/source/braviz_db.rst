@@ -7,6 +7,7 @@ Braviz Data Base
 
     tabular_data
     user_data
+    geom_db
 
 Braviz uses a database to store analysis variables, data saved by users, and small geometric structures.
 In the current implementation this database is `sqlite <slite.org>`_, but this may change in the future.
@@ -48,6 +49,8 @@ The module :mod:`~braviz.readAndFilter.geom_db` contains functions to save and r
 
 - Lines
 - Spheres
+
+See :doc:`geom_db`
 
 Fiber Bundles
 ----------------

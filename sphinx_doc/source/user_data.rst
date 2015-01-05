@@ -1,7 +1,5 @@
 .. module:: braviz.readAndFilter.user_data
 
-
-
 User Data
 =========
 

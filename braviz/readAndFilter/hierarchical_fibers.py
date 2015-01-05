@@ -33,7 +33,7 @@ def get_valid_lines_from_node(subj,tree_node,reader):
     elif node_type == STRUCT:
         lines = get_valid_lines_from_struct(subj,tree_node["value"],reader)
     elif node_type == ROI:
-        lines = get_valied_lines_from_roi(subj,tree_node["extra_data"],reader)
+        lines = get_valid_lines_from_roi(subj,tree_node["extra_data"],reader)
     else:
         raise Exception("Unknown data type")
     return lines
@@ -71,7 +71,7 @@ def get_valid_lines_from_struct(subj,struct,reader):
     valid_ids = reader.get('fibers',img_subj,waypoint=struct,ids=True)
     return set(valid_ids)
 
-def get_valied_lines_from_roi(subj,roi_id,reader):
+def get_valid_lines_from_roi(subj,roi_id,reader):
     space = geom_db.get_roi_space(roi_id=roi_id)
     sphere_data = geom_db.load_sphere(roi_id,subj)
     if sphere_data is None:

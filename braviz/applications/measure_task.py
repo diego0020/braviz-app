@@ -4,7 +4,6 @@ from functools import partial as partial_f
 
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import QMainWindow, QDialog
-import vtk
 import numpy as np
 
 import braviz
@@ -15,7 +14,7 @@ from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 
 from braviz.visualization.subject_viewer import QMeasurerWidget
-from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel, SubjectCheckTable
+from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel
 from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
 import datetime
@@ -29,6 +28,13 @@ __author__ = 'Diego'
 AXIAL = 2
 SAGITAL = 0
 CORONAL = 1
+
+_plane_names = {
+    2 : "axial",
+    0 : "sagital",
+    1 : "coronal",
+}
+
 
 class StartDialog(QDialog):
     def __init__(self):
@@ -48,8 +54,9 @@ class StartDialog(QDialog):
             self.name = new_roi_dialog.name
             coords = new_roi_dialog.coords
             desc = new_roi_dialog.desc
-            code = 10+new_roi_dialog.plane
-            geom_db.create_roi(self.name, code, coords, desc)
+            code = "line_"+_plane_names[new_roi_dialog.plane]
+            assert coords == 1
+            geom_db.create_roi(self.name, code, "talairach", desc)
             self.accept()
 
     def load_roi(self):
@@ -158,8 +165,8 @@ class MeasureApp(QMainWindow):
         try:
             self.__curent_space = geom_db.get_roi_space(roi_name)
         except Exception:
-            self.__curent_space = "Talairach"
-        assert self.__curent_space == "Talairach"
+            self.__curent_space = "talairach"
+        assert self.__curent_space == "talairach"
         self.meaure_axis = 0
         try:
             self.meaure_axis = (geom_db.get_roi_type(roi_name)) % 10
@@ -482,7 +489,7 @@ class MeasureApp(QMainWindow):
         try:
             self.__curent_space = geom_db.get_roi_space(self.__roi_name)
         except Exception:
-            self.__curent_space = "Talairach"
+            self.__curent_space = "talairach"
         self.vtk_viewer.change_space(self.__curent_space)
         self.__checked_subjects = geom_db.subjects_with_line(self.__roi_id)
         self.__subjects_check_model.checked = self.__checked_subjects
@@ -549,8 +556,9 @@ class MeasureApp(QMainWindow):
         if res == dialog.Accepted:
             new_name = dialog.name
             desc = dialog.desc
-            roi_type = 10 + self.meaure_axis
-            new_id = geom_db.create_roi(new_name,roi_type,self.__curent_space,desc)
+            roi_type = "line_" + _plane_names[self.meaure_axis]
+            assert self.__curent_space == 1
+            new_id = geom_db.create_roi(new_name,roi_type,"talairach",desc)
             geom_db.copy_spheres(self.__roi_id,new_id)
             self.__roi_id=new_id
             self.__roi_name = new_name
