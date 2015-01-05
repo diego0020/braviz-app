@@ -12,5 +12,5 @@ Contents:
    reader
    braviz_db
    configuring
-   low level functions <other_read>
+   low level functions <read_low_level>
 

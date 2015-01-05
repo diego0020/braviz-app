@@ -5,20 +5,36 @@ import vtk
 import braviz
 import numpy as np
 import logging
-from scipy import ndimage
+
 
 __author__ = 'Diego'
 
 
 def iter_id_list(id_list):
+    """
+    Iterate over a vtkIdList
+
+    Args:
+        id_list (vtkIdList) : Id List
+
+    Yields:
+        Point ids
+    """
     n = id_list.GetNumberOfIds()
     for i in xrange(n):
         id_i = id_list.GetId(i)
         yield id_i
 
-def abstract_test_lines_in_polyline(fibers,test_point_fun):
+def abstract_test_lines_in_polyline(fibers,predicate):
     """
-    return a list of line_ids where at least one of the points passes the condition test_point_fun(p) == True
+    Extract lines where at least one point makes predicate True.
+
+    Args:
+        fibers (vtkPolyData) : Tractography
+        predicate (function) : Should take point coordinates and return a boolean
+
+    Returns:
+        Set of cells where the predicate is True for at least one point
     """
     valid_fibers = set()
     n = fibers.GetNumberOfCells()
@@ -35,7 +51,7 @@ def abstract_test_lines_in_polyline(fibers,test_point_fun):
         #inside=False
         for j in xrange(npts):
             p = pts.GetPoint(j)
-            if test_point_fun(p):
+            if predicate(p):
                 #inside=True
                 return True
             #if not inside:
@@ -49,6 +65,16 @@ def abstract_test_lines_in_polyline(fibers,test_point_fun):
 
 
 def extract_poly_data_subset(polydata,id_list):
+    """
+    Extracts polylines with given ids from polydata
+
+    Args:
+        polydata (vtkPolyData) : Full polydata
+        id_list (list) : List of cell ids
+
+    Returns:
+        A vtkPolyData containing only the requested cells.
+    """
     extract_lines = vtk.vtkExtractSelectedPolyDataIds()
     cleaner = vtk.vtkCleanPolyData()
     if isinstance(id_list,vtk.vtkIdTypeArray):
@@ -74,11 +100,23 @@ def extract_poly_data_subset(polydata,id_list):
     return fib2
 
 class FilterBundleWithSphere(object):
+    """
+    A class to interactively filter a polydata with a moving sphere
+    """
     def __init__(self):
+        """
+        A class to interactively filter a polydata with a moving sphere
+        """
         self.__full_bundle = None
         self.__locator = None
 
     def set_bundle(self,bundle):
+        """
+        Set the base polydata
+
+        Args:
+            bundle (vtkPolyData) : base bundle
+        """
         self.__full_bundle = bundle
         self.__locator = vtk.vtkKdTreePointLocator()
         self.__locator.SetDataSet(self.__full_bundle)
@@ -86,7 +124,16 @@ class FilterBundleWithSphere(object):
 
     def filter_bundle_with_sphere(self,center,radius,get_ids = False):
         """
-        Filter a polydata to keep only the lines which have a point inside a sphere
+        Filter polydata to keep only the lines which have a point inside a sphere
+
+        Args:
+            center (tuple) : Sphere center (x,y,z)
+            radius (float) : Sphere radius
+            get_ids (bool) : get ids or filtered polydata
+
+        Returns:
+            If get_ids is True the ids of the satisfying cells are returned, otherwise a filtered vtkPolydata is
+                returned
         """
         if self.__full_bundle is None:
             raise Exception("Set a bundle first")
@@ -104,17 +151,18 @@ class FilterBundleWithSphere(object):
         out_pd = extract_poly_data_subset(self.__full_bundle,valid_cell_ids)
         return out_pd
 
-def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
+def filterPolylinesWithModel(fibers, model):
     """filters a polyline, keeps only the lines that cross a model
-    the progress variable is pudated (via its set method) to indicate progress in the filtering operation
-    if do_remove is true, the filtered polydata object is returned,
-     otherwise a list of the fibers that do cross the model is returned"""
+
+    Args:
+        fibers (vtkPolyData) : Tractography
+        model (vtkPolyData) : Structure model (closed surface)
+
+    Returns:
+        Set of polyline ids where the line goes through the model
+    """
     selector = vtk.vtkSelectEnclosedPoints()
     selector.Initialize(model)
-    if progress:
-        log = logging.getLogger(__name__)
-        log.warning("use of this progress argument is deprecated")
-        progress.set(0)
     def test_point_inside_model(p):
         if selector.IsInsideSurface(p):
             return True
@@ -123,19 +171,14 @@ def filterPolylinesWithModel(fibers, model, progress=None, do_remove=True):
 
     valid_fibers = abstract_test_lines_in_polyline(fibers,test_point_inside_model)
     selector.Complete()
-    if do_remove is False:
-        return valid_fibers
-    else:
-        raise Exception("Deprecated, you may use extract_poly_data_subset")
+    return valid_fibers
 
 
-def filter_polylines_with_img_slow(polydata,img,label,do_remove=False):
+
+def filter_polylines_with_img_slow(polydata,img,label):
     """
-    img should be in the nibabel format
+    Slow version of :func:`filter_polylines_with_img`
     """
-    #TODO, do it all with numpy arrays, only one for
-    if do_remove is True:
-        raise NotImplementedError
     affine = img.get_affine()
     i_affine = np.linalg.inv(affine)
     data = img.get_data()
@@ -155,12 +198,22 @@ def filter_polylines_with_img_slow(polydata,img,label,do_remove=False):
     return valid_fibers
 
 
-def filter_polylines_with_img(polydata,img,label,do_remove=False):
+def filter_polylines_with_img(polydata,img,label):
     """
-    img should be in the nibabel format
+    Filter polydata based on labels found in an image.
+
+    For each point in the polyline the function finds the corresponding label in the image. Only lines where at least
+    one point has the requested label are left in the output set.
+
+    Args:
+        polydata (vtkPolyData) : Full tractography polydata
+        img (nibabel.spatialimages.SpatialImage) : Label map, should be in same coordinate system as polydata
+        label (int) : Label of interest
+
+    Returns:
+        Set of CellIds where at least one point gets the requested label
     """
-    if do_remove is True:
-        raise NotImplementedError
+
     affine = img.get_affine()
     i_affine = np.linalg.inv(affine)
     data = img.get_data()
@@ -192,6 +245,16 @@ def filter_polylines_with_img(polydata,img,label,do_remove=False):
     return valid_fibers
 
 def filter_polylines_by_scalar(fibs,scalar):
+    """
+    Finds lines where at least one point has a scalar value in the range (scalar -0.5, scalar + 0.5)
+
+    Args:
+        fibs (vtkPolyData) : Full polydata with scalar data
+        scalar (float) : scalar value to look for
+
+    Returns:
+        Cell ids where at least one point has a scalar in the range (scalar -0.5, scalar + 0.5)
+    """
     selection = vtk.vtkSelection()
     selection_node = vtk.vtkSelectionNode()
     selection_node.GetProperties().Set(vtk.vtkSelectionNode.CONTENT_TYPE(), vtk.vtkSelectionNode.THRESHOLDS)

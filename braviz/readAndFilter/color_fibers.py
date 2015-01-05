@@ -6,20 +6,37 @@ import vtk
 import numpy as np
 from scipy import ndimage
 
-import braviz
-
 
 def color_by_z(pt):
-        "calculates color based on the z coordinate"
-        z=pt[2]
-        z_norm=(z+60)/(60+75)
-        z_col=int(255*z_norm)
-        z_col=np.clip(z_col, 0, 255)
-        color=(0,z_col,0)
-        return color
+    """
+    Color a point based on its 'z' coordinate
+
+    Args:
+        pt (tuple) : Point coordinates
+
+    Returns:
+        (r,g,b)
+    """
+    z=pt[2]
+    z_norm=(z+60)/(60+75)
+    z_col=int(255*z_norm)
+    z_col=np.clip(z_col, 0, 255)
+    color=(0,z_col,0)
+    return color
 
 def color_by_fa(pt,fa_img):
-    "calculates colores based on the fa value, taken from fa_img"
+    """
+    Calculates color based on an FA img
+
+    .. deprecated:: 3.0
+        Use scalars instead
+
+    Args:
+        pt (tuple) : points coordinates
+        fa_img (vrtImageData) : FA image
+    Returns
+        (r,g,b)
+    """
     org=fa_img.GetOrigin()
     delta=fa_img.GetSpacing()
     v_pt=np.subtract(pt, org)
@@ -36,7 +53,16 @@ def color_by_fa(pt,fa_img):
     return color
 
 def color_fibers_pts(fibers,color_function,*args,**kw):
-    "color fiber bundles based on a function from each point"
+    """
+    Apply a function to assign color for each point in a tractography
+
+    Args:
+        fibers (vtkPolyData) : Tractography
+        color_function (function) : Function that takes point coordinates and returns a color tuple
+        *args : extra positional arguments passed to ``color_function``
+        **kwargs : extra keyword arguments passed to ``color_function``
+
+    """
     n_pts=fibers.GetNumberOfPoints()
     pts=fibers.GetPoints()
     scalars=fibers.GetPointData().GetScalars()
@@ -46,7 +72,18 @@ def color_fibers_pts(fibers,color_function,*args,**kw):
         scalars.SetTupleValue(i,color)
 
 def color_fibers_lines(fibers,polyline_color_function,*args,**kw):
-    "color fiber bundles based on a function that requires access to the whole line"
+    """
+    Applies a function to each line in a tractography to assign it a color
+
+    Args:
+    Args:
+        fibers (vtkPolyData) : Tractography
+        polyline_color_function (function) : Function that takes a vtkCell and returns a dict mapping point ids
+            to colors
+        *args : extra positional arguments passed to ``polyline_color_function``
+        **kwargs : extra keyword arguments passed to ``polyline_color_function``
+    """
+
     nlines=fibers.GetNumberOfLines()
     ncells=fibers.GetNumberOfCells()
     if nlines != ncells:
@@ -60,7 +97,15 @@ def color_fibers_lines(fibers,polyline_color_function,*args,**kw):
         
     
 def random_line(line):
-    "Creates a random color for the whole polyline"
+    """
+    Creates a random color and maps the whole line to it
+
+    Args:
+        line (vtkCell) : Polyline
+
+    Returns:
+        Dictionary from all point ids to the random color
+    """
     color=[random.randint(0,255) for i in ('r','g','b')]
     pts=line.GetPointIds()
     color_dict={}
@@ -69,8 +114,19 @@ def random_line(line):
     return color_dict
 
 def line_curvature(line):
-    "Calculates a color based on a curvature function"
-    #simple formula from http://en.wikipedia.org/wiki/Curvature
+    """
+    Calculates a color based on the curvature of the polyline
+
+    Implements the simple formula from http://en.wikipedia.org/wiki/Curvature
+
+    Args:
+        line (vtkCell) : Polyline
+
+    Returns:
+        Dictionary from all point ids to the random color
+
+    """
+
     ids=line.GetPointIds()
     pts=line.GetPoints()
     color_dict={}
@@ -94,6 +150,15 @@ def line_curvature(line):
         
 
 def scalars_from_image(fibers,nifti_image):
+    """
+    Assigns scalars taken from an image to a polydata
+
+    Args:
+        fibers (vtkPolyData) : Tractography
+        nifti_image (nibabel.spatialimages.SpatialImage) : Image to grab scalars from. It should be on the same
+            coordinates system as the tractography
+
+    """
 
     affine = nifti_image.get_affine()
     iaffine = np.linalg.inv(affine)
@@ -122,6 +187,15 @@ def scalars_from_image(fibers,nifti_image):
 
 
 def scalars_from_image_int(fibers,nifti_image):
+    """
+    Assigns scalars taken from an image to a polydata without interpolation (nearest neighbour)
+
+    Args:
+        fibers (vtkPolyData) : Tractography
+        nifti_image (nibabel.spatialimages.SpatialImage) : Image to grab scalars from. It should be on the same
+            coordinates system as the tractography
+
+    """
 
     affine = nifti_image.get_affine()
     iaffine = np.linalg.inv(affine)
@@ -152,7 +226,15 @@ def scalars_from_image_int(fibers,nifti_image):
 
 
 def scalars_lines_from_image(fibers,nifti_image):
+    """
+    Averages scalars along lines and assigns one scalar to each line, based on an image
 
+    Args:
+        fibers (vtkPolyData) : Tractography
+        nifti_image (nibabel.spatialimages.SpatialImage) : Image to grab scalars from. It should be on the same
+            coordinates system as the tractography
+
+    """
     affine = nifti_image.get_affine()
     iaffine = np.linalg.inv(affine)
     data = nifti_image.get_data()
@@ -186,7 +268,13 @@ def scalars_lines_from_image(fibers,nifti_image):
 
 
 def scalars_from_length(fibers):
+    """
+    Assigns scalars to each line representing its length
 
+    Args:
+        fibers (vtkPolyData) : Tractography
+
+    """
     pd = fibers.GetPointData()
     pd.RemoveArray(0)
     ncells = fibers.GetNumberOfCells()
@@ -215,11 +303,25 @@ def scalars_from_length(fibers):
 
 
 def get_fa_lut():
+    """
+    A generic FA lookuptable
+
+    Returns:
+        vtkColorTransferFunction
+    """
+    import braviz.visualization
     lut = braviz.visualization.get_colorbrewer_lut(0.35,0.82,"YlGn",9,invert=True,continuous=True,skip=1)
     return lut
 
 
 def get_length_lut():
+    """
+    A generic length lookuptable
+
+    Returns:
+        vtkColorTransferFunction
+    """
+    import braviz.visualization
     lut = braviz.visualization.get_colorbrewer_lut(41,125,"YlOrBr",9,invert=True)
     return lut
 

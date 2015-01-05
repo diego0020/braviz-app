@@ -15,7 +15,13 @@ from braviz.readAndFilter.tabular_data import LATERALITY,LEFT_HANDED
 from braviz.interaction.structure_metrics import get_right_or_left_hemisphere as __get_right_or_left_hemisphere
 
 
-def __cached_named_tract(name_tract_func):
+def _cached_named_tract(name_tract_func):
+    """
+    Wraps a named tract function so that it uses the disk cache
+
+    Args:
+        name_tract_func (function) : Function to wrap
+    """
     @functools.wraps(name_tract_func)
     def cached_func(reader, subject, color,scalars = None):
         log = logging.getLogger(__name__)
@@ -34,8 +40,20 @@ def __cached_named_tract(name_tract_func):
     return cached_func
 
 
-@__cached_named_tract
+@_cached_named_tract
 def cortico_spinal_l(reader, subject, color,scalars, get_out_space=False):
+    """
+    Gets the left cortico-spinal tract
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Braviz reader
+        subject : subject id
+        color (str) : color for the output fibers
+        get_out_space (bool) : If True return only the space in which the tracts are defined
+
+    Returns:
+        vtkPolyData of left cortico-spinal tract
+    """
     log = logging.getLogger(__name__)
     if get_out_space is True:
         return 'dartel'
@@ -69,8 +87,20 @@ def cortico_spinal_l(reader, subject, color,scalars, get_out_space=False):
     return tracts3, 'dartel'
 
 
-@__cached_named_tract
+@_cached_named_tract
 def cortico_spinal_r(reader, subject, color ,scalars, get_out_space=False):
+    """
+    Gets the right corticospinal tract
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Braviz reader
+        subject : subject id
+        color (str) : color for the output fibers
+        get_out_space (bool) : If True return only the space in which the tracts are defined
+
+    Returns:
+        vtkPolyData of right cortico-spinal tract
+    """
     log = logging.getLogger(__name__)
     if get_out_space is True:
         return 'dartel'
@@ -107,6 +137,18 @@ def cortico_spinal_r(reader, subject, color ,scalars, get_out_space=False):
 
 
 def cortico_spinal_d(reader, subject, color,scalars, get_out_space=False):
+    """
+    Gets the dominant hemisphere corticospinal tract
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Braviz reader
+        subject : subject id
+        color (str) : color for the output fibers
+        get_out_space (bool) : If True return only the space in which the tracts are defined
+
+    Returns:
+        vtkPolyData of dominant cortico-spinal tract
+    """
     if get_out_space is True:
         return 'dartel'
     laterality = __get_var_value(LATERALITY, int(subject))
@@ -124,6 +166,18 @@ def cortico_spinal_d(reader, subject, color,scalars, get_out_space=False):
 
 
 def cortico_spinal_n(reader, subject, color,scalars, get_out_space=False):
+    """
+    Gets the non-dominant hemisphere corticospinal tract
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Braviz reader
+        subject : subject id
+        color (str) : color for the output fibers
+        get_out_space (bool) : If True return only the space in which the tracts are defined
+
+    Returns:
+        vtkPolyData of non-dominant cortico-spinal tract
+    """
     if get_out_space is True:
         return 'dartel'
     laterality = __get_var_value(LATERALITY, int(subject))
@@ -141,6 +195,19 @@ def cortico_spinal_n(reader, subject, color,scalars, get_out_space=False):
 
 
 def corpus_callosum(reader, subject, color,scalars, get_out_space=False):
+    """
+    Gets the corpus callosum bundle
+    
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Braviz reader
+        subject : subject id
+        color (str) : color for the output fibers
+        get_out_space (bool) : If True return only the space in which the tracts are defined
+
+    Returns:
+        vtkPolyData of the corpus callosum bundle
+    """
     if get_out_space is True:
         return 'world'
     return reader.get('fibers', subject, operation='or',

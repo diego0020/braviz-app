@@ -642,7 +642,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             fibers = self.get('fibers', subj, space='world')
             model = self.get('model', subj, name=waypoint, space='world')
             if model:
-                ids = braviz.readAndFilter.filterPolylinesWithModel(fibers, model, do_remove=False)
+                ids = braviz.readAndFilter.filterPolylinesWithModel(fibers, model)
             else:
                 ids = set()
         else:
