@@ -21,8 +21,7 @@ def get_reader_class(project):
     import importlib
     import inspect
     from braviz.readAndFilter.base_reader import BaseReader
-    #todo filter by being instance of base_reader
-    module = importlib.import_module('braviz.readAndFilter.%s' % project)
+    module = importlib.import_module('braviz.readAndFilter.%s' % project.lower())
     pred = lambda c: inspect.isclass(c) and issubclass(c, BaseReader)
     candidate_classes = [c for c in inspect.getmembers(module, pred)]
     project_upper = project.upper()

@@ -58,8 +58,12 @@ File System
 Custom Readers
 ==============
 
-    .. autoclass:: braviz.readAndFilter.kmc40.Kmc40Reader
+Custom readers should be subclasses of :class:`BaseReader`. They should be included in a module with the same name as
+the project (in lowercase) and named after the project followed by ``"Reader"``. Look at the examples below
 
+
+
+    .. autoclass:: braviz.readAndFilter.kmc40.Kmc40Reader
     .. autoclass:: braviz.readAndFilter.kmc400.Kmc400Reader
 
 
