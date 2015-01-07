@@ -9,6 +9,7 @@ import struct
 from scipy import ndimage
 from itertools import izip
 from vtk.util import numpy_support
+from braviz.readAndFilter.transforms import applyTransform
 
 __author__ = 'Diego'
 
@@ -66,7 +67,7 @@ viewer = braviz.visualization.simpleVtkViewer()
 for i in xrange(img_data.shape[3]):
     img_0 = img_data[:,:,:,i]
     vtk_img = numpy2vtk_img(img_0)
-    vtk_img2 = braviz.readAndFilter.applyTransform(vtk_img,np.linalg.inv(affine))
+    vtk_img2 = applyTransform(vtk_img,np.linalg.inv(affine))
 
 
 

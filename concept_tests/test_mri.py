@@ -8,10 +8,13 @@ from numpy.linalg import inv
 import braviz.readAndFilter
 
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
+from braviz.readAndFilter.images import write_vtk_image
+from braviz.readAndFilter.transforms import applyTransform
+
 reader=braviz.readAndFilter.BravizAutoReader()
 niiImg=reader.get('MRI','093')
-img=braviz.readAndFilter.nibNii2vtk(niiImg)
-img2=braviz.readAndFilter.applyTransform(img, inv(niiImg.get_affine()))
+img= nibNii2vtk(niiImg)
+img2= applyTransform(img, inv(niiImg.get_affine()))
 
 picker = vtk.vtkCellPicker()
 picker.SetTolerance(0.005)

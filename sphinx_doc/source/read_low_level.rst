@@ -5,6 +5,15 @@ Low level functions
 The readAndFilter module contains additional functions which should not be necessary for creating applications. These
 functions however may be used when developing new :class:`~braviz.readAndFilter.base_reader.BaseReader` subclasses.
 
+cache
+-------------
+
+Handle memory cache
+
+.. automodule:: braviz.readAndFilter.cache
+    :members:
+
+
 color_fibers
 -------------
 
@@ -20,6 +29,15 @@ Extract fibers from tractographies
 
 .. automodule:: braviz.readAndFilter.filter_fibers
     :members:
+
+images
+----------------
+
+Work with nifti and vtk Images
+
+.. automodule:: braviz.readAndFilter.images
+    :members:
+
 
 named_tracts
 -------------
@@ -56,3 +74,11 @@ surfer_input
 
 .. automodule:: braviz.readAndFilter.surfer_input
     :members:
+
+transforms
+----------------
+
+.. automodule:: braviz.readAndFilter.transforms
+    :members:
+
+

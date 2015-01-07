@@ -3,6 +3,7 @@ from __future__ import division
 
 import os
 import re
+from braviz.readAndFilter.cache import memo_ten
 from braviz.readAndFilter.config_file import get_host_config
 
 import logging
@@ -11,13 +12,12 @@ import nibabel as nib
 import numpy as np
 from numpy.linalg import inv
 
-
-from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix,readFreeSurferTransform,  numpy2vtk_img,\
-    nifti_rgb2vtk, memo_ten
+from braviz.readAndFilter.images import numpy2vtk_img, nifti_rgb2vtk, nibNii2vtk
 
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
+from braviz.readAndFilter.transforms import applyTransform, readFreeSurferTransform, readFlirtMatrix
 from braviz.visualization import get_colorbrewer_lut
 
 class Kmc400Reader(KmcAbstractReader):

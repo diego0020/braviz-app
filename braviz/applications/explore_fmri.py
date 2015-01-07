@@ -10,6 +10,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 import braviz
+from braviz.readAndFilter.images import write_vtk_image
 import braviz.visualization.fmri_view
 import braviz.visualization.vtk_charts
 from braviz.utilities import configure_logger_from_conf
@@ -215,7 +216,7 @@ if __name__ == "__main__":
         vol0 = vol0[:, :, :, spatial_slice_i]
         #time axis
         n_time_slices = vol0.shape[axis]
-        vtk0 = braviz.readAndFilter.numpy2vtk_img(vol0)
+        vtk0 = numpy2vtk_img(vol0)
         time_spacing = list(spacing)
         time_spacing[axis] = TR
         vtk0.SetSpacing(time_spacing)

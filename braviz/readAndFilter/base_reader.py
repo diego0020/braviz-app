@@ -7,7 +7,7 @@ import logging
 
 import tempfile
 
-from braviz.readAndFilter import cache_function, CacheContainer
+from braviz.readAndFilter.cache import cache_function, CacheContainer
 
 _auto_temp_dir = os.path.join(tempfile.gettempdir(),"braviz_temp")
 
@@ -99,8 +99,8 @@ data is requested. To get a more useful class you should create your own subclas
                              ``contrasts_dict`` = True will return a dictionary with
                              the available for contrasts for the specified paradigm.
 
-                             ``SPM = True`` will return a dictionary with the data contained
-                             in the *spm.mat* file.
+                             ``SPM = True`` will return a :class:`~braviz.readAndFilter.read_spm.SpmFileReader`
+                              with the data contained in the *spm.mat* file.
                 -----------  -----------------------------------------------------
                 BOLD         SPM, pre-processed bold series
 

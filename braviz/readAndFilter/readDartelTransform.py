@@ -7,18 +7,27 @@ import vtk
 import nibabel as nib
 import numpy as np
 
-from braviz.readAndFilter import numpy2vtkMatrix
+from braviz.readAndFilter.transforms import numpy2vtkMatrix
 
 
-def dartel2GridTransform(y_file,assume_bad_matrix=False):
-    """reads a dartel nifti file from disk and returns a vtkTransform, this function is very slow"""
+def dartel2GridTransform(y_file,assume_general_matrix=False):
+    """reads a dartel nifti file from disk and returns a vtkTransform, this function is very slow
+
+    Args:
+        y_file (str) : path to the nifti warp file
+        assume_general_matrix (bool) : If True it will be assumed that the matrix contains more than origin and spacing
+
+    Returns:
+        vtkGridTransform if the matrix is only spacing and origin, otherwise a vtkGeneralTransform which include the
+        full original affine transform.
+    """
     log = logging.getLogger(__name__)
     log.info("importing dartel warp field... this will take a while")
     img=nib.load(y_file)
     data=img.get_data()
     matrix=img.get_affine()
     good_matrix=False
-    if not assume_bad_matrix and check_matrix(matrix):
+    if not assume_general_matrix and check_matrix(matrix):
         good_matrix=True
         origin=matrix[0:3,3]
         spacing=np.diag(matrix)[0:3]
@@ -69,7 +78,14 @@ def dartel2GridTransform(y_file,assume_bad_matrix=False):
     return concatenated
    
 def check_matrix(m):
-    "check that the affine matrix contains only spacing and translation"
+    """
+    check that the affine matrix contains only spacing and translation
+
+    Args:
+        m (numpy.ndarray) : 4x4 Matrix
+
+    Returns: ``True`` if the components other than the diagonal and the last column are zero, ``False`` otherwise
+    """
     log = logging.getLogger(__name__)
     for i in range(4):
         for j in range(3): # don't look at last column
@@ -78,13 +94,25 @@ def check_matrix(m):
                     log.warning("WARNING: Matrix contains rotations or shears, this is not tested")
                     return False
     return True
-def dartel2GridTransform_cached(y_file,cache_key,reader,assume_bad_matrix=False):
-    "Cached version of dartel2GridTransform"
+def dartel2GridTransform_cached(y_file,cache_key,reader,assume_general_matrix=False):
+    """
+    Cached version of :func:`dartel2GridTransform`
+
+    Args:
+        y_file (str) : Path to nifti warp file
+        cache_key (str) : Key to use for saving and reading from cache
+        reader (:class:`~braviz.readAndFilter.base_reader.BaseReader`) : Reader object to use for accessing cache
+        assume_general_matrix (bool) : If True it will be assumed that the matrix contains more than origin and spacing
+
+    Returns:
+        vtkGridTransform if the matrix is only spacing and origin, otherwise a vtkGeneralTransform which include the
+        full original affine transform.
+    """
     log = logging.getLogger(__name__)
     cache=reader.load_from_cache(cache_key)
     if not cache:
         log.info("importing dartel warp field... this will take a while")
-        trans=dartel2GridTransform(y_file,assume_bad_matrix)
+        trans=dartel2GridTransform(y_file,assume_general_matrix)
         if isinstance(trans, vtk.vtkGridTransform):
             g=trans.GetDisplacementGrid()
         elif isinstance(trans, vtk.vtkGeneralTransform):
@@ -138,5 +166,3 @@ def dartel2GridTransform_cached(y_file,cache_key,reader,assume_bad_matrix=False)
             trans.SetDisplacementGridData(g)
             trans.Update()
         return trans
-    
-    

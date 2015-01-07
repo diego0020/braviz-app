@@ -8,7 +8,8 @@ import numpy as np
 import nibabel as nib
 
 import braviz
-from braviz.readAndFilter import nibNii2vtk,applyTransform
+from braviz.readAndFilter.images import write_vtk_image, nibNii2vtk
+from braviz.readAndFilter.transforms import applyTransform
 import braviz.visualization.vtk_charts
 import braviz.visualization.fmri_view
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
@@ -56,7 +57,7 @@ def get_time_vol(spatial_slice):
     vol0=data_d4[spatial_slice,:,:,:]
     vol0=np.rollaxis(vol0,2)
     nslices=vol0.shape[0]
-    vtk0=braviz.readAndFilter.numpy2vtk_img(vol0)
+    vtk0= numpy2vtk_img(vol0)
     vtk0.SetSpacing(TR,2,2)
     slice_actor.set_input(vtk0,spatial_slice)
 

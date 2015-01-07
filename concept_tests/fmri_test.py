@@ -9,14 +9,16 @@ import itertools
 import nibabel as nib
 import numpy as np
 import vtk
+from braviz.readAndFilter.images import write_vtk_image
+from braviz.readAndFilter.transforms import applyTransform, numpy2vtkMatrix
 
 
 os.chdir(r'K:\JohanaForero\KAB-db\144\spm\POWERGRIP')
 n_bT1=nib.load('T1.nii.gz')
-bT1=braviz.readAndFilter.nibNii2vtk(n_bT1)
+bT1= nibNii2vtk(n_bT1)
 T=n_bT1.get_affine()
 Ti=np.linalg.inv(T)
-v_T1=braviz.readAndFilter.applyTransform(bT1,Ti)
+v_T1= applyTransform(bT1,Ti)
 
 
 #os.chdir(r'../T1')
@@ -25,7 +27,7 @@ T2=n_T1.get_affine()
 T2i=np.linalg.inv(T2)
 T3=np.dot(T,T2i)
 
-T1_b=braviz.readAndFilter.applyTransform(v_T1,T3)
+T1_b= applyTransform(v_T1,T3)
 
 v=braviz.visualization.simpleVtkViewer()
 v.addImg(T1_b)
@@ -71,7 +73,7 @@ transform.Update()
 
 #coord to voxel transform
 affine=img.get_affine()
-aff_vtk=braviz.readAndFilter.numpy2vtkMatrix(affine)
+aff_vtk= numpy2vtkMatrix(affine)
 aff_vtk.Invert()
 
 vtkTrans=vtk.vtkMatrixToLinearTransform()
@@ -94,8 +96,8 @@ n_bT1=nib.load('T1.nii')
 T1_T=n_T1.get_affine()
 #print T
 T1_Ti=np.linalg.inv(T)
-bT1=braviz.readAndFilter.nibNii2vtk(n_bT1)
-v_T1=braviz.readAndFilter.applyTransform(bT1,T1_Ti)
+bT1= nibNii2vtk(n_bT1)
+v_T1= applyTransform(bT1,T1_Ti)
 
 
 
@@ -103,10 +105,10 @@ v_T1=braviz.readAndFilter.applyTransform(bT1,T1_Ti)
 t_map_file='spmT_0001.hdr'
 t_img=nib.load(t_map_file)
 
-t_vtk=braviz.readAndFilter.nibNii2vtk(t_img)
+t_vtk= nibNii2vtk(t_img)
 aff2=t_img.get_affine()
 aff2=np.linalg.inv(aff2)
-t_vtk=braviz.readAndFilter.applyTransform(t_vtk,aff2)
+t_vtk= applyTransform(t_vtk,aff2)
 
 reslicer=vtk.vtkImageReslice()
 reslicer.SetInputData(t_vtk)

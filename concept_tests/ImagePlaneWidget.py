@@ -25,9 +25,11 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz.readAndFilter
 
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
+from braviz.readAndFilter.images import write_vtk_image
+
 reader=braviz.readAndFilter.BravizAutoReader()
 niiImg=reader.get('MRI','093')
-img=braviz.readAndFilter.nibNii2vtk(niiImg)
+img= nibNii2vtk(niiImg)
 
 xMin, xMax, yMin, yMax, zMin, zMax = img.GetExtent()
 

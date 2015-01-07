@@ -7,6 +7,7 @@ import nibabel as nib
 import numpy as np
 
 import braviz
+from braviz.readAndFilter.images import write_vtk_image
 
 
 kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
@@ -18,7 +19,7 @@ img_data=img.get_data()
 
 fa_image_path=os.path.join(root_path,'911','camino','FA-masked.nii.gz')
 fa_img_nii=nib.load(fa_image_path)
-fa_img=braviz.readAndFilter.nibNii2vtk(fa_img_nii)
+fa_img= nibNii2vtk(fa_img_nii)
 #fa_img_w=braviz.readAndFilter.applyTransform(fa_img, fa_img_nii.get_affine())
 fa_img.SetSpacing( 1.02, 1.02, 4.0)
 

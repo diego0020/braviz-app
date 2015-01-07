@@ -8,7 +8,9 @@ import vtk
 import nibabel as nib
 import numpy as np
 
-from braviz.readAndFilter import numpy2vtkMatrix
+from braviz.readAndFilter.transforms import numpy2vtkMatrix
+
+
 def tensorFromImgData(img_data):
     "Returns a function which generates tensors for each coordinate in img_data"
     #print img_data.shape

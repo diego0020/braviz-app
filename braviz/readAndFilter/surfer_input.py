@@ -22,7 +22,17 @@ def _fread3_many(fobj, n):
 
 #==================================================================
 def read_surface(filepath):
-    "reads a freesurfer wireframe structure"
+    """
+    reads a freesurfer wireframe structure
+
+    Args:
+        filepath (str) : Path to freesurfer surface file
+
+    Returns:
+        (coords,faces,geom), where coords are the coordinates of each point, faces are the indeces of points in each
+        face, and geom is a dictionary containing ``['cras', 'volume',  'voxelsize',  'xras',  'yras',  'zras']`` which
+        can be used to determine the affine transform required to move the surface to the MRI space
+    """
 #based on pysurfer.io.read_geometry  '
     with open(filepath,'rb') as fobj:
         magic = _fread3(fobj)
@@ -56,6 +66,8 @@ def read_morph_data(filepath):
 #copied directly from pysurfer.io
     """Read a Freesurfer morphometry data file.
 
+    *copied directly from pysurfer.io*
+
     This function reads in what Freesurfer internally calls "curv" file types,
     (e.g. ?h. curv, ?h.thickness), but as that has the potential to cause
     confusion where "curv" also refers to the surface curvature values,
@@ -68,7 +80,7 @@ def read_morph_data(filepath):
 
     Returns
     -------
-    curv : numpy array
+    curv : numpy.ndarray
         Vector representation of surface morpometry values
 
     """
@@ -86,7 +98,10 @@ def read_morph_data(filepath):
 
 def read_annot(filepath, orig_ids=False):
     #copied directly from pysurfer.io
+
     """Read in a Freesurfer annotation from a .annot file.
+
+    *copied directly from pysurfer.io*
 
     Parameters
     ----------
@@ -98,11 +113,11 @@ def read_annot(filepath, orig_ids=False):
 
     Returns
     -------
-    labels : n_vtx numpy array
+    labels : n_vtx numpy.ndarray
         Annotation id at each vertex
-    ctab : numpy array
+    ctab : numpy.ndarray
         RGBA + label id colortable array
-    names : numpy array
+    names : numpy.ndarray
         Array of region names as stored in the annot file
 
     """
@@ -156,16 +171,19 @@ def read_annot(filepath, orig_ids=False):
 
 
 
-def apply_offset(coords,offset):
-    "applies an offset to all the coordinates in coords"
-    f_offset=map(float,offset)
-    def add_offset(a):
-        return [f_offset[i]+a[i] for i in [0,1,2]]
-    b=np.apply_along_axis(add_offset,1,coords)
-    return b
-    
 def create_polydata(coords,faces):
-    "Creates a polydata using the coords and faces array (must contain only triangles)"
+    """
+    Creates a polydata using the coords and faces array (must contain only triangles)
+
+    See :func:`read_surface`
+
+    Args:
+        coords (numpy.ndarray) : Points coordinates array
+        faces (numpy.ndarray) : Faces array
+
+    Returns:
+        vtkPolyData with same points and faces
+    """
     poly=vtk.vtkPolyData()
     points=vtk.vtkPoints()
     points.SetDataTypeToFloat()
@@ -181,9 +199,31 @@ def create_polydata(coords,faces):
         poly.InsertNextCell(vtk.VTK_TRIANGLE , idList)
     return poly
 
+def apply_offset(coords,offset):
+    """
+    applies an offset to all the coordinates in coords
+
+    Args:
+        coords (numpy.ndarray) : nx3 coordinates array
+
+    Returns: nx3 coordinates array of translated coordinates
+    """
+    f_offset=map(float,offset)
+    def add_offset(a):
+        return [f_offset[i]+a[i] for i in [0,1,2]]
+    b=np.apply_along_axis(add_offset,1,coords)
+    return b
+
 
 def _cached_surface_read(surf_file):
-    "cached function to read a freesurfer structure file"
+    """
+    cached function to read a freesurfer structure file
+
+    .. deprecated :: 3.0b
+        Use a :class:`~braviz.readAndFilter.base_reader.BaseReader` to do all cache operations
+
+    see :func:`surface2vtkPoly`
+    """
     #check cache
     vtkFile=surf_file+'.vtk'
     if os.path.isfile(vtkFile):
@@ -210,13 +250,32 @@ def _cached_surface_read(surf_file):
     return poly
 
 def surface2vtkPolyData(surf_file):
-    """read free surfer surface and transform to poly data"""
+    """
+    read free surfer surface and transform to poly data
+
+    Args:
+        surf_file (str) : Path to freesurfer surface file
+
+    Returns:
+        vtkPolyData representation of the surface
+
+    """
     coords, faces, geom = read_surface(surf_file)
     coords2=apply_offset(coords,geom['cras'])
     poly=create_polydata(coords2,faces)
     return poly
 def addScalars(surf_polydata,scalars):
-    "Scalaras are expected as a numpy array"
+    """
+    Add scalars to a vtkPolyData representation of a freesurfer surface
+
+    Args:
+        surf_polydata (vtkPolyData) : freesurfer surface
+        scalars (numpy.ndarray) : scalars belonging to the same freesurfer surface (same number of points)
+
+    Returns:
+        vtkPolyData with scalar data
+    """
+
     surf=surf_polydata
     log = logging.getLogger(__name__)
     if not len(scalars)==surf.GetNumberOfPoints():
@@ -234,9 +293,19 @@ def addScalars(surf_polydata,scalars):
     surf_polydata.GetPointData().SetScalars(vtk_scalars)
     return surf_polydata
 def surfLUT2VTK(ctab,names=None):
-    """Expects as input a numpy 2darray with R G B [A] [X] columns.
+    """
+    Transform freesurfer lookuptable into a vtkLookupTable
+
     The index of the row will be used as label. This method is designed
-    to work with the ctab array returned by read_annot; labels may be used to annotate values"""
+    to work with the ctab array returned by read_annot; labels may be used to annotate values
+
+    Args:
+        ctab (numpy.ndarray) : 2darray with R G B [A] [X] columns.
+        names (list) : Same length as ctab, add annotations to the lookuptable
+
+    Retruns:
+        vtkLookupTable with colors and annotations.
+    """
     out_lut=vtk.vtkLookupTable()
     out_lut.SetNumberOfTableValues(ctab.shape[0])
     out_lut.IndexedLookupOn()
@@ -252,32 +321,28 @@ def surfLUT2VTK(ctab,names=None):
     return out_lut
 
 
-def getBrewerColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
-    """Creates a vtkLookUpTable from color0 to color1 or from color0 to color2 passing by color1
-    The range of the LUT will be (start,end)
-    midpoint and sharpness can be used to change the characteristics of the function between colors
-    (see vtkPiecewiseFunction)
-    if three colors are used, the resulting function will be symmetric, this means the actual midpoint for the second half will be 1-midpoint"""
-    lut=vtk.vtkColorTransferFunction()
-    lut.SetColorSpaceToRGB()
-    if color2:
-        mid=(start+end)/2
-    else:
-        mid=end
-    lut.SetRange(start, end )
-    lut.AddRGBPoint(start, color0[0],color0[1],color0[2],    midpoint,sharpness)
-    lut.AddRGBPoint(mid,   color1[0],color1[1],color1[2], 1 - midpoint,sharpness)
-    if color2:
-        lut.AddRGBPoint(end,   color2[0],color2[1],color2[2],      midpoint,sharpness) #midpoint and sharpness ignored for last point
-    return lut
-
-
 def getColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
-    """Creates a vtkLookUpTable from color0 to color1 or from color0 to color2 passing by color1
-    The range of the LUT will be (start,end)
+    """
+    Creates a vtkLookUpTable from color0 to color1 or from color0 to color2 passing by color1
+
+    The domain of the LUT will be (start,end)
     midpoint and sharpness can be used to change the characteristics of the function between colors
-    (see vtkPiecewiseFunction)
-    if three colors are used, the resulting function will be symmetric, this means the actual midpoint for the second half will be 1-midpoint"""
+    (see `vtkPiecewiseFunction <http://www.vtk.org/doc/nightly/html/classvtkPiecewiseFunction.html#details>`_)
+    if three colors are used, the resulting function will be symmetric, this means the actual midpoint for the second half will be 1-midpoint
+
+    Args:
+        start (float) : first value in the lookuptable domain
+        end (float) : last value in the lookuptable domain
+        midpoint (float) : Midpoint for function between colors
+        sharpness (float) : Sharpness for function between colors
+        color0 (tuple) : First color in the lookuptable
+        color1 (tuple) : Second color in the lookuptable
+        color2 (tuple) : Optional, third color in the lookuptable
+
+    Returns:
+        vtkColorTransferFunction
+
+    """
     lut=vtk.vtkColorTransferFunction()
     lut.SetColorSpaceToRGB()
     if color2:
@@ -293,6 +358,20 @@ def getColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
 
 
 def get_free_surfer_lut(name):
+    """
+    Get standard freesurfer lookup tables
+
+    Args:
+        name (str) : Name of table, available tables are
+            - curv / avg_curv
+            - area
+            - thickness
+            - volume
+            - sulc
+
+    Returns:
+        vtkColorTransferFunction
+    """
     parameters_d={'curv' : (-0.5 ,0.5 , "RdYlGn", 11,True),
               'avg_curv' : (-0.5 ,0.5 , "RdYlGn", 11,True),
               'area' : (0 ,2 , "PuBuGn", 9 ),

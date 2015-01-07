@@ -294,3 +294,27 @@ if __name__ == "__main__":
     viewer = braviz.visualization.simpleVtkViewer()
     viewer.addPolyData(out)
     viewer.start()
+
+
+def boundingBoxIntesection(box1, box2):
+    """test if two bounding boxes intersect
+
+    Args:
+        box1 (list) : Bounding box [x0, x1, y0, y1, z0, z1]
+        box2 (list) : Bounding box [x0, x1, y0, y1, z0, z1]
+
+    Returns:
+        ``True`` if the bounding boxes intersect, ``False`` otherwise
+
+    """
+    #Test intersection in three axis
+    for i in range(3):
+        #      2----[1]------2------1                                   1-----[2]-----1------2
+        if (box2[2 * i] <= box1[2 * i] <= box2[2 * i + 1]) or (
+                    box1[2 * i] <= box2[2 * i] <= box1[2 * i + 1]):
+        #      2----[1]-----1-------2                                   1-----[2]-----2-------1
+            pass
+        else:
+            #Must intersect in all axis
+            return False
+    return True

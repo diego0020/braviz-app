@@ -7,8 +7,8 @@ import itertools
 
 import braviz
 from braviz.readAndFilter import geom_db
-from braviz.readAndFilter import write_nib_image
 from braviz.readAndFilter import tabular_data
+from braviz.readAndFilter.images import write_nib_image
 
 __author__ = 'da.angulo39'
 

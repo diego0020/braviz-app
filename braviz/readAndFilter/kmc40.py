@@ -10,11 +10,12 @@ import nibabel as nib
 from numpy.linalg import inv
 
 
-from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, \
-    readFreeSurferTransform,  numpy2vtk_img, nifti_rgb2vtk,memo_ten
+from braviz.readAndFilter.cache import memo_ten
+from braviz.readAndFilter.images import numpy2vtk_img, nifti_rgb2vtk, nibNii2vtk
 
 from braviz.readAndFilter.readDartelTransform import  dartel2GridTransform_cached
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
+from braviz.readAndFilter.transforms import applyTransform, readFreeSurferTransform, readFlirtMatrix
 from braviz.visualization import get_colorbrewer_lut
 
 class Kmc40Reader(KmcAbstractReader):

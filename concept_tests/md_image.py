@@ -1,3 +1,6 @@
+from braviz.readAndFilter.images import write_vtk_image
+from braviz.readAndFilter.transforms import applyTransform
+
 __author__ = 'Diego'
 
 import os
@@ -13,12 +16,12 @@ nimage=nib.load("MD.nii.gz")
 
 data = nimage.get_data()
 data = data * 1e12
-vimg = braviz.readAndFilter.numpy2vtk_img(data)
+vimg = numpy2vtk_img(data)
 t=nimage.get_affine()
 it = np.linalg.inv(t)
 
 
-vimg2=braviz.readAndFilter.applyTransform(vimg,it)
+vimg2= applyTransform(vimg,it)
 
 viewer= braviz.visualization.simpleVtkViewer()
 

@@ -34,7 +34,8 @@ def color_by_fa(pt,fa_img):
     Args:
         pt (tuple) : points coordinates
         fa_img (vrtImageData) : FA image
-    Returns
+
+    Returns:
         (r,g,b)
     """
     org=fa_img.GetOrigin()
@@ -75,7 +76,6 @@ def color_fibers_lines(fibers,polyline_color_function,*args,**kw):
     """
     Applies a function to each line in a tractography to assign it a color
 
-    Args:
     Args:
         fibers (vtkPolyData) : Tractography
         polyline_color_function (function) : Function that takes a vtkCell and returns a dict mapping point ids

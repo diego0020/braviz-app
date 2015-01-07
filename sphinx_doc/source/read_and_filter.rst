@@ -4,7 +4,8 @@
 Read And Filter
 ***********************************
 
-Contents:
+Contents
+---------
 
 .. toctree::
    :maxdepth: 2
@@ -13,4 +14,9 @@ Contents:
    braviz_db
    configuring
    low level functions <read_low_level>
+
+
+Basic Usage
+------------
+
 

@@ -4,6 +4,8 @@ import nibabel as nib
 import vtk
 
 import braviz
+from braviz.readAndFilter.images import write_vtk_image
+from braviz.readAndFilter.transforms import applyTransform
 
 
 kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
@@ -17,8 +19,8 @@ viz=braviz.visualization.simpleVtkViewer()
 
 fa_img=nib.load('FA.nii')
 
-fa_vtk=braviz.readAndFilter.nibNii2vtk(fa_img)
-fa=braviz.readAndFilter.applyTransform(fa_vtk,fa_img.get_affine())
+fa_vtk= nibNii2vtk(fa_img)
+fa= applyTransform(fa_vtk,fa_img.get_affine())
 viz.addImg(fa)
 reader=vtk.vtkPolyDataReader()
 

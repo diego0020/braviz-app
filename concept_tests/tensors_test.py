@@ -51,6 +51,8 @@ import braviz
 
 
 #===================real data===================
+from braviz.readAndFilter.images import write_vtk_image
+from braviz.readAndFilter.transforms import applyTransform, numpy2vtkMatrix
 
 kmc_40_reader=braviz.readAndFilter.BravizAutoReader()
 root_path=kmc_40_reader.get_data_root()
@@ -141,7 +143,7 @@ pointData.SetScalars(colors)
 pointData.SetTensors(farray)
 
 matrix=fa_img.get_affine()
-vtk_matrix=braviz.readAndFilter.numpy2vtkMatrix(matrix)
+vtk_matrix= numpy2vtkMatrix(matrix)
 vtkTrans=vtk.vtkMatrixToLinearTransform()
 vtkTrans.SetInput(vtk_matrix)
 transFilter=vtk.vtkTransformFilter()
@@ -232,8 +234,8 @@ iren.SetRenderWindow(renWin)
 iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
 
 #context
-vtk_fa=braviz.readAndFilter.nibNii2vtk(fa_img)
-vtk_faw=braviz.readAndFilter.applyTransform(vtk_fa,fa_img.get_affine())
+vtk_fa= nibNii2vtk(fa_img)
+vtk_faw= applyTransform(vtk_fa,fa_img.get_affine())
 
 planeWidget=vtk.vtkImagePlaneWidget()
 planeWidget.SetInputData(vtk_faw)

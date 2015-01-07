@@ -7,6 +7,7 @@ import nibabel as nib
 import numpy as np
 
 import braviz
+from braviz.readAndFilter.images import write_vtk_image
 
 reader=braviz.readAndFilter.BravizAutoReader()
 data_root=reader.get_data_root()
@@ -23,7 +24,7 @@ yback_img=nib.load(yback_file)
 yback_data=yback_img.get_data()
 yforw_img=nib.load(yforw_file)
 yforw_data=yforw_img.get_data()
-template_vtk=braviz.readAndFilter.nibNii2vtk(template_img)
+template_vtk= nibNii2vtk(template_img)
 #template_vtk=braviz.readAndFilter.applyTransform(template_vtk, template_img.get_affine())
 template_vtk.SetOrigin(template_img.get_affine()[0:3,3])
 template_vtk.SetSpacing(np.diag(template_img.get_affine())[0:3])

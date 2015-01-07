@@ -1,4 +1,5 @@
 from __future__ import division
+from braviz.readAndFilter.images import write_vtk_image
 
 __author__ = 'Diego'
 
@@ -41,7 +42,7 @@ data2 = -1*data2
 
 #=================
 viewer = braviz.visualization.simpleVtkViewer()
-vtk_image = braviz.readAndFilter.numpy2vtk_img(data2)
+vtk_image = numpy2vtk_img(data2)
 plane_widget = viewer.addImg(vtk_image)
 plane_widget.SetResliceInterpolateToNearestNeighbour()
 plane_widget.set_orientation(0)

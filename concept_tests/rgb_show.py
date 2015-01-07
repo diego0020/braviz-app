@@ -1,3 +1,5 @@
+from braviz.readAndFilter.transforms import applyTransform
+
 __author__ = 'Diego'
 
 import os
@@ -30,7 +32,7 @@ importer.SetWholeExtent(0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
 importer.Update()
 
 img=importer.GetOutput()
-img2=braviz.readAndFilter.applyTransform(img,np.linalg.inv(nimage.get_affine()))
+img2= applyTransform(img,np.linalg.inv(nimage.get_affine()))
 
 reader=braviz.readAndFilter.BravizAutoReader()
 

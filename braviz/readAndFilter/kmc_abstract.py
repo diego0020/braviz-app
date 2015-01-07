@@ -12,9 +12,9 @@ import numpy as np
 from numpy.linalg import inv
 import vtk
 
-from braviz.readAndFilter import nibNii2vtk, applyTransform, readFlirtMatrix, transformPolyData,  \
-    readFreeSurferTransform, numpy2vtkMatrix, extract_poly_data_subset, numpy2vtk_img,  \
-    memo_ten, config_file
+from braviz.readAndFilter import extract_poly_data_subset, config_file
+from braviz.readAndFilter.cache import memo_ten
+from braviz.readAndFilter.images import numpy2vtk_img, nibNii2vtk
 
 from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
     surfLUT2VTK
@@ -25,6 +25,8 @@ import braviz.readAndFilter.color_fibers
 from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
 
 from braviz.readAndFilter.base_reader import BaseReader
+from braviz.readAndFilter.transforms import applyTransform, numpy2vtkMatrix, transformPolyData, readFreeSurferTransform, readFlirtMatrix
+
 
 class KmcAbstractReader(BaseReader):
     """
@@ -878,8 +880,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if format == "nii":
             return nib.Nifti1Image(data2,affine)
         elif format == "vtk":
-            vtk_img = numpy2vtk_img(data2,data_type=np.float64)
-            vtk_img2 = braviz.readAndFilter.applyTransform(vtk_img,np.linalg.inv(affine))
+            vtk_img = numpy2vtk_img(data2, array_data_type=np.float64)
+            vtk_img2 = applyTransform(vtk_img,np.linalg.inv(affine))
             return vtk_img2
 
     @memo_ten

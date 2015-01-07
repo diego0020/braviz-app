@@ -4,6 +4,8 @@ from braviz.readAndFilter.color_fibers import scalars_from_image_int
 import numpy as np
 from braviz.readAndFilter import filter_fibers
 from braviz.readAndFilter.filter_fibers import iter_id_list
+from braviz.readAndFilter.images import write_vtk_image
+from braviz.readAndFilter.transforms import applyTransform
 
 __author__ = 'Diego'
 SUBJ = "119"
@@ -24,8 +26,8 @@ img = reader.get("aparc",SUBJ)
 
 
 scalars_from_image_int(fibs,aparc)
-aparc_vtk = braviz.readAndFilter.nibNii2vtk(aparc)
-aparc_vtk = braviz.readAndFilter.applyTransform(aparc_vtk,np.linalg.inv(aparc.get_affine()),interpolate=False)
+aparc_vtk = nibNii2vtk(aparc)
+aparc_vtk = applyTransform(aparc_vtk,np.linalg.inv(aparc.get_affine()),interpolate=False)
 
 lut = reader.get("APARC",SUBJ,lut=True)
 

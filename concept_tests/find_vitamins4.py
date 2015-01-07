@@ -1,5 +1,6 @@
 from __future__ import division
 import itertools
+from braviz.readAndFilter.images import write_vtk_image
 
 __author__ = 'Diego'
 
@@ -66,7 +67,7 @@ for c, i in itertools.izip(get_next_peak(data2, model.shape), xrange(5)):
 
 
 viewer = braviz.visualization.simpleVtkViewer()
-vtk_image = braviz.readAndFilter.numpy2vtk_img(data)
+vtk_image = numpy2vtk_img(data)
 plane_widget = viewer.addImg(vtk_image)
 plane_widget.SetResliceInterpolateToNearestNeighbour()
 plane_widget.set_orientation(0)
