@@ -1,12 +1,13 @@
+import logging
+
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-
 from PyQt4.QtGui import QFrame, QHBoxLayout
 from PyQt4.QtCore import pyqtSignal
-import logging
-from braviz.visualization.simple_vtk import OrientationAxes, persistentImagePlane
 
+from braviz.visualization.simple_vtk import OrientationAxes, persistentImagePlane, get_window_level
 from braviz.visualization.subject_viewer import do_and_render
+
 
 __author__ = 'Diego'
 
@@ -14,8 +15,19 @@ _NOMINAL_MODS={"APARC","WMPARC"}
 _COLORED_MODS={"DTI","NONE"}
 _WL_MODS={"MRI","FA","MD"}
 
-class CheckbordView(object):
+class CheckboardView(object):
+    """
+    Viewer to compare two images
+    """
     def __init__(self, render_window_interactor, reader, widget):
+        """
+        Construct the viewer
+
+        Args:
+            render_window_interactor (vtkRenderWindowInteractor) : Interactor for the image plane widget
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            widget (QObject) : Must implement *slice_change_handle*
+        """
         self.iren = render_window_interactor
         self.ren_win = render_window_interactor.GetRenderWindow()
         self.ren = vtk.vtkRenderer()
@@ -90,14 +102,19 @@ class CheckbordView(object):
 
     @do_and_render
     def reset_camera(self, position):
-        """resets the current camera to standard locations. Position may be:
-        0: initial 3d view
-        1: left
-        2: right
-        3: front
-        4: back
-        5: top
-        6: bottom"""
+        """
+        resets the current camera to standard locations.
+
+        Args:
+            position (int) :
+                0: initial 3d view
+                1: left
+                2: right
+                3: front
+                4: back
+                5: top
+                6: bottom
+        """
 
         focal, position, viewup = self.__camera_positions_dict[position]
 
@@ -110,8 +127,11 @@ class CheckbordView(object):
 
 
     def update_pipeline(self):
+        """
+        Updates the whole visualization pipeline
+        """
         if self.__plane_widget is None:
-            self.create_image_plane_widget()
+            self._create_image_plane_widget()
 
         if self.__img1 is None and self.__img2 is None:
             self.__plane_widget.Off()
@@ -200,7 +220,10 @@ class CheckbordView(object):
             self.__plane_widget.SetInputData(self.__checkboard_view.GetOutput())
 
 
-    def create_image_plane_widget(self):
+    def _create_image_plane_widget(self):
+        """
+        Creates the internal vtkImagePlaneWidget
+        """
         if self.__plane_widget is None:
             self.__plane_widget = persistentImagePlane(self.__orientation)
             self.__plane_widget.SetInteractor(self.iren)
@@ -214,6 +237,15 @@ class CheckbordView(object):
 
     @do_and_render
     def set_img1(self,subj,mod,contrast=None,force=False):
+        """
+        Sets the first image
+
+        Args:
+            subj : Subject image code
+            mod (str) : modality (see :meth:`braviz.visualization.subject_viewer.ImageManager.change_image_modality`)
+            contrast (int) : contrast for fMRI images
+            force (bool) : if ``True`` force reloading the data
+        """
         params = (subj,mod.upper(),contrast)
         if params == self.__img1_params and not force:
             return
@@ -245,6 +277,17 @@ class CheckbordView(object):
 
     @do_and_render
     def set_img2(self,subj,mod,contrast=None, force=False):
+        """
+        Sets the second image
+
+
+
+        Args:
+            subj : Subject image code
+            mod (str) : modality (see :meth:`braviz.visualization.subject_viewer.ImageManager.change_image_modality`)
+            contrast (int) : contrast for fMRI images
+            force (bool) : if ``True`` force reloading the data
+        """
         params = (subj,mod.upper(),contrast)
         if params == self.__img2_params and not force:
             return
@@ -274,11 +317,14 @@ class CheckbordView(object):
         self.update_pipeline()
 
 
-    def set_orientation(self,orientation_int):
-        pass
-
     @do_and_render
     def set_number_of_divisions(self,divs):
+        """
+        Set number of divisions in the checkboard pattern
+
+        Args:
+            divs (int) : Number of divisions
+        """
         divs_ar = [divs]*3
         divs_ar[self.__orientation]=1
         self.__checkboard_view.SetNumberOfDivisions(divs_ar)
@@ -289,16 +335,30 @@ class CheckbordView(object):
 
     @do_and_render
     def set_orientation(self,orientation_int):
+        """
+        Sets orientation of the plane widget
+
+        Args:
+            orientation_int (int) : 0 is x, 1 is y, 2 is z
+        """
         self.__plane_widget.set_orientation(orientation_int)
         self.__orientation = orientation_int
         self.set_number_of_divisions(self.__divs,skip_render=True)
 
-    def load_test_view(self):
+    def _load_test_view(self):
+        """
+        Test
+        """
         self.set_img1(119,"MRI")
         self.set_img2(119,"APARC")
 
     @do_and_render
     def change_space(self,new_space):
+        """
+        Change current coordinate system
+
+        new_space (str) : new coordinate system, see :meth:`~braviz.readAndFilter.base_reader.BaseReader.get`
+        """
         self.__current_space=new_space
         p1=self.__img1_params
         p2=self.__img2_params
@@ -307,12 +367,24 @@ class CheckbordView(object):
 
     @do_and_render
     def set_image_slice(self, new_slice):
+        """
+        Set plane widget slice
+
+        Args:
+            new_slice (int) : Index of desired slice
+        """
         if self.__plane_widget is None:
             return
         self.__plane_widget.SetSliceIndex(int(new_slice))
         self.__plane_widget.InvokeEvent(self.__plane_widget.slice_change_event)
 
     def get_number_of_image_slices(self):
+        """
+        Gets the number of slices available in the current direction
+
+        Returns:
+            The number of available slices
+        """
         if self.__plane_widget is None:
             return 0
         img = self.__plane_widget.GetInput()
@@ -323,35 +395,48 @@ class CheckbordView(object):
         return dimensions[self.__orientation]
 
 
-def get_window_level(img):
-    stats = vtk.vtkImageHistogramStatistics()
-    stats.SetInputData(img)
-    stats.Update()
-    _,w = stats.GetAutoRange()
-    return w,w/2
+
 
 
 
 class QCheckViewer(QFrame):
+    """
+    Wraps the :class:`CheckboardView` so that in can be connected to Qt applications.
+    """
     slice_changed = pyqtSignal(int)
 
     def __init__(self, reader, parent):
+        """
+        Constructs the widget
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            parent (QObject) : Parent
+        """
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
         self.__reader = reader
-        self.__vtk_viewer = CheckbordView(self.__qwindow_interactor, self.__reader, self)
+        self.__vtk_viewer = CheckboardView(self.__qwindow_interactor, self.__reader, self)
         self.__layout = QHBoxLayout()
         self.__layout.addWidget(self.__qwindow_interactor)
         self.__layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.__layout)
     def initialize_widget(self):
-        """call after showing the interface"""
+        """
+        Call this function **after** calling show on the widget or a parent
+        """
         self.__qwindow_interactor.Initialize()
         self.__qwindow_interactor.Start()
 
     @property
     def viewer(self):
+        """
+        Access to internal :class:`CheckboardView` object
+        """
         return self.__vtk_viewer
 
     def slice_change_handle(self, new_slice):
+        """
+        Emits a qt signal when the current slice is changed from vtk
+        """
         self.slice_changed.emit(new_slice)

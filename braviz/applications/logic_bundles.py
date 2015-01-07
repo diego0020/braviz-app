@@ -12,7 +12,7 @@ import sys
 import platform
 
 import braviz
-from braviz import _test_arrow
+
 from braviz.interaction.qt_guis.logic_bundles import Ui_LogicBundlesApp
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 from braviz.interaction.qt_guis.AddStructuresDialog import Ui_AddSegmented
@@ -20,6 +20,7 @@ from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.interaction.qt_guis.export_logic_scalar_into_db import Ui_ExportScalar
 from braviz.interaction.logic_bundle_model import LogicBundleQtTree, LogicBundleNodeWithVTK
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
+from braviz.visualization.simple_vtk import save_ren_win_picture
 from braviz.interaction.qt_structures_model import StructureTreeModel
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel
 from braviz.readAndFilter import geom_db, tabular_data
@@ -29,6 +30,7 @@ from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
 from braviz.interaction.qt_dialogs import SaveScenarioDialog,LoadScenarioDialog, SaveLogicFibersBundleDialog, LoadLogicBundle
 from braviz.readAndFilter import user_data as braviz_user_data
 from braviz.readAndFilter.config_file import get_config
+
 
 __author__ = 'Diego'
 

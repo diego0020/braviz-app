@@ -10,8 +10,8 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 import braviz
-from braviz import _test_arrow
-from braviz.readAndFilter.images import write_vtk_image
+from braviz.visualization.simple_vtk import persistentImagePlane, cursors, OutlineActor
+from braviz.readAndFilter.images import numpy2vtk_img
 import braviz.visualization.fmri_view
 import braviz.visualization.vtk_charts
 from braviz.utilities import configure_logger_from_conf
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     planeWidget.UpdatePlacement()
 
     blend = braviz.visualization.fmri_view.blend_fmri_and_mri(t_stat_img, mri_img, threshold=1.0, alfa=True)
-    fmri_lut = braviz.visualization.fmri_view.get_fmri_lut(1)
+    fmri_lut = braviz.visualization.fmri_view.get_fmri_lut()
 
     planeWidget.SetInputData(blend.GetOutput())
     #plane_widget.SetInputConnection(color_mapper2.GetOutputPort())

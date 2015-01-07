@@ -5,7 +5,6 @@ import vtk
 import braviz
 import numpy as np
 import logging
-from braviz import _test_arrow
 
 
 __author__ = 'Diego'

@@ -8,18 +8,19 @@ import numpy as np
 import nibabel as nib
 
 import braviz
-from braviz import _test_arrow
-from braviz.readAndFilter.images import write_vtk_image, nibNii2vtk
+
+from braviz.readAndFilter.images import  nibNii2vtk, numpy2vtk_img
 from braviz.readAndFilter.transforms import applyTransform
 import braviz.visualization.vtk_charts
 import braviz.visualization.fmri_view
+from braviz.visualization.simple_vtk import SimpleVtkViewer, cursors,persistentImagePlane, OutlineActor
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached as dartel2GridTransform
 
 
 __author__ = 'Diego'
 
 reader=braviz.readAndFilter.BravizAutoReader()
-viewer= simpleVtkViewer()
+viewer= SimpleVtkViewer()
 
 #====================global variables===========
 subject='144'
@@ -92,7 +93,7 @@ mri_img.SetSpacing((-2,2,2))
 #blend
 
 blend=braviz.visualization.fmri_view.blend_fmri_and_mri(t_stat_img,mri_img,threshold=1.0,alfa=True)
-fmri_lut=braviz.visualization.fmri_view.get_fmri_lut(1)
+fmri_lut=braviz.visualization.fmri_view.get_fmri_lut()
 
 plane_widget.SetInputConnection(blend.GetOutputPort())
 #plane_widget.SetInputConnection(color_mapper2.GetOutputPort())

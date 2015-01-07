@@ -7,7 +7,6 @@ from PyQt4.QtGui import QMainWindow, QDialog
 import numpy as np
 
 import braviz
-from braviz import _test_arrow
 from braviz.interaction.qt_guis.ortho_measure import Ui_OrtoMeasure
 from braviz.interaction.qt_guis.ortho_measure_start import Ui_OpenMeasureApp
 from braviz.interaction.qt_guis.new_orthogonal_measure import Ui_NewRoi
@@ -15,6 +14,7 @@ from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 
 from braviz.visualization.subject_viewer import QMeasurerWidget
+from braviz.visualization.simple_vtk import save_ren_win_picture
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel
 from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog

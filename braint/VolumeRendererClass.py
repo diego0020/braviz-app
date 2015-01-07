@@ -6,7 +6,7 @@ Created on 26/10/2013
 import vtk
 
 import braviz
-from braviz import _test_arrow
+
 
 
 class VolumeRendererClass:

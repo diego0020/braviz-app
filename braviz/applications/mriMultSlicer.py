@@ -5,12 +5,12 @@ import ttk
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-from braviz import _test_arrow
+
 
 import braviz.readAndFilter
 from braviz.utilities import configure_logger_from_conf
-from braviz.visualization.simple_vtk import add_solid_balloon
-
+from braviz.visualization.simple_vtk import add_solid_balloon, persistentImagePlane
+import braviz.readAndFilter.config_file
 
 class MriMultSlicerApp(object):
     def __init__(self,pipe=None):
@@ -35,7 +35,7 @@ class MriMultSlicerApp(object):
         self.renWin=vtk.vtkRenderWindow()
         self.renWin.AddRenderer(ren)
         self.renWin.SetMultiSamples(2)
-        config=braviz.interaction.get_config(__file__)
+        config=braviz.readAndFilter.config_file.get_config(__file__)
         background= config.get_background()
         ren.SetBackground(background)
 

@@ -20,8 +20,8 @@ purpose are:
 - Subject Viewer (:mod:`~braviz.visualization.subject_viewer`) : Implements a powerful viewer and Qt4 Widget which
   directly requests data, and handles subject and space changes.
 
-- fMRI View (:mod:`~braviz.visualization.fmri_view`) : Utilities for displaying fMRI data.
 
+The module :mod:`~braviz.visualization.fmri_view` contains some low level utilities for displaying fMRI data.
 The module :mod:`~braviz.visualization.checkboard_view` implements a widget that shows two images in a checkboard
 pattern. It is intended to check the registration between different modalities.
 

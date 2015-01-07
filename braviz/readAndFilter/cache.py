@@ -138,3 +138,25 @@ def memo_ten(f):
             return f.vals[key]
 
     return wrapped
+
+
+def memoize(obj):
+    """A wrapper that saves the return values for a function,
+    and returns them if the function is called again with the same arguments.
+
+    .. warning :: There is no limit to the size of the cache in this wrapper, consider using
+        :func:`memo_ten`. For large data use func:`cache_function`.
+
+    Args:
+        obj (function) : function to wrap
+    """
+    cache = obj.cache = {}
+
+    @functools.wraps(obj)
+    def memoizer(*args, **kwargs):
+        if len(kwargs) > 0:
+            raise NotImplementedError
+        if args not in cache:
+            cache[args] = obj(*args, **kwargs)
+        return cache[args]
+    return memoizer

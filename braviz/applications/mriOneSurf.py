@@ -8,10 +8,11 @@ import math
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
-from braviz import _test_arrow
+
 
 import braviz.readAndFilter
-
+from braviz.visualization.simple_vtk import persistentImagePlane
+from braviz.readAndFilter import config_file
 
 if __name__ == "__main__":
 
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     ren=vtk.vtkRenderer()
     renWin=vtk.vtkRenderWindow()
     renWin.AddRenderer(ren)
-    config=braviz.interaction.get_config(__file__)
+    config=config_file.get_config(__file__)
     background= config.get_background()
     ren.SetBackground(background)
 

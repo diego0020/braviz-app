@@ -1,34 +1,42 @@
 """Contains utilities for displaying fMRI images"""
 
 from __future__ import division
-import functools
 
 import vtk
+from braviz.readAndFilter.cache import memoize
 
 __author__ = 'Diego'
 
-def memoize(obj):
-    """A wrapper that saves the return values for a function,
-    and returns them if the funcion is called again with the same arguments"""
-    cache = obj.cache = {}
 
-    @functools.wraps(obj)
-    def memoizer(*args, **kwargs):
-        if args not in cache:
-            cache[args] = obj(*args, **kwargs)
-        return cache[args]
-    return memoizer
 
 class blend_fmri_and_mri(vtk.vtkImageBlend):
-    """Class that blends an fMRI t-score map with a matchin MRI image"""
+    """
+    Class that blends an fMRI t-score map with a MRI image
+
+    .. deprecated:: 3.0b
+        Use :class:`fMRI_blender` instead
+
+    Use methods *GetOutput* and *GetOutputPort* to extract the output
+    """
     def __init__(self,fmri_img,mri_img,window=2000,level=1000,alfa=True,threshold=3):
-        """Returns a blend object, to which you can apply
-        GetOutput: To get the resulting image
-        GetOutputPort: To connect to a vtk pipeline"""
+        """
+        Creates a blend object
+
+        If alfa is ``True`` the opacity function will look like a "v", being zero at zero, and one at plus and
+        minus threshold.
+
+        Args:
+            fmri_img (vtkImageData) : t-score image
+            mri_img (vtkImageData) : Structural image
+            window (float) : Window for structural image
+            level (float) : level for structural image
+            alfa (bool) : If True colors of t-score map will fade below *threshold*
+            threshold (float) : Value at which colors start to fade (invisible at zero)
+        """
 
         fmri_mapper = vtk.vtkImageMapToColors()
         fmri_mapper.SetInputData(fmri_img)
-        fmri_lut=get_fmri_lut(threshold,alfa)
+        fmri_lut=get_fmri_lut(alfa, threshold)
         fmri_mapper.SetLookupTable(fmri_lut)
 
         mri_mapper = vtk.vtkImageMapToWindowLevelColors()
@@ -57,23 +65,47 @@ class blend_fmri_and_mri(vtk.vtkImageBlend):
         self.mri_lut = mri_lut
         self.alfa=alfa
 
-    def change_imgs(self,mri_img,fmri_img):
-        """Set new MRI and fMRI images"""
+    def change_imgs(self,mri_img, fmri_img):
+        """
+        Set new MRI and fMRI images
+
+        Args:
+            mri_img (vtkImageData) : Structural image data
+            fmri_img (vtkImageData) : fMRI t-score image
+        """
         self.fmri_mapper.SetInputData(fmri_img)
         self.mri_mapper.SetInputData(mri_img)
         self.Update()
+
     def change_threshold(self,threshold):
-        """Change the threshold for displaying the fMRI scores"""
-        self.fmri_lut=get_fmri_lut(threshold,self.alfa)
+        """
+        Change the threshold for displaying the fMRI scores
+
+        Args:
+            threshold (float) : Minimum magnitude at which the values are displayed
+        """
+        self.fmri_lut = get_fmri_lut(self.alfa,threshold)
         self.fmri_mapper.SetLookupTable(self.fmri_lut)
         self.Update()
 
 #Usually the same function will be used throughout the application
 @memoize
-def get_fmri_lut(threshold=0,alpha=False,n_pts=200):
-    """Returns a standard look up table for fMRI data
+def get_fmri_lut(alpha=False,threshold=0,n_pts=200):
+    """
+    Returns a standard look up table for fMRI data
+
     If alpha is True, the opacity of the colors below the threshold will be less than one,
-    more precisely, the opacity will be a line from 0 to 1 between 0 and the threshold"""
+    more precisely, the opacity will be a ramp from 0 to 1 between 0 and the threshold
+
+    Args:
+        alpha (bool) : If True use a lookup table
+        threshold (float) : Value at which color starts to fade (lower opacity) if alpha is True
+            minimum value shown
+        n_pts (int) : Number of points for the lookup table
+
+    Returns:
+        vtkLookuptable
+    """
 
     color_interpolator = vtk.vtkColorTransferFunction()
     color_interpolator.ClampingOn()
@@ -107,9 +139,16 @@ def get_fmri_lut(threshold=0,alpha=False,n_pts=200):
 
 
 class time_slice_viewer(vtk.vtkImageSlice):
-    """Class for displaying a single slice of a time-moment in BOLD time series"""
+    """
+    Class for displaying a single slice of a time-moment in BOLD time series
+    """
     def __init__(self,orientation=0):
-        """Orientation is 0:x , 1:y, 2:z """
+        """
+        Create the bold viewer
+
+        Args:
+            Orientation (int):  0:x , 1:y, 2:z
+        """
         slice_mapper = vtk.vtkImageSliceMapper()
         slice_mapper.SetOrientation(orientation)
         self.SetMapper(slice_mapper)
@@ -133,6 +172,9 @@ class time_slice_viewer(vtk.vtkImageSlice):
     def set_time_point(self,time):
         """
         Set the time point at which the time series should be sampled
+
+        Args:
+            time (float) : Time in seconds of the volume of interest
         """
         TR=self.TR
         space_slice=self.spatial_slice
@@ -142,7 +184,16 @@ class time_slice_viewer(vtk.vtkImageSlice):
         self.slice_mapper.SetSliceNumber(time)
 
     def set_input(self,input_data,spatial_pos=0,time=0,orientation=0):
-        """Sets the input 4D image, the position across the perpendicular axis, the time point and the orientation """
+        """
+        Sets the input 4D image, the position across the perpendicular axis, the time point and the orientation
+
+        Args:
+            input_data (vtkImageData) : bold 4d image
+            spatial_pos (int) : index of the slice along the perpendicular axis
+            time (float) : time point of interest
+            Orientation (int):  0:x , 1:y, 2:z
+
+        """
         self.slice_mapper.SetInputData(input_data)
         spacing=input_data.GetSpacing()
         self.TR=spacing[orientation]
@@ -153,17 +204,35 @@ class time_slice_viewer(vtk.vtkImageSlice):
 
 
     def set_window_level(self,window,level):
-        """Sets window and level for the display image"""
+        """
+        Sets window and level for the display image
+
+        Args:
+            window (float) : window value
+            level (float) : level value
+        """
         image_property = self.GetProperty()
         image_property.SetColorWindow(window)
         image_property.SetColorLevel(level)
+
     def set_z_spacing(self,spacing):
-        """spacing in perpendicular axis, used to position the resulting slice in the right place"""
+        """
+        spacing in perpendicular axis, used to position the resulting slice in the right place
+
+        Args:
+            spacing (float) : Image spacing in the perpendicular axis
+        """
         self.spacing=spacing
 
 
 class fMRI_blender(object):
+    """
+    Blend an fMRI map with an structural image
+    """
     def __init__(self):
+        """
+        Creates the blender class
+        """
         self.blend = vtk.vtkImageBlend()
         self.color_mapper2 = vtk.vtkImageMapToColors()
         self.color_mapper1 = vtk.vtkImageMapToWindowLevelColors()
@@ -173,14 +242,38 @@ class fMRI_blender(object):
         self.blend.SetOpacity(1, .5)
 
     def set_luts(self, mri_lut, fmri_lut):
+        """
+        Set lookuptables for both images
+
+        Args:
+            mri_lut (vtkWindowLevelLookupTable) : Lookuptable for structural image
+            fmri_lut (vtkScalarsToColors) : t-score image lookuptable
+
+        """
         self.color_mapper1.SetLookupTable(mri_lut)
         self.color_mapper2.SetLookupTable(fmri_lut)
 
     def set_images(self, mri_image, fmri_image):
+        """
+        Sets structural and fMRI images
+
+        Args:
+            mri_image (vtkImageData) : structural image
+            fmri_image (vtkImageData) : t-score image
+
+        Returns:
+            Blended vtkImageData
+        """
         self.color_mapper1.SetInputData(mri_image)
         self.color_mapper2.SetInputData(fmri_image)
         self.blend.Update()
         return self.blend.GetOutput()
 
     def get_blended_img(self):
+        """
+        Get blended image
+
+        Returns:
+            Blended vtkImageData
+        """
         return self.blend.GetOutput()

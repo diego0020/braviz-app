@@ -12,7 +12,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz
-from braviz import _test_arrow
+from braviz.visualization.simple_vtk import persistentImagePlane, add_solid_balloon
 
 
 scheduled_refresh = False

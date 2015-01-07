@@ -9,7 +9,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz
-from braviz import _test_arrow
+from braviz.visualization import persistentImagePlane,add_solid_balloon
 
 reader=braviz.readAndFilter.BravizAutoReader()
 

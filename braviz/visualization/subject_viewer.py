@@ -493,7 +493,7 @@ class QSubjectViewerWidget(QFrame):
     @property
     def subject_viewer(self):
         """
-        Access to the underlying class:`SubjectViewer`
+        Access to the underlying :class:`SubjectViewer`
         """
         return self.__subject_viewer
 
@@ -3608,7 +3608,7 @@ class FmriContours(object):
         However the lut will reflect the changes in the contour value.
 
         Args:
-            lut (vtkColorTransferFunction) : Table to generate contour color based on its value
+            lut (vtkScalarsToColors) : Table to generate contour color based on its value
         """
         self.__mapper.SetLookupTable(lut)
         self.__mapper.UseLookupTableScalarRangeOn()

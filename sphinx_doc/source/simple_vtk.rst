@@ -43,6 +43,6 @@ Other Utilities
 
 .. autofunction:: get_arrow
 
-
+.. autofunction:: get_window_level
 
 

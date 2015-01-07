@@ -8,8 +8,9 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 import braviz
-from braviz import _test_arrow
 import braviz.utilities
+from braviz.visualization.simple_vtk import persistentImagePlane,build_grid,remove_nan_from_grid
+from braviz.readAndFilter import config_file
 
 if __name__ == "__main__":
     braviz.utilities.configure_logger_from_conf("mriOne")
@@ -22,7 +23,7 @@ if __name__ == "__main__":
 
     img = reader.get('MRI', initial_subject, format='VTK')
 
-    config = braviz.interaction.get_config(__file__)
+    config = config_file.get_config(__file__)
     background = config.get_background()
 
     picker = vtk.vtkCellPicker()

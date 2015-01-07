@@ -10,8 +10,8 @@ import numpy as np
 import datetime
 import platform
 import os
-from braviz import _test_arrow
 
+from braviz.visualization.simple_vtk import save_ren_win_picture
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview

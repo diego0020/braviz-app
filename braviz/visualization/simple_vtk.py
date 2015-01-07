@@ -79,7 +79,7 @@ class SimpleVtkViewer(object):
 
         Args:
             polyData (vtkPolyData) : Polydata object to add to the scene
-            LUT (vtkColorTransferFunction) : A lookup table to apply to the polydata
+            LUT (vtkScalarsToColors) : A lookup table to apply to the polydata
 
         Returns:
             The vtkActor instance created, it may be used to change the visual properties
@@ -855,3 +855,20 @@ def add_fibers_balloon(balloon_widget, fib_actor, name=None):
     and descriptors about the length of the fibers (see fibers_balloon_message)"""
     message = fibers_balloon_message(fib_actor, name)
     balloon_widget.AddBalloon(fib_actor, message)
+
+
+def get_window_level(img):
+    """
+    Automatically gets appropriate window and level values for displaying an image
+
+    Args:
+        img (vtkImageData) : Image
+
+    Returns
+        (window,level), proposed values
+    """
+    stats = vtk.vtkImageHistogramStatistics()
+    stats.SetInputData(img)
+    stats.Update()
+    _,w = stats.GetAutoRange()
+    return w,w/2

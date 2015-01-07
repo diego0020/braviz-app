@@ -13,7 +13,7 @@ import numpy as np
 from scipy import ndimage
 
 import braviz
-from braviz import _test_arrow
+
 from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
 from braviz.interaction.qt_guis.roi_builder_start import Ui_OpenRoiBuilder
 from braviz.interaction.qt_guis.new_roi import Ui_NewRoi
