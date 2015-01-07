@@ -58,7 +58,8 @@ class SubjectViewer(object):
     """
     A general viewer to show data on a particular subject
 
-    It gives access to
+    It provides access to
+
         - Images
         - fMRI Contours
         - Segmentation reconstruction models
@@ -67,7 +68,14 @@ class SubjectViewer(object):
         - Tracula Bundles
     """
     def __init__(self, render_window_interactor, reader, widget):
+        """
+        Initializes the viewer
 
+        Args:
+            render_window_interactor (vtkRenderWindowInteractor) : The intaractor that will be used with this viewer
+            widget (QObject) : Must implement *slice_change_handle* and *window_level_change_handle*
+
+        """
         # render_window_interactor.Initialize()
         # render_window_interactor.Start()
         self.iren = render_window_interactor
@@ -2101,7 +2109,24 @@ class SurfaceManager(object):
 
 
 class OrthogonalPlanesViewer(object):
+    """
+    A viewer with three orthogonal planes
+
+    It provides access to
+
+        - Images
+        - Surfaces
+        - A sphere
+    """
     def __init__(self, render_window_interactor, reader, widget):
+        """
+        Initializes the viewer
+
+        Args:
+            render_window_interactor (vtkRenderWindowInteractor) : The intaractor that will be used with this viewer
+            widget (QObject) : Must implement *slice_change_handle* and *window_level_change_handle*
+
+        """
         # render_window_interactor.Initialize()
         # render_window_interactor.Start()
         self.iren = render_window_interactor
@@ -2160,18 +2185,28 @@ class OrthogonalPlanesViewer(object):
 
 
     def finish_initializing(self):
-        self.link_window_level()
-        self.connect_cursors()
+        """
+        Finish viewer initialization, only call this after calling "show" on the widget or its parents
+        """
+        self._link_window_level()
+        self._connect_cursors()
         self.ren.ResetCameraClippingRange()
         self.ren.ResetCamera()
 
-    def link_window_level(self):
-        "call after initializing the planes"
+    def _link_window_level(self):
+        """
+        Link window and level of all planes
+
+        call after initializing the planes
+        """
         if self.__curent_modality not in ("DTI", "FMRI"):
             self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
 
-    def connect_cursors(self):
+    def _connect_cursors(self):
+        """
+        Connects the additional cursors
+        """
         def draw_cursor2(caller, event):
             self.cortex.hide_cone()
             self.__active_cursor_plane = True
@@ -2219,16 +2254,28 @@ class OrthogonalPlanesViewer(object):
 
     @do_and_render
     def show_image(self):
+        """
+        Shows all planes
+        """
         for im in self.__image_planes:
             im.show_image(skip_render=True)
 
     @do_and_render
     def hide_image(self):
+        """
+        Hide all planes
+        """
         for im in self.__image_planes:
             im.hide_image(skip_render=True)
 
     @do_and_render
     def change_subject(self, subj):
+        """
+        Changes the subject associated to the viewer
+
+        Args:
+            new_subject : new subject id
+        """
         ex = None
         for im in self.__image_planes:
             try:
@@ -2244,10 +2291,20 @@ class OrthogonalPlanesViewer(object):
             raise ex
 
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
-        self.link_window_level()
+        self._link_window_level()
 
     @do_and_render
     def change_image_modality(self, mod, contrast=None):
+        """
+        Change image modality in all planes
+
+        See :meth:`ImageManager.change_image_modality`
+
+
+        Args:
+            mod (str): New modality, for fMRI enter the paradigm here
+            contrast (int): If modality is fMRI the index of the contrast
+        """
         mod = mod.upper()
         if contrast is not None:
             pdgm = mod
@@ -2258,18 +2315,36 @@ class OrthogonalPlanesViewer(object):
             im.change_image_modality(mod, pdgm, mod, skip_render=True, contrast=contrast)
         self.__curent_modality = mod
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
-        self.link_window_level()
+        self._link_window_level()
 
     def get_number_of_slices(self):
+        """
+        Get number of slices in each plane
+
+        Returns:
+            A tuple with the image dimension
+        """
         n_slices = self.x_image.image_plane_widget.GetInput().GetDimensions()
         return n_slices
 
     def get_current_slice(self):
+        """
+        Get current slices of all planes
+
+        Returns:
+            A tuple with the current slice of each plane (x,y,z)
+        """
         return (self.x_image.get_current_image_slice(),
                 self.y_image.get_current_image_slice(),
                 self.z_image.get_current_image_slice(),)
 
     def get_camera_parameters(self):
+        """
+        Gets current camera parameters
+
+        Returns:
+            focal_point, position, view_up
+        """
         cam1 = self.ren.GetActiveCamera()
         fp = cam1.GetFocalPoint()
         pos = cam1.GetPosition()
@@ -2277,6 +2352,15 @@ class OrthogonalPlanesViewer(object):
         return fp, pos, vu
 
     def set_camera(self, focal_point, position, view_up):
+        """
+        Sets the camera position
+
+        Args:
+            focal_point (tuple) : Focal point
+            position (tuple) : Camera position
+            view_up (tuple) : View up vector
+
+        """
         cam1 = self.ren.GetActiveCamera()
         cam1.SetFocalPoint(focal_point)
         cam1.SetPosition(position)
@@ -2287,29 +2371,53 @@ class OrthogonalPlanesViewer(object):
 
     @property
     def image_planes(self):
+        """
+        Access to the image planes array
+        """
         return self.__image_planes
 
     @property
     def x_image(self):
+        """
+        Access to the image manager perpendicular to x
+        """
         return self.__x_image_manager
 
     @property
     def y_image(self):
+        """
+        Access to the image manager perpendicular to y
+        """
         return self.__y_image_manager
 
     @property
     def z_image(self):
+        """
+        Access to the image manager perpendicular to z
+        """
         return self.__z_image_manager
 
     @property
     def sphere(self):
+        """
+        Access to the sphere
+        """
         return self.__sphere
 
     @property
     def cortex(self):
+        """
+        Access to the surface manager
+        """
         return self.__cortex
 
     def current_position(self):
+        """
+        Last picked position, either on the planes or on the surface
+
+        Returns:
+            Coordinates of the last picked position
+        """
         if self.__active_cursor_plane:
             return self.__cursor.get_position()
         else:
@@ -2317,6 +2425,12 @@ class OrthogonalPlanesViewer(object):
 
     @do_and_render
     def change_space(self, new_space):
+        """
+        Changes the current coordinate system
+
+        Args:
+            new_space (str) : New coordinate system
+        """
         for im in self.image_planes:
             im.change_space(new_space, skip_render=True)
         self.cortex.set_space(new_space, skip_render=True)
@@ -2326,6 +2440,9 @@ class OrthogonalPlanesViewer(object):
 
 
 class MeasurerViewer(object):
+    """
+    A viewer that allows the user to measure the distance between two points on images
+    """
     camera_positions = {
         0: ((-5.5, -5.5, 4.5), (535, -5.5, 4.5), (0, 0, 1)),  # SAGITAL
         1: ((-5.5, -8, 2.8), (-5.5, 530, 2.8), (1, 0, 0)),  # CORONAL
@@ -2333,6 +2450,14 @@ class MeasurerViewer(object):
     }
 
     def __init__(self, render_window_interactor, reader, widget):
+        """
+        Initializes the viewer
+
+        Args:
+            render_window_interactor (vtkRenderWindowInteractor) : The intaractor that will be used with this viewer
+            widget (QObject) : Must implement *slice_change_handle* and *window_level_change_handle*
+
+        """
         self.iren = render_window_interactor
         self.ren_win = render_window_interactor.GetRenderWindow()
         self.ren = vtk.vtkRenderer()
@@ -2399,7 +2524,10 @@ class MeasurerViewer(object):
         self.obs_id, self.obs_id2, self.obs_id3 = None, None, None
 
 
-    def restrict_points_to_plane(self, object, event):
+    def _restrict_points_to_plane(self, object, event):
+        """
+        Restrict the measure widget points to the plane surfaces
+        """
         modifiers = QApplication.keyboardModifiers()
         straight = False
         if QtCore.Qt.ControlModifier & modifiers:
@@ -2456,19 +2584,26 @@ class MeasurerViewer(object):
 
 
     def finish_initializing(self):
+        """
+        Finish viewer initialization, only call this after calling "show" on the widget or its parents
+        """
         self.measure_widget.SetPriority(self.x_image.image_plane_widget.GetPriority() + 1)
-        self.obs_id = self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent, self.restrict_points_to_plane)
-        self.obs_id2 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self.restrict_points_to_plane)
+        self.obs_id = self.measure_widget.AddObserver(vtk.vtkCommand.PlacePointEvent, self._restrict_points_to_plane)
+        self.obs_id2 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent, self._restrict_points_to_plane)
         self.obs_id3 = self.measure_widget.AddObserver(vtk.vtkCommand.InteractionEvent,
                                                        self.emit_distance_changed_signal)
-        self.link_window_level()
+        self._link_window_level()
         self.ren.ResetCameraClippingRange()
         self.ren.ResetCamera()
         self.measure_widget.On()
 
 
-    def link_window_level(self):
-        "call after initializing the planes"
+    def _link_window_level(self):
+        """
+        Link window and level of all planes
+
+        call after initializing the planes
+        """
         if self.__curent_modality not in ("DTI", "FMRI"):
             self.y_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(self.x_image.image_plane_widget.GetLookupTable())
@@ -2498,6 +2633,12 @@ class MeasurerViewer(object):
 
     @do_and_render
     def set_measure_axis(self, axis):
+        """
+        Set the measure plane to be perpendicular to the axis
+
+        Args:
+            axis (int) : 0 for x, 1 for y and 2 for z
+        """
         assert axis in {0, 1, 2}
         self.__measure_axis = axis
         if axis == 0:
@@ -2513,38 +2654,69 @@ class MeasurerViewer(object):
 
     @do_and_render
     def set_slice_coords(self, coords):
+        """
+        Move the measure plane perpendicularly
+
+        Args:
+            coords (float) : New position across the axis perpendicular to the measure plane
+        """
         pw = self.image_planes[self.__measure_axis].image_plane_widget
         pw.SetSlicePosition(coords)
         pw.InvokeEvent(pw.slice_change_event)
 
 
     def emit_distance_changed_signal(self, caller, event):
+        """
+        Emit a Qt Signal through the associated widget
+        """
         d = self.distance
         self.__widget.distance_changed_handle(d)
 
 
     @do_and_render
     def show_image(self):
+        """
+        Shows all planes
+        """
         for im in self.__image_planes:
             im.show_image(skip_render=True)
 
     @do_and_render
     def hide_image(self):
+        """
+        Hide all planes
+        """
         for im in self.__image_planes:
             im.hide_image(skip_render=True)
 
     @do_and_render
     def change_subject(self, subj):
-        ex = None
+        """
+        Changes the subject associated to the viewer
+
+        Args:
+            new_subject : new subject id
+        """
+        log = logging.getLogger(__name__)
         for im in self.__image_planes:
             try:
                 im.change_subject(subj, skip_render=True)
             except Exception as e:
-                ex = e
-        self.link_window_level()
+                log.exception(e)
+        self._link_window_level()
 
     @do_and_render
     def change_image_modality(self, mod, contrast=None):
+        """
+        Change image modality in all planes
+
+        See :meth:`ImageManager.change_image_modality`
+
+
+        Args:
+            mod (str): New modality, for fMRI enter the paradigm here
+            contrast (int): If modality is fMRI the index of the contrast
+        """
         mod = mod.upper()
         if contrast is not None:
             pdgm = mod
@@ -2554,19 +2726,36 @@ class MeasurerViewer(object):
         for im in self.__image_planes:
             im.change_image_modality(mod, pdgm, mod, skip_render=True, contrast=contrast)
         self.__curent_modality = mod
-        self.link_window_level()
+        self._link_window_level()
 
     def get_number_of_slices(self):
-        # TODO: Something is not working right
+        """
+        Get number of slices in each plane
+
+        Returns:
+            A tuple with the image dimension
+        """
         n_slices = self.x_image.image_plane_widget.GetInput().GetDimensions()
         return n_slices
 
     def get_current_slice(self):
+        """
+        Get current slices of all planes
+
+        Returns:
+            A tuple with the current slice of each plane (x,y,z)
+        """
         return (self.x_image.get_current_image_slice(),
                 self.y_image.get_current_image_slice(),
                 self.z_image.get_current_image_slice(),)
 
     def get_camera_parameters(self):
+        """
+        Gets current camera parameters
+
+        Returns:
+            focal_point, position, view_up
+        """
         cam1 = self.ren.GetActiveCamera()
         fp = cam1.GetFocalPoint()
         pos = cam1.GetPosition()
@@ -2575,11 +2764,23 @@ class MeasurerViewer(object):
 
     @do_and_render
     def reset_camera(self):
+        """
+        Resets camera to the initial position
+        """
         fp, pos, vu = self.camera_positions[self.__measure_axis]
         self.set_camera(fp, pos, vu, skip_render=True)
 
     @do_and_render
     def set_camera(self, focal_point, position, view_up):
+        """
+        Sets the camera position
+
+        Args:
+            focal_point (tuple) : Focal point
+            position (tuple) : Camera position
+            view_up (tuple) : View up vector
+
+        """
         cam1 = self.ren.GetActiveCamera()
         cam1.SetFocalPoint(focal_point)
         cam1.SetPosition(position)
@@ -2589,18 +2790,30 @@ class MeasurerViewer(object):
 
     @property
     def image_planes(self):
+        """
+        Access to the image planes array
+        """
         return self.__image_planes
 
     @property
     def x_image(self):
+        """
+        Access to the image manager perpendicular to x
+        """
         return self.__x_image_manager
 
     @property
     def y_image(self):
+        """
+        Access to the image manager perpendicular to y
+        """
         return self.__y_image_manager
 
     @property
     def z_image(self):
+        """
+        Access to the image manager perpendicular to z
+        """
         return self.__z_image_manager
 
 
