@@ -1,11 +1,10 @@
 import vtk
-import braviz
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from PyQt4 import QtCore
-from PyQt4.QtGui import QFrame, QHBoxLayout, QApplication
+
+from PyQt4.QtGui import QFrame, QHBoxLayout
 from PyQt4.QtCore import pyqtSignal
 import logging
-from braviz import _test_arrow
+from braviz.visualization.simple_vtk import OrientationAxes, persistentImagePlane
 
 from braviz.visualization.subject_viewer import do_and_render
 

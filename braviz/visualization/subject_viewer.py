@@ -69,10 +69,11 @@ class SubjectViewer(object):
     """
     def __init__(self, render_window_interactor, reader, widget):
         """
-        Initializes the viewer
+        Creates the viewer
 
         Args:
             render_window_interactor (vtkRenderWindowInteractor) : The intaractor that will be used with this viewer
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
             widget (QObject) : Must implement *slice_change_handle* and *window_level_change_handle*
 
         """
@@ -457,7 +458,7 @@ class QSubjectViewerWidget(QFrame):
 
     def __init__(self, reader, parent):
         """
-        Initalize the subject viewer widget
+        Creates the subject viewer widget
 
         Args:
             reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
@@ -579,7 +580,7 @@ class ImageManager(object):
     @do_and_render
     def _create_image_plane_widget(self):
         """
-        Create the internal plane widget
+        Creates the internal plane widget
         """
         if self.__image_plane_widget is not None:
             # already created
@@ -2441,7 +2442,7 @@ class OrthogonalPlanesViewer(object):
 
 class MeasurerViewer(object):
     """
-    A viewer that allows the user to measure the distance between two points on images
+    A viewer that allows the user to measure the distance between two points on images using a vtkMeasureWidget
     """
     camera_positions = {
         0: ((-5.5, -5.5, 4.5), (535, -5.5, 4.5), (0, 0, 1)),  # SAGITAL
@@ -2455,7 +2456,8 @@ class MeasurerViewer(object):
 
         Args:
             render_window_interactor (vtkRenderWindowInteractor) : The intaractor that will be used with this viewer
-            widget (QObject) : Must implement *slice_change_handle* and *window_level_change_handle*
+            widget (QObject) : Must implement *slice_change_handle*, *window_level_change_handle*
+                and *distance_changed_handle*
 
         """
         self.iren = render_window_interactor
@@ -2819,6 +2821,12 @@ class MeasurerViewer(object):
 
     @do_and_render
     def change_space(self, new_space):
+        """
+        Changes the current coordinate system
+
+        Args:
+            new_space (str) : New coordinate system
+        """
         for im in self.image_planes:
             im.change_space(new_space, skip_render=True)
         self.__current_space = new_space
@@ -2826,6 +2834,9 @@ class MeasurerViewer(object):
 
     @do_and_render
     def reset_measure(self):
+        """
+        Reset the measure widget, remove both points from the scene
+        """
         self.measure_widget.Off()
         self.measure_widget.SetWidgetStateToStart()
         self.measure_widget.On()
@@ -2835,6 +2846,9 @@ class MeasurerViewer(object):
 
     @property
     def distance(self):
+        """
+        Current distance measured by the measure widget
+        """
         if not self.__placed:
             return np.nan
         else:
@@ -2842,6 +2856,9 @@ class MeasurerViewer(object):
 
     @property
     def point1(self):
+        """
+        Get coordinates of first measure point
+        """
         if self.__placed:
             p1 = np.zeros(3)
             self.measure_repr.GetPoint1WorldPosition(p1)
@@ -2851,6 +2868,9 @@ class MeasurerViewer(object):
 
     @property
     def point2(self):
+        """
+        Get coordinates of second measure point
+        """
         if self.__placed:
             p2 = np.zeros(3)
             self.measure_repr.GetPoint2WorldPosition(p2)
@@ -2860,6 +2880,13 @@ class MeasurerViewer(object):
 
     @do_and_render
     def set_points(self, p1, p2):
+        """
+        Set coordinates for both points
+
+        Args:
+            p1 (tuple) : First point coordinates
+            p2 (tuple) : Second point coordinates
+        """
         self.measure_repr.SetPoint1WorldPosition(p1)
         self.measure_repr.SetPoint2WorldPosition(p2)
         if not self.__placed:
@@ -2872,6 +2899,14 @@ class MeasurerViewer(object):
 
     @do_and_render
     def set_measure_color(self, r, g, b):
+        """
+        Set color of the measure widget
+
+        Args:
+            r (int) : red
+            g (int) : green
+            b (int) : blue
+        """
         r, g, b = r / 255, g / 255, b / 255
         self.measure_repr.GetLineProperty().SetColor(r, g, b)
         self.measure_repr.GetGlyphActor().GetProperty().SetColor(r, g, b)
@@ -2879,7 +2914,16 @@ class MeasurerViewer(object):
 
 
 class AdditionalCursors(object):
+    """
+    An additional set of cursors to use when those included in vtkImageWidget are not flexible enough
+    """
     def __init__(self, ren):
+        """
+        Initializes the cursors
+
+        Args:
+            ren (vtkRenderer) : Renderer into which the cursors will be drawn
+        """
         self.__cursors = cursors()
         self.__cursors.SetVisibility(0)
         self.__image = None
@@ -2888,6 +2932,12 @@ class AdditionalCursors(object):
         ren.AddActor(self.__cursors)
 
     def set_image(self, img):
+        """
+        Image to use as reference for the cursors
+
+        Args:
+            img (vtkImageData) : The cursors will stick to this image
+        """
         self.__image = img
         dim = img.GetDimensions()
         sp = img.GetSpacing()
@@ -2900,6 +2950,12 @@ class AdditionalCursors(object):
         self.__cursors.set_delta(max_sp / 5)
 
     def get_position(self):
+        """
+        Current position of the cursors
+
+        Returns:
+            Coordinates of the last picked position (in mm)
+        """
         if self.__coords is None:
             return None
         pos = np.array(self.__coords)
@@ -2908,9 +2964,22 @@ class AdditionalCursors(object):
         return pos * sp + org
 
     def get_coords(self):
+        """
+        Voxel coordinates of last picked position
+
+        Returns:
+            Coordinates of last picked position in voxels
+        """
         return self.__coords
 
     def set_axis_coords(self, axis=None, coords=None):
+        """
+        Set position of the cursors
+
+        Args:
+            axis (int) : Axis perpendicular to the cursor, 0 for x, 1 for y and 2 for z
+            coords (tuple) : Position of the cursor in voxels
+        """
         if axis is None or coords is None or self.__image is None:
             self.__cursors.SetVisibility(0)
             self.__coords = None
@@ -2924,11 +2993,23 @@ class AdditionalCursors(object):
         pass
 
     def hide(self):
+        """
+        Hide cursor
+        """
         self.__cursors.SetVisibility(0)
 
 
 class SphereProp(object):
+    """
+    An sphere that can be added to any viewer to represent regions of interest
+    """
     def __init__(self, ren):
+        """
+        Initializes the sphere prop
+
+        Args:
+            ren (vtkRenderer) : Renderer that will draw the sphere
+        """
         self.__source = vtk.vtkSphereSource()
         self.__mapper = vtk.vtkPolyDataMapper()
         self.__actor = vtk.vtkActor()
@@ -2945,41 +3026,89 @@ class SphereProp(object):
         ren.AddActor(self.__actor)
 
     def set_center(self, ctr):
+        """
+        Set the center of the sphere
+
+        Args:
+            ctr (tuple) : center
+        """
         self.__source.SetCenter(*ctr)
         self.__center = ctr
 
     def set_radius(self, r):
+        """
+        Set the radius of the sphere
+
+        Args:
+            r (float) : Sphere radius
+        """
         self.__source.SetRadius(r)
         self.__radius = r
 
     def set_repr(self, rep):
+        """
+        Set representation of the sphere
+
+        Args:
+            rep (str): Options are ``"wireframe"`` or ``"surface"``
+        """
         if rep.startswith("w"):
             self.__actor.GetProperty().SetRepresentationToWireframe()
         else:
             self.__actor.GetProperty().SetRepresentationToSurface()
 
     def hide(self):
+        """
+        Hide the sphere
+        """
         self.__actor.SetVisibility(0)
 
     def show(self):
+        """
+        Show the sphere
+        """
         self.__actor.SetVisibility(1)
 
     def set_opacity(self, opac_int):
+        """
+        Opacity of the sphere
+
+        Args:
+            opac_int (int) : A number from 0 to 100; where 0 is invisible and 100 is opaque
+        """
         opac = opac_int / 100.0
         self.__actor.GetProperty().SetOpacity(opac)
 
     def set_color(self, r, g, b):
+        """
+        Set color of the measure widget
+
+        Args:
+            r (int) : red
+            g (int) : green
+            b (int) : blue
+        """
         r, g, b = map(lambda x: x / 255.0, (r, g, b))
         self.__actor.GetProperty().SetColor(r, g, b)
 
 
 class QMeasurerWidget(QFrame):
+    """
+    A Qt Widget that wraps :class:`MeasurerViewer` and lets it connect naturally to Qt Applications
+    """
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
     image_level_changed = pyqtSignal(float)
     distance_changed = pyqtSignal(float)
 
     def __init__(self, reader, parent):
+        """
+        Creates the measurer widget
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            parent (QObject) : Parent
+        """
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
         filt = FilterArrows(self, (QtCore.Qt.Key_C,))
@@ -2997,33 +3126,57 @@ class QMeasurerWidget(QFrame):
         # self.__qwindow_interactor.show()
 
     def initialize_widget(self):
-        """call after showing the interface"""
+        """
+        Call this function **after** calling show on the widget or a parent
+        """
         self.__qwindow_interactor.Initialize()
         self.__qwindow_interactor.Start()
         # self.__subject_viewer.show_cone()
 
     @property
     def orthogonal_viewer(self):
+        """
+        Access to the underlying class:`MeasurerViewer`
+        """
         return self.__vtk_viewer
 
     def slice_change_handle(self, new_slice):
+        """
+        Emits a signal when the current image slice is changed on the vtkWidget
+        """
         self.slice_changed.emit(new_slice)
         # print new_slice
 
     def window_level_change_handle(self, window, level):
+        """
+        Emits a signal when window or level are changed by interacting in the vtkWidget
+        """
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
     def distance_changed_handle(self, distance):
+        """
+        Emits a signal the measured distance is changed in the vtkWidget
+        """
         self.distance_changed.emit(distance)
 
 
 class QOrthogonalPlanesWidget(QFrame):
+    """
+    A Qt Widget that wraps :class:`OrthogonalPlanesViewer` and lets it connect naturally to Qt Applications
+    """
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
     image_level_changed = pyqtSignal(float)
 
     def __init__(self, reader, parent):
+        """
+        Creates the orthogonal planes widget
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            parent (QObject) : Parent
+        """
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
         filt = FilterArrows(self, (QtCore.Qt.Key_C, QtCore.Qt.Key_O))
@@ -3041,26 +3194,54 @@ class QOrthogonalPlanesWidget(QFrame):
         # self.__qwindow_interactor.show()
 
     def initialize_widget(self):
-        """call after showing the interface"""
+        """
+        Call this function **after** calling show on the widget or a parent
+        """
         self.__qwindow_interactor.Initialize()
         self.__qwindow_interactor.Start()
         # self.__subject_viewer.show_cone()
 
     @property
     def orthogonal_viewer(self):
+        """
+        Access to the underlying class:`OrthogonalPlanesViewer`
+        """
         return self.__vtk_viewer
 
     def slice_change_handle(self, new_slice):
+        """
+        Emits a signal when the current image slice is changed on the vtkWidget
+        """
         self.slice_changed.emit(new_slice)
         # print new_slice
 
     def window_level_change_handle(self, window, level):
+        """
+        Emits a signal when window or level are changed by interacting in the vtkWidget
+        """
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
 
 class fMRI_viewer(object):
+    """
+    A viewer for visualizaing fMRI data. It displays
+
+        - Images
+        - fMRI contours
+
+    """
     def __init__(self, render_window_interactor, reader, widget):
+        """
+        Creates the fMRI viewer
+
+        Args:
+            render_window_interactor (vtkRenderWindowInteractor) : The intaractor that will be used with this viewer
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            widget (QObject) : Must implement *slice_change_handle*, *window_level_change_handle*
+                and *cursor_move_handler*
+
+        """
         self.iren = render_window_interactor
         self.ren_win = render_window_interactor.GetRenderWindow()
         self.ren = vtk.vtkRenderer()
@@ -3109,6 +3290,12 @@ class fMRI_viewer(object):
         self.__widget = widget
 
     def change_orientation(self, orientation_index):
+        """
+        Changes the orientation of the Image Plane Widget
+
+        Args:
+            orientation_index (int) : 0 for x, 1 for y and 2 for z
+        """
         # find cursor position
         pos = self.__cursor.get_coords()
         self.image.change_image_orientation(orientation_index)
@@ -3120,7 +3307,7 @@ class fMRI_viewer(object):
         self.image.set_image_slice(new_slice)
 
 
-    def connect_cursors(self):
+    def _connect_cursors(self):
         def draw_cursor2(caller, event):
             self.__active_cursor_plane = True
             axis = self.image.image_plane_widget.GetPlaneOrientation()
@@ -3146,10 +3333,22 @@ class fMRI_viewer(object):
         self.image.image_plane_widget.AddObserver(self.image.image_plane_widget.slice_change_event, slice_movement)
 
     def current_coords(self):
+        """
+        Get cursor coordinates
+
+        Returns:
+            A tuple of coordinates
+        """
         return self.__cursor.get_coords()
 
     @do_and_render
     def set_cursor_coords(self, coords):
+        """
+        Set coordinates for the cursor
+
+        Args:
+            Coords (tuple) : New position for the cursor (in voxels)
+        """
         axis = self.image.image_plane_widget.GetPlaneOrientation()
         self.__cursor.set_axis_coords(axis, coords)
         slice = coords[axis]
@@ -3157,32 +3356,64 @@ class fMRI_viewer(object):
 
     @property
     def image(self):
+        """
+        Access to ImageManager
+        """
         return self.__image_manager
 
     @property
     def contours(self):
+        """
+        Access to FmriContours
+        """
         return self.__contours
 
     @do_and_render
     def change_subject(self, new_subj):
+        """
+        Change subject associated to the plane
+
+        Args:
+            new_subj : Id of new subject
+        """
         if self.__current_subject != new_subj:
             self.__current_subject = new_subj
             self.update_view(skip_render=True)
 
     @do_and_render
     def change_paradigm(self, new_pdgm):
+        """
+        Change fMRI paradigm
+
+        Args:
+            new_pdgm (str) : Must be one of the available fMRI paradigms
+        """
         if self.__current_paradigm != new_pdgm:
             self.__current_paradigm = new_pdgm
             self.update_view(skip_render=True)
 
     @do_and_render
     def change_contrast(self, new_contrast):
+        """
+        Change contrast
+
+        Args:
+            new_contrast (int) : Index of new contrast (starting at 1)
+        """
         if self.__current_contrast != new_contrast:
             self.__current_contrast = new_contrast
             self.update_view(skip_render=True)
 
     @do_and_render
     def set_all(self, new_subject, new_pdgm, new_contrast):
+        """
+        Set subject, paradigm and contrast
+
+        Args:
+            new_subject : Id of new subject
+            new_pdgm (str) : New paradigm, must be one of the available fMRI paradigms
+            new_contrast (int) : Index of new contrast (starting at 1)
+        """
         if self.__current_subject != new_subject:
             self.__current_subject = new_subject
         if self.__current_paradigm != new_pdgm:
@@ -3193,19 +3424,40 @@ class fMRI_viewer(object):
 
     @do_and_render
     def set_contour_value(self, value):
+        """
+        Set value for the fMRI contours
+
+        Args:
+            value (float) : The iso-contours will be calculated at this value
+        """
         self.__contours.set_value(value)
 
     @do_and_render
     def set_contour_opacity(self, value):
+        """
+        Opacity for displaying the contours
+
+        Args:
+            value (int) : A number from 0 to 100; where 0 is invisible and 100 is opaque
+        """
         opac = value / 100
         self.__contours.actor.GetProperty().SetOpacity(opac)
 
     @do_and_render
     def set_contour_visibility(self, value):
+        """
+        Set visibility of contours
+
+        Args:
+            value (bool) : If ``True`` show the contours, otherwise hide them
+        """
         self.__contours.actor.SetVisibility(value)
 
     @do_and_render
     def update_view(self):
+        """
+        Resets all elements in the view
+        """
         if self.__current_subject is None or self.__current_paradigm is None or self.__current_contrast is None:
             return
         try:
@@ -3220,7 +3472,7 @@ class fMRI_viewer(object):
 
         self.image.change_image_modality("fMRI", self.__current_paradigm, contrast=self.__current_contrast)
         if not self.__image_loaded:
-            self.connect_cursors()
+            self._connect_cursors()
             self.__image_loaded = True
         self.__cursor.set_image(self.image.image_plane_widget.GetInput())
         if self.image.image_plane_widget.GetEnabled():
@@ -3229,7 +3481,6 @@ class fMRI_viewer(object):
 
         else:
             self.__contours.actor.SetVisibility(0)
-
 
     __camera_positions_dict = {
         0: ((-3.5, 0, 13), (157, 154, 130), (0, 0, 1)),
@@ -3243,14 +3494,19 @@ class fMRI_viewer(object):
 
     @do_and_render
     def reset_camera(self, position):
-        """resets the current camera to standard locations. Position may be:
-        0: initial 3d view
-        1: left
-        2: right
-        3: front
-        4: back
-        5: top
-        6: bottom"""
+        """
+        resets the current camera to standard locations.
+
+        Args:
+            position (int) :
+                0: initial 3d view
+                1: left
+                2: right
+                3: front
+                4: back
+                5: top
+                6: bottom
+        """
 
         focal, position, viewup = self.__camera_positions_dict[position]
 
@@ -3263,6 +3519,12 @@ class fMRI_viewer(object):
 
 
     def get_camera_parameters(self):
+        """
+        Gets current camera parameters
+
+        Returs:
+            focal_point, position, view_up
+        """
         cam1 = self.ren.GetActiveCamera()
         fp = cam1.GetFocalPoint()
         pos = cam1.GetPosition()
@@ -3270,6 +3532,15 @@ class fMRI_viewer(object):
         return fp, pos, vu
 
     def set_camera(self, focal_point, position, view_up):
+        """
+        Sets the camera position
+
+        Args:
+            focal_point (tuple) : Focal point
+            position (tuple) : Camera position
+            view_up (tuple) : View up vector
+
+        """
         cam1 = self.ren.GetActiveCamera()
         cam1.SetFocalPoint(focal_point)
         cam1.SetPosition(position)
@@ -3280,7 +3551,16 @@ class fMRI_viewer(object):
 
 
 class FmriContours(object):
+    """
+    Display contours calculated over an fMRI statistic map.
+    """
     def __init__(self, ren):
+        """
+        Initialize the contours manager
+
+        Args:
+            ren (vtkRenderer) : Renderer that will draw the contours
+        """
         self.__contour_filter = vtk.vtkContourFilter()
         self.__contour_filter.UseScalarTreeOn()
         self.__contour_filter.ComputeNormalsOff()
@@ -3299,31 +3579,65 @@ class FmriContours(object):
         self.__lut = None
 
     def set_value(self, value):
+        """
+        Sets the value at which contours are generated
+
+        Args:
+            value (float) : Statistical value for creating contours
+        """
         self.__value = value
         self.__contour_filter.SetValue(0, value)
         self.__contour_filter.SetValue(1, -1 * value)
 
     def set_image(self, img):
+        """
+        Sets the statistical map
+
+        Args:
+            img (vtkImageData) : Data used for contours generation
+        """
         self.__img = img
         self.__contour_filter.SetInputData(img)
         self.__contour_filter.Update()
 
     def set_lut(self, lut):
+        """
+        Sets a lookup table for showing the contours
+
+        Notice the contour will always have the same vale, and therefore the same color.
+        However the lut will reflect the changes in the contour value.
+
+        Args:
+            lut (vtkColorTransferFunction) : Table to generate contour color based on its value
+        """
         self.__mapper.SetLookupTable(lut)
         self.__mapper.UseLookupTableScalarRangeOn()
 
     @property
     def actor(self):
+        """
+        Get the contours actor
+        """
         return self.__actor
 
 
 class QFmriWidget(QFrame):
+    """
+    A Qt Widget that wraps :class:`fMRI_viewer` and lets it connect naturally to Qt Applications
+    """
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
     image_level_changed = pyqtSignal(float)
     cursor_moved = pyqtSignal(tuple)
 
     def __init__(self, reader, parent):
+        """
+        Creates the fMRI viewer widget
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            parent (QObject) : Parent
+        """
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
         self.__reader = reader
@@ -3338,24 +3652,38 @@ class QFmriWidget(QFrame):
         # self.__qwindow_interactor.show()
 
     def initialize_widget(self):
-        """call after showing the interface"""
+        """
+        Call this function **after** calling show on the widget or a parent
+        """
         self.__qwindow_interactor.Initialize()
         self.__qwindow_interactor.Start()
         # self.__subject_viewer.show_cone()
 
     @property
     def viewer(self):
+        """
+        Access to the internal fMRI_viewer
+        """
         return self.__vtk_viewer
 
     def slice_change_handle(self, new_slice):
+        """
+        Emits a signal when the current image slice is changed on the vtkWidget
+        """        
         self.slice_changed.emit(new_slice)
         # print new_slice
 
     def window_level_change_handle(self, window, level):
+        """
+        Emits a signal when window or level are changed by interacting in the vtkWidget
+        """        
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
     def cursor_move_handler(self, coordinates):
+        """
+        Emits a signal when the cursor is moved
+        """
         self.cursor_moved.emit(tuple(coordinates))
 
 
