@@ -1,6 +1,7 @@
 from __future__ import division
 import braviz
 import vtk
+from braviz import _test_arrow
 
 
 __author__ = 'Diego'
@@ -76,7 +77,7 @@ check.SetNumberOfDivisions(1,5,5)
 check.Update()
 out = check.GetOutput()
 
-viewer = braviz.visualization.simpleVtkViewer()
+viewer = simpleVtkViewer()
 viewer.addImg(out)
 #viewer.addImg(img2)
 

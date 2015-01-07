@@ -3,6 +3,7 @@ from __future__ import division
 import vtk
 
 import braviz
+from braviz import _test_arrow
 
 
 __author__ = 'Diego'
@@ -11,7 +12,7 @@ subj='207'
 if left is True:
 
     reader = braviz.readAndFilter.BravizAutoReader()
-    viewer = braviz.visualization.simpleVtkViewer()
+    viewer = simpleVtkViewer()
 
     tracts = reader.get('fibers', subj, space='dartel', waypoint=['ctx-lh-precentral', 'Brain-Stem'])
 
@@ -82,7 +83,7 @@ if left is True:
 #======================================================
 else:
     reader=braviz.readAndFilter.BravizAutoReader()
-    viewer=braviz.visualization.simpleVtkViewer()
+    viewer= simpleVtkViewer()
 
     tracts=reader.get('fibers',subj,space='dartel',waypoint=['ctx-rh-precentral','Brain-Stem'])
 

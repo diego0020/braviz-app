@@ -1,3 +1,5 @@
+from braviz import _test_arrow
+
 __author__ = 'Diego'
 
 import dipy
@@ -48,7 +50,7 @@ for i in xrange(bundles.total_clusters):
 
 new_array.SetName("clusters")
 tracts.GetCellData().SetScalars(new_array)
-v = braviz.visualization.simpleVtkViewer()
+v = simpleVtkViewer()
 ac = v.addPolyData(tracts)
 mp = ac.GetMapper()
 mp.SetScalarModeToUseCellData()

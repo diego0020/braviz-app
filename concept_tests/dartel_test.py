@@ -8,6 +8,7 @@ import numpy as np
 
 import braviz
 from braviz.readAndFilter.images import write_vtk_image
+from braviz.visualization.simple_vtk import _test_arrow
 
 reader=braviz.readAndFilter.BravizAutoReader()
 data_root=reader.get_data_root()
@@ -62,7 +63,7 @@ reslicer.SetInformationInput(template_vtk)
 reslicer.Update()
 orig_warped=reslicer.GetOutput()
 
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 v.addImg(template_vtk)
 v.start()
 
@@ -74,7 +75,7 @@ v.start()
 
 
 #Calculate forward transform: To map points
-v2=braviz.visualization.simpleVtkViewer()
+v2= simpleVtkViewer()
 v2.addImg(orig_warped)
 v2.addImg(template_vtk)
 

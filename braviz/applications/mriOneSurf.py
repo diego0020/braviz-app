@@ -8,6 +8,7 @@ import math
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
+from braviz import _test_arrow
 
 import braviz.readAndFilter
 
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     background= config.get_background()
     ren.SetBackground(background)
 
-    planeWidget=braviz.visualization.persistentImagePlane()
+    planeWidget= persistentImagePlane()
     planeWidget.SetInputData(img)
     planeWidget.SetPicker(picker)
     renWin.SetSize(600, 600)

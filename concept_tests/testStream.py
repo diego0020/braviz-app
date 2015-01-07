@@ -4,6 +4,7 @@ import nibabel as nib
 import vtk
 
 import braviz
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image
 from braviz.readAndFilter.transforms import applyTransform
 
@@ -15,7 +16,7 @@ root_path=kmc_40_reader.get_data_root()
 os.chdir(os.path.join(root_path,'093','camino'))
 #r'C:\Users\da.angulo39\Documents\Kanguro\093\camino')
 
-viz=braviz.visualization.simpleVtkViewer()
+viz= simpleVtkViewer()
 
 fa_img=nib.load('FA.nii')
 
@@ -31,6 +32,6 @@ pd=reader.GetOutput()
 viz.addPolyData(pd)
 viz.start()
 del viz
-viz=braviz.visualization.simpleVtkViewer()
+viz= simpleVtkViewer()
 viz.addImg(fa_vtk)
 viz.start()

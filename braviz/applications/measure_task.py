@@ -7,6 +7,7 @@ from PyQt4.QtGui import QMainWindow, QDialog
 import numpy as np
 
 import braviz
+from braviz import _test_arrow
 from braviz.interaction.qt_guis.ortho_measure import Ui_OrtoMeasure
 from braviz.interaction.qt_guis.ortho_measure_start import Ui_OpenMeasureApp
 from braviz.interaction.qt_guis.new_orthogonal_measure import Ui_NewRoi
@@ -538,7 +539,7 @@ class MeasureApp(QMainWindow):
         file_path = os.path.join(self.reader.get_dyn_data_root(), "braviz_data","scenarios",file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
-        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
+        save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
 
     def load_scenario(self):
         if self.action_confirmed():

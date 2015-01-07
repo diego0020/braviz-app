@@ -12,6 +12,7 @@ import sys
 import platform
 
 import braviz
+from braviz import _test_arrow
 from braviz.interaction.qt_guis.logic_bundles import Ui_LogicBundlesApp
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 from braviz.interaction.qt_guis.AddStructuresDialog import Ui_AddSegmented
@@ -655,7 +656,7 @@ class LogicBundlesApp(QMainWindow):
         file_path = os.path.join(self.reader.get_dyn_data_root(), "braviz_data","scenarios",file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
-        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
+        save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
 
     def export_scalar_to_db(self):
         dialog = ExportScalarToDB(self)

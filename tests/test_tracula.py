@@ -1,13 +1,14 @@
 from __future__ import division
 
 import braviz
+from braviz import _test_arrow
 from braviz.utilities import configure_console_logger
 import numpy as np
 
 __author__ = 'da.angulo39'
 
 configure_console_logger("test_tracula")
-v= braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 
 reader=braviz.readAndFilter.BravizAutoReader()
 tracks = reader.get("TRACULA",119,index=True)

@@ -10,6 +10,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 import braviz
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image
 import braviz.visualization.fmri_view
 import braviz.visualization.vtk_charts
@@ -53,7 +54,7 @@ if __name__ == "__main__":
     renWin = vtk.vtkRenderWindow()
     renWin.AddRenderer(ren)
 
-    planeWidget = braviz.visualization.persistentImagePlane()
+    planeWidget = persistentImagePlane()
 
     planeWidget.SetPicker(picker)
     planeWidget.UpdatePlacement()
@@ -76,14 +77,14 @@ if __name__ == "__main__":
     slice_actor.SetVisibility(0)
     slice_actor.set_z_spacing(spacing[0])
 
-    cursors = braviz.visualization.cursors()
+    cursors = cursors()
     cursors.set_spacing(*spacing)
     cursors.set_dimensions(*dimensions)
     cursors.set_origin(*origin)
     set_cursor = cursors.set_cursor
     ren.AddActor(cursors)
 
-    outline = braviz.visualization.OutlineActor()
+    outline = OutlineActor()
     outline.set_input_data(t_stat_img)
 
     config = braviz.interaction.get_config(__file__)

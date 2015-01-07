@@ -7,6 +7,7 @@ import nibabel as nib
 import numpy as np
 
 import braviz
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image
 
 
@@ -83,7 +84,7 @@ s1Actor = vtk.vtkActor()
 s1Actor.SetMapper(s1Mapper)
 s1Mapper.SetLookupTable(lut )
 
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 v.ren.AddActor(s1Actor)
 v.addImg(fa_img)
 

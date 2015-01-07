@@ -1,6 +1,7 @@
 import vtk
 
 import braviz
+from braviz import _test_arrow
 
 
 __author__ = 'Diego'
@@ -8,7 +9,7 @@ __author__ = 'Diego'
 
 #load image
 reader=braviz.readAndFilter.BravizAutoReader()
-viewer=braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 
 aparc=reader.get('APARC','310',format='vtk')
 aparc_lut=reader.get('APARC','310',lut=True)

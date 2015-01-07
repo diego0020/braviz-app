@@ -13,6 +13,7 @@ import numpy as np
 from scipy import ndimage
 
 import braviz
+from braviz import _test_arrow
 from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
 from braviz.interaction.qt_guis.roi_builder_start import Ui_OpenRoiBuilder
 from braviz.interaction.qt_guis.new_roi import Ui_NewRoi
@@ -970,7 +971,7 @@ class BuildRoiApp(QMainWindow):
         file_path = os.path.join(self.reader.get_dyn_data_root(), "braviz_data", "scenarios", file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
-        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
+        save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
 
     def load_scenario(self):
         if self.action_confirmed():

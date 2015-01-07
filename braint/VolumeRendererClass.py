@@ -6,6 +6,7 @@ Created on 26/10/2013
 import vtk
 
 import braviz
+from braviz import _test_arrow
 
 
 class VolumeRendererClass:
@@ -15,7 +16,7 @@ class VolumeRendererClass:
         self.render_window = vtk.vtkRenderWindow()
         self.render_window.AddRenderer(self.renderer)
         self.renderer.SetBackground(0.0, 0.0, 0.0)
-        self.image_plane=braviz.visualization.persistentImagePlane()
+        self.image_plane= persistentImagePlane()
         self.current_actors = list()
         
     def load_model(self, vtk_structure, patient_number, vol_name):

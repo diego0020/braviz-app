@@ -1,5 +1,7 @@
 
 from __future__ import division
+from braviz import _test_arrow
+
 __author__ = 'Diego'
 
 import braviz
@@ -108,7 +110,7 @@ if(True):
 
 
 
-viewer = braviz.visualization.simpleVtkViewer()
+viewer = simpleVtkViewer()
 ac = viewer.addPolyData(base_fibers,LUT)
 #viewer.addImg(mri)
 viewer.start()

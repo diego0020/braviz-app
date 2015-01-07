@@ -7,6 +7,7 @@ import scipy.spatial
 
 
 import nibabel
+from braviz import _test_arrow
 
 __author__ = 'da.angulo39'
 
@@ -64,7 +65,7 @@ def _get_descriptors(aseg,labels,draw=False):
 
     if draw is True:
         import vtk
-        viewer = braviz.visualization.simpleVtkViewer()
+        viewer = simpleVtkViewer()
 
         def paint_verts(vs,color,size=2):
             if vs.shape[1]!=3:

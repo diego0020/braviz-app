@@ -1,5 +1,6 @@
 from __future__ import division
 import itertools
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image
 
 __author__ = 'Diego'
@@ -66,7 +67,7 @@ for c, i in itertools.izip(get_next_peak(data2, model.shape), xrange(5)):
     draw_cross(data, c)
 
 
-viewer = braviz.visualization.simpleVtkViewer()
+viewer = simpleVtkViewer()
 vtk_image = numpy2vtk_img(data)
 plane_widget = viewer.addImg(vtk_image)
 plane_widget.SetResliceInterpolateToNearestNeighbour()

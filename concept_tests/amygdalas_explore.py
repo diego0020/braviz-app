@@ -7,6 +7,7 @@ import vtk
 import numpy as np
 
 import braviz
+from braviz import _test_arrow
 from braviz.visualization.create_lut import get_colorbrewer_lut
 
 __author__ = 'Diego'
@@ -14,7 +15,7 @@ __author__ = 'Diego'
 scalar_column='WMIIQ'
 
 reader=braviz.readAndFilter.BravizAutoReader()
-viewer=braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 
 subj_ids=reader.get('ids')
 

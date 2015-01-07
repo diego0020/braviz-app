@@ -1,4 +1,5 @@
 import braviz
+from braviz import _test_arrow
 
 subject='093'
 
@@ -7,7 +8,7 @@ r=braviz.readAndFilter.BravizAutoReader()
 
 
 #crear visualizador
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 
 #Agregar Fibras
 fibers=r.get('fibers',subject,space='talairach',waypoint='CC_Central',color='fa')

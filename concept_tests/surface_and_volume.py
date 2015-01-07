@@ -6,6 +6,7 @@ Created on 27/08/2013
 import vtk
 
 import braviz
+from braviz import _test_arrow
 
 
 r=braviz.readAndFilter.BravizAutoReader()
@@ -22,7 +23,7 @@ volume=massProperty.GetVolume()
 print volume
 print surface
 
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 actor=v.addPolyData(struct)
 balloon=vtk.vtkBalloonWidget()
 balloon_rep=vtk.vtkBalloonRepresentation()

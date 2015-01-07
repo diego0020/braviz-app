@@ -1,4 +1,5 @@
 from __future__ import division
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image
 
 __author__ = 'Diego'
@@ -102,7 +103,7 @@ data2 = (500*edges+data2)
 #data2=ndimage.filters.gaussian_gradient_magnitude(data,1)
 
 #=================
-viewer = braviz.visualization.simpleVtkViewer()
+viewer = simpleVtkViewer()
 vtk_image = numpy2vtk_img(data2)
 plane_widget = viewer.addImg(vtk_image)
 plane_widget.SetResliceInterpolateToNearestNeighbour()

@@ -4,6 +4,7 @@
 import sys
 
 import braviz
+from braviz import _test_arrow
 
 
 subject='093'
@@ -30,7 +31,7 @@ reader=braviz.readAndFilter.BravizAutoReader()
 
 
 #crear visualizador
-viewer=braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 
 #todas
 # fibers=reader.get('fibers',subject,space=espacio)

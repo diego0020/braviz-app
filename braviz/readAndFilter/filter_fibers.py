@@ -5,6 +5,7 @@ import vtk
 import braviz
 import numpy as np
 import logging
+from braviz import _test_arrow
 
 
 __author__ = 'Diego'
@@ -291,7 +292,7 @@ if __name__ == "__main__":
     test_filter = FilterBundleWithSphere()
     test_filter.set_bundle(fibers)
     out = test_filter.filter_bundle_with_sphere(ctr,r)
-    viewer = braviz.visualization.simpleVtkViewer()
+    viewer = simpleVtkViewer()
     viewer.addPolyData(out)
     viewer.start()
 

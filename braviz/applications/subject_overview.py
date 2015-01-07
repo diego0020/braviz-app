@@ -10,13 +10,14 @@ import numpy as np
 import datetime
 import platform
 import os
+from braviz import _test_arrow
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
 from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList, \
     SimpleCheckModel
-from braviz.visualization.subject_viewer import QSubjectViwerWidget
+from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
@@ -61,7 +62,7 @@ class SubjectOverviewApp(QMainWindow):
         self.__context_variables=def_var_codes
         initial_details_vars=def_var_codes
 
-        self.vtk_widget = QSubjectViwerWidget(reader=self.reader, parent=self)
+        self.vtk_widget = QSubjectViewerWidget(reader=self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
         self.sample = braviz_tab_data.get_subjects()
@@ -910,7 +911,7 @@ class SubjectOverviewApp(QMainWindow):
         file_path = os.path.join(self.reader.get_dyn_data_root(), "braviz_data", "scenarios", file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
-        braviz.visualization.save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
+        save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
 
 
     def load_scenario_dialog(self):

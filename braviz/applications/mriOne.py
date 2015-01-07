@@ -8,6 +8,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 import braviz
+from braviz import _test_arrow
 import braviz.utilities
 
 if __name__ == "__main__":
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     renWin.AddRenderer(ren)
     ren.SetBackground(background)
 
-    planeWidget = braviz.visualization.persistentImagePlane()
+    planeWidget = persistentImagePlane()
     planeWidget.SetInputData(img)
 
     planeWidget.SetPicker(picker)
@@ -250,14 +251,14 @@ if __name__ == "__main__":
         orig_slice = round(orig_img_center[0])
         print orig_slice
         #get grid
-        grid = braviz.visualization.build_grid(orig_img, orig_slice, 5)
+        grid = build_grid(orig_img, orig_slice, 5)
         #transform to current space
         #orig_space -> world
         grid = reader.transform_points_to_space(grid, orig_img_desc['space'], subj, True)
         #world -> current space
         grid = reader.transform_points_to_space(grid, space_var.get(), subj, False)
         if space_var.get().lower() == 'dartel':
-            grid = braviz.visualization.remove_nan_from_grid(grid)
+            grid = remove_nan_from_grid(grid)
         #paint grid
         grid_mapper.SetInputData(grid)
         grid_actor.SetVisibility(1)

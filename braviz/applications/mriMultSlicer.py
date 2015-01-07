@@ -5,10 +5,11 @@ import ttk
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
+from braviz import _test_arrow
 
 import braviz.readAndFilter
-from braviz.visualization import add_solid_balloon
 from braviz.utilities import configure_logger_from_conf
+from braviz.visualization.simple_vtk import add_solid_balloon
 
 
 class MriMultSlicerApp(object):
@@ -38,7 +39,7 @@ class MriMultSlicerApp(object):
         background= config.get_background()
         ren.SetBackground(background)
 
-        planeWidget=braviz.visualization.persistentImagePlane()
+        planeWidget= persistentImagePlane()
         planeWidget.SetInputData(self.img)
         planeWidget.addLabels(aparc)
 

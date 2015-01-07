@@ -4,6 +4,7 @@
 import sys
 
 import braviz
+from braviz import _test_arrow
 
 
 subject='093'
@@ -39,7 +40,7 @@ model_list=r.get('model',subject,index=1)
 putamen=r.get('model',subject,name='Left-Putamen',space=espacio)
 
 #crear visualizador
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 
 #agregar putamen al visualizador
 v.addPolyData(putamen)

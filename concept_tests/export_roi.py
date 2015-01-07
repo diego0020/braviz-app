@@ -6,6 +6,7 @@ import nibabel as nib
 import itertools
 
 import braviz
+from braviz import _test_arrow
 from braviz.readAndFilter import geom_db
 
 __author__ = 'da.angulo39'
@@ -48,7 +49,7 @@ def export_roi(subject,roi_id,space,out_file,reader=None):
     #move to out
     sphere_img=reader.move_img_from_world(sphere_img_w,space,subject)
 
-    viewer = braviz.visualization.simpleVtkViewer()
+    viewer = simpleVtkViewer()
     viewer.addImg(sphere_img)
     viewer.start()
 

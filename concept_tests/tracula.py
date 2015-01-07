@@ -9,6 +9,7 @@ import struct
 from scipy import ndimage
 from itertools import izip
 from vtk.util import numpy_support
+from braviz import _test_arrow
 from braviz.readAndFilter.transforms import applyTransform
 
 __author__ = 'Diego'
@@ -62,7 +63,7 @@ def numpy2vtk_img(d):
 reader.get("model",SUBJ,name="CSF",color=True)
 labels = dict(izip(reader.free_surfer_labels.itervalues(),reader.free_surfer_labels.iterkeys()))
 colors = reader.free_surfer_LUT
-viewer = braviz.visualization.simpleVtkViewer()
+viewer = simpleVtkViewer()
 
 for i in xrange(img_data.shape[3]):
     img_0 = img_data[:,:,:,i]

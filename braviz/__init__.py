@@ -9,6 +9,7 @@ import logging
 
 
 import vtk
+from braviz.visualization.simple_vtk import _test_arrow
 
 
 vtk_mayor=int(vtk.VTK_VERSION.split('.')[0])
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     import os
     from braviz.utilities import configure_logger_from_conf
     configure_logger_from_conf(__name__)
-    viewer = visualization.simpleVtkViewer()
+    viewer = simpleVtkViewer()
     reader = readAndFilter.BravizAutoReader()
     apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
     get_conf = interaction.get_config(apps_dir)

@@ -7,10 +7,11 @@ import thread
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
+from braviz import _test_arrow
 
 import braviz.readAndFilter
-from braviz.visualization import add_simple_solid_balloon,add_fibers_balloon
 from braviz.interaction.tkSimpleDialog import Dialog as simpleDialog
+from braviz.visualization.simple_vtk import add_simple_solid_balloon, add_fibers_balloon
 
 
 currSubj='093'
@@ -31,7 +32,7 @@ config=braviz.interaction.get_config(__file__)
 background= config.get_background()
 ren.SetBackground(background)
 
-planeWidget=braviz.visualization.persistentImagePlane()
+planeWidget= persistentImagePlane()
 planeWidget.SetInputData(img)
 
 planeWidget.addLabels(aparc)

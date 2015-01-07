@@ -5,12 +5,13 @@ import nibabel as nib
 from numpy.linalg import inv
 
 import braviz
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image
 from braviz.readAndFilter.transforms import applyTransform, transformGeneralData
 
 subject='144'
 
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 
 #os.chdir(r'C:\Users\da.angulo39\Documents\Kanguro\093\camino')
 reader=braviz.readAndFilter.BravizAutoReader()

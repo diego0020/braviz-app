@@ -5,6 +5,7 @@ from PyQt4 import QtCore
 from PyQt4.QtGui import QFrame, QHBoxLayout, QApplication
 from PyQt4.QtCore import pyqtSignal
 import logging
+from braviz import _test_arrow
 
 from braviz.visualization.subject_viewer import do_and_render
 
@@ -29,7 +30,7 @@ class CheckbordView(object):
         self.ren.SetOcclusionRatio(0.1)
         self.ren_win.AddRenderer(self.ren)
         self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        self.axes = braviz.visualization.OrientationAxes()
+        self.axes = OrientationAxes()
         self.axes.initialize(self.iren)
 
         self.reader = reader
@@ -202,7 +203,7 @@ class CheckbordView(object):
 
     def create_image_plane_widget(self):
         if self.__plane_widget is None:
-            self.__plane_widget = braviz.visualization.persistentImagePlane(self.__orientation)
+            self.__plane_widget = persistentImagePlane(self.__orientation)
             self.__plane_widget.SetInteractor(self.iren)
             self.__plane_widget.GetColorMap().SetLookupTable(None)
             self.__plane_widget.On()

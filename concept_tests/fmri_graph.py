@@ -8,6 +8,7 @@ import numpy as np
 import nibabel as nib
 
 import braviz
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image, nibNii2vtk
 from braviz.readAndFilter.transforms import applyTransform
 import braviz.visualization.vtk_charts
@@ -18,7 +19,7 @@ from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 __author__ = 'Diego'
 
 reader=braviz.readAndFilter.BravizAutoReader()
-viewer=braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 
 #====================global variables===========
 subject='144'
@@ -64,13 +65,13 @@ def get_time_vol(spatial_slice):
 get_time_vol(spatial_slice)
 #============CURSORS=====================
 
-cursors=braviz.visualization.cursors()
+cursors= cursors()
 cursors.set_spacing(-2,2,2)
 set_cursor= cursors.set_cursor
 
 viewer.ren.AddActor(cursors)
 #===============T-IMAGE=================
-plane_widget=braviz.visualization.persistentImagePlane()
+plane_widget= persistentImagePlane()
 
 
 t_stat_img=reader.get('fMRI',subject,name='powergrip',space='native',format='vtk')
@@ -101,7 +102,7 @@ plane_widget.GetColorMap().SetLookupTable(None)
 plane_widget.DisplayTextOff()
 
 # An outline is shown for context.
-outline = braviz.visualization.OutlineActor()
+outline = OutlineActor()
 outline.set_input_data(t_stat_img)
 
 viewer.ren.AddActor(outline)

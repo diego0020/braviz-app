@@ -3,6 +3,8 @@ import braviz
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(reader'K:\JohanaForero\KAB-db')
 #r=braviz.readAndFilter.kmc40.kmc40Reader(r'K:\JohanaForero\KAB-db')
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\imagine\Documents\juanibarral\yoyis\KAB-db')
+from braviz import _test_arrow
+
 reader=reader=braviz.readAndFilter.BravizAutoReader()
 r=r=braviz.readAndFilter.BravizAutoReader()
 #reader=braviz.readAndFilter.kmc40AutoReader()
@@ -19,7 +21,7 @@ print(model_list)
 putamen=reader.get('model','144',name='Left-Putamen')
 
 #crear visualizador
-viewer=braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 #viewer=braviz.visualization.vtk.vtkImagePlaneWidget()
 
 #agregar putamen al visualizador

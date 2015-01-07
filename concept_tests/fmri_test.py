@@ -9,6 +9,7 @@ import itertools
 import nibabel as nib
 import numpy as np
 import vtk
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image
 from braviz.readAndFilter.transforms import applyTransform, numpy2vtkMatrix
 
@@ -29,7 +30,7 @@ T3=np.dot(T,T2i)
 
 T1_b= applyTransform(v_T1,T3)
 
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 v.addImg(T1_b)
 v.start()
 
@@ -120,7 +121,7 @@ reslicer.Update()
 
 
 
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 v.addImg(reslicer.GetOutput())
 v.addImg(v_T1)
 v.start()
@@ -192,6 +193,6 @@ r_concatenated.Update()
 import braviz
 r=braviz.readAndFilter.BravizAutoReader()
 func=r.get('fMRI','144',name='POWERGRIP',space='world',format='vtk')
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 v.addImg(func)
 v.start()

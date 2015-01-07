@@ -1,6 +1,7 @@
 import vtk
 
 import braviz
+from braviz import _test_arrow
 
 
 r=braviz.readAndFilter.BravizAutoReader()
@@ -8,7 +9,7 @@ r=braviz.readAndFilter.BravizAutoReader()
 mri=r.get('mri','093',format='vtk')
 aparc=r.get('aparc','093',format='vtk')
 lut=r.get('aparc','093',lut=1)
-pw=braviz.visualization.persistentImagePlane()
+pw= persistentImagePlane()
 pw.SetInputData(mri)
 pw.addLabels(aparc)
 pw.setLabelsLut(lut)

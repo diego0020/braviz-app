@@ -10,9 +10,11 @@ import braviz
 
 #test='sphere'
 #test='measure'
+from braviz import _test_arrow
+
 test='measure'
 
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 r=braviz.readAndFilter.BravizAutoReader()
 struct=r.get('Model','093',name='Left-Caudate')
 v.addPolyData(struct)

@@ -9,6 +9,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
 
 import braviz
+from braviz import _test_arrow
 
 reader=braviz.readAndFilter.BravizAutoReader()
 
@@ -66,7 +67,7 @@ class CompareStructs(object):
         background= config.get_background()
         ren2.SetBackground(background)
 
-        planeWidget=braviz.visualization.persistentImagePlane()
+        planeWidget= persistentImagePlane()
         planeWidget.SetInputData(img1)
         planeWidget.SetResliceInterpolateToNearestNeighbour() # Sin interpolar
 
@@ -74,7 +75,7 @@ class CompareStructs(object):
         renWin.SetSize(600, 300)
         renWin.SetSize(600, 300)
 
-        planeWidget2=braviz.visualization.persistentImagePlane()
+        planeWidget2= persistentImagePlane()
         planeWidget2.SetInputData(img2)
         planeWidget2.SetResliceInterpolateToNearestNeighbour() # Sin interpolar
 
@@ -143,7 +144,7 @@ class CompareStructs(object):
                     actor2model_dict[id(model_actor)]=model_name
             if addToRef:
                 model_volume = reader.get('model', ref_subj, name=model_name, volume='1')
-                braviz.visualization.add_solid_balloon(balloon, models_dict[model_name][2], model_name,model_volume)
+                add_solid_balloon(balloon, models_dict[model_name][2], model_name,model_volume)
             else:
                 #"show personalized message"
                 _,area_r=braviz.interaction.compute_volume_and_area(ref_models[model_name][0])

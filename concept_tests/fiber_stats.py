@@ -7,6 +7,7 @@ import vtk
 import numpy as np
 
 import braviz
+from braviz import _test_arrow
 
 
 r=braviz.readAndFilter.BravizAutoReader()
@@ -52,7 +53,7 @@ Std: %.2f"""%(len(d),np.mean(d),np.max(d),np.min(d),np.std(d))
     balloon_widget.AddBalloon(fib_actor,message)
 
 #===================
-v=braviz.visualization.simpleVtkViewer()
+v= simpleVtkViewer()
 actor=v.addPolyData(fib)
 balloon=vtk.vtkBalloonWidget()
 balloon_rep=vtk.vtkBalloonRepresentation()

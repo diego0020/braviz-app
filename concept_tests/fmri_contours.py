@@ -1,6 +1,8 @@
 from __future__ import division
 import vtk
 import braviz
+from braviz.visualization.simple_vtk import _test_arrow
+
 __author__ = 'Diego'
 
 reader = braviz.readAndFilter.BravizAutoReader()
@@ -9,7 +11,7 @@ pdgms = reader.get("fmri",None,index=True)
 pdgm = list(pdgms)[0]
 fmri_img = reader.get("fmri",subject,name=pdgm,contrast=1,format="vtk",space = "fmri-%s"%pdgm)
 
-viewer = braviz.visualization.simpleVtkViewer()
+viewer = simpleVtkViewer()
 viewer.addImg(fmri_img)
 
 contour_filter = vtk.vtkContourFilter()

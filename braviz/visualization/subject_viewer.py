@@ -6,6 +6,9 @@ from PyQt4 import QtCore
 from PyQt4.QtGui import QFrame, QHBoxLayout, QApplication
 from PyQt4.QtCore import pyqtSignal
 
+from braviz.visualization.simple_vtk import OrientationAxes, persistentImagePlane, cursors
+from braviz.visualization.fmri_view import fMRI_blender
+
 from braviz.interaction.structure_metrics import solve_laterality
 import braviz.readAndFilter.tabular_data
 import seaborn as sbs
@@ -20,7 +23,17 @@ __author__ = 'Diego'
 # TODO: Abstract viewer classes
 
 def do_and_render(f):
-    """requiers the class to have the rendered accesible as self.ren"""
+    """
+    Wraps drawing methods, adding an optional call to *Render* at the end.
+
+    It adds the *skip_render* kwarg argument, which if True will avoid the call to Render. This is
+    useful to avoid repeated call renders when performing several draw operations.
+
+    requires the class to have the renderer accessible as self.ren
+
+    Args:
+        f (function) : Function that changes vtk scene
+    """
 
     @wraps(f)
     def wrapped(*args, **kwargs):
@@ -42,6 +55,17 @@ def do_and_render(f):
 
 
 class SubjectViewer(object):
+    """
+    A general viewer to show data on a particular subject
+
+    It gives access to
+        - Images
+        - fMRI Contours
+        - Segmentation reconstruction models
+        - Surface parcellations
+        - Tractographies
+        - Tracula Bundles
+    """
     def __init__(self, render_window_interactor, reader, widget):
 
         # render_window_interactor.Initialize()
@@ -60,7 +84,7 @@ class SubjectViewer(object):
         self.ren_win.AddRenderer(self.ren)
 
         self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        self.axes = braviz.visualization.OrientationAxes()
+        self.axes = OrientationAxes()
         self.axes.initialize(self.iren)
 
         self.light = vtk.vtkLight()
@@ -101,26 +125,44 @@ class SubjectViewer(object):
 
     @property
     def models(self):
+        """
+        Access to :class:`ModelManager`
+        """
         return self.__model_manager
 
     @property
     def tractography(self):
+        """
+        Access to :class:`TractographyManager`
+        """
         return self.__tractography_manager
 
     @property
     def image(self):
+        """
+        Access to :class:`ImageManager`
+        """
         return self.__image_manager
 
     @property
     def surface(self):
+        """
+        Access to :class:`SurfaceManager`
+        """
         return self.__surface_manager
 
     @property
     def contours(self):
+        """
+        Access to :class:`FmriContours`
+        """
         return self.__contours_manager
 
     @property
     def tracula(self):
+        """
+        Access to :class:`TraculaManager`
+        """
         return self.__tracula_manager
 
     def show_cone(self):
@@ -136,34 +178,40 @@ class SubjectViewer(object):
         self.ren.AddActor(cone_actor)
         self.ren_win.Render()
 
-    def change_subject(self, new_subject_img_code):
-        self.__current_subject = new_subject_img_code
+    def change_subject(self, new_subject):
+        """
+        Changes the subject associated to the viewer
+
+        Args:
+            new_subject : new subject id
+        """
+        self.__current_subject = new_subject
         errors = []
         log = logging.getLogger(__name__)
         # update image
         try:
-            self.image.change_subject(new_subject_img_code, skip_render=True)
+            self.image.change_subject(new_subject, skip_render=True)
         except Exception as e:
             log.exception(e)
             errors.append("Image")
 
         # update models
         try:
-            self.models.reload_models(subj=new_subject_img_code, skip_render=True)
+            self.models.reload_models(subj=new_subject, skip_render=True)
         except Exception as e:
             log.exception(e)
             errors.append("Models")
 
         # update fibers
         try:
-            self.tractography.set_subject(new_subject_img_code, skip_render=True)
+            self.tractography.set_subject(new_subject, skip_render=True)
         except Exception as e:
             log.exception(e)
             errors.append("Fibers")
 
         # update surfaces
         try:
-            self.surface.set_subject(new_subject_img_code, skip_render=True)
+            self.surface.set_subject(new_subject, skip_render=True)
         except Exception as e:
             log.exception(e)
             errors.append("Surfaces")
@@ -187,6 +235,12 @@ class SubjectViewer(object):
 
     @do_and_render
     def change_current_space(self, new_space):
+        """
+        Changes the current coordinate system
+
+        Args:
+            new_space (str) : New coordinate system
+        """
         if self.__current_space == new_space:
             return
         self.__current_space = new_space
@@ -223,14 +277,19 @@ class SubjectViewer(object):
     }
 
     def reset_camera(self, position):
-        """resets the current camera to standard locations. Position may be:
-        0: initial 3d view
-        1: left
-        2: right
-        3: front
-        4: back
-        5: top
-        6: bottom"""
+        """
+        resets the current camera to standard locations.
+
+        Args:
+            position (int) :
+                0: initial 3d view
+                1: left
+                2: right
+                3: front
+                4: back
+                5: top
+                6: bottom
+        """
 
         focal, position, viewup = self.__camera_positions_dict[position]
 
@@ -243,6 +302,15 @@ class SubjectViewer(object):
         self.ren_win.Render()
 
     def set_camera(self, focal_point, position, view_up):
+        """
+        Sets the camera position
+
+        Args:
+            focal_point (tuple) : Focal point
+            position (tuple) : Camera position
+            view_up (tuple) : View up vector
+
+        """
         cam1 = self.ren.GetActiveCamera()
         cam1.SetFocalPoint(focal_point)
         cam1.SetPosition(position)
@@ -253,6 +321,11 @@ class SubjectViewer(object):
 
 
     def print_camera(self):
+        """
+        Logs information about the current camera position
+
+        Data is send to the current logger with *info* level
+        """
         cam1 = self.ren.GetActiveCamera()
         log = logging.getLogger(__name__)
         log.info("Camera coordinates:")
@@ -264,6 +337,12 @@ class SubjectViewer(object):
         log.info(cam1.GetViewUp())
 
     def get_camera_parameters(self):
+        """
+        Gets current camera parameters
+
+        Returs:
+            focal_point, position, view_up
+        """
         cam1 = self.ren.GetActiveCamera()
         fp = cam1.GetFocalPoint()
         pos = cam1.GetPosition()
@@ -272,6 +351,13 @@ class SubjectViewer(object):
 
     @do_and_render
     def set_fmri_contours_image(self, paradigm=None, contrast=None):
+        """
+        Sets the image to use for calculating fMRI contours
+
+        Args:
+            paradigm (str) : Name of fMRI paradigm
+            contrast (int): Index (Matlab style) of desired contrast
+        """
         if paradigm is None:
             paradigm = self.__contours_paradigm
         else:
@@ -308,6 +394,12 @@ class SubjectViewer(object):
 
     @do_and_render
     def set_contours_visibility(self, visible):
+        """
+        Toggle visibility of fMRI contours
+
+        Args:
+            visible (bool) : If ``True`` contours will show, if ``False`` contours will be hidden,
+        """
         self.__contours_hidden = not visible
         if self.__contours_hidden:
             self.contours.actor.SetVisibility(0)
@@ -317,9 +409,21 @@ class SubjectViewer(object):
 
 
 class FilterArrows(QtCore.QObject):
+    """
+    A Qt event filter to prevent the main vtk widget from swallowing certain keys. By default this are the arrows,
+    but additional keys can be added in the constructor.
+    """
     key_pressed = pyqtSignal(QtCore.QEvent)
 
     def __init__(self, parent=None, other_keys=tuple()):
+        """
+        Construct the Qt Event Filter to avoid certain key presses from arriving to the VTK widget
+
+        Args:
+            parent (QOject) : Parent of the current object
+            other_keys (list) : List of additional keys to filter out
+
+        """
         super(FilterArrows, self).__init__(parent)
         keys = {QtCore.Qt.Key_Left, QtCore.Qt.Key_Right, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down}
         keys.update(other_keys)
@@ -335,12 +439,22 @@ class FilterArrows(QtCore.QObject):
         return False
 
 
-class QSubjectViwerWidget(QFrame):
+class QSubjectViewerWidget(QFrame):
+    """
+    A Qt Widget that wraps :class:`SubjectViewer` and lets it connect naturally to Qt Applications
+    """
     slice_changed = pyqtSignal(int)
     image_window_changed = pyqtSignal(float)
     image_level_changed = pyqtSignal(float)
 
     def __init__(self, reader, parent):
+        """
+        Initalize the subject viewer widget
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            parent (QObject) : Parent
+        """
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
         filt = FilterArrows(self)
@@ -359,7 +473,9 @@ class QSubjectViwerWidget(QFrame):
         # self.__qwindow_interactor.show()
 
     def initialize_widget(self):
-        """call after showing the interface"""
+        """
+        Call this function **after** calling show on the widget or a parent
+        """
         self.__qwindow_interactor.Initialize()
         self.__qwindow_interactor.Start()
         self.subject_viewer.reset_camera(0)
@@ -367,19 +483,43 @@ class QSubjectViwerWidget(QFrame):
 
     @property
     def subject_viewer(self):
+        """
+        Access to the underlying class:`SubjectViewer`
+        """
         return self.__subject_viewer
 
     def slice_change_handle(self, new_slice):
+        """
+        Emits a signal when the current image slice is changed on the vtkWidget
+        """
         self.slice_changed.emit(new_slice)
         # print new_slice
 
     def window_level_change_handle(self, window, level):
+        """
+        Emits a signal when window or level are changed by interacting in the vtkWidget
+        """
         self.image_window_changed.emit(window)
         self.image_level_changed.emit(level)
 
 
 class ImageManager(object):
+    """
+    Controls an ImagePlaneWidget
+    """
     def __init__(self, reader, ren, widget, interactor, initial_subj=None, initial_space="World", picker=None):
+        """
+        Initializes the ImageManager
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            ren (vtkRenderer) : Renderer in which to draw the plane
+            widget (QObject) : Must implement *slice_change_handle* and *window_level_change_handle*
+            interactor (vtkRenderWindowInteractor) : The render window interactor of the output window
+            initial_subj : Code of initial subject, if None an arbitrary subject will be selected
+            initial_space (str) : Initial coordinate system
+            picker (vtkPicker) : A vtkPicker may be used to pick on several objects. If None a new picker is created
+        """
         self.ren = ren
         self.reader = reader
         if initial_subj is None:
@@ -394,7 +534,7 @@ class ImageManager(object):
         self.__current_fa_window_level = None
         self.__image_plane_widget = None
         self.__mri_lut = None
-        self.__fmri_blender = braviz.visualization.fMRI_blender()
+        self.__fmri_blender = fMRI_blender()
         self.__widget = widget
         self.__outline_filter = None
         self.__picker = picker
@@ -403,12 +543,18 @@ class ImageManager(object):
 
     @property
     def image_plane_widget(self):
+        """
+        Get the vtkImagePlaneWidget
+        """
         if self.__image_plane_widget is None:
-            self.create_image_plane_widget()
+            self._create_image_plane_widget()
         return self.__image_plane_widget
 
     @do_and_render
     def hide_image(self):
+        """
+        Hide the plane widget
+        """
         self.__hidden = True
         if self.__image_plane_widget is not None:
             self.__image_plane_widget.Off()
@@ -416,15 +562,21 @@ class ImageManager(object):
 
     @do_and_render
     def show_image(self):
+        """
+        Show the plane widget
+        """
         self.__hidden = False
         self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, True, self.__current_contrast)
 
     @do_and_render
-    def create_image_plane_widget(self):
+    def _create_image_plane_widget(self):
+        """
+        Create the internal plane widget
+        """
         if self.__image_plane_widget is not None:
             # already created
             return
-        self.__image_plane_widget = braviz.visualization.persistentImagePlane(self.__current_image_orientation)
+        self.__image_plane_widget = persistentImagePlane(self.__current_image_orientation)
         self.__image_plane_widget.SetInteractor(self.iren)
         self.__image_plane_widget.On()
         self.__mri_lut = vtk.vtkWindowLevelLookupTable()
@@ -458,6 +610,12 @@ class ImageManager(object):
 
     @do_and_render
     def change_subject(self, new_subject):
+        """
+        Change subject associated to the plane
+
+        Args:
+            new_subject : Id of new subject
+        """
         self.__current_subject = new_subject
         if not self.__hidden:
             self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
@@ -465,6 +623,11 @@ class ImageManager(object):
 
     @do_and_render
     def change_space(self, new_space):
+        """
+        Change current coordinate system
+
+        new_space (str) : new coordinate system, see :meth:`~braviz.readAndFilter.base_reader.BaseReader.get`
+        """
         if self.__current_space == new_space:
             return
         self.__current_space = new_space
@@ -475,9 +638,16 @@ class ImageManager(object):
     @do_and_render
     def change_image_modality(self, modality, paradigm=None, force_reload=False, contrast=1):
         """Changes the modality of the current image;
-        to hide the image call hide_image;
-        After this, the only way of showing back the image is by calling show_image
-        in the case of fMRI modality should be fMRI and paradigm the name of the paradigm"""
+
+        In the case of fMRI modality should be fMRI and paradigm the name of the paradigm
+
+        Args:
+            modality (str) : New image modality, may be one of  ``["mri","fa","md","dti","aparc","wmparc","fmri"]``
+            paradigm (str) : Name of paradigm in case modality is ``"fmri"``
+            force_reload (bool) : if True, forces the plane to reload the image if it appears to be the same as before
+            contrast (int) : contrast to show in case modality is ``"fmri"``
+
+        """
 
         if modality is not None:
             modality = modality.upper()
@@ -508,7 +678,7 @@ class ImageManager(object):
             return
 
         if self.__image_plane_widget is None:
-            self.create_image_plane_widget()
+            self._create_image_plane_widget()
             self.__image_plane_widget.On()
 
         # update image labels:
@@ -630,9 +800,12 @@ class ImageManager(object):
 
     @do_and_render
     def change_image_orientation(self, orientation):
-        """Changes the orientation of the current image
-        to hide the image call hide_image
-        orientation is a number from 0, 1 or 2 """
+        """
+        Changes the orientation of the current image
+
+        Args:
+            orientation (int) : 0 for X, 1 for Y and 2 for Z
+        """
         log = logging.getLogger(__name__)
         if self.__image_plane_widget is None:
             self.__current_image_orientation = orientation
@@ -642,6 +815,12 @@ class ImageManager(object):
         self.__current_image_orientation = orientation
 
     def get_number_of_image_slices(self):
+        """
+        Gets the number of slices in the current orientation
+
+        Returns:
+            The number of available slicer for the current image and orientation
+        """
         if self.__image_plane_widget is None:
             return 0
         img = self.__image_plane_widget.GetInput()
@@ -652,12 +831,24 @@ class ImageManager(object):
         return dimensions[self.__current_image_orientation]
 
     def get_current_image_slice(self):
+        """
+        Get the index of the actual slice
+
+        Returns:
+            The index of the current slice
+        """
         if self.__image_plane_widget is None:
             return 0
         return self.__image_plane_widget.GetSliceIndex()
 
     @do_and_render
     def set_image_slice(self, new_slice):
+        """
+        Sets the image slice
+
+        Args:
+            new_slice (int) : Number of the desired slice
+        """
         if self.__image_plane_widget is None:
             return
         self.__image_plane_widget.SetSliceIndex(int(new_slice))
@@ -665,26 +856,53 @@ class ImageManager(object):
 
 
     def get_current_image_window(self):
+        """
+        Current window
+
+        Returns:
+            Current window value
+        """
         return self.__image_plane_widget.GetWindow()
 
     def get_current_image_level(self):
+        """
+        Current level
+
+        Returns:
+            Current level value
+        """
         return self.__image_plane_widget.GetLevel()
 
     @do_and_render
     def set_image_window(self, new_window):
+        """
+        Changes window value
+
+        Args:
+            new_window (float) : New window value
+        """
         if self.__image_plane_widget is None:
             return
         self.__image_plane_widget.SetWindowLevel(new_window, self.get_current_image_level())
 
     @do_and_render
     def set_image_level(self, new_level):
+        """
+        Changes level value
+
+        Args:
+            new_level (float) : New level value
+        """
         if self.__image_plane_widget is None:
             return
         self.__image_plane_widget.SetWindowLevel(self.get_current_image_window(), new_level)
 
     @do_and_render
-    def reset_window_level(self, button=None):
-        # print button
+    def reset_window_level(self):
+        """
+        Resets window and level to standard values
+        """
+
         if self.__image_plane_widget is None:
             return
         if self.__current_image == "MRI" or self.__current_image == "MD" or self.__current_image == "FMRI":
@@ -705,7 +923,19 @@ class ImageManager(object):
 
 
 class ModelManager(object):
+    """
+    A manager for segmented structure models
+    """
     def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
+        """
+        Initializes a model manager
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            ren (vtkRenderer) : Renderer in which to draw the models
+            initial_subj : Code of initial subject, if None an arbitrary subject will be selected
+            initial_space (str) : Initial coordinate system
+        """
         self.ren = ren
         if initial_subj is None:
             initial_subj = reader.get("ids", None)[0]
@@ -740,6 +970,13 @@ class ModelManager(object):
 
     @do_and_render
     def reload_models(self, subj=None, space=None):
+        """
+        Reloads all models
+
+        Args:
+            subj : Code for new subject, if ``None`` the subject is not changed
+            space (str) : new coordinate system, if ``None`` the coordinates are not changed
+        """
         if subj is not None:
             self.__current_subject = subj
             try:
@@ -824,6 +1061,12 @@ class ModelManager(object):
 
     @do_and_render
     def set_models(self, new_model_set):
+        """
+        Sets the currently shown models
+
+        Args:
+            new_model_set (set) : An iterable of strings with names of valid models.
+        """
         new_set = set(new_model_set)
         current_models = self.__active_models_set
 
@@ -843,6 +1086,12 @@ class ModelManager(object):
 
     @do_and_render
     def set_opacity(self, int_opacity):
+        """
+        Opacity for displaying the models
+
+        Args:
+            int_opacity (int) : A number from 0 to 100; where 0 is invisible and 100 is opaque
+        """
         float_opacity = int_opacity / 100
         self.__opacity = float_opacity
         for _, _, ac in self.__pd_map_act.itervalues():
@@ -850,10 +1099,22 @@ class ModelManager(object):
             prop.SetOpacity(float_opacity)
 
     def get_opacity(self):
+        """
+        Gets actual opacity
+
+        Returns:
+            An integer from 0 to 100 indicating the current opacity percentage
+        """
         return self.__opacity * 100
 
     @do_and_render
     def set_color(self, float_rgb_color):
+        """
+        Sets the color for displaying the models
+
+        Args:
+            float_rgb_color (tuple) : An rgb value, if ``None`` the freesurfer lookuptable is used
+        """
         self.__current_color = float_rgb_color
         for k, (_, _, ac) in self.__pd_map_act.iteritems():
             prop = ac.GetProperty()
@@ -865,6 +1126,22 @@ class ModelManager(object):
                 prop.SetColor(self.__current_color)
 
     def get_scalar_metrics(self, metric_name):
+        """
+        Get an scalar metric from the current models
+
+        Args:
+            metric_name (str): May be
+
+                - ``volume`` : Total volume occupied by all models
+                - ``area`` : Sum of superficial areas of all models
+                - ``fa_inside`` : Mean value of FA inside the current models
+                - ``md_inside`` : Mean value of MD inside the current models
+                - ``nfibers`` : Number of fibers that cross any of the current models
+                - ``lfibers`` : Mean length of fibers that cross any of the current models
+                - ``fa-fibers`` : Mean FA of fibers that cross any of the current models
+        Returns:
+            Scalar value or ``nan`` if there was an error
+        """
         models = self.__active_models_set
         rl_models = [solve_laterality(self.__laterality, m) for m in models]
         try:
@@ -879,7 +1156,19 @@ class ModelManager(object):
 
 
 class TractographyManager(object):
+    """
+    A manager for tractography data
+    """
     def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
+        """
+        Initializes the tractography manager
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            ren (vtkRenderer) : Renderer in which to draw the planeow
+            initial_subj : Code of initial subject, if None an arbitrary subject will be selected
+            initial_space (str) : Initial coordinate system
+        """
         self.reader = reader
         self.ren = ren
         if initial_subj is None:
@@ -907,19 +1196,38 @@ class TractographyManager(object):
 
     @do_and_render
     def set_subject(self, subj):
+        """
+        Sets the subject associated to the manager
+
+        Args:
+            subj : New subject
+        """
         self.__current_subject = subj
         self.__reload_fibers()
 
     @do_and_render
     def set_current_space(self, space):
+        """
+        Set current coordinate system
+
+        new_space (str) : new coordinate system, see :meth:`~braviz.readAndFilter.base_reader.BaseReader.get`
+        """
         self.__current_space = space
         self.__reload_fibers()
 
     @do_and_render
-    def set_bundle_from_checkpoints(self, checkpoints, throug_all):
+    def set_bundle_from_checkpoints(self, checkpoints, through_all):
+        """
+        Creates a fiber bundle based on a list of structures
+
+        Args:
+            checkpoints (list) : Structure model names list
+            through_all (bool): If ``True`` the bundle will contain lines that pass though all checkpoints,
+                otherwise it will contain lines that pass through any checkpoint
+        """
         checkpoints = list(checkpoints)
         self.__ad_hoc_fiber_checks = checkpoints
-        self.__ad_hoc_throug_all = throug_all
+        self.__ad_hoc_throug_all = through_all
         self.__ad_hoc_visibility = True
         self.__ad_hock_checkpoints = checkpoints
         if self.__ad_hoc_pd_mp_ac is None:
@@ -929,7 +1237,7 @@ class TractographyManager(object):
             actor.SetMapper(mapper)
         else:
             _, mapper, actor = self.__ad_hoc_pd_mp_ac
-        if throug_all is True:
+        if through_all is True:
             operation = "and"
         else:
             operation = "or"
@@ -961,6 +1269,9 @@ class TractographyManager(object):
 
     @do_and_render
     def hide_checkpoints_bundle(self):
+        """
+        Hide the checkpoints bundle created with :meth:`set_bundle_from_checkpoints`
+        """
         if self.__ad_hoc_pd_mp_ac is None:
             return
         act = self.__ad_hoc_pd_mp_ac[2]
@@ -984,6 +1295,14 @@ class TractographyManager(object):
 
     @do_and_render
     def add_from_database(self, b_id):
+        """
+        Add a bundle from the database
+
+        See :mod:`braviz.readAndFilter.bundles_db`
+
+        Args:
+            b_id (int) : Bundle id in the database
+        """
 
         self.__active_db_tracts.add(b_id)
         if b_id not in self.__db_tracts:
@@ -1015,6 +1334,12 @@ class TractographyManager(object):
 
 
     def get_bundle_colors(self):
+        """
+        Get a set of colors for coloring each active bundle in a different color
+
+        Returns:
+            A color palette with length equal to the number of active bundles
+        """
         number_of_bundles = len(self.__active_db_tracts)
         if self.__ad_hoc_visibility is True:
             number_of_bundles += 1
@@ -1030,13 +1355,36 @@ class TractographyManager(object):
 
     @do_and_render
     def set_show_color_bar(self, value):
+        """
+        Activates a vtk color bar
+
+        Args:
+            value (bool) : If ``True`` the bar is activated, if ``False`` it is hidden
+        """
         self.__show_color_bar = bool(value)
         self.__set_color_bar()
 
     def get_show_color_bar(self):
+        """
+        Status of the color bar
+
+        Returns:
+            ``True`` if the color bar is active, ``False`` otherwise
+        """
         return self.__show_color_bar
 
     def get_polydata(self, b_id):
+        """
+        Gets the polydata object associated to a database bundle.
+
+        The current subject, coordinate system and scalars are maintained
+
+        Args:
+            b_id (int) :  Bundle database id
+
+        Returns:
+            vtkPolyData from the requested bundle
+        """
         poly = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
                                db_id=b_id, **self.__current_color_parameters)
         return poly
@@ -1044,6 +1392,12 @@ class TractographyManager(object):
 
     @do_and_render
     def hide_database_tract(self, bid):
+        """
+        Hides a bundle previously added from the database
+
+        Args:
+            bid (int) : Bundle database id
+        """
         trio = self.__db_tracts.get(bid)
         if trio is None:
             return
@@ -1053,6 +1407,24 @@ class TractographyManager(object):
 
     @do_and_render
     def change_color(self, new_color):
+        """
+        Sets the coloring scheme for the rendered data.
+
+        Args:
+            new_color (str) : New coloring scheme, the following values are accepted
+
+                - ``bundle`` : A different color for each bundle
+                - ``orient`` : Color tractography based on local orientation
+                - ``rand`` : A different color for each line
+                - ``fa_p`` : Use FA values at each point and a lookuptable
+                - ``fa_l`` : Use mean fa of each line and a lookuptable
+                - ``md_p`` : Use MD values at each point and a lookuptable
+                - ``md_l`` : Use mean MD of each line and a lookuptable
+                - ``length``: Use length of each line and a lookuptable
+                - ``aparc``: Use the *aparc* label at each point and the freesurfer lookuptable
+                - ``wmparc``: Use the *wmparc* label at each point and the freesurfer lookuptable
+
+        """
         if self.__current_color == new_color:
             return
         self.__current_color = new_color
@@ -1126,6 +1498,12 @@ class TractographyManager(object):
 
     @do_and_render
     def set_active_db_tracts(self, new_set):
+        """
+        Selects active database tracts
+
+        Args:
+            new_set (list) : List of database ids
+        """
         new_set = set(new_set)
         to_hide = self.__active_db_tracts - new_set
         to_add = new_set - self.__active_db_tracts
@@ -1149,10 +1527,32 @@ class TractographyManager(object):
 
     @do_and_render
     def set_opacity(self, float_opacity):
+        """
+        Sets opacity for the displayed bundles
+
+        Args:
+            float_opacity (float) : From 0 to 1; where 0 is transparent and 1 is opaque
+        """
         self.__opacity = float_opacity
         self.__reload_fibers()
 
     def get_scalar_from_db(self, scalar, bid):
+        """
+        Gets an scalar metric from an active database bundle
+
+        Args:
+            scalar (str) : Scalar metric, available options are:
+
+                - ``number`` : Number of lines
+                - ``mean_length`` : Mean length of lines
+                - ``mean_fa`` : Mean FA of the bundle
+                - ``mean_md`` : Mean MD of the bundle
+
+            bid (int) :  Database id
+
+        Returns:
+            Scalar value or ``nan`` if there was an error
+        """
         if bid in self.__active_db_tracts:
             if scalar in ("number", "mean_length"):
                 pd = self.__db_tracts[bid][0]
@@ -1172,6 +1572,22 @@ class TractographyManager(object):
             return float("nan")
 
     def get_scalar_from_structs(self, scalar):
+        """
+        Gets an scalar metric from the active checkpoints bundle
+
+        see :meth:`set_bundle_from_checkpoints`
+
+        Args:
+            scalar (str) : Scalar metric, available options are:
+
+                - ``number`` : Number of lines
+                - ``mean_length`` : Mean length of lines
+                - ``mean_fa`` : Mean FA of the bundle
+                - ``mean_md`` : Mean MD of the bundle
+
+        Returns:
+            Scalar value or ``nan`` if there was an error
+        """
         if self.__ad_hoc_visibility is False:
             return float("nan")
         try:
@@ -1197,7 +1613,19 @@ class TractographyManager(object):
 
 
 class TraculaManager(object):
+    """
+    A data manager for Tracula bundles
+    """
     def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
+        """
+        Initializes the manager
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            ren (vtkRenderer) : Renderer in which to draw the models
+            initial_subj : Code of initial subject, if None an arbitrary subject will be selected
+            initial_space (str) : Initial coordinate system
+        """
         self.ren = ren
         if initial_subj is None:
             initial_subj = reader.get("ids", None)[0]
@@ -1215,6 +1643,13 @@ class TraculaManager(object):
 
     @do_and_render
     def reload_bundles(self, subj, space):
+        """
+        Reloads all bundles
+
+        Args:
+            subj : Code for new subject, if ``None`` the subject is not changed
+            space (str) : new coordinate system, if ``None`` the coordinates are not changed
+        """
         self.__current_subject = subj
         self.__current_space = space
         log = logging.getLogger(__name__)
@@ -1227,6 +1662,12 @@ class TraculaManager(object):
 
     @do_and_render
     def set_bundles(self, bundle_names):
+        """
+        Sets the currently shown bundles
+
+        Args:
+            bundle_names (set) : An iterable of strings with names of tracula bundles.
+        """
         wanted_bundles = frozenset(bundle_names)
         to_add = wanted_bundles - self.__active_bundles_set
         to_hide = self.__active_bundles_set - wanted_bundles
@@ -1241,6 +1682,12 @@ class TraculaManager(object):
 
     @do_and_render
     def set_opacity(self, int_opacity):
+        """
+        Opacity for displaying the models
+
+        Args:
+            int_opacity (int) : A number from 0 to 100; where 0 is invisible and 100 is opaque
+        """
         for b in self.__active_bundles_set:
             _, _, ac = self.__pd_map_act[b]
             ac.GetProperty().SetOpacity(int_opacity / 100)
@@ -1273,12 +1720,34 @@ class TraculaManager(object):
 
     @property
     def active_bundles(self):
+        """
+        Gets the set of active bundles
+
+        Returns:
+            A frozenSet of currently active bundles
+        """
         return self.__active_bundles_set
 
 
 class SurfaceManager(object):
+    """
+    A data manager for freesurfer sufaces parcelations
+    """
     def __init__(self, reader, ren, iren, initial_subj=None, initial_space="World", picker=None,
                  persistent_cone=False):
+        """
+        Initializes the manager
+
+        Args:
+            reader (braviz.visualization.base_reader.BaseReader) : Braviz reader
+            ren (vtkRenderer) : Renderer in which to draw the plane
+            iren (vtkRenderWindowInteractor) : The render window interactor of the output window
+            initial_subj : Code of initial subject, if None an arbitrary subject will be selected
+            initial_space (str) : Initial coordinate system
+            picker (vtkPicker) : A vtkPicker may be used to pick on several objects. If None a new picker is created
+            persistent_cone (bool) : If ``True`` the cone used for picking will not disappear at the end of
+                the operation
+        """
         self.ren = ren
         self.reader = reader
         self.picker = picker
@@ -1484,6 +1953,15 @@ class SurfaceManager(object):
 
     @do_and_render
     def set_hemispheres(self, left=None, right=None):
+        """
+        Sets the active hemisphers
+
+        Args:
+            left (bool) : If ``True`` the left hemisphere is activated, if ``False`` it is deactivated,
+                if ``None`` it is unchanged
+            right (bool) : If ``True`` the right hemisphere is activated, if ``False`` it is deactivated,
+                if ``None`` it is unchanged
+        """
 
         if left is not None:
             left = bool(left)
@@ -1499,6 +1977,12 @@ class SurfaceManager(object):
 
     @do_and_render
     def set_scalars(self, scalars):
+        """
+        Sets the current scalars to use for the surfaces
+
+        Args:
+            scalars (str) : See :meth:`braviz.readAndFilter.base_reader.BaseReader.get` for options
+        """
 
         if scalars == self.__current_scalars:
             return
@@ -1508,6 +1992,12 @@ class SurfaceManager(object):
 
     @do_and_render
     def set_surface(self, surface):
+        """
+        Sets the current surface to display at both hemispheres
+
+        Args:
+            surface (str) : See :meth:`braviz.readAndFilter.base_reader.BaseReader.get` for options
+        """
         surface = surface.lower()
         if surface == self.__current_surface:
             return
@@ -1516,6 +2006,12 @@ class SurfaceManager(object):
 
     @do_and_render
     def show_color_bar(self, show):
+        """
+        Activates a vtk color bar
+
+        Args:
+            value (bool) : If ``True`` the bar is activated, if ``False`` it is hidden
+        """
         if show == self.__active_color_bar:
             return
         self.__active_color_bar = show
@@ -1544,19 +2040,36 @@ class SurfaceManager(object):
 
     @do_and_render
     def set_subject(self, new_subject):
+        """
+        Change subject associated to the manager
+
+        Args:
+            new_subject : Id of new subject
+        """
         self.__subject = new_subject
         self.__update_both()
 
     @do_and_render
     def set_space(self, new_space):
+        """
+        Change current coordinate system
+
+        new_space (str) : new coordinate system, see :meth:`~braviz.readAndFilter.base_reader.BaseReader.get`
+        """
         self.__current_space = new_space
         self.__update_both()
 
     @do_and_render
-    def set_opacity(self, new_opacity):
-        if new_opacity == self.__opacity:
+    def set_opacity(self, int_opacity):
+        """
+        Opacity for displaying the surfaces
+
+        Args:
+            int_opacity (int) : A number from 0 to 100; where 0 is invisible and 100 is opaque
+        """
+        if int_opacity == self.__opacity:
             return
-        self.__opacity = new_opacity
+        self.__opacity = int_opacity
         for trio in self.__surf_trios.itervalues():
             ac = trio[2]
             opac = self.__opacity / 100
@@ -1564,14 +2077,26 @@ class SurfaceManager(object):
             ac.GetProperty().SetOpacity(opac)
 
     def hide_cone(self):
+        """
+        Hides the picking cone
+        """
         self.__cone_trio[2].SetVisibility(0)
         self.__picking_text.SetVisibility(0)
 
     def get_last_picked_pos(self):
+        """
+        Coordinates of the last picked position
+
+        Returns:
+            A tuple with the coordinates of the last pickedposition
+        """
         return self.__last_picked_pos
 
     @property
     def pick_cone_actor(self):
+        """
+        Access to the pick cone actor
+        """
         return self.__cone_trio[2]
 
 
@@ -1593,7 +2118,7 @@ class OrthogonalPlanesViewer(object):
         self.ren_win.AddRenderer(self.ren)
 
         self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        self.axes = braviz.visualization.OrientationAxes()
+        self.axes = OrientationAxes()
         self.axes.initialize(self.iren)
 
         self.light = vtk.vtkLight()
@@ -1822,7 +2347,7 @@ class MeasurerViewer(object):
         self.ren_win.AddRenderer(self.ren)
 
         self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        self.axes = braviz.visualization.OrientationAxes()
+        self.axes = OrientationAxes()
         self.axes.initialize(self.iren)
 
         self.light = vtk.vtkLight()
@@ -2142,7 +2667,7 @@ class MeasurerViewer(object):
 
 class AdditionalCursors(object):
     def __init__(self, ren):
-        self.__cursors = braviz.visualization.cursors()
+        self.__cursors = cursors()
         self.__cursors.SetVisibility(0)
         self.__image = None
         self.__coords = None
@@ -2337,7 +2862,7 @@ class fMRI_viewer(object):
         self.ren_win.AddRenderer(self.ren)
 
         self.iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        self.axes = braviz.visualization.OrientationAxes()
+        self.axes = OrientationAxes()
         self.axes.initialize(self.iren)
 
         self.light = vtk.vtkLight()
@@ -2628,7 +3153,7 @@ if __name__ == "__main__":
 
     reader = braviz.readAndFilter.BravizAutoReader()
     app = QtGui.QApplication(sys.argv)
-    main_window = QSubjectViwerWidget(reader, None)
+    main_window = QSubjectViewerWidget(reader, None)
     main_window.show()
     main_window.initialize_widget()
 

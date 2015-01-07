@@ -6,6 +6,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 import braviz
+from braviz import _test_arrow
 
 
 reader=braviz.readAndFilter.BravizAutoReader()
@@ -69,7 +70,7 @@ ren.AddActor(amygdala_actor)
 
 #Agregar imagen
 mri=reader.get('mri','093',format='vtk')
-image_plane=braviz.visualization.persistentImagePlane()
+image_plane= persistentImagePlane()
 image_plane.SetInputData(mri)
 
 

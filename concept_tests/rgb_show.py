@@ -1,3 +1,4 @@
+from braviz import _test_arrow
 from braviz.readAndFilter.transforms import applyTransform
 
 __author__ = 'Diego'
@@ -10,7 +11,7 @@ import numpy as np
 
 import braviz
 
-viewer= braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 
 
 os.chdir(r"C:\Users\Diego\Documents\kmc40-db\KAB-db\093\camino")
@@ -38,7 +39,7 @@ reader=braviz.readAndFilter.BravizAutoReader()
 
 img2=reader.get("DTI","093",format="VTK")
 
-viewer= braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 nip=viewer.addImg(img2)
 nip.GetColorMap().SetLookupTable(None)
 

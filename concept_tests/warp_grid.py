@@ -4,13 +4,14 @@ import vtk
 import numpy as np
 
 import braviz
+from braviz import _test_arrow
 
 
 __author__ = 'Diego'
 subject='143'
 
 reader=braviz.readAndFilter.BravizAutoReader()
-viewer=braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 
 orig_img=reader.get('MRI',subject,space='world',format='vtk')
 target_space='dartel'

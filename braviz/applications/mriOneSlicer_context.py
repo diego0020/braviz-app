@@ -7,11 +7,12 @@ import thread
 import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import \
      vtkTkRenderWindowInteractor
+from braviz import _test_arrow
 
 import braviz.readAndFilter
-from braviz.visualization import add_solid_balloon,add_fibers_balloon
 from braviz.interaction.tkSimpleDialog import Dialog as simpleDialog
 from braviz.utilities import configure_logger_from_conf
+from braviz.visualization.simple_vtk import add_solid_balloon, add_fibers_balloon
 
 if __name__ == "__main__":
     configure_logger_from_conf("mriOneSlicer_context")
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     background= config.get_background()
     ren.SetBackground(background)
 
-    planeWidget=braviz.visualization.persistentImagePlane()
+    planeWidget= persistentImagePlane()
     planeWidget.SetInputData(img)
 
     planeWidget.addLabels(aparc)

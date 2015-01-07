@@ -1,5 +1,6 @@
 import braviz
 import vtk
+from braviz import _test_arrow
 from braviz.readAndFilter.color_fibers import scalars_from_image_int
 import numpy as np
 from braviz.readAndFilter import filter_fibers
@@ -68,7 +69,7 @@ valid_cell_ids2 = filter_fibers.filter_polylines_with_img(fibs,aparc,LBL)
 
 
 fibs2 = filter_fibers.extract_poly_data_subset(fibs,valid_cell_ids)
-v = braviz.visualization.simpleVtkViewer()
+v = simpleVtkViewer()
 v.addImg(aparc_vtk)
 #v.addPolyData(fibs,lut)
 ac = v.addPolyData(fibs2)

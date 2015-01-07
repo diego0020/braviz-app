@@ -9,7 +9,7 @@ import logging
 import vtk
 import numpy as np
 
-from braviz.visualization import get_arrow, OutlineActor
+from braviz.visualization.simple_vtk import OutlineActor, get_arrow
 from braviz.visualization.vtk_charts import mini_scatter_plot
 
 

@@ -160,3 +160,27 @@ class time_slice_viewer(vtk.vtkImageSlice):
     def set_z_spacing(self,spacing):
         """spacing in perpendicular axis, used to position the resulting slice in the right place"""
         self.spacing=spacing
+
+
+class fMRI_blender(object):
+    def __init__(self):
+        self.blend = vtk.vtkImageBlend()
+        self.color_mapper2 = vtk.vtkImageMapToColors()
+        self.color_mapper1 = vtk.vtkImageMapToWindowLevelColors()
+        self.blend.AddInputConnection(self.color_mapper1.GetOutputPort())
+        self.blend.AddInputConnection(self.color_mapper2.GetOutputPort())
+        self.blend.SetOpacity(0, 1)
+        self.blend.SetOpacity(1, .5)
+
+    def set_luts(self, mri_lut, fmri_lut):
+        self.color_mapper1.SetLookupTable(mri_lut)
+        self.color_mapper2.SetLookupTable(fmri_lut)
+
+    def set_images(self, mri_image, fmri_image):
+        self.color_mapper1.SetInputData(mri_image)
+        self.color_mapper2.SetInputData(fmri_image)
+        self.blend.Update()
+        return self.blend.GetOutput()
+
+    def get_blended_img(self):
+        return self.blend.GetOutput()

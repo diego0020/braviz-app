@@ -1,3 +1,4 @@
+from braviz import _test_arrow
 from braviz.readAndFilter.images import write_vtk_image
 from braviz.readAndFilter.transforms import applyTransform
 
@@ -23,7 +24,7 @@ it = np.linalg.inv(t)
 
 vimg2= applyTransform(vimg,it)
 
-viewer= braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 
 ip=viewer.addImg(vimg2)
 ip.SetSliceIndex(120)

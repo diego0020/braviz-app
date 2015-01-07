@@ -9,6 +9,7 @@ import os
 import vtk
 
 import braviz
+from braviz import _test_arrow
 
 
 reader=braviz.readAndFilter.BravizAutoReader()
@@ -49,7 +50,7 @@ for i in color_dict.keys():    #HACKY.... maybe there is a bug?
 print aparc_img
 
 
-viewer=braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 pw=viewer.addImg(aparc_img)
 pw.SetResliceInterpolateToNearestNeighbour() 
 pw.SetLookupTable(out_lut)

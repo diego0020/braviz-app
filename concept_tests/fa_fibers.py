@@ -1,5 +1,6 @@
 from __future__ import division
 import braviz
+from braviz import _test_arrow
 
 from braviz.utilities import configure_console_logger
 configure_console_logger("fa_fibers")
@@ -19,7 +20,7 @@ lut = reader.get('fibers',subj,scalars="md_p",lut=True)
 print fibers.GetNumberOfPoints()
 
 
-viewer=braviz.visualization.simpleVtkViewer()
+viewer= simpleVtkViewer()
 viewer.addImg(fa_img)
 viewer.addPolyData(fibers,lut)
 viewer.start()
