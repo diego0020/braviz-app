@@ -107,13 +107,14 @@ class CheckboardView(object):
 
         Args:
             position (int) :
-                0: initial 3d view
-                1: left
-                2: right
-                3: front
-                4: back
-                5: top
-                6: bottom
+
+                - 0: initial 3d view
+                - 1: left
+                - 2: right
+                - 3: front
+                - 4: back
+                - 5: top
+                - 6: bottom
         """
 
         focal, position, viewup = self.__camera_positions_dict[position]

@@ -144,7 +144,7 @@ def nibNii2vtk(nii):
 
     Returns:
         vtkImageData, transformations are ignored, you should apply them afterwards
-        see :func:`~braviz.readAndFilter.transforms.apply_transform`
+        see :func:`~braviz.readAndFilter.transforms.applyTransform`
     """
     d = nii.get_data()
     return numpy2vtk_img(d)

@@ -27,6 +27,9 @@ Full Viewers
 .. autoclass::  OrthogonalPlanesViewer
     :members:
 
+.. autoclass::  MeasurerViewer
+    :members:
+
 Data Managers
 -------------
 

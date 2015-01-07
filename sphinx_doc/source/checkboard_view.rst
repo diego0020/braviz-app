@@ -1,4 +1,4 @@
-.. module:: braviz.visualization.checkboard_view
+.. module:: braviz.visualization.checkerboard_view
 
 
 Checking image registration

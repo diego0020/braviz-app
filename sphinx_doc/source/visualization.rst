@@ -22,7 +22,7 @@ purpose are:
 
 
 The module :mod:`~braviz.visualization.fmri_view` contains some low level utilities for displaying fMRI data.
-The module :mod:`~braviz.visualization.checkboard_view` implements a widget that shows two images in a checkboard
+The module :mod:`~braviz.visualization.checkerboard_view` implements a widget that shows two images in a checkboard
 pattern. It is intended to check the registration between different modalities.
 
 .. toctree::

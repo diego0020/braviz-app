@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import vtk
 
-from braviz.visualization import get_colorbrewer_lut
+from braviz.visualization.create_lut import get_colorbrewer_lut
 
 
 def _fread3(fobj):

@@ -12,12 +12,13 @@ import numpy as np
 from numpy.linalg import inv
 import vtk
 
-from braviz.readAndFilter import extract_poly_data_subset, config_file
+from braviz.readAndFilter import config_file
+from braviz.readAndFilter.filter_fibers import extract_poly_data_subset
 from braviz.readAndFilter.cache import memo_ten
 from braviz.readAndFilter.images import numpy2vtk_img, nibNii2vtk
 
-from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars, get_free_surfer_lut, \
-    surfLUT2VTK
+from braviz.readAndFilter.surfer_input import surface2vtkPolyData, read_annot, read_morph_data, addScalars,\
+    get_free_surfer_lut,   surfLUT2VTK
 from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 

@@ -18,7 +18,7 @@ from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 
 from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 from braviz.readAndFilter.transforms import applyTransform, readFreeSurferTransform, readFlirtMatrix
-from braviz.visualization import get_colorbrewer_lut
+from braviz.visualization.create_lut import get_colorbrewer_lut
 
 class Kmc400Reader(KmcAbstractReader):
     """
