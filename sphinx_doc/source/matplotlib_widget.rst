@@ -13,9 +13,16 @@ Main Widget
 .. autoclass:: MatplotWidget
     :members:
 
-Plots
-------
 
+Examples
+---------
+
+
+
+Plot classes
+-------------
+
+Notice that this classes are usually used through :class:MatplotWidget .
 All plots should be subclasses of the abstract class
 
 .. autoclass:: AbstractPlot

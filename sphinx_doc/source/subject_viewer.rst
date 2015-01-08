@@ -88,3 +88,5 @@ Utilities
 .. autoclass:: AdditionalCursors
     :members:
 
+Examples
+---------

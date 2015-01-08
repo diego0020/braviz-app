@@ -111,10 +111,11 @@ class MatplotWidget(FigureCanvasQTAgg):
         Draws a bar chart
 
         Args:
-            data (pandas.DataFrame) : Data frame to draw, the first column will be the height of the bars
+            data (pandas.DataFrame) : Data frame to draw, the first column will be the height of the bars,
+                the optional second column will be used to group data
             ylims (tuple) : minimum and maximum y axis values
             orientation (str) : Orientation of the bars, can be "vertical" or "horizontal"
-            group_labels ():
+            group_labels (dict): Optioina, dictionary with group labels
         """
         self.__get_one_axis()
         self.painted_plot = MatplotBarPlot(self.axes,data,ylims,orientation,group_labels)
@@ -122,27 +123,86 @@ class MatplotWidget(FigureCanvasQTAgg):
         self.draw()
 
     def draw_coefficients_plot(self,coefficients_df,draw_intecept = False):
+        """
+        Draws a coefficient plot to show the results of a linear regression
+
+        Args:
+            coefficients_df (pandas.DataFrame) : DataFrame containing the 95% confidence interval as CI_95,
+                the standard error (std_error), Slope, and indexed by coefficient names.
+            draw_intecept (bool) : if ``True`` the intercept coefficient (first in the DataFrame) will be draw
+                otherwise it will be ignored.
+        """
         self.__get_one_axis()
         self.painted_plot = CoefficientsPlot(self.axes,coefficients_df,draw_intecept)
         self.draw()
 
     def draw_histogram(self):
+        """
+        Draws a histogram of the data, not yet implemented
+        """
+        raise NotImplementedError
         pass
     def draw_scatter(self,data,x_name,y_name,xlabel=None,ylabel=None,reg_line=True,hue_var=None,hue_labels = None,
                      qualitative_map = True, x_labels=None):
+        """
+        Draws a scatter plot
+
+        Args:
+            data (pandas.DataFrame) : DataFrame with numerical data
+            x_name (str) : Name of the column containing the data for the *x* axis
+            y_name (str) : Name of the column containing the data for the *y* axis
+            x_label (str) : Optional, label for the *x* axis, if not given *x_name* will be used
+            y_label (str) : Optional, label for the *y* axis, if not given *y_name* will be used
+            reg_line (bool) : If ``True`` draw a line showing a linear regression between the two variables
+            hue_var (str) : Optional, Name of the column containing the data for the color
+            hue_labels (dict) : Optional, Labels to use for each level of the *hue_var*
+            qualitative_map (bool) : If ``True`` use a qualitative color map, otherwise use a sequential color map
+            x_labels (dict) :  Optional, specify positions and values for tickmarks in the x axis
+        """
         self.__get_one_axis()
         self.painted_plot = ScatterPlot(self.axes,data,x_name,y_name,xlabel,ylabel,reg_line,hue_var=hue_var,
                                         hue_labels=hue_labels,qualitative_map = qualitative_map, x_ticks=x_labels)
         self.draw()
     def draw_intercept(self,data,y_name,groups=None,ylabel = None, ci_plot = True,color=None, group_labels=None):
+        """
+        Draws a plot to show the mean of different data groups
+
+        Args:
+            data (pandas.DataFrame) : DataFrame with numerical data
+            y_name (str) : *data* column containing the y axis data
+            groups (str) : optional, column containing group numerical labels
+            ci_plot (bool) : if ``True`` draw a confidence interval
+            color (tuple) : Optional, color to use for the plot
+            group_labels (dict) : Optional, labels for the different groups
+        """
         self.__get_one_axis()
         self.painted_plot = InterceptPlot(self.axes,data,y_name,groups,ylabel,ci_plot,color, group_labels=group_labels)
         self.draw()
+
     def draw_boxplot(self):
-        pass
+        """
+        Draw a boxplot to illustrate anova results in the matplot widget, not yet implemented
+        """
+        raise NotImplementedError
+
     def draw_spider_plot(self):
-        pass
+        """
+        Draw a spider plot in the matplot widget, not yet implemented
+        """
+        raise NotImplementedError
+
     def draw_residuals(self,residuals,fitted,names=None):
+        """
+        Creates two plot which can be used to diagnose the residuals of a distribution.
+
+            - An scatter plot of residuals vs predicted outcome variable
+            - A histogram of residuals
+
+        Args:
+            residuals (numpy.ndarray) : Array of residuals
+            fitted (numpy.ndarray) : Array of fitted values
+            names (list) : Names to display as tooltips for each point
+        """
         #this will create two access
         self.painted_plot = ResidualsDiagnosticPlot(self.fig,residuals,fitted,names)
         self.draw()
@@ -209,6 +269,13 @@ class MatplotWidget(FigureCanvasQTAgg):
 
 
 class MatplotBarPlot(AbstractPlot):
+    """
+    Draws a bar plot on the :class:`MatplotWidget`.
+
+    Bars are sorted from smallest to biggest,
+    they also may be colored with respect to a nominal variable.
+    To create a bar plot call :meth:`MatplotWidget.draw_bars`
+    """
     def __init__(self,axes,data,ylims=None,orientation = "vertical",group_labels=None):
         sns.set_style("darkgrid")
         self.highlight_color = '#000000'
@@ -371,6 +438,26 @@ class MatplotBarPlot(AbstractPlot):
 
 
 class CoefficientsPlot(AbstractPlot):
+    """
+    Draws a coefficient plot to illustrate the results of a linear regression.
+
+    The plot shows the 95% confidence intervals and standard errors. For a coefficient to
+    be significant it's confidence intervals should not cross the zero line. For it to have an important
+    effect it should be far from the zero.
+
+    The input DataFrame should contain the results of a linear regression with normalized variables.
+    The expected columns are
+
+    - (index) : Coefficient names
+    - CI_95 : lower and upper limit of the 95% confidence interval
+    - Std_error : The standard error magnitude
+    - Slope : slope of the coefficients in the regression
+
+    Also the first row in the dataframe should be the intercept, this will be ignored if *intercept* is ``False``.
+
+    Use :meth:`MatplotWidget.draw_coefficients_plot` to draw create this plot.
+
+    """
     def __init__(self,axes,coefs_df,draw_intercept=False):
         sns.set_style("darkgrid")
         self.axes = axes
@@ -427,7 +514,20 @@ class CoefficientsPlot(AbstractPlot):
             return ""
 
 class ResidualsDiagnosticPlot(AbstractPlot):
+
+    """
+    Creates two plots to analyze distributions of residuals from a regression.
+
+    The first one shows the distribution of the residuals with respect to the outcome variable. This should be used
+    to check the hypothesis that the variance must be constant across this range.
+
+    The second one shows a histogram of the residuals. This should be used to verify that the residuals distribution is
+    close to normal.
+
+    To create this plot call :class:`MatplotWidget.draw_residuals`
+    """
     def __init__(self,figure,residuals,fitted,names=None):
+
 
         sns.set_style("darkgrid")
         self.names = names
@@ -471,6 +571,11 @@ class ResidualsDiagnosticPlot(AbstractPlot):
 
 
 class MessagePlot(AbstractPlot):
+    """
+    Draws a text message into a :class:`MatplotWidget`
+
+    To create this plot call :class:`MatplotWidget.draw_scatter`
+    """
     def __init__(self,axes,message):
         sns.set_style("darkgrid")
         self.axes = axes
@@ -489,6 +594,16 @@ class MessagePlot(AbstractPlot):
 
 
 class ScatterPlot(AbstractPlot):
+    """
+    Draws an scatter plot in :class:`MatplotWidget`.
+
+    The plot may contain
+
+        - a line showing regression results
+        - data from different groups painted with different colors
+
+    To create this plot call :class:`MatplotWidget.draw_scatter`
+    """
     def __init__(self,axes,data,x_var,y_var,xlabel=None,ylabel=None,reg_line=True,hue_var = None, hue_labels = None,
                  qualitative_map = True,x_ticks=None):
         sns.set_style("darkgrid")
@@ -545,7 +660,8 @@ class ScatterPlot(AbstractPlot):
                             scatter_kws={"picker":0.5,"url":url},label=label,ax=self.axes,
                     color=c)
             self.add_legend()
-        print self.x_ticks
+        log = logging.getLogger(__name__)
+        log.info(self.x_ticks)
         if self.x_ticks is not None:
             keys,labels = zip(*self.x_ticks.iteritems())
             self.axes.set_xticks(keys)
@@ -591,6 +707,12 @@ class ScatterPlot(AbstractPlot):
 
 class InterceptPlot(AbstractPlot):
     def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None,group_labels=None):
+        """
+        Draws a plot to show the mean of different data groups
+
+        Optionally a confidence interval can be added.
+        To create this plot call :class:`MatplotWidget.draw_intercept`
+        """
         sns.set_style("darkgrid")
         self.y_name=y_var
         if y_label is None:
@@ -631,7 +753,7 @@ class InterceptPlot(AbstractPlot):
                 x_ser[ix]=xd
             self.internal_df["x_data"] = x_ser
         if self.ci_plot is True:
-            self.ci = [get_ci(a) for a in arrays]
+            self.ci = [_get_ci(a) for a in arrays]
 
 
         self.means = [np.mean(a) for a in arrays]
@@ -683,7 +805,7 @@ class InterceptPlot(AbstractPlot):
         return self.last_viewed
 
 
-def get_ci(array):
+def _get_ci(array):
     bootstrap = sns.algo.bootstrap(array,func=np.mean)
     ci = tuple(sns.utils.ci(bootstrap))
     return ci
