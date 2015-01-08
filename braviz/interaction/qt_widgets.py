@@ -81,6 +81,7 @@ class MatplotWidget(FigureCanvas):
     box_outlier_pick_signal = QtCore.pyqtSignal(float, float, tuple)
     scatter_pick_signal = QtCore.pyqtSignal(str, tuple)
     #TODO: instead of using blit create a @wrapper to save last render command to restore after drawing subjects
+    #TODO: Unify with MatplotWidget in visualization
 
     def __init__(self, parent=None, dpi=100, initial_message=None):
         fig = Figure(figsize=(5, 5), dpi=dpi, tight_layout=True)

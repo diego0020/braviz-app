@@ -22,15 +22,51 @@ import seaborn as sns
 
 
 class AbstractPlot(object):
+    """
+    Base class for plots used inside the :class:`MatplotWidget`
+    """
     def redraw(self):
+        """
+        Should redraw its contents, called when the widget is resized
+        """
         raise NotImplementedError("must be implemented")
     def add_subjects(self,subjs):
+        """
+        Should highlight the specified points in the plot
+
+        Args:
+            subjs (list) : List of subjects to highlight
+        """
         return None
     def highlight(self,subj):
+        """
+        Should highlight one point in the plot
+
+        Args:
+            subj : Id of point to highlight
+        """
         return None
     def get_tooltip(self,event):
+        """
+        Request a tooltip at a given position
+
+        Return an empty string if there is no tooltip for that position
+
+        Args:
+            event (MouseEvent) : Matplotlib MouseEvent that caused the request, extract the position from here
+
+        Returns:
+            string to show as tooltip, empty string if you don't want to show anything
+        """
         return ""
     def get_last_id(self):
+        """
+        Get the id of the point last signaled with the cursor. This is used by the MatplotWidget to create
+        a context menu
+
+        Returns:
+            Id of the last point for which a tooltip was requested
+        """
         return None
 
 
@@ -82,6 +118,10 @@ class MatplotWidget(FigureCanvasQTAgg):
         self.__title = None
         self.__title_text = None
 
+        if initial_message is not None:
+            func = lambda : self.draw_message(initial_message)
+            QtCore.QTimer.singleShot(0, func)
+
 
     def __get_one_axis(self):
         n_axis = len(self.fig.get_axes())
@@ -128,7 +168,7 @@ class MatplotWidget(FigureCanvasQTAgg):
 
         Args:
             coefficients_df (pandas.DataFrame) : DataFrame containing the 95% confidence interval as CI_95,
-                the standard error (std_error), Slope, and indexed by coefficient names.
+                the standard error (Std_error), Slope, and indexed by coefficient names.
             draw_intecept (bool) : if ``True`` the intercept coefficient (first in the DataFrame) will be draw
                 otherwise it will be ignored.
         """
@@ -706,13 +746,14 @@ class ScatterPlot(AbstractPlot):
 
 
 class InterceptPlot(AbstractPlot):
-    def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None,group_labels=None):
-        """
-        Draws a plot to show the mean of different data groups
+    """
+    Draws a plot to show the mean of different data groups
 
-        Optionally a confidence interval can be added.
-        To create this plot call :class:`MatplotWidget.draw_intercept`
-        """
+    Optionally a confidence interval can be added.
+    To create this plot call :class:`MatplotWidget.draw_intercept`
+    """
+    def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None,group_labels=None):
+
         sns.set_style("darkgrid")
         self.y_name=y_var
         if y_label is None:
