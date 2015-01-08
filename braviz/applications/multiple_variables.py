@@ -18,7 +18,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 
 import braviz
 from braviz.interaction.tk_gui import hierarchy_dict_to_tree
-from braviz.visualization.mathplotlib_charts import BarPlot,ScatterPlot,SpiderPlot
+from braviz.visualization.matplotlib_charts import BarPlot,ScatterPlot,SpiderPlot
 from braviz.interaction.tk_tooltip import ToolTip
 from braviz.interaction.tms_variables import data_codes_dict
 from braviz.readAndFilter.read_csv import get_column,get_headers

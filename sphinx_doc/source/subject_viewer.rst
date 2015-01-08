@@ -18,6 +18,8 @@ exist for each of them. This wrappers can send PyQt signals on certain events, l
 Full Viewers
 --------------
 
+These classes combine different data managers to create integrated visualizations.
+
 .. autoclass::  SubjectViewer
     :members:
 
@@ -32,6 +34,8 @@ Full Viewers
 
 Data Managers
 -------------
+
+Managing the visualization state is simplified by the data managers, which focus on specific data types.
 
 .. autoclass::  ImageManager
     :members:
@@ -58,6 +62,9 @@ Data Managers
 PyQt Widgets
 --------------
 
+These classes wrap the viewers so that they can be connected into Qt applications, in theory such classes could
+be built for other graphical interface libraries.
+
 .. autoclass::  QSubjectViewerWidget
     :members:
 
@@ -73,8 +80,7 @@ PyQt Widgets
 Utilities
 -----------
 
-.. autoclass::  do_and_render
-    :members:
+.. autofunction::  do_and_render
 
 .. autoclass::  FilterArrows
     :members:

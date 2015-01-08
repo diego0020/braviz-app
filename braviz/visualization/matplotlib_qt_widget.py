@@ -6,7 +6,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 import matplotlib
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import matplotlib.axes
 import matplotlib.gridspec as gridspec
@@ -21,9 +21,9 @@ import logging
 import seaborn as sns
 
 
-class _AbstractPlot(object):
+class AbstractPlot(object):
     def redraw(self):
-        raise NotImplementedError("must be reinplemented")
+        raise NotImplementedError("must be implemented")
     def add_subjects(self,subjs):
         return None
     def highlight(self,subj):
@@ -34,17 +34,36 @@ class _AbstractPlot(object):
         return None
 
 
-class MatplotWidget(FigureCanvas):
+class MatplotWidget(FigureCanvasQTAgg):
+    """
+    A Matplotlib Qt Widget capable of drawing different kinds of plots
+
+    It emits the following signals
+
+        - point_picked (str) : When the user clicks on a point in the plot
+        - context_requested (str) : When the user right clicks on a point
+
+    Both of them include the id of the clicked point.
+
+    """
     #These signals return the id of the point where the action occured
     point_picked = QtCore.pyqtSignal(str)
     context_requested = QtCore.pyqtSignal(str)
     def __init__(self,parent=None,dpi=100,initial_message=None):
+        """
+        Starts the widget
+
+        Args:
+            parent (QObject) : Parent for the widget
+            dpi (float) : Scale of the graphical elements, larger means font will be smaller
+            initial_message (str) : Optional, write a message at the start
+        """
         fig = Figure(figsize=(5, 5), dpi=dpi, tight_layout=True)
         self.fig = fig
         self.axes = fig.add_subplot(111)
-        FigureCanvas.__init__(self, fig)
+        FigureCanvasQTAgg.__init__(self, fig)
         self.setParent(parent)
-        FigureCanvas.setSizePolicy(self, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        FigureCanvasQTAgg.setSizePolicy(self, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.updateGeometry()
         palette = self.palette()
         fig.set_facecolor(palette.background().color().getRgbF()[0:3])
@@ -76,11 +95,27 @@ class MatplotWidget(FigureCanvas):
 
 
     def draw_message(self,message):
+        """
+        Draws a message on the widget
+
+        Args:
+            message (str) : Message to display
+        """
+
         self.__get_one_axis()
         self.painted_plot=MessagePlot(self.axes,message)
         self.draw()
 
     def draw_bars(self,data,ylims=None,orientation="vertical",group_labels=None):
+        """
+        Draws a bar chart
+
+        Args:
+            data (pandas.DataFrame) : Data frame to draw, the first column will be the height of the bars
+            ylims (tuple) : minimum and maximum y axis values
+            orientation (str) : Orientation of the bars, can be "vertical" or "horizontal"
+            group_labels ():
+        """
         self.__get_one_axis()
         self.painted_plot = MatplotBarPlot(self.axes,data,ylims,orientation,group_labels)
         self.colors_dict = self.painted_plot.colors_dict
@@ -132,7 +167,7 @@ class MatplotWidget(FigureCanvas):
         self.draw()
 
     def show_tooltip(self,event):
-        if not isinstance(self.painted_plot,_AbstractPlot):
+        if not isinstance(self.painted_plot,AbstractPlot):
             log = logging.getLogger(__name__)
             log.error("Invalid plot")
             return
@@ -172,7 +207,8 @@ class MatplotWidget(FigureCanvas):
     def last_viewed_subject(self):
         return self.painted_plot.get_last_id()
 
-class MatplotBarPlot(_AbstractPlot):
+
+class MatplotBarPlot(AbstractPlot):
     def __init__(self,axes,data,ylims=None,orientation = "vertical",group_labels=None):
         sns.set_style("darkgrid")
         self.highlight_color = '#000000'
@@ -334,7 +370,7 @@ class MatplotBarPlot(_AbstractPlot):
         return self.last_id
 
 
-class CoefficientsPlot(_AbstractPlot):
+class CoefficientsPlot(AbstractPlot):
     def __init__(self,axes,coefs_df,draw_intercept=False):
         sns.set_style("darkgrid")
         self.axes = axes
@@ -390,7 +426,7 @@ class CoefficientsPlot(_AbstractPlot):
         except IndexError:
             return ""
 
-class ResidualsDiagnosticPlot(_AbstractPlot):
+class ResidualsDiagnosticPlot(AbstractPlot):
     def __init__(self,figure,residuals,fitted,names=None):
 
         sns.set_style("darkgrid")
@@ -434,7 +470,7 @@ class ResidualsDiagnosticPlot(_AbstractPlot):
         self.axes2.scatter(fitted,residuals,s=20,color="#2ca25f",picker=0.5)
 
 
-class MessagePlot(_AbstractPlot):
+class MessagePlot(AbstractPlot):
     def __init__(self,axes,message):
         sns.set_style("darkgrid")
         self.axes = axes
@@ -452,7 +488,7 @@ class MessagePlot(_AbstractPlot):
                     verticalalignment='center', fontsize=16)
 
 
-class ScatterPlot(_AbstractPlot):
+class ScatterPlot(AbstractPlot):
     def __init__(self,axes,data,x_var,y_var,xlabel=None,ylabel=None,reg_line=True,hue_var = None, hue_labels = None,
                  qualitative_map = True,x_ticks=None):
         sns.set_style("darkgrid")
@@ -532,7 +568,7 @@ class ScatterPlot(_AbstractPlot):
 
 
     def highlight(self, subj):
-        _AbstractPlot.highlight(self, subj)
+        AbstractPlot.highlight(self, subj)
         self.to_highlight = [subj]
 
     def get_tooltip(self, event):
@@ -553,7 +589,7 @@ class ScatterPlot(_AbstractPlot):
         return self.last_id
 
 
-class InterceptPlot(_AbstractPlot):
+class InterceptPlot(AbstractPlot):
     def __init__(self,axes,data,y_var,groups=None,y_label=None,ci_plot = True,color=None,group_labels=None):
         sns.set_style("darkgrid")
         self.y_name=y_var

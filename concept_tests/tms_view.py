@@ -12,7 +12,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 from braviz.readAndFilter.read_csv import get_column
 from braviz.interaction.tk_tooltip import ToolTip
 import braviz
-from braviz.visualization.mathplotlib_charts import BarPlot
+from braviz.visualization.matplotlib_charts import BarPlot
 
 __author__ = 'Diego'
 
