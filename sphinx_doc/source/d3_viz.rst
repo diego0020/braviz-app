@@ -12,6 +12,10 @@ page is loaded. This could be done by polling at a particular address and keepin
 Parallel Coordinates
 ----------------------
 
+.. image:: images/parallel_coords.png
+    :alt: Parallel coordinates example
+    :align: center
+    :width: 90%
+
 .. autoclass:: ParallelCoordinatesHandler
-    :members:
 
