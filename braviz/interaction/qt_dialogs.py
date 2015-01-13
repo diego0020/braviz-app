@@ -940,6 +940,13 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
 
 
 class BundleSelectionDialog(QtGui.QDialog):
+    """
+    Selects a set of bundles
+
+    Args:
+        selected (list) : List of selected bundle ids. This object will be updated with the new selection.
+        names_dict (dict) : Dictionary mapping bundle ids to bundle names
+    """
     def __init__(self, selected, names_dict):
         super(BundleSelectionDialog, self).__init__()
         self.ui = None
@@ -1024,6 +1031,16 @@ class SaveFibersBundleDialog(QtGui.QDialog):
 
 
 class SaveLogicFibersBundleDialog(QtGui.QDialog):
+    """
+    Saves a logic bundle
+
+    This dialog shows a tree summarizing the dialog
+    and it asks for a name and a description
+
+    Args:
+        tree_model (braviz.interaction.logic_bundle_model.LogicBundleNode) : Tree of the bundle
+
+    """
     def __init__(self, tree_model):
         super(SaveLogicFibersBundleDialog, self).__init__()
         self.__tree_model = tree_model
