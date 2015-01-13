@@ -18,11 +18,11 @@ from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
 from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList, \
     SimpleCheckModel
 from braviz.visualization.subject_viewer import QSubjectViewerWidget
-from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, ContextVariablesPanel, BundleSelectionDialog, \
+from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 from braviz.readAndFilter.config_file import get_config
-from braviz.interaction.qt_widgets import ListValidator
+from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel
 import subprocess
 from braviz.interaction.connection import MessageClient
 import cPickle

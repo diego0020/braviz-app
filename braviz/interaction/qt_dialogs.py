@@ -11,12 +11,6 @@ import numpy as np
 from braviz.interaction.qt_widgets import MatplotWidget
 
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
 import braviz
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.outcome_select_multi_plot import Ui_SelectOutcomeMPDialog
@@ -36,9 +30,8 @@ from braviz.interaction.qt_guis.load_logic_bundle import Ui_LoadLogicDialog
 from braviz.interaction.logic_bundle_model import LogicBundleNode,LogicBundleQtTree
 
 import braviz.interaction.qt_models as braviz_models
-from braviz.readAndFilter.tabular_data import get_data_frame_by_name, get_var_idx, get_var_name, \
-    is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values_by_name, \
-    get_min_max_values, is_variable_name_real, get_var_description_by_name, save_is_real_by_name, \
+from braviz.readAndFilter.tabular_data import get_data_frame_by_name, get_var_idx, get_min_max_values_by_name, \
+    is_variable_name_real, get_var_description_by_name, save_is_real_by_name, \
     save_real_meta_by_name, save_var_description_by_name, get_min_max_opt_values_by_name, register_new_variable,\
     save_real_meta, save_var_description
 
@@ -54,7 +47,15 @@ import seaborn as sns
 __author__ = 'Diego'
 
 class VariableSelectDialog(QtGui.QDialog):
-    """Implement common features for Oucome and Regressor Dialogs"""
+    """
+    Abstract, Implement common features for Outcome and Regressor Dialogs
+
+    This class is incomplete, in order to get a full dialog consider using one of the inherited
+    classes.
+
+    In particular there is no ui associated with this class, in subclasses you should add a UI
+    and then call ``finish_ui_setup``
+    """
 
     def __init__(self,sample = None):
         """remember to call finish_ui_setup() after setting up ui"""
@@ -273,8 +274,19 @@ class VariableSelectDialog(QtGui.QDialog):
         global_pos = self.ui.tableView.mapToGlobal(pos)
         menu.exec_(global_pos)
 
-
 class OutcomeSelectDialog(VariableSelectDialog):
+    """
+    A dialog for selecting a single or multiple variable
+
+    The constructor takes a dictionary which will be used to save the selection in the dialog.
+    When the user clicks the *save and select* button, the dialog will close, and the current selection
+    will be available in the ``selected_outcome`` field of the dictionary.
+
+    If ``multiple = True`` is passed to the constructor the variable list will have check marks.
+    The output dictionary will still contain only one variable, but the list is available in
+    the ``vars_list_model`` field. You may get a set of selected variables by calling
+    ``dialog.vars_list_model.checked_set``
+    """
     def __init__(self, params_dict, multiple=False,sample=None):
         super(OutcomeSelectDialog, self).__init__(sample)
         self.ui = Ui_SelectOutcomeDialog()
@@ -316,8 +328,6 @@ class OutcomeSelectDialog(VariableSelectDialog):
         mask = "%%%s%%"%self.ui.search_box.text()
         self.vars_list_model.update_list(mask)
 
-
-
 class GenericVariableSelectDialog(OutcomeSelectDialog):
     """
     Derived from Outcome Select Dialog,
@@ -340,7 +350,6 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
             selected_names = self.vars_list_model.checked_set
             self.params_dict["checked"] = [get_var_idx(name) for name in selected_names]
         OutcomeSelectDialog.select_and_return(self, *args)
-
 
 class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
     def __init__(self, params_dict, multiple=False,sample=None,available_plots=None):
@@ -483,6 +492,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
                 data_lists_top.append(data_list)
 
             self.matplot_widget.make_linked_box_plot(data, self.var_name, nominal_factors[0], nominal_factors[1])
+
 class SelectOneVariableWithFilter(OutcomeSelectDialog):
     """
     Derived from Outcome Select Dialog,
@@ -503,7 +513,6 @@ class SelectOneVariableWithFilter(OutcomeSelectDialog):
     def update_details(self, index):
         super(SelectOneVariableWithFilter,self).update_details(index)
         self.check_selecion()
-
 
 class RegressorSelectDialog(VariableSelectDialog):
     def __init__(self, outcome_var, regressors_model,sample=None):
@@ -572,7 +581,6 @@ class RegressorSelectDialog(VariableSelectDialog):
         mask = "%%%s%%"%self.ui.search_box.text()
         self.vars_model.update_list(mask)
 
-
 class InteractionSelectDialog(QtGui.QDialog):
     def __init__(self, regressors_model):
         super(InteractionSelectDialog, self).__init__()
@@ -600,7 +608,6 @@ class InteractionSelectDialog(QtGui.QDialog):
         for r in xrange(2, len(rows) + 1):
             for i in itertools.combinations(rows, r):
                 self.full_model.add_interactor(i)
-
 
 class NewVariableDialog(QtGui.QDialog):
     def __init__(self):
@@ -705,7 +712,6 @@ class NewVariableDialog(QtGui.QDialog):
         self.values_model.save_into_db(var_idx)
         self.accept()
 
-
 class ContextVariablesSelectDialog(VariableSelectDialog):
     def __init__(self, variables_list=None, current_subject=None, editables_dict=None,sample=None):
         super(ContextVariablesSelectDialog, self).__init__(sample=sample)
@@ -800,253 +806,6 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.vars_model.update_list(mask)
 
 
-class ContextVariablesPanel(QtGui.QGroupBox):
-    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initial_subject=None,app=None,
-                 sample = None):
-        super(ContextVariablesPanel, self).__init__(parent)
-        self.setTitle(title)
-        self.setToolTip("Right click to select context variables, and to make them editable")
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.layout = QtGui.QHBoxLayout(self)
-        self.setLayout(self.layout)
-        self.app = app
-        self.sample = sample
-        if self.sample is None:
-            self.sample = braviz_tab_data.get_subjects()
-
-        self.layout.setContentsMargins(7, 2, 7, 2)
-        self.customContextMenuRequested.connect(self.create_context_menu)
-
-        size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Maximum)
-        #size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(1)
-        self.setSizePolicy(size_policy)
-        #self.setMaximumSize(QtCore.QSize(16777215, 56))
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.setObjectName(_fromUtf8("context_frame"))
-        #self.setFrameStyle(self.NoFrame)
-
-        #internal variables
-        self.__context_variable_codes = None
-        self.__context_variable_names = None
-        self.__is_nominal = None
-        self.__labels_dict = None
-        self.__context_labels = None
-        self.__values_widgets = None
-        self.__internal_df = None
-        self.__curent_subject = None
-        self.__editables_dict = None
-        self.__save_changes_button = None
-        self.set_variables(initial_variable_idxs)
-        if initial_subject is not None:
-            self.set_subject(initial_subject)
-
-    def set_variables(self, variables, editables=None):
-        self.__context_variable_codes = list(variables)
-        self.__context_variable_names = dict((idx, get_var_name(idx)) for idx in self.__context_variable_codes)
-        self.__is_nominal = dict((idx, is_variable_nominal(idx)) for idx in self.__context_variable_codes)
-        self.__labels_dict = dict((idx, get_labels_dict(idx)) for idx in self.__context_variable_codes if
-                                  self.__is_nominal[idx])
-        self.__internal_df = get_data_frame_by_index(self.__context_variable_codes)
-        self.__values_widgets = []
-        if editables is None:
-            self.__editables_dict = dict((idx, False) for idx in variables)
-        else:
-            self.__editables_dict = editables
-        self.reset_internal_widgets()
-
-    def get_variables(self):
-        return self.__context_variable_codes
-
-    def get_editables(self):
-        return self.__editables_dict.iteritems()
-
-    def reset_internal_widgets(self):
-        #clear layout
-        self.__save_changes_button = None
-        for i in xrange(self.layout.count() - 1, -1, -1):
-            w = self.layout.takeAt(i)
-            wgt = w.widget()
-            if wgt is not None:
-                wgt.deleteLater()
-
-        self.__context_labels = []
-        self.__values_widgets = []
-
-        first = True
-        any_editable = False
-        for idx in self.__context_variable_codes:
-            #add separator
-            if not first:
-                self.layout.addStretch()
-            else:
-                first = False
-            #add label
-            label = QtGui.QLabel("%s : " % self.__context_variable_names[idx])
-            label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.__context_labels.append(label)
-            self.layout.addWidget(label)
-            #add value
-            if self.__editables_dict.get(idx) is True:
-                value_widget = self.get_editable_widget(idx)
-                any_editable = True
-            else:
-                value_widget = self.get_read_only_widget(idx)
-            self.layout.addWidget(value_widget)
-            self.__values_widgets.append(value_widget)
-        if any_editable is True:
-            self.__save_changes_button = QtGui.QPushButton("Save")
-            self.__save_changes_button.setEnabled(False)
-            self.__save_changes_button.clicked.connect(self.save_changes_into_db)
-            self.layout.addWidget(self.__save_changes_button)
-        return
-
-    def get_read_only_widget(self, idx):
-        value_widget = QtGui.QLabel("XXXXXXX")
-        value_widget.setFrameShape(QtGui.QFrame.Box)
-        value_widget.setFrameShadow(QtGui.QFrame.Raised)
-        #value_widget.setContentsMargins(7,7,7,7)
-        value_widget.setMargin(7)
-        value_widget.setAlignment(QtCore.Qt.AlignCenter)
-        font = QtGui.QFont()
-        font.setPointSize(11)
-        value_widget.setFont(font)
-        value_widget.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        value_widget.setCursor(QtCore.Qt.IBeamCursor)
-        #calculate maximum width
-        if is_variable_nominal(idx):
-            lens = [(x,len(x)) for x in self.__labels_dict[idx].itervalues() if x is not None]
-            if len (lens)==0:
-                longest="<Unknown>"
-            else:
-                longest = max(lens,key=lambda x:x[1])[0]
-            value_widget.setText(longest)
-            longest_size = value_widget.sizeHint()
-            value_widget.setFixedWidth(longest_size.width())
-            value_widget.setFixedHeight(longest_size.height())
-        else:
-            max_value = get_maximum_value(idx)
-            if max_value is None:
-                max_value = 1000
-            value_widget.setText("%.2f" % max_value)
-            longest_size = value_widget.sizeHint()
-            value_widget.setFixedWidth(longest_size.width())
-            value_widget.setFixedHeight(longest_size.height())
-        return value_widget
-
-    def get_editable_widget(self, idx):
-        if self.__is_nominal.get(idx) is True:
-            value_widget = QtGui.QComboBox()
-            for i, lbl in self.__labels_dict[idx].iteritems():
-                if not np.isnan(float(i)):
-                    value_widget.addItem(lbl, i)
-            value_widget.insertSeparator(value_widget.count())
-            value_widget.addItem("<Unknown>",float("nan"))
-            value_widget.currentIndexChanged.connect(self.enable_save_changes)
-        else:
-            value_widget = QtGui.QDoubleSpinBox()
-            minim, maxim = get_min_max_values(idx)
-            value_widget.setMaximum(10 * maxim)
-            value_widget.setMinimum(-10 * maxim)
-            value_widget.setSingleStep((maxim - minim) / 20)
-            value_widget.valueChanged.connect(self.enable_save_changes)
-        font = QtGui.QFont()
-        font.setPointSize(11)
-        value_widget.setFont(font)
-        return value_widget
-
-    def set_subject(self, subject_id):
-        values = self.__internal_df.loc[int(subject_id)]
-        for i, idx in enumerate(self.__context_variable_codes):
-            try:
-                value = values[self.__context_variable_names[idx]]
-            except KeyError:
-                value = float("nan")
-            #print self.__context_variable_names[idx], value
-            value_widget = self.__values_widgets[i]
-            if self.__is_nominal[idx]:
-
-                if isinstance(value_widget, QtGui.QLabel):
-                    label = self.__labels_dict[idx].get(value, "?")
-                    if label is None:
-                        label = "?"
-                    value_widget.setText(label)
-                elif isinstance(value_widget, QtGui.QComboBox):
-                    label = self.__labels_dict[idx].get(value, "<Unknown>")
-                    index = value_widget.findText(label)
-                    value_widget.setCurrentIndex(index)
-            else:
-                if isinstance(value_widget, QtGui.QLabel):
-                    value_widget.setText("%s" % value)
-                elif isinstance(value_widget, QtGui.QDoubleSpinBox):
-                    value_widget.setValue(value)
-        self.__curent_subject = subject_id
-        if self.__save_changes_button is not None:
-            self.__save_changes_button.setEnabled(False)
-
-    def create_context_menu(self, pos):
-        global_pos = self.mapToGlobal(pos)
-        change_action = QtGui.QAction("Change Variables", None)
-        menu = QtGui.QMenu()
-        menu.addAction(change_action)
-
-        def change_variables(*args):
-            context_change_dialog = ContextVariablesSelectDialog(current_subject=self.__curent_subject,
-                                                                 variables_list=self.__context_variable_codes,
-                                                                 editables_dict=self.__editables_dict,
-                                                                 sample = self.sample)
-            context_change_dialog.exec_()
-            self.set_variables(self.__context_variable_codes, self.__editables_dict)
-            self.set_subject(self.__curent_subject)
-
-        change_action.triggered.connect(change_variables)
-        menu.addAction(change_action)
-        menu.exec_(global_pos)
-
-    def enable_save_changes(self, *args):
-        if self.__save_changes_button is None:
-            return
-        self.__save_changes_button.setEnabled(True)
-
-    def save_changes_into_db(self):
-
-        for i,idx in enumerate(self.__context_variable_codes):
-            if self.__editables_dict[idx] is True:
-                value_widget = self.__values_widgets[i]
-                if isinstance(value_widget,QtGui.QDoubleSpinBox):
-                    value = float(value_widget.value())
-                elif isinstance(value_widget,QtGui.QComboBox):
-                    value=value_widget.itemData(value_widget.currentIndex())
-                    value=value.toDouble()[0]
-                    if np.isnan(float(value)):
-                        value = None
-                    else:
-                        value=int(value)
-                #update value
-                braviz_tab_data.updata_variable_value(int(idx),self.__curent_subject,value)
-                #update internal
-                var_name = self.__context_variable_names[idx]
-                self.__internal_df[var_name][int(self.__curent_subject)]=value
-                #check if scenarios exists for this variable
-                if braviz_user_data.count_variable_scenarios(int(idx)) == 0:
-                    #save scenario
-                    name = "<AUTO_%s>"%self.__context_variable_names[idx]
-                    desc = "Created automatically when saving values for variable %s"%self.__context_variable_names[idx]
-                    data = self.app.get_state_dict()
-                    app = data["meta"]["application"]
-                    data_s = cPickle.dumps(data,2)
-                    scn_idx=braviz_user_data.save_scenario(app,name,desc,data_s)
-                    #link
-                    braviz_user_data.link_var_scenario(int(idx),scn_idx)
-                    #save screenshot
-                    self.app.save_screenshot(scn_idx)
-
-        self.__save_changes_button.setEnabled(0)
-        #print idx_value_tuples
-
-    def set_sample(self,new_sample):
-        self.sample = list(new_sample)
-
 class BundleSelectionDialog(QtGui.QDialog):
     def __init__(self,selected,names_dict):
         super(BundleSelectionDialog,self).__init__()
@@ -1068,7 +827,6 @@ class BundleSelectionDialog(QtGui.QDialog):
         self.selection.clear()
         self.selection.update(new_select)
         self.names_dict.update(self.bundles_list_model.names_dict)
-
 
 class SaveFibersBundleDialog(QtGui.QDialog):
     def __init__(self,operation,checkpoints_list,operation_is_and):
@@ -1201,8 +959,6 @@ class SaveScenarioDialog(QtGui.QDialog):
         self.ui.buttonBox.clear()
         self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Ok)
 
-
-
 class LoadScenarioDialog(QtGui.QDialog):
     def __init__(self,app_name,out_dict=None,reader=None):
         super(LoadScenarioDialog,self).__init__()
@@ -1279,4 +1035,13 @@ class LoadLogicBundle(QtGui.QDialog):
     def before_accepting(self):
         index = self.ui.listView.currentIndex()
         self.update_tree(index)
+
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    out = {}
+    vsd = OutcomeSelectDialog(out, multiple=True)
+    vsd.exec_()
+    print out
+
 

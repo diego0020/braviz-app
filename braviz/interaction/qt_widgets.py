@@ -1,15 +1,18 @@
 from __future__ import division
+import cPickle
 from functools import wraps
 from itertools import izip
 import itertools
 import logging
 import matplotlib
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas, FigureCanvasQTAgg
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from braviz.readAndFilter import tabular_data as braviz_tab_data, tabular_data
+
+from braviz.readAndFilter import tabular_data as braviz_tab_data
+from braviz.readAndFilter.tabular_data import get_var_name, is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values
 
 __author__ = 'Diego'
 
@@ -469,3 +472,252 @@ class MatplotWidget(FigureCanvas):
             #print "in legend"
         else:
             self.pick(event)
+
+
+class ContextVariablesPanel(QtGui.QGroupBox):
+    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initial_subject=None,app=None,
+                 sample = None):
+        super(ContextVariablesPanel, self).__init__(parent)
+        self.setTitle(title)
+        self.setToolTip("Right click to select context variables, and to make them editable")
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.layout = QtGui.QHBoxLayout(self)
+        self.setLayout(self.layout)
+        self.app = app
+        self.sample = sample
+        if self.sample is None:
+            self.sample = braviz_tab_data.get_subjects()
+
+        self.layout.setContentsMargins(7, 2, 7, 2)
+        self.customContextMenuRequested.connect(self.create_context_menu)
+
+        size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Maximum)
+        #size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(1)
+        self.setSizePolicy(size_policy)
+        #self.setMaximumSize(QtCore.QSize(16777215, 56))
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setObjectName("context_frame")
+        #self.setFrameStyle(self.NoFrame)
+
+        #internal variables
+        self.__context_variable_codes = None
+        self.__context_variable_names = None
+        self.__is_nominal = None
+        self.__labels_dict = None
+        self.__context_labels = None
+        self.__values_widgets = None
+        self.__internal_df = None
+        self.__curent_subject = None
+        self.__editables_dict = None
+        self.__save_changes_button = None
+        self.set_variables(initial_variable_idxs)
+        if initial_subject is not None:
+            self.set_subject(initial_subject)
+
+    def set_variables(self, variables, editables=None):
+        self.__context_variable_codes = list(variables)
+        self.__context_variable_names = dict((idx, get_var_name(idx)) for idx in self.__context_variable_codes)
+        self.__is_nominal = dict((idx, is_variable_nominal(idx)) for idx in self.__context_variable_codes)
+        self.__labels_dict = dict((idx, get_labels_dict(idx)) for idx in self.__context_variable_codes if
+                                  self.__is_nominal[idx])
+        self.__internal_df = get_data_frame_by_index(self.__context_variable_codes)
+        self.__values_widgets = []
+        if editables is None:
+            self.__editables_dict = dict((idx, False) for idx in variables)
+        else:
+            self.__editables_dict = editables
+        self.reset_internal_widgets()
+
+    def get_variables(self):
+        return self.__context_variable_codes
+
+    def get_editables(self):
+        return self.__editables_dict.iteritems()
+
+    def reset_internal_widgets(self):
+        #clear layout
+        self.__save_changes_button = None
+        for i in xrange(self.layout.count() - 1, -1, -1):
+            w = self.layout.takeAt(i)
+            wgt = w.widget()
+            if wgt is not None:
+                wgt.deleteLater()
+
+        self.__context_labels = []
+        self.__values_widgets = []
+
+        first = True
+        any_editable = False
+        for idx in self.__context_variable_codes:
+            #add separator
+            if not first:
+                self.layout.addStretch()
+            else:
+                first = False
+            #add label
+            label = QtGui.QLabel("%s : " % self.__context_variable_names[idx])
+            label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.__context_labels.append(label)
+            self.layout.addWidget(label)
+            #add value
+            if self.__editables_dict.get(idx) is True:
+                value_widget = self.get_editable_widget(idx)
+                any_editable = True
+            else:
+                value_widget = self.get_read_only_widget(idx)
+            self.layout.addWidget(value_widget)
+            self.__values_widgets.append(value_widget)
+        if any_editable is True:
+            self.__save_changes_button = QtGui.QPushButton("Save")
+            self.__save_changes_button.setEnabled(False)
+            self.__save_changes_button.clicked.connect(self.save_changes_into_db)
+            self.layout.addWidget(self.__save_changes_button)
+        return
+
+    def get_read_only_widget(self, idx):
+        value_widget = QtGui.QLabel("XXXXXXX")
+        value_widget.setFrameShape(QtGui.QFrame.Box)
+        value_widget.setFrameShadow(QtGui.QFrame.Raised)
+        #value_widget.setContentsMargins(7,7,7,7)
+        value_widget.setMargin(7)
+        value_widget.setAlignment(QtCore.Qt.AlignCenter)
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        value_widget.setFont(font)
+        value_widget.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        value_widget.setCursor(QtCore.Qt.IBeamCursor)
+        #calculate maximum width
+        if is_variable_nominal(idx):
+            lens = [(x,len(x)) for x in self.__labels_dict[idx].itervalues() if x is not None]
+            if len (lens)==0:
+                longest="<Unknown>"
+            else:
+                longest = max(lens,key=lambda x:x[1])[0]
+            value_widget.setText(longest)
+            longest_size = value_widget.sizeHint()
+            value_widget.setFixedWidth(longest_size.width())
+            value_widget.setFixedHeight(longest_size.height())
+        else:
+            max_value = get_maximum_value(idx)
+            if max_value is None:
+                max_value = 1000
+            value_widget.setText("%.2f" % max_value)
+            longest_size = value_widget.sizeHint()
+            value_widget.setFixedWidth(longest_size.width())
+            value_widget.setFixedHeight(longest_size.height())
+        return value_widget
+
+    def get_editable_widget(self, idx):
+        if self.__is_nominal.get(idx) is True:
+            value_widget = QtGui.QComboBox()
+            for i, lbl in self.__labels_dict[idx].iteritems():
+                if not np.isnan(float(i)):
+                    value_widget.addItem(lbl, i)
+            value_widget.insertSeparator(value_widget.count())
+            value_widget.addItem("<Unknown>",float("nan"))
+            value_widget.currentIndexChanged.connect(self.enable_save_changes)
+        else:
+            value_widget = QtGui.QDoubleSpinBox()
+            minim, maxim = get_min_max_values(idx)
+            value_widget.setMaximum(10 * maxim)
+            value_widget.setMinimum(-10 * maxim)
+            value_widget.setSingleStep((maxim - minim) / 20)
+            value_widget.valueChanged.connect(self.enable_save_changes)
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        value_widget.setFont(font)
+        return value_widget
+
+    def set_subject(self, subject_id):
+        values = self.__internal_df.loc[int(subject_id)]
+        for i, idx in enumerate(self.__context_variable_codes):
+            try:
+                value = values[self.__context_variable_names[idx]]
+            except KeyError:
+                value = float("nan")
+            #print self.__context_variable_names[idx], value
+            value_widget = self.__values_widgets[i]
+            if self.__is_nominal[idx]:
+
+                if isinstance(value_widget, QtGui.QLabel):
+                    label = self.__labels_dict[idx].get(value, "?")
+                    if label is None:
+                        label = "?"
+                    value_widget.setText(label)
+                elif isinstance(value_widget, QtGui.QComboBox):
+                    label = self.__labels_dict[idx].get(value, "<Unknown>")
+                    index = value_widget.findText(label)
+                    value_widget.setCurrentIndex(index)
+            else:
+                if isinstance(value_widget, QtGui.QLabel):
+                    value_widget.setText("%s" % value)
+                elif isinstance(value_widget, QtGui.QDoubleSpinBox):
+                    value_widget.setValue(value)
+        self.__curent_subject = subject_id
+        if self.__save_changes_button is not None:
+            self.__save_changes_button.setEnabled(False)
+
+    def create_context_menu(self, pos):
+        from braviz.interaction.qt_dialogs import  ContextVariablesSelectDialog
+        global_pos = self.mapToGlobal(pos)
+        change_action = QtGui.QAction("Change Variables", None)
+        menu = QtGui.QMenu()
+        menu.addAction(change_action)
+
+        def change_variables(*args):
+            context_change_dialog = ContextVariablesSelectDialog(current_subject=self.__curent_subject,
+                                                                 variables_list=self.__context_variable_codes,
+                                                                 editables_dict=self.__editables_dict,
+                                                                 sample = self.sample)
+            context_change_dialog.exec_()
+            self.set_variables(self.__context_variable_codes, self.__editables_dict)
+            self.set_subject(self.__curent_subject)
+
+        change_action.triggered.connect(change_variables)
+        menu.addAction(change_action)
+        menu.exec_(global_pos)
+
+    def enable_save_changes(self, *args):
+        if self.__save_changes_button is None:
+            return
+        self.__save_changes_button.setEnabled(True)
+
+    def save_changes_into_db(self):
+
+        for i,idx in enumerate(self.__context_variable_codes):
+            if self.__editables_dict[idx] is True:
+                value_widget = self.__values_widgets[i]
+                if isinstance(value_widget,QtGui.QDoubleSpinBox):
+                    value = float(value_widget.value())
+                elif isinstance(value_widget,QtGui.QComboBox):
+                    value=value_widget.itemData(value_widget.currentIndex())
+                    value=value.toDouble()[0]
+                    if np.isnan(float(value)):
+                        value = None
+                    else:
+                        value=int(value)
+                #update value
+                braviz_tab_data.updata_variable_value(int(idx),self.__curent_subject,value)
+                #update internal
+                var_name = self.__context_variable_names[idx]
+                self.__internal_df[var_name][int(self.__curent_subject)]=value
+                #check if scenarios exists for this variable
+                if braviz_user_data.count_variable_scenarios(int(idx)) == 0:
+                    #save scenario
+                    name = "<AUTO_%s>"%self.__context_variable_names[idx]
+                    desc = "Created automatically when saving values for variable %s"%self.__context_variable_names[idx]
+                    data = self.app.get_state_dict()
+                    app = data["meta"]["application"]
+                    data_s = cPickle.dumps(data,2)
+                    scn_idx=braviz_user_data.save_scenario(app,name,desc,data_s)
+                    #link
+                    braviz_user_data.link_var_scenario(int(idx),scn_idx)
+                    #save screenshot
+                    self.app.save_screenshot(scn_idx)
+
+        self.__save_changes_button.setEnabled(0)
+        #print idx_value_tuples
+
+    def set_sample(self,new_sample):
+        self.sample = list(new_sample)

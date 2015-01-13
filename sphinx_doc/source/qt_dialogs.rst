@@ -5,3 +5,61 @@
 Braviz Qt Dialogs
 *************************************
 
+This module contain several dialogs that should be used across applications to provide a consistent
+experience.
+
+Select Variables
+-----------------
+
+.. image:: images/variable_select.png
+    :alt: Variable select dialog example
+    :width: 90%
+    :align: center
+
+A common task in Braviz is navigating the variable database and selecting variables of interest.
+
+The variable select dialog provides an overview of the data distribution at the right side,
+a panel where variable meta data can be reviewed and updated in the middle, and a variable list which
+can be searched at the left.
+
+However there are several variations of this dialog which are appropriate for different tasks.
+
+.. autoclass:: GenericVariableSelectDialog
+
+.. autoclass:: VariableSelectDialog
+
+.. autoclass:: OutcomeSelectDialog
+
+.. autoclass:: MultiPlotOutcomeSelectDialog
+
+.. autoclass:: SelectOneVariableWithFilter
+
+.. autoclass:: RegressorSelectDialog
+
+.. autoclass:: NewVariableDialog
+
+.. autoclass:: ContextVariablesSelectDialog
+
+Scenarios
+----------
+
+.. autoclass:: LoadScenarioDialog
+
+.. autoclass:: SaveScenarioDialog
+
+
+Bundles
+---------
+
+.. autoclass:: BundleSelectionDialog
+
+.. autoclass:: LoadLogicBundle
+
+.. autoclass:: SaveFibersBundleDialog
+
+.. autoclass:: SaveLogicFibersBundleDialog
+
+
+Other
+------
+.. autoclass:: InteractionSelectDialog
