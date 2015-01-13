@@ -810,17 +810,21 @@ def register_new_variable(var_name,is_real=1):
     """
     var_name = unicode(var_name)
     conn = _get_connection()
-    row_id = None
-    with conn :
-        if is_real:
-            is_real = 1
-        else:
-            is_real = 0
-        q="""INSERT INTO variables (var_name, is_real)
-             Values (? , ?)"""
-        cur = conn.execute(q,(var_name,is_real))
-        row_id = cur.lastrowid
-    return row_id
+    try:
+        with conn :
+            if is_real:
+                is_real = 1
+            else:
+                is_real = 0
+            q="""INSERT INTO variables (var_name, is_real)
+                 Values (? , ?)"""
+            cur = conn.execute(q,(var_name,is_real))
+            row_id = cur.lastrowid
+        return row_id
+    except sqlite3.IntegrityError:
+        log=logging.getLogger(__name__)
+        log.warning("Couldn't create new variable")
+        return None
 
 def update_variable_values(var_idx,tuples):
     """

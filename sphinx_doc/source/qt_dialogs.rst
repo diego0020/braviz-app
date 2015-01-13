@@ -24,9 +24,9 @@ can be searched at the left.
 
 However there are several variations of this dialog which are appropriate for different tasks.
 
-.. autoclass:: GenericVariableSelectDialog
-
 .. autoclass:: VariableSelectDialog
+
+.. autoclass:: GenericVariableSelectDialog
 
 .. autoclass:: OutcomeSelectDialog
 
@@ -35,8 +35,6 @@ However there are several variations of this dialog which are appropriate for di
 .. autoclass:: SelectOneVariableWithFilter
 
 .. autoclass:: RegressorSelectDialog
-
-.. autoclass:: NewVariableDialog
 
 .. autoclass:: ContextVariablesSelectDialog
 
@@ -63,3 +61,5 @@ Bundles
 Other
 ------
 .. autoclass:: InteractionSelectDialog
+
+.. autoclass:: NewVariableDialog

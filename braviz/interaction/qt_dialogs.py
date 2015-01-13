@@ -10,7 +10,6 @@ import numpy as np
 
 from braviz.interaction.qt_widgets import MatplotWidget
 
-
 import braviz
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.outcome_select_multi_plot import Ui_SelectOutcomeMPDialog
@@ -27,12 +26,12 @@ from braviz.interaction.qt_guis.save_scenario_dialog import Ui_SaveScenarioDialo
 from braviz.interaction.qt_guis.load_scenario_dialog import Ui_LoadScenarioDialog
 from braviz.interaction.qt_guis.load_logic_bundle import Ui_LoadLogicDialog
 
-from braviz.interaction.logic_bundle_model import LogicBundleNode,LogicBundleQtTree
+from braviz.interaction.logic_bundle_model import LogicBundleNode, LogicBundleQtTree
 
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_data_frame_by_name, get_var_idx, get_min_max_values_by_name, \
     is_variable_name_real, get_var_description_by_name, save_is_real_by_name, \
-    save_real_meta_by_name, save_var_description_by_name, get_min_max_opt_values_by_name, register_new_variable,\
+    save_real_meta_by_name, save_var_description_by_name, get_min_max_opt_values_by_name, register_new_variable, \
     save_real_meta, save_var_description
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
@@ -44,11 +43,13 @@ import os
 from itertools import izip
 
 import seaborn as sns
+
 __author__ = 'Diego'
+
 
 class VariableSelectDialog(QtGui.QDialog):
     """
-    Abstract, Implement common features for Outcome and Regressor Dialogs
+    **Abstract**, Implement common features for Outcome and Regressor Dialogs
 
     This class is incomplete, in order to get a full dialog consider using one of the inherited
     classes.
@@ -57,7 +58,7 @@ class VariableSelectDialog(QtGui.QDialog):
     and then call ``finish_ui_setup``
     """
 
-    def __init__(self,sample = None):
+    def __init__(self, sample=None):
         """remember to call finish_ui_setup() after setting up ui"""
         super(VariableSelectDialog, self).__init__()
         self.var_name = None
@@ -69,7 +70,7 @@ class VariableSelectDialog(QtGui.QDialog):
         if sample is None:
             self.sample = braviz_tab_data.get_subjects()
         else:
-            self.sample = sorted(map(int,sample))
+            self.sample = sorted(map(int, sample))
             log = logging.getLogger(__name__)
             log.info("got custom sample")
             log.info(self.sample)
@@ -146,13 +147,13 @@ class VariableSelectDialog(QtGui.QDialog):
         medi = self.rational["opt"]
         self.details_ui.maximum_val.setValue(maxi)
         self.details_ui.minimum_val.setValue(mini)
-        self.details_ui.minimum_val.setMinimum(min(mini*10,-100))
-        self.details_ui.maximum_val.setMinimum(min(mini*10,-100))
+        self.details_ui.minimum_val.setMinimum(min(mini * 10, -100))
+        self.details_ui.maximum_val.setMinimum(min(mini * 10, -100))
 
-        self.details_ui.minimum_val.setMaximum(max(maxi*10,1000))
-        self.details_ui.maximum_val.setMaximum(max(maxi*10,1000))
+        self.details_ui.minimum_val.setMaximum(max(maxi * 10, 1000))
+        self.details_ui.maximum_val.setMaximum(max(maxi * 10, 1000))
         try:
-            self.details_ui.optimum_val.setValue(int((medi - mini) / (maxi - mini)*100))
+            self.details_ui.optimum_val.setValue(int((medi - mini) / (maxi - mini) * 100))
         except Exception:
             self.details_ui.optimum_val.setValue(0)
         self.update_optimum_real_value()
@@ -245,21 +246,24 @@ class VariableSelectDialog(QtGui.QDialog):
         elif var_type == 0:
             self.nominal_model.save_into_db()
 
-    def show_plot_tooltip(self,subj,position):
+    def show_plot_tooltip(self, subj, position):
         message = "Subject: %s" % subj
         QtGui.QToolTip.showText(self.matplot_widget.mapToGlobal(QtCore.QPoint(*position)), message, self.matplot_widget)
 
-    def show_delete_menu(self,pos):
+    def show_delete_menu(self, pos):
         print "showing menu"
         menu = QtGui.QMenu()
         mod = self.ui.tableView.model()
-        cur_idx=self.ui.tableView.currentIndex()
-        idx2 = mod.index(cur_idx.row(),0)
-        var_name = mod.data(idx2,QtCore.Qt.DisplayRole)
+        cur_idx = self.ui.tableView.currentIndex()
+        idx2 = mod.index(cur_idx.row(), 0)
+        var_name = mod.data(idx2, QtCore.Qt.DisplayRole)
+
         def delete_var():
             confirm = QtGui.QMessageBox.question(self,
-                "Confirm delete variable","Are you sure you want to delete \n%s ?\nThis is not reversible"%var_name,
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,QtGui.QMessageBox.Cancel)
+                                                 "Confirm delete variable",
+                                                 "Are you sure you want to delete \n%s ?\nThis is not reversible" % var_name,
+                                                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,
+                                                 QtGui.QMessageBox.Cancel)
             if confirm == QtGui.QMessageBox.Yes:
                 print "deleting"
                 var_idx = braviz_tab_data.get_var_idx(var_name)
@@ -268,11 +272,13 @@ class VariableSelectDialog(QtGui.QDialog):
                 mod.update_list(None)
             else:
                 "cancelled"
-        action = QtGui.QAction("Delete %s"%var_name,menu)
+
+        action = QtGui.QAction("Delete %s" % var_name, menu)
         menu.addAction(action)
         action.triggered.connect(delete_var)
         global_pos = self.ui.tableView.mapToGlobal(pos)
         menu.exec_(global_pos)
+
 
 class OutcomeSelectDialog(VariableSelectDialog):
     """
@@ -282,12 +288,18 @@ class OutcomeSelectDialog(VariableSelectDialog):
     When the user clicks the *save and select* button, the dialog will close, and the current selection
     will be available in the ``selected_outcome`` field of the dictionary.
 
+    If you need multiple variables consider using :class:`GenericVariableSelectDialog`.
+
     If ``multiple = True`` is passed to the constructor the variable list will have check marks.
     The output dictionary will still contain only one variable, but the list is available in
     the ``vars_list_model`` field. You may get a set of selected variables by calling
     ``dialog.vars_list_model.checked_set``
+
+    The constructor also takes a ``sample`` parameter which can be used to set the sample used in the
+    right side plot.
     """
-    def __init__(self, params_dict, multiple=False,sample=None):
+
+    def __init__(self, params_dict, multiple=False, sample=None):
         super(OutcomeSelectDialog, self).__init__(sample)
         self.ui = Ui_SelectOutcomeDialog()
         self.ui.setupUi(self)
@@ -312,9 +324,9 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
 
     def update_plot(self, data):
-        data2=data.dropna()
+        data2 = data.dropna()
         self.matplot_widget.compute_scatter(data2.get_values(),
-                                            x_lab=self.var_name, y_lab="jitter",urls=data2.index.get_values())
+                                            x_lab=self.var_name, y_lab="jitter", urls=data2.index.get_values())
 
 
     def select_and_return(self, *args):
@@ -325,24 +337,32 @@ class OutcomeSelectDialog(VariableSelectDialog):
         self.accept()
 
     def filter_list(self):
-        mask = "%%%s%%"%self.ui.search_box.text()
+        mask = "%%%s%%" % self.ui.search_box.text()
         self.vars_list_model.update_list(mask)
+
 
 class GenericVariableSelectDialog(OutcomeSelectDialog):
     """
-    Derived from Outcome Select Dialog,
+    A dialog for selecting one or multiple variables with initial selection.
+
+    This dialog is optimized for multiple selections, and it improves :class:`~OutcomeSelectDialog` in that
+
+        - In the *multiple* mode, the output dictionary includes a ``checked`` field with the codes of the selected variables
+        - In the *multiple* mode, initial selections can be set using the ``initial_selection_names`` and
+            ``initial_selection_idx`` parameters in the constructor.
     """
 
-    def __init__(self, params, multiple=False, initial_selection_names=None, initial_selection_idx=None,sample=None):
-        OutcomeSelectDialog.__init__(self, params, multiple=multiple,sample=sample)
+    def __init__(self, params, multiple=False, initial_selection_names=None, initial_selection_idx=None, sample=None):
+        OutcomeSelectDialog.__init__(self, params, multiple=multiple, sample=sample)
         self.multiple = multiple
         self.setWindowTitle("Select Variables")
         self.ui.select_button.setText("Accept Selection")
         self.ui.select_button.setEnabled(True)
-        if initial_selection_idx is not None:
-            self.vars_list_model.select_items(initial_selection_idx)
-        elif initial_selection_names is not None:
-            self.vars_list_model.select_items_by_name(initial_selection_names)
+        if multiple:
+            if initial_selection_idx is not None:
+                self.vars_list_model.select_items(initial_selection_idx)
+            elif initial_selection_names is not None:
+                self.vars_list_model.select_items_by_name(initial_selection_names)
 
 
     def select_and_return(self, *args):
@@ -351,9 +371,28 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
             self.params_dict["checked"] = [get_var_idx(name) for name in selected_names]
         OutcomeSelectDialog.select_and_return(self, *args)
 
+
 class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
-    def __init__(self, params_dict, multiple=False,sample=None,available_plots=None):
-        VariableSelectDialog.__init__(self)
+    """
+    A dialog for selecting one variable with multiple plot options
+
+    The selected variable will be available in the ``selected_outcome`` field of the
+    *params_dict* dictionary.
+
+    The constructor takes the ``available_plots`` argument, which contains a list of plots to make available
+    in the dialog. This list should contain tuples of the following types
+
+        - ``("scatter", None)`` : The default plot, *x* is the variable, and *y* is jitter
+        - ``("scatter", var)`` : An scatter plot in which *x* is variable *var* and *y*
+          is the current variable.
+        - ``("box",var)`` : A box plot using variable *var* for groups and the current variable for values
+        - ``("interaction", vars)`` : A two factor box plot where the groups are the interaction between the variables
+          in *vars* , which is a string with an ``*`` between the two names.
+
+    """
+
+    def __init__(self, params_dict, sample=None, available_plots=None):
+        VariableSelectDialog.__init__(self, sample=sample)
         self.ui = Ui_SelectOutcomeMPDialog()
         self.ui.setupUi(self)
         if available_plots is not None:
@@ -364,7 +403,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
 
         self.params_dict = params_dict
 
-        self.vars_list_model = braviz_models.VarListModel(checkeable=multiple)
+        self.vars_list_model = braviz_models.VarListModel(checkeable=False)
         self.ui.tableView.setModel(self.vars_list_model)
         self.ui.tableView.clicked.connect(self.update_right_side)
         self.ui.tableView.activated.connect(self.update_right_side)
@@ -377,30 +416,30 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
         if type(data) == int:
             data = self.data
 
-        default_plot = ("scatter",None)
+        default_plot = ("scatter", None)
         if self.available_plots is None:
             plot_type = default_plot
         else:
             plot_str = str(self.ui.plot_type.currentText())
-            plot_type = self.available_plots.get(plot_str,default_plot)
+            plot_type = self.available_plots.get(plot_str, default_plot)
         print plot_type
-        if plot_type[0]=="scatter":
+        if plot_type[0] == "scatter":
             if plot_type[1] is None:
-                data=data.dropna()
-                self.matplot_widget.compute_scatter(data,x_lab=self.var_name,y_lab="jitter",urls=data.index)
+                data = data.dropna()
+                self.matplot_widget.compute_scatter(data, x_lab=self.var_name, y_lab="jitter", urls=data.index)
                 self.matplot_widget.limits_vertical = True
             else:
                 x = plot_type[1]
                 y = self.var_name
-                data = braviz_tab_data.get_data_frame_by_name([x,y])
+                data = braviz_tab_data.get_data_frame_by_name([x, y])
                 data = data.loc[self.sample]
                 data.dropna(inplace=True)
-                self.matplot_widget.compute_scatter(data[x],data[y],x_lab=x,y_lab=y,urls=data.index)
+                self.matplot_widget.compute_scatter(data[x], data[y], x_lab=x, y_lab=y, urls=data.index)
                 self.matplot_widget.limits_vertical = False
-        elif plot_type[0]=="box":
+        elif plot_type[0] == "box":
             x = plot_type[1]
             y = self.var_name
-            data = braviz_tab_data.get_data_frame_by_name([y,x])
+            data = braviz_tab_data.get_data_frame_by_name([y, x])
             data = data.loc[self.sample]
             data.dropna(inplace=True)
             label_nums = set(data[x])
@@ -411,14 +450,14 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
                 data_col = data[y][data[x] == i]
                 data_list.append(data_col.get_values())
                 ticks.append(labels_dict.get(i, str(i)))
-            #print data_list
+                #print data_list
             self.matplot_widget.make_box_plot(data_list, x, y, ticks)
             self.matplot_widget.limits_vertical = False
-        elif plot_type[0]=="interaction":
+        elif plot_type[0] == "interaction":
             factors = plot_type[1].split("*")
             self.matplot_widget.limits_vertical = False
             self.two_factors_plot(factors)
-        QtCore.QTimer.singleShot(10,self.update_limits_in_plot)
+        QtCore.QTimer.singleShot(10, self.update_limits_in_plot)
 
     def two_factors_plot(self, factors_list):
         #copied from anova application... not a good practice
@@ -434,7 +473,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
         if len(real_factors) == 1:
 
             top_labels_dict = braviz_tab_data.get_labels_dict_by_name(nominal_factors[0])
-            colors = sns.color_palette("Dark2",len(top_labels_dict))
+            colors = sns.color_palette("Dark2", len(top_labels_dict))
             #print top_labels_strings
             colors_dict = dict(izip(top_labels_dict.iterkeys(), colors))
             plot_color = colors_dict
@@ -453,13 +492,13 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
                 if k is None:
                     continue
                 if v is None:
-                    v="?"
+                    v = "?"
                 labels.append(v)
                 colors.append(colors_dict[k])
                 datay.append(data[self.var_name][data[nominal_factors[0]] == k].get_values())
                 datax.append(data[real_factors[0]][data[nominal_factors[0]] == k].get_values())
                 urls.append(data[self.var_name][data[nominal_factors[0]] == k].index.get_values())
-            #print datax
+                #print datax
             self.matplot_widget.compute_scatter(datax, datay, real_factors[0], self.var_name, colors, labels, urls=urls)
 
 
@@ -476,7 +515,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
             nlevels = {}
             for f in nominal_factors:
                 nlevels[f] = len(data[f].unique())
-            #print nlevels
+                #print nlevels
             nominal_factors.sort(key=nlevels.get, reverse=True)
             #print nominal_factors
 
@@ -487,35 +526,54 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
                 data_list = []
                 for j in levels_first_factor:
                     data_col = data[self.var_name][(data[nominal_factors[1]] == i) &
-                                                           (data[nominal_factors[0]] == j)].get_values()
+                                                   (data[nominal_factors[0]] == j)].get_values()
                     data_list.append(data_col)
                 data_lists_top.append(data_list)
 
             self.matplot_widget.make_linked_box_plot(data, self.var_name, nominal_factors[0], nominal_factors[1])
 
+
 class SelectOneVariableWithFilter(OutcomeSelectDialog):
     """
-    Derived from Outcome Select Dialog,
+    A dialog for selecting one variable of an specific kind.
+
+    This dialog behaves likes the :class:`OutcomeSelectDialog`, but you may choose to accept only
+    nominal or only real variables using the parameters ``accept_real`` and ``accept_nominal`` of the constructor.
     """
-    def __init__(self, params, accept_nominal=True, accept_real=True,sample=None):
-        OutcomeSelectDialog.__init__(self, params, multiple=False,sample=sample)
+
+    def __init__(self, params, accept_nominal=True, accept_real=True, sample=None):
+        OutcomeSelectDialog.__init__(self, params, multiple=False, sample=sample)
         self.setWindowTitle("Select Variable")
         self.accept_real = accept_real
         self.accept_nominal = accept_nominal
 
     def check_selecion(self):
-        is_current_variable_real=(self.ui.var_type_combo.currentIndex() == 0)
+        is_current_variable_real = (self.ui.var_type_combo.currentIndex() == 0)
         if (is_current_variable_real and self.accept_real) or (not is_current_variable_real and self.accept_nominal):
             self.ui.select_button.setEnabled(True)
         else:
             self.ui.select_button.setEnabled(False)
 
     def update_details(self, index):
-        super(SelectOneVariableWithFilter,self).update_details(index)
+        super(SelectOneVariableWithFilter, self).update_details(index)
         self.check_selecion()
 
+
 class RegressorSelectDialog(VariableSelectDialog):
-    def __init__(self, outcome_var, regressors_model,sample=None):
+    """
+    Dialog for selecting a secondary variable in the analysis.
+
+    The ``outcome_var`` parameter of the constructor may be used to specify a variable of reference.
+    The default plot would have current variable in the *x* axis and the *outcome_var* variable in the
+    *y* axis. If *outcome_var* is None, the *y* axis will be jitter.
+
+    The ``regressors_model`` parameter should be an instance of
+    :class:`~braviz.interaction.qt_models.AnovaRegressorsModel`. Variables will be added to and removed from
+    the model using the dialog.
+
+    """
+
+    def __init__(self, outcome_var, regressors_model, sample=None):
         super(RegressorSelectDialog, self).__init__(sample=sample)
         self.outcome_var = outcome_var
         self.ui = Ui_AddRegressorDialog()
@@ -564,24 +622,36 @@ class RegressorSelectDialog(VariableSelectDialog):
                 both_data = regressor_data
             else:
                 outcome_data = get_data_frame_by_name(self.outcome_var)
-                both_data=regressor_data.join(outcome_data)
+                both_data = regressor_data.join(outcome_data)
             both_data.dropna(inplace=True)
 
-            self.matplot_widget.compute_scatter(both_data.iloc[:,0].get_values(), both_data.iloc[:,1].get_values(),
+            self.matplot_widget.compute_scatter(both_data.iloc[:, 0].get_values(), both_data.iloc[:, 1].get_values(),
                                                 x_lab=self.var_name, y_lab=self.outcome_var,
                                                 urls=both_data.index.get_values())
         else:
-            data2=data.dropna()
-            self.matplot_widget.compute_scatter(data2.get_values(),urls=data2.index.get_values())
+            data2 = data.dropna()
+            self.matplot_widget.compute_scatter(data2.get_values(), urls=data2.index.get_values())
 
     def finish_close(self):
         self.done(self.Accepted)
 
     def filter_list(self):
-        mask = "%%%s%%"%self.ui.search_box.text()
+        mask = "%%%s%%" % self.ui.search_box.text()
         self.vars_model.update_list(mask)
 
+
 class InteractionSelectDialog(QtGui.QDialog):
+    """
+    A dialog for specifying interactions between variables
+
+    The top panel contains a list of current variables, and the bottom panel contains a list of interaction terms
+    The user may select two or more variables and click *Add single term* to add the product of the selected variables
+    to the list of interactions. Clicking *Add all combinations* will add all possible combinations to the list.
+
+    All operations will update the specified *regressors_model*, which should be an instance of
+    :class:`~braviz.interaction.qt_models.AnovaRegressorsModel`
+    """
+
     def __init__(self, regressors_model):
         super(InteractionSelectDialog, self).__init__()
         self.full_model = regressors_model
@@ -609,7 +679,18 @@ class InteractionSelectDialog(QtGui.QDialog):
             for i in itertools.combinations(rows, r):
                 self.full_model.add_interactor(i)
 
+
 class NewVariableDialog(QtGui.QDialog):
+    """
+    A dialog for creating new variables
+
+    The dialog contains fields for entering a variable name and metadata, as well as a table view
+    where values can be entered.
+
+    The dialog attempts to save the variable into the database, and if it fails shows an error message and lets the user
+    change the variable name
+    """
+
     def __init__(self):
         super(NewVariableDialog, self).__init__()
         self.ui = Ui_NewVariableDialog()
@@ -688,32 +769,38 @@ class NewVariableDialog(QtGui.QDialog):
         self.details_ui.optimum_real_value.setNum(real_value)
 
     def activate_save_button(self):
-        if len(str(self.ui.var_name_input.text()))>0:
+        if len(str(self.ui.var_name_input.text())) > 0:
             self.ui.save_button.setEnabled(True)
 
     def save_new_variable(self):
         #create new variable
         var_name = str(self.ui.var_name_input.text())
-        is_real = 1-self.ui.var_type_combo.currentIndex()
-        var_idx = register_new_variable(var_name,is_real)
+        is_real = 1 - self.ui.var_type_combo.currentIndex()
+        var_idx = register_new_variable(var_name, is_real)
+        if var_idx is None:
+            m="""A variable with the same name already exists,\nplease choose a different name"""
+            QtGui.QMessageBox.critical(None, "Couldn't create variable",m,)
+            return
+
         #add meta data
         if is_real:
-            mini=self.details_ui.minimum_val.value()
-            maxi=self.details_ui.maximum_val.value()
-            opti=self.details_ui.optimum_val.value()
+            mini = self.details_ui.minimum_val.value()
+            maxi = self.details_ui.maximum_val.value()
+            opti = self.details_ui.optimum_val.value()
             opti = mini + opti * (maxi - mini) / 100
-            save_real_meta(var_idx,mini,maxi,opti)
+            save_real_meta(var_idx, mini, maxi, opti)
         else:
             self.nominal_model.save_into_db(var_idx)
-        #description
-        desc=str(self.ui.var_description.toPlainText())
-        save_var_description(var_idx,desc)
+            #description
+        desc = str(self.ui.var_description.toPlainText())
+        save_var_description(var_idx, desc)
         #values
         self.values_model.save_into_db(var_idx)
         self.accept()
 
+
 class ContextVariablesSelectDialog(VariableSelectDialog):
-    def __init__(self, variables_list=None, current_subject=None, editables_dict=None,sample=None):
+    def __init__(self, variables_list=None, current_subject=None, editables_dict=None, sample=None):
         super(ContextVariablesSelectDialog, self).__init__(sample=sample)
         if variables_list is None:
             variables_list = []
@@ -771,7 +858,7 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
 
 
     def update_plot(self, data):
-        data=data.dropna()
+        data = data.dropna()
         self.jitter = np.random.random(len(data))
         data_values = data.get_values()
         xlimits = get_min_max_values_by_name(self.var_name)
@@ -781,7 +868,7 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
             try:
                 subj_index = data.index.get_loc(int(self.current_subject))
                 self.matplot_widget.add_subject_points((data_values[subj_index]), (self.jitter[subj_index],),
-                                                   urls=(self.current_subject,))
+                                                       urls=(self.current_subject,))
             except KeyError:
                 pass
 
@@ -796,25 +883,25 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
 
     def launch_new_variable_dialog(self):
         new_variable_dialog = NewVariableDialog()
-        r=new_variable_dialog.exec_()
+        r = new_variable_dialog.exec_()
         if r == QtGui.QDialog.Accepted:
             self.vars_model.update_list()
 
 
     def filter_list(self):
-        mask = "%%%s%%"%self.ui.search_box.text()
+        mask = "%%%s%%" % self.ui.search_box.text()
         self.vars_model.update_list(mask)
 
 
 class BundleSelectionDialog(QtGui.QDialog):
-    def __init__(self,selected,names_dict):
-        super(BundleSelectionDialog,self).__init__()
+    def __init__(self, selected, names_dict):
+        super(BundleSelectionDialog, self).__init__()
         self.ui = None
-        self.bundles_list_model=braviz_models.BundlesSelectionList()
+        self.bundles_list_model = braviz_models.BundlesSelectionList()
         self.bundles_list_model.select_many_ids(selected)
         self.load_ui()
-        self.selection=selected
-        self.names_dict=names_dict
+        self.selection = selected
+        self.names_dict = names_dict
 
     def load_ui(self):
         self.ui = Ui_LoadBundles()
@@ -828,9 +915,10 @@ class BundleSelectionDialog(QtGui.QDialog):
         self.selection.update(new_select)
         self.names_dict.update(self.bundles_list_model.names_dict)
 
+
 class SaveFibersBundleDialog(QtGui.QDialog):
-    def __init__(self,operation,checkpoints_list,operation_is_and):
-        super(SaveFibersBundleDialog,self).__init__()
+    def __init__(self, operation, checkpoints_list, operation_is_and):
+        super(SaveFibersBundleDialog, self).__init__()
         self.ui = Ui_SaveBundleDialog()
         self.ui.setupUi(self)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
@@ -843,13 +931,12 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         self.ui.structures_list.setPlainText(", ".join(self._checkpoints))
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).clicked.connect(self.accept_save)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.accept)
-        self._and= operation_is_and
-
+        self._and = operation_is_and
 
 
     def check_name(self):
         name = str(self.ui.lineEdit.text())
-        if len(name)<2:
+        if len(name) < 2:
             self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
             return
         if bundles_db.check_if_name_exists(name) is True:
@@ -864,11 +951,11 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         log.info("saving")
         name = str(self.ui.lineEdit.text())
         log.info(str(self.ui.lineEdit.text()))
-        op =  "and" if self._and else "or"
+        op = "and" if self._and else "or"
         log.info(op)
         log.info(self._checkpoints)
-        try :
-            bundles_db.save_checkpoints_bundle(name, self._and,self._checkpoints)
+        try:
+            bundles_db.save_checkpoints_bundle(name, self._and, self._checkpoints)
         except:
             log.error("problem saving into database")
             raise
@@ -878,9 +965,10 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Cancel).setEnabled(False)
         self.ui.lineEdit.setEnabled(False)
 
+
 class SaveLogicFibersBundleDialog(QtGui.QDialog):
-    def __init__(self,tree_model):
-        super(SaveLogicFibersBundleDialog,self).__init__()
+    def __init__(self, tree_model):
+        super(SaveLogicFibersBundleDialog, self).__init__()
         self.__tree_model = tree_model
         self.ui = Ui_SaveLogicBundleDialog()
         self.ui.setupUi(self)
@@ -896,7 +984,7 @@ class SaveLogicFibersBundleDialog(QtGui.QDialog):
 
     def check_name(self):
         name = str(self.ui.lineEdit.text())
-        if len(name)<2:
+        if len(name) < 2:
             self.ui.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
             return
         if bundles_db.check_if_name_exists(name) is True:
@@ -913,8 +1001,8 @@ class SaveLogicFibersBundleDialog(QtGui.QDialog):
         log.info(str(self.ui.lineEdit.text()))
         tree_dict = self.__tree_model.root.to_dict()
         log.info(tree_dict)
-        try :
-            bundles_db.save_logic_bundle(name,tree_dict)
+        try:
+            bundles_db.save_logic_bundle(name, tree_dict)
         except:
             log.error("problem saving into database")
             raise
@@ -924,14 +1012,15 @@ class SaveLogicFibersBundleDialog(QtGui.QDialog):
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Cancel).setEnabled(False)
         self.ui.lineEdit.setEnabled(False)
 
+
 class SaveScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,state,params=None):
-        super(SaveScenarioDialog,self).__init__()
+    def __init__(self, app_name, state, params=None):
+        super(SaveScenarioDialog, self).__init__()
         self.app_name = app_name
-        self.data = cPickle.dumps(state,2)
+        self.data = cPickle.dumps(state, 2)
         if params is None:
             params = dict()
-        self.params=params
+        self.params = params
         self.ui = None
         self.init_gui()
 
@@ -940,28 +1029,28 @@ class SaveScenarioDialog(QtGui.QDialog):
         self.ui = Ui_SaveScenarioDialog()
         self.ui.setupUi(self)
         self.ui.app_name.setText(self.app_name)
-        self.ui.save_button=QtGui.QPushButton("Save")
+        self.ui.save_button = QtGui.QPushButton("Save")
         self.ui.save_button.clicked.connect(self.save_into_db)
-        self.ui.buttonBox.addButton(self.ui.save_button,QtGui.QDialogButtonBox.ActionRole)
+        self.ui.buttonBox.addButton(self.ui.save_button, QtGui.QDialogButtonBox.ActionRole)
         self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Cancel)
         self.ui.succesful_message.setText("")
 
 
-
     def save_into_db(self):
         scenario_name = str(self.ui.scenario_name.text())
-        if len(scenario_name)==0:
+        if len(scenario_name) == 0:
             scenario_name = "<Unnamed>"
         description = unicode(self.ui.scn_description.toPlainText())
-        scn_id=braviz_user_data.save_scenario(self.app_name,scenario_name , description, self.data)
-        self.params["scn_id"]=scn_id
+        scn_id = braviz_user_data.save_scenario(self.app_name, scenario_name, description, self.data)
+        self.params["scn_id"] = scn_id
         self.ui.succesful_message.setText("Save completed succesfully")
         self.ui.buttonBox.clear()
         self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Ok)
 
+
 class LoadScenarioDialog(QtGui.QDialog):
-    def __init__(self,app_name,out_dict=None,reader=None):
-        super(LoadScenarioDialog,self).__init__()
+    def __init__(self, app_name, out_dict=None, reader=None):
+        super(LoadScenarioDialog, self).__init__()
         if out_dict is None:
             out_dict = {}
         self.out_dict = out_dict
@@ -980,36 +1069,37 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.ui.scenarios_table.activated.connect(self.select_scenario)
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.load_data)
 
-    def select_scenario(self,index):
+    def select_scenario(self, index):
         row = index.row()
         self.current_row = row
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(1)
         #load picture
-        index = self.model.data(index,QtCore.Qt.UserRole)
-        self.ui.screen_shot_label.setText("<No screenshot available>"%index)
+        index = self.model.data(index, QtCore.Qt.UserRole)
+        self.ui.screen_shot_label.setText("<No screenshot available>" % index)
         self.ui.screen_shot_label.setScaledContents(False)
         if self.reader is None:
             data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
         else:
             data_root = self.reader.get_dyn_data_root()
-        image_file = os.path.join(data_root,"braviz_data","scenarios","scenario_%d.png"%index)
+        image_file = os.path.join(data_root, "braviz_data", "scenarios", "scenario_%d.png" % index)
         if os.path.isfile(image_file):
             image = QtGui.QImage(image_file)
-            scaled_image = image.scaledToWidth(300,)
+            scaled_image = image.scaledToWidth(300, )
             self.ui.screen_shot_label.setPixmap(QtGui.QPixmap.fromImage(scaled_image))
 
 
     def load_data(self):
         scn_id = int(self.model.get_index(self.current_row))
-        parameters_dict=braviz_user_data.get_scenario_data_dict(scn_id)
+        parameters_dict = braviz_user_data.get_scenario_data_dict(scn_id)
         parameters_dict["meta"]["scn_id"] = scn_id
         self.out_dict.update(parameters_dict)
         self.accept()
 
+
 class LoadLogicBundle(QtGui.QDialog):
     def __init__(self):
-        super(LoadLogicBundle,self).__init__()
-        self.__tree_root = LogicBundleNode(None,0,LogicBundleNode.LOGIC,"AND")
+        super(LoadLogicBundle, self).__init__()
+        self.__tree_root = LogicBundleNode(None, 0, LogicBundleNode.LOGIC, "AND")
         self.__tree_model = LogicBundleQtTree(self.__tree_root)
         self.__bundles = bundles_db.get_bundles_list(bundle_type=10)
         self.__bundles_model = braviz_models.SimpleSetModel()
@@ -1024,8 +1114,8 @@ class LoadLogicBundle(QtGui.QDialog):
         self.accepted.connect(self.before_accepting)
 
 
-    def update_tree(self,index):
-        name = str(self.__bundles_model.data(index,QtCore.Qt.DisplayRole))
+    def update_tree(self, index):
+        name = str(self.__bundles_model.data(index, QtCore.Qt.DisplayRole))
         data = bundles_db.get_logic_bundle_dict(bundle_name=name)
         self.current_data = data
         self.__tree_root = LogicBundleNode.from_dict(data)
@@ -1036,11 +1126,16 @@ class LoadLogicBundle(QtGui.QDialog):
         index = self.ui.listView.currentIndex()
         self.update_tree(index)
 
+
 if __name__ == "__main__":
     import sys
+
     app = QtGui.QApplication(sys.argv)
     out = {}
-    vsd = OutcomeSelectDialog(out, multiple=True)
+    #vsd = GenericVariableSelectDialog(out, multiple=False,initial_selection_names=['ABCL_DSM_antisocial_T_padres'])
+    #vsd = MultiPlotOutcomeSelectDialog(out))
+    vsd = NewVariableDialog()
+
     vsd.exec_()
     print out
 
