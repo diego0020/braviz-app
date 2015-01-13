@@ -974,12 +974,12 @@ class ContextVariablesModel(QAbstractTableModel):
     def __init__(self, context_vars_list=None, parent=None, editable_dict=None):
         QAbstractTableModel.__init__(self, parent)
         self.data_type_dict = dict()
-        if context_vars_list is not None:
+        if context_vars_list is not None and len(context_vars_list) > 0:
             self.data_frame = pd.DataFrame(
                 [(braviz_tab_data.get_var_name(idx), self.get_type(idx)) for idx in context_vars_list],
                 columns=["variable", "Type"], index=context_vars_list)
         else:
-            self.data_frame = pd.DataFrame(tuple(), columns=["variable", "Type"])
+            self.data_frame = pd.DataFrame(columns=["variable", "Type"])
 
         self.editables_dict = editable_dict
         if self.editables_dict is None:

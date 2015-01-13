@@ -56,6 +56,9 @@ class VariableSelectDialog(QtGui.QDialog):
 
     In particular there is no ui associated with this class, in subclasses you should add a UI
     and then call ``finish_ui_setup``
+    
+    Args:
+        sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
 
     def __init__(self, sample=None):
@@ -297,6 +300,11 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
     The constructor also takes a ``sample`` parameter which can be used to set the sample used in the
     right side plot.
+    
+    Args:
+        params_dict (dict) : Output will be written in this object
+        multiple (boolean) : If True, allows to select multiple variables by placing checkmarks
+        sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
 
     def __init__(self, params_dict, multiple=False, sample=None):
@@ -349,9 +357,16 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
 
         - In the *multiple* mode, the output dictionary includes a ``checked`` field with the codes of the selected variables
         - In the *multiple* mode, initial selections can be set using the ``initial_selection_names`` and
-            ``initial_selection_idx`` parameters in the constructor.
+          ``initial_selection_idx`` parameters in the constructor.
+    
+    Args:
+        params (dict) : Output will be written in this object
+        multiple (boolean) : If True, allows to select multiple variables by placing checkmarks
+        initial_selection_names (list) : List of variable names which should be selected when the dialog opens
+        initial_selection_idx (list) : List of variable indeces which should be selected when the dialog opens
+        sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
-
+    
     def __init__(self, params, multiple=False, initial_selection_names=None, initial_selection_idx=None, sample=None):
         OutcomeSelectDialog.__init__(self, params, multiple=multiple, sample=sample)
         self.multiple = multiple
@@ -388,7 +403,11 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
         - ``("box",var)`` : A box plot using variable *var* for groups and the current variable for values
         - ``("interaction", vars)`` : A two factor box plot where the groups are the interaction between the variables
           in *vars* , which is a string with an ``*`` between the two names.
-
+    
+    Args:
+        params_dict (dict) : Output will be written in this object
+        sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
+        available_plots (list) : List of plots which will be available for the user, syntax was explained above
     """
 
     def __init__(self, params_dict, sample=None, available_plots=None):
@@ -539,6 +558,12 @@ class SelectOneVariableWithFilter(OutcomeSelectDialog):
 
     This dialog behaves likes the :class:`OutcomeSelectDialog`, but you may choose to accept only
     nominal or only real variables using the parameters ``accept_real`` and ``accept_nominal`` of the constructor.
+    
+    Args:
+        params (dict) : Output will be written in this object
+        accept_nominal (boolean) : If ``False`` the select button will be disabled for nominal variables
+        accept_real (boolean) : If ``False`` the select button will be disabled for real variables
+        sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
 
     def __init__(self, params, accept_nominal=True, accept_real=True, sample=None):
@@ -571,6 +596,14 @@ class RegressorSelectDialog(VariableSelectDialog):
     :class:`~braviz.interaction.qt_models.AnovaRegressorsModel`. Variables will be added to and removed from
     the model using the dialog.
 
+    This dialog also allows the user to sort the variables according to a ginni index over the
+    *outcome_var*
+
+    Args:
+        outcome_var (str) : Variable to use as reference. It will be the *y* axis of plots, look above
+            for more uses
+        regressors_model (braviz.interaction.qt_models.AnovaRegressorsModel): All operations will update this model
+        sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
 
     def __init__(self, outcome_var, regressors_model, sample=None):
@@ -650,6 +683,9 @@ class InteractionSelectDialog(QtGui.QDialog):
 
     All operations will update the specified *regressors_model*, which should be an instance of
     :class:`~braviz.interaction.qt_models.AnovaRegressorsModel`
+
+    Args:
+        regressors_model (braviz.interaction.qt_models.AnovaRegressorsModel): All operations will update this model
     """
 
     def __init__(self, regressors_model):
@@ -800,6 +836,16 @@ class NewVariableDialog(QtGui.QDialog):
 
 
 class ContextVariablesSelectDialog(VariableSelectDialog):
+    """
+    A dialog for selecting multiple variables, and make some of them editable
+
+    Args:
+        variables_list (lits) : List of variables indices to include in the current selection
+        current_subject : This subject will be highlighted in plots
+        editables_dict (dict) : This dictionary will contain which variables were selected to be editable
+            keys are variable indices and values are booleans
+        sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
+    """
     def __init__(self, variables_list=None, current_subject=None, editables_dict=None, sample=None):
         super(ContextVariablesSelectDialog, self).__init__(sample=sample)
         if variables_list is None:
@@ -1134,7 +1180,7 @@ if __name__ == "__main__":
     out = {}
     #vsd = GenericVariableSelectDialog(out, multiple=False,initial_selection_names=['ABCL_DSM_antisocial_T_padres'])
     #vsd = MultiPlotOutcomeSelectDialog(out))
-    vsd = NewVariableDialog()
+    vsd = ContextVariablesSelectDialog(editables_dict=out)
 
     vsd.exec_()
     print out
