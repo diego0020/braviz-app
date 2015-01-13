@@ -963,7 +963,17 @@ class BundleSelectionDialog(QtGui.QDialog):
 
 
 class SaveFibersBundleDialog(QtGui.QDialog):
-    def __init__(self, operation, checkpoints_list, operation_is_and):
+    """
+    Save a bundle defined from a list of models
+
+    The dialog asks for a name and a description, it also shows the list of structures and the operation.
+
+    Args:
+        checkpoints_list (list) : List of model names which define the bundle
+        operation_is_and (boolean) : If ``True`` the bundle is composed of the fibers that pass through
+            *all* structures, otherwise it is composed of the fibers that pass throug *any* of the listed structures
+    """
+    def __init__(self, checkpoints_list, operation_is_and):
         super(SaveFibersBundleDialog, self).__init__()
         self.ui = Ui_SaveBundleDialog()
         self.ui.setupUi(self)
@@ -972,6 +982,7 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         self.ui.lineEdit.textChanged.connect(self.check_name)
         self.ui.error_message.setText("")
         self.ui.save_succesful.setText("")
+        operation = "And" if operation_is_and else "Or"
         self.ui.operation_label.setText(operation)
         self._checkpoints = tuple(checkpoints_list)
         self.ui.structures_list.setPlainText(", ".join(self._checkpoints))
@@ -1158,6 +1169,12 @@ class LoadScenarioDialog(QtGui.QDialog):
 
 
 class LoadLogicBundle(QtGui.QDialog):
+    """
+    Loading a logic bundle from the database
+
+    The dialog shows a preview of the tree associated with the bundle
+    This tree will be available in the *data* attribute after the selection is accepted
+    """
     def __init__(self):
         super(LoadLogicBundle, self).__init__()
         self.__tree_root = LogicBundleNode(None, 0, LogicBundleNode.LOGIC, "AND")
@@ -1195,7 +1212,7 @@ if __name__ == "__main__":
     out = {}
     #vsd = GenericVariableSelectDialog(out, multiple=False,initial_selection_names=['ABCL_DSM_antisocial_T_padres'])
     #vsd = MultiPlotOutcomeSelectDialog(out))
-    vsd = SaveScenarioDialog(None,out)
+    vsd = LoadLogicBundle()
 
     vsd.exec_()
     print out

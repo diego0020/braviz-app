@@ -760,7 +760,7 @@ class SubjectOverviewApp(QMainWindow):
         throug_all = (index == 2)
         logger = logging.getLogger(__name__)
         logger.info("saving bundles")
-        dialog = SaveFibersBundleDialog(operation, checkpoints, throug_all)
+        dialog = SaveFibersBundleDialog(checkpoints, throug_all)
         dialog.exec_()
 
     def update_surfaces_from_gui(self, event=None):
