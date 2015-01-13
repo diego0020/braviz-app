@@ -544,7 +544,7 @@ class MeasureApp(QMainWindow):
     def load_scenario(self):
         if self.action_confirmed():
             my_name = os.path.splitext(os.path.basename(__file__))[0]
-            dialog = LoadScenarioDialog(my_name,reader=self.reader)
+            dialog = LoadScenarioDialog(my_name)
             res = dialog.exec_()
             if res == dialog.Accepted:
                 wanted_state = dialog.out_dict

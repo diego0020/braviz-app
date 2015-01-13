@@ -117,7 +117,7 @@ class BravizMenu2(QtGui.QMainWindow):
         if self.reader is None:
             self.reader = braviz.readAndFilter.BravizAutoReader()
         params = {}
-        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(None, params, self.reader)
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(None, params)
         ret = dialog.exec_()
         if ret == QtGui.QDialog.Accepted:
             log = logging.getLogger(__name__)

@@ -41,6 +41,13 @@ However there are several variations of this dialog which are appropriate for di
 Scenarios
 ----------
 
+These dialogs are used to write and load scenarios in all applications.
+
+.. image:: images/load_scenario.png
+    :alt: Example of load scenario dialog
+    :width: 90%
+    :align: center
+
 .. autoclass:: LoadScenarioDialog
 
 .. autoclass:: SaveScenarioDialog

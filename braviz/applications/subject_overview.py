@@ -917,7 +917,7 @@ class SubjectOverviewApp(QMainWindow):
     def load_scenario_dialog(self):
         wanted_state = dict()
         my_name = os.path.splitext(os.path.basename(__file__))[0]
-        dialog = LoadScenarioDialog(my_name, wanted_state, self.reader)
+        dialog = LoadScenarioDialog(my_name, wanted_state)
         dialog.exec_()
         log = logging.getLogger(__name__)
         log.info(wanted_state)

@@ -421,7 +421,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def load_visualization(self):
         return_dict = {}
-        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict, self.reader)
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("subject_overview", return_dict)
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:
@@ -843,7 +843,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def load_scenario_dialog(self):
         new_state = {}
-        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("sample_overview", new_state, self.reader)
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("sample_overview", new_state)
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == QtGui.QDialog.Accepted:

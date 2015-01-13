@@ -478,7 +478,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def load_scenario(self):
         new_state = {}
-        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("fmri_explorer", new_state, self.__reader)
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog("fmri_explorer", new_state)
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == QtGui.QDialog.Accepted:

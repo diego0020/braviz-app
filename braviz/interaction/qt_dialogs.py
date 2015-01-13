@@ -1060,6 +1060,16 @@ class SaveLogicFibersBundleDialog(QtGui.QDialog):
 
 
 class SaveScenarioDialog(QtGui.QDialog):
+    """
+    A dialog for saving scenarios, it doesn't save an screen-shot, this should be done afterwards by the application
+
+    Args:
+        app_name (str) : Name of application for which the scenario is created
+        state (dict) : Dictionary of application state
+        params (dict) : Optional, when the dialog closes, this object will contain
+            the key ``scn_id`` and its value will be the index of the newly created scenario.
+            Use this to save a corresponding screen-shot
+    """
     def __init__(self, app_name, state, params=None):
         super(SaveScenarioDialog, self).__init__()
         self.app_name = app_name
@@ -1095,13 +1105,19 @@ class SaveScenarioDialog(QtGui.QDialog):
 
 
 class LoadScenarioDialog(QtGui.QDialog):
-    def __init__(self, app_name, out_dict=None, reader=None):
+    """
+    Dialog that shows the user a list of available scenarios, with screen-shots, and allows him to select one
+
+    Args:
+        app_name (str) : Restrict the list of scenarios to those created with an specific application
+        out_dict (dict) : When the dialog finishes this dictionary will contain the selected scenario data
+    """
+    def __init__(self, app_name, out_dict=None):
         super(LoadScenarioDialog, self).__init__()
         if out_dict is None:
             out_dict = {}
         self.out_dict = out_dict
         self.model = braviz_models.ScenariosTableModel(app_name)
-        self.reader = reader
         self.current_row = None
         self.ui = None
         self.init_ui()
@@ -1123,10 +1139,9 @@ class LoadScenarioDialog(QtGui.QDialog):
         index = self.model.data(index, QtCore.Qt.UserRole)
         self.ui.screen_shot_label.setText("<No screenshot available>" % index)
         self.ui.screen_shot_label.setScaledContents(False)
-        if self.reader is None:
-            data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
-        else:
-            data_root = self.reader.get_dyn_data_root()
+
+        data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
+
         image_file = os.path.join(data_root, "braviz_data", "scenarios", "scenario_%d.png" % index)
         if os.path.isfile(image_file):
             image = QtGui.QImage(image_file)
@@ -1180,7 +1195,7 @@ if __name__ == "__main__":
     out = {}
     #vsd = GenericVariableSelectDialog(out, multiple=False,initial_selection_names=['ABCL_DSM_antisocial_T_padres'])
     #vsd = MultiPlotOutcomeSelectDialog(out))
-    vsd = ContextVariablesSelectDialog(editables_dict=out)
+    vsd = SaveScenarioDialog(None,out)
 
     vsd.exec_()
     print out
