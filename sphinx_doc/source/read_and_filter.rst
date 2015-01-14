@@ -31,7 +31,7 @@ There are three basic operations that the readAndFilter module provides.
   always honor this configuration. Use the module :mod:`~braviz.readAndFilter.config_file` to access
   this information.
 
-Base Module Contents
+Module level objects
 ---------------------
 .. data:: PROJECT
 

@@ -27,6 +27,14 @@ from braviz.interaction.structural_hierarchy import get_structural_hierarchy_wit
 import logging
 
 class StructureTreeNode(object):
+    """
+    Node for the freesurfer structures tree
+
+    Args:
+        parent (braviz.interaction.qt_structures_model.StructureTreeNode) : Reference to the parent node
+        name (str) : Name of this node
+        son_number (int) : How many siblings are before this node
+    """
     def __init__(self, parent=None, name="", son_number=0):
         self.parent_id = id(parent)
         self.parent = parent
@@ -38,14 +46,29 @@ class StructureTreeNode(object):
         self.son_number = son_number
 
     def is_leaf(self):
+        """
+        Returns ``True`` if this node is a leaf
+        """
         return len(self.children) == 0
 
     def add_child(self, name):
+        """
+        Add a child to this node
+
+        Args:
+            name (str) : Name for the child node
+        """
         child = StructureTreeNode(self, name, len(self.children))
         self.children.append(child)
         return child
 
     def check_and_update_tree(self, check=True):
+        """
+        Add a checkmark to this node
+
+        If it has childs, they are also checked (recursively)
+        Predecessor boxes are also updated
+        """
         self.__check_and_propagate_down(check)
         self.__propagate_up()
 
@@ -84,6 +107,9 @@ class StructureTreeNode(object):
             self.__propagate_up()
 
     def delete_children(self):
+        """
+        Delete all children from this node
+        """
         for i in self.children:
             i.parent = None
             i.delete_children()
@@ -91,6 +117,15 @@ class StructureTreeNode(object):
 
 
 class StructureTreeModel(QAbstractItemModel):
+    """
+    A tree of freesurfer segmented structures
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : A reader from which to get available models
+        subj : Id of a subject to use as reference for getting available models
+        dominant (bool) : If ``False`` the tree will have left and right hemispheres, otherwise it will
+            have dominant and non-dominant hemispheres
+    """
     selection_changed = QtCore.pyqtSignal()
 
     def __init__(self, reader, subj=None, dominant=False):
@@ -108,7 +143,17 @@ class StructureTreeModel(QAbstractItemModel):
         self.subj = subj
 
     def optimistic_reload_hierarchy(self,dominant):
+        """
+        Rebuilds the tree from the models of the first subject with models
+
+        Args:
+            dominant (bool) : If ``False`` the tree will have left and right hemispheres, otherwise it will
+                have dominant and non-dominant hemispheres
+        """
+        from braviz.readAndFilter import config_file
         possibles = self.reader.get("ids",None)
+        favorite = config_file.get_apps_config().get_default_subject()
+        possibles.insert(0,favorite)
         for subj in possibles:
             self.reload_hierarchy(subj,dominant)
             if len(self.hierarchy)>0:
@@ -116,6 +161,14 @@ class StructureTreeModel(QAbstractItemModel):
         raise Exception("Couldnt build structures index")
 
     def reload_hierarchy(self, subj=None, dominant=False):
+        """
+        Reload tree based on a specific subject
+
+        Args:
+            subj : Subject to load available models from
+            dominant (bool) : If ``False`` the tree will have left and right hemispheres, otherwise it will
+                have dominant and non-dominant hemispheres
+        """
         if subj is None:
             subj = self.reader.get("ids",None)[0]
         log = logging.getLogger(__name__)
@@ -265,12 +318,21 @@ class StructureTreeModel(QAbstractItemModel):
         return index
 
     def get_selected_structures(self):
+        """
+        Get a list of currently checked structures
+        """
         selected_leaf_names = [self.__id_index[leaf].leaf_name for leaf in self.leaf_ids if
                                self.__id_index[leaf].checked == QtCore.Qt.Checked]
         # print "selected leafs names",selected_leaf_names
         return selected_leaf_names
 
     def set_selected_structures(self,selected_list):
+        """
+        Selects the structures given in a list
+
+        Args:
+            selected_list (list) : New set of selected structures' names
+        """
         for leaf in self.leaf_ids:
             node = self.__id_index[leaf]
             if node.leaf_name in selected_list:

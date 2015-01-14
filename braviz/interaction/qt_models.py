@@ -549,7 +549,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
         Get the internal data frame
 
         Returns:
-            A :class:`pandas.DataFrame` with three columns: regressor name, degrees of freedom, and interaction.
+            :class:`pandas.DataFrame` with three columns: regressor name, degrees of freedom, and interaction.
             The last column has zeros for single variable regressors and 1 for interaction terms.
         """
         return self.data_frame
@@ -1696,6 +1696,9 @@ class SimpleBundlesList(QAbstractListModel):
 
 
 class BundlesSelectionList(QAbstractListModel):
+    """
+    A list of bundles with checkboxes
+    """
     def __init__(self):
         super(BundlesSelectionList, self).__init__()
         self.id_list = []
@@ -1704,15 +1707,27 @@ class BundlesSelectionList(QAbstractListModel):
         self.refresh_model()
 
     def refresh_model(self):
+        """
+        Reloads data from the database
+        """
         tuples = bundles_db.get_bundle_ids_and_names()
         self.names_dict = dict(tuples)
         self.id_list = sorted(self.names_dict.keys())
 
     def select_many_ids(self, ids_it):
+        """
+        Adds several bundles to the selection
+
+        Args:
+            ids_it (list) : List of database ids to add
+        """
         for i in ids_it:
             self._selected[i] = True
 
     def get_selected(self):
+        """
+        Get a list of selected bundle ids
+        """
         return (i for i, k in self._selected.iteritems() if k is True)
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -1757,6 +1772,15 @@ class BundlesSelectionList(QAbstractListModel):
 
 
 class ScenariosTableModel(QAbstractTableModel):
+    """
+    A table with available scenarios
+
+    Optionally restricts the table to scenarios for a certain application
+    It has three columns: date, name and description
+
+    Args:
+        app_name (str) : Name of application, if ``None`` scenarios for all applications are shown
+    """
     def __init__(self, app_name):
         super(ScenariosTableModel, self).__init__()
         self.df = braviz_user_data.get_scenarios_data_frame(app_name)
@@ -1796,6 +1820,9 @@ class ScenariosTableModel(QAbstractTableModel):
         self.modelReset.emit()
 
     def get_index(self, row):
+        """
+        Get the database index for the scenario in a given row
+        """
         return self.df.index[row]
 
 

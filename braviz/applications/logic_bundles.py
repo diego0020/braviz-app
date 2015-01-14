@@ -532,7 +532,7 @@ class LogicBundlesApp(QMainWindow):
         res = dialog.exec_()
         if res == dialog.Accepted:
             data = dialog.current_data
-            new_root = LogicBundleNodeWithVTK.from_dict(data,self.reader,self.__current_subject,self.__curent_space)
+            new_root = LogicBundleNodeWithVTK.vtk_from_dict(data,self.reader,self.__current_subject,self.__curent_space)
             #remove from render
             for k in self.vtk_tree:
                 self.vtk_viewer.ren.RemoveActor(k.prop)
@@ -627,7 +627,7 @@ class LogicBundlesApp(QMainWindow):
         #remove all from render
         for node in self.vtk_tree:
             self.vtk_viewer.ren.RemoveActor(node.prop)
-        self.vtk_tree = LogicBundleNodeWithVTK.from_dict(tree,self.reader,self.__current_subject,self.__curent_space)
+        self.vtk_tree = LogicBundleNodeWithVTK.vtk_from_dict(tree,self.reader,self.__current_subject,self.__curent_space)
         self.logic_tree.set_root(self.vtk_tree)
         #add all to render
         for node in self.vtk_tree:

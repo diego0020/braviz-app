@@ -29,6 +29,14 @@ Extract fibers from tractographies
 .. automodule:: braviz.readAndFilter.filter_fibers
     :members:
 
+hierarchical fibers
+--------------------
+
+Read fibers defined by a logical hierarchy
+
+.. automodule:: braviz.readAndFilter.hierarchical_fibers
+    :members:
+
 images
 ----------------
 

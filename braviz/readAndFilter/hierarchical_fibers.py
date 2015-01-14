@@ -29,6 +29,15 @@ STRUCT = 1
 ROI = 2
 
 def read_logical_fibers(subj,tree_dict,reader,**kwargs):
+    """
+    Gets a :obj:`vtkPolyData` for a bundle described using a logical hierarchy
+
+    Args:
+        subj : Id of subject
+        tree_dict (dict) : Dictionary describing the logical tree,
+            see :func:`braviz.readAndFilter.bundles_db.get_logic_bundle_dict`
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
+    """
     log = logging.getLogger(__file__)
     if "space" in kwargs:
         space = kwargs.pop("space")
@@ -45,6 +54,14 @@ def read_logical_fibers(subj,tree_dict,reader,**kwargs):
     return fibers2
 
 def get_valid_lines_from_node(subj,tree_node,reader):
+    """
+    Get ids of polylines that match the condition described in a tree node
+
+    Args:
+        subj : Id of subject
+        tree_node (braviz.interaction.logic_bundle_model.LogicBundleNode) : Tree node
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
+    """
     node_type = tree_node["node_type"]
     if node_type == LOGIC:
         lines = get_valid_lines_from_logical(subj,tree_node,reader)
@@ -58,6 +75,14 @@ def get_valid_lines_from_node(subj,tree_node,reader):
 
 
 def get_valid_lines_from_logical(subj,tree_node,reader):
+    """
+    Get polyline ids that match the condition in a logical node
+
+    Args:
+        subj : Id of subject
+        tree_node (braviz.interaction.logic_bundle_model.LogicBundleNode) : Tree node, must have logical type
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
+    """
     subsets = [(get_valid_lines_from_node(subj,c,reader)) for c in tree_node["children"]]
     value = tree_node["value"]
     if value == "OR":
@@ -78,6 +103,13 @@ def get_valid_lines_from_logical(subj,tree_node,reader):
     return ans
 
 def get_all_lines(subj,reader):
+    """
+    Gets a list of the polyline ids of the whole tractography
+
+    Args:
+        subj : Subject id
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
+    """
     pd = reader.get("FIBERS",subj)
     assert pd.GetNumberOfCells() == pd.GetNumberOfLines()
     all_lines = set(xrange(pd.GetNumberOfCells()))
@@ -85,11 +117,27 @@ def get_all_lines(subj,reader):
 
 
 def get_valid_lines_from_struct(subj,struct,reader):
+    """
+    Get polyline ids that match the condition in a structure node
+
+    Args:
+        subj : Id of subject
+        struct (str) : Name of a freesufer model
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
+    """
     img_subj = subj
     valid_ids = reader.get('fibers',img_subj,waypoint=struct,ids=True)
     return set(valid_ids)
 
 def get_valid_lines_from_roi(subj,roi_id,reader):
+    """
+    Get polyline ids that match the condition in a roi node
+
+    Args:
+        subj : Id of subject
+        roi_id : Database id of a ROI (see :mod:`braviz.readAndFilter.geom_db`)
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
+    """
     space = geom_db.get_roi_space(roi_id=roi_id)
     sphere_data = geom_db.load_sphere(roi_id,subj)
     if sphere_data is None:
@@ -113,8 +161,8 @@ def get_valid_lines_from_roi(subj,roi_id,reader):
 
 
 
-def brute_force_lines_in_sphere(fibers,ctr,radius):
-    #TODO trye by loading first all points into a numpy array
+def _brute_force_lines_in_sphere(fibers,ctr,radius):
+    #TODO try by loading first all points into a numpy array
     ans = set()
     c = np.array(ctr)
     n_lines = fibers.GetNumberOfLines()
