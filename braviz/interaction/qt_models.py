@@ -1426,6 +1426,9 @@ class ScenariosTableModel(QAbstractTableModel):
 
 
 class SimpleSetModel(QAbstractListModel):
+    """
+    Transforms a python :class:`set` into a Qt List Model
+    """
     def __init__(self):
         super(SimpleSetModel, self).__init__()
         self.__internal_list = []
@@ -1442,19 +1445,37 @@ class SimpleSetModel(QAbstractListModel):
         return QtCore.QVariant()
 
     def get_elements(self):
+        """
+        Returns a set of the current data
+        """
         return set(self.__internal_list)
 
-    def set_elements(self, set):
-        self.__internal_list = sorted(list(set))
+    def set_elements(self, data_set):
+        """
+        Sets the current elements in the model
+
+        Args:
+            data_set (set) : Items to be stored in the model
+        """
+        self.__internal_list = sorted(list(data_set))
         self.modelReset.emit()
 
 class SimpleCheckModel(QAbstractListModel):
     def __init__(self,choices):
+        """
+        Provides a model for selecting items from a set of choices (represented with checkboxes in Qt Views)
+
+        Args:
+            choices (list) : List of elements
+        """
         super(SimpleCheckModel, self).__init__()
         self.choices_list = list(choices)
         self.__selected = set()
 
     def get_selected(self):
+        """
+        Gets a tuple of the checked items
+        """
         return tuple(self.__selected)
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -1501,6 +1522,12 @@ class SimpleCheckModel(QAbstractListModel):
         return False
 
     def set_selection(self,selection):
+        """
+        Sets the currently selected items to those (and only those) in *selection*
+
+        Args:
+            selection (set) : New set of checked items
+        """
         self.__selected=set(selection)
         self.modelReset.emit()
         self.dataChanged.emit(self.index(0,0),self.index(self.rowCount(),0))

@@ -5,11 +5,21 @@
 Braviz Qt Models
 *************************************
 
+This module provides several classes that can be used in the
+`Model / View <http://qt-project.org/doc/qt-4.8/model-view-programming.html>`_ Qt pattern,
+so they inherit from `http://qt-project.org/doc/qt-4.8/qabstractitemmodel.html <QAbstractItemModel>`_.
+
+
 Generic models
 ---------------
 
+This models are designed to be generic, and they don't make any assumptions about the data.
+
 .. autoclass:: SimpleSetModel
+    :members:
+
 .. autoclass:: SimpleCheckModel
+    :members:
 
 Tabular Data Models
 --------------------
@@ -57,6 +67,7 @@ Scenarios
 Structures model
 -----------------
 
+.. autoclass:: StructureTreeModel
 .. autoclass:: StructureTreeNode
 
 .. module:: braviz.interaction.logic_bundle_model
