@@ -26,7 +26,7 @@ def get_contrasts_dict(spm_file_path):
     return contrast_names
 
 ContrastInfo = namedtuple("ContrastInfo",("name","design"))
-ConditionInfo = namedtuple("CondisionInfo",("name","onsets","durations"))
+ConditionInfo = namedtuple("ConditionInfo",("name","onsets","durations"))
 
 class SpmFileReader(object):
     "Helper class to read data from an SPM file"

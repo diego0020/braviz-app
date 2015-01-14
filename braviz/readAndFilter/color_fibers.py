@@ -33,7 +33,7 @@ def color_by_fa(pt,fa_img):
 
     Args:
         pt (tuple) : points coordinates
-        fa_img (vrtImageData) : FA image
+        fa_img (vtkImageData) : FA image
 
     Returns:
         (r,g,b)

@@ -37,7 +37,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.napoleon',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.linkcode',
 ]
 
 intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
@@ -45,6 +44,7 @@ intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
                        'nipy': ('http://nipy.org', None),
                        'nibabel': ('http://nipy.org/nibabel', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy', None),
+                       'matplotlib': ('http://matplotlib.sourceforge.net/', None)
                        }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -304,6 +304,8 @@ def link_to_google(app,env,node,contnode):
     elif target.startswith("Q"):
         # Qt links
         uri = "http://qt-project.org/doc/qt-4.8/%s.html"%target
+    elif target=="function":
+        uri = "https://docs.python.org/2/tutorial/controlflow.html#defining-functions"
     else:
         return
     newnode = nodes.reference("","",internal = False, refuri = uri,

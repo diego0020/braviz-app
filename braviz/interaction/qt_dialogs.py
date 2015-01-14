@@ -303,7 +303,7 @@ class OutcomeSelectDialog(VariableSelectDialog):
     
     Args:
         params_dict (dict) : Output will be written in this object
-        multiple (boolean) : If True, allows to select multiple variables by placing checkmarks
+        multiple (bool) : If True, allows to select multiple variables by placing checkmarks
         sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
 
@@ -361,7 +361,7 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
     
     Args:
         params (dict) : Output will be written in this object
-        multiple (boolean) : If True, allows to select multiple variables by placing checkmarks
+        multiple (bool) : If True, allows to select multiple variables by placing checkmarks
         initial_selection_names (list) : List of variable names which should be selected when the dialog opens
         initial_selection_idx (list) : List of variable indeces which should be selected when the dialog opens
         sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
@@ -561,8 +561,8 @@ class SelectOneVariableWithFilter(OutcomeSelectDialog):
     
     Args:
         params (dict) : Output will be written in this object
-        accept_nominal (boolean) : If ``False`` the select button will be disabled for nominal variables
-        accept_real (boolean) : If ``False`` the select button will be disabled for real variables
+        accept_nominal (bool) : If ``False`` the select button will be disabled for nominal variables
+        accept_real (bool) : If ``False`` the select button will be disabled for real variables
         sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
 
@@ -840,7 +840,7 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
     A dialog for selecting multiple variables, and make some of them editable
 
     Args:
-        variables_list (lits) : List of variables indices to include in the current selection
+        variables_list (list) : List of variables indices to include in the current selection
         current_subject : This subject will be highlighted in plots
         editables_dict (dict) : This dictionary will contain which variables were selected to be editable
             keys are variable indices and values are booleans
@@ -977,7 +977,7 @@ class SaveFibersBundleDialog(QtGui.QDialog):
 
     Args:
         checkpoints_list (list) : List of model names which define the bundle
-        operation_is_and (boolean) : If ``True`` the bundle is composed of the fibers that pass through
+        operation_is_and (bool) : If ``True`` the bundle is composed of the fibers that pass through
             *all* structures, otherwise it is composed of the fibers that pass throug *any* of the listed structures
     """
     def __init__(self, checkpoints_list, operation_is_and):

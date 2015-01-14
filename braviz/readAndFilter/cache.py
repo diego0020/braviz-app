@@ -18,7 +18,7 @@ def cache_function(cache_container):
     time is also recorded, and in case that memory needs to be released, data with oldest access time is deleted.
 
     Args:
-        cache_container (CacheContainer) : Object used to store data
+        cache_container (braviz.readAndFilter.cache.CacheContainer) : Object used to store data
 
 
     """

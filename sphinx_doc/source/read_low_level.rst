@@ -1,7 +1,6 @@
 Low level functions
 ====================
 
-
 The readAndFilter module contains additional functions which should not be necessary for creating applications. These
 functions however may be used when developing new :class:`~braviz.readAndFilter.base_reader.BaseReader` subclasses.
 

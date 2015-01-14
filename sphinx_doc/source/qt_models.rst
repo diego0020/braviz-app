@@ -7,7 +7,7 @@ Braviz Qt Models
 
 This module provides several classes that can be used in the
 `Model / View <http://qt-project.org/doc/qt-4.8/model-view-programming.html>`_ Qt pattern,
-so they inherit from `http://qt-project.org/doc/qt-4.8/qabstractitemmodel.html <QAbstractItemModel>`_.
+so they inherit from :obj:`QAbstractItemModel`.
 Only methods that are not part of the Qt interface are shown here.
 
 
@@ -50,30 +50,53 @@ Subjects and samples
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SampleTree
+    :members:
+
 .. autoclass:: SubjectsTable
-.. autoclass:: SamplesFilterModel
-.. autoclass:: SamplesSelectionModel
+    :members:
+
 .. autoclass:: SubjectChecklist
+    :members:
+
 .. autoclass:: SubjectCheckTable
+    :members:
+
+.. autoclass:: SamplesSelectionModel
+    :members:
+
+.. autoclass:: SamplesFilterModel
+    :members:
 
 
 Statistics
 ^^^^^^^^^^^
 
 .. autoclass:: VarAndGiniModel
+    :members:
+
 .. autoclass:: AnovaRegressorsModel
+    :members:
+
 .. autoclass:: AnovaResultsModel
+    :members:
+
 
 Bundles
 -----------------------
 
 .. autoclass:: SimpleBundlesList
+    :members:
+
 .. autoclass:: BundlesSelectionList
+    :members:
+
 
 Scenarios
 -----------
 
 .. autoclass:: ScenariosTableModel
+    :members:
+
 
 .. module:: braviz.interaction.qt_structures_model
 
@@ -81,13 +104,31 @@ Structures model
 -----------------
 
 .. autoclass:: StructureTreeModel
+    :members:
+
+Helper
+^^^^^^^
+
 .. autoclass:: StructureTreeNode
+    :members:
+
 
 .. module:: braviz.interaction.logic_bundle_model
+
+
 
 Logic bundle model
 -------------------
 
 .. autoclass:: LogicBundleQtTree
+    :members:
+
+Helpers
+^^^^^^^
+
 .. autoclass:: LogicBundleNode
+    :members:
+
 .. autoclass:: LogicBundleNodeWithVTK
+    :members:
+

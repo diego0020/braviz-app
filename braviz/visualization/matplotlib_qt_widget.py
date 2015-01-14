@@ -53,7 +53,8 @@ class AbstractPlot(object):
         Return an empty string if there is no tooltip for that position
 
         Args:
-            event (MouseEvent) : Matplotlib MouseEvent that caused the request, extract the position from here
+            event (matplotlib.backend_bases.MouseEvent) : Matplotlib MouseEvent that caused the request,
+            extract the position from here
 
         Returns:
             string to show as tooltip, empty string if you don't want to show anything
