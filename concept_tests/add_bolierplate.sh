@@ -19,9 +19,9 @@ add_bp_to_file () {
         local boilerplate=license_boilerplate.txt
         local file=$1
         echo adding bolirplate to $file
-        cat $boilerplate $file > {$file}.bp
+        cat $boilerplate $file > ${file}.bp
         rm $file
-        mv {$file}.bp $file
+        mv ${file}.bp $file
     else
         echo $1 already has boilerplate
     fi
