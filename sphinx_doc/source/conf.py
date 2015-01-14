@@ -37,6 +37,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.linkcode',
 ]
 
 intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
@@ -288,3 +289,27 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+def link_to_google(app,env,node,contnode):
+    from docutils import nodes
+    target = node["reftarget"]
+    domain = node.get("refdomain")
+    type = node.get("reftype")
+    if domain != "py" and type != "obj":
+        return
+
+    if target.startswith("vtk"):
+        #vtk links
+        uri = "http://www.vtk.org/doc/nightly/html/class%s.html"%target
+    elif target.startswith("Q"):
+        # Qt links
+        uri = "http://qt-project.org/doc/qt-4.8/%s.html"%target
+    else:
+        return
+    newnode = nodes.reference("","",internal = False, refuri = uri,
+                              reftitle = "google")
+    newnode.append(contnode)
+    return newnode
+
+def setup(app):
+    app.connect('missing-reference',link_to_google)

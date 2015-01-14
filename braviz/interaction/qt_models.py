@@ -15,14 +15,22 @@ from braviz.interaction.qt_structures_model import StructureTreeModel
 
 
 class VarListModel(QAbstractListModel):
+    """
+    List of available variables, optionally with checkboxes
+
+    The list can be filtered to include only variables whose name include a certain pattern
+
+    Args:
+        parent (QObject) : Qt parent
+        checkeable (bool) : If ``True`` the list will be displayed with checkboxes
+    """
     CheckedChanged = QtCore.pyqtSignal(list)
 
-    def __init__(self, outcome_var=None, parent=None, checkeable=False):
+    def __init__(self, parent=None, checkeable=False):
         QAbstractListModel.__init__(self, parent)
         self.internal_data = []
         self.header = "Variable"
         self.update_list()
-        self.outcome = outcome_var
         self.checkeable = checkeable
         self.checked_set = None
         self.highlighted_name = None
@@ -31,6 +39,13 @@ class VarListModel(QAbstractListModel):
 
 
     def update_list(self,mask=None):
+        """
+        Update the variable list to show variables whose name match a mask
+
+        Args:
+            mask (str) : Mask in sql format, the database is configured to be case insensitive. To
+                search for variables that include the word ``"age"`` use ``"%age%"``
+        """
         panda_data = braviz_tab_data.get_variables(mask=mask)
         self.internal_data = list(panda_data["var_name"])
         self.modelReset.emit()
@@ -101,18 +116,44 @@ class VarListModel(QAbstractListModel):
 
 
     def select_items_by_name(self, items_list):
+        """
+        Add variables to the set of checked items
+
+        This will cause checks to appear in the respective boxes when the view is updated
+
+        Args:
+            items_list (list) : List of variable to check
+        """
         for i in items_list:
             self.checked_set.add(i)
 
     def select_items(self, items_list):
+        """
+        Add checks to variables by id
+
+        This will cause checks to appear in the respective boxes when the view is updated
+
+        Args:
+            items_list (list) : List of variable ids to check
+        """
         for i in items_list:
             name = braviz_tab_data.get_var_name(i)
             self.checked_set.add(name)
 
     def set_highlighted(self,highlighted_name=None):
+        """
+        The highlighted item will appear in bold
+
+        Args:
+            highlighted_name (str) : Name of a variable to show in bold, use None
+                to don't highlight any variable
+        """
         self.highlighted_name = highlighted_name
 
     def clear_selection(self):
+        """
+        Removes checks from all variables
+        """
         self.checked_set.clear()
         self.dataChanged.emit(self.index(0),self.index(self.rowCount()))
         self.CheckedChanged.emit(sorted(self.checked_set))
@@ -413,6 +454,15 @@ class AnovaRegressorsModel(QAbstractTableModel):
 
 
 class NominalVariablesMeta(QAbstractTableModel):
+    """
+    A table with numerical labels in the first column and corresponding text labels in the second column
+
+    These labels correspond to the possible values a nominal variable can take
+    Textual labels can be edited
+
+    Args:
+        var_name (str) : Name of a nominal variable
+    """
     def __init__(self, var_name, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self.var_name = var_name
@@ -499,6 +549,12 @@ class NominalVariablesMeta(QAbstractTableModel):
         return flags
 
     def update_model(self, var_name):
+        """
+        Update the table with data from the database
+
+        Args:
+            var_name (str) : Read labels for this variable
+        """
         if self.var_name is None:
             # generic labels
             self.labels_list = range(1, 3)
@@ -508,7 +564,13 @@ class NominalVariablesMeta(QAbstractTableModel):
         self.names_dict = braviz_tab_data.get_labels_dict_by_name(var_name)
         self.labels_list = self.names_dict.keys()
 
-    def save_into_db(self, var_idx=None):
+    def save_into_db(self, var_idx):
+        """
+        Save the textual labels into the database
+
+        Args:
+            var_idx (int) : Index of the variable to which the labels will be saved
+        """
         tuples = ( (k, v) for k, v in self.names_dict.iteritems())
         if self.var_name is not None:
             braviz_tab_data.save_nominal_labels_by_name(self.var_name, tuples)
@@ -518,21 +580,42 @@ class NominalVariablesMeta(QAbstractTableModel):
             braviz_tab_data.save_nominal_labels(var_idx, tuples)
 
     def add_label(self):
+        """
+        Add another row with the next numerical label to the table
+        """
         self.labels_list.append(len(self.labels_list) + 1)
         self.modelReset.emit()
 
     def set_labels_dict(self,labels_dict):
+        """
+        Sets textual labels
+
+        Args:
+            labels_dict (dict) : Dictionary that maps numerical labels to textual labels
+        """
         self.labels_list = labels_dict.keys()
         self.names_dict = labels_dict
         self.modelReset.emit()
 
     def set_checkeable(self, checkeable):
+        """
+        Choose if check boxes should be displayed next to numerical labels
+
+        Args:
+            checkeable (bool) : If ``True`` checkboxes will appear
+        """
         self.checkeable = bool(checkeable)
 
     def get_unchecked(self):
+        """
+        Get a set of labels whose checkbox is empty
+        """
         return self.unchecked
 
     def get_checked(self):
+        """
+        Get a set of labels whose checkbox is checked
+        """
         return set(self.labels_list) - self.unchecked
 
 
@@ -971,12 +1054,26 @@ class SubjectsTable(QAbstractTableModel):
 
 
 class ContextVariablesModel(QAbstractTableModel):
+    """
+    A table with three columns: Variable name, variable type, and a checkbox called "editable"
+
+    This table is used to select a list of variables, and decide which of those should be made
+    writable, and which readonly
+
+    Args:
+        context_vars_list (list) : List of variables ids to include at the start
+        parent (QObject) : Qt parent
+        editable_dict (dict) : Dictionary where keys are variable ids and values are booleans indicating
+            if the variable should be writable by the user. This object will be modified.
+
+
+    """
     def __init__(self, context_vars_list=None, parent=None, editable_dict=None):
         QAbstractTableModel.__init__(self, parent)
         self.data_type_dict = dict()
         if context_vars_list is not None and len(context_vars_list) > 0:
             self.data_frame = pd.DataFrame(
-                [(braviz_tab_data.get_var_name(idx), self.get_type(idx)) for idx in context_vars_list],
+                [(braviz_tab_data.get_var_name(idx), self._get_type(idx)) for idx in context_vars_list],
                 columns=["variable", "Type"], index=context_vars_list)
         else:
             self.data_frame = pd.DataFrame(columns=["variable", "Type"])
@@ -1033,7 +1130,10 @@ class ContextVariablesModel(QAbstractTableModel):
             self.data_frame.sort("Type", ascending=reverse, inplace=True)
         self.modelReset.emit()
 
-    def get_type(self, var_idx):
+    def _get_type(self, var_idx):
+        """
+        Gets the type of a variable as a string
+        """
         data_type = self.data_type_dict.get(var_idx)
         if data_type is None:
             if braviz_tab_data.is_variable_nominal(var_idx):
@@ -1044,13 +1144,20 @@ class ContextVariablesModel(QAbstractTableModel):
         return data_type
 
     def add_variable(self, var_idx):
+        """
+        Add a variable to the table
+
+        The removeRows method can be used to remove a variable
+        Args:
+            var_idx (int) : Variable index
+        """
         if var_idx in self.data_frame.index:
             # ignore duplicates
             return
 
         self.beginInsertRows(QtCore.QModelIndex(), len(self.data_frame), len(self.data_frame))
         self.data_frame = self.data_frame.append(
-            pd.DataFrame([(braviz_tab_data.get_var_name(var_idx), self.get_type(var_idx))],
+            pd.DataFrame([(braviz_tab_data.get_var_name(var_idx), self._get_type(var_idx))],
                          columns=["variable", "Type"],
                          index=(var_idx,)))
         self.endInsertRows()
@@ -1090,10 +1197,26 @@ class ContextVariablesModel(QAbstractTableModel):
             return QtCore.Qt.NoItemFlags
 
     def get_variables(self):
+        """
+        Gets a list of variable indices currently in the table
+        """
         return self.data_frame.index.tolist()
 
 
 class SubjectDetails(QAbstractTableModel):
+    """
+    A table showing variable values for a single subject
+
+    The first column contains variable names, and the second column its values, together with
+    the range of values for the reference population
+
+    The user may drag table rows to change the order
+
+    Args:
+        initial_vars (list) : List of variables codes to include in the table from the start
+        initial_subject : Code of the initial subject
+
+    """
     def __init__(self, initial_vars=None, initial_subject=None):
         QAbstractTableModel.__init__(self)
         if initial_vars is None:
@@ -1147,6 +1270,12 @@ class SubjectDetails(QAbstractTableModel):
             return QtCore.QVariant()
 
     def set_variables(self, variable_ids):
+        """
+        Set the list of variables
+
+        Args:
+            variable_ids : list of new variable ids to show in the table
+        """
         vars_df = braviz_tab_data.get_subject_variables(self.__current_subject, variable_ids)
         self.__df = vars_df
         self.__is_var_real = braviz_tab_data.are_variables_real(variable_ids)
@@ -1156,6 +1285,12 @@ class SubjectDetails(QAbstractTableModel):
         self.modelReset.emit()
 
     def change_subject(self, new_subject):
+        """
+        Change the current subject to whih the variable values correspond
+
+        Args:
+            new_subject : New subject code
+        """
         self.__current_subject = new_subject
         self.set_variables(self.__df.index)
 
@@ -1190,10 +1325,18 @@ class SubjectDetails(QAbstractTableModel):
         return True
 
     def get_current_variables(self):
+        """
+        Get a list of current variable codes
+        """
         return self.__df.index
 
 
 class NewVariableValues(QAbstractTableModel):
+    """
+    A table with on column for subject, and a writable second column for variable values
+
+    Values are restricted to numbers
+    """
     def __init__(self):
         super(NewVariableValues, self).__init__()
         self.subjects_list = braviz_tab_data.get_subjects()
@@ -1250,10 +1393,22 @@ class NewVariableValues(QAbstractTableModel):
         return QtCore.QVariant()
 
     def save_into_db(self, var_idx):
+        """
+        Save values from the model into the braviz database
+
+        Args:
+            var_idx (int) : Index of the variable to which the values should be saved
+        """
         value_tuples = ((s, self.values_dict.get(s, "nan")) for s in self.subjects_list)
         braviz_tab_data.update_variable_values(var_idx, value_tuples)
 
     def set_values_dict(self,values_dict):
+        """
+        Set values for variables
+
+        Args:
+            values_dict (dict) :  A dictionary with subject codes as keys, and variable values as values
+        """
         self.modelAboutToBeReset.emit()
         self.values_dict = values_dict
         self.modelReset.emit()
