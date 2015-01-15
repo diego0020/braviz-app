@@ -12,6 +12,16 @@ test_if_has_bp () {
     fi
 }
 
+remove_bp () {
+local test=$( test_if_has_bp $1)
+    if [ "$test" -eq "0" ]
+    then
+        tail -N +18 > ${1}.nbp
+        rm $1
+        mv ${1}.nbp $1
+    fi
+}
+
 add_bp_to_file () {
     local test=$( test_if_has_bp $1)
     if [ "$test" -eq "0" ]

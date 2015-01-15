@@ -11,17 +11,17 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name = "PyTanic",
-    version = "2.0.1",
-    author = "Imagine",
+    name = "Braviz",
+    version = "3.0",
+    author = "Diego Angulo",
     author_email = "da.angulo39@uniandes.edu.co",
     description = "A framework for interactive analysis of brain data",
-    license = "?",
+    license = "LGPL",
     keywords = "visual analytics brain data",
     url = "imagine.uniandes.edu.co",
     packages=['braviz', 'braint'],
     long_description=read('README.md'),
-    install_requires=['vtk','nibabel','colorbrewer','numpy',
+    install_requires=['vtk','nibabel','numpy',
                       'scipy','pandas','psutil',
                       'matplotlib','PyQt4','sip','pandas', 'seaborn','rpy2','tornado',
                       ],
