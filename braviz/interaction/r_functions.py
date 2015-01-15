@@ -38,7 +38,14 @@ import braviz.readAndFilter.tabular_data as braviz_tab_data
 # car
 # randomForest
 
-def import_or_install(lib_name):
+def import_or_error(lib_name):
+    """
+    Tries to import an R package, if it is not found prints a message asking the user to install it
+    and raises an exception
+
+    Args:
+        lib_name (str) : Name of an R package
+    """
     try:
         lib = importr(lib_name)
     except rpy2.rinterface.RRuntimeError:
@@ -50,6 +57,21 @@ def import_or_install(lib_name):
 
 
 def calculate_ginni_index(outcome, data_frame):
+    """
+    Calculates Ginni impurity indices respect to an outcome variable
+
+    `<http://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity>`_
+    Uses the RandomForest package
+
+    Args:
+        outcome (str) : Name of the outcome variable
+        data_frame (pandas.DataFrame) : Data Frame with variable indices as index, this object will be modified
+
+    Returns:
+        The input *data_frame* with an additional column called ``Ginni`` that contains the requested indices.
+        The value will be ``numpy.inf`` for the outcome variable, and 0 for variables where the index couln't be
+        calculated.
+    """
     #construct data frame
     is_nominal = False
     conn = braviz_tab_data._get_connection()
@@ -96,7 +118,7 @@ def calculate_ginni_index(outcome, data_frame):
     #    print "%d \t %s"%(i,n)
     #print r_df
     #import randomForest
-    randomForest = import_or_install("randomForest")
+    randomForest = import_or_error("randomForest")
 
     #use correct variable in formula
     form = robjects.Formula("c%d~." % outcome_variable_index)
@@ -131,6 +153,28 @@ def calculate_ginni_index(outcome, data_frame):
 
 
 def calculate_anova(outcome, regressors_data_frame, interactions_dict, sample):
+    """
+    Calculates an anova regression
+
+    Uses the *car* package with type 3 sum of squares
+
+    Args:
+        outcome (str) : Name of outcome variable
+        regressors_data_frame (pandas.DataFrame) : A DataFrame with three columns regressor name,
+            degrees of freedom, and interaction. The last column should have
+            zeros for single variable regressors and 1 for interaction terms.
+             see :meth:`braviz.interaction.qt_models.AnovaRegressorsModel.get_data_frame`
+         interactions_dict (dict) : Dictionary mapping indices of interaction terms (in the previous DataFrame)
+            to the indices of its factors.
+        sample (list) : List of subject ids considered during the calculation
+
+    Returns
+        ``(output_df, residuals, intercept, fitted)`` where *output_df* is a DataFrame containing 5 columns:
+        Factor name, sum of squares, degrees of freedom, F statistic and P value, it includes an *(intercept)* term.
+        *Residuals*, *intercept* and *fitted* are parameters of the regression.
+        See :class:`braviz.interaction.qt_models.AnovaResultsModel`
+
+    """
     #is outcome nominal?
     is_nominal = braviz_tab_data.is_variable_name_nominal(outcome)
 
@@ -196,7 +240,7 @@ def calculate_anova(outcome, regressors_data_frame, interactions_dict, sample):
     form = robjects.Formula(formula_str)
 
     #construct constrasts list
-    stats = import_or_install("stats")
+    stats = import_or_error("stats")
     contrasts_dict = {}
     for i, var in enumerate(var_names[:-1]):
         if factors_nominal[var]:
@@ -205,7 +249,7 @@ def calculate_anova(outcome, regressors_data_frame, interactions_dict, sample):
 
 
     #run anova
-    car = import_or_install("car")
+    car = import_or_error("car")
 
     if len(contrasts_dict) > 0:
         contrasts_list = robjects.ListVector(contrasts_dict)
@@ -247,6 +291,44 @@ def calculate_anova(outcome, regressors_data_frame, interactions_dict, sample):
 
 
 def calculate_normalized_linear_regression(outcome, regressors_data_frame, interactions_dict, sample):
+    """
+    Calculates a linear regression after normalizing variables
+
+    It uses the arm package `standardize <http://www.inside-r.org/packages/cran/arm/docs/standardize>`_
+
+    Args:
+        outcome (str) : Name of outcome variable
+        regressors_data_frame (pandas.DataFrame) : A DataFrame with three columns regressor name,
+            degrees of freedom, and interaction. The last column should have
+            zeros for single variable regressors and 1 for interaction terms.
+             see :meth:`braviz.interaction.qt_models.AnovaRegressorsModel.get_data_frame`
+         interactions_dict (dict) : Dictionary mapping indices of interaction terms (in the previous DataFrame)
+            to the indices of its factors.
+        sample (list) : List of subject ids considered during the calculation
+
+    Returns:
+        A dictionary with the following fields
+
+            - ``coefficients_df`` : A data frame with 7 columns: Slope, T statistc value, P value, standard error,
+              95% confidence interval, r_name (variable alias used inside r)
+              and components (Name of variables that make up the term)
+            - ``residuals`` : vector with regression residuals
+            - ``fitted`` : vector of fitted values
+            - ``adj_r2`` : Adjusted r square
+            - ``f_pval`` : Regression fit p value
+            - ``f_stats_val`` : Value of the regression F statistic
+            - ``f_stat_df`` : Degrees of freedom from F stistics (nominator,denominatior)
+            - ``data_points`` : Subject ids used in the calculation (after dropping nans)
+            - ``standardized_model`` : DataFrame of standardized data
+            - ``data`` : DataFrame used in the calculation (after dropping nans)
+            - ``mean_sigma`` : mean and standard deviation from outcome
+            - ``var_types`` : Dictionary with the type of each variable, options are "r" for real, "b" for binary,
+              and "n" for nominal variables with more levels
+            - ``dummy_levels`` : The text labels for each level of dummy variables (except the base level)
+
+        see `Fitting & Interpreting Linear Models in R <http://blog.yhathq.com/posts/r-lm-summary.html>`_ for more
+        details on the interpretation of the output
+    """
     if not braviz_tab_data.is_variable_name_real(outcome):
         raise NotImplementedError("Logistic regression not yet implemented, please select a rational outcome")
     regressor_names = regressors_data_frame[regressors_data_frame["Interaction"] == 0]["variable"].tolist()

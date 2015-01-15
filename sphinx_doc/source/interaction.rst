@@ -68,11 +68,21 @@ See :doc:`communication`
 .. toctree::
    :hidden:
 
-    communication
+   communication
 
 
 R Statistical processing
 -----------------------------------
+
+Braviz connects with the R software using the `RPy2 <http://rpy.sourceforge.net/>` package.
+These statistical functions are isolated in the module :mod:`~braviz.interaction.r_functions`
+
+See :doc:`r_funcs`
+
+.. toctree::
+   :hidden:
+
+   r_funcs
 
 
 Structures processing
