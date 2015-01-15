@@ -27,6 +27,17 @@ __author__ = 'Diego'
 
 
 class MessageServer(QtCore.QObject):
+    """
+    Acts as a message broker, listens for messages in one port, and broadcasts them in another port
+
+    Also generates the *message_received* signal when it receives a message with the message string.
+    The broadcast and receive addresses are binded to ephimeral ports, use the respective
+    properties to query them.
+
+    Args:
+        local_only (bool) : If ``True`` the server will only accept connections from localhost
+
+    """
     message_received = pyqtSignal(basestring)
     def __init__(self,local_only = True):
         super(MessageServer,self).__init__()
@@ -37,9 +48,13 @@ class MessageServer(QtCore.QObject):
         self._pub_address = None
         self._server_thread = None
         self._local_only = local_only
+        self.__paused = False
         self.start_server()
 
     def start_server(self):
+        """
+        Starts the server thread, called by the constructor
+        """
         context = zmq.Context()
         if zmq.zmq_version_info()[0]>=4:
             context.setsockopt(zmq.IMMEDIATE,1)
@@ -54,29 +69,65 @@ class MessageServer(QtCore.QObject):
         def server_loop():
             while not self._stop:
                 msg = self._listen_socket.recv()
-                self.message_received.emit(msg)
-                self._forward_socket.send(msg)
+                if not self.__paused:
+                    self.message_received.emit(msg)
+                    self._forward_socket.send(msg)
         self._server_thread = threading.Thread(target=server_loop)
         self._server_thread.setDaemon(True)
         self._server_thread.start()
 
     @property
     def broadcast_address(self):
+        """
+        The address in which this server broadcasts messages
+        """
         return self._pub_address
 
     @property
     def receive_address(self):
+        """
+        The address in which the server listens for messages
+        """
         return self._pull_address
 
     def send_message(self,msg):
+        """
+        Send a message in the broadcast address
+
+        Args:
+            msg (str) : Message to broadcast
+        """
         self._forward_socket.send(msg)
 
     def stop_server(self):
+        """
+        Stops the server thread
+        """
         #atomi operation
         self._stop = True
 
+    @property
+    def pause(self):
+        """
+        Pause the server, received messages will be ignored.
+        """
+        return self.__paused
+
+    @pause.setter
+    def pause(self,val):
+        self.__paused = bool(val)
+
 
 class MessageClient(QtCore.QObject):
+    """
+    A client that connects to :class:`~braviz.interaction.connection.MessageServer`
+
+    When it receives a message it emits the *message_received* signal with the message string.
+
+    Args:
+        server_broadcast (str) : Address of the server broadcast port
+        server_receive (str) : Address of the server receive port
+    """
     message_received = pyqtSignal(basestring)
     def __init__(self,server_broadcast=None,server_receive=None):
         super(MessageClient,self).__init__()
@@ -91,6 +142,9 @@ class MessageClient(QtCore.QObject):
 
 
     def connect_to_server(self):
+        """
+        Connect to the server, called by the constructor
+        """
         context = zmq.Context()
         if zmq.zmq_version_info()[0]>=4:
             context.setsockopt(zmq.IMMEDIATE,1)
@@ -113,6 +167,12 @@ class MessageClient(QtCore.QObject):
             self._receive_thread.start()
 
     def send_message(self,msg):
+        """
+        Send a message
+
+        Args:
+            msg (str) : Message to send to the server
+        """
         log = logging.getLogger(__file__)
 
         if self._send_socket is None:
@@ -127,12 +187,21 @@ class MessageClient(QtCore.QObject):
             log.error("Couldn't send message %s",msg)
 
     def stop(self):
+        """
+        stop the client
+        """
         self._stop = True
 
     @property
     def server_broadcast(self):
+        """
+        The server broadcast address
+        """
         return self._server_pub
 
     @property
     def server_receive(self):
+        """
+        The server receive address
+        """
         return self._server_pull

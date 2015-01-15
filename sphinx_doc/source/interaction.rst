@@ -59,6 +59,17 @@ See :doc:`qt_widgets`
 Applications communication
 ----------------------------
 
+All braviz applications share the same database, and the main way in which they communicate is through it.
+However applications may also send and receive messages from all other running applications, in order to
+coordinate the whole system.
+
+See :doc:`communication`
+
+.. toctree::
+   :hidden:
+
+    communication
+
 
 R Statistical processing
 -----------------------------------

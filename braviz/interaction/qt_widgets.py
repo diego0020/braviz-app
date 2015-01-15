@@ -30,7 +30,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from braviz.readAndFilter import tabular_data as braviz_tab_data
+from braviz.readAndFilter import tabular_data as braviz_tab_data, user_data as braviz_user_data, config_file
 from braviz.readAndFilter.tabular_data import get_var_name, is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values
 
 __author__ = 'Diego'
@@ -40,6 +40,12 @@ from PyQt4 import QtGui
 
 
 class RotatedLabel(QtGui.QLabel):
+    """
+    A vertical label useful for labeling rows of data
+
+    Args:
+        parent (QObject) : Qt Parent
+    """
     def __init__(self,parent):
         super(RotatedLabel,self).__init__(parent)
         self.color = (255,0,0)
@@ -47,7 +53,9 @@ class RotatedLabel(QtGui.QLabel):
     def set_color(self,color):
         """
         Sets the color of the label
-        :param color: a 3-tuple with values in [0,1]
+
+        Args:
+            color (tuple): a 3-tuple with values in [0,1]
         """
         if color is not None:
             color = [c*256 for c in color]
@@ -80,6 +88,14 @@ class RotatedLabel(QtGui.QLabel):
 
 
 class ListValidator(QtGui.QValidator):
+    """
+    Can be applied to :obj:`QLineEdit` so that it will only accept input from a list of possible values.
+
+    Can be used together with :obj:`QCompleter`
+
+    Args:
+        valid_options (set) : Set of valid strings to accept as input
+    """
     def __init__(self, valid_options):
         super(ListValidator, self).__init__()
         self.valid = frozenset(valid_options)
@@ -494,9 +510,37 @@ class MatplotWidget(FigureCanvas):
 
 
 class ContextVariablesPanel(QtGui.QGroupBox):
-    def __init__(self, parent, title="Context", initial_variable_idxs=(11, 6, 17, 1), initial_subject=None,app=None,
+    """
+    A panel that displays and allows to edit variables for a given subject.
+
+    The context menu of the panel allows the user to select variables and to make some of them editable.
+    In this case a *save changes* button will also be displayed. Pressing it will cause the changes to be
+    written into the databases
+
+    Args:
+        parent (QObject) : Qt parent
+        title (str) : Title for the widget
+        initial_variable_idxs (list) : List of variable indices to display at start
+        initial_subject : Id of the initial subject whose variable values will be displayed
+        app : Optional, an application with the ``save_screenshot`` and ``get_state_dict`` method.
+            In this case a scenario will be automatically created whenever a variable is first modified.
+        sample (list) : list of subjects. This sample will be passed on to the variable select dialog deployed
+            by the panel.
+
+    """
+    def __init__(self, parent, title="Context", initial_variable_idxs=None, initial_subject=None,app=None,
                  sample = None):
         super(ContextVariablesPanel, self).__init__(parent)
+
+        if initial_variable_idxs is None or initial_subject is None:
+
+            config = config_file.get_apps_config()
+            if initial_variable_idxs is None:
+                var_names = config.get_default_variables().values()
+                initial_variable_idxs = [braviz_tab_data.get_var_idx(v) for v in var_names]
+            if initial_subject is None:
+                initial_subject = config.get_default_subject()
+
         self.setTitle(title)
         self.setToolTip("Right click to select context variables, and to make them editable")
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -535,6 +579,14 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             self.set_subject(initial_subject)
 
     def set_variables(self, variables, editables=None):
+        """
+        Sets a new set of variables for the panel
+
+        Args:
+            variables (list) : List of variable indices
+            editables (dict) : Dictionary mapping varible indices to booleans that indicate if a variable should
+                be modifiable by the user
+        """
         self.__context_variable_codes = list(variables)
         self.__context_variable_names = dict((idx, get_var_name(idx)) for idx in self.__context_variable_codes)
         self.__is_nominal = dict((idx, is_variable_nominal(idx)) for idx in self.__context_variable_codes)
@@ -546,15 +598,21 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             self.__editables_dict = dict((idx, False) for idx in variables)
         else:
             self.__editables_dict = editables
-        self.reset_internal_widgets()
+        self._reset_internal_widgets()
 
     def get_variables(self):
+        """
+        Get a list of current variable codes
+        """
         return self.__context_variable_codes
 
     def get_editables(self):
-        return self.__editables_dict.iteritems()
+        """
+        Get a list of tuples (var_code, editable) indicating which variables are editable
+        """
+        return self.__editables_dict.items()
 
-    def reset_internal_widgets(self):
+    def _reset_internal_widgets(self):
         #clear layout
         self.__save_changes_button = None
         for i in xrange(self.layout.count() - 1, -1, -1):
@@ -581,20 +639,20 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             self.layout.addWidget(label)
             #add value
             if self.__editables_dict.get(idx) is True:
-                value_widget = self.get_editable_widget(idx)
+                value_widget = self._get_editable_widget(idx)
                 any_editable = True
             else:
-                value_widget = self.get_read_only_widget(idx)
+                value_widget = self._get_read_only_widget(idx)
             self.layout.addWidget(value_widget)
             self.__values_widgets.append(value_widget)
         if any_editable is True:
             self.__save_changes_button = QtGui.QPushButton("Save")
             self.__save_changes_button.setEnabled(False)
-            self.__save_changes_button.clicked.connect(self.save_changes_into_db)
+            self.__save_changes_button.clicked.connect(self._save_changes_into_db)
             self.layout.addWidget(self.__save_changes_button)
         return
 
-    def get_read_only_widget(self, idx):
+    def _get_read_only_widget(self, idx):
         value_widget = QtGui.QLabel("XXXXXXX")
         value_widget.setFrameShape(QtGui.QFrame.Box)
         value_widget.setFrameShadow(QtGui.QFrame.Raised)
@@ -627,7 +685,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             value_widget.setFixedHeight(longest_size.height())
         return value_widget
 
-    def get_editable_widget(self, idx):
+    def _get_editable_widget(self, idx):
         if self.__is_nominal.get(idx) is True:
             value_widget = QtGui.QComboBox()
             for i, lbl in self.__labels_dict[idx].iteritems():
@@ -635,20 +693,26 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                     value_widget.addItem(lbl, i)
             value_widget.insertSeparator(value_widget.count())
             value_widget.addItem("<Unknown>",float("nan"))
-            value_widget.currentIndexChanged.connect(self.enable_save_changes)
+            value_widget.currentIndexChanged.connect(self._enable_save_changes)
         else:
             value_widget = QtGui.QDoubleSpinBox()
             minim, maxim = get_min_max_values(idx)
             value_widget.setMaximum(10 * maxim)
             value_widget.setMinimum(-10 * maxim)
             value_widget.setSingleStep((maxim - minim) / 20)
-            value_widget.valueChanged.connect(self.enable_save_changes)
+            value_widget.valueChanged.connect(self._enable_save_changes)
         font = QtGui.QFont()
         font.setPointSize(11)
         value_widget.setFont(font)
         return value_widget
 
     def set_subject(self, subject_id):
+        """
+        Set the current subject to which variable values are associated
+
+        Args:
+            subject_id : Subject id
+        """
         values = self.__internal_df.loc[int(subject_id)]
         for i, idx in enumerate(self.__context_variable_codes):
             try:
@@ -678,6 +742,12 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             self.__save_changes_button.setEnabled(False)
 
     def create_context_menu(self, pos):
+        """
+        Create a context menu which gives the user the option to open a dialog to select variables
+
+        Args:
+            pos : Position of event
+        """
         from braviz.interaction.qt_dialogs import  ContextVariablesSelectDialog
         global_pos = self.mapToGlobal(pos)
         change_action = QtGui.QAction("Change Variables", None)
@@ -697,12 +767,13 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         menu.addAction(change_action)
         menu.exec_(global_pos)
 
-    def enable_save_changes(self, *args):
+    def _enable_save_changes(self, *args):
+
         if self.__save_changes_button is None:
             return
         self.__save_changes_button.setEnabled(True)
 
-    def save_changes_into_db(self):
+    def _save_changes_into_db(self):
 
         for i,idx in enumerate(self.__context_variable_codes):
             if self.__editables_dict[idx] is True:
@@ -722,7 +793,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                 var_name = self.__context_variable_names[idx]
                 self.__internal_df[var_name][int(self.__curent_subject)]=value
                 #check if scenarios exists for this variable
-                if braviz_user_data.count_variable_scenarios(int(idx)) == 0:
+                if braviz_user_data.count_variable_scenarios(int(idx)) == 0 and self.app is not None:
                     #save scenario
                     name = "<AUTO_%s>"%self.__context_variable_names[idx]
                     desc = "Created automatically when saving values for variable %s"%self.__context_variable_names[idx]
@@ -739,4 +810,16 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         #print idx_value_tuples
 
     def set_sample(self,new_sample):
+        """
+        Set the sample used in the variable selection dialogs
+
+        Args:
+            new_sample (list) : List of subject ids
+        """
         self.sample = list(new_sample)
+
+if __name__ == "__main__":
+    app = QtGui.QApplication([])
+    context = ContextVariablesPanel(None)
+    context.show()
+    app.exec_()

@@ -86,6 +86,8 @@ class BravizMenu2(QtGui.QMainWindow):
         project = config.get_project_name()
         self.ui.label.setText("Welcome to Braviz<small><br><br>%s</small>" % project)
 
+        self.ui.network_button.toggled.connect(self.toggle_connection)
+
 
     __applications = {
         "subject_overview": "subject_overview",
@@ -161,6 +163,11 @@ class BravizMenu2(QtGui.QMainWindow):
         # for testing
         print "RECEIVED: %s" % msg
 
+    def toggle_connection(self,on):
+        if on:
+            self.messages_server.pause = False
+        else:
+            self.messages_server.pause = True
 
 def run():
     import sys

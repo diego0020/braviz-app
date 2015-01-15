@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>peertopeer.png</file>
     <file>thg-password.svg</file>
     <file>check_reg.png</file>
     <file>parallel_coords_logo.png</file>
