@@ -47,6 +47,7 @@ add_to_braviz () {
         echo remove from $f
         remove_bp $f
         echo
+        sleep 1
     done
 
 
