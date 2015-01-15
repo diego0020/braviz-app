@@ -13,15 +13,15 @@ test_if_has_bp () {
 }
 
 remove_bp () {
-local test=$( test_if_has_bp $1)
-    if [ "$test" -eq "0" ]
-    then
-        echo removing bp from $1
-        tail -n +18 > ${1}.nbp
-        rm $1
-        mv ${1}.nbp $1
-    else
-        echo $1 doesnt have bp
+    local test=$( test_if_has_bp $1)
+        if [ "$test" -eq "1" ]
+        then
+            echo removing bp from $1
+            tail -n +18 > ${1}.nbp
+            rm $1
+            mv ${1}.nbp $1
+        else
+            echo $1 doesnt have bp
     fi
 }
 
