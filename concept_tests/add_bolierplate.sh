@@ -4,7 +4,7 @@ test_if_has_bp () {
     local readonly boilerplate=license_boilerplate.txt
     local bp_text=$(cat $boilerplate)
     local file=$1
-    local file_pre=$(cat $1 | head -n 18 )
+    local file_pre=$( head -n 18 $file )
     if [ "$bp_text" = "$file_pre" ] ; then
     echo "1"
     else
@@ -44,8 +44,8 @@ add_to_braviz () {
     braviz_files=$(find ../braviz -name "*.py")
     for f in ${braviz_files[*]}
     do
-        echo remove from $f
-        remove_bp $f
+        echo adding to $f
+        add_bp_to_file $f
         echo
         sleep 1
     done
