@@ -21,7 +21,7 @@ local test=$( test_if_has_bp $1)
         rm $1
         mv ${1}.nbp $1
     else
-        echo $1 doesn't have bp
+        echo $1 doesnt have bp
     fi
 }
 
@@ -31,7 +31,7 @@ add_bp_to_file () {
     then
         local boilerplate=license_boilerplate.txt
         local file=$1
-        echo adding bolirplate to $file
+        echo adding boilerplate to $file
         cat $boilerplate $file > ${file}.bp
         rm $file
         mv ${file}.bp $file
@@ -44,8 +44,8 @@ add_to_braviz () {
     braviz_files=$(find ../braviz -name "*.py")
     for f in ${braviz_files[*]}
     do
-        echo add to $f
-        add_bp_to_file $f
+        echo remove from $f
+        remove_bp $f
         echo
     done
 
