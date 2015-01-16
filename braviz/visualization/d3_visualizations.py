@@ -173,11 +173,23 @@ class IndexHandler(tornado.web.RequestHandler):
         return data
 
 class MessageHandler(tornado.web.RequestHandler):
+    """
+    Allow querying for messages and sending messages through http
+
+    **GET** requests will receive json data ``{"count":<n>,"message",<s>}`` where count is a number
+     that increases with any new message, and message is the text of the last message.
+
+    **POST** requests allow to send messages. It is required to have a ``"message"`` parameter in the
+    request body
+    """
     def __init__(self, application, request, **kwargs):
         super(MessageHandler, self).__init__(application, request, **kwargs)
 
 
     def initialize(self,message_client):
+        """
+        Requires a :class:`braviz.interaction.connection.PassiveMessageClient`
+        """
         self.message_client = message_client
         super(MessageHandler, self).initialize()
 
@@ -194,7 +206,7 @@ class MessageHandler(tornado.web.RequestHandler):
         if self.message_client is None:
             self.write_error(503)
         else:
-            m = str(self.get_body_argument("message", ""))
+            m = str(self.get_body_argument("message"))
             print "message: "
             print m
             self.message_client.send_message(m)

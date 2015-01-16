@@ -34,7 +34,15 @@ settings = {
 }
 
 if __name__ == "__main__":
-    message_client = PassiveMessageClient("tcp://127.0.0.1:52818","tcp://127.0.0.1:57914")
+    import sys
+    broadcast_address = None
+    receive_address = None
+
+    if len(sys.argv)>3:
+        broadcast_address = sys.argv[2]
+        receive_address = sys.argv[3]
+
+    message_client = PassiveMessageClient(broadcast_address,receive_address)
     application = tornado.web.Application(
         [
         (r"/parallel", ParallelCoordinatesHandler),
