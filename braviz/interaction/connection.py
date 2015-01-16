@@ -22,6 +22,7 @@ from PyQt4 import QtGui,QtCore
 from  PyQt4.QtCore import pyqtSignal
 import threading
 import logging
+import time
 
 __author__ = 'Diego'
 
@@ -138,6 +139,7 @@ class MessageClient(QtCore.QObject):
         self._receive_thread = None
         self._stop = False
         self._last_message = None
+        self._last_send_time = -5
         self.connect_to_server()
 
 
@@ -159,7 +161,8 @@ class MessageClient(QtCore.QObject):
             def receive_loop():
                 while not self._stop:
                     msg = self._receive_socket.recv()
-                    if msg != self._last_message:
+                    #Ignore bouncing messages
+                    if msg != self._last_message or (time.time() - self._last_send_time > 5):
                         self.message_received.emit(msg)
                         self._last_message = msg
             self._receive_thread = threading.Thread(target=receive_loop)
@@ -182,6 +185,7 @@ class MessageClient(QtCore.QObject):
         try:
             #self._send_socket.send(msg,zmq.DONTWAIT)
             self._last_message = msg
+            self._last_send_time = time.time()
             self._send_socket.send(msg)
         except zmq.Again:
             log.error("Couldn't send message %s",msg)
@@ -205,3 +209,106 @@ class MessageClient(QtCore.QObject):
         The server receive address
         """
         return self._server_pull
+
+
+class PassiveMessageClient(object):
+    """
+    A client that connects to :class:`~braviz.interaction.connection.MessageServer`
+
+    When it receives a message it keeps it in memory. The last message may be polled using the
+    method :meth:`PassiveMessageClient.get_last_message`
+
+    Args:
+        server_broadcast (str) : Address of the server broadcast port
+        server_receive (str) : Address of the server receive port
+    """
+
+    def __init__(self,server_broadcast=None,server_receive=None):
+        self._server_pub = server_broadcast
+        self._server_pull = server_receive
+        self._send_socket = None
+        self._receive_socket = None
+        self._receive_thread = None
+        self._stop = False
+        self._last_seen_message = None
+        self.connect_to_server()
+        self._message_counter = 0
+        self._last_received_message = ""
+        self._last_send_time = -5
+
+
+    def connect_to_server(self):
+        """
+        Connect to the server, called by the constructor
+        """
+        context = zmq.Context()
+        if zmq.zmq_version_info()[0]>=4:
+            context.setsockopt(zmq.IMMEDIATE,1)
+        if self._server_pull is not None:
+            self._send_socket = context.socket(zmq.PUSH)
+            server_address = self._server_pull
+            self._send_socket.connect(server_address)
+        if self._server_pub is not None:
+            self._receive_socket = context.socket(zmq.SUB)
+            self._receive_socket.connect(self._server_pub)
+            self._receive_socket.setsockopt(zmq.SUBSCRIBE,"")
+            def receive_loop():
+                while not self._stop:
+                    msg = self._receive_socket.recv()
+                    #Filter some messages to avoid loops
+                    if msg != self._last_seen_message or (time.time() - self._last_send_time > 5):
+                        self._last_seen_message = msg
+                        self._last_received_message = msg
+                        self._message_counter += 1
+            self._receive_thread = threading.Thread(target=receive_loop)
+            self._receive_thread.setDaemon(True)
+            self._receive_thread.start()
+
+    def send_message(self,msg):
+        """
+        Send a message
+
+        Args:
+            msg (str) : Message to send to the server
+        """
+        log = logging.getLogger(__file__)
+
+        if self._send_socket is None:
+            log.error("Trying to send message without connection to server")
+            return
+
+        try:
+            self._last_seen_message = msg
+            self._last_send_time = time.time()
+            self._send_socket.send(msg)
+        except zmq.Again:
+            log.error("Couldn't send message %s",msg)
+
+    def stop(self):
+        """
+        stop the client
+        """
+        self._stop = True
+
+    @property
+    def server_broadcast(self):
+        """
+        The server broadcast address
+        """
+        return self._server_pub
+
+    @property
+    def server_receive(self):
+        """
+        The server receive address
+        """
+        return self._server_pull
+
+    def get_last_message(self):
+        """
+        Get the last received message and a consecutive number
+
+        Returns:
+            ``number, message_text``; where the number will increase each time a new message arrives
+        """
+        return self._message_counter,self._last_received_message

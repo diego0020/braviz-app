@@ -35,3 +35,6 @@ Message Client
 
 .. autoclass:: MessageClient
     :members:
+
+.. autoclass:: PassiveMessageClient
+    :members:
