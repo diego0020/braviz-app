@@ -216,7 +216,7 @@ class PassiveMessageClient(object):
     A client that connects to :class:`~braviz.interaction.connection.MessageServer`
 
     When it receives a message it keeps it in memory. The last message may be polled using the
-    method :meth:`PassiveMessageClient.get_last_message`
+    method :meth:`get_last_message`
 
     Args:
         server_broadcast (str) : Address of the server broadcast port
