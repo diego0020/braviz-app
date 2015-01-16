@@ -167,3 +167,15 @@ def nibNii2vtk(nii):
     """
     d = nii.get_data()
     return numpy2vtk_img(d)
+
+def vtk2numpy(vtk_image):
+    """
+    Transform a vtk image into a numpy array
+
+    Args:
+        vtk_image (vtkImageData) : vtk image
+
+    Returns:
+        A numpy array of the same shape as the image
+    """
+    return np.array(vtk_image.GetPointData()["ImageScalars"].reshape(vtk_image.GetDimensions(), order="F"))

@@ -34,10 +34,32 @@ __author__ = 'Diego'
 
 
 def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
-    """Aggregates a metric across multiple structures
+    """
+    Aggregates a metric across multiple structures
 
-    If metric is area or volume the values for the different structures are added,
-    if metric is nfiber,lfibers or fa_fibers get_fibers_metric is used"""
+    The supported metrics are:
+
+        - *volume*: Total volume of the structures, read from freesurfer files
+        - *area*: Sum of the surface areas of each structure
+        - *nfibers*: Number of fibers that cross the structure, or number of fibers
+          in the bundle if structure is ``Fibs:*``
+        - *lfibers*: Mean length of fibers going through structure or in bundle
+        - *fa_fibers*: Mean fa of fibers crossing the structure or in bundle
+        - *fa_inside*: Mean fa inside the structures
+        - *md_inside*: Mean md inside the structures
+
+    if metric is nfiber,lfibers or fa_fibers :func:`get_fibers_metric` is used
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
+        struct_names (list) : List of structure names
+        code : Subject id
+        metric (str) : Metric to calculate, options are *volume*, *area* (surface area), *nfibers*, *lfibers*
+            *md_inside* and *fa_inside*
+
+    Returns:
+        A float number with the requested metric
+    """
     values = []
     if metric in ('lfibers', 'fa_fibers', 'nfibers'):
         # we need to get all the fibers
@@ -63,7 +85,7 @@ def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
         else:
             img2 = "MD"
             result = mean_inside(reader, code, struct_names, img2)
-            result *= 1e12
+            #result *= 1e12
     else:
         log = logging.getLogger(__name__)
         log.error("Unknown metric")
@@ -72,14 +94,27 @@ def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
 
 
 def get_struct_metric(reader, struct_name, code, metric='volume'):
-    """Calculates a metric for a specific structure
+    """
+    Calculates a metric for a specific structure
 
     The supported metrics are:
-    volume: Volume of the structure, read from freesurfer files
-    area: Surfrace area of the structure
-    nfibers: Number of fibers that cross the structure, or number of fibers in the bundle if structure is Fibs:*
-    lfibers: Mean length of fibers going through structure or in bundle
-    fa_fibers: Mean fa of fibers crossing the structure or in bundle
+
+        - *volume*: Volume of the structure, read from freesurfer files
+        - *area*: Surfrace area of the structure
+        - *nfibers*: Number of fibers that cross the structure, or number of fibers in the bundle if structure is Fibs:*
+        - *lfibers*: Mean length of fibers going through structure or in bundle
+        - *fa_fibers*: Mean fa of fibers crossing the structure or in bundle
+        - *fa_inside*: Mean fa inside the structure
+        - *md_inside*: Mean md inside the structure
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
+        struct_name (str) : Name of an structure or of a named bundle (should start with *Fibs:*)
+        cod : Subject id
+        metric (str) : Look above for the options
+
+    Returns:
+        A float number with the requested metric
     """
     # print "calculating %s for %s (%s)"%(metric,struct_name,code)
     if metric == 'volume':
@@ -104,18 +139,35 @@ def get_struct_metric(reader, struct_name, code, metric='volume'):
         return get_fibers_metric(reader, struct_name, code, 'mean_length')
     elif metric == 'fa_fibers':
         return get_fibers_metric(reader, struct_name, code, 'mean_fa')
+    elif metric in ("fa_inside", "md_inside"):
+        if metric == "fa_inside":
+            img2 = "FA"
+            return mean_inside(reader, code, (struct_name,), img2)
+        else:
+            img2 = "MD"
+            return mean_inside(reader, code, (struct_name,), img2)
     else:
         raise Exception("unknown metric %s" % metric)
 
 
 def get_fibers_metric(reader, struct_name, code, metric='number', ):
-    """Calculates metrics for groups of fibers
+    """
+    Calculates metrics for groups of fibers
 
     struct_name can be the name of a freesurfer model, in which case the bundle will be the fibers that cross it,
     if struct_name is a list of structures, the fibers crossing any of those structures will be used
     finally struct_name can be a named fiber, which will be used as a bundle
 
-    metrics are number, mean_length and mean_fa
+    metrics are number, mean_length and mean_fa, see :func:`get_struct_metric`
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
+        struct_name (str) : Name of an structure or of a named bundle (should start with *Fibs:*)
+        cod : Subject id
+        metric (str) : Options are *number*, *mean_length*, and *mean_fa*
+
+    Returns:
+        A float number with the requested metric
     """
     # print "calculating for subject %s"%code
     n = 0
@@ -155,24 +207,46 @@ def get_fibers_metric(reader, struct_name, code, metric='number', ):
 
 
 def cached_get_struct_metric_col(reader, codes, struct_name, metric,
-                                 state_variables={}, force_reload=False, laterality_dict={}):
+                                 state_variables=None, force_reload=False, laterality_dict=None):
     """
     calculates a structure metrics for all subjects in a list of codes
 
-    It has a disk cache which is used to try to save results, and if available read from disk instead of calculating again
+    It has a disk cache which is used to try to save results, and reload them instead of calculating again
     if force_reload is True, a cached result will be ignored, and the column will be calculated again
-    A laterality_dict may be used for solving dominand and non dominant structures specifications
-    It has a dictionary of state_variables which can be used to monitor or cancel the calculation from a different thread
+
+    A laterality_dict may be used for solving dominant and non dominant structures specifications
+
+    It has a dictionary of state_variables which can be used to monitor or cancel the calculation
+    from a different thread
     The states variables are:
-    'struct_name': the requested structure name
-    'metric' ; the requested metric
-    'working' : Set to true at start of function, and to false just before returning
-    'output' : A partial list of results will be stored here, this is the same object that will be returned
-    'number_calculated' : number of metrics calculated
-    'number_requested' : number of metrics requested (length of codes list)
-    'cancel' : Set this to True, to cancel the operation and return before the next iteration
+
+        - 'struct_name': the requested structure name
+        - 'metric' ; the requested metric
+        - 'working' : Set to true at start of function, and to false just before returning
+        - 'output' : A partial list of results will be stored here, this is the same object that will be returned
+        - 'number_calculated' : number of metrics calculated
+        - 'number_requested' : number of metrics requested (length of codes list)
+        - 'cancel' : Set this to True, to cancel the operation and return before the next iteration
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data and access cache
+        codes (list) : List of subject ids
+        struct_name (str) : Name of an structure or of a named bundle (should start with *Fibs:*)
+        metric (str) : See :func:`get_struct_metric` for options
+        state_variables (dict) : Used for sharing state with other threads, read above
+        force_reload (bool) : If ``True`` cache is ignored
+        laterality_dict (dict) : Dictionary with laterality of subjects. Values should be
+            'l' for left handed subjects and 'r' otherwise. See :func:`braviz.readAndFilter.tabular_data.get_laterality`
+
+    Returns:
+        A list of floats of the same length as *codes* with the respective metrics for each subject
     """
-    # global struct_metrics_col, temp_struct_metrics_col, processing, cancel_calculation_flag, struct_name, metric
+    if state_variables is None:
+        state_variables = dict()
+
+    if laterality_dict is None:
+        laterality_dict = dict()
+
     state_variables['struct_name'] = struct_name
     state_variables['metric'] = metric
     state_variables['working'] = True
@@ -187,10 +261,10 @@ def cached_get_struct_metric_col(reader, codes, struct_name, metric,
         calc_function = get_mult_struct_metric
         standard_list = list(struct_name)
         standard_list.sort()
-        key = 'column_%s_%s' % (''.join(struct_name).replace(':', '_'), metric.replace(':', '_'))
+        key = 'column_%s_%s' % (''.join(sorted(struct_name)).replace(':', '_'), metric.replace(':', '_'))
     else:
         key = 'column_%s_%s' % (struct_name.replace(':', '_'), metric.replace(':', '_'))
-    key += ';'.join(sorted(codes))
+    key += ';'.join(codes)
     if force_reload is not True:
         cached = reader.load_from_cache(key)
         if cached is not None:
@@ -233,9 +307,18 @@ laterality_lut = {
 
 def get_right_or_left_hemisphere(hemisphere, laterality):
     """
-    Translates d (dominant) and n (nondominant) into r (right) or l (left) using laterality,
+    Translates 'd' (dominant) and 'n' (non-dominant) into 'r' (right) or 'l' (left) using laterality,
+
     laterality should be r (right handed) or l (left handed)
-    hemisphere can also be r or l; which will be outputed again"""
+    hemisphere can also be 'r' or 'l'; in this case the same letters will be returned
+
+    Args:
+        hemisphere (str) : Should be 'd' for dominant, 'n' for non-dominant, 'r' for right or 'l' for left
+        laterality (str) : Should be 'l' for left handed subjects or 'r' otherwise
+
+    Returns:
+        'r' or 'l'
+    """
     if hemisphere in ('d', 'n'):
         if laterality[0].lower() not in ('r', 'l'):
             raise Exception('Unknown laterality')
@@ -248,11 +331,18 @@ def get_right_or_left_hemisphere(hemisphere, laterality):
 
 
 def solve_laterality(laterality, names):
-    """translates dominant and nondominant freesurfer names into right and left names,
-    laterality should be r (right handed) or l (left handed)
+    """
+    translates dominant and nondominant freesurfer names into right and left names,
+
+    laterality should be  'l' (left handed) or 'r'
     names is a list of names to translate
-    currently wm-[d|n|r|l]h-* , ctx-[d|n|r|l]h-* and fiber bundles ending in '_[d|n|r|l]' are supported"""
-    # TODO: Support Left-Amygdala
+    currently ``wm-[d|n|r|l]h-*`` , ``ctx-[d|n|r|l]h-*`` and fiber bundles ending in ``_[d|n|r|l]`` are supported
+
+    Args:
+        laterality (str) : Laterality of subject, 'l' for left handed, 'r' otherwise
+        names (list) : List of structure names, possibly with 'd' and 'n' sides, to translate to 'l' and 'r' sides.
+            Only cortical structures and named fibers are supported, read above.
+    """
     new_names = []
     if type(names) == str:
         names2 = (names,)
@@ -278,8 +368,18 @@ def solve_laterality(laterality, names):
 
 def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
     """
-    Calculate the mean value of img2 modality inside of the structures listed
-    img2 must be FA, MD, MRI or fMRI
+    Calculate the mean value of img2 values inside of the structures listed
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
+        subject : Subject id
+        structures (list) : List of structure names
+        img2 (str) : Modality in which to calculate mean, must be FA, MD, MRI or fMRI
+        paradigm (str) : In case img2 is fMRI, the paradigm to use
+        contrast (int) : In case img2 is fMRI, the contrast to use
+
+    Returns:
+        The mean value of the image voxels that lay inside any of the listed structures
     """
     if len(structures) == 0:
         return float("nan")
@@ -292,7 +392,7 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
         aparc_img = reader.get("APARC", subject, space="world", format="nii")
     except Exception:
         return float("nan")
-    locations = [get_locations(reader, subject, name) for name in structures]
+    locations = [_get_locations(reader, subject, name) for name in structures]
     shape = aparc_img.shape
     shape2 = shape + (1,)
     locations = [l.reshape(shape2) for l in locations]
@@ -330,6 +430,13 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
 
 
 class AggregateInRoi(object):
+    """
+    A class for doing repeated aggregations of image values inside different rois
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
+
+    """
     def __init__(self, reader):
         self.reader = reader
         self.img_values = None
@@ -337,6 +444,18 @@ class AggregateInRoi(object):
         self.img = None
 
     def load_image(self, subject, space, modality, paradigm=None, contrast=1, mean=True):
+        """
+        Loads an image into the class
+
+        Args:
+            subject : subject id
+            space (str) : Coordinate system in which the roi is defined
+            modality (str) : Modality in which to calculate mean or mode.
+            paradigm (str) : In case modality is fMRI, the paradigm to use
+            contrast (int) : In case modality is fMRI, the contrast to use
+            mean (bool) : If ``True`` :meth:`get_value` will return the mean inside the roi, otherwise it will
+                return the *mode*.
+        """
         reader = self.reader
         if paradigm is None:
             target_img = reader.get(modality, subject, space=space, format="nii")
@@ -351,6 +470,16 @@ class AggregateInRoi(object):
         self.mean = mean
 
     def get_value(self, roi_ctr, roi_radius):
+        """
+        Get mean or mode from the image inside an spherical roi
+
+        Args:
+            roi_ctr (tuple) : Coordinates of the roi center
+            roi_radius (float) : Sphere radius
+
+        Returns:
+            The mean or mode of the image inside the sphere, according to the data set using :meth:`load_image`
+        """
         target_img = self.img
         shape = target_img.get_shape()
         affine = target_img.get_affine()
@@ -395,6 +524,24 @@ class AggregateInRoi(object):
 
 
 def aggregate_in_roi(reader, subject, roi_ctr, roi_radius, roi_space, img2, paradigm=None, contrast=None, mean=True):
+    """
+    Aggregate values from an image inside a spherical roi
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
+        subject : subject id
+        roi_ctr (tuple) : Coordinates of the roi center
+        roi_radius (float) : Sphere radius
+        roi_space (str) : Coordinate system in which the roi is defined
+        img2 (str) : Modality in which to calculate mean or mode.
+        paradigm (str) : In case img2 is fMRI, the paradigm to use
+        contrast (int) : In case img2 is fMRI, the contrast to use
+        mean (bool) : If will return the mean inside the roi, otherwise it will
+            return the *mode*.
+
+    Returns:
+        Mean or mode of the image inside a sphere
+    """
     if paradigm is None:
         target_img = reader.get(img2, subject, space=roi_space, format="nii")
     else:
@@ -426,7 +573,8 @@ def aggregate_in_roi(reader, subject, roi_ctr, roi_radius, roi_space, img2, para
     return ans
 
 
-def get_locations(reader, subject, struct_name):
+def _get_locations(reader, subject, struct_name):
+
     label = int(reader.get("Model", subject, name=struct_name, label=True))
     if struct_name.startswith("wm"):
         aparc_img = reader.get("WMPARC", subject, space="world", format="nii")
@@ -437,6 +585,16 @@ def get_locations(reader, subject, struct_name):
 
 
 def get_scalar_from_fiber_ploydata(poly_data, scalar):
+    """
+    Calculates the number of lines, mean length or mean color from a polydata bundle
+
+    Args:
+        poly_data (vtkPolyData) : Poly Data containing only lines
+        scalar (str) : may be "number","mean_length", or "mean_color"
+
+    Returns:
+        The requested scalar
+    """
     pd = poly_data
     if scalar == "number":
         return pd.GetNumberOfLines()
@@ -453,10 +611,22 @@ def get_scalar_from_fiber_ploydata(poly_data, scalar):
         log = logging.getLogger(__name__)
         log.error("Unknown metric %s", scalar)
         raise Exception("Unknown metric %s", scalar)
-        return float("nan")
+
 
 
 def get_fiber_scalars_from_db(reader, subj_id, db_id, scalar):
+    """
+    Calculates the number of lines, mean length mean fa or mean md from a database fiber
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
+        subj_id : Subject id
+        db_id : Bundle database id
+        scalar (str) : may be "number","mean_length", or "mean_fa" or "mean_md"
+
+    Returns:
+        The requested scalar, or 'nan' if there was an error
+    """
     try:
         if scalar in ("number", "mean_length"):
             pd = reader.get("FIBERS", subj_id, db_id=db_id)
@@ -479,6 +649,20 @@ def get_fiber_scalars_from_db(reader, subj_id, db_id, scalar):
 
 
 def get_fiber_scalars_from_waypoints(reader, subj_id, waypoints, operation, scalar):
+    """
+    Calculates the number of lines, mean length mean fa or mean md from a fiber created using waypoints
+
+    Args:
+        reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
+        subj_id : Subject id
+        waypoints (list) : List of structure names
+        operation (str) : "and" if it required for lines to pass through *all* waypoints, "or" if they can pass
+            through *any* of them
+        scalar (str) : may be "number","mean_length", or "mean_fa" or "mean_md"
+
+    Returns:
+        The requested scalar, or 'nan' if there was an error
+    """
     try:
         lat = braviz.readAndFilter.tabular_data.get_laterality(subj_id)
         waypoints2 = solve_laterality(lat, waypoints)

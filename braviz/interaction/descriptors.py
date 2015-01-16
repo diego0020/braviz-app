@@ -134,6 +134,19 @@ def _get_descriptors(aseg,labels,draw=False):
     return (max_distance,max_distance2,max_distance3)
 
 def get_descriptors(aseg,labels,draw=False):
+    """
+    Calculate the longest axis in a structure, the second longest axis perpendicular to it, and the third axis
+    perpendicular to both
+
+    Args:
+        aseg (nibabel.spatialimages.SpatialImage) : Label map
+        labels (list) : list of integer labels to look for in the label map
+        draw (bool) : If ``True`` the process will be illustrated in a
+            :class:`~braviz.visualization.simple_vtk.SimpleVtkViewer`, press 'q' after each stage
+
+    Returns:
+        A tuple with the lengths of the three axes
+    """
     try:
         return _get_descriptors(aseg,labels,draw)
     except Exception:

@@ -88,3 +88,14 @@ See :doc:`r_funcs`
 Structures processing
 ------------------------
 
+Sometimes it is required to perform additional processing steps on the geometrical structure returned by braviz. For
+example calculating scalar measure or descriptors. This module intends to group such functions. Notice that when the
+intend of the processing is improving visualizations, functions should be located in :mod:`braviz.visualization`.
+
+See :doc:`struc_proc`
+
+
+.. toctree::
+   :hidden:
+
+   struc_proc

@@ -4,35 +4,71 @@
 Read And Filter
 ***********************************
 
-Contents
----------
-
-.. toctree::
-   :maxdepth: 2
-
-   reader
-   braviz_db
-   configuring
-   low level functions <read_low_level>
-
-
-Basic Usage
-------------
 
 There are three basic operations that the readAndFilter module provides.
 
-- Read geometric data (images, surfaces, structures, fibers): Use :func:`BravizAutoReader` to get an appropriate
-  project reader. Afterwards use its :meth:`~braviz.readAndFilter.base_reader.BaseReader.get` method to access the data.
 
-- Read tabular data: This data is stored inside the braviz Data Base. Use the module
-  :mod:`~braviz.readAndFilter.tabular_data` to access it.
+Reading geometric data
+--------------------------
 
-- Read system configuration: User are able to configure the system using a configuration file. Applications should
-  always honor this configuration. Use the module :mod:`~braviz.readAndFilter.config_file` to access
-  this information.
+To read geometric data, such as (images, surfaces, structures, fibers), use :func:`BravizAutoReader` to get an appropriate
+project reader. Afterwards use its :meth:`~braviz.readAndFilter.base_reader.BaseReader.get` method to access the data.
 
-Module level objects
+see :doc:`reader`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   reader
+
+Reading tabular data
+-----------------------
+
+This data is stored inside the braviz Data Base. Use the module
+:mod:`~braviz.readAndFilter.tabular_data` to access it.
+
+see doc:`braviz_db`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   braviz_db
+
+
+Read system configuration
+---------------------------
+
+User are able to configure the system using a configuration file. Applications should
+always honor this configuration. Use the module :mod:`~braviz.readAndFilter.config_file` to access
+this information.
+
+see :doc:`configuring`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   configuring
+
+
+Low level functions
 ---------------------
+
+There are other functions in the module which should only be required when building new
+:class:`~braviz.readAndFilter.base_reader.BaseReader` subclasses, or for performing very specific operations.
+
+see :doc:`read_low_level`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   low level functions <read_low_level>
+
+Access current project data
+----------------------------
 .. data:: PROJECT
 
    Name of the current project, read from the configuration file
@@ -55,4 +91,5 @@ Module level objects
 
     Gets the root for braviz data files from the hosts configuration file (see :doc:`configuring`) and the
     current host
+
 

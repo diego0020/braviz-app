@@ -928,7 +928,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 transform = inv(transform)
             return transformPolyData(point_set, transform)
         elif space[:4] == 'diff':
-            path = self._get_base_fibs_dir_name()
+            path = self._get_base_fibs_dir_name(subj)
             #TODO: This looks wrong!!!!
             transform = readFlirtMatrix('surf2diff.mat', self._get_orig_img_name(),self._get_fa_img_name(), path)
             if inverse:
