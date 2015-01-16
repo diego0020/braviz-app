@@ -149,3 +149,53 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             print subj_list
             user_data.save_sub_sample(name,subj_list,desc)
             self.write("ok")
+
+class IndexHandler(tornado.web.RequestHandler):
+    """
+    Displays the braviz start page
+    """
+
+    def __init__(self, application, request, **kwargs):
+        super(IndexHandler, self).__init__(application, request, **kwargs)
+
+    def get(self):
+
+        index = IndexHandler.read_index()
+        self.write(index)
+
+    @staticmethod
+    @memoize
+    def read_index():
+        import os
+        path = os.path.join(os.path.dirname(__file__),"web_static","index.html")
+        with open(path) as f:
+            data = f.read()
+        return data
+
+class MessageHandler(tornado.web.RequestHandler):
+    def __init__(self, application, request, **kwargs):
+        super(MessageHandler, self).__init__(application, request, **kwargs)
+
+
+    def initialize(self,message_client):
+        self.message_client = message_client
+        super(MessageHandler, self).initialize()
+
+    def get(self, *args, **kwargs):
+        if self.message_client is None:
+            self.write("")
+            print "nanai"
+        else:
+            i,m = self.message_client.get_last_message()
+            print i,m
+            self.write({"count":i,"message":m})
+
+    def post(self, *args, **kwargs):
+        if self.message_client is None:
+            self.write_error(503)
+        else:
+            m = str(self.get_body_argument("message", ""))
+            print "message: "
+            print m
+            self.message_client.send_message(m)
+        self.set_status(202,"Message sent")

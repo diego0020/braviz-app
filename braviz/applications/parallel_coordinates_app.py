@@ -91,7 +91,7 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
     def generate_url(self):
         all_vars=[self.cathegorical_var]+self.attributes
         str_vars = ",".join(map(str,all_vars))
-        url = "http://127.0.0.1:8100/?vars=%s"%str_vars
+        url = "http://127.0.0.1:8100/parallel?vars=%s"%str_vars
         if self.sample_id is not None:
             url+="&sample=%s"%self.sample_id
         self.url=url

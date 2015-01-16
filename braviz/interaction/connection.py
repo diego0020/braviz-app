@@ -230,10 +230,9 @@ class PassiveMessageClient(object):
         self._receive_socket = None
         self._receive_thread = None
         self._stop = False
-        self._last_seen_message = None
+        self._last_seen_message = ""
         self.connect_to_server()
         self._message_counter = 0
-        self._last_received_message = ""
         self._last_send_time = -5
 
 
@@ -256,9 +255,8 @@ class PassiveMessageClient(object):
                 while not self._stop:
                     msg = self._receive_socket.recv()
                     #Filter some messages to avoid loops
-                    if msg != self._last_seen_message or (time.time() - self._last_send_time > 5):
+                    if msg != self._last_seen_message or (time.time() - self._last_send_time > 1):
                         self._last_seen_message = msg
-                        self._last_received_message = msg
                         self._message_counter += 1
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
@@ -279,6 +277,7 @@ class PassiveMessageClient(object):
 
         try:
             self._last_seen_message = msg
+            self._message_counter += 1
             self._last_send_time = time.time()
             self._send_socket.send(msg)
         except zmq.Again:
@@ -311,4 +310,4 @@ class PassiveMessageClient(object):
         Returns:
             ``number, message_text``; where the number will increase each time a new message arrives
         """
-        return self._message_counter,self._last_received_message
+        return self._message_counter,self._last_seen_message

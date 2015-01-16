@@ -23,8 +23,8 @@ import tornado.ioloop
 import tornado.web
 
 import braviz
-from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler
-
+from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler, MessageHandler
+from braviz.interaction.connection import PassiveMessageClient
 
 __author__ = 'da.angulo39'
 
@@ -34,9 +34,12 @@ settings = {
 }
 
 if __name__ == "__main__":
+    message_client = PassiveMessageClient("tcp://127.0.0.1:52818","tcp://127.0.0.1:57914")
     application = tornado.web.Application(
         [
-        (r"/", ParallelCoordinatesHandler),
+        (r"/parallel", ParallelCoordinatesHandler),
+        (r"/messages", MessageHandler,{"message_client":message_client}),
+        (r"/", IndexHandler),
         ],
         **settings)
     try:

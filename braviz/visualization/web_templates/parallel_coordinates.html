@@ -344,7 +344,7 @@ function send_sample(data){
   });
 
   // We setup our request
-  XHR.open('POST', '/');
+  XHR.open('POST', '/parallel');
 
   // We add the required HTTP header to handle a form data POST request
   XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
