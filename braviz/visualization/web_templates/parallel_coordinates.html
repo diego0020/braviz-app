@@ -364,6 +364,23 @@ return false;
   sel_title.innerText=title
   };
 
+//---------------------------------connection--------------------------------------
+// TODO: Use jquery ajax
+var last_message = "";
+function check_for_messages(){
+  var XHR = new XMLHttpRequest();
+  var urlEncodedData = "";
+  var urlEncodedDataPairs = [];
+  var name;
+
+    XHR.addEventListener('load', function(event) {
+        if(200==XHR.status){
+        data = JSON.parse(XHR.responseText)
+        alert(data)
+    }
+
+}
+
 
 
     </script>
