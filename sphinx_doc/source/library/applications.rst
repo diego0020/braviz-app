@@ -54,6 +54,11 @@ Visualize geometry
 Subject Overview
 """""""""""""""""
 
+.. image:: images/subj_overview.png
+    :alt: Subject overview screenshot
+    :width: 80%
+    :align: center
+
 This application provides access to geometrical and tabular data from a single subject.
 
 See :doc:`User documentation <../visual/subject_overview>`.
@@ -64,6 +69,11 @@ See :doc:`User documentation <../visual/subject_overview>`.
 
 Sample Overview
 """""""""""""""""
+
+.. image:: images/sample_overview.png
+    :alt: Sample overview screenshot
+    :width: 80%
+    :align: center
 
 The sample_overview application can load geometric data for several subjects in the same display. Visualizations
 are created as scenarios in the subject overview application. They are arranged in rows with respect to a nominal
@@ -78,6 +88,11 @@ See :doc:`User documentation <../visual/sample_overview>`.
 Explore fMRI
 """""""""""""""""
 
+.. image:: images/fmri.png
+    :alt: Explore fmri screenshot
+    :width: 80%
+    :align: center
+
 This application specializes in fMRI data. It shows a timeline with the experiment design and the raw bold signal at
 the bottom.
 
@@ -89,6 +104,11 @@ See :doc:`User documentation <../visual/fmri_explore>`.
 
 Check Registration
 """"""""""""""""""""
+
+.. image:: images/check_reg.png
+    :alt: Check registration screenshot
+    :width: 80%
+    :align: center
 
 This application allows to compare two images in order to check if a registration algorithm was successful or
 to compare images from different subjects.
