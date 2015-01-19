@@ -1018,6 +1018,14 @@ def say_ciao():
 
 
 def run(server_broadcast=None, server_receive=None, scenario=None):
+    """
+    Launches the sample_overview application
+
+    Args:
+        server_broadcast (str) : The address used by a message broker to broadcast message
+        server_receive (str) : The address used by a message broker to receive messages
+        scenario (int) : The scenario id to load at startup
+    """
     import sys
     from braviz.utilities import configure_logger_from_conf
 

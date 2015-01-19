@@ -20,6 +20,4 @@ Parallel Coordinates
 .. autoclass:: ParallelCoordinatesHandler
 
 
-.. autoclass:: MessageHandler
-
 .. autoclass:: IndexHandler

@@ -1170,6 +1170,15 @@ class SubjectOverviewApp(QMainWindow):
 
 
 def run(server_broadcast=None, server_receive=None, scenario=None,subject=None):
+    """
+    Launches the subject_overview application
+
+    Args:
+        server_broadcast (str) : The address used by a message broker to broadcast message
+        server_receive (str) : The address used by a message broker to receive messages
+        scenario (int) : The scenario id to load at startup
+        subject : The subject id to load at startup
+    """
     app = QtGui.QApplication([])
     main_window = SubjectOverviewApp(server_broadcast, server_receive, scenario,subject)
     main_window.show()

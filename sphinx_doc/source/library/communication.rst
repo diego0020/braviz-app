@@ -43,6 +43,7 @@ Message Client
 .. autoclass:: GenericMessageClient
     :members:
 
+
 .. module:: braviz.interaction.tornado_connection
 
 Tornado Clients
@@ -52,5 +53,7 @@ This classes are meant to be used inside in tornado web servers to send and rece
 of the system
 
 .. autoclass:: MessageHandler
+
+.. autoclass:: LongPollMessageHandler
 
 
