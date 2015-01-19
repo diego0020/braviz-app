@@ -19,6 +19,11 @@
   stroke-opacity: 1.0;
 }
 
+.foreground path.fade:hover {
+  stroke-width: 1;
+  stroke-opacity: 1.0;
+}
+
 .foreground path.fade {
   stroke: #000;
   stroke-opacity: .02;
@@ -99,13 +104,19 @@
         }
 
     </style>
-</head>
-<body>
 
     <script type="text/javascript" src="static/d3/d3.js"></script>
     <script type="text/javascript" src="static/d3/colorbrewer.js"></script>
     <script type="text/javascript" src="static/d3/colorbrewer.js"></script>
     <script type="text/javascript" src="static/jquery-2.1.3.min.js"></script>
+    <script type="text/javascript" src="static/jquery.ui.position.js"></script>
+    <script type="text/javascript" src="static/jquery.contextMenu.js"></script>
+
+     <link href="static/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+
 
 <script type="text/javascript">
 var flowers = {% raw data %} ;
@@ -428,9 +439,10 @@ $("#selected table tr").removeClass("highlighted_row");
 if (subj != null) {
 var s=d3.selectAll(".foreground path").filter(function (f) {return f.code == subj});
 var n = s[0][0];
-var n2=n.cloneNode();
+var n2=n.cloneNode(true);
 n2.classList.add("bg")
-var n3=n.cloneNode();
+n2.onmouseover=null
+var n3=n.cloneNode(true);
 n3.classList.add("fg");
 g.appendChild(n2);
 g.appendChild(n3);
@@ -443,6 +455,30 @@ $("#selected table tr").filter(function(i){return this.firstChild.textContent ==
 return;
 }
 
+var hover_subj="";
+//------------------context menu---------------------------
+function add_context_menu(){
+    $.contextMenu({
+        selector: '.foreground',
+        trigger: 'hover',
+        delay: 1000,
+        autoHide: false,
+        callback: function(key, options) {
+        send_subject_message(hover_subj)
+        },
+        items: {
+            "show": {name: "Show in other viewers"},
+        }
+
+    });
+    $(".foreground path").attr("onmouseover","{hover_subj=this.firstChild.textContent;}");
+};
+
+function send_subject_message(subj){
+var msg="subject "+subj
+$.post("/messages",{message:msg});
+}
+
 // -------------------on load-------------------------
 
 window.onload=function(){
@@ -453,7 +489,11 @@ window.onload=function(){
   sel_title.innerText=title;
   document.getElementById("main_svg").onclick=function(){highlight_subj_path(null);};
   message_getter.poll();
+  add_context_menu();
 };
+
+
+
 
 
     </script>
