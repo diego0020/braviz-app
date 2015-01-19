@@ -23,8 +23,10 @@ import tornado.ioloop
 import tornado.web
 
 import braviz
-from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler, MessageHandler
-from braviz.interaction.connection import PassiveMessageClient
+from braviz.interaction.connection import GenericMessageClient
+from braviz.interaction.tornado_connection import LongPollMessageHandler, MessageFutureHandler
+from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler
+
 
 __author__ = 'da.angulo39'
 
@@ -38,15 +40,19 @@ if __name__ == "__main__":
     broadcast_address = None
     receive_address = None
 
+    broadcast_address = "tcp://127.0.0.1:50407"
+    receive_address = "tcp://127.0.0.1:39863"
+
     if len(sys.argv)>3:
         broadcast_address = sys.argv[2]
         receive_address = sys.argv[3]
 
-    message_client = PassiveMessageClient(broadcast_address,receive_address)
+    message_handler = MessageFutureHandler()
+    message_client = GenericMessageClient(message_handler,broadcast_address,receive_address)
     application = tornado.web.Application(
         [
         (r"/parallel", ParallelCoordinatesHandler),
-        (r"/messages", MessageHandler,{"message_client":message_client}),
+        (r"/messages", LongPollMessageHandler,{"message_client":message_client}),
         (r"/", IndexHandler),
         ],
         **settings)

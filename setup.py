@@ -23,7 +23,7 @@ setup(
     long_description=read('README.md'),
     install_requires=['vtk','nibabel','numpy',
                       'scipy','pandas','psutil',
-                      'matplotlib','PyQt4','sip','pandas', 'seaborn','rpy2','tornado',
+                      'matplotlib','PyQt4','sip','pandas', 'seaborn','rpy2','tornado', 'futures'
                       ],
     r_libraries=["car","randomforest"],
 )

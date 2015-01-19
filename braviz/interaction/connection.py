@@ -311,3 +311,95 @@ class PassiveMessageClient(object):
             ``number, message_text``; where the number will increase each time a new message arrives
         """
         return self._message_counter,self._last_seen_message
+
+
+class GenericMessageClient(object):
+    """
+    A client that connects to :class:`~braviz.interaction.connection.MessageServer`
+
+    When it receives a message it calls ``handle_new_message`` on the handler
+
+    Args:
+        server_broadcast (str) : Address of the server broadcast port
+        server_receive (str) : Address of the server receive port
+    """
+
+    def __init__(self,handler, server_broadcast=None,server_receive=None):
+        super(GenericMessageClient,self).__init__()
+        self._server_pub = server_broadcast
+        self._server_pull = server_receive
+        self._send_socket = None
+        self._receive_socket = None
+        self._receive_thread = None
+        self._stop = False
+        self.handler = handler
+        self.connect_to_server()
+
+
+    def connect_to_server(self):
+        """
+        Connect to the server, called by the constructor
+        """
+        context = zmq.Context()
+        if zmq.zmq_version_info()[0]>=4:
+            context.setsockopt(zmq.IMMEDIATE,1)
+        if self._server_pull is not None:
+            self._send_socket = context.socket(zmq.PUSH)
+            server_address = self._server_pull
+            self._send_socket.connect(server_address)
+        if self._server_pub is not None:
+            self._receive_socket = context.socket(zmq.SUB)
+            self._receive_socket.connect(self._server_pub)
+            self._receive_socket.setsockopt(zmq.SUBSCRIBE,"")
+            def receive_loop():
+                while not self._stop:
+                    msg = self._receive_socket.recv()
+                    #Ignore bouncing messages
+                    self.handler.handle_new_message(msg)
+            self._receive_thread = threading.Thread(target=receive_loop)
+            self._receive_thread.setDaemon(True)
+            self._receive_thread.start()
+
+    def send_message(self,msg):
+        """
+        Send a message
+
+        .. Warning:: This message will also bounce to the handler, be careful with loops
+
+        Args:
+            msg (str) : Message to send to the server
+        """
+        log = logging.getLogger(__file__)
+
+        if self._send_socket is None:
+            log.error("Trying to send message without connection to server")
+            return
+
+        try:
+            #self._send_socket.send(msg,zmq.DONTWAIT)
+            self._last_message = msg
+            self._last_send_time = time.time()
+            self._send_socket.send(msg)
+        except zmq.Again:
+            log.error("Couldn't send message %s",msg)
+
+    def stop(self):
+        """
+        stop the client
+        """
+        self._stop = True
+
+    @property
+    def server_broadcast(self):
+        """
+        The server broadcast address
+        """
+        return self._server_pub
+
+    @property
+    def server_receive(self):
+        """
+        The server receive address
+        """
+        return self._server_pull
+

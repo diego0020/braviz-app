@@ -38,3 +38,19 @@ Message Client
 
 .. autoclass:: PassiveMessageClient
     :members:
+
+
+.. autoclass:: GenericMessageClient
+    :members:
+
+.. module:: braviz.interaction.tornado_connection
+
+Tornado Clients
+^^^^^^^^^^^^^^^^^^^^^
+
+This classes are meant to be used inside in tornado web servers to send and receive messages to the rest
+of the system
+
+.. autoclass:: MessageHandler
+
+

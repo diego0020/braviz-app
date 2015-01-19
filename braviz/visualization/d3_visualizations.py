@@ -18,12 +18,14 @@
 
 
 import json
-import tornado.web
 import logging
+
+import tornado.web
 
 from braviz.readAndFilter import tabular_data as tab_data, user_data
 from braviz.readAndFilter.cache import memoize
 from braviz.readAndFilter.config_file import get_config
+
 
 __author__ = 'diego'
 
@@ -172,42 +174,3 @@ class IndexHandler(tornado.web.RequestHandler):
             data = f.read()
         return data
 
-class MessageHandler(tornado.web.RequestHandler):
-    """
-    Allow querying for messages and sending messages through http
-
-    **GET** requests will receive json data ``{"count":<n>,"message",<s>}`` where count is a number
-     that increases with any new message, and message is the text of the last message.
-
-    **POST** requests allow to send messages. It is required to have a ``"message"`` parameter in the
-    request body
-    """
-    def __init__(self, application, request, **kwargs):
-        super(MessageHandler, self).__init__(application, request, **kwargs)
-
-
-    def initialize(self,message_client):
-        """
-        Requires a :class:`braviz.interaction.connection.PassiveMessageClient`
-        """
-        self.message_client = message_client
-        super(MessageHandler, self).initialize()
-
-    def get(self, *args, **kwargs):
-        if self.message_client is None:
-            self.write("")
-            print "nanai"
-        else:
-            i,m = self.message_client.get_last_message()
-            print i,m
-            self.write({"count":i,"message":m})
-
-    def post(self, *args, **kwargs):
-        if self.message_client is None:
-            self.write_error(503)
-        else:
-            m = str(self.get_body_argument("message"))
-            print "message: "
-            print m
-            self.message_client.send_message(m)
-        self.set_status(202,"Message sent")
