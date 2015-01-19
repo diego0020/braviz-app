@@ -461,15 +461,18 @@ function add_context_menu(){
     $.contextMenu({
         selector: '.foreground',
         trigger: 'hover',
-        delay: 1000,
+        delay : 2000,
+        build : function (trigger, pos){
+        return {
         autoHide: false,
         callback: function(key, options) {
         send_subject_message(hover_subj)
         },
         items: {
-            "show": {name: "Show in other viewers"},
+            show: {name: "Show "+ hover_subj +" in other viewers"},
         }
-
+        }
+        }
     });
     $(".foreground path").attr("onmouseover","{hover_subj=this.firstChild.textContent;}");
 };
