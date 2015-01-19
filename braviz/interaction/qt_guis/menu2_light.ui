@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>631</width>
-    <height>830</height>
+    <height>868</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -670,7 +670,7 @@ Export variables to the database</string>
          </property>
          <property name="icon">
           <iconset resource="resources.qrc">
-           <normaloff>:/icons/peertopeer.png</normaloff>:/icons/peertopeer.png</iconset>
+           <normaloff>:/icons/internet-web-browser.png</normaloff>:/icons/internet-web-browser.png</iconset>
          </property>
          <property name="checkable">
           <bool>true</bool>

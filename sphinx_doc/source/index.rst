@@ -94,6 +94,27 @@ The code above reads two variables from the database, creates a scatter plot and
 This two pieces of code provide the most simple way of combining tabular and geometrical data. For more advanced
 examples look at gui user manual.
 
+Guides
+--------
+
+The following guides are meant to help you find your way around the API and see how the different components can
+be connected.
+
+Interactive work and simple scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using braviz from a python terminal and creating simple scripts.
+
+Creating a new Qt Application
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Building a new Qt Application and integrating it with the rest of the system.
+
+Adapting to a new project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Configuring braviz to work with a new dataset.
+
 Dependencies
 --------------
 
