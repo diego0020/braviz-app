@@ -78,6 +78,10 @@
         color:white;
         }
 
+#selected table tr.highlighted_row {
+    background-color: rgb(222, 222, 5);
+}
+
 #save_sample{
         float:right;
         margin-right:10%;
@@ -420,6 +424,7 @@ var message_getter = {
 function highlight_subj_path(subj){
 var g=document.getElementById("highlight_path_node");
 g.innerHTML="";
+$("#selected table tr").removeClass("highlighted_row");
 if (subj != null) {
 var s=d3.selectAll(".foreground path").filter(function (f) {return f.code == subj});
 var n = s[0][0];
@@ -429,6 +434,11 @@ var n3=n.cloneNode();
 n3.classList.add("fg");
 g.appendChild(n2);
 g.appendChild(n3);
+
+// in table
+
+$("#selected table tr").filter(function(i){return this.firstChild.textContent == subj}).addClass("highlighted_row");
+
 }
 return;
 }
