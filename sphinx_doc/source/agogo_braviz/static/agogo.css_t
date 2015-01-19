@@ -35,6 +35,30 @@ div.header-wrapper {
   border-bottom: 3px solid #2e3436;
 }
 
+nav.parents ol {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+nav.parents ol li {
+    float: left;
+    text-transform: uppercase;
+    color: #fcaf3e;
+
+}
+nav.parents ol li a{
+    margin : 0px 5px 0px 12px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #fcaf3e;
+}
+
+nav.parents ol li:first-child a{
+    margin-left : 0px;
+}
+
 
 /* Default body styles */
 a {

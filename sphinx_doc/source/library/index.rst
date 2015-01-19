@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 
-Welcome to Braviz library documentation!
+Braviz library
 ========================================
 
 Introduction
@@ -135,6 +135,17 @@ it relies in the following projects
 - `vtk <http://vtk.org/>`_
 
 Thanks a lot to all for making braviz possible.
+
+contributing
+--------------
+
+Repository
+
+`https://bitbucket.org/dieg0020/braviz`_
+
+Issues
+
+`https://bitbucket.org/dieg0020/braviz/issues?status=new&status=open`_
 
 Indices and tables
 ==================

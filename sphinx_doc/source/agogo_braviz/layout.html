@@ -22,6 +22,7 @@
         <div class="headertitle"><a
           href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a></div>
         {%- endblock %}
+        <!--
         <div class="rel">
           {%- for rellink in rellinks|reverse %}
           <a href="{{ pathto(rellink[0]) }}" title="{{ rellink[1]|striptags|e }}"
@@ -29,6 +30,14 @@
           {%- if not loop.last %}{{ reldelim2 }}{% endif %}
           {%- endfor %}
         </div>
+        -->
+          <nav class="parents">
+              <ol>
+          {%- for parent in parents %}
+          <li><a href="{{ parent.link|e }}" {% if loop.last %}{{ accesskey("U") }}{% endif %}>{{ parent.title }}</a>{{ reldelim1 }}</li>
+        {%- endfor %}
+                  </ol>
+          </nav>
        </div>
     </div>
 {% endblock %}
