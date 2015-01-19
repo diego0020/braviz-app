@@ -141,6 +141,7 @@ var line = d3.svg.line(),
 var svg = d3.select("body").append("svg:svg")
     .attr("width", w+m[1]+m[3] )
     .attr("height", h+m[0] +m[2])
+    .attr("id","main_svg")
   .append("svg:g")
     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
@@ -440,6 +441,7 @@ window.onload=function(){
   var sel_title=document.getElementById("selection_div").getElementsByTagName("H3")[0];
   var title = "Selection 0/"+flowers.length;
   sel_title.innerText=title;
+  document.getElementById("main_svg").onclick=function(){highlight_subj_path(null);};
   message_getter.poll();
 };
 
