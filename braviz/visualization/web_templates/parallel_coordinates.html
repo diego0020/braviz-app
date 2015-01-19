@@ -24,6 +24,22 @@
   stroke-opacity: .02;
 }
 
+
+#highlight_path_node path.bg {
+  stroke-width: 10;
+  stroke-opacity: 0.8;
+  stroke : yellow;
+  stroke-linecap : round;
+  fill : none;
+}
+
+#highlight_path_node path.fg {
+  stroke-width: 6;
+  stroke-opacity: 1.0;
+  stroke-linecap : round;
+  fill : none;
+}
+
 .legend {
   font-size: 18px;
   font-style: oblique;
@@ -84,8 +100,10 @@
 
     <script type="text/javascript" src="static/d3/d3.js"></script>
     <script type="text/javascript" src="static/d3/colorbrewer.js"></script>
-    <script type="text/javascript">
+    <script type="text/javascript" src="static/d3/colorbrewer.js"></script>
+    <script type="text/javascript" src="static/jquery-2.1.3.min.js"></script>
 
+<script type="text/javascript">
 var flowers = {% raw data %} ;
 var categories = {% raw caths %} ,
     traits = {% raw vars %};
@@ -127,8 +145,8 @@ var svg = d3.select("body").append("svg:svg")
     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
 
-  // Create a scale and brush for each trait.
-  traits.forEach(function(d) {
+// Create a scale and brush for each trait.
+traits.forEach(function(d) {
     // Coerce values to numbers.
     flowers.forEach(function(p) { p[d] = +p[d]; });
     var ex = d3.extent(flowers, function(p) { return p[d]; });
@@ -217,7 +235,9 @@ var svg = d3.select("body").append("svg:svg")
     t.selectAll(".trait").attr("transform", function(d) { return "translate(" + x(d) + ")"; });
     t.selectAll(".foreground path").attr("d", path);
   }
-// });
+
+  highlight_path = svg.append("svg:g")
+      .attr("class", "highlight_path").attr("id","highlight_path_node");
 
 // Returns the path for a given data point.
 function path(d) {
@@ -356,31 +376,72 @@ function send_sample(data){
 return false;
 }
 
-  window.onload=function(){
-  var data2 = [];
-  tabulate(data2,["code","category"].concat(traits));
-  var sel_title=document.getElementById("selection_div").getElementsByTagName("H3")[0]
-  var title = "Selection 0/"+flowers.length
-  sel_title.innerText=title
-  };
+
 
 //---------------------------------connection--------------------------------------
-// TODO: Use jquery ajax
-var last_message = "";
-function check_for_messages(){
-  var XHR = new XMLHttpRequest();
-  var urlEncodedData = "";
-  var urlEncodedDataPairs = [];
-  var name;
+// based on https://github.com/tornadoweb/tornado/blob/master/demos/chat/static/chat.js
 
-    XHR.addEventListener('load', function(event) {
-        if(200==XHR.status){
-        data = JSON.parse(XHR.responseText)
-        alert(data)
-    }
+var message_getter = {
+    errorSleepTime: 500,
 
+    poll: function() {
+        $.ajax({url: "/messages", type: "GET",
+                success: message_getter.onSuccess,
+                error: message_getter.onError});
+    },
+
+    onSuccess: function(response) {
+        try {
+
+            message = response.message;
+            if (message.substr(0,7) == "subject"){
+               var code = message.substr(8);
+               highlight_subj_path(code);
+            }
+        } catch (e) {
+            message_getter.onError();
+            return;
+        }
+        message_getter.errorSleepTime = 500;
+        window.setTimeout(message_getter.poll, 0);
+    },
+
+    onError: function(response) {
+        message_getter.errorSleepTime *= 2;
+        console.log("Poll error; sleeping for", message_getter.errorSleepTime, "ms");
+        window.setTimeout(message_getter.poll, message_getter.errorSleepTime);
+    },
+
+};
+
+
+
+function highlight_subj_path(subj){
+var g=document.getElementById("highlight_path_node");
+g.innerHTML="";
+if (subj != null) {
+var s=d3.selectAll(".foreground path").filter(function (f) {return f.code == subj});
+var n = s[0][0];
+var n2=n.cloneNode();
+n2.classList.add("bg")
+var n3=n.cloneNode();
+n3.classList.add("fg");
+g.appendChild(n2);
+g.appendChild(n3);
+}
+return;
 }
 
+// -------------------on load-------------------------
+
+window.onload=function(){
+  var data2 = [];
+  tabulate(data2,["code","category"].concat(traits));
+  var sel_title=document.getElementById("selection_div").getElementsByTagName("H3")[0];
+  var title = "Selection 0/"+flowers.length;
+  sel_title.innerText=title;
+  message_getter.poll();
+};
 
 
     </script>

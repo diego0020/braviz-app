@@ -24,7 +24,7 @@ import tornado.web
 
 import braviz
 from braviz.interaction.connection import GenericMessageClient
-from braviz.interaction.tornado_connection import LongPollMessageHandler, MessageFutureHandler
+from braviz.interaction.tornado_connection import LongPollMessageHandler, MessageFutureProxy
 from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler
 
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         broadcast_address = sys.argv[2]
         receive_address = sys.argv[3]
 
-    message_handler = MessageFutureHandler()
+    message_handler = MessageFutureProxy()
     message_client = GenericMessageClient(message_handler,broadcast_address,receive_address)
     application = tornado.web.Application(
         [

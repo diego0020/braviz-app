@@ -48,7 +48,7 @@ class MessageHandler(tornado.web.RequestHandler):
         self.set_status(202,"Message sent")
 
 
-class MessageFutureHandler(object):
+class MessageFutureProxy(object):
     """
     Interfaces tornado futures with zmq messages
     """
@@ -76,8 +76,8 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
     """
     Allow querying for messages and sending messages through http
 
-    **GET** requests will receive json data ``{"count":<n>,"message",<s>}`` where count is a number
-     that increases with any new message, and message is the text of the last message.
+    **GET** requests will receive json data ``{"message",<s>}``. This request will not return until a new
+    message is available. (Long poll)
 
     **POST** requests allow to send messages. It is required to have a ``"message"`` parameter in the
     request body
@@ -88,7 +88,8 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
 
     def initialize(self,message_client):
         """
-        Requires a :class:`braviz.interaction.connection.BlockingMessageClient`
+        Requires a :class:`braviz.interaction.connection.GenericMessageClient` with
+        :class:`braviz.interaction.tornado_connection.MessageFutureProxy` as handler
         """
         self.message_client = message_client
         self.message_handler = message_client.handler
