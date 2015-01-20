@@ -627,6 +627,13 @@ div.sidebar div.sphinxsidebarwrapper > ul > li >ul > li > ul > li  a {
   border-bottom: 1px solid #dddddd;
 }
 
+div.sidebar div.sphinxsidebarwrapper > ul > li >ul > li > ul > li  ul> li> a {
+  background-color: transparent;
+  border: none;
+  margin-left: 3em;
+  border-bottom: 1px solid #dddddd;
+}
+
 div.sidebar div.sphinxsidebarwrapper > ul > li >ul > li:last-child a {
   border-bottom: none;
 }
@@ -650,6 +657,8 @@ div#agogo-sidebar {
     overflow: auto;
     height: auto;
     right: 50px;
+    max-height: 90%;
+    margin-top: -5em;
 }
 div.header, div.content, div.footer {
   max-width: {{ theme_pagewidth }};

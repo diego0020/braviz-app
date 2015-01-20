@@ -98,7 +98,10 @@ def get_valid_lines_from_logical(subj,tree_node,reader):
             ans = set.intersection(*subsets)
     elif value == "NOT":
         all_lines = get_all_lines(subj,reader)
-        ans = all_lines - set.union(*subsets)
+        if len(subsets)>0:
+            ans = all_lines - set.union(*subsets)
+        else:
+            ans = all_lines
     else:
         raise Exception("Invalid logical value")
     return ans

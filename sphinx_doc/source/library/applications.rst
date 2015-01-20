@@ -119,9 +119,153 @@ See :doc:`User documentation <../graphical/check_reg>`.
 Create geometry
 ^^^^^^^^^^^^^^^^^^^^
 
+.. ----------------------------------------------------------------------
+
+.. module:: braviz.applications.build_roi
+
+ROI Builder
+""""""""""""""""""""
+
+.. image:: images/build_roi.png
+    :alt: Roi builder screenshot
+    :width: 80%
+    :align: center
+
+This application lets the user position spherical ROIs in the different subjects. Sphere positions and size can
+be interpolated using one of the common spaces as intermediate stop. Images and cortical surfaces can be used as
+guides to position the sphere. Fibers and scalar values inside the sphere are shown to the user.
+
+See :doc:`User documentation <../graphical/build_roi>`.
+
+.. ----------------------------------------------------------------------
+
+.. module:: braviz.applications.logic_bundles
+
+Logic bundles
+""""""""""""""""""""
+
+.. image:: images/logic_bundles.png
+    :alt: Logic bundles screenshot
+    :width: 80%
+    :align: center
+
+This application lets the user define new fiber bundles based on ROIs, segmented structures and logical
+operations.
+
+See :doc:`User documentation <../graphical/logic_bundles>`.
+
+.. ----------------------------------------------------------------------
+
+.. module:: braviz.applications.measure_task
+
+Measure
+""""""""""""""""""""
+
+.. image:: images/measure.png
+    :alt: Measure application screenshot
+    :width: 80%
+    :align: center
+
+This application lets the user perform linear measurement over an orthogonal plane.
+
+See :doc:`User documentation <../graphical/measure>`.
+
+
 Statistics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. ----------------------------------------------------------------------
+
+.. module:: braviz.applications.anova_task
+
+Anova
+""""""""""""""""""""
+
+.. image:: images/anova.png
+    :alt: Anova application screenshot
+    :width: 80%
+    :align: center
+
+This application .................
+
+See :doc:`User documentation <../graphical/anova>`.
+
+.. ----------------------------------------------------------------------
+
+.. module:: braviz.applications.lm_task
+
+Linear Model
+""""""""""""""""""""
+
+.. image:: images/linear_model.png
+    :alt: Linear model application screenshot
+    :width: 80%
+    :align: center
+
+This application
+
+See :doc:`User documentation <../graphical/lm>`.
+
+.. ----------------------------------------------------------------------
+
+.. module:: braviz.applications.correlations
+
+Correlations
+""""""""""""""""""""
+
+.. image:: images/correlations.png
+    :alt: Correlations application screenshot
+    :width: 80%
+    :align: center
+
+This application
+
+See :doc:`User documentation <../graphical/measure>`.
+
+
+.. ----------------------------------------------------------------------
+
+.. module:: braviz.applications.parallel_coordinates
+
+Parallel Coordinates
+"""""""""""""""""""""
+
+.. image:: images/parallel.png
+    :alt: Parallel coordinates application screenshot
+    :width: 80%
+    :align: center
+
+This application
+
+See :doc:`User documentation <../graphical/parallel>`.
 
 Command line applications
 ---------------------------
 
+.. module:: braviz.applications.parse_spss_file
+
+Parse spss files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+lalala
+
+.. module:: braviz.applications.calculate_descriptors
+
+Calculate descriptors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+lalala
+
+.. module:: braviz.applications.populate_cache
+
+Populate cache
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+lalala
+
+.. module:: braviz.applications.braviz_web_server
+
+Braviz web server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+lalala
