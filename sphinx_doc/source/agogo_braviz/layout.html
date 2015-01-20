@@ -45,14 +45,15 @@
 {% block content %}
     <div class="content-wrapper">
       <div class="content">
+        <div class="sidebar" id="agogo-sidebar">
+            {% block sidebar1 %}{{ sidebar() }}{% endblock %}
+        </div>
         <div class="document">
           {%- block document %}
             {{ super() }}
           {%- endblock %}
         </div>
-        <div class="sidebar" id="agogo-sidebar">
-            {% block sidebar1 %}{{ sidebar() }}{% endblock %}
-        </div>
+
         <div class="clearer"></div>
       </div>
     </div>

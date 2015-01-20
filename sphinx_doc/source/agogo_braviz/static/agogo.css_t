@@ -25,7 +25,6 @@ body {
 /* Page layout */
 
 div.header, div.content, div.footer {
-  width: {{ theme_pagewidth }};
   margin-left: auto;
   margin-right: auto;
 }
@@ -191,12 +190,14 @@ div.content-wrapper {
 }
 
 div.document {
-  width: {{ theme_documentwidth }};
-  float: left;
+  /* float: left; */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 div.body {
   padding-right: 2em;
+  padding-left: 2em;
   text-align: {{ theme_textalign }};
 }
 
@@ -269,8 +270,6 @@ div.document ol {
 /* Sidebar */
 
 div.sidebar {
-  width: {{ theme_sidebarwidth }};
-  float: right;
   font-size: .9em;
 }
 
@@ -597,7 +596,7 @@ div.documentwrapper img {
     margin-top: 2em;
 }
 
-/* Sidebar */
+/* ---------------------Sidebar ----------------------------------------------------*/
 
 
 div.sidebar ul {
@@ -638,12 +637,25 @@ div.document div.toctree-wrapper compound ul.simple:empty {
 
 
 div#agogo-sidebar {
+    margin: 2em auto 2em auto;
+    max-width: 550px;
+}
+
+
+@media screen and (min-width: 1150px){
+div#agogo-sidebar {
+    max-width: 280px;
     position: fixed;
     float: right;
     overflow: auto;
     height: auto;
     right: 50px;
 }
-
+div.header, div.content, div.footer {
+  max-width: {{ theme_pagewidth }};
+}
+div.document {
+  max-width: 50em;
+}
 
 

@@ -110,6 +110,12 @@ Creating a new Qt Application
 
 Building a new Qt Application and integrating it with the rest of the system.
 
+
+Creating a new Web Application
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Implementing a web visualization based on D3.
+
 Adapting to a new project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -139,13 +145,17 @@ Thanks a lot to all for making braviz possible.
 contributing
 --------------
 
-Repository
-
-`https://bitbucket.org/dieg0020/braviz`_
-
 Issues
+^^^^^^^^^
 
-`https://bitbucket.org/dieg0020/braviz/issues?status=new&status=open`_
+Please report bugs, issues and ideas for improvements in the
+`issue tracker <https://bitbucket.org/dieg0020/braviz/issues>`_
+
+Repository
+^^^^^^^^^^
+
+You may find the source code and propose improvements at the
+`mercurial repository <https://bitbucket.org/dieg0020/braviz>`_
 
 Indices and tables
 ==================

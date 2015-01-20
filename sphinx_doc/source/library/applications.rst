@@ -9,7 +9,7 @@ executable. This module also contains the configuration files used in :mod:`brav
 This page will contain an overview of the scripts located in this module and some guidelines on creating new
 applications. For documentation from the user point of view please look at
 
-:doc:`../visual/applications`
+:doc:`../graphical/applications`
 
 
 .. module::braviz.applications.braviz_menu2
@@ -41,7 +41,7 @@ The parameters are
 Notice that the broadcast and receive addresses will be printed when the server starts. You may use this addresses
 to connect to the server from external applications.
 
-For an overview of the menu from the user point of view see :doc:`../visual/menu`
+For an overview of the menu from the user point of view see :doc:`../graphical/menu`
 
 Graphical applications
 ------------------------
@@ -61,7 +61,7 @@ Subject Overview
 
 This application provides access to geometrical and tabular data from a single subject.
 
-See :doc:`User documentation <../visual/subject_overview>`.
+See :doc:`User documentation <../graphical/subject_overview>`.
 
 .. ----------------------------------------------------------------------
 
@@ -79,7 +79,7 @@ The sample_overview application can load geometric data for several subjects in 
 are created as scenarios in the subject overview application. They are arranged in rows with respect to a nominal
 variable and sorted from left to right with respect to a real variable.
 
-See :doc:`User documentation <../visual/sample_overview>`.
+See :doc:`User documentation <../graphical/sample_overview>`.
 
 .. ----------------------------------------------------------------------
 
@@ -96,7 +96,7 @@ Explore fMRI
 This application specializes in fMRI data. It shows a timeline with the experiment design and the raw bold signal at
 the bottom.
 
-See :doc:`User documentation <../visual/fmri_explore>`.
+See :doc:`User documentation <../graphical/fmri_explore>`.
 
 .. ----------------------------------------------------------------------
 
@@ -113,7 +113,7 @@ Check Registration
 This application allows to compare two images in order to check if a registration algorithm was successful or
 to compare images from different subjects.
 
-See :doc:`User documentation <../visual/check_reg>`.
+See :doc:`User documentation <../graphical/check_reg>`.
 
 
 Create geometry

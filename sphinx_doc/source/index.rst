@@ -8,7 +8,7 @@ Welcome to Braviz
     :maxdepth: 0
     :hidden:
 
-    Visual Analytics <visual/index>
+    Graphical Interface <graphical/index>
     Library <library/index>
 
 
