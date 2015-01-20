@@ -20,7 +20,7 @@
         {%- endif %}
         {%- block headertitle %}
         <div class="headertitle"><a
-          href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a></div>
+          href="{{ pathto(master_doc) }}"> Braviz Documentation </a></div>
         {%- endblock %}
         <!--
         <div class="rel">
@@ -33,6 +33,9 @@
         -->
           <nav class="parents">
               <ol>
+          {%- block rootrellink %}
+        <li><a href="{{ pathto(master_doc) }}"> Home </a>{{ reldelim1 }}</li>
+         {%- endblock %}
           {%- for parent in parents %}
           <li><a href="{{ parent.link|e }}" {% if loop.last %}{{ accesskey("U") }}{% endif %}>{{ parent.title }}</a>{{ reldelim1 }}</li>
         {%- endfor %}

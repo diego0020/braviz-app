@@ -59,7 +59,7 @@ Subject Overview
     :width: 80%
     :align: center
 
-This application provides access to geometrical and tabular data from a single subject.
+Visualize geometrical data from a single subject with tabular data as context.
 
 See :doc:`User documentation <../graphical/subject_overview>`.
 
@@ -110,7 +110,7 @@ Check Registration
     :width: 80%
     :align: center
 
-This application allows to compare two images in order to check if a registration algorithm was successful or
+Compare two images in order to check if a registration algorithm was successful or
 to compare images from different subjects.
 
 See :doc:`User documentation <../graphical/check_reg>`.
@@ -131,7 +131,7 @@ ROI Builder
     :width: 80%
     :align: center
 
-This application lets the user position spherical ROIs in the different subjects. Sphere positions and size can
+Position spherical ROIs in the different subjects. Sphere positions and size can
 be interpolated using one of the common spaces as intermediate stop. Images and cortical surfaces can be used as
 guides to position the sphere. Fibers and scalar values inside the sphere are shown to the user.
 
@@ -149,7 +149,7 @@ Logic bundles
     :width: 80%
     :align: center
 
-This application lets the user define new fiber bundles based on ROIs, segmented structures and logical
+Define new fiber bundles based on ROIs, segmented structures and logical
 operations.
 
 See :doc:`User documentation <../graphical/logic_bundles>`.
@@ -166,7 +166,7 @@ Measure
     :width: 80%
     :align: center
 
-This application lets the user perform linear measurement over an orthogonal plane.
+Perform linear measurement over an orthogonal plane.
 
 See :doc:`User documentation <../graphical/measure>`.
 
@@ -186,7 +186,9 @@ Anova
     :width: 80%
     :align: center
 
-This application .................
+Fit anova regressions, and visualize the results, based on the
+variables in the database. It uses `rpy2 <rpy.sourceforge.net>`_ to connect with the R statistical
+software where the actual calculation takes place.
 
 See :doc:`User documentation <../graphical/anova>`.
 
@@ -202,7 +204,8 @@ Linear Model
     :width: 80%
     :align: center
 
-This application
+Fit linear models and visualize the results, with the database variables.
+Variable normalization and model fitting are done in R via  `rpy2 <rpy.sourceforge.net>`_.
 
 See :doc:`User documentation <../graphical/lm>`.
 
@@ -218,7 +221,7 @@ Correlations
     :width: 80%
     :align: center
 
-This application
+Explore a dataset looking for potential correlations.
 
 See :doc:`User documentation <../graphical/measure>`.
 
@@ -235,9 +238,32 @@ Parallel Coordinates
     :width: 80%
     :align: center
 
-This application
+Explore relationships among several variables using a parralel coordinates display.
 
 See :doc:`User documentation <../graphical/parallel>`.
+
+
+Utilities
+^^^^^^^^^^
+
+.. module:: import_from_excel
+
+Import from excel
+""""""""""""""""""
+
+Import variables from an excel file into the database
+
+See :doc:`User documentation <../graphical/from_excel>`.
+
+.. module:: export_vars
+
+Export to csv
+""""""""""""""""""
+
+Export variables from the database into a csv file
+
+See :doc:`User documentation <../graphical/export_csv>`.
+
 
 Command line applications
 ---------------------------
@@ -247,25 +273,78 @@ Command line applications
 Parse spss files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-lalala
+Access an spss ``*.sav`` file to read variables metadata, specifically
+
+    - variable descriptions
+    - variable types
+    - nominal variable labels
+
+Notice at the moment it is not possible to read variable values from the spss file; it is necessary
+to first import the variables using the dialog in the menu. The program should be called as this
+
+.. code-block:: console
+
+    python -m braviz.applications.parse_spss_file my_file.sav
+
+To read and show in the screen the descriptions and labels from the file. To save this metadata into the
+database, use the following form
+
+.. code-block:: console
+
+    python -m braviz.applications.parse_spss_file my_file.sav yes
+
+.. warning:: This will overwrite existing descriptions and labels in the database
 
 .. module:: braviz.applications.calculate_descriptors
 
 Calculate descriptors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-lalala
+Calculate geometric descriptors from segmented structures (ASEG only) in all available subjects.
+The results are saved into a database called ``descriptors.sqlite`` in the dynamic data root
+(see :mod:`braviz.readAndFilter`). The geometric descriptors are
+
+ -  Volume
+ -  Surface Area
+ -  Length of longest axis
+ -  Length of second longest axis
+ -  Length of third longest axis
+
+All three axes are orthogonal. The output database contains a single table called "descriptors" with
+columns: subject, structure, volume, area, d1, d2 and d3.
+
+The application takes as argument the number of processes to use in the calculation, for example to
+split the job on 4 processes use
+
+.. code-block:: console
+
+    python -m braviz.applications.calculate_descriptors 4
 
 .. module:: braviz.applications.populate_cache
 
 Populate cache
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-lalala
+Fill the braviz disk cache (see :mod:`braviz.readAndFilter.cache`) with commonly used data.
+The script takes as argument the number of processes to use. For example, to use 3 processes
+call it like
+
+.. code-block:: console
+
+    python -m braviz.applications.calculate_descriptors 3
 
 .. module:: braviz.applications.braviz_web_server
 
 Braviz web server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-lalala
+Launches the `Tornado <tornado.readthedocs.org>`_ web server. It will listen for http requests on port 8100.
+
+Notice that D3 visualization applications like :mod:`~braviz.applications.parallel_coordinates` will attempt
+to launch the server process if it is not found. It should not be required to launch it manually.
+
+The server is capable or relying braviz communication messages (see :doc:`communication`) to
+web applications.
+
+For compatibility it takes the same arguments as the applications launched from the menu, but ignores the scenario
+argument.

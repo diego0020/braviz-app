@@ -12,12 +12,12 @@ Welcome to Braviz
     Library <library/index>
 
 
-Without code
+Graphical interface
 -----------------------------
 
-see :doc:`Using braviz for visual analytics <visual/index>`
+see :doc:`Using braviz for visual analytics <graphical/index>`
 
-With code
+Python library
 -------------------------
 
 see :doc:`braviz library documentation <library/index>`

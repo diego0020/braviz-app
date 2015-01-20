@@ -9,8 +9,10 @@ Prerequisites:
 
 Python packages:
 
+- vtk
+- PyQy4
+- matplotlib
 - nibabel
-- colorbrewer*
 - numpy
 - scipy
 - pandas
@@ -19,6 +21,7 @@ Python packages:
 - seaborn
 - pyzmq
 - rpy2 (for anova, linear model)
+- savReaderWriter (for importing spss files)
 - tornado (for parallel coordinates)
 - xlrd (to read excel files)
 - XlsxWriter (to write excel files)

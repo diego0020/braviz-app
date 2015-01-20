@@ -28,7 +28,7 @@ Reading tabular data
 This data is stored inside the braviz Data Base. Use the module
 :mod:`~braviz.readAndFilter.tabular_data` to access it.
 
-see doc:`braviz_db`
+see :doc:`braviz_db`
 
 .. toctree::
    :maxdepth: 2

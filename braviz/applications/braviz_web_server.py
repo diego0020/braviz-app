@@ -40,9 +40,6 @@ if __name__ == "__main__":
     broadcast_address = None
     receive_address = None
 
-    broadcast_address = "tcp://127.0.0.1:50407"
-    receive_address = "tcp://127.0.0.1:39863"
-
     if len(sys.argv)>3:
         broadcast_address = sys.argv[2]
         receive_address = sys.argv[3]

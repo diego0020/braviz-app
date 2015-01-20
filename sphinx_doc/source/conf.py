@@ -135,10 +135,10 @@ html_theme_path = ["."]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = "Braviz Documentation"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-#html_short_title = None
+html_short_title = "Braviz"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -290,7 +290,7 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-def link_to_google(app,env,node,contnode):
+def link_to_vtk_qt(app,env,node,contnode):
     from docutils import nodes
     target = node["reftarget"]
     domain = node.get("refdomain")
@@ -301,17 +301,20 @@ def link_to_google(app,env,node,contnode):
     if target.startswith("vtk"):
         #vtk links
         uri = "http://www.vtk.org/doc/nightly/html/class%s.html"%target
+        title = "See on vtk documentation"
     elif target.startswith("Q"):
         # Qt links
         uri = "http://qt-project.org/doc/qt-4.8/%s.html"%target
+        title = "See on Qt documentation"
     elif target=="function":
         uri = "https://docs.python.org/2/tutorial/controlflow.html#defining-functions"
+        title = "Python function"
     else:
         return
     newnode = nodes.reference("","",internal = False, refuri = uri,
-                              reftitle = "google")
+                              reftitle = title)
     newnode.append(contnode)
     return newnode
 
 def setup(app):
-    app.connect('missing-reference',link_to_google)
+    app.connect('missing-reference',link_to_vtk_qt)

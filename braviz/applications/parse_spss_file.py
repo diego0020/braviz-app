@@ -17,37 +17,35 @@
 ##############################################################################
 
 
-import os
 import savReaderWriter
 from braviz.readAndFilter import tabular_data
 
 __author__ = 'da.angulo39'
 
-DO_SAVE = True
 
-def parse_spss_file(file_name):
+def parse_spss_file(file_name,do_save=False):
     reader = savReaderWriter.SavReader(file_name,verbose=True,)
     info=reader.getSavFileInfo()
     descriptions = info[5]
     labels =info[6]
     for k,v in descriptions.iteritems():
-        save_description(k,v)
+        save_description(k,v,do_save)
     for k,v in labels.iteritems():
-        save_labels(k,v)
+        save_labels(k,v,do_save)
 
 
-def save_description(var_name,desc):
+def save_description(var_name,desc,do_save=False):
     print "%s : %s"%(var_name,desc)
     try:
         desc2 = unicode(desc,errors="ignore")
-        if DO_SAVE:
+        if do_save:
             tabular_data.save_var_description_by_name(var_name,desc2)
     except Exception as e:
 
         print e.message
         raise
 
-def save_labels(var_name,labels):
+def save_labels(var_name,labels,do_save=False):
     print "==============="
     print var_name
     print
@@ -58,21 +56,27 @@ def save_labels(var_name,labels):
     if len(good_labels)<2:
         print "NOT GOOD LABELS FOUND, Assuming real"
         return
-    if DO_SAVE and var_idx is None:
+    if do_save and var_idx is None:
         print "VARIABLE NOT FOUND"
         return
-    if DO_SAVE:
+    if do_save:
         tabular_data.save_is_real(var_idx,False)
     tuples = [(int(k),unicode(v,errors="ignore")) for k,v in labels.iteritems()]
     print tuples
-    if DO_SAVE:
+    if do_save:
         tabular_data.save_nominal_labels(var_idx,tuples)
 
-
-
-
-
 if __name__ == "__main__":
-    os.chdir(r"C:\Users\da.angulo39\Downloads")
-    file_name = "basepilotoTMScondatospernitales.sav"
-    parse_spss_file(file_name)
+    import sys
+    args = sys.argv
+    if len(args)<2:
+        print "Usage:"
+        print "%s <spss file> [save_labels]"%args[0]
+        print
+        print "spss file : Path to an spss file"
+        print "save labels : By default labels and description are echoed to the terminal, if this"
+        print "is 'yes' then they will be saved to the current database"
+        sys.exit(0)
+    file_name = args[1]
+    do_save = args[2]=="yes"
+    parse_spss_file(file_name,do_save)
