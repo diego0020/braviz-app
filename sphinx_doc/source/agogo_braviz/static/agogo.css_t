@@ -665,6 +665,7 @@ div.header, div.content, div.footer {
 }
 div.document {
   max-width: 50em;
+  float: left;
 }
 
 
