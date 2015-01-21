@@ -14,10 +14,11 @@ purpose are:
 
 - Simple VTK (:mod:`~braviz.visualization.simple_vtk`) : Several utilities that help displaying data in vtk. Includes
   the :class:`~braviz.visualization.simple_vtk.SimpleVtkViewer`, a lightweight viewer useful for testing.
+  see :doc:`simple_vtk`
 
 - Subject Viewer (:mod:`~braviz.visualization.subject_viewer`) : Implements a powerful viewer and Qt4 Widget which
   directly requests data, and handles subject and space changes.
-
+  see :doc:`subject_viewer`
 
 The module :mod:`~braviz.visualization.fmri_view` contains some low level utilities for displaying fMRI data.
 The module :mod:`~braviz.visualization.checkerboard_view` implements a widget that shows two images in a checkboard

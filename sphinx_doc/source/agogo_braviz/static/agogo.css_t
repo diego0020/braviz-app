@@ -591,6 +591,10 @@ dl.class {
     border-top-width: thin;
 }
 
+dl.class:first-of-type {
+    border-top-style: none;
+}
+
 div.documentwrapper img {
     margin-bottom: 2em;
     margin-top: 2em;
@@ -649,6 +653,19 @@ div#agogo-sidebar {
 }
 
 
+
+/* ---------------------class folding ----------------------------------------------------*/
+span.fold_global_control {
+float: right;
+}
+
+div.fold_control {
+margin-top: 1em;
+margin-bottom: 1em;
+}
+
+
+/* ---------------------large screens ----------------------------------------------------*/
 @media screen and (min-width: 1150px){
 div#agogo-sidebar {
     max-width: 280px;
@@ -667,5 +684,4 @@ div.document {
   max-width: 50em;
   float: left;
 }
-
-
+}
