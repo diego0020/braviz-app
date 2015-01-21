@@ -19,6 +19,10 @@ Braviz: Interactive brain data visualization
     :width: 100%
 
 
+Braviz is both, a python library, and a system with graphical user interface which
+can be used to analyze brain data. To start select the point of view from which
+you want to use Braviz below.
+
 Profile
 ---------
 Graphical interface user

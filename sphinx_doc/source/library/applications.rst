@@ -9,7 +9,7 @@ executable. This module also contains the configuration files used in :mod:`brav
 This page will contain an overview of the scripts located in this module and some guidelines on creating new
 applications. For documentation from the user point of view please look at
 
-:doc:`../graphical/applications`
+:doc:`../graphical/index`
 
 
 .. module::braviz.applications.braviz_menu2
@@ -223,7 +223,7 @@ Correlations
 
 Explore a dataset looking for potential correlations.
 
-See :doc:`User documentation <../graphical/measure>`.
+See :doc:`User documentation <../graphical/correlations>`.
 
 
 .. ----------------------------------------------------------------------
