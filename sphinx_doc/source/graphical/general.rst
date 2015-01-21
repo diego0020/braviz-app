@@ -8,3 +8,6 @@ Braviz Interface Elements
     :maxdepth: 0
 
     3dviews
+    configuration
+    variables
+    samples

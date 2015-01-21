@@ -59,7 +59,7 @@ Frequently asked questions
 
 **Where can I get Braviz?**
 
-The source code is available in a `bitbucket repository <bitbucket.org/dieg0020/braviz/>`_
+The source code is available in a `bitbucket repository <https://bitbucket.org/dieg0020/braviz/>`_
 
 |
 
@@ -71,7 +71,7 @@ The `lesser general public license <https://www.gnu.org/licenses/lgpl.html>`_
 
 **Where can I report bugs or ideas for improvements?**
 
-Use the `issue tracker <https://bitbucket.org/dieg0020/braviz/issues/new>`_
+Please use the `issue tracker <https://bitbucket.org/dieg0020/braviz/issues/new>`_
 
 |
 
@@ -89,11 +89,28 @@ Read :doc:`3dviews`
 
 |
 
-see :doc:`faq` for more
+**How do I change the current project?**
 
-.. toctree::
-    :includehidden:
-    :maxdepth: 0
-    :hidden:
+Use the configuration file ``braviz.cfg`` found at the braviz applications directory. For more information
+read :doc:`configuration`
 
-    faq
+|
+
+**What kind of data does Braviz support?**
+
+The current version can be used with
+
+    -   Neuro-Images:
+
+        -   Anatomical MRI images
+        -   `FreeSurfer <http://freesurfer.net/>`_ Segmentation and Surface reconstruction
+        -   DTI images
+        -   Tractographies
+        -   `Tracula <http://surfer.nmr.mgh.harvard.edu/fswiki/Tracula>`_ bundles
+        -   Functional BOLD series
+        -   `SPM <http://www.fil.ion.ucl.ac.uk/spm/>`_ first level analyses
+
+    -   Tabular Data
+
+        - Real variables
+        - Nominal variables

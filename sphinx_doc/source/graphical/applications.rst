@@ -17,8 +17,6 @@ Braviz Applications
     lm
     correlations
     parallel
-    variables
-    samples
     from_excel
     export_csv
 
