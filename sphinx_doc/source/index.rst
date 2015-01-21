@@ -1,5 +1,6 @@
-Welcome to Braviz
-===================
+
+Braviz: Interactive brain data visualization
+================================================
 
 
 
@@ -17,8 +18,11 @@ Welcome to Braviz
     :align: center
     :width: 100%
 
-Graphical interface
------------------------------
+
+Profile
+---------
+Graphical interface user
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
     -   Instant access to your project's data
     -   Visualize neuro-image data in context of tabular data
@@ -26,14 +30,24 @@ Graphical interface
     -   Visualize distribution of variables
     -   Define your own variables based on neuro-image data
 
-see :doc:`Using braviz for visual analytics <graphical/index>`
+:doc:`Visual Analytics with Braviz<graphical/index>`
 
-Python library
--------------------------
+Python library user
+^^^^^^^^^^^^^^^^^^^^^^^
 
     -   Convenient access to neuro-image data
     -   Use scripts to perform additional processing
     -   Program new interactive visualizations
     -   Interactively build custom visualizations
 
-see :doc:`braviz library documentation <library/index>`
+:doc:`Braviz Library<library/index>`
+
+About
+-------
+
+Braviz is being developed at the `imagine <imagine.uniandes.edu.co>`_ research group
+as part of a phd thesis. The objective is providing brain researchers with interactive
+visualization tools, which will allow them to explore and grab insights from
+large and heterogeneus data-sets more efficiently. The focus is on user centered design,
+for heavy processing, calculations and visualization we rely when ever possible in
+other libraries.

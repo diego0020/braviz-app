@@ -142,7 +142,7 @@ it relies in the following projects
 
 Thanks a lot to all for making braviz possible.
 
-contributing
+Contributing
 --------------
 
 Issues

@@ -652,7 +652,14 @@ div#agogo-sidebar {
     max-width: 550px;
 }
 
+div#agogo-sidebar h4{
+margin-bottom: 0em;
+margin-top: 1em;
+}
 
+div#agogo-sidebar #searchbox{
+margin-top: 1em;
+}
 
 /* ---------------------class folding ----------------------------------------------------*/
 span.fold_global_control {

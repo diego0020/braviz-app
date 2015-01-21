@@ -34,7 +34,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
+    #'sphinx.ext.viewcode',
     'sphinxcontrib.napoleon',
     'sphinx.ext.intersphinx',
 ]
@@ -104,7 +104,8 @@ add_module_names = False
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+
+#pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 modindex_common_prefix = ["braviz."]
@@ -173,7 +174,11 @@ html_static_path = ['_static']
 html_sidebars = {
    #'index': ['globaltoc.html',  'searchbox.html'],
    #'*': ['globaltoc.html','localtoc.html',  'searchbox.html'],
-   '*': ['localtoc.html',  'searchbox.html'],
+   #'*': ['localtoc.html',  'searchbox.html'],
+   #'*': ['localtoc.html'],
+   'library/*': ['localtoc.html', 'relations.html',  'searchbox.html'],
+   'graphical/*': ['localtoc.html', 'relations.html'],
+   'index': [],
 }
 
 # Additional templates that should be rendered to pages, maps page names to
