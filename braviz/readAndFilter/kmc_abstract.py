@@ -900,7 +900,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if format == "nii":
             return nib.Nifti1Image(data2,affine)
         elif format == "vtk":
-            vtk_img = numpy2vtk_img(data2, array_data_type=np.float64)
+            vtk_img = numpy2vtk_img(data2)
             vtk_img2 = applyTransform(vtk_img,np.linalg.inv(affine))
             return vtk_img2
 
