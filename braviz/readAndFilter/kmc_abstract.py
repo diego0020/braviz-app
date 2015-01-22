@@ -906,7 +906,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
     @memo_ten
     def _get_full_tracula_map(self,subj):
-        tracks_full_file = self._get_tracula_map_name()
+        tracks_full_file = self._get_tracula_map_name(subj)
         tracks_img = nib.load(tracks_full_file)
         affine = tracks_img.get_affine()
         img_data = tracks_img.get_data()
