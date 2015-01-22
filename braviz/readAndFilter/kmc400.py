@@ -155,19 +155,19 @@ This is done to protect raw data and to allow to share it between different user
             path = os.path.join(self.get_data_root(), "nii",str(subj))
             filename = 'MPRAGEmodifiedSENSE.nii.gz'
         elif data == 'FA':
-            path = os.path.join(self.get_data_root(), 'tractography',str(subj))
+            path = os.path.join(self.get_data_root(), 'tractography_w_cerebellum',str(subj))
             if space.startswith('diff'):
                 filename = 'fa.nii.gz'
             else:
                 filename = 'fa_mri.nii.gz'
         elif data == "MD":
-            path = os.path.join(self.get_data_root(), 'tractography',str(subj))
+            path = os.path.join(self.get_data_root(), 'tractography_w_cerebellum',str(subj))
             if space.startswith('diff'):
                 filename = 'md.nii.gz'
             else:
                 filename = 'md_mri.nii.gz'
         elif data == "DTI":
-            path = os.path.join(self.get_data_root(), 'tractography',str(subj))
+            path = os.path.join(self.get_data_root(), 'tractography_w_cerebellum',str(subj))
             if space.startswith('diff'):
                 filename = 'rgb_dti.nii.gz'
                 #filename = 'rgb_dti_masked.nii.gz'
