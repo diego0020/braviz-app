@@ -281,12 +281,14 @@ This is done to protect raw data and to allow to share it between different user
 
     #=============Camino==================
     def _get_base_fibs_name(self,subj):
+        #return os.path.join(self.get_data_root(), "tractography",subj, 'CaminoTracts.vtk')
         return os.path.join(self.get_data_root(), "tractography_w_cerebellum",subj, 'CaminoTracts.vtk')
 
     def _get_base_fibs_dir_name(self,subj):
         """
         Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
         """
+        #return os.path.join(self.get_data_root(), "tractography",subj)
         return os.path.join(self.get_data_root(), "tractography_w_cerebellum",subj)
 
     def _get_fa_img_name(self):
