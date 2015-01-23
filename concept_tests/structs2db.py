@@ -1,6 +1,6 @@
 from __future__ import division
 import braviz
-from braviz.readAndFilter import tabular_data, geom_db
+from braviz.readAndFilter import tabular_data
 from braviz.interaction.structure_metrics import mean_inside
 from multiprocessing import Pool
 from functools import partial
@@ -31,6 +31,7 @@ def struct2db(structs,vars_dict,subj):
         try:
             tabular_data.update_multiple_variable_values(tuples)
         except Exception as e:
+            print e.message
             print "sleeping"
         else:
             written = True
