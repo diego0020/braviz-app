@@ -7,7 +7,7 @@ from functools import partial
 
 __author__ = 'da.angulo39'
 
-def struct2db(structs,subj):
+def struct2db(structs,vars_dict,subj):
     reader = braviz.readAndFilter.BravizAutoReader(max_cache=1000)
     measures = {"fa":"FA","md":"MD"}
     tuples = []
@@ -15,7 +15,7 @@ def struct2db(structs,subj):
     for m in measures:
         for s in structs:
             var_name = "bvz_str_"+s+"_"+m
-            vi=tabular_data.get_var_idx(var_name)
+            vi=vars_dict[var_name]
             img = measures[m]
             var_id = vi
             try:
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     vars_dict = get_variables(structs)
 
     pool=Pool(n_procs)
-    f= partial(struct2db,structs)
+    f= partial(struct2db,structs,vars_dict)
     pool.map(f,subjs,10)
 
 

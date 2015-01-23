@@ -22,30 +22,30 @@ def track2db(tracks,sample=None):
         subjects = sample
 
     tuples = []
+    measures = {"fa":("fa_p","mean_color"),
+                "md":("md_p","mean_color"),
+                "length":("fa_p","mean_length"),
+                "count":("fa_p","number")
+               }
+
+    var_ids = {}
+    var_names = {}
 
     for track_id in tracks:
         track_name = bundles_db.get_bundle_name(track_id)
-        measures = {"fa":("fa_p","mean_color"),
-                    "md":("md_p","mean_color"),
-                    "length":("fa_p","mean_length"),
-                    "count":("fa_p","number")
-                   }
-
-        var_ids = {}
-        var_names = {}
         for m in measures:
             var_name = "bvz_"+track_name+"_"+m
             vi=tabular_data.get_var_idx(var_name)
-            var_ids[m]=vi
-            var_names[m]=var_name
-        for subj in subjects:
-            print "================"
-            print subj
-            img_code = subj
-            for m in measures:
+            var_ids[(track_id,m)]=vi
+            var_names[(track_id,m)]=var_name
+
+    for subj in subjects:
+        for m in measures:
+            for track_id in tracks:
+                img_code = subj
                 scalar,operation = measures[m]
-                var_id = var_ids[m]
-                var_name=var_names[m]
+                var_id = var_ids[(track_id,m)]
+                var_name=var_names[(track_id,m)]
                 try:
                     fibs = reader.get("fibers",img_code,db_id=track_id,scalars=scalar)
                     v = get_scalar_from_fiber_ploydata(fibs,operation)
@@ -53,7 +53,8 @@ def track2db(tracks,sample=None):
                     tuples.append((var_id,subj,v))
                 except Exception as e:
                     log.exception(e)
-    reader.clear_mem_cache()
+        reader.clear_mem_cache()
+
     written = False
     while not written:
         try:
