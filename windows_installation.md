@@ -34,6 +34,8 @@ Pure python, install using [pip](https://pip.pypa.io/en/latest/installing.html)
 5. colorbrewer*
 6. rdflib*
 7. httplib2*
+8. futures
+9. (savReaderWriter) : for parsing meta data from spss files
 
 ## R-packages
 

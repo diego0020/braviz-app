@@ -71,7 +71,12 @@ Changing the image plane
 ------------------------
 
 If you have a three button mouse you can change the current image plane by pressing the middle button (the wheel),
-holding, and dragging. 
+holding, and dragging. The current slice will be shown on the lower right corner.
+
+.. image:: images/changing_slice.png
+    :align: center
+    :width: 50%
+    :alt: Changing image slice
 
 Adjusting window and level
 ---------------------------
@@ -79,6 +84,10 @@ Adjusting window and level
 For most image modalities you can adjust the window and level by right-clicking on the image, holding and dragging.
 The current window and level values are shown on the lower left corner.
 
+.. image:: images/window_level.png
+    :align: center
+    :width: 50%
+    :alt: Adjusting window and level
 
 Reset camera
 ----------------
