@@ -2,7 +2,7 @@ Navigating 3d views
 ====================
 
 Braviz uses `vtk <http://www.vtk.org>`_ for displaying 3d data. In particular we use an interaction style called
-`trackball camera <http://www.vtk.org/doc/nightly/html/classvtkInteractorStyleTrackballCamera.html#details>`.
+`trackball camera <http://www.vtk.org/doc/nightly/html/classvtkInteractorStyleTrackballCamera.html#details>`_.
 The mouse is used to control the camera which moves on a sphere around the view.
 
 
