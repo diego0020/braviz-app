@@ -83,4 +83,9 @@ systems:
         `SPM Dartel <http://www.fil.ion.ucl.ac.uk/spm/doc/>`_ . Brains warped in this way will look very similar to
         one another, but there will be little correspondance with the physical world. This kind of transforms are the
         basis of second level fmri analyses or VBM.
+    -   **Other** : Diffusion images are acquired in a different space usually called *diff*, calculations involving
+        tensors and gradient data are more precise if done in this native space. fMRI sequences are also captured
+        in its own space. The SPM pipeline register these images to the anatomical images and afterwards the whole set
+        to a template space, typically MNI. Statistical maps are calculated in this space. Notice this final coordinate
+        system is not necessarily equal to the dartel system.
 

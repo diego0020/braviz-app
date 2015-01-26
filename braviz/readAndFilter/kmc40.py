@@ -35,7 +35,7 @@ from braviz.readAndFilter.images import numpy2vtk_img, nifti_rgb2vtk, nibNii2vtk
 from braviz.readAndFilter.readDartelTransform import  dartel2GridTransform_cached
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 from braviz.readAndFilter.transforms import applyTransform, readFreeSurferTransform, readFlirtMatrix
-from braviz.visualization import get_colorbrewer_lut
+from braviz.visualization.create_lut import get_colorbrewer_lut
 
 class Kmc40Reader(KmcAbstractReader):
     """
@@ -325,7 +325,7 @@ The constructor requires the root to this structure
     @staticmethod
     @memo_ten
     def get_auto_dyn_data_root():
-        return kmc40Reader.get_auto_data_root()
+        return Kmc40Reader.get_auto_data_root()
 
     @staticmethod
     def get_auto_reader(**kw_args):
@@ -345,7 +345,7 @@ The constructor requires the root to this structure
             log.info("Max cache set to %.2f MB" % max_cache)
         else:
             max_cache = config["memory (mb)"]
-        return kmc40Reader(data_root, max_cache=max_cache)
+        return Kmc40Reader(data_root, max_cache=max_cache)
 
 
 

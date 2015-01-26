@@ -5,8 +5,8 @@ import shutil
 import cPickle
 from braviz.readAndFilter import hierarchical_fibers
 
-source_db = r"D:\kmc400-braviz\braviz_data\tabular_data.sqlite"
-dest_db = r"D:\kmc400-braviz\braviz_data\tabular_data - lavadora.sqlite"
+source_db = r"D:\kmc400-braviz\braviz_data\tabular_data_lavadora.sqlite"
+dest_db = r"D:\kmc400-braviz\braviz_data\tabular_data_pre_merge.sqlite"
 
 dest_db_2 = dest_db[:-7]+"temp.sqlite"
 
@@ -23,7 +23,7 @@ dest_con = sqlite3.connect(dest_db_2)
 #only commit if all goes well
 with dest_con:
     #merge geom_rois
-    low_limit = 12
+    low_limit = 0
 
     cur = source_con.execute("SELECT * FROM geom_rois")
     rois = cur.fetchall()
@@ -31,7 +31,7 @@ with dest_con:
         if row[0]>=low_limit:
             print row
             insert_cur = dest_con.execute(
-                "INSERT OR FAIL INTO geom_rois (roi_name,roi_type,roi_desc,roi_coords) VALUES (?,?,?,?)",
+                "INSERT OR IGNORE INTO geom_rois (roi_name,roi_type,roi_desc,roi_coords) VALUES (?,?,?,?)",
                             (row[1],row[2],row[3],row[4]))
             map_roi_ids[row[0]]=insert_cur.lastrowid
     print map_roi_ids
@@ -42,7 +42,7 @@ with dest_con:
     for row in spheres:
         new_id = map_roi_ids[row[0]]
         insert_cur = dest_con.execute(
-                "INSERT OR FAIL INTO geom_spheres VALUES (?,?,?,?,?,?)",
+                "INSERT OR IGNORE INTO geom_spheres VALUES (?,?,?,?,?,?)",
                             (new_id,row[1],row[2],row[3],row[4],row[5]))
 
     #merge fiber_bundles
@@ -67,7 +67,7 @@ with dest_con:
         blob2 = buffer(cPickle.dumps(tree,-1))
         try :
             insert_cur = dest_con.execute(
-                "INSERT OR FAIL INTO fiber_bundles (bundle_name,bundle_type,bundle_data) VALUES (?,?,?)",
+                "INSERT OR IGNORE INTO fiber_bundles (bundle_name,bundle_type,bundle_data) VALUES (?,?,?)",
                             (row[1],row[2],blob2))
             map_bundle_ids[row[0]]=insert_cur.lastrowid
         except sqlite3.IntegrityError as e:
@@ -76,4 +76,36 @@ with dest_con:
 
     print map_bundle_ids
     #merge scenarios
+
+    #merge variables
+    dest_vars_names=set(i[0] for i in dest_con.execute("SELECT var_name from variables").fetchall())
+    source_vars_names=set(i[0] for i in source_con.execute("SELECT var_name from variables").fetchall())
+
+    missing_vars = source_vars_names - dest_vars_names
+    print "There are %d missinge vars in destination db"%len(missing_vars)
+
+    for var_name in missing_vars:
+        print "copying %s"%var_name
+        source_id, source_is_real = source_con.execute("SELECT var_idx, is_real from variables where var_name = ?",(var_name,)).fetchone()
+        dest_id = dest_con.execute("INSERT INTO variables (var_name, is_real) VALUES (?,?)", (var_name, source_is_real)).lastrowid
+
+        #copy meta data
+        source_description = source_con.execute("select description from var_descriptions where var_idx=?",(source_id,) ).fetchone()
+        if source_description is not None:
+            dest_con.execute("INSERT INTO var_descriptions VALUES (?,?)", (dest_id, source_description[0]))
+
+        #meta data
+        if source_is_real:
+            source_meta = source_con.execute("select * from ratio_meta where var_idx=?",(source_id,)).fetchone()
+            if source_meta is not None:
+                dest_con.execute("INSERT INTO ratio_meta VALUES (?,?,?,?)", (dest_id,)+source_meta[1:])
+        else:
+                labels = source_con.execute("Select * from nom_meta where var_idx = ? ",(source_id,)).fetchall()
+                dest_con.executemany("INSERT INTO nom_meta VALUES (?,?,?)",((dest_id,)+l[1:] for l in labels))
+
+        #copy data
+        values = source_con.execute("Select * from var_values where var_idx = ? ",(source_id,)).fetchall()
+
+        dest_con.executemany("INSERT INTO var_values VALUES (?,?,?)",((dest_id,)+v[1:] for v in values))
+
 print "commiting"
