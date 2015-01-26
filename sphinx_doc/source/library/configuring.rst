@@ -10,7 +10,7 @@ Configuration file
 The default config file is
 
 
-.. literalinclude:: ../../braviz/readAndFilter/braviz.cfg
+.. literalinclude:: ../../../braviz/readAndFilter/braviz.cfg
     :language: cfg
 
 Braviz
