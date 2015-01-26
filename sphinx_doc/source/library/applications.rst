@@ -264,6 +264,15 @@ Export variables from the database into a csv file
 
 See :doc:`User documentation <../graphical/export_csv>`.
 
+.. module:: qt_sample_select_dialog
+
+Sample select dialog
+"""""""""""""""""""""
+
+Select sub-samples and crate new sub-samples.
+
+See :doc:`User documentation <../graphical/samples>`.
+
 
 Command line applications
 ---------------------------

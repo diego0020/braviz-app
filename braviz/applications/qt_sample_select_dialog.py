@@ -50,6 +50,7 @@ class SampleLoadDialog(QtGui.QDialog):
         self.ui.tableView.setModel(self.model)
         self.current_sample = None
         self.current_sample_idx = None
+        self.current_sample_name = None
         self.ui.tableView.activated.connect(self.load_action)
         self.ui.tableView.clicked.connect(self.load_action)
         if new_button:
@@ -65,7 +66,7 @@ class SampleLoadDialog(QtGui.QDialog):
                     self.new_button.setEnabled(1)
                     self.model.reload()
 
-            def launch_new_sample_sun_process():
+            def launch_new_sample_sub_process():
                 self.new_button.setEnabled(0)
                 executable = sys.executable
                 self.new_sample_app = subprocess.Popen([executable, __file__])
@@ -73,7 +74,7 @@ class SampleLoadDialog(QtGui.QDialog):
                 self.check_state_timer.timeout.connect(refresh_list_and_re_enamble_new)
                 self.check_state_timer.start(1000)
 
-            self.new_button.clicked.connect(launch_new_sample_sun_process)
+            self.new_button.clicked.connect(launch_new_sample_sub_process)
 
     def load_action(self, index=None):
         if index is None:
@@ -82,6 +83,7 @@ class SampleLoadDialog(QtGui.QDialog):
             current = index
         self.current_sample = self.model.get_sample(current)
         self.current_sample_idx = self.model.get_sample_index(current)
+        self.current_sample_name = self.model.get_sample_name(current)
         log = logging.getLogger(__name__)
         log.info(self.current_sample)
 
@@ -94,12 +96,13 @@ class SampleCreateDilog(QtGui.QMainWindow):
         self.output_model = SimpleSetModel()
         self.filters_model = SamplesFilterModel()
         self.base_sample = []
+        self.base_sample_name = None
         self.history = []
 
         self.ui = None
         self.setup_ui()
 
-        self.get_base_sample()
+        self.set_base_sample()
 
 
     def setup_ui(self):
@@ -121,7 +124,31 @@ class SampleCreateDilog(QtGui.QMainWindow):
         self.ui.save_button.clicked.connect(self.show_save_dialog)
         self.ui.load_button.clicked.connect(self.show_load_sample)
         self.ui.create_ind_variable.clicked.connect(self.create_indicator_variable)
+        self.ui.comboBox.insertSeparator(self.ui.comboBox.count())
+        self.ui.comboBox.addItem("Select")
+        self.ui.comboBox.activated.connect(self.change_base_sample)
+        self.base_sample_name = self.ui.comboBox.itemText(0)
 
+    def change_base_sample(self):
+        new_index = self.ui.comboBox.currentIndex()
+        if new_index == 0:
+            self.set_base_sample(None)
+        elif new_index == self.ui.comboBox.count() - 1:
+            d = SampleLoadDialog(False)
+            if d.exec_() and d.current_sample is not None:
+                self.set_base_sample(d.current_sample_idx)
+                self.base_sample_name = d.current_sample_name
+                self.ui.comboBox.insertItem(1,self.base_sample_name)
+                self.ui.comboBox.setItemData(1,int(d.current_sample_idx))
+                self.ui.comboBox.setCurrentIndex(1)
+
+            else:
+                i = self.ui.comboBox.findText(self.base_sample_name)
+                if i >= 0:
+                    self.ui.comboBox.setCurrentIndex(i)
+        else:
+            sample_idx = self.ui.comboBox.itemData(new_index).toInt()[0]
+            self.set_base_sample(sample_idx)
 
     def change_output_sample(self, new_set):
         #to make sure it is not altered afterwards
@@ -164,11 +191,11 @@ class SampleCreateDilog(QtGui.QMainWindow):
             self.ui.undo_button.setEnabled(0)
         self.output_model.set_elements(last_set)
 
-    def get_base_sample(self, sample_id=None):
+    def set_base_sample(self, sample_id=None):
         if sample_id is None:
             sample = braviz_tab_data.get_subjects()
         else:
-            sample = []
+            sample = braviz_user_data.get_sample_data(sample_id)
         self.base_sample = sample
         self.update_filters()
 
@@ -298,7 +325,6 @@ class SampleCreateDilog(QtGui.QMainWindow):
 
 
         dialog.exec_()
-        print "wololo"
 
 
 def get_filter_name(params):

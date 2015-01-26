@@ -17,7 +17,7 @@ a series of bottoms for combining the two.
 The working set
 ----------------
 
-In this panel you apply filters to the complete sample in order to get a reduced subset. To add a new filter click
+In this panel you apply filters to a base sample in order to get a reduced subset. To add a new filter click
 the *Add Filter* button. This will take you to a variable select dialog where you can additionally select a threshold
 for real variables or a set of valid labels for nominal variables. Only subjects that pass all the filters will
 be shown at the bottom list. To remove a filter right click on it and select remove from the context menu.

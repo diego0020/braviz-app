@@ -2070,6 +2070,18 @@ class SamplesSelectionModel(QAbstractTableModel):
             sample_index = self.data_frame.index[row]
             return sample_index
 
+    def get_sample_name(self, QModelIndex):
+        """
+        Get the name of a subsample located at a certain row
+
+        Args:
+            QModelIndex (QModelIndex) : Index of a cell in the table (only the row is important)
+        """
+        if QModelIndex.isValid():
+            row = QModelIndex.row()
+            sample_name = self.data_frame["sample_name"].iloc[row]
+            return sample_name
+
 class SubjectChecklist(QAbstractListModel):
     """
     A list of subjects with checkboxes
