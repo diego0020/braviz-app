@@ -6,6 +6,23 @@ Subject Overview
     :width: 90%
     :alt: Subject overview screenshot
 
+This is the largest application in the braviz systems. It provides access to several kinds of neuro-image based data
+for a single subject in the same view. The kind of data and visualization parameters can be configured using individual
+controls. Afterwards it is possible to cycle through the subjects keeping this parameters constant.
+
+Most of the application interface is occupied by a 3d viewer (see :doc:`3dviews`). At the left side is the control
+panel, where the graphical attributes for the different data types can be set. This panel includes tabs for controling
+the list of available subjects, and for showing additional details.  At the lower left is a small panel for changing
+the coordinate system (see :doc:`concepts`) and for resetting the camera to pre defined locations.
+
+Under the main 3d viewer is a widget that displays the current subject and allows you to change it, and at the
+very bottom is a *context panel* which provides values for certain variables for the current subject.
+
+.. hint::
+    The control panel, context panel, and the subject widget can be hidden in order to provide more room
+    for the 3d view. Move the mouse to the border between these widgets and the 3d view until you get an
+    a cursor with two arrows, then click and drag to hide (or enlarge) these panels.
+
 Changing subjects
 -------------------
 
@@ -18,7 +35,7 @@ The context panel
 
 .. image:: images/subject_overview/context.png
     :align: center
-    :width: 90%
+    :width: 100%
     :alt: Context panel
 
 The view panel
