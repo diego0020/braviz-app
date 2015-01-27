@@ -10,6 +10,10 @@ This is the largest application in the braviz systems. It provides access to sev
 for a single subject in the same view. The kind of data and visualization parameters can be configured using individual
 controls. Afterwards it is possible to cycle through the subjects keeping this parameters constant.
 
+This application sends a message to the rest of the system when the current subject changes. It also listens for
+messages indicating a subject change, and when it receives one switches to that subject. If you want to avoid that
+behaviour, press the keychain button at the right side of the subject widget.
+
 Most of the application interface is occupied by a 3d viewer (see :doc:`3dviews`). At the left side is the control
 panel, where the graphical attributes for the different data types can be set. This panel includes tabs for controling
 the list of available subjects, and for showing additional details.  At the lower left is a small panel for changing
@@ -20,7 +24,7 @@ very bottom is a *context panel* which provides values for certain variables for
 
 .. hint::
     The control panel, context panel, and the subject widget can be hidden in order to provide more room
-    for the 3d view. Move the mouse to the border between these widgets and the 3d view until you get an
+    for the 3d view. Move the mouse to their border until you get
     a cursor with two arrows, then click and drag to hide (or enlarge) these panels.
 
 Changing subjects
@@ -29,6 +33,14 @@ Changing subjects
 .. image:: images/subject_overview/select_subject.png
     :align: center
     :alt: Subject selection widget
+
+This widget displays the current subject and lets you change it. The arrow buttons can be used to select the
+previous and next subjects based on the list shown in the *Subjects tab* of the control panel. You can also click
+on the text area and write the id of a subject using the keyboard. Notice a message will be broad-casted to all other
+applications indicating the new subject.
+
+The keychain button allows you to lock the current subject. In the locked status it will become impossible to change
+the current subject, neither by using the other controls in this widget nor by messages from other applications.
 
 The context panel
 ------------------
