@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Braviz Menu</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -704,7 +704,7 @@ Export variables to the database</string>
      <x>0</x>
      <y>0</y>
      <width>631</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

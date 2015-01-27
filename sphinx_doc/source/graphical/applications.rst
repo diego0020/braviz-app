@@ -41,12 +41,13 @@ These applications provide access to neuro-image data.
     subject_overview
     sample_overview
     fmri_explore
+    check_reg
 
 Subject Overview
 ^^^^^^^^^^^^^^^^^^
 
 
-.. image:: images/subject_overview.png
+.. image:: images/subj_overview.png
     :align: center
     :width: 50%
     :alt: Subject overview screenshot
@@ -98,7 +99,14 @@ See :doc:`check_reg`
 Defining geometric objects
 ---------------------------
 
+.. toctree::
+    :includehidden:
+    :maxdepth: 0
+    :hidden:
 
+    build_roi
+    logic_bundles
+    measure
 
 ROI Builder
 ^^^^^^^^^^^^^^^^^^^^
@@ -140,19 +148,11 @@ Manually measure features on images for each subject.
 See :doc:`check_reg`
 
 
-.. toctree::
-    :includehidden:
-    :maxdepth: 0
-    :hidden:
-
-    check_reg
-    build_roi
-    logic_bundles
-    measure
-
 
 Statistical visualization
 ----------------------------
+
+Visualize variables stored in the database.
 
 .. toctree::
     :includehidden:
@@ -165,8 +165,63 @@ Statistical visualization
     parallel
 
 
+Anova
+^^^^^^^^^^^^^^^^^^^^
+
+
+.. image:: images/anova.png
+    :align: center
+    :width: 50%
+    :alt: Anova screenshot
+
+Perform and visualize anova analyzes.
+
+See :doc:`anova`
+
+Linear Model
+^^^^^^^^^^^^^^^^^^^^
+
+
+.. image:: images/linear_model.png
+    :align: center
+    :width: 50%
+    :alt: Linear model screenshot
+
+Fit linear models
+
+See :doc:`lm`
+
+Correlations
+^^^^^^^^^^^^^^^^^^^^
+
+
+.. image:: images/correlations.png
+    :align: center
+    :width: 50%
+    :alt: Correlations screenshot
+
+Quickly visualize correlations between variables
+
+See :doc:`correlations`
+
+Parallel coordinates
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. image:: images/parallel.png
+    :align: center
+    :width: 50%
+    :alt: Parallel coordinates screenshot
+
+Visualize multiple variables using a parallel coordinates
+
+See :doc:`parallel`
+
+
 Managing data
 ---------------
+
+Import and export variables from the database
 
 .. toctree::
     :includehidden:
@@ -175,6 +230,37 @@ Managing data
 
     from_excel
     export_csv
+
+Import excel tables
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. image:: images/from_excel.png
+    :align: center
+    :width: 50%
+    :alt: Import from excel dialog
+
+Add variables to the database from excel spreadsheets.
+
+See :doc:`from_excel`
+
+Export variables
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. image:: images/export_vars.png
+    :align: center
+    :width: 50%
+    :alt: Export variables dialog
+
+Select variables and export them as comma separated files
+
+See :doc:`export_csv`
+
+
+
+
+
 
 
 

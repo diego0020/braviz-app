@@ -54,7 +54,7 @@ Visualize geometry
 Subject Overview
 """""""""""""""""
 
-.. image:: images/subj_overview.png
+.. image:: ../graphical/images/subj_overview.png
     :alt: Subject overview screenshot
     :width: 80%
     :align: center
@@ -70,7 +70,7 @@ See :doc:`User documentation <../graphical/subject_overview>`.
 Sample Overview
 """""""""""""""""
 
-.. image:: images/sample_overview.png
+.. image:: ../graphical/images/sample_overview.png
     :alt: Sample overview screenshot
     :width: 80%
     :align: center
@@ -88,7 +88,7 @@ See :doc:`User documentation <../graphical/sample_overview>`.
 Explore fMRI
 """""""""""""""""
 
-.. image:: images/fmri.png
+.. image:: ../graphical/images/fmri_explore.png
     :alt: Explore fmri screenshot
     :width: 80%
     :align: center
@@ -105,7 +105,7 @@ See :doc:`User documentation <../graphical/fmri_explore>`.
 Check Registration
 """"""""""""""""""""
 
-.. image:: images/check_reg.png
+.. image:: ../graphical/images/check_reg.png
     :alt: Check registration screenshot
     :width: 80%
     :align: center
@@ -126,7 +126,7 @@ Create geometry
 ROI Builder
 """"""""""""""""""""
 
-.. image:: images/build_roi.png
+.. image:: ../graphical/images/roi_builder.png
     :alt: Roi builder screenshot
     :width: 80%
     :align: center
@@ -144,7 +144,7 @@ See :doc:`User documentation <../graphical/build_roi>`.
 Logic bundles
 """"""""""""""""""""
 
-.. image:: images/logic_bundles.png
+.. image:: ../graphical/images/logic_bundles.png
     :alt: Logic bundles screenshot
     :width: 80%
     :align: center
@@ -161,7 +161,7 @@ See :doc:`User documentation <../graphical/logic_bundles>`.
 Measure
 """"""""""""""""""""
 
-.. image:: images/measure.png
+.. image:: ../graphical/images/measure.png
     :alt: Measure application screenshot
     :width: 80%
     :align: center
@@ -181,7 +181,7 @@ Statistics
 Anova
 """"""""""""""""""""
 
-.. image:: images/anova.png
+.. image:: ../graphical/images/anova.png
     :alt: Anova application screenshot
     :width: 80%
     :align: center
@@ -199,7 +199,7 @@ See :doc:`User documentation <../graphical/anova>`.
 Linear Model
 """"""""""""""""""""
 
-.. image:: images/linear_model.png
+.. image:: ../graphical/images/linear_model.png
     :alt: Linear model application screenshot
     :width: 80%
     :align: center
@@ -216,7 +216,7 @@ See :doc:`User documentation <../graphical/lm>`.
 Correlations
 """"""""""""""""""""
 
-.. image:: images/correlations.png
+.. image:: ../graphical/images/correlations.png
     :alt: Correlations application screenshot
     :width: 80%
     :align: center
@@ -233,7 +233,7 @@ See :doc:`User documentation <../graphical/correlations>`.
 Parallel Coordinates
 """""""""""""""""""""
 
-.. image:: images/parallel.png
+.. image:: ../graphical/images/parallel.png
     :alt: Parallel coordinates application screenshot
     :width: 80%
     :align: center
