@@ -42,6 +42,9 @@ applications indicating the new subject.
 The keychain button allows you to lock the current subject. In the locked status it will become impossible to change
 the current subject, neither by using the other controls in this widget nor by messages from other applications.
 
+.. hint::
+    You can also use the left and right arrow keys in the keyboard to change subjects.
+
 The context panel
 ------------------
 
@@ -49,6 +52,25 @@ The context panel
     :align: center
     :width: 100%
     :alt: Context panel
+
+The context panel displays the values of some variables for the current subject. It is meant to provide additional
+information about the subject useful when interpreting the images. At the start the variables shown are those
+found in the configuration file (see :doc:`configuration`), but you may choose the ones that are more important
+for the actual analysis. In order to do that right click inside the panel and from the context menu select
+*change variables*. A dialog for selecting variables will appear. This dialog includes a secondary table at the
+bottom left containing the actual variables. From this dialog you may also create a new variable and
+optionally give it initial values. The current variables table has a column indicating the variable type and a
+check-box indicating if it should be possible to modify the variable value from the panel.
+A panel with editable variables will look like this
+
+.. image:: images/subject_overview/context_edit.png
+    :align: center
+    :width: 100%
+    :alt: Context panel with editable variables
+
+In this case you may modify the variable values based on your observations of the image. Values are only saved
+into the database after clicking on the *Save* button.
+
 
 The view panel
 ---------------
@@ -58,6 +80,10 @@ The view panel
     :width: 30%
     :alt: View panel
 
+This panel has two functions. First it lets you select the coordinate system used in the 3d viewer. Second, it allows
+you to reset the camera to a predefined position. Using *Talairach* or *Dartel* coordinates will make it easier to
+compare different subjects, but it will add some distortion to the objects in the viewer.
+
 The control panel
 ------------------
 
@@ -65,6 +91,10 @@ The control panel
     :align: center
     :width: 80%
     :alt: Control panel tabs
+
+The control panel houses the controls for adding, removing, and modifying visual properties of the objects in the
+viewer. It also lets you modify the order in which subjects are traversed and the current subsample. Finally it lets
+you see additional details of the current subject. All of these features are available under different tabs.
 
 Subject tab
 ^^^^^^^^^^^^
