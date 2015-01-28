@@ -217,6 +217,53 @@ Tractography tab
     :width: 50%
     :alt: Tractography tab
 
+In this tab you can select fiber bundles to display in the 3d view. The top part shows a list of currently active
+bundles. In order to add bundles to the list click on the button *Select Saved Bundles*. These bundles are stored
+into the database and can come from three places:
+
+    -   They can be created in this tab based on segmented structures (read below)
+    -   They can be created in the Logic Bundles application (see :doc:`logic_bundles`)
+    -   They can be defined using code (Advanced, see :mod:`braviz.readAndFilter.named_tracts`
+
+The combo box labeled *From Seg.* lets you build new bundles on the fly based on the currently active structures from
+the *Segmentation tab*. The possible values for the box are
+
+    -   **None**: Don't create a bundle from segmented structures
+    -   **Through Any**: Create a bundle with fibers that pass through any of the active structures
+    -   **Through All**: Create a bundle with fibers that pass through all of the active structures.
+
+The *Save Bundle* button under the box lets you save the bundle defined by the operation and the list of segmented
+structures into the database. This bundle will be later available by clicking the *Select Saved Bundles* button.
+
+The box labeled *color* is used to select the lookup-table to use for displaying fibers in the viewer. The available
+values are:
+
+    -   **Orientation**:    Color the lines based on the direction in which they travel. Red segments are going from
+        lef to right or right to left, green segments are going from front to back or back to front, and blue segments
+        are going from top to bottom or bottom to top.
+    -   **FA (Point)**: Each segment is colored according to the FA value at that voxel
+    -   **FA (Line)**: Each line is colored according to the mean FA value in all its trajectory
+    -   **MD (Point)**: Each segment is colored according to the MD value at that voxel
+    -   **MD (Line)**: Each line is colored according to the mean MD value in all its trajectory
+    -   **Length**: Each line is colored according to its length
+    -   **By Line**: Each line is assigned a random color, useful for following individual lines
+    -   **By Bundle**: Each bundle is assigned a different color, useful when multiple bundles are in the scene
+
+For the color schemes that are based on scalar values, the *show color bar* check box will be activated, and checking
+it will display a color bar that illustrates the mapping from scalar values to colors in the screen.
+
+The opacity slider lets you make the bundles translucent so that you can see what is behind.
+
+The last section of the panel displays an scalar value from one of the active bundles. In order to change the active
+bundle you must click on its name in the list at the top of the panel. The currently available scalar values are:
+
+    -   **Count**: Number of lines that make up the bundle
+    -   **Mean L**: Mean length of lines in the bundle
+    -   **Mean FA**: Mean FA from all points in the bundle
+    -   **Mean MD**: Mean MD from all points in the bundle
+
+The *Export To Database* button lets you calculate the same scalar for all subjects and save it as a new variable in
+the database.
 
 Tracula tab
 ^^^^^^^^^^^^^^^^^^

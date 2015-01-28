@@ -170,7 +170,6 @@ def get_fibers_metric(reader, struct_name, code, metric='number', ):
         A float number with the requested metric
     """
     # print "calculating for subject %s"%code
-    n = 0
     if hasattr(struct_name, "__iter__") and len(struct_name) == 1:
         struct_name = iter(struct_name).next()
     if (type(struct_name) == str) and struct_name.startswith('Fibs:'):
@@ -196,7 +195,7 @@ def get_fibers_metric(reader, struct_name, code, metric='number', ):
         desc = braviz.interaction.get_fiber_bundle_descriptors(fibers)
         n = float(desc[1])
     elif metric == 'mean_fa':
-        desc = braviz.interaction.aggregate_fiber_scalar(fibers, component=0, norm_factor=1 / 255)
+        desc = braviz.interaction.aggregate_fiber_scalar(fibers, norm_factor=1 / 255)
         del fibers
         n = float(desc[1])
     else:
@@ -600,7 +599,6 @@ def get_scalar_from_fiber_ploydata(poly_data, scalar):
         return pd.GetNumberOfLines()
     elif scalar == "mean_length":
         lengths = braviz.interaction.compute_fiber_lengths(pd)
-        # TODO, only desc[1] is ever used?
         n = np.mean(lengths)
         return n
     elif scalar == "mean_color":
