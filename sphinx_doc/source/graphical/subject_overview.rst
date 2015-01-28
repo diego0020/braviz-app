@@ -104,7 +104,12 @@ Subject tab
     :width: 50%
     :alt: Subject tab
 
-This
+This tab shows a table with the subjects in the current sample. By default they are ordered by code, but you can
+click on the header of any column to change the order. The *select sample* button allows you to select a subsample
+of subjects to use in the application. By pressing the *select table columns* button will open a dialog where you
+can select which variables you want to be displayed as columns in the table. If you double click on any of the rows
+of the table the application will switch to that subject. Finally, notice that the order in which subjects are
+traversed using the *subject selection widget* is determined by this table.
 
 Details tab
 ^^^^^^^^^^^^
@@ -114,6 +119,21 @@ Details tab
     :width: 50%
     :alt: Details tab
 
+This tab lets you view additional variable values for the current subject. In this case each variable is displayed
+as a row in the table with the value in front. For real variables the minimum and maximum values found inside the
+reference population (see :doc:`configuration`). A star is shown next to the values that fall outside this range.
+Clicking the *select variables* button will display a dialog where you can select the variables that will be used as
+rows for the table.
+
+.. hint::
+    You may change the order of the rows by dragging them with the mouse.
+
+At the bottom of the tab is a large text field where you can write general comments about the subject. This comments
+will be saved into the database when you click on *save*. The next time you open the same subject the previously
+entered comments will show again. You can use this to register remarks or peculiarities about a subject that should
+be taken into account when looking at him.
+
+
 Images tab
 ^^^^^^^^^^^^
 
@@ -121,6 +141,23 @@ Images tab
     :align: center
     :width: 50%
     :alt: Images tab
+
+Here you can control the image shown in the main view, or switch it off. The *modality* field is where you select the
+kind of image you want to see. Available options include anatomical MRI, color DTI, FA, freesurfer *APARC* segmentation
+and fMRI paradigms. In case you choose an fMRI paradigm the second field, labeled *Contrast* will become active. You
+can then use it to select the contrast of interest.
+The orientation box lets you select the orientation of the image plane.
+
+In some kinds of images you can manipulate the window and level values from the lookup-table using the corresponding
+fields. Notices you can achieve the same effect by right clicking and dragging the mouse on top of the image in the
+3d view. The *Reset* button can be used to reinitialize the window and level values.
+
+Finally the slice field and slider display the current slice and allows you to move it.
+
+.. hint::
+    You can use the mouse wheel to change slice while the cursor is on top of the slider or the slice number field.
+    You can also use the top and down arrows in the keyboard when the cursor is on the slice number field.
+
 
 fMRI tab
 ^^^^^^^^^^^^
@@ -130,10 +167,15 @@ fMRI tab
     :width: 50%
     :alt: fMRI tab
 
+This tab allows you to display iso-contours of fMRI statistical maps. The *paradigm* and *contrast* fields are used
+to select the map of interest. The *contours* checkbox activates or deactivates the contours, and the value in front
+is the T-score value at which you want to show contours. The color of the contours will be the color used for that
+value in the fMRI lookup-table.
+
 Segmentation tab
 ^^^^^^^^^^^^^^^^^^
 
-.. image:: images/subject_overview/subject_tab.png
+.. image:: images/subject_overview/segmentation_tab.png
     :align: center
     :width: 50%
     :alt: Subject tab

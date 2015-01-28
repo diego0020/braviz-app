@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>857</width>
-    <height>655</height>
+    <height>658</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -72,7 +72,7 @@
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <property name="elideMode">
            <enum>Qt::ElideNone</enum>
@@ -208,7 +208,14 @@
              </widget>
             </item>
             <item>
-             <widget class="QPlainTextEdit" name="comments_box"/>
+             <widget class="QPlainTextEdit" name="comments_box">
+              <property name="documentTitle">
+               <string>Comments</string>
+              </property>
+              <property name="placeholderText">
+               <string>Write general comments on the subject</string>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QPushButton" name="comments_save">
@@ -1491,7 +1498,7 @@
      <x>0</x>
      <y>0</y>
      <width>857</width>
-     <height>21</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
