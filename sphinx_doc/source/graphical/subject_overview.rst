@@ -223,7 +223,7 @@ into the database and can come from three places:
 
     -   They can be created in this tab based on segmented structures (read below)
     -   They can be created in the Logic Bundles application (see :doc:`logic_bundles`)
-    -   They can be defined using code (Advanced, see :mod:`braviz.readAndFilter.named_tracts`
+    -   They can be defined using code (Advanced, see :mod:`~braviz.readAndFilter.named_tracts`)
 
 The combo box labeled *From Seg.* lets you build new bundles on the fly based on the currently active structures from
 the *Segmentation tab*. The possible values for the box are
@@ -273,6 +273,10 @@ Tracula tab
     :width: 50%
     :alt: Tracula tab
 
+This tab allows you to display bundles from tracula tractography. It displays a list of such bundles where you can
+check the ones you want to display. At the bottom there is an slider for controlling opacity of the bundles, lowering
+it will allow you to see through them.
+
 Surfaces tab
 ^^^^^^^^^^^^^^^^^^
 
@@ -281,7 +285,50 @@ Surfaces tab
     :width: 50%
     :alt: Surfaces tab
 
+The surfaces tab provides access to freesurfer surface reconstructions. First there are two check boxes which let
+you activate or deactivate each hemisphere. Afterwards there is a combobox where you can select the surface you
+want to see, in this application the selection is limited to *pial* and *white*. Afterwards there is another combobox
+labeled *scalars* which lets you select the scalars and lookuptable that will be displayed. The current options are
+
+    -   **Curv**: Curvature at each point
+    -   **Avg. Curv**: Smoothed curvature map
+    -   **Thickness**: Thickness of the cortex at the point
+    -   **Sulc**: Height of each point with respect to the average surface (`source link <http://surfer.nmr.mgh.harvard.edu/fswiki/UserContributions/FAQ#Q.IamusingQDECtoexaminetheanatomicaldifferencesbetweentwogroupsofsubjects.Thesurface-basedmeasuresIcanselectarethickness.2Carea.2Carea.pial.2Csulc.2Ccurv.2Candjacobianwhite.Couldanybodytellmewhatanatomicalfeaturesthelaterthree.28sulc.2Ccurv.2Candjacobianwhite.29actuallymeasure.3F>`_)
+    -   **Parcellation**: Parcelation based on Desikan-Killiany Atlas
+    -   **Parcellation 2009**: Parcelation based on Destrieux Atlas
+    -   **Parcellation DKT**: Parcelation based on DKT atlas
+    -   **Broadman area**: Parcelation based on broadman areas (only a few regions)
+
+For more information on freesurfer parcelations see `here <https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation>`_
+
+The *show color bar* check box is activated for color schemes showing scalar values, you may click on it to show
+a color bar with the mapping from scalar values to colors.
+
+.. hint::
+    You may click and hold on a surface in order to query the value or label at any point.
+
+Finally the opacity slider lets you add some transparency to the surfaces so that they don't occlude the scene.
+
 Scenarios
 ------------
 
-Saving and loading
+As seen above there are several ways in which you can configure this application for specific tasks. Setting up a
+visualization may take a significant amount of time and effort. To avoid having to repeat the work, it is always a
+good idea to save the application state often.
+
+Application state is saved as a scenario. This scenarios include everything, from the active objects in the 3d
+view to the camera position.
+
+In order to save a scenario click on the *file* menu in the top bar, and afterwards *save scenario*. You will be
+asked to provide a name and optionally a description.
+
+To load a scenario go to the *file* menu and click on *load scenario*. A dialog containing the available scenarios will
+open. This dilog contains the date in which scenarios were saved, the name and the description. They also show a
+screenshot of the application taken at the moment the scenario was saved. To select a scenario double click on its name
+and afterwards on the *ok* button.
+
+
+.. image:: images/subject_overview/load_scenario.png
+    :align: center
+    :width: 70%
+    :alt: Load scenario dialog
