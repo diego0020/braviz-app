@@ -678,12 +678,13 @@ class NominalVariablesMeta(QAbstractTableModel):
         self.names_dict = braviz_tab_data.get_labels_dict_by_name(var_name)
         self.labels_list = self.names_dict.keys()
 
-    def save_into_db(self, var_idx):
+    def save_into_db(self, var_idx = None):
         """
         Save the textual labels into the database
 
         Args:
-            var_idx (int) : Index of the variable to which the labels will be saved
+            var_idx (int) : Index of the variable to which the labels will be saved, only required if *var_name*
+                is not set.
         """
         tuples = ( (k, v) for k, v in self.names_dict.iteritems())
         if self.var_name is not None:
