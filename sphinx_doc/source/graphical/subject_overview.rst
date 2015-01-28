@@ -180,6 +180,35 @@ Segmentation tab
     :width: 50%
     :alt: Subject tab
 
+With the controls on this tab you can include segmented structures in the 3d-view. This structures can also be used
+to select fiber bundles that go through them later in the *Tractography tab*.
+
+Most of the space is occupied by a tree which represents all of the free-surfer segmented structures. Next to each
+item is a checkbox that activates or deactivates the given item and its descendants. The tree is divided into the
+following sections
+
+    -   **Base**: Subcortical structures
+    -   **Corpus Callosum**: The five sections segmented by freesurfer
+    -   **Left Hemisphere**: Cortical parcellation of the left hemisphere
+    -   **Right Hemisphere**: Cortical parcellation of the right hemisphere
+
+Notice that the cortical parcellations can alternatively be split into *Dominant* and *Non-dominant* using the
+radio buttons at the top of the frame.
+
+Below the list is a combo-box that lets you choose between using the freesurfer lookup-table for coloring the structures,
+or choosing your own color. Underneath is a slider that lets you adjust the transparency of the structures.
+
+Finally, the bottom section of the frame, displays a combo-box where you can select an scalar measure. The value of
+the given measure for the active structures will be shown in front. Currently the available measures are
+
+    -   **Volume**: Sum of the volumes of all the active structures
+    -   **Area**: Sum of the surface areas of the active structures
+    -   **FA Inside**: Mean FA value from the voxels that lay inside the active structures
+    -   **MD Inside**: Mean MD value from the voxels that lay inside the active structures
+
+The button labeled *Export to Database* allows you to repeat the calculation for all subjects, and save the results
+as a new variable into the database.
+
 Tractography tab
 ^^^^^^^^^^^^^^^^^^
 
