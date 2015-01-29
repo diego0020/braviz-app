@@ -72,7 +72,7 @@
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="elideMode">
            <enum>Qt::ElideNone</enum>
@@ -211,9 +211,6 @@
              <widget class="QPlainTextEdit" name="comments_box">
               <property name="documentTitle">
                <string>Comments</string>
-              </property>
-              <property name="placeholderText">
-               <string>Write general comments on the subject</string>
               </property>
              </widget>
             </item>
@@ -1498,7 +1495,7 @@
      <x>0</x>
      <y>0</y>
      <width>857</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
