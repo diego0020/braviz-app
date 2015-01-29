@@ -151,12 +151,8 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def open_help(self):
         import webbrowser
-        import os
 
-        my_path = os.path.dirname(__file__)
-        doc_path = os.path.join(my_path, "..", "..", "doc")
-        help_file = os.path.join(doc_path, "faq.html")
-        url = "file://%s" % help_file
+        url = "http://diego0020.github.io/braviz"
         webbrowser.open(url, 2)
 
     def print_messages(self, msg):
