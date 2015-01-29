@@ -17,9 +17,9 @@
 ##############################################################################
 
 
-from vtkInteractionWidgetsPython import vtkImagePlaneWidget
 import numpy as np
 import vtk
+from vtk import vtkImagePlaneWidget
 from braviz.interaction import get_fiber_bundle_descriptors, compute_volume_and_area
 
 
