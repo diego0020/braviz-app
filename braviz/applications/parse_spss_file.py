@@ -37,9 +37,10 @@ def parse_spss_file(file_name, do_save=False):
 def save_description(var_name, desc, do_save=False):
     print "%s : %s" % (var_name, desc)
     try:
+        var_name2 = unicode(var_name, errors="ignore")
         desc2 = unicode(desc, errors="ignore")
         if do_save:
-            tabular_data.save_var_description_by_name(var_name, desc2)
+            tabular_data.save_var_description_by_name(var_name2, desc2)
     except Exception as e:
 
         print e.message

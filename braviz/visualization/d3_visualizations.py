@@ -109,10 +109,12 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         data.columns=cols2
         labels = tab_data.get_labels_dict(vars[0])
 
-        for k,v in labels.iteritems():
+        for i,(k,v) in enumerate(labels.iteritems()):
             if v is None:
                 labels[k]="label%s"%k
-            if v[0].isdigit():
+            if len(v) == 0:
+                v="level_%d"%i
+            elif v[0].isdigit():
                 v = "c_"+v
             labels[k]=v.replace(' ','_')
 
