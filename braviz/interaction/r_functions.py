@@ -163,12 +163,12 @@ def calculate_anova(outcome, regressors_data_frame, interactions_dict, sample):
         regressors_data_frame (pandas.DataFrame) : A DataFrame with three columns regressor name,
             degrees of freedom, and interaction. The last column should have
             zeros for single variable regressors and 1 for interaction terms.
-             see :meth:`braviz.interaction.qt_models.AnovaRegressorsModel.get_data_frame`
-         interactions_dict (dict) : Dictionary mapping indices of interaction terms (in the previous DataFrame)
+            see :meth:`braviz.interaction.qt_models.AnovaRegressorsModel.get_data_frame`
+        interactions_dict (dict) : Dictionary mapping indices of interaction terms (in the previous DataFrame)
             to the indices of its factors.
         sample (list) : List of subject ids considered during the calculation
 
-    Returns
+    Returns:
         ``(output_df, residuals, intercept, fitted)`` where *output_df* is a DataFrame containing 5 columns:
         Factor name, sum of squares, degrees of freedom, F statistic and P value, it includes an *(intercept)* term.
         *Residuals*, *intercept* and *fitted* are parameters of the regression.
@@ -301,8 +301,8 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
         regressors_data_frame (pandas.DataFrame) : A DataFrame with three columns regressor name,
             degrees of freedom, and interaction. The last column should have
             zeros for single variable regressors and 1 for interaction terms.
-             see :meth:`braviz.interaction.qt_models.AnovaRegressorsModel.get_data_frame`
-         interactions_dict (dict) : Dictionary mapping indices of interaction terms (in the previous DataFrame)
+            see :meth:`braviz.interaction.qt_models.AnovaRegressorsModel.get_data_frame`
+        interactions_dict (dict) : Dictionary mapping indices of interaction terms (in the previous DataFrame)
             to the indices of its factors.
         sample (list) : List of subject ids considered during the calculation
 
