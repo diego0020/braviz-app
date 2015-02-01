@@ -29,7 +29,7 @@ LOGIC = 0
 STRUCT = 1
 ROI = 2
 
-def read_logical_fibers(subj,tree_dict,reader,**kwargs):
+def read_logical_fibers(subj,space,tree_dict,reader,**kwargs):
     """
     Gets a :obj:`vtkPolyData` for a bundle described using a logical hierarchy
 
@@ -40,10 +40,6 @@ def read_logical_fibers(subj,tree_dict,reader,**kwargs):
         reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
     """
     log = logging.getLogger(__file__)
-    if "space" in kwargs:
-        space = kwargs.pop("space")
-    else:
-        space = "World"
 
     try:
         valid_lines = get_valid_lines_from_node(subj,tree_dict,reader)

@@ -436,7 +436,7 @@ class LogicBundlesApp(QMainWindow):
             sc = None
         else:
             sc = self.__fibers_color
-        fibers = read_logical_fibers(self.__current_subject,dict_tree,self.reader,space=self.__curent_space,
+        fibers = read_logical_fibers(self.__current_subject, self.__curent_space,dict_tree,self.reader,
                                      scalars=sc)
         return fibers
 

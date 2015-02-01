@@ -699,7 +699,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if bundle_type == 0:
             #named tract
             assert "name" not in kw
-            poly = self.get("Fibers", subj, name=data, **kw)
+            poly = self.get("Fibers", subj, space,  name=data, **kw)
             return poly
         elif (bundle_type == 1) or (bundle_type == 2):
             assert "waypoint" not in kw
@@ -710,7 +710,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return poly
         elif bundle_type == 10:
             tree_dict = pickle.loads(data)
-            poly = read_logical_fibers(subj,tree_dict,self,**kw)
+            poly = read_logical_fibers(subj,space,tree_dict,self,**kw)
             return poly
         else:
             log.error("Unknown data type")
