@@ -34,7 +34,7 @@ Graphical interface user
     -   Visualize distribution of variables
     -   Define your own variables based on neuro-image data
 
-:doc:`Click here for Visual Analytics with Braviz (Click here)<graphical/index>`
+:doc:`Visual Analytics with Braviz (Click here)<graphical/index>`
 
 Python library user
 ^^^^^^^^^^^^^^^^^^^^^^^

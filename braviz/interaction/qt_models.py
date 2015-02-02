@@ -2156,7 +2156,6 @@ class SubjectChecklist(QAbstractListModel):
                     brush = QtGui.QBrush()
                     brush.setColor(QtGui.QColor("palegreen"))
                     brush.setStyle(QtCore.Qt.SolidPattern)
-                    print "background"
                     return brush
 
         return QtCore.QVariant()

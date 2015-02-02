@@ -44,6 +44,7 @@ ROIs.
 .. hint::
     You can press the right and left arrow keys in the keyboard to move trough the subjects in the list
 
+.. roi-builder-context-panel:
 
 Context Panel
 ^^^^^^^^^^^^^^
