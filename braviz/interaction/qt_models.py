@@ -2096,6 +2096,7 @@ class SubjectChecklist(QAbstractListModel):
         self.__list = list(initial_list)
         self.__checked = frozenset()
         self.__show_checks = show_checks
+        self.__highlight_subject = None
 
     @property
     def checked(self):
@@ -2103,6 +2104,15 @@ class SubjectChecklist(QAbstractListModel):
         set of checked subjects
         """
         return self.__checked
+
+    @property
+    def highlighted_subject(self):
+        return self.__highlight_subject
+
+    @highlighted_subject.setter
+    def highlighted_subject(self,subj):
+        self.__highlight_subject = subj
+        self.modelReset.emit()
 
     @checked.setter
     def checked(self, new_set):
@@ -2136,6 +2146,19 @@ class SubjectChecklist(QAbstractListModel):
                     return QtCore.Qt.Checked
                 else:
                     return QtCore.Qt.Unchecked
+            if int_role == QtCore.Qt.FontRole:
+                if name == self.__highlight_subject:
+                    font = QtGui.QFont()
+                    font.setBold(True)
+                    return font
+            if int_role == QtCore.Qt.BackgroundRole:
+                if name == self.__highlight_subject:
+                    brush = QtGui.QBrush()
+                    brush.setColor(QtGui.QColor("palegreen"))
+                    brush.setStyle(QtCore.Qt.SolidPattern)
+                    print "background"
+                    return brush
+
         return QtCore.QVariant()
 
 

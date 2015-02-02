@@ -158,6 +158,7 @@ class LogicBundlesApp(QMainWindow):
         self.__fibers_ac.SetVisibility(0)
 
         self.__subjects_check_model = SubjectChecklist(self.subjects_list,show_checks=False)
+        self.__subjects_check_model.highlighted_subject = self.__current_subject
         self.scalar_metric_value = None
         self.setup_ui()
 
@@ -333,6 +334,7 @@ class LogicBundlesApp(QMainWindow):
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
+        self.__subjects_check_model.highlighted_subject = self.__current_subject
         img_id = new_subject
         self.__current_img_id = img_id
         log = logging.getLogger(__file__)

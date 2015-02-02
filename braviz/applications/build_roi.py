@@ -419,6 +419,7 @@ class BuildRoiApp(QMainWindow):
         assert isinstance(self.__checked_subjects, set)
         self.__subjects_check_model = SubjectChecklist(self.__subjects_list)
         self.__subjects_check_model.checked = self.__checked_subjects
+        self.__subjects_check_model.highlighted_subject = self.__current_subject
 
         self.__sphere_modified = True
 
@@ -749,6 +750,7 @@ class BuildRoiApp(QMainWindow):
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
+        self.__subjects_check_model.highlighted_subject = self.__current_subject
         self.ui.subject_sphere_label.setText("Subject %s" % self.__current_subject)
         img_id = new_subject
         self.__current_img_id = img_id

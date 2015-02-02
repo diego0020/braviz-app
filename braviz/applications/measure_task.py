@@ -203,6 +203,7 @@ class MeasureApp(QMainWindow):
         assert isinstance(self.__checked_subjects, set)
         self.__subjects_check_model = SubjectChecklist(self.__subjects_list)
         self.__subjects_check_model.checked = self.__checked_subjects
+        self.__subjects_check_model.highlighted_subject = self.__current_subject
 
         self.__line_modified = True
 
@@ -367,6 +368,7 @@ class MeasureApp(QMainWindow):
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
+        self.__subjects_check_model.highlighted_subject = self.__current_subject
         self.ui.subject_line_label.setText("Subject %s" % self.__current_subject)
         img_id = new_subject
         self.__current_img_id = img_id

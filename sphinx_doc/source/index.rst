@@ -49,7 +49,7 @@ Python library user
 About
 -------
 
-Braviz is being developed at the `imagine <imagine.uniandes.edu.co>`_ research group
+Braviz is being developed at the `imagine <http://imagine.uniandes.edu.co>`_ research group
 as part of a phd thesis. The objective is providing brain researchers with interactive
 visualization tools, which will allow them to explore and grab insights from
 large and heterogeneus data-sets more efficiently. The focus is on user centered design,
