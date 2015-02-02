@@ -85,6 +85,8 @@ a surface a red cone will appear. Pressing this button will translate the sphere
 
 The button labeled *Optimize* will move the sphere to the place of maximum FA in a small neighborhood.
 
+The button labeled *reload* will restore the sphere position and size to the one previously stored in the database.
+
 To save the modifications of the sphere into the database you must press the *Save sphere* button. Pay special
 attention to this button, whenever it is active it means there are unsaved changes.
 
@@ -122,3 +124,26 @@ you *select all subjects*, *select empty* (only subjects who don't yet have any 
 To start the extrapolation click the *Start exploration* button at the lower left. The progress bar on top of it
 will start to fill. Notice that this process may take significant time, and that the interface may freeze in the
 middle.
+
+Changing the current sphere
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to start working on a different ROI, you don't have to close the application. The *File* menu contains
+two items that let you change to a different ROI without changing anything else in the application.
+
+    -   **Save sphere as**: Create a new ROI and save the current sphere as the sphere for the current subject.
+    -   **Switch sphere**: Change to another, existent ROI. Notice this will keep the sphere in its current position,
+        if you want to load the sphere already defined in the new ROI click on *Reload*.
+
+Exporting rois
+^^^^^^^^^^^^^^^^
+
+The file menu contains an item labeled *Export Roi* which allows you to export the sphere as a nifti image, which
+contains ones in voxels inside the sphere, and zeros in the background.
+
+Scenarios
+----------
+
+As usual, the *File* menu contains items for saving and loading scenarios. In this case scenarios include everything
+but the roi position or size, this data is only recorded in the database. The camera, context and visual attributes,
+current subject and current ROI will be saved.

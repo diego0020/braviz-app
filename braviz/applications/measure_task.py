@@ -55,6 +55,11 @@ _plane_names = {
     1 : "coronal",
 }
 
+_plane_names_i = {
+    "axial" : 2,
+    "sagital" : 0,
+    "coronal" : 1,
+}
 
 class StartDialog(QDialog):
     def __init__(self):
@@ -98,10 +103,15 @@ class StartDialog(QDialog):
             self.scenario_data = None
 
 class NewMeasure(QDialog):
-    def __init__(self):
+    def __init__(self,freeze_axis=None):
         QDialog.__init__(self)
         self.ui = Ui_NewRoi()
         self.ui.setupUi(self)
+        if freeze_axis is not None:
+            freeze_axis = freeze_axis.title()
+            axis_i = self.ui.plane_combo.findText(freeze_axis)
+            self.ui.plane_combo.setCurrentIndex(axis_i)
+            self.ui.plane_combo.setEnabled(False)
         self.ui.error_msg.setText("")
         self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(0)
         self.ui.roi_name.textChanged.connect(self.check_name)
@@ -187,9 +197,9 @@ class MeasureApp(QMainWindow):
         except Exception:
             self.__curent_space = "talairach"
         assert self.__curent_space == "talairach"
-        self.meaure_axis = 0
+        self.meaure_axis = "sagital"
         try:
-            self.meaure_axis = (geom_db.get_roi_type(roi_name)) % 10
+            self.meaure_axis = (geom_db.get_roi_type(roi_name))[5:]
         except Exception:
             log.error("Invalid roi type, unknown measure axis, assuming SAGITAL")
         self.vtk_widget = QMeasurerWidget(self.reader, parent=self)
@@ -227,9 +237,9 @@ class MeasureApp(QMainWindow):
         self.ui.axial_slice.valueChanged.connect(partial_f(self.set_slice, AXIAL))
         self.ui.coronal_slice.valueChanged.connect(partial_f(self.set_slice, CORONAL))
         self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice, SAGITAL))
-        if self.meaure_axis == AXIAL:
+        if self.meaure_axis == "axial":
             check = self.ui.axial_check
-        elif self.meaure_axis == CORONAL:
+        elif self.meaure_axis == "coronal":
             check = self.ui.coronal_check
         else:
             check = self.ui.sagital_check
@@ -254,9 +264,12 @@ class MeasureApp(QMainWindow):
         self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
         self.ui.actionLoad_Scenario.triggered.connect(self.load_scenario)
         self.ui.actionSave_line_as.triggered.connect(self.save_line_as)
+        self.ui.actionSwitch_line.triggered.connect(self.switch_line_dialog)
+
         self.ui.color_button.clicked.connect(self.set_line_color)
 
         self.ui.reset_measure.clicked.connect(self.reset_measure)
+        self.ui.reload_button.clicked.connect(self.reload_line)
         self.ui.reset_camera_button.clicked.connect(self.reset_camera)
 
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
@@ -377,12 +390,17 @@ class MeasureApp(QMainWindow):
         try:
             self.vtk_viewer.change_subject(img_id)
         except Exception:
-            log.warning("Couldnt load data for subject %s",new_subject)
+            log.warning("Couldn't load data for subject %s",new_subject)
         else:
             self.update_slice_maximums()
         self.load_line(new_subject)
         self.__line_modified = False
-        print new_subject
+
+
+    def reload_line(self):
+        self.load_line(self.__current_subject)
+        self.__line_modified = False
+        self.ui.save_line.setEnabled(0)
 
     def save_line(self):
         p1 = self.vtk_viewer.point1
@@ -404,7 +422,7 @@ class MeasureApp(QMainWindow):
         p2 = np.array(res[3:6])
 
         self.vtk_viewer.set_points(p1,p2)
-        slice_position = p1[self.meaure_axis]
+        slice_position = p1[_plane_names_i[self.meaure_axis]]
         self.vtk_viewer.set_slice_coords(slice_position)
         self.__line_modified = False
         self.ui.save_line.setEnabled(0)
@@ -573,21 +591,30 @@ class MeasureApp(QMainWindow):
 
 
     def save_line_as(self):
-        dialog = NewMeasure()
+        dialog = NewMeasure(self.meaure_axis)
         res = dialog.exec_()
         if res == dialog.Accepted:
             new_name = dialog.name
             desc = dialog.desc
-            roi_type = "line_" + _plane_names[self.meaure_axis]
-            assert self.__curent_space == 1
+            roi_type = "line_" + self.meaure_axis
+            assert self.__curent_space == "talairach"
             new_id = geom_db.create_roi(new_name,roi_type,"talairach",desc)
-            geom_db.copy_spheres(self.__roi_id,new_id)
-            self.__roi_id=new_id
-            self.__roi_name = new_name
-            self.refresh_checked()
+            self.change_line(new_id,new_name)
+            self.save_line()
 
+    def change_line(self,roi_id,roi_name):
+        self.__roi_id = roi_id
+        self.__roi_name = roi_name
+        self.ui.measure_name.setText(self.__roi_name)
+        self.refresh_checked()
 
-
+    def switch_line_dialog(self):
+        dialog = LoadRoiDialog()
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_name = dialog.name
+            new_id = geom_db.get_roi_id(new_name)
+            self.change_line(new_id,new_name)
 
     def set_line_color(self):
         color = QtGui.QColorDialog.getColor()

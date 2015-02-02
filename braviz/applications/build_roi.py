@@ -40,6 +40,7 @@ from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 from braviz.interaction.qt_guis.extrapolate_spheres import Ui_ExtrapolateSpheres
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
+from braviz.visualization.simple_vtk import save_ren_win_picture
 from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel, SubjectCheckTable
 from braviz.readAndFilter import geom_db, tabular_data
@@ -66,12 +67,17 @@ SURFACE_SCALARS_DICT = dict(enumerate((
     'BA')
 ))
 
-COORDS = {
-    0 : "world",
-    1 : "talairach",
-    2 : "dartel"
-}
-
+# COORDS = {
+#     0 : "World",
+#     1 : "Talairach",
+#     2 : "Dartel"
+# }
+#
+# COORDS_I = {
+#     "World" :0  ,
+#     "Talairach" : 1,
+#     "Dartel" : 2,
+# }
 
 def get_unit_vectors():
     # from http://blog.marmakoide.org/?p=1
@@ -399,7 +405,7 @@ class BuildRoiApp(QMainWindow):
         self.__current_image_mod = "MRI"
         self.__current_contrast = None
         try:
-            self.__curent_space = geom_db.get_roi_space(name=roi_name)
+            self.__curent_space = geom_db.get_roi_space(name=roi_name).title()
         except Exception:
             raise
 
@@ -488,6 +494,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.subjects_list.activated.connect(self.select_subject)
         self.ui.subject_sphere_label.setText("Subject %s" % self.__current_subject)
         self.ui.save_sphere.clicked.connect(self.save_sphere)
+        self.ui.reload_button.clicked.connect(self.reload_sphere)
 
         self.ui.surface_combo.currentIndexChanged.connect(self.select_surface)
         self.ui.scalar_combo.currentIndexChanged.connect(self.select_surface_scalars)
@@ -500,6 +507,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
         self.ui.actionLoad_Scenario.triggered.connect(self.load_scenario)
         self.ui.actionSave_sphere_as.triggered.connect(self.save_sphere_as)
+        self.ui.actionSwitch_sphere.triggered.connect(self.switch_sphere_dialog)
         self.ui.actionExport_ROI.triggered.connect(self.export_sphere)
         self.ui.color_button.clicked.connect(self.set_sphere_color)
 
@@ -768,7 +776,13 @@ class BuildRoiApp(QMainWindow):
         self.caclulate_image_in_roi_pre()
         self.__sphere_modified = False
         self.vtk_viewer.ren_win.Render()
-        print new_subject
+
+
+    def reload_sphere(self):
+        self.load_sphere(self.__current_subject)
+        self.__sphere_modified = False
+        self.ui.save_sphere.setEnabled(0)
+        self.vtk_viewer.ren_win.Render()
 
     def save_sphere(self):
         x = self.ui.sphere_x.value()
@@ -1010,14 +1024,24 @@ class BuildRoiApp(QMainWindow):
         if res == dialog.Accepted:
             new_name = dialog.name
             desc = dialog.desc
-            space = COORDS[self.__curent_space]
+            space = self.__curent_space
             new_id = geom_db.create_roi(new_name, "sphere", space, desc)
-            geom_db.copy_spheres(self.__roi_id, new_id)
-            self.__roi_id = new_id
-            self.__roi_name = new_name
-            self.ui.sphere_name.setText(new_name)
-            self.refresh_checked()
+            self.change_sphere(new_id,new_name)
+            self.save_sphere()
 
+    def change_sphere(self,roi_id,roi_name):
+        self.__roi_id = roi_id
+        self.__roi_name = roi_name
+        self.ui.sphere_name.setText(roi_name)
+        self.refresh_checked()
+
+    def switch_sphere_dialog(self):
+        dialog = LoadRoiDialog()
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_name = dialog.name
+            new_id = geom_db.get_roi_id(new_name)
+            self.change_sphere(new_id,new_name)
 
     def set_sphere_color(self):
         color = QtGui.QColorDialog.getColor()

@@ -39,6 +39,9 @@ import logging
 
 __author__ = 'Diego'
 
+
+_axis_dict = {"axial" : 2, "sagital" : 0,  "coronal": 1}
+
 # TODO: Abstract viewer classes
 
 def do_and_render(f):
@@ -2510,7 +2513,7 @@ class MeasurerViewer(object):
 
         self.__measure_axis = None
         self.__pax1, self.__pax2 = None, None  # perpendicular to measure axis
-        self.set_measure_axis(2, skip_render=True)
+        self.set_measure_axis("axial", skip_render=True)
         # state
         self.__current_subject = None
         self.__current_space = "talairach"
@@ -2654,14 +2657,14 @@ class MeasurerViewer(object):
         self.z_image.image_plane_widget.AddObserver(self.z_image.image_plane_widget.slice_change_event, slice_movement)
 
     @do_and_render
-    def set_measure_axis(self, axis):
+    def set_measure_axis(self, axis_str):
         """
         Set the measure plane to be perpendicular to the axis
 
         Args:
-            axis (int) : 0 for x, 1 for y and 2 for z
+            axis_str (str) : "axial", "sagital" or "coronal"
         """
-        assert axis in {0, 1, 2}
+        axis = _axis_dict[axis_str.lower()]
         self.__measure_axis = axis
         if axis == 0:
             self.__pax1 = 1
