@@ -1059,8 +1059,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
             concatenated_trans.Concatenate(dartel_trans)
             return concatenated_trans
         else:
-            T1_func = os.path.join(path, paradigm_name, 'T1.nii')
-            T1_world = os.path.join(path, 'T1', 'T1.nii')
             dartel_trans = self._get_spm_grid_transform(subject,paradigm_name,"back", True)
             T1_func_img = nib.load(T1_func)
             T1_world_img = nib.load(T1_world)

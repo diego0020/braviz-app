@@ -278,10 +278,10 @@ The constructor requires the root to this structure
 
     #==========SPM================
     def _get_paradigm_name(self,paradigm_name):
-        return paradigm_name
+        return paradigm_name.upper()
 
     def _get_paradigm_dir(self,subject,name,spm=False):
-        "If spm is True return the direcory containing spm.mat, else return its parent"
+        "If spm is True return the directory containing spm.mat, else return its parent"
         if not spm:
             return os.path.join(self.get_data_root(), subject, 'spm', name)
         else:
