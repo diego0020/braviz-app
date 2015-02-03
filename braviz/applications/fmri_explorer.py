@@ -383,7 +383,8 @@ class FmriExplorer(QtGui.QMainWindow):
 
 
     def set_timeline_colors(self, var_name):
-        print "Coloring by ", var_name
+        log = logging.getLogger(__name__)
+        log.info("Coloring by ", var_name)
         if var_name is None:
             self.time_plot.set_frozen_colors(None)
             self.time_plot.set_frozen_groups_and_colors(None, None)
@@ -395,7 +396,7 @@ class FmriExplorer(QtGui.QMainWindow):
             values = set(series.astype(int))
             values.add(None)
             n_values = len(values)
-            color_palette = sns.color_palette("Set1", n_values)
+            color_palette = sns.color_palette("Dark2", n_values)
             color_dict = dict(( (v, color_palette[i]) for i, v in enumerate(values)))
             color_dict[-1] = "#FF00E6"  # nan
 
@@ -418,7 +419,7 @@ class FmriExplorer(QtGui.QMainWindow):
     def set_timeline_colors_by_location(self):
         locations = [t for t in self.__frozen_points["Coordinates"]]
         unique_locs = set(locations)
-        colors = sns.color_palette("Set1", len(unique_locs))
+        colors = sns.color_palette("Dark2", len(unique_locs))
         loc_indexes = dict(( (l, i) for i, l in enumerate(unique_locs)))
         color_dict = dict(( (i, c) for i, c in enumerate(colors)))
 

@@ -19,21 +19,30 @@ fMRI panel
     :alt: The fmri panel
 
 The fMRI panel lets you control the current subject, fMRI paradigm, contrast to show; using the controls with the
-corresponding labels. It also lets you 
+corresponding labels. It also lets you change to orientation of the image plane, and move along the different slices.
+Finally there is a check-box which allows you to display *iso-contours* at a certain *z-score* value. The slide at
+the bottom, lets you add transparency to these contours.
 
 The time plot
 --------------
 
+The time plot at the bottom of the application shows the experiment along the time domain. The stimulus that make
+up the current contrast are shown as block signals in different colors
 
 .. image:: images/fmri/fmri_estimulus.png
     :align: center
     :width: 90%
     :alt: A bold signal
 
+When you click on a point of the image in the 3d viewer, the raw BOLD signal measured at that point will be displayed
+on the graph
+
 .. image:: images/fmri/fmri_bold.png
     :align: center
     :width: 90%
     :alt: A bold signal
+
+You can move the cursor around in the 3d viewer, and the bold signal will update.
 
 
 Working with bold signals
@@ -48,3 +57,11 @@ Working with bold signals
     :align: center
     :width: 90%
     :alt: Aggregate signal
+
+Exporting data
+---------------
+
+
+Samples and scenarios
+----------------------
+
