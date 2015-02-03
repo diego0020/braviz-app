@@ -215,7 +215,7 @@
              <item>
               <widget class="QLabel" name="label_6">
                <property name="text">
-                <string>Freezed points:</string>
+                <string>Frozen points:</string>
                </property>
               </widget>
              </item>
@@ -349,7 +349,7 @@
      <x>0</x>
      <y>0</y>
      <width>1128</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

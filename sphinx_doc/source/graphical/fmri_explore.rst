@@ -53,6 +53,36 @@ Working with bold signals
     :width: 90%
     :alt: Aggregate signal
 
+The *Timeline* panel lets you perform several operations with BOLD signals. You can add several lines to the plot,
+which will be shown on the table labeled *frozen points*. The table has the following columns:
+
+    -   **Subject**: The subject to whom the signal belongs
+    -   **Coordinates**: The spatial coordinates at which the bold signal was sampled
+    -   **Contrast**: The active contrast when the signal was sampled
+    -   **T Stat**: The T statistic value corresponding to the signal and the contrast.
+
+.. hint::
+    When you click on a row of the table the corresponding signal will be highlighted in the plot
+
+To remove a signal, right click on its name on the table and from the context menu select "remove". To remove all
+signals from the table click on the button labeled *Clear*.
+
+To add the current bold signal to the table, click on the button *Freeze current point*. You can retrieve the
+current point for all subjects in the current sample by clicking on *Get point for all subjects*.
+
+By default all lines are shown in the same color, but you may also color them with respect to a nominal variable,
+or by grouping the signals by the location at which they were sampled. This is achieved using the box below the
+*Freeze current point* button.
+
+.. image:: images/fmri/fmri_many_bold.png
+    :align: center
+    :width: 90%
+    :alt: Several BOLD signals colored by gender
+
+The above graph show several lines on top of each other, it is also possible to group lines of the same color into
+groups and show them as in the following graph. This is done using the box below *Get point for all subjects*.
+The graph displays the mean signal, and the confidence interval based on all the lines in the group.
+
 .. image:: images/fmri/fmri_agg_time.png
     :align: center
     :width: 90%
