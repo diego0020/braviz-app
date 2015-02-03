@@ -64,6 +64,11 @@ which will be shown on the table labeled *frozen points*. The table has the foll
 .. hint::
     When you click on a row of the table the corresponding signal will be highlighted in the plot
 
+.. image:: images/fmri/fmri_highlighted.png
+    :align: center
+    :width: 90%
+    :alt: A highlighted signal
+
 To remove a signal, right click on its name on the table and from the context menu select "remove". To remove all
 signals from the table click on the button labeled *Clear*.
 
