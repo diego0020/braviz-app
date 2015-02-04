@@ -65,10 +65,14 @@ class CorrelationMatrixFigure(FigureCanvas):
         plt.clf()
         self.ax = plt.axes()
         if self.df is None:
+            self.ax.tick_params('y', left='off', right='off', labelleft='off', labelright='off')
+            self.ax.tick_params('x', top='off', bottom='off', labelbottom='off', labeltop='off')
             message = "Select two or more variables from list"
             self.ax.text(0.5, 0.5, message, horizontalalignment='center',
                          verticalalignment='center', fontsize=16)
         else:
+            self.ax.tick_params('y', left='off', right='off', labelleft='on', labelright='off')
+            self.ax.tick_params('x', top='off', bottom='off', labelbottom='on', labeltop='off')
             plt.sca(self.ax)
             sns.corrplot(self.df, annot=False, sig_stars=True, cmap_range="full",
                          diag_names=False, sig_corr=False, cmap=self.cmap, ax=self.ax, cbar=True)
@@ -109,6 +113,7 @@ class CorrelationMatrixFigure(FigureCanvas):
             x_name,y_name = self.df.columns[x_int],self.df.columns[y_int]
             df2 = self.df[[x_name,y_name]]
             self.SquareSelected.emit(df2)
+
     def set_sample(self,new_sample):
         self.sample = list(new_sample)
         self.df = self.df.loc[self.sample].copy()
@@ -134,6 +139,8 @@ class RegFigure(FigureCanvas):
 
     def draw_initial_message(self):
         self.ax.clear()
+        self.ax.tick_params('y', left='off', right='off', labelleft='off', labelright='off')
+        self.ax.tick_params('x', top='off', bottom='off', labelbottom='off', labeltop='off')
         message = "Click in the correlation matrix"
         self.ax.text(0.5, 0.5, message, horizontalalignment='center',
                      verticalalignment='center', fontsize=16)
@@ -146,6 +153,8 @@ class RegFigure(FigureCanvas):
         assert df.shape[1] == 2
         #print df
         self.ax.clear()
+        self.ax.tick_params('y', left='on', right='off', labelleft='off', labelright='on')
+        self.ax.tick_params('x', top='off', bottom='on', labelbottom='on', labeltop='off')
         plt.sca(self.ax)
         plt.sca(self.ax)
         df = df.dropna()
