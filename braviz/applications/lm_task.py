@@ -127,7 +127,8 @@ class LinearModelApp(QMainWindow):
 
         self.ui.actionSave_scneario.triggered.connect(self.save_scenario_dialog)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
-
+        self.ui.actionData.triggered.connect(self.save_data)
+        self.ui.actionImages.triggered.connect(self.save_figure)
 
     def dispatch_outcome_select(self):
 
@@ -597,6 +598,19 @@ class LinearModelApp(QMainWindow):
             pixmap.save(file_path)
         log.info("saving")
         log.info(state)
+
+    def save_figure(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
+                                 "Save Plot",".","PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
+        self.plot.fig.savefig(filename)
+
+    def save_data(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
+                             "Save Data",".","csv (*.csv)"))
+        if len(filename)>0:
+            vars = [self.outcome_var_name]+list(self.regressors_model.get_regressors())
+            out_df = braviz_tab_data.get_data_frame_by_name(vars)
+            out_df.to_csv(filename)
 
     def load_scenario_dialog(self):
         app_name = os.path.splitext(os.path.basename(__file__))[0]

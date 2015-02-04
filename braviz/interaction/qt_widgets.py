@@ -194,6 +194,7 @@ class MatplotWidget(FigureCanvas):
         self.fig.clear()
         if len(data) == 0:
             log.warning("Data Frame is empty")
+            return
         if isinstance(data,(pd.DataFrame,pd.Series)):
             assert pd.isnull(data).sum().sum() == 0
         elif isinstance(data,np.ndarray):
