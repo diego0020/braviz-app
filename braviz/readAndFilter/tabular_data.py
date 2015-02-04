@@ -967,9 +967,12 @@ def add_data_frame(df):
     for i, c in enumerate(columns):
         with conn:
             print "%d / %d : %s"%(i+1,tot_cols,c)
-            q1 = "INSERT INTO variables (var_name) VALUES (?)"
-            cur = conn.execute(q1,(c,))
-            var_idx = cur.lastrowid
+            if does_variable_name_exists(c):
+                var_idx = get_var_idx(c)
+            else:
+                q1 = "INSERT INTO variables (var_name) VALUES (?)"
+                cur = conn.execute(q1,(c,))
+                var_idx = cur.lastrowid
             col = df[c]
             try:
                 vals = col.get_values().astype(float)

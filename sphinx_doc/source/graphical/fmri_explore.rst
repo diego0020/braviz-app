@@ -50,7 +50,6 @@ Working with bold signals
 
 .. image:: images/fmri/fmri_timeline_panel.png
     :align: center
-    :width: 90%
     :alt: Aggregate signal
 
 The *Timeline* panel lets you perform several operations with BOLD signals. You can add several lines to the plot,
@@ -59,7 +58,7 @@ which will be shown on the table labeled *frozen points*. The table has the foll
     -   **Subject**: The subject to whom the signal belongs
     -   **Coordinates**: The spatial coordinates at which the bold signal was sampled
     -   **Contrast**: The active contrast when the signal was sampled
-    -   **T Stat**: The T statistic value corresponding to the signal and the contrast.
+    -   **T Stat**: The T statistic value corresponding to the signal and the contrast (read from the SPM output).
 
 .. hint::
     When you click on a row of the table the corresponding signal will be highlighted in the plot
@@ -96,7 +95,22 @@ The graph displays the mean signal, and the confidence interval based on all the
 Exporting data
 ---------------
 
+This application allow exporting three kinds of data, in order to do this go to the *file* menu and then to *export*,
+you will see three options
+
+    -   **Graph**: Export the current time plot as a vectorial (svg or pdf) or raster (pdf) file.
+    -   **Signals**: Export the current signals as a matlab data file.
+    -   **Frozen Table**: Export the current *Frozen points table* as a csv file with 5 columns
+
+        -   Index: A tuple with the subject and the coordinates
+        -   Contrast: Name of the contrast
+        -   Subject: Numerical id of the subject
+        -   T Stat: T statistic associated to the contrast the subject and the coordinates.
+
 
 Samples and scenarios
 ----------------------
 
+The *file* menu also contains options to save and load scenarios; and to change the current sample to a group of
+interest. In this case scenarios include the current plot, the frozen points table, the paradigm, contrast and camera
+of the 3d viewer. See :doc:`concepts` for more information.
