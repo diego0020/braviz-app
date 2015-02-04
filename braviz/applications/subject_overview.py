@@ -84,6 +84,8 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_widget = QSubjectViewerWidget(reader=self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.subject_viewer
         self.subjects_model = SubjectsTable(initial_vars)
+        self.__demo_timer = QtCore.QTimer()
+        self.__demo_timer.timeout.connect(self.go_to_next_subject)
         self.sample = braviz_tab_data.get_subjects()
 
         self.__frozen_subject = False
@@ -239,7 +241,7 @@ class SubjectOverviewApp(QMainWindow):
         #menubar
         self.ui.actionSave_scenario.triggered.connect(self.save_state)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
-
+        self.ui.actionAuto_loop.toggled.connect(self.toggle_demo_mode)
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
 
@@ -282,6 +284,7 @@ class SubjectOverviewApp(QMainWindow):
         self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
         self.ui.subject_id2.setText("%s" % new_subject)
+        self.subjects_model.highlighted_subject = int(new_subject)
         #details
         self.subject_details_model.change_subject(new_subject)
         self.reload_comments()
@@ -1166,6 +1169,18 @@ class SubjectOverviewApp(QMainWindow):
         comment = unicode(self.ui.comments_box.toPlainText())
         braviz_user_data.update_comment(self.__curent_subject,comment)
         self.statusBar().showMessage("comments saved",2000)
+
+
+    def toggle_demo_mode(self,active):
+        if active:
+            interval = (QtGui.QInputDialog.getInt(self,"Set loop interval",
+                                                     "Interval (s):",20,0,1000))
+            if interval[1] is True:
+                self.__demo_timer.start(interval[0]*1000)
+            else:
+                self.ui.actionAuto_loop.setChecked(False)
+        else:
+            self.__demo_timer.stop()
 
 
 

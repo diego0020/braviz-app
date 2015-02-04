@@ -756,9 +756,10 @@ class AnovaApp(QMainWindow):
     def save_data(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
                              "Save Data",".","csv (*.csv)"))
-        vars = [self.outcome_var_name]+list(self.regressors_model.get_regressors())
-        out_df = braviz_tab_data.get_data_frame_by_name(vars)
-        out_df.to_csv(filename)
+        if len(filename)>0:
+            vars = [self.outcome_var_name]+list(self.regressors_model.get_regressors())
+            out_df = braviz_tab_data.get_data_frame_by_name(vars)
+            out_df.to_csv(filename)
 
 def run():
     import sys

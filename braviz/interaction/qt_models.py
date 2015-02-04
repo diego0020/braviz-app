@@ -1131,6 +1131,7 @@ class SubjectsTable(QAbstractTableModel):
         self.__is_var_real = None
         self.__labels = None
         self.__col_indexes = None
+        self.__highlight_subject = None
         self.sample = sample
         if sample is None:
             self.sample = braviz_tab_data.get_subjects()
@@ -1154,9 +1155,22 @@ class SubjectsTable(QAbstractTableModel):
             return QtCore.QVariant()
 
     def data(self, QModelIndex, int_role=None):
+        line = QModelIndex.row()
+        name = self.__df.iloc[line,0]
+        if int_role == QtCore.Qt.FontRole:
+            if name == self.__highlight_subject:
+                font = QtGui.QFont()
+                font.setBold(True)
+                return font
+        if int_role == QtCore.Qt.BackgroundRole:
+            if name == self.__highlight_subject:
+                brush = QtGui.QBrush()
+                brush.setColor(QtGui.QColor("palegreen"))
+                brush.setStyle(QtCore.Qt.SolidPattern)
+                return brush
         if not (int_role in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole)):
             return QtCore.QVariant()
-        line = QModelIndex.row()
+
         col = QModelIndex.column()
         if (0 <= line < len(self.__df)) and (0 <= col < self.__df.shape[1]):
             datum = self.__df.iloc[line, col]
@@ -1234,6 +1248,14 @@ class SubjectsTable(QAbstractTableModel):
         row = self.__df.index.get_loc(int(subj_id))
         return row
 
+    @property
+    def highlighted_subject(self):
+        return self.__highlight_subject
+
+    @highlighted_subject.setter
+    def highlighted_subject(self,subj):
+        self.__highlight_subject = subj
+        self.modelReset.emit()
 
 class ContextVariablesModel(QAbstractTableModel):
     """
@@ -2105,6 +2127,12 @@ class SubjectChecklist(QAbstractListModel):
         """
         return self.__checked
 
+
+    @checked.setter
+    def checked(self, new_set):
+        self.__checked = frozenset(new_set)
+        self.modelReset.emit()
+
     @property
     def highlighted_subject(self):
         return self.__highlight_subject
@@ -2112,11 +2140,6 @@ class SubjectChecklist(QAbstractListModel):
     @highlighted_subject.setter
     def highlighted_subject(self,subj):
         self.__highlight_subject = subj
-        self.modelReset.emit()
-
-    @checked.setter
-    def checked(self, new_set):
-        self.__checked = frozenset(new_set)
         self.modelReset.emit()
 
     def set_list(self, lst):

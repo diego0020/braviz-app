@@ -8,8 +8,13 @@ float : none;
 
 div#profile{
 text-align: center;
-overflow: hidden;
 }
+
+div.document h2{
+text-align: center;
+font-size: 150%;
+}
+
 
 div#profile div.section{
 text-align: left;
@@ -47,7 +52,6 @@ div#profile div.section p{
 text-align:center;
 margin-top: 1em;
 margin-bottom: 1em;
-position: absolute;
 bottom: 0;
 width: 100%;
 }
@@ -57,10 +61,15 @@ text-align: center;
 background: rgb(218, 221, 214);
 padding-top: .5em;
 padding-bottom: .5em;
+font-size: 150%;
 }
 
 
 @media screen and (min-width: 1150px){
 div#profile div.section{
 width: 21em ;
+}
+div#profile div.section p{
+position: absolute;
+}
 }
