@@ -179,9 +179,6 @@
               <property name="sortingEnabled">
                <bool>false</bool>
               </property>
-              <attribute name="horizontalHeaderVisible">
-               <bool>false</bool>
-              </attribute>
               <attribute name="horizontalHeaderStretchLastSection">
                <bool>true</bool>
               </attribute>
@@ -1495,7 +1492,7 @@
      <x>0</x>
      <y>0</y>
      <width>857</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

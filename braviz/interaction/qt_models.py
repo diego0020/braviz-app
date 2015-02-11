@@ -1446,8 +1446,7 @@ class SubjectDetails(QAbstractTableModel):
             return QtCore.QVariant()
         elif 0 <= p_int < len(self.headers):
             name = self.headers[p_int]
-            desc = braviz_tab_data.get_var_description_by_name(name)
-            return "\n".join((name, desc))
+            return name
         else:
             return QtCore.QVariant()
 
