@@ -284,6 +284,18 @@ def get_sample_data(sample_idx):
     data = cPickle.loads(str(data_str))
     return data
 
+def delete_sample(sample_id):
+    """
+    Delete a sample from the database
+
+    Args:
+        sample_id (int) :  Sample id
+    """
+    conn=_get_connection()
+    with conn:
+        q = "DELETE FROM subj_samples WHERE sample_idx = ?"
+        conn.execute(q,(int(sample_id),))
+
 def delete_scenario(scn_id):
     """
     Delete a scenario from the database

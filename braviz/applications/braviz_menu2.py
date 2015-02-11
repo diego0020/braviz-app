@@ -132,7 +132,12 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def launch_samples_dialog(self):
         dialog = braviz.applications.qt_sample_select_dialog.SampleLoadDialog()
-        dialog.exec_()
+        ret = dialog.exec_()
+        if ret == dialog.Accepted:
+            idx = dialog.current_sample_idx
+            interpreter = sys.executable
+            args = [interpreter, "-m", "braviz.applications.qt_sample_select_dialog", str(idx)]
+            subprocess.Popen(args)
 
     def launch_scenarios_dialog(self):
         if self.reader is None:

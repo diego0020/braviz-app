@@ -1109,6 +1109,7 @@ class SubjectOverviewApp(QMainWindow):
             self.tracula_model.set_selection(bundles)
             self.ui.tracula_opac.setValue(opac)
             self.vtk_viewer.tracula.set_opacity(opac)
+            self.vtk_viewer.ren.Render()
 
         #surface panel
         surface_state = wanted_state.get("surf_state")

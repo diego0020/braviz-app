@@ -53,6 +53,7 @@ class SampleLoadDialog(QtGui.QDialog):
         self.current_sample_name = None
         self.ui.tableView.activated.connect(self.load_action)
         self.ui.tableView.clicked.connect(self.load_action)
+        self.ui.tableView.customContextMenuRequested.connect(self.show_context_menu)
         if new_button:
             self.new_button = QtGui.QPushButton("New")
             self.ui.buttonBox.addButton(self.new_button, QtGui.QDialogButtonBox.ActionRole)
@@ -65,6 +66,7 @@ class SampleLoadDialog(QtGui.QDialog):
                 if return_value is not None:
                     self.new_button.setEnabled(1)
                     self.model.reload()
+                    self.check_state_timer.stop()
 
             def launch_new_sample_sub_process():
                 self.new_button.setEnabled(0)
@@ -87,6 +89,24 @@ class SampleLoadDialog(QtGui.QDialog):
         log = logging.getLogger(__name__)
         log.info(self.current_sample)
 
+    def show_context_menu(self, pos):
+        global_pos = self.ui.tableView.mapToGlobal(pos)
+        selection = self.ui.tableView.currentIndex()
+        idx =  self.model.get_sample_index(selection)
+        name = self.model.get_sample_name(selection)
+        remove_action = QtGui.QAction("Remove %s"%name, None)
+        menu = QtGui.QMenu()
+        menu.addAction(remove_action)
+
+        def remove_item():
+            log = logging.getLogger(__name__)
+            log.info("removing sample %s (%d)"%(name,idx))
+            braviz_user_data.delete_sample(idx)
+            self.model.reload()
+
+        remove_action.triggered.connect(remove_item)
+        menu.addAction(remove_action)
+        menu.exec_(global_pos)
 
 class SampleCreateDilog(QtGui.QMainWindow):
     def __init__(self):
@@ -548,6 +568,10 @@ if __name__ == "__main__":
     app = QtGui.QApplication([])
     main_window = SampleCreateDilog()
     main_window.show()
+    if len(sys.argv) >= 2:
+        sample_id = int(sys.argv[1])
+        sample = braviz_user_data.get_sample_data(sample_id)
+        main_window.change_output_sample(sample)
     main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     try:
         sys.exit(app.exec_())
