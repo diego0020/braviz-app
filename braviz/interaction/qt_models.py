@@ -1533,6 +1533,12 @@ class SubjectDetails(QAbstractTableModel):
         """
         return self.__df.index
 
+    def sort(self, p_int, Qt_SortOrder_order=None):
+        if p_int == 0:
+            ascending = not (Qt_SortOrder_order == QtCore.Qt.AscendingOrder)
+            self.__df.sort("name",inplace=True,ascending=ascending)
+            self.modelReset.emit()
+
 
 class NewVariableValues(QAbstractTableModel):
     """
