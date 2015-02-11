@@ -73,6 +73,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
         self._functional_paradigms=frozenset()
         self._named_bundles=frozenset()
+        self._tracula_bundles = []
 
 
     def transform_points_to_space(self, point_set, space, subj, inverse=False):
@@ -841,7 +842,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
     def _read_tracula(self,subj, space, **kw):
         "Read tracula files"
         if kw.get("index",False):
-            labels = ['CC-ForcepsMajor', 'CC-ForcepsMinor', 'LAntThalRadiation', 'LCingulumAngBundle', 'LCingulumCingGyrus', 'LCorticospinalTract', 'LInfLongFas', 'LSupLongFasParietal', 'LSupLongFasTemporal', 'LUncinateFas', 'RAntThalRadiation', 'RCingulumAngBundle', 'RCingulumCingGyrus', 'RCorticospinalTract', 'RInfLongFas', 'RSupLongFasParietal', 'RSupLongFasTemporal', 'RUncinateFas']
+            labels = self._tracula_bundles
             return labels
         log= logging.getLogger(__name__)
         track_name = kw.get("name")

@@ -54,7 +54,7 @@ This is done to protect raw data and to allow to share it between different user
         KmcAbstractReader.__init__(self,static_root,dynamic_route,max_cache)
 
         self._functional_paradigms=frozenset(('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION'))
-
+        self._tracula_bundles =  ['CC-ForcepsMajor', 'CC-ForcepsMinor', 'LAntThalRadiation', 'LCingulumAngBundle', 'LCingulumCingGyrus', 'LCorticospinalTract', 'LInfLongFas', 'LSupLongFasParietal', 'LSupLongFasTemporal', 'LUncinateFas', 'RAntThalRadiation', 'RCingulumAngBundle', 'RCingulumCingGyrus', 'RCorticospinalTract', 'RInfLongFas', 'RSupLongFasParietal', 'RSupLongFasTemporal', 'RUncinateFas']
 
     def _getIds(self):
         "Auxiliary function to get the available ids"

@@ -216,6 +216,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.bundles_list.clicked.connect(self.update_current_bundle)
         self.ui.fibers_scalar_combo.currentIndexChanged.connect(self.update_fiber_scalars)
         self.ui.export_fiber_scalars_to_db.clicked.connect(self.export_fiber_scalars_to_db)
+
         #tracula panel
         self.ui.tracula_list.setModel(self.tracula_model)
         self.tracula_model.dataChanged.connect(self.update_tracula)
