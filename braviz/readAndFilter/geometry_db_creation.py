@@ -22,7 +22,7 @@ from braviz.readAndFilter.tabular_data import _get_connection
 
 __author__ = 'Diego'
 
-def create_geom_rois_tables():
+def create_geom_rois_tables(conn = None):
     """
     geom types
     0 : spheres
@@ -43,11 +43,12 @@ def create_geom_rois_tables():
     roi_desc TEXT,
     roi_coords INT -- 0:World,1:Talairach,2:Dartel
     );"""
-    conn=_get_connection()
+    if conn is None:
+        conn=_get_connection()
     conn.execute(q)
     conn.commit()
 
-def create_spheres_table():
+def create_spheres_table(conn = None):
     q="""CREATE TABLE IF NOT EXISTS geom_spheres (
     sphere_id INTEGER,
     subject REFERENCES subjects(subject),
@@ -58,11 +59,12 @@ def create_spheres_table():
     PRIMARY KEY (sphere_id,subject)
     )
     """
-    conn=_get_connection()
+    if conn is None:
+        conn=_get_connection()
     conn.execute(q)
     conn.commit()
 
-def create_lines_table():
+def create_lines_table(conn = None):
     """
     Creates a table for storing measurement lines
     :return Nothing:
@@ -80,7 +82,8 @@ def create_lines_table():
     PRIMARY KEY (line_id,subject)
     )
     """
-    conn=_get_connection()
+    if conn is None:
+        conn=_get_connection()
     conn.execute(q)
     conn.commit()
     q="""CREATE INDEX IF NOT EXISTS

@@ -56,11 +56,13 @@ def create_directories():
     except Exception:
         pass
 
-def create_data_base(path=None):
+def create_data_base(path=None, conn = None):
     if path is None:
         import braviz
         path = os.path.join(braviz.readAndFilter.braviz_auto_dynamic_data_root(), "braviz_data", "tabular_data.sqlite")
-    conn = sqlite3.connect(path)
+
+    if conn is None:
+        conn = sqlite3.connect(path)
 
     #enable foreign keys
     conn.execute("PRAGMA foreign_keys= ON;")

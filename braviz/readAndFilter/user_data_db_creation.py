@@ -28,8 +28,9 @@ if __name__ == "__main__":
     sys.exit(0)
 
 
-def create_tables():
-    conn = _get_connection()
+def create_tables(conn = None):
+    if conn is None:
+        conn = _get_connection()
 
     #applications table
     q = """CREATE TABLE IF NOT EXISTS applications (
@@ -100,9 +101,10 @@ _applications_dir = {
         8: "measure_task",
         }
 
-def update_current_applications():
+def update_current_applications(conn = None):
     applications = _applications_dir
-    conn = _get_connection()
+    if conn is None:
+        conn = _get_connection()
     q = "SELECT app_idx, exec_name FROM applications ORDER BY app_idx"
     cur = conn.execute(q)
     db_tuples = cur.fetchall()

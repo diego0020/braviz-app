@@ -1052,3 +1052,15 @@ def recursive_delete_subject(subject):
     else:
         print "Done"
 
+
+def initialize_database(path):
+    """
+    Create a new braviz database
+
+    Args:
+        path (str) : Name of the new sqlite file that will contain the braviz database
+    """
+    conn = sqlite3.connect(path)
+    conn.close()
+    from braviz.readAndFilter.check_db import verify_db_completeness
+    verify_db_completeness(path)
