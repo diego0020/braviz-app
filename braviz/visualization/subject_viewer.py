@@ -30,6 +30,7 @@ from braviz.visualization.fmri_view import fMRI_blender
 
 from braviz.interaction.structure_metrics import solve_laterality
 import braviz.readAndFilter.tabular_data
+import braviz.readAndFilter.config_file
 import seaborn as sbs
 from itertools import izip
 from braviz.interaction import structure_metrics
@@ -968,6 +969,12 @@ class ModelManager(object):
             initial_subj : Code of initial subject, if None an arbitrary subject will be selected
             initial_space (str) : Initial coordinate system
         """
+
+        conf = braviz.readAndFilter.config_file.get_apps_config()
+        lat_var=conf.get_laterality()
+        self.lat_idx=braviz.readAndFilter.tabular_data.get_var_idx(lat_var[0])
+        self.left_handed = lat_var[1]
+
         self.ren = ren
         if initial_subj is None:
             initial_subj = reader.get("ids", None)[0]
@@ -988,14 +995,13 @@ class ModelManager(object):
 
 
     def __get_laterality(self):
-        lat_var_idx = braviz.readAndFilter.tabular_data.LATERALITY
         log = logging.getLogger(__file__)
         try:
-            label = braviz.readAndFilter.tabular_data.get_var_value(lat_var_idx, self.__current_subject)
+            label = braviz.readAndFilter.tabular_data.get_var_value(self.lat_idx, self.__current_subject)
         except Exception:
             log.warning("Laterality no found for subject %s, assuming right handed" % self.__current_subject)
             label = 1
-        if label is None or (int(label) == braviz.readAndFilter.tabular_data.LEFT_HANDED):
+        if label is None or (int(label) == self.left_handed):
             return "l"
         else:
             return "r"
