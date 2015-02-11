@@ -46,6 +46,7 @@ def verify_db_completeness():
         from braviz.readAndFilter import bundles_db_creation
         bundles_db_creation.create_bundles_table()
         bundles_db_creation.add_named_bundes_to_table()
+    _check_named_tracts()
 
     #geom db
     if not _check_tables(conn,("geom_rois","geom_spheres","geom_lines",)):
@@ -59,6 +60,18 @@ def _check_table(conn,table_name):
     cur = conn.execute(q,(table_name,))
     res = cur.fetchone()[0]
     return res>0
+
+def _check_named_tracts():
+    from braviz.readAndFilter import bundles_db
+    import braviz.readAndFilter
+    conn = tabular_data._get_connection()
+    r = braviz.readAndFilter.BravizAutoReader()
+    named_tracts=r.get("FIBERS",None,index=True)
+    for n in named_tracts:
+        if not bundles_db.check_if_name_exists(n):
+            q="""INSERT INTO fiber_bundles (bundle_name, bundle_type, bundle_data) VALUES (?, 0, ?) """
+            with conn:
+                conn.execute(q,(n,n))
 
 def _check_tables(conn,tables):
     import logging
