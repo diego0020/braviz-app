@@ -49,6 +49,8 @@ The constructor requires the root to this structure
         "The path pointing to the __root of the file structure must be set here"
         KmcAbstractReader.__init__(self,path,path,max_cache)
         self._functional_paradigms = frozenset(("PRECISION", "POWERGRIP"))
+        self._named_bundles = frozenset(("cortico_spinal_l","cortico_spinal_r","cortico_spinal_n","cortico_spinal_d",
+                                         "corpus_callosum"))
 
     def _getIds(self):
         "Auxiliary function to get the available ids"

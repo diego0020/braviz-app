@@ -72,6 +72,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         self._free_surfer_labels = None
 
         self._functional_paradigms=frozenset()
+        self._named_bundles=frozenset()
 
 
     def transform_points_to_space(self, point_set, space, subj, inverse=False):
@@ -747,11 +748,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 return lut
         #named tracts index
         if kw.get('index', False):
-            import braviz.readAndFilter.named_tracts
-            named_tract_funcs = dir(braviz.readAndFilter.named_tracts)
-            functions = filter(lambda x: isinstance(getattr(braviz.readAndFilter.named_tracts, x),
-                                                    types.FunctionType), named_tract_funcs)
-            return filter(lambda x: not x.startswith('_'), functions)
+            return self._named_bundles
 
         #deal with database tracts:
         if "db_id" in kw:
