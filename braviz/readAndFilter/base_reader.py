@@ -338,6 +338,8 @@ data is requested. To get a more useful class you should create your own subclas
             except OSError:
                 pass
             os.mkdir(cache_dir)
+        else:
+            print "If you are sure you want to delete the cache dir, call this function with a True argument"
 
     def get_data_root(self):
         """Returns the root directory from which this instance reads data

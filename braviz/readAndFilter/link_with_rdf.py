@@ -19,13 +19,14 @@
 
 import os
 import logging
+import csv
 from braviz.utilities import working_directory, recursive_default_dict
 
 
 __author__ = 'Diego'
 
 
-def get_free_surfer_pretty_names_dict():
+def get_free_surfer_pretty_names_dict_from_rdf():
     from kernel.RDFDBManagerClass import RDFDBManager
 
     yoyis_dir = os.path.abspath(os.path.dirname(__file__))
@@ -48,6 +49,13 @@ def get_free_surfer_pretty_names_dict():
         return out_dict
 
 
+def get_free_surfer_long_names():
+    path = os.path.join(os.path.dirname(__file__),"data","free_surfer_long_names.csv")
+    with open(path,"rb") as f:
+        r = csv.reader(f)
+        pretty_names = dict(t for t in r)
+    return pretty_names
+
 def cached_get_free_surfer_dict(reader=None):
     from braviz.readAndFilter import BravizAutoReader
 
@@ -57,7 +65,7 @@ def cached_get_free_surfer_dict(reader=None):
     names_dict = reader.load_from_cache(key)
     if names_dict is not None:
         return names_dict
-    names_dict = get_free_surfer_pretty_names_dict()
+    names_dict = get_free_surfer_long_names()
     reader.save_into_cache(key, names_dict)
     return names_dict
 
