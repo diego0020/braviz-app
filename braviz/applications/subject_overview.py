@@ -1068,7 +1068,10 @@ class SubjectOverviewApp(QMainWindow):
             bundles = tractography_state.get("bundles")
             if bundles is not None:
                 self.fibers_list_model.set_ids(bundles)
-                self.vtk_viewer.tractography.set_active_db_tracts(bundles)
+                try:
+                    self.vtk_viewer.tractography.set_active_db_tracts(bundles)
+                except Exception as e:
+                    log.exception(e)
             from_segment = tractography_state.get("from_segment")
             if from_segment is not None:
                 idx = self.ui.fibers_from_segments_box.findText(from_segment)
