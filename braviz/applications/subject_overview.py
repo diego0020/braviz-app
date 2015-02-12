@@ -1096,13 +1096,18 @@ class SubjectOverviewApp(QMainWindow):
             current = tractography_state.get("active_bundle", False)
             if current is not False:
                 self.current_fibers = current
+                try:
+                    if isinstance(current, str):
+                        self.ui.current_bundle_tag.setText(current)
+                    else:
+                        name = self.fibers_list_model.get_bundle_name(current)
+                        self.ui.current_bundle_tag.setText(name)
+                except Exception as e:
+                    log.exception(e)
+                    current = None
                 if current is None:
                     self.ui.current_bundle_tag.setText("<No active bundle>")
-                elif isinstance(current, str):
-                    self.ui.current_bundle_tag.setText(current)
-                else:
-                    name = self.fibers_list_model.get_bundle_name(current)
-                    self.ui.current_bundle_tag.setText(name)
+
                 self.update_fiber_scalars()
 
         #tracula_panel
