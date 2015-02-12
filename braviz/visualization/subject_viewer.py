@@ -1556,7 +1556,7 @@ class TractographyManager(object):
             except Exception as e:
                 log = logging.getLogger(__name__)
                 log.error(e)
-                raise
+                errors+=1
 
         if errors > 0:
             log = logging.getLogger(__name__)
