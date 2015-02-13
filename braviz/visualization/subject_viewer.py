@@ -1518,7 +1518,7 @@ class TractographyManager(object):
 
     def __reload_fibers(self):
         # reload ad_hoc
-        error = False
+        log = logging.getLogger(__name__)
         if self.__ad_hoc_visibility is True:
             try:
                 self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks, self.__ad_hoc_throug_all)
@@ -1529,10 +1529,9 @@ class TractographyManager(object):
         for bid in self.__active_db_tracts:
             try:
                 self.add_from_database(bid)
-            except Exception:
-                error = True
-        if error is True:
-            raise Exception("Couldn't load fibers")
+            except Exception as e:
+                log.exception(e)
+
 
     @do_and_render
     def set_active_db_tracts(self, new_set):
@@ -1561,7 +1560,6 @@ class TractographyManager(object):
         if errors > 0:
             log = logging.getLogger(__name__)
             log.warning("Couldn't load all tracts")
-            raise Exception("Couldn't load all tracts")
 
     @do_and_render
     def set_opacity(self, float_opacity):
@@ -1592,22 +1590,25 @@ class TractographyManager(object):
             Scalar value or ``nan`` if there was an error
         """
         if bid in self.__active_db_tracts:
-            if scalar in ("number", "mean_length"):
-                pd = self.__db_tracts[bid][0]
-                return structure_metrics.get_scalar_from_fiber_ploydata(pd, scalar)
-            elif scalar == "mean_fa":
-                fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                                        db_id=bid, color=None, scalars="fa_p")
-                n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
-                return n
-            elif scalar == "mean_md":
-                fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
-                                        db_id=bid, color=None, scalars="md_p")
-                n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
-                return n
+            try:
+                if scalar in ("number", "mean_length"):
+                    pd = self.__db_tracts[bid][0]
+                    return structure_metrics.get_scalar_from_fiber_ploydata(pd, scalar)
+                elif scalar == "mean_fa":
+                    fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
+                                            db_id=bid, color=None, scalars="fa_p")
+                    n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
+                    return n
+                elif scalar == "mean_md":
+                    fiber = self.reader.get("FIBERS", self.__current_subject, space=self.__current_space,
+                                            db_id=bid, color=None, scalars="md_p")
+                    n = structure_metrics.get_scalar_from_fiber_ploydata(fiber, "mean_color")
+                    return n
+            except Exception as e:
+                log = logging.getLogger(__name__)
+                log.exception(e)
 
-        else:
-            return float("nan")
+        return float("nan")
 
     def get_scalar_from_structs(self, scalar):
         """
@@ -1733,20 +1734,25 @@ class TraculaManager(object):
     def __load_bundle(self, bundle_name):
         trio = self.__pd_map_act.get(bundle_name)
         if trio is None:
-            pd = self.__reader.get("TRACULA", self.__current_subject, name=bundle_name, space=self.__current_space)
             color = self.__reader.get("TRACULA", self.__current_subject, name=bundle_name, color=True)
             mapper = vtk.vtkPolyDataMapper()
             mapper.ScalarVisibilityOff()
-            mapper.SetInputData(pd)
             actor = vtk.vtkActor()
             actor.SetMapper(mapper)
             actor.GetProperty().SetColor(color)
             self.ren.AddActor(actor)
         else:
             pd, mapper, actor = trio
+        try:
             pd = self.__reader.get("TRACULA", self.__current_subject, name=bundle_name, space=self.__current_space)
+        except Exception as e:
+            log = logging.getLogger(__name__)
+            log.exception(e)
+            actor.SetVisibility(0)
+            pd = None
+        else:
             mapper.SetInputData(pd)
-        actor.SetVisibility(1)
+            actor.SetVisibility(1)
         self.__pd_map_act[bundle_name] = (pd, mapper, actor)
 
     def __hide_bundle(self, bundle_name):

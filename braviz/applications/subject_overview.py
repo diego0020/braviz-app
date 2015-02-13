@@ -676,14 +676,16 @@ class SubjectOverviewApp(QMainWindow):
     def update_current_bundle(self, index=None):
         self.ui.export_fiber_scalars_to_db.setEnabled(1)
         if index is None:
+            # Just activated a from segmentation model
             if (self.current_fibers is None) and (self.ui.fibers_from_segments_box.currentIndex() > 0):
                 self.current_fibers = "<From Segmentation>"
                 self.ui.current_bundle_tag.setText("<From Segmentation>")
-            if (self.current_fibers == "<From Segmentation>") and (
-                        self.ui.fibers_from_segments_box.currentIndex() == 0):
+            # Invalid from segmentation bundle
+            else :
                 self.current_fibers = None
                 self.ui.current_bundle_tag.setText("<No active bundle>")
                 self.ui.export_fiber_scalars_to_db.setEnabled(0)
+
         else:
             name = self.fibers_list_model.data(index, QtCore.Qt.DisplayRole)
             self.ui.current_bundle_tag.setText(name)
@@ -770,16 +772,18 @@ class SubjectOverviewApp(QMainWindow):
         selected = set(self.fibers_list_model.get_ids())
         names_dict = {}
         dialog = BundleSelectionDialog(selected, names_dict)
-        dialog.exec_()
-        log = logging.getLogger(__name__)
-        log.info(selected)
-        self.fibers_list_model.set_ids(selected, names_dict)
-        self.vtk_viewer.tractography.set_active_db_tracts(selected)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            log = logging.getLogger(__name__)
+            log.info(selected)
+            self.fibers_list_model.set_ids(selected, names_dict)
+            self.vtk_viewer.tractography.set_active_db_tracts(selected)
+            if isinstance(self.current_fibers,int) and self.current_fibers not in selected:
+                self.update_current_bundle()
 
     def save_fibers_bundle(self):
         checkpoints = self.structures_tree_model.get_selected_structures()
         index = self.ui.fibers_from_segments_box.currentIndex()
-        operation = self.ui.fibers_from_segments_box.itemText(index)
         throug_all = (index == 2)
         logger = logging.getLogger(__name__)
         logger.info("saving bundles")
@@ -881,6 +885,7 @@ class SubjectOverviewApp(QMainWindow):
         tractography_state["visible_color_bar"] = self.vtk_viewer.tractography.get_show_color_bar()
         tractography_state["opacity"] = float(self.ui.fibers_opacity.value())
         tractography_state["scalar"] = str(self.ui.fibers_scalar_combo.currentText())
+        assert self.current_fibers in tractography_state["bundles"]+(None,"<From Segmentation>")
         tractography_state["active_bundle"] = self.current_fibers
         state["tractography_state"] = tractography_state
 
