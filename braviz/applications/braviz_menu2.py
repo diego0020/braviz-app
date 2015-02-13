@@ -145,7 +145,7 @@ class BravizMenu2(QtGui.QMainWindow):
         params = {}
         dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(None, params)
         ret = dialog.exec_()
-        if ret == QtGui.QDialog.Accepted:
+        if ret == QtGui.QDialog.Accepted and "meta" in params:
             log = logging.getLogger(__name__)
             log.info(params)
             app = params["meta"]["application"]
