@@ -28,6 +28,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QTableView" name="scenarios_table">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
         <property name="alternatingRowColors">
          <bool>true</bool>
         </property>

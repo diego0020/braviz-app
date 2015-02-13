@@ -556,7 +556,8 @@ class ImageManager(object):
         self.ren = ren
         self.reader = reader
         if initial_subj is None:
-            initial_subj = reader.get("ids", None)[0]
+            conf = braviz.readAndFilter.config_file.get_apps_config()
+            initial_subj = conf.get_default_subject()
         self.__current_subject = initial_subj
         self.__current_space = initial_space
         self.__current_image = None
