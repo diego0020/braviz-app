@@ -896,6 +896,8 @@ class ImageManager(object):
         Returns:
             Current window value
         """
+        if self.__image_plane_widget is None:
+            return 0
         return self.__image_plane_widget.GetWindow()
 
     def get_current_image_level(self):
@@ -905,6 +907,8 @@ class ImageManager(object):
         Returns:
             Current level value
         """
+        if self.__image_plane_widget is None:
+            return 0
         return self.__image_plane_widget.GetLevel()
 
     @do_and_render
