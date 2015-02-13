@@ -978,7 +978,8 @@ class ModelManager(object):
 
         self.ren = ren
         if initial_subj is None:
-            initial_subj = reader.get("ids", None)[0]
+            conf=braviz.readAndFilter.config_file.get_apps_config()
+            initial_subj = conf.get_default_subject()
         self.__active_models_set = set()
         self.__pd_map_act = dict()
         self.__available_models = set()
