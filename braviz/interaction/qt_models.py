@@ -1813,9 +1813,14 @@ class ScenariosTableModel(QAbstractTableModel):
     """
     def __init__(self, app_name):
         super(ScenariosTableModel, self).__init__()
-        self.df = braviz_user_data.get_scenarios_data_frame(app_name)
+        self.app_name = app_name
         self.headers = ("Date", "Name", "Description")
         self.columns = ("scn_date", "scn_name", "scn_desc")
+        self.reload_data()
+
+    def reload_data(self):
+        self.df = braviz_user_data.get_scenarios_data_frame(self.app_name)
+        self.modelReset.emit()
 
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
@@ -1854,6 +1859,12 @@ class ScenariosTableModel(QAbstractTableModel):
         Get the database index for the scenario in a given row
         """
         return self.df.index[row]
+
+    def get_name(self,row):
+        """
+        Get the name of the scenario at a given row
+        """
+        return self.df["scn_name"].iloc[row]
 
 
 class SimpleSetModel(QAbstractListModel):

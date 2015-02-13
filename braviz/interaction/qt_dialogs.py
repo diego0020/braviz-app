@@ -1176,6 +1176,7 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.ui.scenarios_table.setModel(self.model)
         self.ui.scenarios_table.clicked.connect(self.select_scenario)
         self.ui.scenarios_table.activated.connect(self.select_scenario)
+        self.ui.scenarios_table.customContextMenuRequested.connect(self.show_context_menu )
         self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.load_data)
 
     def select_scenario(self, index):
@@ -1203,6 +1204,26 @@ class LoadScenarioDialog(QtGui.QDialog):
         self.out_dict.update(parameters_dict)
         self.accept()
 
+    def show_context_menu(self, pos):
+        global_pos = self.ui.scenarios_table.mapToGlobal(pos)
+        selection = self.ui.scenarios_table.currentIndex()
+        if not selection.isValid():
+            return
+        selection_row = selection.row()
+        scn_idx = self.model.get_index(selection_row)
+        scn_name =self.model.get_name(selection_row)
+        remove_action = QtGui.QAction("Remove %s"%scn_name, None)
+        menu = QtGui.QMenu()
+        menu.addAction(remove_action)
+
+        def remove_item():
+            braviz_user_data.delete_scenario(int(scn_idx))
+            self.model.reload_data()
+
+        remove_action.triggered.connect(remove_item)
+        menu.addAction(remove_action)
+        selected_item = menu.exec_(global_pos)
+        # print selected_item
 
 class LoadLogicBundle(QtGui.QDialog):
     """
