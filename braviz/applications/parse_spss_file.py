@@ -19,19 +19,22 @@
 
 import savReaderWriter
 from braviz.readAndFilter import tabular_data
+import pandas as pd
+import numpy as np
 
 __author__ = 'da.angulo39'
 
 
-def parse_spss_file(file_name, do_save=False):
-    reader = savReaderWriter.SavReader(file_name, verbose=True, )
-    info = reader.getSavFileInfo()
-    descriptions = info[5]
-    labels = info[6]
-    for k, v in descriptions.iteritems():
-        save_description(k, v, do_save)
-    for k, v in labels.iteritems():
-        save_labels(k, v, do_save)
+def parse_spss_meta(file_name, do_save=False):
+    reader = savReaderWriter.SavReader(file_name )
+    with reader:
+        info = reader.getSavFileInfo()
+        descriptions = info[5]
+        labels = info[6]
+        for k, v in descriptions.iteritems():
+            save_description(k, v, do_save)
+        for k, v in labels.iteritems():
+            save_labels(k, v, do_save)
 
 
 def save_description(var_name, desc, do_save=False):
@@ -45,6 +48,32 @@ def save_description(var_name, desc, do_save=False):
 
         print e.message
         raise
+
+def read_spss_data(file_name,index_col=None):
+    reader = savReaderWriter.SavReader(file_name,recodeSysmisTo=float('nan') )
+    with reader:
+        var_names=reader.varNames
+        all_data=reader.all()
+    df=pd.DataFrame(all_data)
+    df.columns = var_names
+    if index_col is not None:
+        df.index=df[index_col]
+    post_process(df)
+    return df
+
+def post_process(data_frame):
+    ttts=data_frame.dtypes.get_values()
+    indeces = np.where(ttts==np.dtype('O'))
+    names=data_frame.columns[indeces]
+    for n in names:
+        c=data_frame[n]
+        try:
+            valid=c.str.strip().str.len()>0
+            c[valid]=c[valid].astype(np.float)
+            c[np.logical_not( valid)] = np.nan
+            data_frame[n]=c.astype(np.float)
+        except ValueError:
+            pass
 
 
 def save_labels(var_name, labels, do_save=False):
@@ -83,4 +112,4 @@ if __name__ == "__main__":
         sys.exit(0)
     file_name = args[1]
     do_save = len(args) > 2 and args[2] == "yes"
-    parse_spss_file(file_name, do_save)
+    parse_spss_meta(file_name, do_save)

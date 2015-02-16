@@ -359,3 +359,11 @@ web applications.
 
 For compatibility it takes the same arguments as the applications launched from the menu, but ignores the scenario
 argument.
+
+.. module:: braviz.applications.import_comments
+
+Import comments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Reads textual comments from an excel table and uploads them to the subject comment (see :doc:`user_data`) field
+of the data base.
