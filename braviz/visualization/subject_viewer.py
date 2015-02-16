@@ -1975,15 +1975,22 @@ class SurfaceManager(object):
         else:
             surf, mapper, actor = trio
 
-        surf = self.reader.get("surf", self.__subject, name=self.__current_surface, hemi=h,
+        try:
+            surf = self.reader.get("surf", self.__subject, name=self.__current_surface, hemi=h,
                                scalars=self.__current_scalars,
                                space=self.__current_space)
+        except Exception as e:
+            log = logging.getLogger(__name__)
+            log.exception(e)
+            actor.SetVisibility(0)
+            surf = None
+        else:
+            mapper.SetInputData(surf)
+            actor.SetVisibility(1)
+            actor.GetProperty().SetOpacity(self.__opacity / 100)
+            self.__locators[h].SetDataSet(surf)
 
-        mapper.SetInputData(surf)
-        actor.SetVisibility(1)
-        actor.GetProperty().SetOpacity(self.__opacity / 100)
         trio = surf, mapper, actor
-        self.__locators[h].SetDataSet(surf)
         self.__surf_trios[h] = trio
 
     def __update_lut(self):
