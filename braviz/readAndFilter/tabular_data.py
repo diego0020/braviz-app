@@ -959,7 +959,6 @@ def add_data_frame(df):
     tot_cols = len(columns)
     subjs = df.index.get_values().astype(int)
     #check if there are new subjects
-    print "updating subjects"
     with conn:
         q="INSERT OR IGNORE INTO subjects VALUES(?)"
         conn.executemany(q,( (s,) for s in subjs))
