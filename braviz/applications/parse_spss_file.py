@@ -18,7 +18,7 @@
 
 
 import savReaderWriter
-from braviz.readAndFilter import tabular_data
+from braviz.readAndFilter import tabular_data, user_data
 import pandas as pd
 import numpy as np
 
@@ -75,6 +75,29 @@ def post_process(data_frame):
         except ValueError:
             pass
 
+
+def save_comments(data_frame):
+    ttts=data_frame.dtypes.get_values()
+    indeces = np.where(ttts==np.dtype('O'))
+    names=data_frame.columns[indeces]
+    comments = {}
+    for c in names:
+        col = data_frame[c].dropna()
+        for i in col.index:
+            com1 = comments.get(i)
+            com = col[i].strip()
+            if len(com)==0:
+                continue
+            com2 = "\n".join((c,col[i]))
+            if com1 is not None:
+                com3 = "\n\n".join((com1,com2))
+            else:
+                com3 = com2
+            comments[i]=com3
+
+    for k,v in comments.iteritems():
+        #print "%d : %s"%(k,v)
+        user_data.update_comment(int(k),v.decode("latin-1"))
 
 def save_labels(var_name, labels, do_save=False):
     print "==============="

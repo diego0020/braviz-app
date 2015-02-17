@@ -35,9 +35,8 @@ if __name__ == "__main__":
         """%args[0]
     path = args[1]
     if len(args)==2:
-        cols = ["PEDIATRIA_Observaciones3",
-                "PEDIATRIA_AnosRepetidosRazon",
-                "NEURO_DiagnosticWMlesions"]
+        cols = [u'WASI_Observaciones', u'NHPT_observacionesNHPT', u'CVLT_Observaciones', u'PEDIATRIA_AnosRepetidosCuales', u'PEDIATRIA_AnosRepetidosRazon', u'PEDIATRIA_Observaciones3', u'NEURO_Porquefalta', u'NEURO_Grupoasignado', u'NEURO_DiagnosticWMlesions', u'NEURO_COMENTARIO']
+
     else:
         cols = args[2:]
     import_comments(path,columns=cols)
