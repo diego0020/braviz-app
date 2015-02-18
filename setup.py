@@ -23,7 +23,7 @@ setup(
     long_description=read('README.md'),
     install_requires=['vtk','nibabel','numpy',
                       'scipy','pandas','psutil',
-                      'matplotlib','PyQt4','pandas', 'seaborn','rpy2','tornado', 'futures',
+                      'matplotlib','PyQt4', 'seaborn','rpy2','tornado', 'futures',
                       'savReaderWriter','xlrd','XlsxWriter'],
     classifiers=["Development Status :: 3 - Alpha",
                  "Environment :: X11 Applications :: Qt",

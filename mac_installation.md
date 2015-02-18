@@ -75,13 +75,20 @@ The following is the list of required packages
 - psutil
 - pandas
 - mpltools
+- seaborn
+- rpy2
+- tornado
+- futures
+- savReaderWriter
+- xlrd
+- XlsxWriter
 
 ## Get braviz
 Go to the directory where you would like braviz files downloaded and do
 
     hg clone <repository_adress>
 
-You can contact jc.forero47@uniandes.edu.co to get the repository adress
+You can contact jhernand@uniandes.edu.co to get the repository adress
 
 You should now add the braviz directory containing the file setup.py to your PYTHONPATH environment variable
 
@@ -89,14 +96,21 @@ You should now add the braviz directory containing the file setup.py to your PYT
 
 You can add that line to your .bash_profile file in order to have braviz always available when you start a terminal
 
-After getting the braviz source files you should run
 
-    python braviz/interaction/generate_qt_guis.py
+## Configurin
 
-To create qt interface files
+The ``braviz/applications`` directory contains several configuration files. First there should be a ``braviz.cfg`` file,
+if it doesn't exist it will be automatically created when you first run the system. The second one is a file named
+``<project>_hosts.cfg where <project>`` is the name of the project you will use (for example kmc400); this file contains
+the locations of the project files for different computers. Be sure your computer is there with the correct paths. For
+more information see  http://diego0020.github.io/braviz/graphical/configuration.html and 
+http://diego0020.github.io/braviz/library/configuring.html#host-configuration
+
+
 
 ## Run braviz
 After meeting all the requirements, and having the code, you should be able to run braviz by doing
 
     python -m braviz.application.braviz_menu2
 
+the first time you launch the system you may require multiple attempts.
