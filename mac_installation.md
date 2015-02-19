@@ -61,7 +61,7 @@ vtk can also be installed from homebrew-science. This should be done after insta
 ### Mercurial
 Mercurial is the version control software used by braviz, and the easyest way to be up to date
 
-   brew install mercurial
+     brew install mercurial
 
 ## Additional python packages
 
