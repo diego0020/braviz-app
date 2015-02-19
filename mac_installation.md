@@ -28,6 +28,7 @@ The following python packages should also be installed from homebrew
 - PyQt
 
 This packages can be found in homebrew-python, and they can be installed by doing
+
     brew tap Homebrew/python
     brew install numpy
     brew install scipy
