@@ -98,7 +98,7 @@ You should now add the braviz directory containing the file setup.py to your PYT
 You can add that line to your .bash_profile file in order to have braviz always available when you start a terminal
 
 
-## Configurin
+## Configuring
 
 The ``braviz/applications`` directory contains several configuration files. First there should be a ``braviz.cfg`` file,
 if it doesn't exist it will be automatically created when you first run the system. The second one is a file named
