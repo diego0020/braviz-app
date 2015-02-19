@@ -85,6 +85,7 @@ The following is the list of required packages
 - savReaderWriter
 - xlrd
 - XlsxWriter
+- pyzmq
 
 ## Get braviz
 Go to the directory where you would like braviz files downloaded and do

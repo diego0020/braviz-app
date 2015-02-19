@@ -24,7 +24,7 @@ setup(
     install_requires=['vtk','nibabel','numpy',
                       'scipy','pandas','psutil',
                       'matplotlib','PyQt4', 'seaborn','rpy2','tornado', 'futures',
-                      'savReaderWriter','xlrd','XlsxWriter'],
+                      'savReaderWriter','xlrd','XlsxWriter','pyzmq'],
     classifiers=["Development Status :: 3 - Alpha",
                  "Environment :: X11 Applications :: Qt",
                  "Intended Audience :: Science/Research",
