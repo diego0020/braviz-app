@@ -47,6 +47,7 @@ After installing r, some additional r libraries should be installed, this can be
 
 and then typing
 
+    packages.install("arm")
     packages.install("car")
     packages.install("randomForest")
     quit()
