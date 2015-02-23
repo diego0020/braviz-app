@@ -112,7 +112,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         for i,(k,v) in enumerate(labels.iteritems()):
             if v is None:
                 labels[k]="label%s"%k
-            if len(v) == 0:
+            if v is None or len(v) == 0:
                 v="level_%d"%i
             elif v[0].isdigit():
                 v = "c_"+v
