@@ -9,9 +9,9 @@ If you don't have home brew installed, install it using:
     
 For more information look at http://http://brew.sh/
 
-Afterwards, add the homebrew/bin directory to your path. This can be done for example by adding the following line to your .bash_profile file
+Afterwards, add the homebrew/bin directory to your path. This can be done for example by adding the following line to your ``.bash_profile file``
 
-    export PATH=home_brew_dir/homebrew/bin:$PATH
+    export PATH=/usr/local/sbin:$PATH
 
 It is possible that it will give you warning about not having xcode, in this case you should install xcode from the apple app store, and then do
 xcode-select in the terminal
