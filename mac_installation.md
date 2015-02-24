@@ -3,9 +3,11 @@
 ## Dependencies
 
 ### Home Brew
-If you don't have home brew installed go to the folder where you would like to install it and do:
+If you don't have home brew installed, install it using:
 
-    git clone https://github.com/Homebrew/homebrew.git
+    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    
+For more information look at http://http://brew.sh/
 
 Afterwards, add the homebrew/bin directory to your path. This can be done for example by adding the following line to your .bash_profile file
 
