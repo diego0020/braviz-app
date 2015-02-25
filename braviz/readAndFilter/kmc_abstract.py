@@ -536,6 +536,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         labels_path = self._get_free_surfer_labels_path(subj)
         log = logging.getLogger(__name__)
         if kw.get('index'):
+            hs='rh'
             contents = os.listdir(morph_path)
             contents.extend(os.listdir(labels_path))
             pattern = re.compile(hs + r'.*\.annot$')
@@ -543,19 +544,26 @@ A read and filter class designed to work with kmc projects. Implements common fu
             morfs = [m for m in morph if hs + '.' + m in contents]
             return morfs + annots
         try:
-            hemisphere = kw['hemi']
-            hs = hemisphere + 'h'
-        except KeyError:
-            log.error("hemi is required")
-            raise (Exception("hemi is required"))
-        try:
             scalar_name = kw['scalars']
         except KeyError:
             log.error(Exception('scalars is required'))
             raise (Exception('scalars is required'))
-        if scalar_name in morph:
-            if kw.get('lut'):
+
+        if kw.get('lut'):
+            if scalar_name in morph:
                 return get_free_surfer_lut(scalar_name)
+            else:
+                annot_filename = os.path.join(labels_path , 'rh.' + scalar_name + '.annot')
+                labels, ctab, names = read_annot(annot_filename)
+                return surfLUT2VTK(ctab, names)
+        try:
+            hemisphere = kw['hemi']
+        except KeyError:
+            log.error("hemi is required")
+            raise (Exception("hemi is required"))
+
+
+        if scalar_name in morph:
             scalar_filename = os.path.join(morph_path,hemisphere + 'h.' + scalar_name)
             scalar_array = read_morph_data(scalar_filename)
             return scalar_array
@@ -563,8 +571,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
             #It should be an annotation
             annot_filename = os.path.join(labels_path , hemisphere + 'h.' + scalar_name + '.annot')
             labels, ctab, names = read_annot(annot_filename)
-            if kw.get('lut'):
-                return surfLUT2VTK(ctab, names)
             return labels
 
     def _cached_color_fibers(self, subj, color=None,scalars=None):
