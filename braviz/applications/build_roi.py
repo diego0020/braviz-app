@@ -373,17 +373,42 @@ class LoadRoiDialog(QDialog):
         self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(1)
 
 class MultipleRoiDialog(QDialog):
-    def __init__(self,space):
+    def __init__(self,space,current_roi_name):
         QDialog.__init__(self)
+        self.space = space
+        self.current_roi_name = current_roi_name
         self.ui = Ui_MultipleRoisDialog()
         self.ui.setupUi(self)
-        spheres_df = geom_db.get_available_spheres_df(space)
-        self.model = DataFrameModel(spheres_df, string_columns={0, 1},checks=True)
+        self.model = None
+        self.reload_list()
+
+
         self.ui.tableView.setModel(self.model)
         self.new_button = QtGui.QPushButton("New Sphere")
+        self.new_button.clicked.connect(self.show_new_sphere_dialog)
         self.ui.buttonBox.addButton(self.new_button,self.ui.buttonBox.ActionRole)
 
+    def reload_list(self):
+        spheres_df = geom_db.get_available_spheres_df(self.space)
+        row = spheres_df.index.get_loc(self.current_roi_name)
+        if self.model is None:
+            self.model = DataFrameModel(spheres_df, string_columns={0, 1},checks=True)
+        else:
+            self.model.set_df(spheres_df)
+        self.model.setData(self.model.index(row,0),QtCore.QVariant(QtCore.Qt.Checked)
+            ,QtCore.Qt.CheckStateRole)
+        self.model.disabled_items = (self.current_roi_name,)
 
+
+    def show_new_sphere_dialog(self):
+        dialog = NewRoi(self.space)
+        res=dialog.exec_()
+        if res == dialog.Accepted:
+            new_name = dialog.name
+            desc = dialog.desc
+            space = self.space
+            new_id = geom_db.create_roi(new_name, "sphere", space, desc)
+            self.reload_list()
 
 
 class ConfirmSubjectChangeDialog(QDialog):
@@ -476,7 +501,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.setupUi(self)
         self.ui.sphere_name_combo.addItem(self.__roi_name,self.__roi_id)
         self.ui.sphere_name_combo.insertSeparator(2)
-        self.ui.sphere_name_combo.addItem("Multiple spheres",None)
+        self.ui.sphere_name_combo.addItem("<Multiple spheres>",None)
         self.ui.sphere_name_combo.currentIndexChanged.connect(self.handle_multiple_rois_combo)
 
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
@@ -954,7 +979,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.sphere_name_combo.clear()
         self.ui.sphere_name_combo.addItem(self.__roi_name,self.__roi_id)
         self.ui.sphere_name_combo.insertSeparator(2)
-        self.ui.sphere_name_combo.addItem("Multiple spheres",None)
+        self.ui.sphere_name_combo.addItem("<Multiple spheres>",None)
         subjs_state = state["subjects"]
         subjs_state["subject"] = self.__current_subject
         self.vtk_viewer.change_subject(self.__current_subject)
@@ -1060,7 +1085,7 @@ class BuildRoiApp(QMainWindow):
         self.ui.sphere_name_combo.clear()
         self.ui.sphere_name_combo.addItem(self.__roi_name,self.__roi_id)
         self.ui.sphere_name_combo.insertSeparator(2)
-        self.ui.sphere_name_combo.addItem("Multiple spheres",None)
+        self.ui.sphere_name_combo.addItem("<Multiple spheres>",None)
         self.refresh_checked()
         self.show_fibers()
 
@@ -1125,6 +1150,9 @@ class BuildRoiApp(QMainWindow):
         return opt_ctr
 
     def handle_multiple_rois_combo(self,index):
+        if index < 0:
+            #When the combo box is cleared
+            return
         roi_id, success = self.ui.sphere_name_combo.itemData(index).toInt()
         if success is True:
             if self.__roi_id == roi_id:
@@ -1133,9 +1161,17 @@ class BuildRoiApp(QMainWindow):
             self.__roi_name = roi_name
             self.reload_sphere()
         else:
-            dialog = MultipleRoiDialog(self.__curent_space)
+            dialog = MultipleRoiDialog(self.__curent_space,self.__roi_name)
             res = dialog.exec_()
-
+            if res == dialog.Accepted:
+                spheres = dialog.model.checked
+                self.ui.sphere_name_combo.clear()
+                for s in sorted(spheres):
+                    self.ui.sphere_name_combo.addItem(s,geom_db.get_roi_id(s))
+                self.ui.sphere_name_combo.insertSeparator(self.ui.sphere_name_combo.count())
+                self.ui.sphere_name_combo.addItem("<Multiple spheres>",None)
+            prev_idx=self.ui.sphere_name_combo.findText(self.__roi_name)
+            self.ui.sphere_name_combo.setCurrentIndex(prev_idx)
 class PositionOptimizer(object):
     def __init__(self,reader):
         self.reader = reader

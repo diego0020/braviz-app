@@ -829,6 +829,7 @@ class DataFrameModel(QAbstractTableModel):
         self.__string_cols = frozenset(string_columns)
         self.__checks = checks
         self.__checked = set()
+        self.__disabled = set()
         self.index_as_column=index_as_column
         super(DataFrameModel, self).__init__()
 
@@ -939,6 +940,7 @@ class DataFrameModel(QAbstractTableModel):
         result = QtCore.Qt.NoItemFlags
         if 0 <= line <= self.rowCount() and 0 <= line <= self.rowCount():
             result |= QtCore.Qt.ItemIsSelectable
+        if self.__df.index[line] not in self.__disabled:
             result |= QtCore.Qt.ItemIsEnabled
         if self.__checks and col == 0:
             result |= QtCore.Qt.ItemIsUserCheckable
@@ -951,6 +953,16 @@ class DataFrameModel(QAbstractTableModel):
     @property
     def checked(self):
         return frozenset(self.__checked)
+
+    @property
+    def disabled_items(self):
+        return frozenset(self.__disabled)
+
+    @disabled_items.setter
+    def disabled_items(self,disabled_set):
+        self.modelAboutToBeReset.emit()
+        self.__disabled = set(disabled_set)
+        self.modelReset.emit()
 
 class SampleTree(QAbstractItemModel):
     """
@@ -1150,6 +1162,7 @@ class SampleTree(QAbstractItemModel):
             for c in item.children:
                 leafs.extend(self.__get_leafs(c))
             return leafs
+
 
 
 class SubjectsTable(QAbstractTableModel):
