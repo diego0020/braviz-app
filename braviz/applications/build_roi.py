@@ -377,9 +377,11 @@ class MultipleRoiDialog(QDialog):
         QDialog.__init__(self)
         self.ui = Ui_MultipleRoisDialog()
         self.ui.setupUi(self)
-        spheres_df = geom_db.get_available_spheres_df()
+        spheres_df = geom_db.get_available_spheres_df(space)
         self.model = DataFrameModel(spheres_df, string_columns={0, 1},checks=True)
         self.ui.tableView.setModel(self.model)
+        self.new_button = QtGui.QPushButton("New Sphere")
+        self.ui.buttonBox.addButton(self.new_button,self.ui.buttonBox.ActionRole)
 
 
 

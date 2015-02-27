@@ -106,26 +106,43 @@ def create_roi(name, roi_type, coords, desc=""):
     return cur.lastrowid
 
 
-def get_available_spheres_df():
+def get_available_spheres_df(space = None):
     """
     Get available spheres
+
+    Args:
+        space (str) : Optional, filter to only rois in a certain space
 
     Returns:
         :class:`~pandas.DataFrame` with columns for sphere id, and number of subjects with the ROI defined; indexed
         by name
     """
     con = _get_connection()
-    q = """
-        SELECT roi_name as name, roi_desc as description, num as quantity
-        FROM geom_rois JOIN
-        (SELECT sphere_id, count(*) as num FROM geom_spheres group by sphere_id
-        UNION
-        SELECT roi_id as sphere_id, 0 as num FROM geom_rois WHERE sphere_id not in (select sphere_id FROM geom_spheres)
-        )
-        ON roi_id = sphere_id
-        WHERE roi_type = 0
-        """
-    df = sql.read_sql(q, con, index_col="name")
+    if space is None:
+        q = """
+            SELECT roi_name as name, roi_desc as description, num as quantity
+            FROM geom_rois JOIN
+            (SELECT sphere_id, count(*) as num FROM geom_spheres group by sphere_id
+            UNION
+            SELECT roi_id as sphere_id, 0 as num FROM geom_rois WHERE sphere_id not in (select sphere_id FROM geom_spheres)
+            )
+            ON roi_id = sphere_id
+            WHERE roi_type = 0
+            """
+        df = sql.read_sql(q, con, index_col="name")
+    else:
+        space_i = _COORDINATES_I[space.lower()]
+        q = """
+            SELECT roi_name as name, roi_desc as description, num as quantity
+            FROM geom_rois JOIN
+            (SELECT sphere_id, count(*) as num FROM geom_spheres group by sphere_id
+            UNION
+            SELECT roi_id as sphere_id, 0 as num FROM geom_rois WHERE sphere_id not in (select sphere_id FROM geom_spheres)
+            )
+            ON roi_id = sphere_id
+            WHERE roi_type = 0 and roi_coords = ?
+            """
+        df = sql.read_sql(q, con, index_col="name",params=(space_i,))
     return df
 
 
