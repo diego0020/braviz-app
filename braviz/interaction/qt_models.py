@@ -954,6 +954,13 @@ class DataFrameModel(QAbstractTableModel):
     def checked(self):
         return frozenset(self.__checked)
 
+    @checked.setter
+    def checked(self,checked_names):
+        self.modelAboutToBeReset.emit()
+        self.__checked=set(checked_names)
+        self.modelReset.emit()
+
+
     @property
     def disabled_items(self):
         return frozenset(self.__disabled)

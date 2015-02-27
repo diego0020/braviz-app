@@ -40,9 +40,9 @@ from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
 from braviz.interaction.qt_guis.multiple_rois import Ui_MultipleRoisDialog
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 from braviz.interaction.qt_guis.extrapolate_spheres import Ui_ExtrapolateSpheres
-from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
+from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget, SphereProp
 from braviz.visualization.simple_vtk import save_ren_win_picture
-from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
+from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere, extract_poly_data_subset
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel, SubjectCheckTable
 from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
@@ -373,7 +373,7 @@ class LoadRoiDialog(QDialog):
         self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(1)
 
 class MultipleRoiDialog(QDialog):
-    def __init__(self,space,current_roi_name):
+    def __init__(self,space,current_roi_name,initial_names_set=tuple()):
         QDialog.__init__(self)
         self.space = space
         self.current_roi_name = current_roi_name
@@ -381,7 +381,7 @@ class MultipleRoiDialog(QDialog):
         self.ui.setupUi(self)
         self.model = None
         self.reload_list()
-
+        self.model.checked=tuple(initial_names_set)+(current_roi_name,)
 
         self.ui.tableView.setModel(self.model)
         self.new_button = QtGui.QPushButton("New Sphere")
@@ -390,13 +390,10 @@ class MultipleRoiDialog(QDialog):
 
     def reload_list(self):
         spheres_df = geom_db.get_available_spheres_df(self.space)
-        row = spheres_df.index.get_loc(self.current_roi_name)
         if self.model is None:
             self.model = DataFrameModel(spheres_df, string_columns={0, 1},checks=True)
         else:
             self.model.set_df(spheres_df)
-        self.model.setData(self.model.index(row,0),QtCore.QVariant(QtCore.Qt.Checked)
-            ,QtCore.Qt.CheckStateRole)
         self.model.disabled_items = (self.current_roi_name,)
 
 
@@ -436,7 +433,7 @@ class BuildRoiApp(QMainWindow):
             self.__roi_id = None
             self.__roi_name = ""
 
-        self.__multiple_mode = False
+        self.__additional_spheres = {}
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
@@ -448,7 +445,7 @@ class BuildRoiApp(QMainWindow):
         try:
             self.__curent_space = geom_db.get_roi_space(name=roi_name).title()
         except Exception:
-            raise
+            self.__curent_space = "World"
 
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
@@ -777,6 +774,14 @@ class BuildRoiApp(QMainWindow):
                 self.vtk_viewer.ren_win.Render()
                 return
             self.__fibers_filterer.set_bundle(self.__full_pd)
+            if len(self.__additional_spheres)>0:
+                crs = ((s.center,s.radius) for s in self.__additional_spheres.itervalues() if s.visible)
+                valid_sets = [self.__fibers_filterer.filter_bundle_with_sphere(cr[0],cr[1],True) for cr in crs]
+                if len(valid_sets)>0:
+                    valid_ids = set.intersection(*valid_sets)
+                    pd2 = extract_poly_data_subset(self.__full_pd,valid_ids)
+                    self.__full_pd = pd2
+                    self.__fibers_filterer.set_bundle(self.__full_pd)
 
         ctr = (self.ui.sphere_x.value(), self.ui.sphere_y.value(), self.ui.sphere_z.value())
         r = self.ui.sphere_radius.value()
@@ -817,6 +822,7 @@ class BuildRoiApp(QMainWindow):
         else:
             self.update_slice_maximums()
         self.load_sphere(new_subject)
+        self.refresh_additional_spheres()
         self.__full_pd = None
         self.show_fibers()
         self.caclulate_image_in_roi_pre()
@@ -934,6 +940,7 @@ class BuildRoiApp(QMainWindow):
     def get_state(self):
         state = dict()
         state["roi_id"] = self.__roi_id
+        state["additional_rois"]=self.__additional_spheres.keys()
         # context
         context_dict = {}
         context_dict["image_type"] = self.ui.image_combo.currentText()
@@ -978,9 +985,19 @@ class BuildRoiApp(QMainWindow):
     def load_state(self, state):
         self.__roi_id = state["roi_id"]
         self.__roi_name = geom_db.get_roi_name(self.__roi_id)
+        additional_spheres = state.get("additional_rois")
         self.ui.sphere_name_combo.clear()
-        self.ui.sphere_name_combo.addItem(self.__roi_name,self.__roi_id)
-        self.ui.sphere_name_combo.insertSeparator(2)
+        if additional_spheres is not None and len(additional_spheres)>0:
+            self.set_additional_spheres(additional_spheres)
+            for s in additional_spheres:
+                self.ui.sphere_name_combo.addItem(geom_db.get_roi_name(s),s)
+            idx = self.ui.sphere_name_combo.findText(self.__roi_name)
+            self.ui.sphere_name_combo.setCurrentIndex(idx)
+        else:
+            self.set_additional_spheres(tuple())
+            self.ui.sphere_name_combo.addItem(self.__roi_name,self.__roi_id)
+            self.ui.sphere_name_combo.setCurrentIndex(0)
+        self.ui.sphere_name_combo.insertSeparator(self.ui.sphere_name_combo.count())
         self.ui.sphere_name_combo.addItem("<Multiple spheres>",None)
         subjs_state = state["subjects"]
         subjs_state["subject"] = self.__current_subject
@@ -1166,8 +1183,10 @@ class BuildRoiApp(QMainWindow):
             self.__roi_id = roi_id
             self.__roi_name = roi_name
             self.reload_sphere()
+            self.refresh_additional_spheres()
         else:
-            dialog = MultipleRoiDialog(self.__curent_space,self.__roi_name)
+            current_spheres = [geom_db.get_roi_name(i) for i in self.__additional_spheres.iterkeys()]
+            dialog = MultipleRoiDialog(self.__curent_space,self.__roi_name, current_spheres)
             res = dialog.exec_()
             if res == dialog.Accepted:
                 spheres = dialog.model.checked
@@ -1176,8 +1195,41 @@ class BuildRoiApp(QMainWindow):
                     self.ui.sphere_name_combo.addItem(s,geom_db.get_roi_id(s))
                 self.ui.sphere_name_combo.insertSeparator(self.ui.sphere_name_combo.count())
                 self.ui.sphere_name_combo.addItem("<Multiple spheres>",None)
+                self.set_additional_spheres(geom_db.get_roi_id(s) for s in spheres)
             prev_idx=self.ui.sphere_name_combo.findText(self.__roi_name)
             self.ui.sphere_name_combo.setCurrentIndex(prev_idx)
+
+    def set_additional_spheres(self,roi_ids):
+        current_spheres = set(self.__additional_spheres.keys())
+        requested_spheres = set(roi_ids)
+        obsolete_spheres = current_spheres - requested_spheres
+        new_spheres = requested_spheres - current_spheres
+        for s in obsolete_spheres:
+            p=self.__additional_spheres.pop(s)
+            p.remove_from_renderer()
+        for s in new_spheres:
+            self.__additional_spheres[s]=SphereProp(self.vtk_viewer.ren)
+
+        self.refresh_additional_spheres()
+        self.show_fibers()
+
+    def refresh_additional_spheres(self):
+        for i,s in self.__additional_spheres.iteritems():
+            if i == self.__roi_id:
+                s.hide()
+            else:
+                try:
+                    r,x,y,z = geom_db.load_sphere(i,self.__current_subject)
+                except TypeError:
+                    s.hide()
+                else:
+                    s.set_center((x,y,z))
+                    s.set_opacity(30)
+                    s.set_radius(r)
+                    s.show()
+        self.__full_pd = None
+        self.vtk_viewer.ren_win.Render()
+
 class PositionOptimizer(object):
     def __init__(self,reader):
         self.reader = reader

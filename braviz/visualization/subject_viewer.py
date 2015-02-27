@@ -2166,6 +2166,7 @@ class OrthogonalPlanesViewer(object):
         - Images
         - Surfaces
         - A sphere
+
     """
     def __init__(self, render_window_interactor, reader, widget):
         """
@@ -3071,6 +3072,7 @@ class SphereProp(object):
         self.__source.SetPhiResolution(self.__RESOLUTION)
         self.__source.LatLongTessellationOn()
         self.__actor.SetVisibility(0)
+        self.__ren = ren
         ren.AddActor(self.__actor)
 
     def set_center(self, ctr):
@@ -3092,6 +3094,18 @@ class SphereProp(object):
         """
         self.__source.SetRadius(r)
         self.__radius = r
+
+    @property
+    def radius(self):
+        return self.__radius
+
+    @property
+    def center(self):
+        return tuple(self.__center)
+
+    @property
+    def visible(self):
+        return self.__actor.GetVisibility()
 
     def set_repr(self, rep):
         """
@@ -3138,6 +3152,13 @@ class SphereProp(object):
         """
         r, g, b = map(lambda x: x / 255.0, (r, g, b))
         self.__actor.GetProperty().SetColor(r, g, b)
+
+    def remove_from_renderer(self):
+        """
+        Remove the sphere from the renderer
+        """
+        self.__ren.RemoveActor(self.__actor)
+
 
 
 class QMeasurerWidget(QFrame):
