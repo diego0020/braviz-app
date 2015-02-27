@@ -575,6 +575,8 @@ class BuildRoiApp(QMainWindow):
             self.copy_coords_from_cursor()
         elif event.key() == QtCore.Qt.Key_O:
             self.optimize_sphere_from_button()
+        elif event.key() == QtCore.Qt.Key_S:
+            self.save_sphere()
         else:
             super(BuildRoiApp, self).keyPressEvent(event)
 
@@ -1154,10 +1156,14 @@ class BuildRoiApp(QMainWindow):
             #When the combo box is cleared
             return
         roi_id, success = self.ui.sphere_name_combo.itemData(index).toInt()
+        if  self.__roi_id != roi_id and not self.action_confirmed():
+            prev_idx=self.ui.sphere_name_combo.findText(self.__roi_name)
+            self.ui.sphere_name_combo.setCurrentIndex(prev_idx)
         if success is True:
             if self.__roi_id == roi_id:
                 return
             roi_name = str(self.ui.sphere_name_combo.itemText(index))
+            self.__roi_id = roi_id
             self.__roi_name = roi_name
             self.reload_sphere()
         else:

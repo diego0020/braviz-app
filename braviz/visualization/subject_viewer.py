@@ -3227,7 +3227,7 @@ class QOrthogonalPlanesWidget(QFrame):
         """
         QFrame.__init__(self, parent)
         self.__qwindow_interactor = QVTKRenderWindowInteractor(self)
-        filt = FilterArrows(self, (QtCore.Qt.Key_C, QtCore.Qt.Key_O))
+        filt = FilterArrows(self, (QtCore.Qt.Key_C, QtCore.Qt.Key_O, QtCore.Qt.Key_S))
         filt.key_pressed.connect(lambda e: self.event(e))
         self.__qwindow_interactor.installEventFilter(filt)
         self.__reader = reader
