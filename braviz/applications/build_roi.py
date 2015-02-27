@@ -37,6 +37,7 @@ from braviz.interaction.qt_guis.roi_builder import Ui_RoiBuildApp
 from braviz.interaction.qt_guis.roi_builder_start import Ui_OpenRoiBuilder
 from braviz.interaction.qt_guis.new_roi import Ui_NewRoi
 from braviz.interaction.qt_guis.load_roi import Ui_LoadRoiDialog
+from braviz.interaction.qt_guis.multiple_rois import Ui_MultipleRoisDialog
 from braviz.interaction.qt_guis.roi_subject_change_confirm import Ui_RoiConfirmChangeSubject
 from braviz.interaction.qt_guis.extrapolate_spheres import Ui_ExtrapolateSpheres
 from braviz.visualization.subject_viewer import QOrthogonalPlanesWidget
@@ -371,6 +372,17 @@ class LoadRoiDialog(QDialog):
         self.name = unicode(self.model.data(name_index, QtCore.Qt.DisplayRole))
         self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(1)
 
+class MultipleRoiDialog(QDialog):
+    def __init__(self,space):
+        QDialog.__init__(self)
+        self.ui = Ui_MultipleRoisDialog()
+        self.ui.setupUi(self)
+        spheres_df = geom_db.get_available_spheres_df()
+        self.model = DataFrameModel(spheres_df, string_columns={0, 1},checks=True)
+        self.ui.tableView.setModel(self.model)
+
+
+
 
 class ConfirmSubjectChangeDialog(QDialog):
     def __init__(self):
@@ -396,6 +408,8 @@ class BuildRoiApp(QMainWindow):
         else:
             self.__roi_id = None
             self.__roi_name = ""
+
+        self.__multiple_mode = False
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__subjects_list = tabular_data.get_subjects()
@@ -458,7 +472,10 @@ class BuildRoiApp(QMainWindow):
     def setup_ui(self):
         self.ui = Ui_RoiBuildApp()
         self.ui.setupUi(self)
-        self.ui.sphere_name.setText(self.__roi_name)
+        self.ui.sphere_name_combo.addItem(self.__roi_name,self.__roi_id)
+        self.ui.sphere_name_combo.insertSeparator(2)
+        self.ui.sphere_name_combo.addItem("Multiple spheres",None)
+        self.ui.sphere_name_combo.currentIndexChanged.connect(self.handle_multiple_rois_combo)
 
         self.ui.vtk_frame_layout = QtGui.QVBoxLayout()
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
@@ -932,7 +949,10 @@ class BuildRoiApp(QMainWindow):
     def load_state(self, state):
         self.__roi_id = state["roi_id"]
         self.__roi_name = geom_db.get_roi_name(self.__roi_id)
-        self.ui.sphere_name.setText(self.__roi_name)
+        self.ui.sphere_name_combo.clear()
+        self.ui.sphere_name_combo.addItem(self.__roi_name,self.__roi_id)
+        self.ui.sphere_name_combo.insertSeparator(2)
+        self.ui.sphere_name_combo.addItem("Multiple spheres",None)
         subjs_state = state["subjects"]
         subjs_state["subject"] = self.__current_subject
         self.vtk_viewer.change_subject(self.__current_subject)
@@ -1032,8 +1052,15 @@ class BuildRoiApp(QMainWindow):
     def change_sphere(self,roi_id,roi_name):
         self.__roi_id = roi_id
         self.__roi_name = roi_name
-        self.ui.sphere_name.setText(roi_name)
+        self.__curent_space = geom_db.get_roi_space(name=roi_name).title()
+        self.ui.sphere_space.setText(self.__curent_space)
+        self.vtk_viewer.change_space(self.__curent_space)
+        self.ui.sphere_name_combo.clear()
+        self.ui.sphere_name_combo.addItem(self.__roi_name,self.__roi_id)
+        self.ui.sphere_name_combo.insertSeparator(2)
+        self.ui.sphere_name_combo.addItem("Multiple spheres",None)
         self.refresh_checked()
+        self.show_fibers()
 
     def switch_sphere_dialog(self):
         dialog = LoadRoiDialog()
@@ -1095,6 +1122,18 @@ class BuildRoiApp(QMainWindow):
         opt_ctr = opt_ctr[:3]/opt_ctr[3]
         return opt_ctr
 
+    def handle_multiple_rois_combo(self,index):
+        roi_id, success = self.ui.sphere_name_combo.itemData(index).toInt()
+        if success is True:
+            if self.__roi_id == roi_id:
+                return
+            roi_name = str(self.ui.sphere_name_combo.itemText(index))
+            self.__roi_name = roi_name
+            self.reload_sphere()
+        else:
+            dialog = MultipleRoiDialog(self.__curent_space)
+            res = dialog.exec_()
+
 class PositionOptimizer(object):
     def __init__(self,reader):
         self.reader = reader
@@ -1129,6 +1168,8 @@ class PositionOptimizer(object):
         opt_ctr = self.__fa_affine.dot(max_i)
         opt_ctr = opt_ctr[:3]/opt_ctr[3]
         return opt_ctr
+
+
 
 
 def run():
