@@ -80,6 +80,10 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         self.ui.actionSelect_Sample.triggered.connect(self.set_sample)
         self.ui.clear_button.clicked.connect(self.clear_selection)
 
+        # web_view = self.ui.webView
+        # set=web_view.settings()
+        # set.setAttribute(set.DeveloperExtrasEnabled,True)
+
         self.refresh_web_view()
 
 
