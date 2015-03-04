@@ -449,6 +449,7 @@ class BuildRoiApp(QMainWindow):
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
 
+        self.__loading_sphere_from_db = True
         self.__fibers_map = None
         self.__fibers_ac = None
         self.__filetred_pd = None
@@ -744,6 +745,9 @@ class BuildRoiApp(QMainWindow):
         self.ui.sphere_z.setValue(cz)
 
     def show_fibers(self, event=None):
+        if self.__loading_sphere_from_db is True:
+            #Ignore intermediate fiber refreshs while loading a sphere from the database
+            return
         if self.ui.show_fibers_check.checkState() != QtCore.Qt.Checked:
             if self.__fibers_ac is not None:
                 self.__fibers_ac.SetVisibility(0)
@@ -854,12 +858,15 @@ class BuildRoiApp(QMainWindow):
         if res is None:
             return
         r, x, y, z = res
+        self.__loading_sphere_from_db = True
         self.ui.sphere_radius.setValue(r)
         self.ui.sphere_x.setValue(x)
         self.ui.sphere_y.setValue(y)
         self.ui.sphere_z.setValue(z)
         self.update_sphere_radius()
         self.update_sphere_center()
+        self.__loading_sphere_from_db = False
+        self.show_fibers()
         self.__sphere_modified = False
         self.ui.save_sphere.setEnabled(0)
 
@@ -1181,8 +1188,8 @@ class BuildRoiApp(QMainWindow):
             roi_name = str(self.ui.sphere_name_combo.itemText(index))
             self.__roi_id = roi_id
             self.__roi_name = roi_name
-            self.reload_sphere()
             self.refresh_additional_spheres()
+            self.reload_sphere()
         else:
             current_spheres = [geom_db.get_roi_name(i) for i in self.__additional_spheres.iterkeys()]
             dialog = MultipleRoiDialog(self.__curent_space,self.__roi_name, current_spheres)
@@ -1227,7 +1234,6 @@ class BuildRoiApp(QMainWindow):
                     s.set_radius(r)
                     s.show()
         self.__full_pd = None
-        self.vtk_viewer.ren_win.Render()
 
 class PositionOptimizer(object):
     def __init__(self,reader):
