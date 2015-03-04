@@ -296,8 +296,7 @@ class StartDialog(QDialog):
         res = new_roi_dialog.exec_()
         if res == new_roi_dialog.Accepted:
             self.name = new_roi_dialog.name
-            coords_key = new_roi_dialog.coords
-            coords = COORDS[coords_key]
+            coords = new_roi_dialog.coords
             desc = new_roi_dialog.desc
             geom_db.create_roi(self.name, "sphere", coords, desc)
             self.accept()
@@ -351,7 +350,7 @@ class NewRoi(QDialog):
             self.ui.error_msg.setText("")
 
     def before_accepting(self):
-        self.coords = self.ui.roi_space.currentIndex()
+        self.coords = unicode(self.ui.roi_space.currentText())
         self.desc = unicode(self.ui.roi_desc.toPlainText())
 
 
