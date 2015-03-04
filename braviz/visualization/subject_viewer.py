@@ -1303,7 +1303,7 @@ class TractographyManager(object):
             actor.SetVisibility(1)
             if self.__current_color == "bundle":
                 colors = self.get_bundle_colors()
-                c = colors[-1]
+                c = colors[0]
                 actor.GetProperty().SetColor(*c)
             self.__set_lut_in_maper(mapper)
 
@@ -1384,15 +1384,13 @@ class TractographyManager(object):
         Returns:
             A color palette with length equal to the number of active bundles
         """
-        number_of_bundles = len(self.__active_db_tracts)
-        if self.__ad_hoc_visibility is True:
-            number_of_bundles += 1
+        # reserve one color for ad_hoc bundles
+        number_of_bundles = len(self.__active_db_tracts)+1
+
         if self.__bundle_colors is not None and len(self.__bundle_colors) == number_of_bundles:
             return self.__bundle_colors
-        n = number_of_bundles
-        n = max(n, 3)
 
-        colors = sbs.color_palette("Set1", n)
+        colors = sbs.color_palette("Set2", number_of_bundles)
         self.__bundle_colors = colors
         # print colors
         return colors
@@ -1528,8 +1526,8 @@ class TractographyManager(object):
         if self.__ad_hoc_visibility is True:
             try:
                 self.set_bundle_from_checkpoints(self.__ad_hoc_fiber_checks, self.__ad_hoc_throug_all)
-            except Exception:
-                error = True
+            except Exception as e:
+                log.exception(e)
 
         # reload db
         for bid in self.__active_db_tracts:
@@ -1551,7 +1549,7 @@ class TractographyManager(object):
         to_hide = self.__active_db_tracts - new_set
         to_add = new_set - self.__active_db_tracts
         errors = 0
-        self.__bundle_labels = dict(izip(new_set, range(len(new_set) + 1)))
+        self.__bundle_labels = dict((n,i+1) for i,n in enumerate(new_set))
         for i in to_hide:
             self.hide_database_tract(i)
         self.__active_db_tracts = new_set
