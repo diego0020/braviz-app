@@ -9,13 +9,7 @@ If you don't have home brew installed, install it using:
     
 For more information look at http://http://brew.sh/
 
-Afterwards, add the homebrew/bin directory to your path. This can be done for example by adding the following line to your ``.bash_profile file``
-
-    export PATH=/usr/local/sbin:$PATH
-
-It is possible that it will give you warning about not having xcode, in this case you should install xcode from the apple app store, and then do
-xcode-select in the terminal
-
+It is possible that it will give you warning about not having xcode, in this case you should install xcode from the apple app store and open it to accept the license.
 ### Python
 It is recomended to use the python version from homebrew, this can be installed by doing
 
