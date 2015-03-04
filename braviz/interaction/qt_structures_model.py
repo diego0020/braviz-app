@@ -340,10 +340,10 @@ class StructureTreeModel(QAbstractItemModel):
         """
         Get a list of currently checked structures
         """
-        selected_leaf_names = [self.__id_index[leaf].leaf_name for leaf in self.leaf_ids if
-                               self.__id_index[leaf].checked == QtCore.Qt.Checked]
+        selected_leaf_names = {self.__id_index[leaf].leaf_name for leaf in self.leaf_ids if
+                               self.__id_index[leaf].checked == QtCore.Qt.Checked}
         # print "selected leafs names",selected_leaf_names
-        return selected_leaf_names
+        return sorted(selected_leaf_names)
 
     def set_selected_structures(self,selected_list):
         """
