@@ -84,7 +84,7 @@ class BravizMenu2(QtGui.QMainWindow):
 
         config = braviz.readAndFilter.config_file.get_config(__file__)
         project = config.get_project_name()
-        self.ui.label.setText("Welcome to Braviz<small><br><br>%s</small>" % project)
+        self.ui.label.setText("Welcome to Braviz<small><br>%s</small>" % project)
 
         self.ui.network_button.toggled.connect(self.toggle_connection)
 
