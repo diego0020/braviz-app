@@ -167,7 +167,12 @@ class StructureTreeModel(QAbstractItemModel):
         favorite = config_file.get_apps_config().get_default_subject()
         possibles.insert(0,favorite)
         for subj in possibles:
-            self.reload_hierarchy(subj,dominant)
+            try:
+                self.reload_hierarchy(subj,dominant)
+            except Exception as e:
+                log=logging.getLogger(__name__)
+                log.exception(e)
+                self.hierarchy=tuple()
             if len(self.hierarchy)>0:
                 return
         raise Exception("Couldnt build structures index")

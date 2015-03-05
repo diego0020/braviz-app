@@ -129,7 +129,10 @@ class SubjectOverviewApp(QMainWindow):
         #load initial
         self.change_subject(self.__curent_subject)
         self.vtk_viewer.change_current_space("Talairach",skip_render=True)
-        self.vtk_viewer.image.change_image_modality("MRI",skip_render=True)
+        try:
+            self.vtk_viewer.image.change_image_modality("MRI",skip_render=True)
+        except Exception as e:
+            self.show_error(e.message)
         #self.vtk_viewer.show_cone()
 
     def setup_gui(self):
