@@ -92,7 +92,7 @@ The following is the list of required packages
 
 You can install all of these by typing
 
- pip install --allow-external savReaderWriter nibabel colorbrewer rdflib httplib2 psutil pandas mpltools seaborn rpy2 tornado futures savReaderWriter xlrd XlsxWriter pyzmq
+    pip install --allow-external savReaderWriter nibabel colorbrewer rdflib httplib2 psutil pandas mpltools seaborn rpy2 tornado futures savReaderWriter xlrd XlsxWriter pyzmq
 
 ## Get braviz
 
