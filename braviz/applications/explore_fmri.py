@@ -212,7 +212,7 @@ if __name__ == "__main__":
 
     def add_experiment_design(scale, center, time_signal=None):
         if paradigm_var.get() in {"Precision", "Power"}:
-            design = np.dot(base_design, scale) + (center)
+            design = np.dot(base_design, scale) + center
         else:
             design = np.zeros(len(time_signal)) + center
         return design
@@ -425,7 +425,7 @@ if __name__ == "__main__":
     slice_actor.AddObserver(vtk.vtkCommand.PickEvent, picking_observer)
 
     def change_to_space_mode():
-        global current_mode, line_plot_id
+        global current_mode
         # print "changing to space mode"
         current_mode = 'space'
         # remove line from time plot

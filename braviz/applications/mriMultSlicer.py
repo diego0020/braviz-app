@@ -345,7 +345,7 @@ class MriMultSlicerApp(object):
             label='Clear context', command=clear_context)
 
         subj_list = select_subj_frame.subjects_list
-        if (top.tk.call('tk', 'windowingsystem') == 'aqua'):
+        if top.tk.call('tk', 'windowingsystem') == 'aqua':
             subj_list.bind('<2>', subj_context_init)
             subj_list.bind('<Control-1>', subj_context_init)
         else:

@@ -1077,9 +1077,9 @@ class SubjectOverviewApp(QMainWindow):
             level = image_state.get("level")
             if level is not None:
                 self.ui.image_level.setValue(level)
-            slice = image_state.get("slice")
-            if slice is not None:
-                self.ui.slice_spin.setValue(slice)
+            img_ = image_state.get("slice")
+            if img_ is not None:
+                self.ui.slice_spin.setValue(img_)
             cont = image_state.get("contrast", 1)
             self.ui.contrast_combo.setCurrentIndex(cont - 1)
 

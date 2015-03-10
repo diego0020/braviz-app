@@ -56,7 +56,7 @@ class ToolTip(Toplevel):
 
         # The msgVar will contain the text displayed by the ToolTip
         self.msgVar = StringVar()
-        if msg == None:
+        if msg is None:
             self.msgVar.set('No message provided')
         else:
             self.msgVar.set(msg)
@@ -104,7 +104,7 @@ class ToolTip(Toplevel):
         self.lastMotion = time()
         # If the follow flag is not set, motion within the widget will make the
         # ToolTip dissapear
-        if self.follow == False:
+        if not self.follow:
             self.withdraw()
             self.visible = 1
         # Offset the ToolTip 10x10 pixes southwest of the pointer

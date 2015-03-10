@@ -140,7 +140,7 @@ if __name__ == "__main__":
     def PointCone(actor, nx, ny, nz):
         actor.SetOrientation(0.0, 0.0, 0.0)
         n = math.sqrt(nx**2 + ny**2 + nz**2)
-        if (nx < 0.0):
+        if nx < 0.0:
             actor.RotateWXYZ(180, 0, 1, 0)
             n = -n
         actor.RotateWXYZ(180, (nx + n) * 0.5, ny * 0.5, nz * 0.5)
@@ -203,17 +203,17 @@ if __name__ == "__main__":
         progress_lock.acquire()
         progress_internal = 10
         progress_lock.release()
-        if(not la_internal):
+        if not la_internal:
             progress_lock.acquire()
             progress_internal = 60
             progress_lock.release()
-        if(ra_internal):
+        if ra_internal:
             try:
                 r_surf_t = reader.get(
                     'Surf', currSubj, name=surface.get(), hemi='r', scalars=scalar.get())
             except Exception:
                 r_surf_t = None
-        if(la_internal):
+        if la_internal:
             progress_lock.acquire()
             progress_internal = 40
             progress_lock.release()
@@ -260,7 +260,7 @@ if __name__ == "__main__":
             progress_bar.after(20, refresh)
             # progress_bar.step()
         else:
-            if(right_active.get()):
+            if right_active.get():
                 r_surf = r_surf_t
                 if r_surf is not None:
                     r_surf_mapper.SetInputData(r_surf)
@@ -269,7 +269,7 @@ if __name__ == "__main__":
                     r_surf_actor.SetVisibility(1)
                 else:
                     r_surf_actor.SetVisibility(0)
-            if(left_active.get()):
+            if left_active.get():
                 l_surf = l_surf_t
                 if l_surf is not None:
                     l_surf_mapper.SetInputData(l_surf)

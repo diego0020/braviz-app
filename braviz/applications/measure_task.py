@@ -498,33 +498,25 @@ class MeasureApp(QMainWindow):
         state = dict()
         state["roi_id"] = self.__roi_id
         # context
-        context_dict = {}
-        context_dict["image_type"] = self.ui.image_combo.currentText()
-        context_dict[
-            "axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
-        context_dict[
-            "coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
-        context_dict[
-            "sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
+        context_dict = {"image_type": self.ui.image_combo.currentText(),
+                        "axial_on": self.ui.axial_check.checkState() == QtCore.Qt.Checked,
+                        "coronal_on": self.ui.coronal_check.checkState() == QtCore.Qt.Checked,
+                        "sagital_on": self.ui.sagital_check.checkState() == QtCore.Qt.Checked,
+                        "axial_slice": int(self.ui.axial_slice.value()),
+                        "coronal_slice": int(self.ui.coronal_slice.value()),
+                        "sagital_slice": int(self.ui.sagital_slice.value())}
 
-        context_dict["axial_slice"] = int(self.ui.axial_slice.value())
-        context_dict["coronal_slice"] = int(self.ui.coronal_slice.value())
-        context_dict["sagital_slice"] = int(self.ui.sagital_slice.value())
         state["context"] = context_dict
 
         # visual
-        visual_dict = {}
-        visual_dict["coords"] = self.__curent_space
+        visual_dict = {"coords": self.__curent_space, "camera": self.vtk_viewer.get_camera_parameters(),
+                       "line_color": self.__line_color}
         # camera
-        visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
-        visual_dict["line_color"] = self.__line_color
         state["visual"] = visual_dict
 
         # subject
-        subjs_state = {}
-        subjs_state["subject"] = self.__current_subject
-        subjs_state["img_code"] = self.__current_img_id
-        subjs_state["sample"] = self.__subjects_list
+        subjs_state = {"subject": self.__current_subject, "img_code": self.__current_img_id,
+                       "sample": self.__subjects_list}
         state["subjects"] = subjs_state
 
         # meta

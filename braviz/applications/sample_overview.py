@@ -520,10 +520,10 @@ class SampleOverview(QtGui.QMainWindow):
                             "Axial": 2, "Coronal": 1, "Sagital": 0}
                         viewer.image.change_image_orientation(
                             orientation_dict[orient], skip_render=True)
-                    slice = image_state.get("slice")
-                    if slice is not None:
+                    img_slice = image_state.get("slice")
+                    if img_slice is not None:
                         viewer.image.set_image_slice(
-                            int(slice), skip_render=True)
+                            int(img_slice), skip_render=True)
                     window = image_state.get("window")
                     if window is not None:
                         viewer.image.set_image_window(window, skip_render=True)

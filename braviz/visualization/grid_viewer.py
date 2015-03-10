@@ -192,7 +192,7 @@ class GridView(vtk.vtkRenderWindow):
                 self.__panning_start_cam_pos = np.array(cam1.GetPosition())
                 self.__panning_start_cam_focal = np.array(cam1.GetFocalPoint())
             else:
-                if self.__panning == False:
+                if not self.__panning:
                     return
                 if event == 'MiddleButtonReleaseEvent':
                     self.__panning = False
@@ -322,7 +322,7 @@ class GridView(vtk.vtkRenderWindow):
         self.clear_selection()
         for act in self.__picking_dict:
             act.SetVisibility(0)
-        for id, polydata in data_dict.iteritems():
+        for f_id, polydata in data_dict.iteritems():
             # center polydata
             if hasattr(polydata, '__iter__'):
                 polydata = merge_polydata(polydata)
@@ -337,27 +337,27 @@ class GridView(vtk.vtkRenderWindow):
             trans.SetInputData(polydata)
             trans.Update()
             polydata2 = trans.GetOutput()
-            self.__poly_data_dict[id] = polydata2
-            if not self.__mapper_dict.has_key(id):
+            self.__poly_data_dict[f_id] = polydata2
+            if not self.__mapper_dict.has_key(f_id):
                 mapper = vtk.vtkPolyDataMapper()
-                self.__mapper_dict[id] = mapper
-            mapper = self.__mapper_dict[id]
+                self.__mapper_dict[f_id] = mapper
+            mapper = self.__mapper_dict[f_id]
             mapper.SetInputData(polydata2)
-            if not self.__actors_dict.has_key(id):
+            if not self.__actors_dict.has_key(f_id):
                 #actor = vtk.vtkActor()
                 if self.__use__lod is True:
                     actor = vtk.vtkLODProp3D()
                 else:
                     actor = vtk.vtkActor()
 
-                self.__actors_dict[id] = actor
+                self.__actors_dict[f_id] = actor
                 self.ren.AddActor(actor)
                 actor.SetOrientation(self.__orientation)
-                self.__picking_dict[actor] = id
+                self.__picking_dict[actor] = f_id
                 if self.__actor_observer_fun is not None:
                     actor.AddObserver(
                         vtk.vtkCommand.PickEvent, self.__actor_observer_fun)
-            actor = self.__actors_dict[id]
+            actor = self.__actors_dict[f_id]
             # actor.SetMapper(mapper)
             prop = vtk.vtkProperty()
             if self.__use__lod is True:
@@ -367,7 +367,7 @@ class GridView(vtk.vtkRenderWindow):
                 actor.SetMapper(mapper)
                 actor.SetProperty(prop)
             if self.__use__lod is True:
-                tringle_filter, decimation_filter, decimation_mapper = self.__decimation_dicts.setdefault(id,
+                tringle_filter, decimation_filter, decimation_mapper = self.__decimation_dicts.setdefault(f_id,
                                                                                                           (vtk.vtkTriangleFilter(), vtk.vtkDecimatePro(), vtk.vtkPolyDataMapper()))
                 tringle_filter.SetInputData(polydata2)
                 decimation_filter.SetInputConnection(
@@ -386,7 +386,7 @@ class GridView(vtk.vtkRenderWindow):
             #actor.GetProperty = lambda: self.__prop_dict[actor]
             actor.SetVisibility(1)
             if self.__color_function is not None:
-                prop.SetColor(self.__color_function(id))
+                prop.SetColor(self.__color_function(f_id))
                 prop.SetOpacity(self.__opacity)
 
     def clear_all(self):
@@ -729,8 +729,8 @@ if __name__ == '__main__':
     test.reset_camera()
     import random
 
-    def rand_color(id):
-        return [random.random() for i in range(3)]
+    def rand_color(f_id):
+        return [random.random() for _ in xrange(3)]
 
     messages = {}
     for i in range(10):

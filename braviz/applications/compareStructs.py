@@ -603,25 +603,25 @@ class CompareStructs(object):
             x, y = list(ref.GetEventPosition())
 
             slave.SetEventInformation(x, y)
-            if(event == 'StartInteractionEvent'):
+            if event == 'StartInteractionEvent':
                 if MiddleButton:
                     slave.InvokeEvent('MiddleButtonPressEvent')
                     slicing = True
                 else:
                     slave.InvokeEvent('LeftButtonPressEvent')
-            elif(event == 'EndInteractionEvent'):
+            elif event == 'EndInteractionEvent':
                 if slicing:
                     slave.InvokeEvent('MiddleButtonReleaseEvent')
                     slicing = False
                 else:
                     slave.InvokeEvent('LeftButtonReleaseEvent')
-            elif(event == 'InteractionEvent'):
+            elif event == 'InteractionEvent':
                 if slicing:
                     plane2.SetSliceIndex(obj.GetSliceIndex())
                     plane2.InvokeEvent('InteractionEvent')
                 else:
                     slave.MouseMoveEvent()
-            elif(event == 'WindowLevelEvent'):
+            elif event == 'WindowLevelEvent':
                 wl = [0, 0]
                 obj.GetWindowLevel(wl)
                 plane2.SetWindowLevel(*wl)

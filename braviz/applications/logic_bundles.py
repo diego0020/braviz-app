@@ -567,43 +567,31 @@ class LogicBundlesApp(QMainWindow):
         # current tree
         state["logic_tree"] = self.vtk_tree.to_dict()
         # context
-        context_dict = {}
-        context_dict["image_type"] = self.__current_image_mod
-        context_dict[
-            "axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
-        context_dict[
-            "coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
-        context_dict[
-            "sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
+        context_dict = {"image_type": self.__current_image_mod,
+                        "axial_on": self.ui.axial_check.checkState() == QtCore.Qt.Checked,
+                        "coronal_on": self.ui.coronal_check.checkState() == QtCore.Qt.Checked,
+                        "sagital_on": self.ui.sagital_check.checkState() == QtCore.Qt.Checked,
+                        "axial_slice": int(self.ui.axial_slice.value()),
+                        "coronal_slice": int(self.ui.coronal_slice.value()),
+                        "sagital_slice": int(self.ui.sagital_slice.value()),
+                        "cortex": str(self.ui.surface_combo.currentText()),
+                        "surf_scalars": str(self.ui.scalar_combo.currentText()),
+                        "left_surface": self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked,
+                        "right_surface": self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked,
+                        "cortex_opac": int(self.ui.cortex_opac.value())}
 
-        context_dict["axial_slice"] = int(self.ui.axial_slice.value())
-        context_dict["coronal_slice"] = int(self.ui.coronal_slice.value())
-        context_dict["sagital_slice"] = int(self.ui.sagital_slice.value())
-
-        context_dict["cortex"] = str(self.ui.surface_combo.currentText())
-        context_dict["surf_scalars"] = str(self.ui.scalar_combo.currentText())
-        context_dict[
-            "left_surface"] = self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked
-        context_dict[
-            "right_surface"] = self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked
-        context_dict["cortex_opac"] = int(self.ui.cortex_opac.value())
         state["context"] = context_dict
         # visual
-        visual_dict = {}
-        visual_dict["coords"] = self.__curent_space
-        visual_dict["waypoints_opac"] = int(self.ui.waypoints_opacity.value())
-        visual_dict[
-            "preview"] = self.ui.preview_bundle.checkState() == QtCore.Qt.Checked
-        visual_dict["scalar"] = str(self.ui.fiber_scalar_combo.currentText())
+        visual_dict = {"coords": self.__curent_space, "waypoints_opac": int(self.ui.waypoints_opacity.value()),
+                       "preview": self.ui.preview_bundle.checkState() == QtCore.Qt.Checked,
+                       "scalar": str(self.ui.fiber_scalar_combo.currentText()),
+                       "camera": self.vtk_viewer.get_camera_parameters()}
         # camera
-        visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
         state["visual"] = visual_dict
 
         # subject
-        subjs_state = {}
-        subjs_state["subject"] = self.__current_subject
-        subjs_state["img_code"] = self.__current_img_id
-        subjs_state["sample"] = self.subjects_list
+        subjs_state = {"subject": self.__current_subject, "img_code": self.__current_img_id,
+                       "sample": self.subjects_list}
         state["subjects"] = subjs_state
 
         # meta

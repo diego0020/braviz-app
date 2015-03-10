@@ -478,30 +478,21 @@ class FmriExplorer(QtGui.QMainWindow):
         import platform
         import os
 
-        state = {}
+        state = {"sample": list(self.__valid_ids)}
         # sample
-        state["sample"] = list(self.__valid_ids)
 
         # fMRI
-        fmri_state = {}
-        fmri_state["subject"] = self.__current_subject
-        fmri_state["paradigm"] = self.__current_paradigm
-        fmri_state["contrast"] = self.__current_contrast
-        fmri_state[
-            "image_orientation"] = self.image_view.image.image_plane_widget.GetPlaneOrientation()
-        fmri_state[
-            "image_slice"] = self.image_view.image.get_current_image_slice()
-        fmri_state["contours_active"] = self.ui.show_contours_check.isChecked()
-        fmri_state["contours_threshold"] = float(
-            self.ui.show_contours_value.value())
-        fmri_state["contours_opacity"] = int(
-            self.ui.contour_opacity_slider.value())
-        fmri_state["camera"] = self.image_view.get_camera_parameters()
+        fmri_state = {"subject": self.__current_subject, "paradigm": self.__current_paradigm,
+                      "contrast": self.__current_contrast,
+                      "image_orientation": self.image_view.image.image_plane_widget.GetPlaneOrientation(),
+                      "image_slice": self.image_view.image.get_current_image_slice(),
+                      "contours_active": self.ui.show_contours_check.isChecked(), "contours_threshold": float(
+            self.ui.show_contours_value.value()), "contours_opacity": int(
+            self.ui.contour_opacity_slider.value()), "camera": self.image_view.get_camera_parameters()}
         state["fmri"] = fmri_state
         # Timelines
-        timeline_state = {}
-        timeline_state["frozen"] = zip(
-            self.__frozen_points.index, self.__frozen_points["Contrast"])
+        timeline_state = {"frozen": zip(
+            self.__frozen_points.index, self.__frozen_points["Contrast"])}
         if self.ui.time_color_combo.currentIndex() == 0:
             color = "<uniform>"
         elif self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count() - 1:

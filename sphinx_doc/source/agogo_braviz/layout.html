@@ -35,7 +35,7 @@
         <li><a href="{{ pathto(master_doc) }}"> Home </a>{{ reldelim1 }}</li>
          {%- endblock %}
           {%- for parent in parents %}
-          <li><a href="{{ parent.link|e }}" {% if loop.last %} {{ accesskey("U") }} {% endif %}>{{ parent.title }}</a>{{ reldelim1 }}</li>
+          <li><a href="{{ parent.link|e }}" {% if loop.last %} {{ accesskey("U") }} {% endif %} >{{ parent.title }}</a>{{ reldelim1 }}</li>
         {%- endfor %}
                   </ol>
           </nav>
@@ -68,7 +68,7 @@
           {% if pagename[0:8] == "library/" %}
           {%- for rellink in rellinks|reverse %}
           <a href="{{ pathto(rellink[0]) }}" title="{{ rellink[1]|striptags|e }}"
-             {{ accesskey(rellink[2]) }}>{{ rellink[3] }}</a>
+             {{ accesskey(rellink[2]) }} >{{ rellink[3] }}</a>
           {%- if not loop.last %}{{ reldelim2 }}{% endif %}
           {%- endfor %}
           {% elif pagename == theme_main_page %}

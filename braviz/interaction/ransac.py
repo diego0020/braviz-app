@@ -189,7 +189,7 @@ class LinearRegression(object):
         A = numpy.vstack([data[:, i] for i in self.input_columns])[0]
         B = numpy.vstack([data[:, i] for i in self.output_columns])[0]
         slope, intercept, r_value, p_value, std_err = linregress(A, B)
-        return (intercept, slope, r_value)
+        return intercept, slope, r_value
 
     def get_error(self, data, model):
         A = numpy.vstack([data[:, i] for i in self.input_columns])[0]

@@ -970,7 +970,7 @@ def get_variable_normal_range(var_idx):
     c = conn.execute(q, (UBICAC[0], UBICAC[1], var_idx))
     values = c.fetchone()
     if values is None:
-        return (float("nan"), float("nan"))
+        return float("nan"), float("nan")
     else:
         return values
 

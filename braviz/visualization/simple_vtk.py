@@ -800,15 +800,15 @@ class cursors(vtk.vtkPropAssembly):
         self.delta = delta
 
 
-def build_grid(orig_img, slice, sampling_rate=5):
+def build_grid(orig_img, img_slice, sampling_rate=5):
     """Creates an homogenous grid, useful for showing the effects of transformations
 
-    The grid dimensions are based on the orig_img, slice is used to position the grid along the x axis,
+    The grid dimensions are based on the orig_img, img_slice is used to position the grid along the x axis,
     For the moment only grids perpendicular to the x axis are available
 
     Args:
         orig_img (vtkImageData) : Image to base grid on
-        slice (int) : Slice of the image where the grid will be located (along the x asis)
+        img_slice (int) : Slice of the image where the grid will be located (along the x asis)
         sampling_rate (int) : Density of the grid, there will be a line each *sampling_rate* voxels
     """
     dimensions = orig_img.GetDimensions()
@@ -827,7 +827,7 @@ def build_grid(orig_img, slice, sampling_rate=5):
     for j in xrange(dimensions[1]):
         for k in xrange(dimensions[2]):
             idx = flat_index(j, k)
-            coords = img2world(slice, j, k)
+            coords = img2world(img_slice, j, k)
             points.SetPoint(idx, coords)
     grid = vtk.vtkPolyData()
     grid.SetPoints(points)

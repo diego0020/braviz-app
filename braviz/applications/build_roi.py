@@ -1002,44 +1002,31 @@ class BuildRoiApp(QMainWindow):
         state["roi_id"] = self.__roi_id
         state["additional_rois"] = self.__additional_spheres.keys()
         # context
-        context_dict = {}
-        context_dict["image_type"] = self.ui.image_combo.currentText()
-        context_dict[
-            "axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
-        context_dict[
-            "coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
-        context_dict[
-            "sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
+        context_dict = {"image_type": self.ui.image_combo.currentText(),
+                        "axial_on": self.ui.axial_check.checkState() == QtCore.Qt.Checked,
+                        "coronal_on": self.ui.coronal_check.checkState() == QtCore.Qt.Checked,
+                        "sagital_on": self.ui.sagital_check.checkState() == QtCore.Qt.Checked,
+                        "axial_slice": int(self.ui.axial_slice.value()),
+                        "coronal_slice": int(self.ui.coronal_slice.value()),
+                        "sagital_slice": int(self.ui.sagital_slice.value()),
+                        "cortex": str(self.ui.surface_combo.currentText()),
+                        "surf_scalars": str(self.ui.scalar_combo.currentText()),
+                        "left_surface": self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked,
+                        "right_surface": self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked,
+                        "cortex_opac": int(self.ui.cortex_opac.value())}
 
-        context_dict["axial_slice"] = int(self.ui.axial_slice.value())
-        context_dict["coronal_slice"] = int(self.ui.coronal_slice.value())
-        context_dict["sagital_slice"] = int(self.ui.sagital_slice.value())
-
-        context_dict["cortex"] = str(self.ui.surface_combo.currentText())
-        context_dict["surf_scalars"] = str(self.ui.scalar_combo.currentText())
-        context_dict[
-            "left_surface"] = self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked
-        context_dict[
-            "right_surface"] = self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked
-        context_dict["cortex_opac"] = int(self.ui.cortex_opac.value())
         state["context"] = context_dict
         # visual
-        visual_dict = {}
-        visual_dict["coords"] = self.__curent_space
+        visual_dict = {"coords": self.__curent_space, "camera": self.vtk_viewer.get_camera_parameters(),
+                       "spher_rep": self.ui.sphere_rep.currentIndex(), "sphere_opac": self.ui.sphere_opac.value(),
+                       "sphere_color": self.__sphere_color,
+                       "show_fibers": self.ui.show_fibers_check.checkState() == QtCore.Qt.Checked}
         # camera
-        visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
-        visual_dict["spher_rep"] = self.ui.sphere_rep.currentIndex()
-        visual_dict["sphere_opac"] = self.ui.sphere_opac.value()
-        visual_dict["sphere_color"] = self.__sphere_color
-        visual_dict[
-            "show_fibers"] = self.ui.show_fibers_check.checkState() == QtCore.Qt.Checked
         state["visual"] = visual_dict
 
         # subject
-        subjs_state = {}
-        subjs_state["subject"] = self.__current_subject
-        subjs_state["img_code"] = self.__current_img_id
-        subjs_state["sample"] = self.__subjects_list
+        subjs_state = {"subject": self.__current_subject, "img_code": self.__current_img_id,
+                       "sample": self.__subjects_list}
         state["subjects"] = subjs_state
 
         # meta

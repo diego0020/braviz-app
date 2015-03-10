@@ -1925,7 +1925,7 @@ class SurfaceManager(object):
         actor = self.__cone_trio[2]
         actor.SetOrientation(0.0, 0.0, 0.0)
         n = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2)
-        if (nx < 0.0):
+        if nx < 0.0:
             actor.RotateWXYZ(180, 0, 1, 0)
             n = -n
         actor.RotateWXYZ(180, (nx + n) * 0.5, ny * 0.5, nz * 0.5)
@@ -2052,7 +2052,7 @@ class SurfaceManager(object):
             mapper = trio[1]
             mapper.SetLookupTable(lut)
         self.__lut = lut
-        if (self.__color_bar_actor is not None) and (self.__active_color_bar):
+        if (self.__color_bar_actor is not None) and self.__active_color_bar:
             self.__color_bar_actor.SetLookupTable(lut)
 
     def __update_both(self):
@@ -2639,7 +2639,7 @@ class MeasurerViewer(object):
 
         self.obs_id, self.obs_id2, self.obs_id3 = None, None, None
 
-    def _restrict_points_to_plane(self, object, event):
+    def _restrict_points_to_plane(self, caller, event):
         """
         Restrict the measure widget points to the plane surfaces
         """
@@ -2654,16 +2654,16 @@ class MeasurerViewer(object):
         plane_point[ax] = slice_coords
         pa1, pa2 = self.__pax1, self.__pax2
 
-        repr = object.GetRepresentation()
-        r1 = repr.GetPoint1Representation()
-        r2 = repr.GetPoint2Representation()
+        representation = caller.GetRepresentation()
+        r1 = representation.GetPoint1Representation()
+        r2 = representation.GetPoint2Representation()
         r1i = r1.GetInteractionState()
         r2i = r2.GetInteractionState()
         camera = self.ren.GetActiveCamera()
         view_vec = np.array(camera.GetDirectionOfProjection())
         if r1i > 0 or not self.__placed:
             p1 = np.zeros(3)
-            repr.GetPoint1WorldPosition(p1)
+            representation.GetPoint1WorldPosition(p1)
             if np.dot(view_vec, p1) != 0:
                 t = (slice_coords - p1[ax]) / view_vec[ax]
                 p1 = p1 + view_vec * t
@@ -2672,17 +2672,17 @@ class MeasurerViewer(object):
 
             if straight and self.__placed:
                 ref = np.zeros(3)
-                repr.GetPoint2WorldPosition(ref)
+                representation.GetPoint2WorldPosition(ref)
                 dif = np.abs(p1 - ref)
                 if dif[pa1] > dif[pa2]:
                     p1[pa2] = ref[pa2]
                 else:
                     p1[pa1] = ref[pa1]
-            repr.SetPoint1WorldPosition(p1)
+            representation.SetPoint1WorldPosition(p1)
             self.__placed = True
         else:
             p2 = np.zeros(3)
-            repr.GetPoint2WorldPosition(p2)
+            representation.GetPoint2WorldPosition(p2)
             if np.dot(view_vec, p2) != 0:
                 t = (slice_coords - p2[ax]) / view_vec[ax]
                 p2 = p2 + view_vec * t
@@ -2690,13 +2690,13 @@ class MeasurerViewer(object):
                 p2[ax] = slice_coords
             if straight:
                 ref = np.zeros(3)
-                repr.GetPoint1WorldPosition(ref)
+                representation.GetPoint1WorldPosition(ref)
                 dif = np.abs(p2 - ref)
                 if dif[pa1] > dif[pa2]:
                     p2[pa2] = ref[pa2]
                 else:
                     p2[pa1] = ref[pa1]
-            repr.SetPoint2WorldPosition(p2)
+            representation.SetPoint2WorldPosition(p2)
 
     def finish_initializing(self):
         """
@@ -3500,8 +3500,8 @@ class fMRI_viewer(object):
         """
         axis = self.image.image_plane_widget.GetPlaneOrientation()
         self.__cursor.set_axis_coords(axis, coords)
-        slice = coords[axis]
-        self.image.set_image_slice(slice)
+        img_slice = coords[axis]
+        self.image.set_image_slice(img_slice)
 
     @property
     def image(self):

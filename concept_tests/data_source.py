@@ -1038,7 +1038,7 @@ class DataSource(object):
   
                 num_labels = len(N.unique(self.cat_labels[idx,:]))
   
-                if num_labels > 8 and num_labels <= 13:
+                if 8 < num_labels <= 13:
                     cl.append([float(cc)/255.0 for cc in [228, 26, 28]])  # Colorbrewer Set2 modY+4
                     cl.append([float(cc)/255.0 for cc in [55, 126, 184]])
                     cl.append([float(cc)/255.0 for cc in [77, 175, 74]])

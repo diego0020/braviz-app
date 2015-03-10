@@ -119,8 +119,8 @@ class CheckRegApp(QMainWindow):
         space = str(self.ui.coords_combo.currentText())
         self.vtk_viewer.change_space(space)
 
-    def change_slice(self, slice):
-        self.vtk_viewer.set_image_slice(slice)
+    def change_slice(self, img_slice):
+        self.vtk_viewer.set_image_slice(img_slice)
 
 
 def run():

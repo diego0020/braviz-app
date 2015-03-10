@@ -823,8 +823,8 @@ if __name__ == '__main__':
     spider_widget.grid(row=2, sticky="NSEW")
 
     def color_fun(value, key):
-        from colorbrewer import BrBG
-        color_array = BrBG[10]
+        import seaborn
+        color_array = seaborn.color_palette("BrBG",10)
         return map(lambda x: x / 255.0, color_array[key])
     spider_plot.set_color_fun(color_fun)
 

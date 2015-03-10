@@ -228,10 +228,10 @@ class LinearModelApp(QMainWindow):
         self.get_missing_values()
 
     def get_missing_values(self):
-        vars = list(self.regressors_model.get_regressors())
+        a_vars = list(self.regressors_model.get_regressors())
         if self.outcome_var_name is not None:
-            vars.append(self.outcome_var_name)
-        whole_df = braviz_tab_data.get_data_frame_by_name(vars)
+            a_vars.append(self.outcome_var_name)
+        whole_df = braviz_tab_data.get_data_frame_by_name(a_vars)
         whole_df = whole_df.loc[self.sample]
         whole_df.dropna(inplace=True)
         self.missing = len(self.sample) - len(whole_df)
@@ -597,10 +597,8 @@ class LinearModelApp(QMainWindow):
 
     def get_state(self):
         state = {}
-        vars_state = {}
-        vars_state["outcome"] = self.outcome_var_name
-        vars_state["regressors"] = self.regressors_model.get_regressors()
-        vars_state["interactions"] = self.regressors_model.get_interactions()
+        vars_state = {"outcome": self.outcome_var_name, "regressors": self.regressors_model.get_regressors(),
+                      "interactions": self.regressors_model.get_interactions()}
         state["vars"] = vars_state
         state["plot"] = {"var_name": self.plot_name}
         state["sample"] = self.sample
@@ -643,9 +641,9 @@ class LinearModelApp(QMainWindow):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
                                                              "Save Data", ".", "csv (*.csv)"))
         if len(filename) > 0:
-            vars = [self.outcome_var_name] + \
+            a_vars = [self.outcome_var_name] + \
                 list(self.regressors_model.get_regressors())
-            out_df = braviz_tab_data.get_data_frame_by_name(vars)
+            out_df = braviz_tab_data.get_data_frame_by_name(a_vars)
             out_df.to_csv(filename)
 
     def load_scenario_dialog(self):
@@ -823,13 +821,13 @@ class LinearModelApp(QMainWindow):
         us_outcome = 2 * s * outcome_data + m
         df3[self.outcome_var_name] = us_outcome
         # fix x_var
-        type = results_var_types_[isolating_factor]
+        v_type = results_var_types_[isolating_factor]
         x_data = df3[isolating_factor]
-        if type == "r":
+        if v_type == "r":
             m, s = self.regression_results["mean_sigma"][isolating_factor]
             us_x_data = 2 * s * x_data + m
             df3[isolating_factor] = us_x_data
-        elif type == "b":
+        elif v_type == "b":
             m, s = self.regression_results["mean_sigma"][isolating_factor]
             us_x_data = s * x_data + m
             df3[isolating_factor] = us_x_data

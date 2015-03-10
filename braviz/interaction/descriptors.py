@@ -130,7 +130,7 @@ def _get_descriptors(aseg, labels, draw=False):
         paint_line(p5 + c2, p6 + c2, (1, 0, 1))
         viewer.start()
 
-    return (max_distance, max_distance2, max_distance3)
+    return max_distance, max_distance2, max_distance3
 
 
 def get_descriptors(aseg, labels, draw=False):
@@ -150,7 +150,7 @@ def get_descriptors(aseg, labels, draw=False):
     try:
         return _get_descriptors(aseg, labels, draw)
     except Exception:
-        return (np.nan, np.nan, np.nan)
+        return np.nan, np.nan, np.nan
 
 
 if __name__ == "__main__":

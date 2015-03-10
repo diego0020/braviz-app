@@ -22,8 +22,7 @@ from __future__ import division
 import logging
 
 import vtk
-import colorbrewer
-
+import seaborn as sbs
 
 __author__ = 'Diego'
 
@@ -47,20 +46,13 @@ def get_colorbrewer_lut(minimum, maximum, scheme, steps, invert=False, continuou
         sharpness = 0
     # load colorbrewer scheme
     try:
-        cb_list = getattr(colorbrewer, scheme)
-    except AttributeError:
-        log.error(
-            "Unknown scheme %s, please look at http://colorbrewer2.org/ for available schemes" % scheme)
+        cb_list = sbs.color_palette(scheme,steps)
+    except Exception as e:
+        log = logging.getLogger(__name__)
+        log.exception(e)
         raise
-
-    try:
-        cb_list = cb_list[steps]
-    except KeyError:
-        log.error("this scheme is not available for %d steps" % steps)
-        raise
-
     cb_list = cb_list[skip:]
-    steps = steps - skip
+    steps -= skip
     if invert is True:
         cb_list.reverse()
     delta = (maximum - minimum) / (steps - 1)

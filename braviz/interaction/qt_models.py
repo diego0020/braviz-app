@@ -1015,8 +1015,8 @@ class SampleTree(QAbstractItemModel):
         super(SampleTree, self).__init__()
         if columns is None:
             conf = config_file.get_apps_config()
-            vars = conf.get_default_variables()
-            columns = [vars["nom1"], vars["nom2"], vars["lat"]]
+            a_vars = conf.get_default_variables()
+            columns = [a_vars["nom1"], a_vars["nom2"], a_vars["lat"]]
         self.data_aspects = columns
         self.__headers = {0: "Attribute", 1: "N"}
         self.__data_frame = braviz_tab_data.get_data_frame_by_name(columns)

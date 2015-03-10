@@ -332,7 +332,8 @@ class VtkWidget(tkFrame):
         self.__models_dict = {}
         self.grid_view.clear_all()
 
-    def update_structures(self, struct_list, fibers_list, async=True, state_vars={}):
+    def update_structures(self, struct_list, fibers_list, async=True, state_vars=None):
+        if not state_vars: state_vars = {}
         models_dict = {}
         if async is False:
             self.grid_view.clear_all()
@@ -706,7 +707,7 @@ class GraphFrame(tkFrame):
         self.__widget.bind('<<PlotSelected>>', self.__selection_handler)
 
     def set_highlight(self, highlight_code):
-        if self.__active_plot == None:
+        if self.__active_plot is None:
             return
         if self.__active_plot == self.__spider_plot:
             self.__spider_plot.set_highlighted_key(highlight_code)
@@ -727,8 +728,9 @@ class DataFetcher(object):
         self.__tms_file = os.path.join(
             self.__reader.get_data_root(), 'baseFinal_TMS.csv')
 
-    def get_data(self, data_variables, state_dict={}):
+    def get_data(self, data_variables, state_dict=None):
         # decode
+        if not state_dict: state_dict = {}
         data_dict = OrderedDict()
         structures = set()
         fibers_set = set()
@@ -811,9 +813,10 @@ class DataFetcher(object):
                 return "u"
         return dict(izip(codes_col, map(words_laterality, ubica_col)))
 
-    def get_structural_data_col(self, col, state_vars={}):
+    def get_structural_data_col(self, col, state_vars=None):
 
         # decode
+        if not state_vars: state_vars = {}
         metrics_dict = {
             'Volume': 'volume',
             'Surface Area': 'area',
@@ -922,7 +925,8 @@ class SaveAndRestore(object):
         self.__extension = '.braviz'
         self.__defautl_dir = default_dir
 
-    def save(self, variables_dict={}):
+    def save(self, variables_dict=None):
+        if not variables_dict: variables_dict = {}
         write_file = asksaveasfile(mode='w', defaultextension=self.__extension, parent=self.__parent, title="Save Scenario",
                                    initialdir=self.__defautl_dir, filetypes=[("braviz scenario", "*.braviz")])
         if write_file is None:

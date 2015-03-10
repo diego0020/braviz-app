@@ -838,7 +838,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 if isinstance(models, basestring):
                     return self._cached_filter_fibers(subj, models)
                 sub_ids = [self._cached_filter_fibers(subj, m) for m in models]
-                if (kw.get('operation', 'and') == 'and'):
+                if kw.get('operation', 'and') == 'and':
                     return set.intersection(*sub_ids)
                 else:
                     return set.union(*sub_ids)
@@ -902,25 +902,25 @@ A read and filter class designed to work with kmc projects. Implements common fu
         idx %= 100
 
         if kw.get("map", False):
-            format = kw.get("format", "nii")
-            map = self._read_tracula_map(subj, idx, format=format)
+            img_format = kw.get("format", "nii")
+            t_map = self._read_tracula_map(subj, idx, i_format=img_format)
             if space in {"diff", "native"}:
-                return map
+                return t_map
             else:
-                if format == "vtk":
+                if img_format == "vtk":
                     w_img = self.move_img_to_world(
-                        map, "diff", subj, interpolate=True)
+                        t_map, "diff", subj, interpolate=True)
                     s_img = self.move_img_from_world(
                         w_img, space, subj, interpolate=True)
                     return s_img
                 else:
                     raise NotImplementedError
 
-        map = self._read_tracula_map(subj, idx, format="vtk")
+        t_map = self._read_tracula_map(subj, idx, i_format="vtk")
         smooth = vtk.vtkImageGaussianSmooth()
         smooth.SetDimensionality(3)
         smooth.SetStandardDeviation(1)
-        smooth.SetInputData(map)
+        smooth.SetInputData(t_map)
         smooth.Update()
 
         maxi_val = smooth.GetOutput().GetScalarRange()[1]
@@ -939,12 +939,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
         cont_s = self._movePointsToSpace(cont_w, space, subj, inverse=False)
         return cont_s
 
-    def _read_tracula_map(self, subj, index, format="nii"):
+    def _read_tracula_map(self, subj, index, i_format="nii"):
         affine, img_data = self._get_full_tracula_map(subj)
         data2 = img_data[:, :, :, index]
-        if format == "nii":
+        if i_format == "nii":
             return nib.Nifti1Image(data2, affine)
-        elif format == "vtk":
+        elif i_format == "vtk":
             vtk_img = numpy2vtk_img(data2)
             vtk_img2 = applyTransform(vtk_img, np.linalg.inv(affine))
             return vtk_img2

@@ -158,6 +158,7 @@ class MatplotWidget(FigureCanvas):
 
         self.limits_vertical = True
 
+    @staticmethod
     def repeatatable_plot(func):
         @wraps(func)
         def saved_plot_func(*args, **kwargs):

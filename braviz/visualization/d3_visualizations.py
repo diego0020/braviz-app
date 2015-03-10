@@ -79,9 +79,9 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             A string
         """
         conf = get_config(__file__)
-        vars = conf.get_default_variables()
+        variables = conf.get_default_variables()
         var_keys = ("nom1", "nom2", "ratio1", "ratio2")
-        all_vars = map(vars.get, var_keys)
+        all_vars = map(variables.get, var_keys)
         codes = map(tab_data.get_var_idx, all_vars)
         def_vars = ",".join(map(str, codes))
         return def_vars
@@ -93,8 +93,8 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             vars_s = ParallelCoordinatesHandler.get_default_vars()
             self.default_variables = vars_s
         sample = self.get_query_argument("sample", None)
-        vars = map(int, vars_s.split(","))
-        data = tab_data.get_data_frame_by_index(vars)
+        variables = map(int, vars_s.split(","))
+        data = tab_data.get_data_frame_by_index(variables)
         if sample is not None:
             subjs = user_data.get_sample_data(sample)
             data = data.loc[subjs]
@@ -108,7 +108,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         cols2 = list(cols)
         cols2[0] = "category"
         data.columns = cols2
-        labels = tab_data.get_labels_dict(vars[0])
+        labels = tab_data.get_labels_dict(variables[0])
 
         for i, (k, v) in enumerate(labels.iteritems()):
             if v is None:

@@ -187,8 +187,8 @@ def read_annot(filepath, orig_ids=False):
                               ctab[i, 2] * (2 ** 16))
         ctab[:, 3] = 255
     if not orig_ids:
-        ord = np.argsort(ctab[:, -1])
-        labels = ord[np.searchsorted(ctab[ord, -1], labels)]
+        order = np.argsort(ctab[:, -1])
+        labels = order[np.searchsorted(ctab[order, -1], labels)]
     return labels, ctab, names
 
 

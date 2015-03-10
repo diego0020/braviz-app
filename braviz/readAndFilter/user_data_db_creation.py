@@ -117,5 +117,5 @@ def update_current_applications(conn=None):
             v2 = db_dict.get(k)
             if v2 is None:
                 conn.execute(add_q, (k, v))
-            elif (str(v) != str(v2)):
+            elif str(v) != str(v2):
                 conn.execute(update_q, (v, k))
