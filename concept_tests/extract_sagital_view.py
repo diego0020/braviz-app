@@ -49,7 +49,6 @@ camera=v.ren.GetActiveCamera()
 
 
 
-
 center=(xmin+xmax)/2
 pos=center+perpendicular*100
 
