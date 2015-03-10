@@ -288,7 +288,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.time_plot.clear_frozen_bold_signals()
 
     def warn_and_remove_frozen(self):
-        "When paradigm changes"
+        """When paradigm changes"""
         if len(self.__frozen_points) > 0:
             dialog = QtGui.QMessageBox()
             dialog.setText(

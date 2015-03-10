@@ -310,7 +310,7 @@ class GridView(vtk.vtkRenderWindow):
         return self.__picking_dict.get(self.__selected_actor, None)
 
     def set_background(self, color1, color2=None):
-        "Set background color"
+        """Set background color"""
         if color2 is not None:
             self.ren.GradientBackgroundOn()
             self.ren.SetBackground2(color2)

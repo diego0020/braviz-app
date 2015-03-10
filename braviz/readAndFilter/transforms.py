@@ -54,12 +54,12 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
             transform_i = transform.NewInstance()
             transform_i.DeepCopy(transform)
             transform_i.Invert()
-        if origin2 is None:
-            # TODO: Use a better strategy to find the new origin; this doesn't
-            # work with large rotations or reflections
-            origin = img.GetOrigin()
-            origin = list(origin) + [1]
-            origin2 = transform_i.MultiplyDoublePoint(origin)[:-1]
+            if origin2 is None:
+                # TODO: Use a better strategy to find the new origin; this doesn't
+                # work with large rotations or reflections
+                origin = img.GetOrigin()
+                origin = list(origin) + [1]
+                origin2 = transform_i.MultiplyDoublePoint(origin)[:-1]
         if spacing2 is None:
             def get_spacing(i):
                 line = [transform_i.GetElement(i, 0), transform_i.GetElement(

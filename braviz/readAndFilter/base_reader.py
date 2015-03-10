@@ -438,7 +438,7 @@ data is requested. To get a more useful class you should create your own subclas
         raise IOError("Data not available in BaseReader")
 
     def _get(self, data, subj=None, space='world', **kw):
-        "Internal: decode instruction and dispatch"
+        """Internal: decode instruction and dispatch"""
         data = data.upper()
         if data == 'MRI':
             self.__raise_error()

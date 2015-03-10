@@ -177,6 +177,7 @@ class structureList(LabelFrame):
         chosen_models = self.chosen_models
         # find if a model was added
         new_set = model_idx - self.previous_selection
+        log = logging.getLogger(__name__)
         if new_set:
             if len(new_set) > 1:
                 log = logging.getLogger(__name__)

@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-"Illustrate how to load and display Slicer 3d Models"
+"""Illustrate how to load and display Slicer 3d Models"""
 import Tkinter as tk
 import ttk
 import threading

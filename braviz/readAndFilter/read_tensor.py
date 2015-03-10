@@ -31,10 +31,10 @@ from braviz.readAndFilter.transforms import numpy2vtkMatrix
 
 
 def tensorFromImgData(img_data):
-    "Returns a function which generates tensors for each coordinate in img_data"
+    """Returns a function which generates tensors for each coordinate in img_data"""
     # print img_data.shape
     def get_tensor(i, j, k):
-        "Returns the tensor located at coordinates i,j,k"
+        """Returns the tensor located at coordinates i,j,k"""
         Dxx = img_data[i, j, k, 0, 0]
         Dxy = img_data[i, j, k, 0, 1]
         Dxz = img_data[i, j, k, 0, 2]
@@ -48,7 +48,7 @@ def tensorFromImgData(img_data):
 
 
 def get_color(tens, i=-1):
-    "Returns a color for a tensor based on the direction of the principal eigenvector"
+    """Returns a color for a tensor based on the direction of the principal eigenvector"""
     # return(0,255,255)
     t = np.array(tens)
     t = t.reshape(3, 3)
@@ -60,7 +60,7 @@ def get_color(tens, i=-1):
 
 
 def encode_chars(chars_tuple):
-    "Encode a tuple of three chars into a long ing"
+    """Encode a tuple of three chars into a long ing"""
     chars_tuple = map(int, chars_tuple)
     r, g, b = chars_tuple
     # g=b=0
@@ -69,7 +69,7 @@ def encode_chars(chars_tuple):
 
 
 def decode_chars(long_int):
-    "transform a long int into a tuple of three chars"
+    """transform a long int into a tuple of three chars"""
     x = int(long_int)
     b = x % 256
     x //= 256
@@ -146,7 +146,7 @@ def readTensorImage(tensor_file, fa_file=None, min_fa=0.3):
 
 
 def cached_readTensorImage(tensor_file, fa_file=None, min_fa=0.3):
-    "cached version of readTensorImage"
+    """cached version of readTensorImage"""
     #============CACHE READ==================
     cache_file = tensor_file[0:-7]
     if fa_file:

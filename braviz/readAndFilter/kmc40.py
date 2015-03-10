@@ -49,14 +49,14 @@ The constructor requires the root to this structure
 """
 
     def __init__(self, path, max_cache=2000):
-        "The path pointing to the __root of the file structure must be set here"
+        """The path pointing to the __root of the file structure must be set here"""
         KmcAbstractReader.__init__(self, path, path, max_cache)
         self._functional_paradigms = frozenset(("PRECISION", "POWERGRIP"))
         self._named_bundles = frozenset(("cortico_spinal_l", "cortico_spinal_r", "cortico_spinal_n", "cortico_spinal_d",
                                          "corpus_callosum"))
 
     def _getIds(self):
-        "Auxiliary function to get the available ids"
+        """Auxiliary function to get the available ids"""
         contents = os.listdir(self.get_data_root())
         numbers = re.compile('[0-9]+$')
         ids = [c for c in contents if numbers.match(c) is not None]
@@ -70,7 +70,7 @@ The constructor requires the root to this structure
         return subj
 
     def _getImg(self, data, subj, space,  **kw):
-        "Auxiliary function to read nifti images"
+        """Auxiliary function to read nifti images"""
         # path=self.getDataRoot()+'/'+subj+'/MRI'
         if data == 'MRI':
             path = os.path.join(self.get_data_root(), subj, 'MRI')
@@ -161,7 +161,7 @@ The constructor requires the root to this structure
         raise NotImplementedError
 
     def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
-        "moves an image from the world coordinate space to talairach or dartel spaces"
+        """moves an image from the world coordinate space to talairach or dartel spaces"""
 
         if space == 'world':
             return img2
@@ -201,7 +201,7 @@ The constructor requires the root to this structure
             raise Exception('Unknown space %s' % space)
 
     def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
-        "moves an image from the world coordinate space to talairach or dartel spaces"
+        """moves an image from the world coordinate space to talairach or dartel spaces"""
 
         if space == 'world':
             return img2
@@ -290,7 +290,7 @@ The constructor requires the root to this structure
         return paradigm_name.upper()
 
     def _get_paradigm_dir(self, subject, name, spm=False):
-        "If spm is True return the directory containing spm.mat, else return its parent"
+        """If spm is True return the directory containing spm.mat, else return its parent"""
         if not spm:
             return os.path.join(self.get_data_root(), subject, 'spm', name)
         else:

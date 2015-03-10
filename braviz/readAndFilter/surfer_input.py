@@ -268,8 +268,9 @@ def _cached_surface_read(surf_file):
         vtkWriter.Update()
     except Exception:
         log.warning('cache write failed')
-    if vtkWriter.GetErrorCode() != 0:
-        log.warning('cache write failed')
+    else:
+        if vtkWriter.GetErrorCode() != 0:
+            log.warning('cache write failed')
     return poly
 
 

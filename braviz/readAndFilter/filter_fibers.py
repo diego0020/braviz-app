@@ -165,7 +165,7 @@ class FilterBundleWithSphere(object):
         """
         if self.__full_bundle is None:
             raise Exception("Set a bundle first")
-            return None
+
         if self.__locator is None:
             if get_ids is True:
                 return set()

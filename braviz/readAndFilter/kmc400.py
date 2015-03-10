@@ -52,7 +52,7 @@ This is done to protect raw data and to allow to share it between different user
 """
 
     def __init__(self, static_root, dynamic_route, max_cache=2000):
-        "The path pointing to the __root of the file structure must be set here"
+        """The path pointing to the __root of the file structure must be set here"""
         KmcAbstractReader.__init__(self, static_root, dynamic_route, max_cache)
 
         self._functional_paradigms = frozenset(
@@ -61,7 +61,7 @@ This is done to protect raw data and to allow to share it between different user
                                  'LSupLongFasTemporal', 'LUncinateFas', 'RAntThalRadiation', 'RCingulumAngBundle', 'RCingulumCingGyrus', 'RCorticospinalTract', 'RInfLongFas', 'RSupLongFasParietal', 'RSupLongFasTemporal', 'RUncinateFas']
 
     def _getIds(self):
-        "Auxiliary function to get the available ids"
+        """Auxiliary function to get the available ids"""
         contents = os.listdir(
             os.path.join(self.get_data_root(), "freeSurfer_Tracula"))
         numbers = re.compile('[0-9]+$')
@@ -73,7 +73,7 @@ This is done to protect raw data and to allow to share it between different user
         return str(subj)
 
     def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
-        "moves an image from the world coordinate space to talairach or dartel spaces"
+        """moves an image from the world coordinate space to talairach or dartel spaces"""
         space = space.lower()
         if space == 'world':
             return img2
@@ -113,7 +113,7 @@ This is done to protect raw data and to allow to share it between different user
             raise Exception('Unknown space %s' % space)
 
     def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
-        "moves an image from the world coordinate space to talairach or dartel spaces"
+        """moves an image from the world coordinate space to talairach or dartel spaces"""
         space = space.lower()
         if space == 'world':
             return img2
@@ -157,7 +157,7 @@ This is done to protect raw data and to allow to share it between different user
             raise Exception('Unknown space %s' % space)
 
     def _getImg(self, data, subj, space, **kw):
-        "Auxiliary function to read nifti images"
+        """Auxiliary function to read nifti images"""
         # path=self.__root+'/'+str(subj)+'/MRI'
         if data == 'MRI':
             path = os.path.join(self.get_data_root(), "nii", str(subj))
@@ -329,7 +329,7 @@ This is done to protect raw data and to allow to share it between different user
         return paradigm_name
 
     def _get_paradigm_dir(self, subject, name, spm=False):
-        "If spm is True return the direcory containing spm.mat, else return its parent"
+        """If spm is True return the direcory containing spm.mat, else return its parent"""
         if not spm:
             return os.path.join(self.get_data_root(), "spm", subject, name)
         else:

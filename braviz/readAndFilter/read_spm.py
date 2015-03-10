@@ -51,7 +51,7 @@ ConditionInfo = namedtuple("ConditionInfo", ("name", "onsets", "durations"))
 
 class SpmFileReader(object):
 
-    "Helper class to read data from an SPM file"
+    """Helper class to read data from an SPM file"""
 
     def __init__(self, spm_file_path):
         """

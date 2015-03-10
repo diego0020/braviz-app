@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-"Illustrate how to load and display freeSurfer surfaces"
+"""Illustrate how to load and display freeSurfer surfaces"""
 import Tkinter as tk
 import ttk
 import thread

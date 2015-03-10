@@ -111,7 +111,8 @@ if __name__ == "__main__":
                         'fibers', subj, waypoint=list(models_set), operation=operation)
                 except Exception:
                     pass
-                models.append(fibers)
+                else:
+                    models.append(fibers)
             # append
             append_filter = vtk.vtkAppendPolyData()
             for mod in models:

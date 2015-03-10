@@ -61,6 +61,7 @@ def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
         A float number with the requested metric
     """
     values = []
+    result = None
     if metric in ('lfibers', 'fa_fibers', 'nfibers'):
         # we need to get all the fibers
         if metric == 'nfibers':

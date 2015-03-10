@@ -54,7 +54,7 @@ class KmcAbstractReader(BaseReader):
 A read and filter class designed to work with kmc projects. Implements common functionality in kmc40 and kmc400."""
 
     def __init__(self, static_root, dynamic_route, max_cache=2000, **kwargs):
-        "The path pointing to the __root of the file structure must be set here"
+        """The path pointing to the __root of the file structure must be set here"""
         self.__static_root = os.path.normcase(static_root)
         # Remove trailing slashes
         self.__static_root = self.__static_root.rstrip('/\\')
@@ -208,22 +208,22 @@ A read and filter class designed to work with kmc projects. Implements common fu
         raise NotImplementedError
 
     def _getIds(self):
-        "Auxiliary function to get the available ids"
+        """Auxiliary function to get the available ids"""
         raise NotImplementedError
 
     def _decode_subject(self, subj):
         raise NotImplementedError
 
     def _getImg(self, data, subj, space, **kw):
-        "Auxiliary function to read nifti images"
+        """Auxiliary function to read nifti images"""
         raise NotImplementedError
 
     def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
-        "moves an image from the world coordinate space to talairach or dartel spaces"
+        """moves an image from the world coordinate space to talairach or dartel spaces"""
         raise NotImplementedError
 
     def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
-        "moves an image from the world coordinate space to talairach or dartel spaces"
+        """moves an image from the world coordinate space to talairach or dartel spaces"""
         raise NotImplementedError
 
     #==========Free Surfer================
@@ -277,7 +277,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         raise NotImplementedError
 
     def _get_paradigm_dir(self, subject, name, spm=False):
-        "If spm is True return the direcory containing spm.mat, else return its parent"
+        """If spm is True return the direcory containing spm.mat, else return its parent"""
         raise NotImplementedError
 
     def _get_spm_grid_transform(self, subject, paradigm, direction, assume_bad_matrix=False):
@@ -295,7 +295,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
 #==============================common methods=============================
 
     def _get(self, data, subj=None, space='world', **kw):
-        "Internal: decode instruction and dispatch"
+        """Internal: decode instruction and dispatch"""
         data = data.upper()
         space = space.lower()
         if subj is not None:
@@ -462,7 +462,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         return float(vol)
 
     def _parse_fs_color_file(self):
-        "Creates an inernal representation of the freesurfer color LUT"
+        """Creates an inernal representation of the freesurfer color LUT"""
         cached = self.load_from_cache('free_surfer_color_lut_internal')
         cached2 = self.load_from_cache('free_surfer_labels_dict_internal')
         if (cached is not None) and (cached2 is not None):
@@ -490,7 +490,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         self._free_surfer_labels = labels_dict
 
     def _cached_surface_read(self, subj, name):
-        "cached function to read a freesurfer surface file"
+        """cached function to read a freesurfer surface file"""
         # check cache
         key = "surf_%s_%s" % (name, subj)
         poly = self.load_from_cache(key)
@@ -541,7 +541,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return orig
 
     def _load_free_surfer_scalar(self, subj, **kw):
-        "Auxiliary function to read free surfer scalars"
+        """Auxiliary function to read free surfer scalars"""
         morph = {'area', 'curv', 'avg_curv', 'thickness', 'volume', 'sulc'}
         morph_path = self._get_free_surfer_morph_path(subj)
         labels_path = self._get_free_surfer_labels_path(subj)
@@ -678,7 +678,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return fibers
 
     def _cached_filter_fibers(self, subj, waypoint):
-        "Only one waypoint, returns a set"
+        """Only one waypoint, returns a set"""
         # print "filtering for model "+waypoint
         cache_key = 'fibers_%s_%s' % (subj, waypoint)
         log = logging.getLogger(__name__)
@@ -885,7 +885,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 return transformed_streams
 
     def _read_tracula(self, subj, space, **kw):
-        "Read tracula files"
+        """Read tracula files"""
         if kw.get("index", False):
             labels = self._tracula_bundles
             return labels
@@ -958,7 +958,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         return affine, img_data
 
     def _readTensors(self, subj, **kw):
-        "Internal function to read a tensor file"
+        """Internal function to read a tensor file"""
         raise NotImplementedError
 
     def _movePointsToSpace(self, point_set, space, subj, inverse=False):
@@ -1018,7 +1018,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             raise Exception('Unknown Space %s' % space)
 
     def _create_surfer_lut(self):
-        "returns a vtkLookUpTable based on the freeSurferColorLUT file"
+        """returns a vtkLookUpTable based on the freeSurferColorLUT file"""
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
         if color_dict is not None and len(color_dict) < 180:
             # pass
@@ -1088,7 +1088,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         return fmri_color_int
 
     def _read_func_transform_internal(self, subject, paradigm_name, inverse, path, T1_func, T1_world,):
-        "reads the transform from world to functional space"
+        """reads the transform from world to functional space"""
         if inverse is False:
 
             dartel_trans = self._get_spm_grid_transform(
@@ -1129,7 +1129,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return concatenated_trans
 
     def _read_func(self, subject, space, **kw):
-        "Internal function to read functional images, deals with the SPM transforms"
+        """Internal function to read functional images, deals with the SPM transforms"""
         log = logging.getLogger(__name__)
         try:
             name = kw['name']

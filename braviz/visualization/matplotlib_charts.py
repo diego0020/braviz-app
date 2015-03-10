@@ -750,7 +750,7 @@ class SpiderPlot(object):
     def get_r_functions(patches):
         """Creates functions that help decide if a click is inside a web"""
         def r_function(theta):
-            "r(theta) for all theta in a web"
+            """r(theta) for all theta in a web"""
             # patches are uniformly spaced:
             # Find to which patch the angle belongs
 #            print theta

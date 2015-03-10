@@ -579,6 +579,7 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_viewer.tracula.set_opacity(int_opac)
 
     def update_segmentation_scalar(self, scalar_index=None):
+        metrics_dict=None
         if braviz.readAndFilter.PROJECT == "kmc40":
             metrics_dict = {"Volume": ("volume", "mm^3"),
                             "Area": ("area", "mm^2"),

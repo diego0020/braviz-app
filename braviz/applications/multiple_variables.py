@@ -687,7 +687,7 @@ class GraphFrame(tkFrame):
                 return self.__messages[hover_item]
         else:
             return 'Select some data and click "Apply Selection"'
-        return "hola: %s" % hover_item
+
 
     def get_messages_dict(self):
         return self.__messages
@@ -1064,7 +1064,6 @@ class AsyncUpdataAll(object):
             except Exception as e:
                 print e
                 raise e
-                internal_vars['stage'] = -1
             finally:
                 return None
 
