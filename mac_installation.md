@@ -3,25 +3,23 @@
 ## Dependencies
 
 ### Home Brew
+
 If you don't have home brew installed, install it using:
 
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     
 For more information look at http://http://brew.sh/
 
-Afterwards, add the homebrew/bin directory to your path. This can be done for example by adding the following line to your ``.bash_profile file``
-
-    export PATH=/usr/local/sbin:$PATH
-
-It is possible that it will give you warning about not having xcode, in this case you should install xcode from the apple app store, and then do
-xcode-select in the terminal
+It is possible that it will give you warning about not having xcode, in this case you should install xcode from the apple app store and open it to accept the license.
 
 ### Python
+
 It is recomended to use the python version from homebrew, this can be installed by doing
 
     brew install python
 
 ### Homebrew Python packages
+
 The following python packages should also be installed from homebrew
 
 - Numpy
@@ -38,6 +36,7 @@ This packages can be found in homebrew-python, and they can be installed by doin
     brew install pyqt
 
 ### R
+
 R can also be installed from homebrew, it is located in homebre-science. The commands are
 
     brew tap homebrew/science
@@ -55,12 +54,14 @@ and then typing
     quit()
 
 ### VTK
+
 vtk can also be installed from homebrew-science. This should be done after installing PyQt. The command is
 
     brew tap homebrew/science
     brew install vtk --with-qt
 
 ### Mercurial
+
 Mercurial is the version control software used by braviz, and the easyest way to be up to date
 
      brew install mercurial
@@ -89,7 +90,12 @@ The following is the list of required packages
 - XlsxWriter
 - pyzmq
 
+You can install all of these by typing
+
+    pip install --allow-external savReaderWriter nibabel colorbrewer rdflib httplib2 psutil pandas mpltools seaborn rpy2 tornado futures savReaderWriter xlrd XlsxWriter pyzmq
+
 ## Get braviz
+
 Go to the directory where you would like braviz files downloaded and do
 
     hg clone <repository_adress>

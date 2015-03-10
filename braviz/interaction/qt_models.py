@@ -810,9 +810,16 @@ class AnovaResultsModel(QAbstractTableModel):
 class DataFrameModel(QAbstractTableModel):
     """
     This model is used for displaying data frames in a QT table view
+
+    Args:
+        data_frame (pandas.DataFrame) : Data Frame
+        columns (list) : Optional, names for columns of the data frame
+        string_columns (list) : List of column names that should be displayed as strings
+        index_as_column (bool) : Display the data frame index as the first column
+        checks (bool) : Display checkboxes next to the first column
     """
 
-    def __init__(self, data_frame, columns=None, string_columns=tuple(),index_as_column=True):
+    def __init__(self, data_frame, columns=None, string_columns=tuple(),index_as_column=True, checks=False):
         if not isinstance(data_frame, pd.DataFrame):
             raise ValueError("A pandas data frame is required")
         if columns is None:
@@ -820,6 +827,9 @@ class DataFrameModel(QAbstractTableModel):
         self.__df = data_frame
         self.__cols = columns
         self.__string_cols = frozenset(string_columns)
+        self.__checks = checks
+        self.__checked = set()
+        self.__disabled = set()
         self.index_as_column=index_as_column
         super(DataFrameModel, self).__init__()
 
@@ -833,10 +843,21 @@ class DataFrameModel(QAbstractTableModel):
             return len(self.__cols)
 
     def data(self, QModelIndex, int_role=None):
-        if not (int_role == QtCore.Qt.DisplayRole):
-            return QtCore.QVariant()
+
         line = QModelIndex.row()
         col = QModelIndex.column()
+
+        if self.__checks is True and int_role == QtCore.Qt.CheckStateRole:
+            if col==0:
+                idx = self.__df.index[line]
+                if idx in self.__checked:
+                    return QtCore.Qt.Checked
+                else:
+                    return QtCore.Qt.Unchecked
+
+        if not (int_role == QtCore.Qt.DisplayRole):
+            return QtCore.QVariant()
+
         if self.index_as_column:
             if col == 0:
                 return self.format_data(0, self.__df.index[line])
@@ -848,6 +869,21 @@ class DataFrameModel(QAbstractTableModel):
             col_name = self.__cols[col]
             data = self.__df[col_name].iloc[line]
             return self.format_data(col, data)
+
+    def setData(self, QModelIndex, QVariant, int_role=None):
+        if int_role != QtCore.Qt.CheckStateRole or not self.__checks:
+            return False
+        col = QModelIndex.column()
+        row = QModelIndex.row()
+        assert col == 0
+        state = QVariant.toInt()[0]
+        idx = self.__df.index[row]
+        if state == QtCore.Qt.Checked:
+            self.__checked.add(idx)
+        elif state == QtCore.Qt.Unchecked:
+            self.__checked.remove(idx)
+        self.emit(QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)
+        return True
 
     def get_item_index(self,QModelIndex):
         if not QModelIndex.isValid():
@@ -900,17 +936,40 @@ class DataFrameModel(QAbstractTableModel):
 
     def flags(self, QModelIndex):
         line = QModelIndex.row()
-        # col = QModelIndex.column()
+        col = QModelIndex.column()
         result = QtCore.Qt.NoItemFlags
         if 0 <= line <= self.rowCount() and 0 <= line <= self.rowCount():
             result |= QtCore.Qt.ItemIsSelectable
+        if self.__df.index[line] not in self.__disabled:
             result |= QtCore.Qt.ItemIsEnabled
+        if self.__checks and col == 0:
+            result |= QtCore.Qt.ItemIsUserCheckable
         return result
 
     def set_df(self, new_df):
         self.__df = new_df.copy()
         self.modelReset.emit()
 
+    @property
+    def checked(self):
+        return frozenset(self.__checked)
+
+    @checked.setter
+    def checked(self,checked_names):
+        self.modelAboutToBeReset.emit()
+        self.__checked=set(checked_names)
+        self.modelReset.emit()
+
+
+    @property
+    def disabled_items(self):
+        return frozenset(self.__disabled)
+
+    @disabled_items.setter
+    def disabled_items(self,disabled_set):
+        self.modelAboutToBeReset.emit()
+        self.__disabled = set(disabled_set)
+        self.modelReset.emit()
 
 class SampleTree(QAbstractItemModel):
     """
@@ -1110,6 +1169,7 @@ class SampleTree(QAbstractItemModel):
             for c in item.children:
                 leafs.extend(self.__get_leafs(c))
             return leafs
+
 
 
 class SubjectsTable(QAbstractTableModel):
@@ -1903,6 +1963,9 @@ class SimpleSetModel(QAbstractListModel):
         self.modelReset.emit()
 
 class SimpleCheckModel(QAbstractListModel):
+    """
+    Provides a model for selecting items from a set of choices (represented with checkboxes in Qt Views)
+    """
     def __init__(self,choices):
         """
         Provides a model for selecting items from a set of choices (represented with checkboxes in Qt Views)

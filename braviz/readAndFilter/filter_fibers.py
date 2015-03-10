@@ -137,9 +137,12 @@ class FilterBundleWithSphere(object):
             bundle (vtkPolyData) : base bundle
         """
         self.__full_bundle = bundle
-        self.__locator = vtk.vtkKdTreePointLocator()
-        self.__locator.SetDataSet(self.__full_bundle)
-        self.__locator.BuildLocator()
+        if bundle.GetNumberOfPoints() > 0:
+            self.__locator = vtk.vtkKdTreePointLocator()
+            self.__locator.SetDataSet(self.__full_bundle)
+            self.__locator.BuildLocator()
+        else:
+            self.__locator = None
 
     def filter_bundle_with_sphere(self,center,radius,get_ids = False):
         """
@@ -157,6 +160,11 @@ class FilterBundleWithSphere(object):
         if self.__full_bundle is None:
             raise Exception("Set a bundle first")
             return None
+        if self.__locator is None:
+            if get_ids is True:
+                return set()
+            else:
+                return self.__full_bundle
         id_list = vtk.vtkIdList()
         self.__locator.FindPointsWithinRadius(radius,center,id_list)
         valid_cell_ids = set()

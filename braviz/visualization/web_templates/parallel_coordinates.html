@@ -29,7 +29,7 @@
 
 .foreground path.fade {
   stroke: #000;
-  stroke-opacity: .02;
+  stroke-opacity: {% raw background_opac %} ;
 }
 
 
@@ -436,7 +436,9 @@ var message_getter = {
 
 function highlight_subj_path(subj){
 var g=document.getElementById("highlight_path_node");
-g.innerHTML="";
+while (g.firstChild) {
+    g.removeChild(g.firstChild);
+}
 $("#selected table tr").removeClass("highlighted_row");
 if (subj != null) {
 var s=d3.selectAll(".foreground path").filter(function (f) {return f.code == subj});

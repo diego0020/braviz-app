@@ -117,6 +117,15 @@ class StructureTreeNode(object):
             i.delete_children()
         del self.children
 
+    def get_leaf_names(self):
+        """
+        Get names of leafs that are under the current node
+        """
+        if self.is_leaf():
+            return {self.leaf_name}
+        else:
+            return set.union(*(c.get_leaf_names() for c in self.children))
+
 
 class StructureTreeModel(QAbstractItemModel):
     """
@@ -139,6 +148,7 @@ class StructureTreeModel(QAbstractItemModel):
         self.__id_index = {}
         self.__root = None
         self.leaf_ids = set()
+        self.leaf_inverse_ids = dict()
         self.optimistic_reload_hierarchy(dominant)
         if subj is None:
             subj = reader.get("ids",None)[0]
@@ -157,7 +167,12 @@ class StructureTreeModel(QAbstractItemModel):
         favorite = config_file.get_apps_config().get_default_subject()
         possibles.insert(0,favorite)
         for subj in possibles:
-            self.reload_hierarchy(subj,dominant)
+            try:
+                self.reload_hierarchy(subj,dominant)
+            except Exception as e:
+                log=logging.getLogger(__name__)
+                log.exception(e)
+                self.hierarchy=tuple()
             if len(self.hierarchy)>0:
                 return
         raise Exception("Couldnt build structures index")
@@ -194,14 +209,16 @@ class StructureTreeModel(QAbstractItemModel):
     def __load_sub_tree(self, sub_root, hierarchy_dict):
         for k, v in sorted(hierarchy_dict.items(), key=lambda x: x[0]):
             new_node = sub_root.add_child(k)
-            self.__id_index[id(new_node)] = new_node
+            new_node_id = id(new_node)
+            self.__id_index[new_node_id] = new_node
             if isinstance(v, dict):
                 self.__load_sub_tree(new_node, v)
             else:
                 #is a leaf
                 new_node.leaf_name = v
                 new_node.tooltip = self.pretty_names.get(v, v)
-                self.leaf_ids.add(id(new_node))
+                self.leaf_ids.add(new_node_id)
+                self.leaf_inverse_ids.setdefault(v,set()).add(new_node_id)
 
     def parent(self, QModelIndex=None):
         if QModelIndex.isValid():
@@ -277,7 +294,12 @@ class StructureTreeModel(QAbstractItemModel):
             node = self.__id_index[nid]
             assert node.son_number == QModelIndex.row()
             check = QVariant.toBool()
-            node.check_and_update_tree(check)
+            leaf_names = node.get_leaf_names()
+            leaf_ids=set.union(*(self.leaf_inverse_ids.get(n,set()) for n in leaf_names))
+            for n_i in leaf_ids:
+                node = self.__id_index[n_i]
+                node.check_and_update_tree(check)
+                self.__notify_parents(node)
             self.dataChanged.emit(QModelIndex, QModelIndex)
             #self.dataChanged.emit(QtCore.QModelIndex(), QtCore.QModelIndex())
             #print "signaling"
@@ -323,10 +345,10 @@ class StructureTreeModel(QAbstractItemModel):
         """
         Get a list of currently checked structures
         """
-        selected_leaf_names = [self.__id_index[leaf].leaf_name for leaf in self.leaf_ids if
-                               self.__id_index[leaf].checked == QtCore.Qt.Checked]
+        selected_leaf_names = {self.__id_index[leaf].leaf_name for leaf in self.leaf_ids if
+                               self.__id_index[leaf].checked == QtCore.Qt.Checked}
         # print "selected leafs names",selected_leaf_names
-        return selected_leaf_names
+        return sorted(selected_leaf_names)
 
     def set_selected_structures(self,selected_list):
         """

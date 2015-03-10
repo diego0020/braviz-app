@@ -16,6 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
+from __future__ import division
 
 import json
 import logging
@@ -133,7 +134,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         attrs=list(data.columns[1:-1])
         attrs_json = json.dumps(attrs)
         self.render("parallel_coordinates.html",data=json_data,caths=caths_json,vars=attrs_json,cath_name=col0,
-                    missing=missing)
+                    missing=missing,background_opac=5.0/len(data2))
 
     def post(self, *args, **kwargs):
         name=self.get_body_argument("sample_name")
