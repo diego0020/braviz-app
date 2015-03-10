@@ -41,6 +41,7 @@ except ImportError as e:
 
 
 class BravizMenu2(QtGui.QMainWindow):
+
     def __init__(self):
         super(BravizMenu2, self).__init__()
         from braviz.interaction.connection import MessageServer
@@ -63,19 +64,26 @@ class BravizMenu2(QtGui.QMainWindow):
         self.connect_application_launcher("anova", self.ui.anova)
         self.connect_application_launcher("correlations", self.ui.correlations)
         self.connect_application_launcher("linear_model", self.ui.linear_model)
-        self.connect_application_launcher("logic_bundles", self.ui.logic_bundles)
+        self.connect_application_launcher(
+            "logic_bundles", self.ui.logic_bundles)
         self.connect_application_launcher("build_roi", self.ui.roi_builder)
-        self.connect_application_launcher("sample_overview", self.ui.sample_overview)
-        self.connect_application_launcher("subject_overview", self.ui.subject_overview)
-        self.connect_application_launcher("fmri_explorer", self.ui.fmri_explorer)
+        self.connect_application_launcher(
+            "sample_overview", self.ui.sample_overview)
+        self.connect_application_launcher(
+            "subject_overview", self.ui.subject_overview)
+        self.connect_application_launcher(
+            "fmri_explorer", self.ui.fmri_explorer)
         self.connect_application_launcher("measure", self.ui.measure_app)
         self.connect_application_launcher("excel", self.ui.excel)
         self.connect_application_launcher("export", self.ui.export_2)
-        self.connect_application_launcher("parallel_coordinates", self.ui.parallel_coordinates)
+        self.connect_application_launcher(
+            "parallel_coordinates", self.ui.parallel_coordinates)
         self.connect_application_launcher("check_reg", self.ui.check_reg)
 
-        # self.connect_application_launcher("braviz_menu_classic", self.ui.braviz_menu_classic))
-        self.ui.variables.clicked.connect(self.launch_variable_management_dialog)
+        # self.connect_application_launcher("braviz_menu_classic",
+        # self.ui.braviz_menu_classic))
+        self.ui.variables.clicked.connect(
+            self.launch_variable_management_dialog)
         self.ui.scenarios.clicked.connect(self.launch_scenarios_dialog)
         self.ui.samples.clicked.connect(self.launch_samples_dialog)
         self.ui.help_button.clicked.connect(self.open_help)
@@ -84,10 +92,10 @@ class BravizMenu2(QtGui.QMainWindow):
 
         config = braviz.readAndFilter.config_file.get_config(__file__)
         project = config.get_project_name()
-        self.ui.label.setText("Welcome to Braviz<small><br>%s</small>" % project)
+        self.ui.label.setText(
+            "Welcome to Braviz<small><br>%s</small>" % project)
 
         self.ui.network_button.toggled.connect(self.toggle_connection)
-
 
     __applications = {
         "subject_overview": "subject_overview",
@@ -123,7 +131,6 @@ class BravizMenu2(QtGui.QMainWindow):
 
         button.clicked.connect(launch_app)
 
-
     def launch_variable_management_dialog(self):
         dialog = braviz.interaction.qt_dialogs.OutcomeSelectDialog(None)
         dialog.setWindowTitle("Variables")
@@ -136,7 +143,8 @@ class BravizMenu2(QtGui.QMainWindow):
         if ret == dialog.Accepted:
             idx = dialog.current_sample_idx
             interpreter = sys.executable
-            args = [interpreter, "-m", "braviz.applications.qt_sample_select_dialog", str(idx)]
+            args = [
+                interpreter, "-m", "braviz.applications.qt_sample_select_dialog", str(idx)]
             subprocess.Popen(args)
 
     def launch_scenarios_dialog(self):
@@ -151,7 +159,8 @@ class BravizMenu2(QtGui.QMainWindow):
             app = params["meta"]["application"]
             scn_id = params["meta"]["scn_id"]
             interpreter = sys.executable
-            args = [interpreter, "-m", "braviz.applications.%s" % app, str(scn_id)]
+            args = [interpreter, "-m", "braviz.applications.%s" %
+                    app, str(scn_id)]
             subprocess.Popen(args)
 
     def open_help(self):
@@ -164,11 +173,12 @@ class BravizMenu2(QtGui.QMainWindow):
         # for testing
         print "RECEIVED: %s" % msg
 
-    def toggle_connection(self,on):
+    def toggle_connection(self, on):
         if on:
             self.messages_server.pause = False
         else:
             self.messages_server.pause = True
+
 
 def run():
     import sys

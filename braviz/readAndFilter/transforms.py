@@ -55,13 +55,15 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
             transform_i.DeepCopy(transform)
             transform_i.Invert()
         if origin2 is None:
-            #TODO: Use a better strategy to find the new origin; this doesn't work with large rotations or reflections
+            # TODO: Use a better strategy to find the new origin; this doesn't
+            # work with large rotations or reflections
             origin = img.GetOrigin()
             origin = list(origin) + [1]
             origin2 = transform_i.MultiplyDoublePoint(origin)[:-1]
         if spacing2 is None:
             def get_spacing(i):
-                line = [transform_i.GetElement(i, 0), transform_i.GetElement(i, 1), transform_i.GetElement(i, 2)]
+                line = [transform_i.GetElement(i, 0), transform_i.GetElement(
+                    i, 1), transform_i.GetElement(i, 2)]
                 return max(line, key=abs)
 
             spacing2 = [get_spacing(i) for i in range(3)]
@@ -69,15 +71,18 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
         vtkTrans = transform
         if None == spacing2 or None == origin2:
             log = logging.getLogger(__name__)
-            log.error("spacing2 and origin2 are required when using a general transform")
-            raise Exception("spacing2 and origin2 are required when using a general transform")
+            log.error(
+                "spacing2 and origin2 are required when using a general transform")
+            raise Exception(
+                "spacing2 and origin2 are required when using a general transform")
     else:
         log = logging.getLogger(__name__)
         log.error("Method not implemented for %s transform" % type(transform))
-        raise Exception("Method not implemented for %s transform" % type(transform))
+        raise Exception(
+            "Method not implemented for %s transform" % type(transform))
     if None == dimension2:
         dimension2 = img.GetDimensions()
-        #=============================Finished parsing arguments==================================
+        #=============================Finished parsing arguments===============
     reslicer = vtk.vtkImageReslice()
 
     reslicer.SetResliceTransform(vtkTrans)
@@ -93,7 +98,7 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
         reslicer.SetInterpolationModeToCubic()
     reslicer.Update()
     outImg = reslicer.GetOutput()
-    #print dimension2
+    # print dimension2
     return outImg
 
 
@@ -137,7 +142,8 @@ def transformGeneralData(data, transform):
     else:
         log = logging.getLogger(__name__)
         log.error("Method not implemented for %s transform" % type(transform))
-        raise Exception("Method not implemented for %s transform" % type(transform))
+        raise Exception(
+            "Method not implemented for %s transform" % type(transform))
     if isinstance(data, vtk.vtkPolyData):
         transFilter = vtk.vtkTransformPolyDataFilter()
     elif isinstance(data, vtk.vtkDataSet):
@@ -178,7 +184,7 @@ def readFreeSurferTransform(filename):
             trans = lines[-3:]
             trans = [l.split() for l in trans]
             trans = [l[0:4] for l in trans]
-            #possible semicolomg in the last term
+            # possible semicolomg in the last term
             trans[2][3] = trans[2][3].rstrip(";")
             trans_f = [map(float, l) for l in trans]
             trans_f.append([0] * 3 + [1])

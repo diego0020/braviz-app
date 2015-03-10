@@ -26,21 +26,21 @@ import numpy as np
 __author__ = 'da.angulo39'
 
 
-def parse_spss_meta(file_name, do_save=False,verbose=False):
-    reader = savReaderWriter.SavReader(file_name )
+def parse_spss_meta(file_name, do_save=False, verbose=False):
+    reader = savReaderWriter.SavReader(file_name)
     with reader:
         info = reader.getSavFileInfo()
         descriptions = info[5]
         labels = info[6]
         print "Reading descriptions"
         for k, v in descriptions.iteritems():
-            save_description(k, v, do_save,verbose)
+            save_description(k, v, do_save, verbose)
         print "Reading labels"
         for k, v in labels.iteritems():
-            save_labels(k, v, do_save,verbose)
+            save_labels(k, v, do_save, verbose)
 
 
-def save_description(var_name, desc, do_save=False,verbose=False):
+def save_description(var_name, desc, do_save=False, verbose=False):
     if verbose or not do_save:
         print "%s : %s" % (var_name, desc)
     try:
@@ -53,67 +53,70 @@ def save_description(var_name, desc, do_save=False,verbose=False):
         print e.message
         raise
 
-def read_spss_data(file_name,index_col=None,verbose=False):
+
+def read_spss_data(file_name, index_col=None, verbose=False):
     print "Reading data"
-    reader = savReaderWriter.SavReader(file_name,recodeSysmisTo=float('nan') )
+    reader = savReaderWriter.SavReader(file_name, recodeSysmisTo=float('nan'))
     with reader:
-        var_names=reader.varNames
-        all_data=reader.all()
-    df=pd.DataFrame(all_data)
+        var_names = reader.varNames
+        all_data = reader.all()
+    df = pd.DataFrame(all_data)
     df.columns = var_names
     if index_col is not None:
-        df.index=df[index_col]
+        df.index = df[index_col]
     print "post processing"
     post_process(df)
     return df
 
-def post_process(data_frame,verbose=False):
-    ttts=data_frame.dtypes.get_values()
-    indeces = np.where(ttts==np.dtype('O'))
-    names=data_frame.columns[indeces]
+
+def post_process(data_frame, verbose=False):
+    ttts = data_frame.dtypes.get_values()
+    indeces = np.where(ttts == np.dtype('O'))
+    names = data_frame.columns[indeces]
     for n in names:
-        c=data_frame[n]
+        c = data_frame[n]
         try:
-            valid=c.str.strip().str.len()>0
-            c[valid]=c[valid].astype(np.float)
-            c[np.logical_not( valid)] = np.nan
-            data_frame[n]=c.astype(np.float)
+            valid = c.str.strip().str.len() > 0
+            c[valid] = c[valid].astype(np.float)
+            c[np.logical_not(valid)] = np.nan
+            data_frame[n] = c.astype(np.float)
         except ValueError:
             pass
         else:
             if verbose:
-                print "%s is numeric"%n
+                print "%s is numeric" % n
 
 
-def save_comments(data_frame,do_save=False,verbose=False):
-    ttts=data_frame.dtypes.get_values()
-    indeces = np.where(ttts==np.dtype('O'))
-    names=data_frame.columns[indeces]
+def save_comments(data_frame, do_save=False, verbose=False):
+    ttts = data_frame.dtypes.get_values()
+    indeces = np.where(ttts == np.dtype('O'))
+    names = data_frame.columns[indeces]
     comments = {}
     for c in names:
         col = data_frame[c].dropna()
         for i in col.index:
             com1 = comments.get(i)
             com = col[i].strip()
-            if len(com)==0:
+            if len(com) == 0:
                 continue
-            com2 = ":\n".join((c,com))
+            com2 = ":\n".join((c, com))
             if com1 is not None:
-                com3 = "\n\n".join((com1,com2))
+                com3 = "\n\n".join((com1, com2))
             else:
                 com3 = com2
-            comments[i]=com3
+            comments[i] = com3
 
-    for k,v in comments.iteritems():
+    for k, v in comments.iteritems():
         if verbose or not do_save:
-            print "%d : %s"%(k,v)
+            print "%d : %s" % (k, v)
         if do_save:
-            user_data.update_comment(int(k),v.decode("latin-1"))
+            user_data.update_comment(int(k), v.decode("latin-1"))
 
-def save_data_frame(data_frame,do_save=False,verbose=False):
+
+def save_data_frame(data_frame, do_save=False, verbose=False):
     print "Processing numerical data"
-    ttts=data_frame.dtypes.get_values()
-    data_frame2=data_frame[data_frame.columns[ttts!=np.dtype('O')]]
+    ttts = data_frame.dtypes.get_values()
+    data_frame2 = data_frame[data_frame.columns[ttts != np.dtype('O')]]
     if verbose and do_save:
         print "The following variables will be updated"
         print ", ".join(sorted(data_frame2.columns))
@@ -126,13 +129,12 @@ def save_data_frame(data_frame,do_save=False,verbose=False):
         print "done saving numerical data"
 
 
-
-def save_labels(var_name, labels, do_save=False,verbose=False):
+def save_labels(var_name, labels, do_save=False, verbose=False):
     if verbose:
         print "==============="
         print var_name
         print
-    #save var as nominal
+    # save var as nominal
     var_idx = tabular_data.get_var_idx(var_name)
     # verify labels have values
     good_labels = [l for l in labels.itervalues() if len(l) > 1]
@@ -146,7 +148,8 @@ def save_labels(var_name, labels, do_save=False,verbose=False):
         return
     if do_save:
         tabular_data.save_is_real(var_idx, False)
-    tuples = [(int(k), unicode(v, errors="ignore")) for k, v in labels.iteritems()]
+    tuples = [(int(k), unicode(v, errors="ignore"))
+              for k, v in labels.iteritems()]
     if verbose or not do_save:
         print tuples
     if do_save:
@@ -156,16 +159,16 @@ def save_labels(var_name, labels, do_save=False,verbose=False):
 if __name__ == "__main__":
     import argparse
 
-    parser= argparse.ArgumentParser(description="Import data from spss files")
-    parser.add_argument('-d','--data',action='store_true',
+    parser = argparse.ArgumentParser(description="Import data from spss files")
+    parser.add_argument('-d', '--data', action='store_true',
                         help="Read numerical data")
-    parser.add_argument('-m','--meta',action='store_true',
+    parser.add_argument('-m', '--meta', action='store_true',
                         help="Read variable descriptions, type, and labels for nominal variables")
-    parser.add_argument('-c','--comments',action='store_true',
+    parser.add_argument('-c', '--comments', action='store_true',
                         help="Read text variables as comments for each subject")
-    parser.add_argument('-s','--save',action='store_true',
+    parser.add_argument('-s', '--save', action='store_true',
                         help="Add the read information to the database")
-    parser.add_argument('-v','--verbose',action='store_true',
+    parser.add_argument('-v', '--verbose', action='store_true',
                         help="Print data to the terminal")
     parser.add_argument('spss_file',
                         help="Path to a spss file (usually with .sav extension)")
@@ -180,11 +183,11 @@ if __name__ == "__main__":
         print args
 
     if args.data or args.comments:
-        df = read_spss_data(args.spss_file,args.index_col,args.verbose)
+        df = read_spss_data(args.spss_file, args.index_col, args.verbose)
         if args.data:
-            save_data_frame(df,args.save,args.verbose)
+            save_data_frame(df, args.save, args.verbose)
         if args.comments:
-            save_comments(df,args.save,args.verbose)
+            save_comments(df, args.save, args.verbose)
 
     if args.meta:
-        parse_spss_meta(args.spss_file,args.save,args.verbose)
+        parse_spss_meta(args.spss_file, args.save, args.verbose)

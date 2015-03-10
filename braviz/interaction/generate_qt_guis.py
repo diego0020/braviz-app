@@ -41,11 +41,11 @@ def update_guis():
 
     # pyrcc4 should be in the path
 
-
     try:
         with braviz.utilities.working_directory(os.path.join(os.path.dirname(__file__), "qt_guis")):
 
-                subprocess.Popen(["pyrcc4", "-o", "resources_rc.py", "resources.qrc"])
+            subprocess.Popen(
+                ["pyrcc4", "-o", "resources_rc.py", "resources.qrc"])
     except OSError:
         print "couldn't generate resources"
 

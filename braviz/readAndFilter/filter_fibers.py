@@ -44,7 +44,8 @@ def iter_id_list(id_list):
         id_i = id_list.GetId(i)
         yield id_i
 
-def abstract_test_lines_in_polyline(fibers,predicate):
+
+def abstract_test_lines_in_polyline(fibers, predicate):
     """
     Extract lines where at least one point makes predicate True.
 
@@ -62,18 +63,19 @@ def abstract_test_lines_in_polyline(fibers,predicate):
         log = logging.getLogger(__name__)
         log.error("Input must be a polydata containing only lines")
         raise Exception("Input must be a polydata containing only lines")
+
     def test_polyline(cellId):
         i = cellId
         c = fibers.GetCell(i)
         pts = c.GetPoints()
         npts = pts.GetNumberOfPoints()
-        #inside=False
+        # inside=False
         for j in xrange(npts):
             p = pts.GetPoint(j)
             if predicate(p):
-                #inside=True
+                # inside=True
                 return True
-            #if not inside:
+            # if not inside:
         return False
 
     for i in xrange(n):
@@ -82,8 +84,7 @@ def abstract_test_lines_in_polyline(fibers,predicate):
     return valid_fibers
 
 
-
-def extract_poly_data_subset(polydata,id_list):
+def extract_poly_data_subset(polydata, id_list):
     """
     Extracts polylines with given ids from polydata
 
@@ -96,8 +97,8 @@ def extract_poly_data_subset(polydata,id_list):
     """
     extract_lines = vtk.vtkExtractSelectedPolyDataIds()
     cleaner = vtk.vtkCleanPolyData()
-    if isinstance(id_list,vtk.vtkIdTypeArray):
-        id_array=id_list
+    if isinstance(id_list, vtk.vtkIdTypeArray):
+        id_array = id_list
     else:
         id_array = vtk.vtkIdTypeArray()
         id_array.SetNumberOfTuples(len(id_list))
@@ -105,23 +106,28 @@ def extract_poly_data_subset(polydata,id_list):
             id_array.SetTuple1(i, cell_id)
     selection = vtk.vtkSelection()
     selection_node = vtk.vtkSelectionNode()
-    selection_node.GetProperties().Set(vtk.vtkSelectionNode.CONTENT_TYPE(), vtk.vtkSelectionNode.INDICES)
-    selection_node.GetProperties().Set(vtk.vtkSelectionNode.FIELD_TYPE(), vtk.vtkSelectionNode.CELL)
+    selection_node.GetProperties().Set(
+        vtk.vtkSelectionNode.CONTENT_TYPE(), vtk.vtkSelectionNode.INDICES)
+    selection_node.GetProperties().Set(
+        vtk.vtkSelectionNode.FIELD_TYPE(), vtk.vtkSelectionNode.CELL)
     selection.AddNode(selection_node)
     selection_node.SetSelectionList(id_array)
     extract_lines.SetInputData(1, selection)
     extract_lines.SetInputData(0, polydata)
-    #extract_lines.Update()
+    # extract_lines.Update()
     cleaner.SetInputConnection(extract_lines.GetOutputPort())
     cleaner.PointMergingOff()
     cleaner.Update()
     fib2 = cleaner.GetOutput()
     return fib2
 
+
 class FilterBundleWithSphere(object):
+
     """
     A class to interactively filter a polydata with a moving sphere
     """
+
     def __init__(self):
         """
         A class to interactively filter a polydata with a moving sphere
@@ -129,7 +135,7 @@ class FilterBundleWithSphere(object):
         self.__full_bundle = None
         self.__locator = None
 
-    def set_bundle(self,bundle):
+    def set_bundle(self, bundle):
         """
         Set the base polydata
 
@@ -144,7 +150,7 @@ class FilterBundleWithSphere(object):
         else:
             self.__locator = None
 
-    def filter_bundle_with_sphere(self,center,radius,get_ids = False):
+    def filter_bundle_with_sphere(self, center, radius, get_ids=False):
         """
         Filter polydata to keep only the lines which have a point inside a sphere
 
@@ -166,17 +172,18 @@ class FilterBundleWithSphere(object):
             else:
                 return self.__full_bundle
         id_list = vtk.vtkIdList()
-        self.__locator.FindPointsWithinRadius(radius,center,id_list)
+        self.__locator.FindPointsWithinRadius(radius, center, id_list)
         valid_cell_ids = set()
         for pt_id in iter_id_list(id_list):
             id_list2 = vtk.vtkIdList()
-            self.__full_bundle.GetPointCells(pt_id,id_list2)
+            self.__full_bundle.GetPointCells(pt_id, id_list2)
             valid_cell_ids.update(iter_id_list(id_list2))
 
         if get_ids is True:
             return valid_cell_ids
-        out_pd = extract_poly_data_subset(self.__full_bundle,valid_cell_ids)
+        out_pd = extract_poly_data_subset(self.__full_bundle, valid_cell_ids)
         return out_pd
+
 
 def filterPolylinesWithModel(fibers, model):
     """filters a polyline, keeps only the lines that cross a model
@@ -190,19 +197,20 @@ def filterPolylinesWithModel(fibers, model):
     """
     selector = vtk.vtkSelectEnclosedPoints()
     selector.Initialize(model)
+
     def test_point_inside_model(p):
         if selector.IsInsideSurface(p):
             return True
         else:
             return False
 
-    valid_fibers = abstract_test_lines_in_polyline(fibers,test_point_inside_model)
+    valid_fibers = abstract_test_lines_in_polyline(
+        fibers, test_point_inside_model)
     selector.Complete()
     return valid_fibers
 
 
-
-def filter_polylines_with_img_slow(polydata,img,label):
+def filter_polylines_with_img_slow(polydata, img, label):
     """
     Slow version of :func:`filter_polylines_with_img`
     """
@@ -210,22 +218,23 @@ def filter_polylines_with_img_slow(polydata,img,label):
     i_affine = np.linalg.inv(affine)
     data = img.get_data()
     label = data.dtype.type(label)
+
     def test_point_in_img(p):
         n_p = np.ones(4)
         n_p[:3] = p
         coords_h = i_affine.dot(n_p)
-        coords = coords_h[:3]/coords_h[3]
+        coords = coords_h[:3] / coords_h[3]
         coords_i = np.round(coords)
         try:
             v = data[tuple(coords_i)]
         except IndexError:
             v = None
         return v == label
-    valid_fibers = abstract_test_lines_in_polyline(polydata,test_point_in_img)
+    valid_fibers = abstract_test_lines_in_polyline(polydata, test_point_in_img)
     return valid_fibers
 
 
-def filter_polylines_with_img(polydata,img,label):
+def filter_polylines_with_img(polydata, img, label):
     """
     Filter polydata based on labels found in an image.
 
@@ -245,20 +254,21 @@ def filter_polylines_with_img(polydata,img,label):
     i_affine = np.linalg.inv(affine)
     data = img.get_data()
     label = data.dtype.type(label)
+
     def test_poly_line(cell):
         pts = cell.GetPoints()
         n_pts = pts.GetNumberOfPoints()
-        points_array = np.ones((n_pts,4))
+        points_array = np.ones((n_pts, 4))
         for i in xrange(n_pts):
-            points_array[i,:3]=pts.GetPoint(i)
+            points_array[i, :3] = pts.GetPoint(i)
         coords_h = i_affine.dot(points_array.T).T
-        coords = coords_h[:,:3]
-        divisors = np.repeat(coords_h[:,3:],3,axis=1)
-        coords = coords/divisors
+        coords = coords_h[:, :3]
+        divisors = np.repeat(coords_h[:, 3:], 3, axis=1)
+        coords = coords / divisors
         coords_i = np.round(coords).astype(np.int)
-        #interpolates, too slow
-        vals = data[coords_i[:,0],coords_i[:,1],coords_i[:,2]]
-        if np.any(vals==label):
+        # interpolates, too slow
+        vals = data[coords_i[:, 0], coords_i[:, 1], coords_i[:, 2]]
+        if np.any(vals == label):
             return True
         else:
             return False
@@ -268,10 +278,12 @@ def filter_polylines_with_img(polydata,img,label):
         log = logging.getLogger(__name__)
         log.error("Input must be a polydata containing only lines")
         raise Exception("Input must be a polydata containing only lines")
-    valid_fibers = set(i for i in xrange(n) if test_poly_line(polydata.GetCell(i)))
+    valid_fibers = set(
+        i for i in xrange(n) if test_poly_line(polydata.GetCell(i)))
     return valid_fibers
 
-def filter_polylines_by_scalar(fibs,scalar):
+
+def filter_polylines_by_scalar(fibs, scalar):
     """
     Finds lines where at least one point has a scalar value in the range (scalar -0.5, scalar + 0.5)
 
@@ -284,14 +296,16 @@ def filter_polylines_by_scalar(fibs,scalar):
     """
     selection = vtk.vtkSelection()
     selection_node = vtk.vtkSelectionNode()
-    selection_node.GetProperties().Set(vtk.vtkSelectionNode.CONTENT_TYPE(), vtk.vtkSelectionNode.THRESHOLDS)
-    selection_node.GetProperties().Set(vtk.vtkSelectionNode.FIELD_TYPE(), vtk.vtkSelectionNode.POINT)
+    selection_node.GetProperties().Set(
+        vtk.vtkSelectionNode.CONTENT_TYPE(), vtk.vtkSelectionNode.THRESHOLDS)
+    selection_node.GetProperties().Set(
+        vtk.vtkSelectionNode.FIELD_TYPE(), vtk.vtkSelectionNode.POINT)
     selection.AddNode(selection_node)
 
     array = vtk.vtkDoubleArray()
     array.SetNumberOfComponents(1)
-    array.InsertNextValue(scalar-.5)
-    array.InsertNextValue(scalar+.5)
+    array.InsertNextValue(scalar - .5)
+    array.InsertNextValue(scalar + .5)
     selection_node.SetSelectionList(array)
     extract_lines = vtk.vtkExtractSelection()
     extract_lines.SetInputData(1, selection)
@@ -305,19 +319,19 @@ def filter_polylines_by_scalar(fibs,scalar):
     for i in xrange(out_ids.GetNumberOfTuples()):
         pt_id = int(out_ids.GetTuple(i)[0])
         id_list2 = vtk.vtkIdList()
-        fibs.GetPointCells(pt_id,id_list2)
+        fibs.GetPointCells(pt_id, id_list2)
         valid_cell_ids.update(iter_id_list(id_list2))
 
     return valid_cell_ids
 
 if __name__ == "__main__":
     reader = braviz.readAndFilter.BravizAutoReader()
-    fibers = reader.get("fibers","093")
-    r=20
-    ctr = (32,-43,9)
+    fibers = reader.get("fibers", "093")
+    r = 20
+    ctr = (32, -43, 9)
     test_filter = FilterBundleWithSphere()
     test_filter.set_bundle(fibers)
-    out = test_filter.filter_bundle_with_sphere(ctr,r)
+    out = test_filter.filter_bundle_with_sphere(ctr, r)
     viewer = simpleVtkViewer()
     viewer.addPolyData(out)
     viewer.start()
@@ -334,14 +348,16 @@ def boundingBoxIntesection(box1, box2):
         ``True`` if the bounding boxes intersect, ``False`` otherwise
 
     """
-    #Test intersection in three axis
+    # Test intersection in three axis
     for i in range(3):
-        #      2----[1]------2------1                                   1-----[2]-----1------2
+        # 2----[1]------2------1
+        # 1-----[2]-----1------2
         if (box2[2 * i] <= box1[2 * i] <= box2[2 * i + 1]) or (
-                    box1[2 * i] <= box2[2 * i] <= box1[2 * i + 1]):
-        #      2----[1]-----1-------2                                   1-----[2]-----2-------1
+                box1[2 * i] <= box2[2 * i] <= box1[2 * i + 1]):
+            # 2----[1]-----1-------2
+            # 1-----[2]-----2-------1
             pass
         else:
-            #Must intersect in all axis
+            # Must intersect in all axis
             return False
     return True

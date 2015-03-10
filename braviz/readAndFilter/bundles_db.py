@@ -32,8 +32,8 @@ def get_bundle_ids_and_names():
         A list of tuples ``(id,name)`` where id is the bundle id and name is the bundle name
     """
     conn = _get_connection()
-    q="SELECT bundle_id, bundle_name FROM fiber_bundles"
-    cur=conn.execute(q)
+    q = "SELECT bundle_id, bundle_name FROM fiber_bundles"
+    cur = conn.execute(q)
     return cur.fetchall()
 
 
@@ -58,10 +58,11 @@ def get_bundle_details(bundle_id):
             ========    ==========================     ==================================
     """
     conn = _get_connection()
-    q="SELECT bundle_name, bundle_type, bundle_data FROM fiber_bundles WHERE bundle_id = ?"
-    cur=conn.execute(q,(bundle_id,))
+    q = "SELECT bundle_name, bundle_type, bundle_data FROM fiber_bundles WHERE bundle_id = ?"
+    cur = conn.execute(q, (bundle_id,))
     res = cur.fetchone()
     return res
+
 
 def get_bundle_name(bundle_id):
     """
@@ -74,10 +75,11 @@ def get_bundle_name(bundle_id):
         Bundle name
     """
     conn = _get_connection()
-    q="SELECT bundle_name FROM fiber_bundles WHERE bundle_id = ?"
-    cur=conn.execute(q,(bundle_id,))
+    q = "SELECT bundle_name FROM fiber_bundles WHERE bundle_id = ?"
+    cur = conn.execute(q, (bundle_id,))
     res = cur.fetchone()
     return res[0]
+
 
 def check_if_name_exists(name):
     """
@@ -90,12 +92,13 @@ def check_if_name_exists(name):
         ``True`` if a bundle with this name exists, ``False`` otherwise
     """
     conn = _get_connection()
-    q="SELECT * FROM fiber_bundles WHERE bundle_name = ?"
-    cur=conn.execute(q,(name,))
+    q = "SELECT * FROM fiber_bundles WHERE bundle_name = ?"
+    cur = conn.execute(q, (name,))
     res = cur.fetchone()
     return res is not None
 
-def save_checkpoints_bundle(bundle_name,operation_is_and,waypoints):
+
+def save_checkpoints_bundle(bundle_name, operation_is_and, waypoints):
     """
     Saves a bundle defined using checkpoints
 
@@ -106,17 +109,18 @@ def save_checkpoints_bundle(bundle_name,operation_is_and,waypoints):
         waypoints (list) : List of waypoints, these should be structure names.
 
     """
-    waypoints=tuple(waypoints)
+    waypoints = tuple(waypoints)
     if operation_is_and is True:
-        btype=1
+        btype = 1
     else:
-        btype=2
+        btype = 2
 
-    data = buffer(cPickle.dumps(waypoints,2))
-    q="""INSERT OR FAIL INTO fiber_bundles (bundle_name, bundle_type, bundle_data) VALUES (?,?,?) """
+    data = buffer(cPickle.dumps(waypoints, 2))
+    q = """INSERT OR FAIL INTO fiber_bundles (bundle_name, bundle_type, bundle_data) VALUES (?,?,?) """
     conn = _get_connection()
-    conn.execute(q,(bundle_name,btype,data))
+    conn.execute(q, (bundle_name, btype, data))
     conn.commit()
+
 
 def get_bundles_list(bundle_type=None):
     """
@@ -136,11 +140,12 @@ def get_bundles_list(bundle_type=None):
         return res
     else:
         q = "SELECT bundle_name FROM fiber_bundles WHERE bundle_type = ?"
-        cur = con.execute(q,(bundle_type,))
+        cur = con.execute(q, (bundle_type,))
         res = [x[0] for x in cur.fetchall()]
         return res
 
-def save_logic_bundle(bundle_name,logic_tree_dict):
+
+def save_logic_bundle(bundle_name, logic_tree_dict):
     """
     Saves a logic bundle into the database
 
@@ -149,13 +154,14 @@ def save_logic_bundle(bundle_name,logic_tree_dict):
         logic_tree_dict (dict) : Dictionary describing the bundle, see :func:`.get_logic_bundle_dict`
 
     """
-    tree_blob = buffer(cPickle.dumps(logic_tree_dict,2))
+    tree_blob = buffer(cPickle.dumps(logic_tree_dict, 2))
     q = """INSERT OR FAIL INTO fiber_bundles (bundle_name, bundle_type, bundle_data) VALUES (?,10,?) """
     con = _get_connection()
-    con.execute(q,(bundle_name,tree_blob))
+    con.execute(q, (bundle_name, tree_blob))
     con.commit()
 
-def get_logic_bundle_dict(bundle_id = None,bundle_name = None):
+
+def get_logic_bundle_dict(bundle_id=None, bundle_name=None):
     """
     Retrieves a logic bundle from the database
 
@@ -184,10 +190,10 @@ def get_logic_bundle_dict(bundle_id = None,bundle_name = None):
     con = _get_connection()
     if bundle_id is None:
         q = "SELECT bundle_data FROM fiber_bundles WHERE bundle_name = ?"
-        cur = con.execute(q,(bundle_name,))
+        cur = con.execute(q, (bundle_name,))
     else:
         q = "SELECT bundle_data FROM fiber_bundles WHERE bundle_id = ?"
-        cur = con.execute(q,(bundle_id,))
+        cur = con.execute(q, (bundle_id,))
     r1 = cur.fetchone()
     if r1 is None:
         raise Exception("Fiber doesn't exist")

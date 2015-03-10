@@ -27,9 +27,11 @@ from braviz.interaction.qt_models import DataFrameModel
 from braviz.readAndFilter import tabular_data
 __author__ = 'Diego'
 
+
 class ImportFromExcel(QtGui.QDialog):
+
     def __init__(self):
-        super(ImportFromExcel,self).__init__()
+        super(ImportFromExcel, self).__init__()
         self.ui = None
         self.setup_gui()
         self.__df = None
@@ -37,14 +39,15 @@ class ImportFromExcel(QtGui.QDialog):
         self.__file_name = None
         self.__model = None
 
-
     def setup_gui(self):
         self.ui = Ui_import_from_excel()
         self.ui.setupUi(self)
         self.ui.select_file_button.clicked.connect(self.get_file_name)
         self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(0)
-        self.ui.buttonBox.button(self.ui.buttonBox.Save).clicked.connect(self.save)
-        self.ui.buttonBox.button(self.ui.buttonBox.Close).clicked.connect(self.reject)
+        self.ui.buttonBox.button(
+            self.ui.buttonBox.Save).clicked.connect(self.save)
+        self.ui.buttonBox.button(
+            self.ui.buttonBox.Close).clicked.connect(self.reject)
         self.ui.omitExistent.clicked.connect(self.update_model)
 
     def update_model(self):
@@ -52,7 +55,8 @@ class ImportFromExcel(QtGui.QDialog):
             return
         cols = self.__df.columns
         if self.ui.omitExistent.isChecked():
-            cols2 = filter(lambda x: not tabular_data.does_variable_name_exists(x),cols)
+            cols2 = filter(
+                lambda x: not tabular_data.does_variable_name_exists(x), cols)
             df = self.__df[cols2]
         else:
             cols2 = [mingle_name(n) for n in cols]
@@ -63,21 +67,19 @@ class ImportFromExcel(QtGui.QDialog):
         self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(1)
         self.__df2 = df
 
-
-    def read_excel(self,file_name):
-        df = pd.read_excel(file_name,0,index_col=0,na_values=["#NULL!"])
+    def read_excel(self, file_name):
+        df = pd.read_excel(file_name, 0, index_col=0, na_values=["#NULL!"])
         columns = df.columns
-        columns = map(remove_non_ascii,columns)
+        columns = map(remove_non_ascii, columns)
         df.columns = columns
         df = df.convert_objects(convert_numeric=True)
 
         self.__df = df
 
-
-
     def get_file_name(self):
-        file_name = str(QtGui.QFileDialog.getOpenFileName(self,"Select excel file",
-                                                          braviz.readAndFilter.braviz_auto_dynamic_data_root(),
+        file_name = str(QtGui.QFileDialog.getOpenFileName(self, "Select excel file",
+                                                          braviz.readAndFilter.braviz_auto_dynamic_data_root(
+                                                          ),
                                                           "Excel (*.xls *.xlsx)"))
         if file_name is not None:
             self.__file_name = file_name
@@ -85,17 +87,18 @@ class ImportFromExcel(QtGui.QDialog):
             self.read_excel(file_name)
             self.update_model()
 
-
     def save(self):
         self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(0)
         QtGui.QApplication.instance().processEvents()
         tabular_data.add_data_frame(self.__df2)
+
 
 def mingle_name(n):
     if tabular_data.does_variable_name_exists(n):
         n += "2"
         return mingle_name(n)
     return n
+
 
 def run():
     import sys

@@ -18,8 +18,8 @@
 
 
 import zmq
-from PyQt4 import QtGui,QtCore
-from  PyQt4.QtCore import pyqtSignal
+from PyQt4 import QtGui, QtCore
+from PyQt4.QtCore import pyqtSignal
 import threading
 import logging
 import time
@@ -28,6 +28,7 @@ __author__ = 'Diego'
 
 
 class MessageServer(QtCore.QObject):
+
     """
     Acts as a message broker, listens for messages in one port, and broadcasts them in another port
 
@@ -40,8 +41,9 @@ class MessageServer(QtCore.QObject):
 
     """
     message_received = pyqtSignal(basestring)
-    def __init__(self,local_only = True):
-        super(MessageServer,self).__init__()
+
+    def __init__(self, local_only=True):
+        super(MessageServer, self).__init__()
         self._stop = False
         self._listen_socket = None
         self._forward_socket = None
@@ -57,14 +59,14 @@ class MessageServer(QtCore.QObject):
         Starts the server thread, called by the constructor
         """
         context = zmq.Context()
-        if zmq.zmq_version_info()[0]>=4:
-            context.setsockopt(zmq.IMMEDIATE,1)
+        if zmq.zmq_version_info()[0] >= 4:
+            context.setsockopt(zmq.IMMEDIATE, 1)
         base_address = "tcp://127.0.0.1" if self._local_only else "tcp://*"
         self._listen_socket = context.socket(zmq.PULL)
-        self._listen_socket.bind("%s:*"%base_address)
+        self._listen_socket.bind("%s:*" % base_address)
         self._pull_address = self._listen_socket.get_string(zmq.LAST_ENDPOINT)
         self._forward_socket = context.socket(zmq.PUB)
-        self._forward_socket.bind("%s:*"%base_address)
+        self._forward_socket.bind("%s:*" % base_address)
         self._pub_address = self._forward_socket.get_string(zmq.LAST_ENDPOINT)
 
         def server_loop():
@@ -91,7 +93,7 @@ class MessageServer(QtCore.QObject):
         """
         return self._pull_address
 
-    def send_message(self,msg):
+    def send_message(self, msg):
         """
         Send a message in the broadcast address
 
@@ -104,7 +106,7 @@ class MessageServer(QtCore.QObject):
         """
         Stops the server thread
         """
-        #atomi operation
+        # atomi operation
         self._stop = True
 
     @property
@@ -115,11 +117,12 @@ class MessageServer(QtCore.QObject):
         return self.__paused
 
     @pause.setter
-    def pause(self,val):
+    def pause(self, val):
         self.__paused = bool(val)
 
 
 class MessageClient(QtCore.QObject):
+
     """
     A client that connects to :class:`~braviz.interaction.connection.MessageServer`
 
@@ -130,8 +133,9 @@ class MessageClient(QtCore.QObject):
         server_receive (str) : Address of the server receive port
     """
     message_received = pyqtSignal(basestring)
-    def __init__(self,server_broadcast=None,server_receive=None):
-        super(MessageClient,self).__init__()
+
+    def __init__(self, server_broadcast=None, server_receive=None):
+        super(MessageClient, self).__init__()
         self._server_pub = server_broadcast
         self._server_pull = server_receive
         self._send_socket = None
@@ -142,14 +146,13 @@ class MessageClient(QtCore.QObject):
         self._last_send_time = -5
         self.connect_to_server()
 
-
     def connect_to_server(self):
         """
         Connect to the server, called by the constructor
         """
         context = zmq.Context()
-        if zmq.zmq_version_info()[0]>=4:
-            context.setsockopt(zmq.IMMEDIATE,1)
+        if zmq.zmq_version_info()[0] >= 4:
+            context.setsockopt(zmq.IMMEDIATE, 1)
         if self._server_pull is not None:
             self._send_socket = context.socket(zmq.PUSH)
             server_address = self._server_pull
@@ -157,11 +160,12 @@ class MessageClient(QtCore.QObject):
         if self._server_pub is not None:
             self._receive_socket = context.socket(zmq.SUB)
             self._receive_socket.connect(self._server_pub)
-            self._receive_socket.setsockopt(zmq.SUBSCRIBE,"")
+            self._receive_socket.setsockopt(zmq.SUBSCRIBE, "")
+
             def receive_loop():
                 while not self._stop:
                     msg = self._receive_socket.recv()
-                    #Ignore bouncing messages
+                    # Ignore bouncing messages
                     if msg != self._last_message or (time.time() - self._last_send_time > 5):
                         self.message_received.emit(msg)
                         self._last_message = msg
@@ -169,7 +173,7 @@ class MessageClient(QtCore.QObject):
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
 
-    def send_message(self,msg):
+    def send_message(self, msg):
         """
         Send a message
 
@@ -183,12 +187,12 @@ class MessageClient(QtCore.QObject):
             return
 
         try:
-            #self._send_socket.send(msg,zmq.DONTWAIT)
+            # self._send_socket.send(msg,zmq.DONTWAIT)
             self._last_message = msg
             self._last_send_time = time.time()
             self._send_socket.send(msg)
         except zmq.Again:
-            log.error("Couldn't send message %s",msg)
+            log.error("Couldn't send message %s", msg)
 
     def stop(self):
         """
@@ -212,6 +216,7 @@ class MessageClient(QtCore.QObject):
 
 
 class PassiveMessageClient(object):
+
     """
     A client that connects to :class:`~braviz.interaction.connection.MessageServer`
 
@@ -223,7 +228,7 @@ class PassiveMessageClient(object):
         server_receive (str) : Address of the server receive port
     """
 
-    def __init__(self,server_broadcast=None,server_receive=None):
+    def __init__(self, server_broadcast=None, server_receive=None):
         self._server_pub = server_broadcast
         self._server_pull = server_receive
         self._send_socket = None
@@ -235,14 +240,13 @@ class PassiveMessageClient(object):
         self._message_counter = 0
         self._last_send_time = -5
 
-
     def connect_to_server(self):
         """
         Connect to the server, called by the constructor
         """
         context = zmq.Context()
-        if zmq.zmq_version_info()[0]>=4:
-            context.setsockopt(zmq.IMMEDIATE,1)
+        if zmq.zmq_version_info()[0] >= 4:
+            context.setsockopt(zmq.IMMEDIATE, 1)
         if self._server_pull is not None:
             self._send_socket = context.socket(zmq.PUSH)
             server_address = self._server_pull
@@ -250,11 +254,12 @@ class PassiveMessageClient(object):
         if self._server_pub is not None:
             self._receive_socket = context.socket(zmq.SUB)
             self._receive_socket.connect(self._server_pub)
-            self._receive_socket.setsockopt(zmq.SUBSCRIBE,"")
+            self._receive_socket.setsockopt(zmq.SUBSCRIBE, "")
+
             def receive_loop():
                 while not self._stop:
                     msg = self._receive_socket.recv()
-                    #Filter some messages to avoid loops
+                    # Filter some messages to avoid loops
                     if msg != self._last_seen_message or (time.time() - self._last_send_time > 1):
                         self._last_seen_message = msg
                         self._message_counter += 1
@@ -262,7 +267,7 @@ class PassiveMessageClient(object):
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
 
-    def send_message(self,msg):
+    def send_message(self, msg):
         """
         Send a message
 
@@ -281,7 +286,7 @@ class PassiveMessageClient(object):
             self._last_send_time = time.time()
             self._send_socket.send(msg)
         except zmq.Again:
-            log.error("Couldn't send message %s",msg)
+            log.error("Couldn't send message %s", msg)
 
     def stop(self):
         """
@@ -310,10 +315,11 @@ class PassiveMessageClient(object):
         Returns:
             ``number, message_text``; where the number will increase each time a new message arrives
         """
-        return self._message_counter,self._last_seen_message
+        return self._message_counter, self._last_seen_message
 
 
 class GenericMessageClient(object):
+
     """
     A client that connects to :class:`~braviz.interaction.connection.MessageServer`
 
@@ -324,8 +330,8 @@ class GenericMessageClient(object):
         server_receive (str) : Address of the server receive port
     """
 
-    def __init__(self,handler, server_broadcast=None,server_receive=None):
-        super(GenericMessageClient,self).__init__()
+    def __init__(self, handler, server_broadcast=None, server_receive=None):
+        super(GenericMessageClient, self).__init__()
         self._server_pub = server_broadcast
         self._server_pull = server_receive
         self._send_socket = None
@@ -335,14 +341,13 @@ class GenericMessageClient(object):
         self.handler = handler
         self.connect_to_server()
 
-
     def connect_to_server(self):
         """
         Connect to the server, called by the constructor
         """
         context = zmq.Context()
-        if zmq.zmq_version_info()[0]>=4:
-            context.setsockopt(zmq.IMMEDIATE,1)
+        if zmq.zmq_version_info()[0] >= 4:
+            context.setsockopt(zmq.IMMEDIATE, 1)
         if self._server_pull is not None:
             self._send_socket = context.socket(zmq.PUSH)
             server_address = self._server_pull
@@ -350,17 +355,18 @@ class GenericMessageClient(object):
         if self._server_pub is not None:
             self._receive_socket = context.socket(zmq.SUB)
             self._receive_socket.connect(self._server_pub)
-            self._receive_socket.setsockopt(zmq.SUBSCRIBE,"")
+            self._receive_socket.setsockopt(zmq.SUBSCRIBE, "")
+
             def receive_loop():
                 while not self._stop:
                     msg = self._receive_socket.recv()
-                    #Ignore bouncing messages
+                    # Ignore bouncing messages
                     self.handler.handle_new_message(msg)
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
 
-    def send_message(self,msg):
+    def send_message(self, msg):
         """
         Send a message
 
@@ -376,12 +382,12 @@ class GenericMessageClient(object):
             return
 
         try:
-            #self._send_socket.send(msg,zmq.DONTWAIT)
+            # self._send_socket.send(msg,zmq.DONTWAIT)
             self._last_message = msg
             self._last_send_time = time.time()
             self._send_socket.send(msg)
         except zmq.Again:
-            log.error("Couldn't send message %s",msg)
+            log.error("Couldn't send message %s", msg)
 
     def stop(self):
         """
@@ -402,4 +408,3 @@ class GenericMessageClient(object):
         The server receive address
         """
         return self._server_pull
-

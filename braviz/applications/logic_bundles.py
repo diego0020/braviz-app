@@ -17,7 +17,6 @@
 ##############################################################################
 
 
-
 from __future__ import division
 import logging
 from functools import partial as partial_f
@@ -47,15 +46,15 @@ from braviz.readAndFilter import geom_db, tabular_data
 from braviz.readAndFilter.hierarchical_fibers import read_logical_fibers
 from braviz.interaction import compute_fiber_lengths
 from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
-from braviz.interaction.qt_dialogs import SaveScenarioDialog,LoadScenarioDialog, SaveLogicFibersBundleDialog, LoadLogicBundle
+from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog, SaveLogicFibersBundleDialog, LoadLogicBundle
 from braviz.readAndFilter import user_data as braviz_user_data
 from braviz.readAndFilter.config_file import get_config
 
 
 __author__ = 'Diego'
 
-#TODO Save bundle
-#TODO Export scalars
+# TODO Save bundle
+# TODO Export scalars
 
 
 AXIAL = 2
@@ -85,7 +84,9 @@ FIBER_SCALARS_DICT = dict(enumerate((
     "mean_md"
 )))
 
+
 class LoadRoiDialog(QDialog):
+
     def __init__(self):
         QDialog.__init__(self)
         self.ui = Ui_LoadRoiDialog()
@@ -102,28 +103,35 @@ class LoadRoiDialog(QDialog):
         self.name = unicode(self.model.data(name_index, QtCore.Qt.DisplayRole))
         self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(1)
 
+
 class AddSegmentedDialog(QDialog):
-    def __init__(self,reader,subj):
+
+    def __init__(self, reader, subj):
         QDialog.__init__(self)
         self.ui = Ui_AddSegmented()
         self.ui.setupUi(self)
-        self.model = StructureTreeModel(reader,subj)
+        self.model = StructureTreeModel(reader, subj)
         self.ui.treeView.setModel(self.model)
 
+
 class ConfirmExitDialog(QDialog):
+
     def __init__(self):
         QDialog.__init__(self)
         self.ui = Ui_RoiConfirmChangeSubject()
         self.ui.setupUi(self)
         self.save_requested = False
-        self.ui.buttonBox.button(self.ui.buttonBox.Save).clicked.connect(self.set_save)
-        self.ui.buttonBox.button(self.ui.buttonBox.Discard).clicked.connect(self.accept)
+        self.ui.buttonBox.button(
+            self.ui.buttonBox.Save).clicked.connect(self.set_save)
+        self.ui.buttonBox.button(
+            self.ui.buttonBox.Discard).clicked.connect(self.accept)
 
     def set_save(self):
         self.save_requested = True
 
 
 class LogicBundlesApp(QMainWindow):
+
     def __init__(self):
         QMainWindow.__init__(self)
         config = get_config(__file__)
@@ -141,9 +149,9 @@ class LogicBundlesApp(QMainWindow):
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
 
-        self.vtk_tree = LogicBundleNodeWithVTK(None,0,LogicBundleNodeWithVTK.LOGIC,
-                                               "AND",reader=self.reader,subj=self.__current_subject,
-                                               space = self.__curent_space)
+        self.vtk_tree = LogicBundleNodeWithVTK(None, 0, LogicBundleNodeWithVTK.LOGIC,
+                                               "AND", reader=self.reader, subj=self.__current_subject,
+                                               space=self.__curent_space)
 
         self.logic_tree = LogicBundleQtTree(self.vtk_tree)
 
@@ -157,11 +165,11 @@ class LogicBundlesApp(QMainWindow):
         self.vtk_viewer.ren.AddActor(self.__fibers_ac)
         self.__fibers_ac.SetVisibility(0)
 
-        self.__subjects_check_model = SubjectChecklist(self.subjects_list,show_checks=False)
+        self.__subjects_check_model = SubjectChecklist(
+            self.subjects_list, show_checks=False)
         self.__subjects_check_model.highlighted_subject = self.__current_subject
         self.scalar_metric_value = None
         self.setup_ui()
-
 
     def setup_ui(self):
         self.ui = Ui_LogicBundlesApp()
@@ -171,23 +179,33 @@ class LogicBundlesApp(QMainWindow):
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
         self.ui.vtk_frame_layout.setContentsMargins(0, 0, 0, 0)
-        self.ui.axial_check.stateChanged.connect(partial_f(self.show_image, AXIAL))
-        self.ui.coronal_check.stateChanged.connect(partial_f(self.show_image, CORONAL))
-        self.ui.sagital_check.stateChanged.connect(partial_f(self.show_image, SAGITAL))
-        self.ui.axial_slice.valueChanged.connect(partial_f(self.set_slice, AXIAL))
-        self.ui.coronal_slice.valueChanged.connect(partial_f(self.set_slice, CORONAL))
-        self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice, SAGITAL))
+        self.ui.axial_check.stateChanged.connect(
+            partial_f(self.show_image, AXIAL))
+        self.ui.coronal_check.stateChanged.connect(
+            partial_f(self.show_image, CORONAL))
+        self.ui.sagital_check.stateChanged.connect(
+            partial_f(self.show_image, SAGITAL))
+        self.ui.axial_slice.valueChanged.connect(
+            partial_f(self.set_slice, AXIAL))
+        self.ui.coronal_slice.valueChanged.connect(
+            partial_f(self.set_slice, CORONAL))
+        self.ui.sagital_slice.valueChanged.connect(
+            partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
-        self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
+        self.ui.image_combo.currentIndexChanged.connect(
+            self.select_image_modality)
         self.ui.space_combo.currentIndexChanged.connect(self.select_space)
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
         self.ui.subjects_list.activated.connect(self.select_subject)
 
         self.ui.surface_combo.currentIndexChanged.connect(self.select_surface)
-        self.ui.scalar_combo.currentIndexChanged.connect(self.select_surface_scalars)
-        self.ui.left_cortex_check.stateChanged.connect(self.toggle_left_surface)
-        self.ui.right_cortex_check.stateChanged.connect(self.toggle_right_surface)
+        self.ui.scalar_combo.currentIndexChanged.connect(
+            self.select_surface_scalars)
+        self.ui.left_cortex_check.stateChanged.connect(
+            self.toggle_left_surface)
+        self.ui.right_cortex_check.stateChanged.connect(
+            self.toggle_right_surface)
         self.ui.cortex_opac.valueChanged.connect(self.set_cortex_opacity)
 
         self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
@@ -196,29 +214,32 @@ class LogicBundlesApp(QMainWindow):
         self.ui.actionLoad_Bundle.triggered.connect(self.load_bundle)
 
         self.ui.treeView.setModel(self.logic_tree)
-        self.ui.treeView.customContextMenuRequested.connect(self.launch_tree_context_menu)
+        self.ui.treeView.customContextMenuRequested.connect(
+            self.launch_tree_context_menu)
         self.ui.treeView.clicked.connect(self.highlight_waypoints)
         self.ui.treeView.activated.connect(self.highlight_waypoints)
 
-        #logic menu
+        # logic menu
         logic_menu = QtGui.QMenu(self.ui.add_logic)
         and_action = logic_menu.addAction("AND")
-        and_action.triggered.connect(partial_f(self.add_logic_node,"AND"))
+        and_action.triggered.connect(partial_f(self.add_logic_node, "AND"))
         or_action = logic_menu.addAction("OR")
-        or_action.triggered.connect(partial_f(self.add_logic_node,"OR"))
+        or_action.triggered.connect(partial_f(self.add_logic_node, "OR"))
         not_action = logic_menu.addAction("NOT")
-        not_action.triggered.connect(partial_f(self.add_logic_node,"NOT"))
+        not_action.triggered.connect(partial_f(self.add_logic_node, "NOT"))
         self.ui.add_logic.setMenu(logic_menu)
 
-        self.ui.add_segmented.clicked.connect(self.add_segmented_structure_dialog)
+        self.ui.add_segmented.clicked.connect(
+            self.add_segmented_structure_dialog)
         self.ui.add_roi.clicked.connect(self.launch_add_roi_dialog)
-        self.ui.waypoints_opacity.valueChanged.connect(self.change_waypoint_opac)
+        self.ui.waypoints_opacity.valueChanged.connect(
+            self.change_waypoint_opac)
 
         self.ui.preview_bundle.stateChanged.connect(self.update_fibers)
 
-        self.ui.fiber_scalar_combo.currentIndexChanged.connect(self.update_fibers)
+        self.ui.fiber_scalar_combo.currentIndexChanged.connect(
+            self.update_fibers)
         self.ui.export_to_db.clicked.connect(self.export_scalar_to_db)
-
 
     def get_valid_parent(self):
         index = self.ui.treeView.currentIndex()
@@ -230,36 +251,35 @@ class LogicBundlesApp(QMainWindow):
             node = node.parent
         return node
 
-
-    def add_logic_node(self,value):
+    def add_logic_node(self, value):
         parent = self.get_valid_parent()
-        self.logic_tree.add_node(parent,parent.LOGIC,value=value)
+        self.logic_tree.add_node(parent, parent.LOGIC, value=value)
         self.ui.treeView.expandAll()
 
     def add_segmented_structure_dialog(self):
-        dialog = AddSegmentedDialog(self.reader,self.__current_subject)
+        dialog = AddSegmentedDialog(self.reader, self.__current_subject)
         res = dialog.exec_()
         if res == dialog.Accepted:
             selected = dialog.model.get_selected_structures()
             self.add_segmented_structures(selected)
 
-
-    def add_segmented_structures(self,structures_list):
+    def add_segmented_structures(self, structures_list):
         """
         The structures in the list will be added inside an "or" node, if only one then it will be added alone
         """
-        if len(structures_list)==0:
+        if len(structures_list) == 0:
             return
         parent = self.get_valid_parent()
-        if len(structures_list)>1:
-            parent=self.logic_tree.add_node(parent,parent.LOGIC,value="OR")
+        if len(structures_list) > 1:
+            parent = self.logic_tree.add_node(parent, parent.LOGIC, value="OR")
         for st in structures_list:
-            new_node = self.logic_tree.add_node(parent,parent.STRUCT,value=st)
+            new_node = self.logic_tree.add_node(
+                parent, parent.STRUCT, value=st)
             self.vtk_viewer.ren.AddActor(new_node.prop)
         self.ui.treeView.expandAll()
         self.refresh_waypoints()
         self.update_fibers()
-        #self.update_scalar_metric()
+        # self.update_scalar_metric()
 
     def launch_add_roi_dialog(self):
         dialog = LoadRoiDialog()
@@ -267,20 +287,18 @@ class LogicBundlesApp(QMainWindow):
         if res == dialog.Accepted:
             roi_name = dialog.name
             roi_id = geom_db.get_roi_id(roi_name)
-            self.add_roi(roi_id,roi_name)
+            self.add_roi(roi_id, roi_name)
 
-
-    def add_roi(self,roi_id,roi_name = None):
+    def add_roi(self, roi_id, roi_name=None):
         if roi_name is None:
             roi_name = geom_db.get_roi_name(roi_id)
         parent = self.get_valid_parent()
-        node = self.logic_tree.add_node(parent,parent.ROI,roi_name,roi_id)
+        node = self.logic_tree.add_node(parent, parent.ROI, roi_name, roi_id)
         self.vtk_viewer.ren.AddActor(node.prop)
         self.ui.treeView.expandAll()
         self.refresh_waypoints()
         self.update_fibers()
-        #self.update_scalar_metric()
-
+        # self.update_scalar_metric()
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -338,16 +356,15 @@ class LogicBundlesApp(QMainWindow):
         img_id = new_subject
         self.__current_img_id = img_id
         log = logging.getLogger(__file__)
-        self.vtk_tree.update(new_subject,self.__curent_space)
+        self.vtk_tree.update(new_subject, self.__curent_space)
         try:
             self.vtk_viewer.change_subject(img_id)
             self.update_slice_maximums()
         except Exception:
-            log.warning("Couldnt load data for subject %s",new_subject)
+            log.warning("Couldnt load data for subject %s", new_subject)
 
         self.update_fibers()
-        #self.update_scalar_metric()
-
+        # self.update_scalar_metric()
 
     def select_image_modality(self, index):
         mod = str(self.ui.image_combo.currentText())
@@ -356,50 +373,49 @@ class LogicBundlesApp(QMainWindow):
     def change_image_modality(self, new_mod):
         self.vtk_viewer.change_image_modality(new_mod)
 
-    def select_surface_scalars(self,index):
+    def select_surface_scalars(self, index):
         scalar_name = SURFACE_SCALARS_DICT[int(index)]
         self.vtk_viewer.cortex.set_scalars(scalar_name)
 
-    def select_surface(self,index):
+    def select_surface(self, index):
         surface_name = str(self.ui.surface_combo.currentText())
         self.vtk_viewer.cortex.set_surface(surface_name)
 
-    def toggle_left_surface(self,status):
+    def toggle_left_surface(self, status):
         b_status = (status == QtCore.Qt.Checked)
         self.vtk_viewer.cortex.set_hemispheres(left=b_status)
 
-    def toggle_right_surface(self,status):
+    def toggle_right_surface(self, status):
         b_status = (status == QtCore.Qt.Checked)
         self.vtk_viewer.cortex.set_hemispheres(right=b_status)
 
-    def set_cortex_opacity(self,int_opac):
+    def set_cortex_opacity(self, int_opac):
         self.vtk_viewer.cortex.set_opacity(int_opac)
 
-    def select_space(self,index):
+    def select_space(self, index):
         space = str(self.ui.space_combo.currentText())
         self.change_space(space)
 
-    def change_space(self,new_space):
+    def change_space(self, new_space):
         self.vtk_viewer.change_space(new_space)
         self.__curent_space = new_space
-        self.vtk_tree.update(self.__current_img_id,new_space)
+        self.vtk_tree.update(self.__current_img_id, new_space)
         self.update_fibers()
-        #self.update_scalar_metric()
+        # self.update_scalar_metric()
 
-    def change_waypoint_opac(self,value):
+    def change_waypoint_opac(self, value):
         self.logic_tree.root.set_opacity(value)
         self.vtk_viewer.ren_win.Render()
 
-    def change_waypoints_color(self,color):
+    def change_waypoints_color(self, color):
         self.logic_tree.root.set_color(color)
         self.vtk_viewer.ren_win.Render()
 
-    def highlight_waypoints(self,index):
+    def highlight_waypoints(self, index):
         self.logic_tree.root.set_color(NORMAL_COLOR)
         node = self.logic_tree.get_node(index)
         node.set_color(ACCENT_COLOR)
         self.vtk_viewer.ren_win.Render()
-
 
     def refresh_waypoints(self):
         self.change_waypoint_opac(self.ui.waypoints_opacity.value())
@@ -438,17 +454,17 @@ class LogicBundlesApp(QMainWindow):
             sc = None
         else:
             sc = self.__fibers_color
-        fibers = read_logical_fibers(self.__current_subject, self.__curent_space,dict_tree,self.reader,
+        fibers = read_logical_fibers(self.__current_subject, self.__curent_space, dict_tree, self.reader,
                                      scalars=sc)
         return fibers
 
-    def read_fibers(self,dummy=None):
+    def read_fibers(self, dummy=None):
         if self.ui.preview_bundle.checkState() == QtCore.Qt.Checked:
 
             try:
                 self.__filetred_pd = self.get_bundle()
             except Exception:
-                self.statusBar().showMessage("Error loading fibers",2000)
+                self.statusBar().showMessage("Error loading fibers", 2000)
                 self.__fibers_ac.SetVisibility(0)
             else:
                 self.__fibers_map.SetInputData(self.__filetred_pd)
@@ -459,14 +475,14 @@ class LogicBundlesApp(QMainWindow):
             self.__fibers_lut = None
             self.__fibers_map.SetColorModeToDefault()
         else:
-            self.__fibers_lut = self.reader.get("Fibers",None,scalars=self.__fibers_color,lut = True)
+            self.__fibers_lut = self.reader.get(
+                "Fibers", None, scalars=self.__fibers_color, lut=True)
             self.__fibers_map.UseLookupTableScalarRangeOn()
             self.__fibers_map.SetColorModeToMapScalars()
             self.__fibers_map.SetLookupTable(self.__fibers_lut)
         self.vtk_viewer.ren_win.Render()
 
-
-    def update_fibers(self,dummy=None):
+    def update_fibers(self, dummy=None):
         if self.ui.preview_bundle.checkState() != QtCore.Qt.Checked:
             self.ui.fiber_scalar_combo.setEnabled(0)
             self.ui.scalar_box.setEnabled(0)
@@ -477,7 +493,7 @@ class LogicBundlesApp(QMainWindow):
         self.ui.fiber_scalar_combo.setEnabled(1)
         self.ui.scalar_box.setEnabled(1)
         self.ui.export_to_db.setEnabled(1)
-        index=self.ui.fiber_scalar_combo.currentIndex()
+        index = self.ui.fiber_scalar_combo.currentIndex()
         logger = logging.getLogger(__file__)
         metric = FIBER_SCALARS_DICT[int(index)]
         self.set_fiber_color(metric)
@@ -492,8 +508,7 @@ class LogicBundlesApp(QMainWindow):
 
         self.update_scalar_metric(metric)
 
-
-    def update_scalar_metric(self,metric):
+    def update_scalar_metric(self, metric):
         logger = logging.getLogger(__file__)
         try:
             ans = self.get_scalar_metric(metric)
@@ -501,10 +516,9 @@ class LogicBundlesApp(QMainWindow):
             logger.warning("Couldnt calculate metric")
             ans = float("nan")
         self.scalar_metric_value = ans
-        self.ui.scalar_box.setText("%.6g"%ans)
+        self.ui.scalar_box.setText("%.6g" % ans)
 
-
-    def set_fiber_color(self,metric):
+    def set_fiber_color(self, metric):
         if metric == "mean_fa":
             color = "fa_p"
         elif metric == "mean_md":
@@ -513,7 +527,7 @@ class LogicBundlesApp(QMainWindow):
             color = "orient"
         self.__fibers_color = color
 
-    def get_scalar_metric(self,metric):
+    def get_scalar_metric(self, metric):
 
         fibers = self.__filetred_pd
         if metric == "number":
@@ -521,8 +535,8 @@ class LogicBundlesApp(QMainWindow):
         elif metric == "mean_length":
             lengths = compute_fiber_lengths(fibers)
             return np.mean(lengths)
-        elif metric in {"mean_fa","mean_md"}:
-            ans = get_scalar_from_fiber_ploydata(fibers,"mean_color")
+        elif metric in {"mean_fa", "mean_md"}:
+            ans = get_scalar_from_fiber_ploydata(fibers, "mean_color")
             return ans
         else:
             raise Exception("Unknwon metric")
@@ -536,27 +550,31 @@ class LogicBundlesApp(QMainWindow):
         res = dialog.exec_()
         if res == dialog.Accepted:
             data = dialog.current_data
-            new_root = LogicBundleNodeWithVTK.vtk_from_dict(data,self.reader,self.__current_subject,self.__curent_space)
-            #remove from render
+            new_root = LogicBundleNodeWithVTK.vtk_from_dict(
+                data, self.reader, self.__current_subject, self.__curent_space)
+            # remove from render
             for k in self.vtk_tree:
                 self.vtk_viewer.ren.RemoveActor(k.prop)
             self.vtk_tree = new_root
             self.logic_tree.set_root(new_root)
-            #add new ones
+            # add new ones
             for k in self.vtk_tree:
                 self.vtk_viewer.ren.AddActor(k.prop)
             self.refresh_waypoints()
 
     def get_state(self):
         state = dict()
-        #current tree
+        # current tree
         state["logic_tree"] = self.vtk_tree.to_dict()
-        #context
+        # context
         context_dict = {}
         context_dict["image_type"] = self.__current_image_mod
-        context_dict["axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
-        context_dict["coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
-        context_dict["sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
+        context_dict[
+            "axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
+        context_dict[
+            "coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
+        context_dict[
+            "sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
 
         context_dict["axial_slice"] = int(self.ui.axial_slice.value())
         context_dict["coronal_slice"] = int(self.ui.coronal_slice.value())
@@ -564,42 +582,45 @@ class LogicBundlesApp(QMainWindow):
 
         context_dict["cortex"] = str(self.ui.surface_combo.currentText())
         context_dict["surf_scalars"] = str(self.ui.scalar_combo.currentText())
-        context_dict["left_surface"] = self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked
-        context_dict["right_surface"] = self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked
+        context_dict[
+            "left_surface"] = self.ui.left_cortex_check.checkState() == QtCore.Qt.Checked
+        context_dict[
+            "right_surface"] = self.ui.right_cortex_check.checkState() == QtCore.Qt.Checked
         context_dict["cortex_opac"] = int(self.ui.cortex_opac.value())
         state["context"] = context_dict
-        #visual
+        # visual
         visual_dict = {}
         visual_dict["coords"] = self.__curent_space
         visual_dict["waypoints_opac"] = int(self.ui.waypoints_opacity.value())
-        visual_dict["preview"] = self.ui.preview_bundle.checkState() == QtCore.Qt.Checked
+        visual_dict[
+            "preview"] = self.ui.preview_bundle.checkState() == QtCore.Qt.Checked
         visual_dict["scalar"] = str(self.ui.fiber_scalar_combo.currentText())
-        #camera
+        # camera
         visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
         state["visual"] = visual_dict
 
-        #subject
+        # subject
         subjs_state = {}
         subjs_state["subject"] = self.__current_subject
         subjs_state["img_code"] = self.__current_img_id
         subjs_state["sample"] = self.subjects_list
         state["subjects"] = subjs_state
 
-        #meta
+        # meta
         meta = {"date": datetime.datetime.now(), "exec": sys.argv, "machine": platform.node(),
                 "application": os.path.splitext(os.path.basename(__file__))[0]}
         state["meta"] = meta
         return state
 
-    def load_state(self,state):
-        #subject
+    def load_state(self, state):
+        # subject
         subjs_state = state["subjects"]
         subj = subjs_state["subject"]
         self.change_subject(subj)
         assert self.__current_img_id == subjs_state["img_code"]
         self.subjects_list = subjs_state["sample"]
-        #context
-        context_dict =state["context"]
+        # context
+        context_dict = state["context"]
         img = context_dict["image_type"]
         idx = self.ui.image_combo.findText(img)
         assert idx >= 0
@@ -628,17 +649,18 @@ class LogicBundlesApp(QMainWindow):
         self.ui.cortex_opac.setValue(context_dict["cortex_opac"])
 
         tree = state["logic_tree"]
-        #remove all from render
+        # remove all from render
         for node in self.vtk_tree:
             self.vtk_viewer.ren.RemoveActor(node.prop)
-        self.vtk_tree = LogicBundleNodeWithVTK.vtk_from_dict(tree,self.reader,self.__current_subject,self.__curent_space)
+        self.vtk_tree = LogicBundleNodeWithVTK.vtk_from_dict(
+            tree, self.reader, self.__current_subject, self.__curent_space)
         self.logic_tree.set_root(self.vtk_tree)
-        #add all to render
+        # add all to render
         for node in self.vtk_tree:
             self.vtk_viewer.ren.AddActor(node.prop)
         self.refresh_waypoints()
 
-        #visual
+        # visual
         visual_dict = state["visual"]
         coords = visual_dict["coords"]
         idx = self.ui.space_combo.findText(coords)
@@ -649,20 +671,19 @@ class LogicBundlesApp(QMainWindow):
         self.ui.preview_bundle.setChecked(visual_dict["preview"])
         fsc = visual_dict["scalar"]
         idx = self.ui.fiber_scalar_combo.findText(fsc)
-        assert  idx >= 0
+        assert idx >= 0
         self.ui.fiber_scalar_combo.setCurrentIndex(idx)
-        #camera
-        fp,pos,vu = visual_dict["camera"]
-        self.vtk_viewer.set_camera(fp,pos,vu)
+        # camera
+        fp, pos, vu = visual_dict["camera"]
+        self.vtk_viewer.set_camera(fp, pos, vu)
         self.update_slice_maximums()
-
 
     def save_scenario(self):
         state = self.get_state()
         meta = state["meta"]
         dialog = SaveScenarioDialog(meta["application"], state)
-        res=dialog.exec_()
-        if res==QtGui.QDialog.Accepted:
+        res = dialog.exec_()
+        if res == QtGui.QDialog.Accepted:
             scn_id = dialog.params["scn_id"]
             self.save_screenshot(scn_id)
         pass
@@ -675,21 +696,24 @@ class LogicBundlesApp(QMainWindow):
             wanted_state = dialog.out_dict
             self.load_state(wanted_state)
 
-    def save_screenshot(self,scenario_index):
-        file_name = "scenario_%d.png"%scenario_index
-        file_path = os.path.join(self.reader.get_dyn_data_root(), "braviz_data","scenarios",file_name)
+    def save_screenshot(self, scenario_index):
+        file_name = "scenario_%d.png" % scenario_index
+        file_path = os.path.join(
+            self.reader.get_dyn_data_root(), "braviz_data", "scenarios", file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
-        save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
+        save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
 
     def export_scalar_to_db(self):
         dialog = ExportScalarToDB(self)
         dialog.exec_()
 
+
 class ExportScalarToDB(QDialog):
-    def __init__(self,caller):
+
+    def __init__(self, caller):
         QDialog.__init__(self)
-        assert isinstance(caller,LogicBundlesApp)
+        assert isinstance(caller, LogicBundlesApp)
         self.caller = caller
         self.ui = Ui_ExportScalar()
         self.ui.setupUi(self)
@@ -702,11 +726,10 @@ class ExportScalarToDB(QDialog):
         self.done = False
         self.var_id = None
 
-
-    def check_name(self,text=None):
+    def check_name(self, text=None):
         self.ui.error_str = ""
         self.ui.start_button.setEnabled(0)
-        if len(text)>2:
+        if len(text) > 2:
             if tabular_data.does_variable_name_exists(str(text)) is True:
                 self.ui.error_str = "Name exists, please choose a unique name"
             else:
@@ -721,24 +744,25 @@ class ExportScalarToDB(QDialog):
         self.ui.var_name_input.setEnabled(0)
         self.ui.var_description.setEnabled(0)
         self.cancel_flag = False
-        #create variable
+        # create variable
         var_name = str(self.ui.var_name_input.text())
         desc = unicode(self.ui.var_description.toPlainText())
         var_id = tabular_data.register_new_variable(var_name)
         self.var_id = var_id
-        tabular_data.save_var_description(var_id,desc)
+        tabular_data.save_var_description(var_id, desc)
         self.process_qt_events()
 
-        #create scenario
+        # create scenario
         orig_state = self.caller.get_state()
         app = orig_state["meta"]["application"]
-        scn_id=braviz_user_data.save_scenario(app,"<AUTO>:%s"%var_name,desc,orig_state)
+        scn_id = braviz_user_data.save_scenario(
+            app, "<AUTO>:%s" % var_name, desc, orig_state)
         self.caller.save_screenshot(scn_id)
         self.process_qt_events()
-        #create link
-        braviz_user_data.link_var_scenario(var_id,scn_id)
+        # create link
+        braviz_user_data.link_var_scenario(var_id, scn_id)
         self.process_qt_events()
-        #fill values
+        # fill values
         subjs = self.caller.subjects_list
         n = len(subjs)
         self.caller.ui.axial_check.setChecked(False)
@@ -746,11 +770,11 @@ class ExportScalarToDB(QDialog):
         self.caller.ui.sagital_check.setChecked(False)
         self.caller.ui.left_cortex_check.setChecked(False)
         self.caller.ui.right_cortex_check.setChecked(False)
-        for i,sbj in enumerate(subjs):
+        for i, sbj in enumerate(subjs):
             if self.cancel_flag is True:
                 break
             self.calculate_one(sbj)
-            self.ui.progressBar.setValue((i+1)*100/n)
+            self.ui.progressBar.setValue((i + 1) * 100 / n)
             self.process_qt_events()
 
         self.caller.load_state(orig_state)
@@ -764,18 +788,17 @@ class ExportScalarToDB(QDialog):
             self.ui.start_button.setEnabled(1)
             self.done = True
 
-
-
     def process_qt_events(self):
         QtGui.QApplication.instance().processEvents()
 
-    def calculate_one(self,subj):
+    def calculate_one(self, subj):
         self.caller.change_subject(subj)
         val = self.caller.scalar_metric_value
-        tabular_data.updata_variable_value(self.var_id,subj,val)
+        tabular_data.updata_variable_value(self.var_id, subj, val)
 
     def cancel(self):
         self.cancel_flag = True
+
 
 def run():
     import sys

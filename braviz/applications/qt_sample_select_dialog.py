@@ -42,6 +42,7 @@ import logging
 
 
 class SampleLoadDialog(QtGui.QDialog):
+
     def __init__(self, new_button=True):
         super(SampleLoadDialog, self).__init__()
         self.model = SamplesSelectionModel()
@@ -53,10 +54,12 @@ class SampleLoadDialog(QtGui.QDialog):
         self.current_sample_name = None
         self.ui.tableView.activated.connect(self.load_action)
         self.ui.tableView.clicked.connect(self.load_action)
-        self.ui.tableView.customContextMenuRequested.connect(self.show_context_menu)
+        self.ui.tableView.customContextMenuRequested.connect(
+            self.show_context_menu)
         if new_button:
             self.new_button = QtGui.QPushButton("New")
-            self.ui.buttonBox.addButton(self.new_button, QtGui.QDialogButtonBox.ActionRole)
+            self.ui.buttonBox.addButton(
+                self.new_button, QtGui.QDialogButtonBox.ActionRole)
             self.new_sample_app = None
             self.check_state_timer = None
             self.ui.buttonBox.accepted.connect(self.load_action)
@@ -73,7 +76,8 @@ class SampleLoadDialog(QtGui.QDialog):
                 executable = sys.executable
                 self.new_sample_app = subprocess.Popen([executable, __file__])
                 self.check_state_timer = QtCore.QTimer(self)
-                self.check_state_timer.timeout.connect(refresh_list_and_re_enamble_new)
+                self.check_state_timer.timeout.connect(
+                    refresh_list_and_re_enamble_new)
                 self.check_state_timer.start(1000)
 
             self.new_button.clicked.connect(launch_new_sample_sub_process)
@@ -92,15 +96,15 @@ class SampleLoadDialog(QtGui.QDialog):
     def show_context_menu(self, pos):
         global_pos = self.ui.tableView.mapToGlobal(pos)
         selection = self.ui.tableView.currentIndex()
-        idx =  self.model.get_sample_index(selection)
+        idx = self.model.get_sample_index(selection)
         name = self.model.get_sample_name(selection)
-        remove_action = QtGui.QAction("Remove %s"%name, None)
+        remove_action = QtGui.QAction("Remove %s" % name, None)
         menu = QtGui.QMenu()
         menu.addAction(remove_action)
 
         def remove_item():
             log = logging.getLogger(__name__)
-            log.info("removing sample %s (%d)"%(name,idx))
+            log.info("removing sample %s (%d)" % (name, idx))
             braviz_user_data.delete_sample(idx)
             self.model.reload()
 
@@ -108,7 +112,9 @@ class SampleLoadDialog(QtGui.QDialog):
         menu.addAction(remove_action)
         menu.exec_(global_pos)
 
+
 class SampleCreateDilog(QtGui.QMainWindow):
+
     def __init__(self):
         super(SampleCreateDilog, self).__init__()
 
@@ -124,17 +130,19 @@ class SampleCreateDilog(QtGui.QMainWindow):
 
         self.set_base_sample()
 
-
     def setup_ui(self):
         self.ui = Ui_NewSampleWindow()
         self.ui.setupUi(self)
         self.ui.working_set_view.setModel(self.working_model)
-        self.ui.working_set_view.customContextMenuRequested.connect(self.get_add_one_context_menu)
+        self.ui.working_set_view.customContextMenuRequested.connect(
+            self.get_add_one_context_menu)
         self.ui.current_view.setModel(self.output_model)
-        self.ui.current_view.customContextMenuRequested.connect(self.get_remove_one_context_menu)
+        self.ui.current_view.customContextMenuRequested.connect(
+            self.get_remove_one_context_menu)
         self.ui.add_filter_button.clicked.connect(self.show_add_filter_dialog)
         self.ui.filters.setModel(self.filters_model)
-        self.ui.filters.customContextMenuRequested.connect(self.remove_filter_context_menu)
+        self.ui.filters.customContextMenuRequested.connect(
+            self.remove_filter_context_menu)
         self.ui.add_all_button.clicked.connect(self.add_all)
         self.ui.remove_button.clicked.connect(self.substract)
         self.ui.intersect_button.clicked.connect(self.intersect)
@@ -143,7 +151,8 @@ class SampleCreateDilog(QtGui.QMainWindow):
         self.ui.add_subset_button.clicked.connect(self.add_subset)
         self.ui.save_button.clicked.connect(self.show_save_dialog)
         self.ui.load_button.clicked.connect(self.show_load_sample)
-        self.ui.create_ind_variable.clicked.connect(self.create_indicator_variable)
+        self.ui.create_ind_variable.clicked.connect(
+            self.create_indicator_variable)
         self.ui.comboBox.insertSeparator(self.ui.comboBox.count())
         self.ui.comboBox.addItem("Select")
         self.ui.comboBox.activated.connect(self.change_base_sample)
@@ -158,8 +167,8 @@ class SampleCreateDilog(QtGui.QMainWindow):
             if d.exec_() and d.current_sample is not None:
                 self.set_base_sample(d.current_sample_idx)
                 self.base_sample_name = d.current_sample_name
-                self.ui.comboBox.insertItem(1,self.base_sample_name)
-                self.ui.comboBox.setItemData(1,int(d.current_sample_idx))
+                self.ui.comboBox.insertItem(1, self.base_sample_name)
+                self.ui.comboBox.setItemData(1, int(d.current_sample_idx))
                 self.ui.comboBox.setCurrentIndex(1)
 
             else:
@@ -171,24 +180,27 @@ class SampleCreateDilog(QtGui.QMainWindow):
             self.set_base_sample(sample_idx)
 
     def change_output_sample(self, new_set):
-        #to make sure it is not altered afterwards
+        # to make sure it is not altered afterwards
         new_set = frozenset(new_set)
         self.history.append(self.output_model.get_elements())
         if len(self.history) > 0:
             self.ui.undo_button.setEnabled(1)
         self.output_model.set_elements(new_set)
-        self.ui.size_label.setText("Size : %d"%len(new_set))
+        self.ui.size_label.setText("Size : %d" % len(new_set))
 
     def add_all(self):
-        new_set = self.working_model.get_elements().union(self.output_model.get_elements())
+        new_set = self.working_model.get_elements().union(
+            self.output_model.get_elements())
         self.change_output_sample(new_set)
 
     def substract(self):
-        new_set = self.output_model.get_elements() - self.working_model.get_elements()
+        new_set = self.output_model.get_elements(
+        ) - self.working_model.get_elements()
         self.change_output_sample(new_set)
 
     def intersect(self):
-        new_set = self.output_model.get_elements().intersection(self.working_model.get_elements())
+        new_set = self.output_model.get_elements().intersection(
+            self.working_model.get_elements())
         self.change_output_sample(new_set)
 
     def add_subset(self):
@@ -196,10 +208,10 @@ class SampleCreateDilog(QtGui.QMainWindow):
         dialog = SubSampleSelectDialog(len(working_set))
         ret = dialog.exec_()
         if ret == dialog.Accepted:
-            sub_sample = np.random.choice(list(working_set), dialog.subsample_size, replace=False)
+            sub_sample = np.random.choice(
+                list(working_set), dialog.subsample_size, replace=False)
             new_sample = self.output_model.get_elements().union(sub_sample)
             self.change_output_sample(set(new_sample))
-
 
     def clear(self):
         new_set = set()
@@ -237,7 +249,8 @@ class SampleCreateDilog(QtGui.QMainWindow):
             self.update_filters()
 
     def show_save_dialog(self):
-        dialog = SaveSubSampleDialog(self.output_model.get_elements(), self.ui.description.toPlainText())
+        dialog = SaveSubSampleDialog(
+            self.output_model.get_elements(), self.ui.description.toPlainText())
         ret = dialog.exec_()
         if ret == dialog.Accepted:
             log = logging.getLogger(__name__)
@@ -245,11 +258,13 @@ class SampleCreateDilog(QtGui.QMainWindow):
             log.info(self.output_model.get_elements())
             log.info(dialog.description)
             self.save_sample(dialog.name, dialog.description)
-            self.ui.statusbar.showMessage("Succesfully saved %s" % dialog.name, 10000)
+            self.ui.statusbar.showMessage(
+                "Succesfully saved %s" % dialog.name, 10000)
 
     def save_sample(self, name, description):
 
-        braviz_user_data.save_sub_sample(name, self.output_model.get_elements(), description)
+        braviz_user_data.save_sub_sample(
+            name, self.output_model.get_elements(), description)
 
     def show_load_sample(self):
         dialog = SampleLoadDialog(new_button=False)
@@ -281,7 +296,6 @@ class SampleCreateDilog(QtGui.QMainWindow):
         action.triggered.connect(add_to_sample)
         global_pos = self.ui.working_set_view.mapToGlobal(pos)
         menu.exec_(global_pos)
-
 
     def remove_one_from_sample(self, subj):
         log = logging.getLogger(__name__)
@@ -331,7 +345,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
             sample = self.output_model.get_elements()
             for s in all_subjs:
                 values[s] = 1 if s in sample else 0
-            dialog.nominal_model.set_labels_dict({0: "Out",1:"In"})
+            dialog.nominal_model.set_labels_dict({0: "Out", 1: "In"})
             dialog.values_model.set_values_dict(values)
 
         def change_to_nominal_and_freeze():
@@ -339,23 +353,24 @@ class SampleCreateDilog(QtGui.QMainWindow):
             dialog.ui.var_type_combo.setCurrentIndex(1)
             dialog.create_meta_data_frame(1)
             dialog.ui.var_type_combo.setEnabled(0)
-            QtCore.QTimer.singleShot(10,set_values)
+            QtCore.QTimer.singleShot(10, set_values)
 
-        QtCore.QTimer.singleShot(0,change_to_nominal_and_freeze)
-
+        QtCore.QTimer.singleShot(0, change_to_nominal_and_freeze)
 
         dialog.exec_()
 
 
 def get_filter_name(params):
     if params["var_real"] is True:
-        name = "%s %s %f" % (params["filter_var"], params["operation"], params["threshold"])
+        name = "%s %s %f" % (
+            params["filter_var"], params["operation"], params["threshold"])
     else:
         checked_names = params["checked_names"]
         if len(checked_names) == 0:
             name = "%s in {}" % params["filter_var"]
         else:
-            name = "%s in { %s }" % (params["filter_var"], ", ".join(params["checked_names"]))
+            name = "%s in { %s }" % (
+                params["filter_var"], ", ".join(params["checked_names"]))
     return name
 
 
@@ -370,7 +385,7 @@ def get_filter_function(params):
             f = lambda x: x == float(params["threshold"])
     else:
         f = lambda x: x in params["checked_labels"]
-    #get data
+    # get data
     var_name = params["filter_var"]
     var_idx = braviz_tab_data.get_var_idx(var_name)
 
@@ -386,6 +401,7 @@ def get_filter_function(params):
 
 
 class AddFilterDialog(VariableSelectDialog):
+
     def __init__(self, params):
         super(AddFilterDialog, self).__init__()
         self.params_dict = params
@@ -401,7 +417,6 @@ class AddFilterDialog(VariableSelectDialog):
 
         self.finish_ui_setup()
 
-
     def setup_ui(self):
         self.ui = Ui_AddFilterDialog()
         self.ui.setupUi(self)
@@ -416,13 +431,15 @@ class AddFilterDialog(VariableSelectDialog):
         super(AddFilterDialog, self).update_right_side(var_name)
 
     def create_real_details(self):
-        #print "creating real details"
+        # print "creating real details"
         details_ui = Ui_rational_details()
         details_ui.setupUi(self.ui.details_frame)
         self.details_ui = details_ui
-        self.details_ui.optimum_val.valueChanged.connect(self.update_optimum_real_value)
-        #try to read values from DB
-        db_values = braviz_tab_data.get_min_max_opt_values_by_name(self.var_name)
+        self.details_ui.optimum_val.valueChanged.connect(
+            self.update_optimum_real_value)
+        # try to read values from DB
+        db_values = braviz_tab_data.get_min_max_opt_values_by_name(
+            self.var_name)
         if db_values is None:
             self.guess_max_min()
         else:
@@ -430,13 +447,18 @@ class AddFilterDialog(VariableSelectDialog):
             self.rational["max"] = db_values[1]
             self.rational["opt"] = db_values[2]
         self.set_real_controls()
-        self.details_ui.optimum_val.valueChanged.connect(self.update_limits_in_plot)
-        self.details_ui.minimum_val.valueChanged.connect(self.update_limits_in_plot)
-        self.details_ui.maximum_val.valueChanged.connect(self.update_limits_in_plot)
-        self.details_ui.th_spin.valueChanged.connect(self.update_limits_in_plot)
+        self.details_ui.optimum_val.valueChanged.connect(
+            self.update_limits_in_plot)
+        self.details_ui.minimum_val.valueChanged.connect(
+            self.update_limits_in_plot)
+        self.details_ui.maximum_val.valueChanged.connect(
+            self.update_limits_in_plot)
+        self.details_ui.th_spin.valueChanged.connect(
+            self.update_limits_in_plot)
         self.details_ui.th_spin.setValue(self.rational["opt"])
         self.details_ui.th_spin.setMaximum(self.rational["max"])
-        self.details_ui.operation_combo.currentIndexChanged.connect(self.update_limits_in_plot)
+        self.details_ui.operation_combo.currentIndexChanged.connect(
+            self.update_limits_in_plot)
         self.update_plot(self.data)
         QtCore.QTimer.singleShot(20, self.update_limits_in_plot)
 
@@ -473,7 +495,8 @@ class AddFilterDialog(VariableSelectDialog):
                     unchecked_indices[i] = 1
             unchecked_data = self.data_vals[unchecked_indices]
             unchecked_jitter = self.jitter[unchecked_indices]
-            self.matplot_widget.add_grayed_scatter(unchecked_data, unchecked_jitter)
+            self.matplot_widget.add_grayed_scatter(
+                unchecked_data, unchecked_jitter)
         else:
             th = self.details_ui.th_spin.value()
             operation = self.details_ui.operation_combo.currentText()
@@ -494,7 +517,7 @@ class AddFilterDialog(VariableSelectDialog):
 
         self.data = data2
         self.data_vals = np.squeeze(data2.get_values())
-        #print self.data_vals.shape
+        # print self.data_vals.shape
         self.jitter = jitter
 
         self.matplot_widget.compute_scatter(data2.get_values(), jitter,
@@ -506,12 +529,15 @@ class AddFilterDialog(VariableSelectDialog):
             self.save_meta_data()
         if self.params_dict is not None:
             self.params_dict["filter_var"] = self.var_name
-            self.params_dict["var_real"] = self.ui.var_type_combo.currentIndex() == 0
+            self.params_dict[
+                "var_real"] = self.ui.var_type_combo.currentIndex() == 0
             if self.params_dict["var_real"]:
-                self.params_dict["operation"] = self.details_ui.operation_combo.currentText()
+                self.params_dict[
+                    "operation"] = self.details_ui.operation_combo.currentText()
                 self.params_dict["threshold"] = self.details_ui.th_spin.value()
             else:
-                self.params_dict["checked_labels"] = self.nominal_model.get_checked()
+                self.params_dict[
+                    "checked_labels"] = self.nominal_model.get_checked()
 
                 def get_name(l):
                     label_name = self.nominal_model.names_dict.get(l)
@@ -524,10 +550,12 @@ class AddFilterDialog(VariableSelectDialog):
         self.accept()
 
     def filter_list(self):
-        mask = "%%%s%%"%self.ui.search_box.text()
+        mask = "%%%s%%" % self.ui.search_box.text()
         self.vars_list_model.update_list(mask)
 
+
 class SubSampleSelectDialog(QtGui.QDialog):
+
     def __init__(self, original_length):
         super(SubSampleSelectDialog, self).__init__()
         self.subsample_size = 0
@@ -541,16 +569,19 @@ class SubSampleSelectDialog(QtGui.QDialog):
 
     def update_value(self, value):
         self.subsample_size = value
-        self.ui.label_2.setText("%.2f %%" % (int(value) / self.full_length * 100))
+        self.ui.label_2.setText(
+            "%.2f %%" % (int(value) / self.full_length * 100))
 
 
 class SaveSubSampleDialog(QtGui.QDialog):
+
     def __init__(self, contents, description):
         super(SaveSubSampleDialog, self).__init__()
         self.ui = Ui_SaveSample()
         self.ui.setupUi(self)
         self.ui.sample_description.setPlainText(description)
-        self.ui.sample_contents.setPlainText(", ".join(map(str, sorted(contents))))
+        self.ui.sample_contents.setPlainText(
+            ", ".join(map(str, sorted(contents))))
         self.accepted.connect(self.before_exiting)
         self.name = ""
         self.description = description
@@ -558,7 +589,6 @@ class SaveSubSampleDialog(QtGui.QDialog):
     def before_exiting(self):
         self.name = self.ui.sample_name.text()
         self.description = self.ui.sample_description.toPlainText()
-
 
 
 if __name__ == "__main__":

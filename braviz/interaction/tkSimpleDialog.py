@@ -26,7 +26,7 @@ from Tkinter import *
 
 class Dialog(Toplevel):
 
-    def __init__(self, parent, title = None):
+    def __init__(self, parent, title=None):
 
         Toplevel.__init__(self, parent)
         self.transient(parent)
@@ -51,8 +51,8 @@ class Dialog(Toplevel):
 
         self.protocol("WM_DELETE_WINDOW", self.cancel)
 
-        self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
-                                  parent.winfo_rooty()+50))
+        self.geometry("+%d+%d" % (parent.winfo_rootx() + 50,
+                                  parent.winfo_rooty() + 50))
 
         self.initial_focus.focus_set()
 
@@ -89,7 +89,7 @@ class Dialog(Toplevel):
     def ok(self, event=None):
 
         if not self.validate():
-            self.initial_focus.focus_set() # put focus back
+            self.initial_focus.focus_set()  # put focus back
             return
 
         self.withdraw()
@@ -110,8 +110,8 @@ class Dialog(Toplevel):
 
     def validate(self):
 
-        return 1 # override
+        return 1  # override
 
     def apply(self):
 
-        pass # override
+        pass  # override

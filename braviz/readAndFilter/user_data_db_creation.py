@@ -28,11 +28,11 @@ if __name__ == "__main__":
     sys.exit(0)
 
 
-def create_tables(conn = None):
+def create_tables(conn=None):
     if conn is None:
         conn = _get_connection()
 
-    #applications table
+    # applications table
     q = """CREATE TABLE IF NOT EXISTS applications (
     app_idx INTEGER PRIMARY KEY,
     exec_name TEXT
@@ -41,7 +41,7 @@ def create_tables(conn = None):
     conn.execute(q)
     conn.commit()
 
-    #scenarios table
+    # scenarios table
     q = """CREATE TABLE IF NOT EXISTS scenarios (
     scn_id INTEGER PRIMARY KEY,
     app_idx INTEGER REFERENCES applications(app_idx),
@@ -55,7 +55,7 @@ def create_tables(conn = None):
     conn.execute(q)
     conn.commit()
 
-    #variables and scenarios table
+    # variables and scenarios table
     q = """
     CREATE TABLE IF NOT EXISTS vars_scenarios (
     var_idx INTEGER REFERENCES variables(var_idx),
@@ -91,31 +91,31 @@ def create_tables(conn = None):
 
 
 _applications_dir = {
-        1: "subject_overview",
-        2: "anova_task",
-        3: "sample_overview",
-        4: "lm_task",
-        5: "logic_bundles",
-        6: "build_roi",
-        7: "fmri_explorer",
-        8: "measure_task",
-        }
+    1: "subject_overview",
+    2: "anova_task",
+    3: "sample_overview",
+    4: "lm_task",
+    5: "logic_bundles",
+    6: "build_roi",
+    7: "fmri_explorer",
+    8: "measure_task",
+}
 
-def update_current_applications(conn = None):
+
+def update_current_applications(conn=None):
     applications = _applications_dir
     if conn is None:
         conn = _get_connection()
     q = "SELECT app_idx, exec_name FROM applications ORDER BY app_idx"
     cur = conn.execute(q)
     db_tuples = cur.fetchall()
-    db_dict=dict(db_tuples)
+    db_dict = dict(db_tuples)
     add_q = "INSERT INTO applications VALUES (?,?)"
     update_q = "UPDATE OR ABORT applications SET exec_name = ? WHERE app_idx = ?"
     with conn:
-        for k,v in applications.iteritems():
+        for k, v in applications.iteritems():
             v2 = db_dict.get(k)
             if v2 is None:
-                conn.execute(add_q,(k,v))
+                conn.execute(add_q, (k, v))
             elif (str(v) != str(v2)):
-                conn.execute(update_q,(v,k))
-
+                conn.execute(update_q, (v, k))

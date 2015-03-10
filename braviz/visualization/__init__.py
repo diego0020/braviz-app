@@ -30,8 +30,8 @@ from create_lut import get_colorbrewer_lut
 from braviz.visualization.simple_vtk import SimpleVtkViewer
 
 
-#Easy access to GridView
+# Easy access to GridView
 from braviz.visualization.grid_viewer import GridView
 if __name__ == "__main__":
 
-    test_grid=GridView()
+    test_grid = GridView()

@@ -23,14 +23,16 @@ import os
 from collections import defaultdict
 import logging
 
+
 def configure_logger_from_conf(app_name="Braviz"):
     from braviz.readAndFilter.config_file import get_apps_config
     conf = get_apps_config()
-    log_out=conf.get("Braviz","logger")
-    if log_out[0]=='c':
+    log_out = conf.get("Braviz", "logger")
+    if log_out[0] == 'c':
         configure_console_logger(app_name)
     else:
         configure_logger(app_name)
+
 
 def configure_logger(app_name):
     """
@@ -41,18 +43,20 @@ def configure_logger(app_name):
     from braviz.readAndFilter import braviz_auto_dynamic_data_root
     now = datetime.datetime.now()
     time_str = now.strftime("%d_%m_%y-%Hh%Mm%Ss")
-    path_root = os.path.join(braviz_auto_dynamic_data_root(),"logs")
+    path_root = os.path.join(braviz_auto_dynamic_data_root(), "logs")
     if not os.path.isdir(path_root):
         os.mkdir(path_root)
-    log_file = os.path.join(path_root,"%s_%s.txt"%(app_name,time_str))
+    log_file = os.path.join(path_root, "%s_%s.txt" % (app_name, time_str))
     format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
     try:
-        logging.basicConfig(filename=log_file,level=logging.INFO,format=format_str)
+        logging.basicConfig(
+            filename=log_file, level=logging.INFO, format=format_str)
     except Exception:
-        print "couldnt create file logger in file %s"%log_file
+        print "couldnt create file logger in file %s" % log_file
         print "falling back to console logger"
-        logging.basicConfig(level=logging.INFO,format=format_str)
+        logging.basicConfig(level=logging.INFO, format=format_str)
     logging.captureWarnings(True)
+
 
 def configure_console_logger(app_name):
     """
@@ -60,8 +64,9 @@ def configure_console_logger(app_name):
     """
     import logging
     format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
-    logging.basicConfig(level=logging.INFO,format=format_str)
+    logging.basicConfig(level=logging.INFO, format=format_str)
     logging.captureWarnings(True)
+
 
 @contextlib.contextmanager
 def working_directory(path):
@@ -78,6 +83,7 @@ def working_directory(path):
 
 from contextlib import contextmanager
 
+
 @contextmanager
 def ignored(*exceptions):
     """A context manager which ignores exceptions of specific types"""
@@ -93,28 +99,30 @@ def recursive_default_dict():
     """A default dict which by default contains default dicts which by default contain default dicts...."""
     return defaultdict(recursive_default_dict)
 
-def get_leafs(rec_dict,name):
+
+def get_leafs(rec_dict, name):
     """ input should be a recursive dicitionary whose elements are dictionaries, and a base name
     output will be a list of leafs, this is, elements which contain empty dictionaries as sons
     names in the output list will have the structure name:grandparent:parent:leaf"""
     if len(rec_dict) == 0:
         return [name]
-    leafs=[]
-    for k,sub_d in rec_dict.iteritems():
-        sub_leafs=get_leafs(sub_d,k)
-        sub_leafs=map(lambda x:':'.join((name,x)),sub_leafs)
+    leafs = []
+    for k, sub_d in rec_dict.iteritems():
+        sub_leafs = get_leafs(sub_d, k)
+        sub_leafs = map(lambda x: ':'.join((name, x)), sub_leafs)
         leafs.extend(sub_leafs)
     return leafs
 
+
 def remove_non_ascii(s):
-    return str("".join(i for i in s if ord(i)<128))
+    return str("".join(i for i in s if ord(i) < 128))
+
 
 def show_error(error_message):
     from PyQt4 import QtGui
     app = QtGui.QApplication([])
-    dialog = QtGui.QMessageBox(QtGui.QMessageBox.Critical,"Braviz",error_message,QtGui.QMessageBox.Abort)
+    dialog = QtGui.QMessageBox(
+        QtGui.QMessageBox.Critical, "Braviz", error_message, QtGui.QMessageBox.Abort)
     dialog.show()
     app.exec_()
     print "ya"
-
-

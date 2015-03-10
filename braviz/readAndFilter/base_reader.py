@@ -28,9 +28,11 @@ import tempfile
 
 from braviz.readAndFilter.cache import cache_function, CacheContainer
 
-_auto_temp_dir = os.path.join(tempfile.gettempdir(),"braviz_temp")
+_auto_temp_dir = os.path.join(tempfile.gettempdir(), "braviz_temp")
+
 
 class BaseReader(object):
+
     """
 Provide access to projects' non-tabular data
 
@@ -43,7 +45,7 @@ data is requested. To get a more useful class you should create your own subclas
 """
     _memory_cache_container = CacheContainer()
 
-    def __init__(self,max_cache=100,**kwargs):
+    def __init__(self, max_cache=100, **kwargs):
         """
         The base reader handles a memory cache for speeding repeated access for the same data.
 
@@ -58,9 +60,8 @@ data is requested. To get a more useful class you should create your own subclas
         self.__static_root = _auto_temp_dir
         return
 
-
     @cache_function(_memory_cache_container)
-    def get(self,data, subj_id=None, space='world', **kwargs):
+    def get(self, data, subj_id=None, space='world', **kwargs):
         """Provides access to geometric data in an specified coordinate system.
 
         Args:
@@ -227,15 +228,15 @@ data is requested. To get a more useful class you should create your own subclas
 
         """
         subj_id = self._decode_subject(subj_id)
-        return self._get(data, subj_id,space, **kwargs)
+        return self._get(data, subj_id, space, **kwargs)
 
-    def _decode_subject(self,subj):
+    def _decode_subject(self, subj):
         """
         Transforms the subject into the standard format, should be called at the start of all public methods
         """
         return subj
 
-    def move_img_to_world(self,img,source_space,subj,interpolate=False):
+    def move_img_to_world(self, img, source_space, subj, interpolate=False):
         """
         Resamples an image into the world coordinate system
 
@@ -250,7 +251,7 @@ data is requested. To get a more useful class you should create your own subclas
         subj = self._decode_subject(subj)
         self.__raise_error()
 
-    def move_img_from_world(self,img,target_space,subj,interpolate=False):
+    def move_img_from_world(self, img, target_space, subj, interpolate=False):
         """
         Resamples an image from the world coordinates into some other coordinate system
 
@@ -323,7 +324,7 @@ data is requested. To get a more useful class you should create your own subclas
         """
         return None
 
-    def clear_cache_dir(self,last_word=False):
+    def clear_cache_dir(self, last_word=False):
         """
         Clears all the contents of the disk cache
 
@@ -379,11 +380,11 @@ data is requested. To get a more useful class you should create your own subclas
                 the value returned by :meth:`get_dyn_data_root` in the reader that stored the data.
         """
         try:
-            os.walk(os.path.join(dir_name,"logs"))
-            os.walk(os.path.join(dir_name,".braviz_cache"))
-            os.walk(os.path.join(dir_name,"braviz_data","scenarios"))
-            for sub_dir in ("logs",".braviz_cache","braviz_data"):
-                top = os.path.join(dir_name,sub_dir)
+            os.walk(os.path.join(dir_name, "logs"))
+            os.walk(os.path.join(dir_name, ".braviz_cache"))
+            os.walk(os.path.join(dir_name, "braviz_data", "scenarios"))
+            for sub_dir in ("logs", ".braviz_cache", "braviz_data"):
+                top = os.path.join(dir_name, sub_dir)
                 for root, dirs, files in os.walk(top, topdown=False):
                     for name in files:
                         os.remove(os.path.join(root, name))
@@ -404,9 +405,9 @@ data is requested. To get a more useful class you should create your own subclas
         from braviz.readAndFilter import check_db
         if dir_name is None:
             dir_name = BaseReader.get_auto_dyn_data_root()
-        os.makedirs(os.path.join(dir_name,"logs"))
-        os.makedirs(os.path.join(dir_name,".braviz_cache"))
-        os.makedirs(os.path.join(dir_name,"braviz_data","scenarios"))
+        os.makedirs(os.path.join(dir_name, "logs"))
+        os.makedirs(os.path.join(dir_name, ".braviz_cache"))
+        os.makedirs(os.path.join(dir_name, "braviz_data", "scenarios"))
         check_db.verify_db_completeness()
 
     @staticmethod
@@ -425,9 +426,9 @@ data is requested. To get a more useful class you should create your own subclas
         if len(key) + data_root_length > 250:
             key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
         else:
-            ilegal = ['_','<', '>', ':', '"', '/', "\\", '|', '?', '*']
-            for i,il in enumerate(ilegal):
-                key = key.replace(il, '%d_'%i)
+            ilegal = ['_', '<', '>', ':', '"', '/', "\\", '|', '?', '*']
+            for i, il in enumerate(ilegal):
+                key = key.replace(il, '%d_' % i)
         return key
 
     def __raise_error(self):
@@ -463,7 +464,7 @@ data is requested. To get a more useful class you should create your own subclas
             self.__raise_error()
         elif data == 'TENSORS':
             self.__raise_error()
-        elif data in {"APARC","WMPARC"}:
+        elif data in {"APARC", "WMPARC"}:
             self.__raise_error()
         elif data == "FMRI":
             if kw.get("index"):

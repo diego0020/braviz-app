@@ -43,34 +43,34 @@ data_codes_dict = {
     'Frequency': 'IHIfreq'
 }
 
-hierarchy={
-    'Motor Brain' : {
-        'Excitability' : {},
-        'Synchronization' : {},
-        'Balanced Activity' :{
-            'Level of Inhibition':{},
-            'Level of Facilitation' : {},
+hierarchy = {
+    'Motor Brain': {
+        'Excitability': {},
+        'Synchronization': {},
+        'Balanced Activity': {
+            'Level of Inhibition': {},
+            'Level of Facilitation': {},
         },
-        'Cooperation between hemispheres':{
-            'Frequency':{},
-            'Transfer time':{},
-            'Duration':{},
+        'Cooperation between hemispheres': {
+            'Frequency': {},
+            'Transfer time': {},
+            'Duration': {},
         }
     }
 }
 
-hierarchy_dnd={
-    'Motor Brain' : {
-        'Excitability' : {'Dominant' : {}, 'Nondominant': {}},
-        'Synchronization' : {'Dominant' : {}, 'Nondominant': {}},
-        'Balanced Activity' :{
-            'Level of Inhibition':{'Dominant' : {}, 'Nondominant': {}},
-            'Level of Facilitation' : {'Dominant' : {}, 'Nondominant': {}},
+hierarchy_dnd = {
+    'Motor Brain': {
+        'Excitability': {'Dominant': {}, 'Nondominant': {}},
+        'Synchronization': {'Dominant': {}, 'Nondominant': {}},
+        'Balanced Activity': {
+            'Level of Inhibition': {'Dominant': {}, 'Nondominant': {}},
+            'Level of Facilitation': {'Dominant': {}, 'Nondominant': {}},
         },
-        'Cooperation between hemispheres':{
-            'Frequency':{'Dominant' : {}, 'Nondominant': {}},
-            'Transfer time':{'Dominant' : {}, 'Nondominant': {}},
-            'Duration':{'Dominant' : {}, 'Nondominant': {}},
+        'Cooperation between hemispheres': {
+            'Frequency': {'Dominant': {}, 'Nondominant': {}},
+            'Transfer time': {'Dominant': {}, 'Nondominant': {}},
+            'Duration': {'Dominant': {}, 'Nondominant': {}},
         }
     }
 }

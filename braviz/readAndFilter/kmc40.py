@@ -32,12 +32,14 @@ from numpy.linalg import inv
 from braviz.readAndFilter.cache import memo_ten
 from braviz.readAndFilter.images import numpy2vtk_img, nifti_rgb2vtk, nibNii2vtk
 
-from braviz.readAndFilter.readDartelTransform import  dartel2GridTransform_cached
+from braviz.readAndFilter.readDartelTransform import dartel2GridTransform_cached
 from braviz.readAndFilter.kmc_abstract import KmcAbstractReader
 from braviz.readAndFilter.transforms import applyTransform, readFreeSurferTransform, readFlirtMatrix
 from braviz.visualization.create_lut import get_colorbrewer_lut
 
+
 class Kmc40Reader(KmcAbstractReader):
+
     """
 Braviz reader class designed to work with the file structure and data from the KMC pilot
 
@@ -45,11 +47,12 @@ This project contains 50 subjects (40 preterms).
 Data is organized into folders, and path and names for the different files can be derived from data type and id.
 The constructor requires the root to this structure
 """
+
     def __init__(self, path, max_cache=2000):
         "The path pointing to the __root of the file structure must be set here"
-        KmcAbstractReader.__init__(self,path,path,max_cache)
+        KmcAbstractReader.__init__(self, path, path, max_cache)
         self._functional_paradigms = frozenset(("PRECISION", "POWERGRIP"))
-        self._named_bundles = frozenset(("cortico_spinal_l","cortico_spinal_r","cortico_spinal_n","cortico_spinal_d",
+        self._named_bundles = frozenset(("cortico_spinal_l", "cortico_spinal_r", "cortico_spinal_n", "cortico_spinal_d",
                                          "corpus_callosum"))
 
     def _getIds(self):
@@ -60,7 +63,7 @@ The constructor requires the root to this structure
         ids.sort(key=int)
         return ids
 
-    def _decode_subject(self,subj):
+    def _decode_subject(self, subj):
         subj = str(subj)
         if len(subj) < 3:
             subj = "0" * (3 - len(subj)) + subj
@@ -68,7 +71,7 @@ The constructor requires the root to this structure
 
     def _getImg(self, data, subj, space,  **kw):
         "Auxiliary function to read nifti images"
-        #path=self.getDataRoot()+'/'+subj+'/MRI'
+        # path=self.getDataRoot()+'/'+subj+'/MRI'
         if data == 'MRI':
             path = os.path.join(self.get_data_root(), subj, 'MRI')
             filename = '%s-MRI-full.nii.gz' % subj
@@ -130,9 +133,10 @@ The constructor requires the root to this structure
             interpolate = True
             if data in {'APARC', "WMPARC"}:
                 interpolate = False
-                #print "turning off interpolate"
+                # print "turning off interpolate"
 
-            img2 = applyTransform(vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
+            img2 = applyTransform(
+                vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
 
             if space == "diff" and (data in {"FA", "MD", "DTI"}):
                 return img2
@@ -143,10 +147,11 @@ The constructor requires the root to this structure
         elif space == "world":
             return img
         elif space == "diff":
-            #read transform:
+            # read transform:
             path = os.path.join(self.get_data_root(), subj, 'camino')
             #matrix = readFlirtMatrix('surf2diff.mat', 'FA.nii.gz', 'orig.nii.gz', path)
-            matrix = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            matrix = readFlirtMatrix(
+                'diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
             affine = img.get_affine()
             aff2 = matrix.dot(affine)
             img2 = nib.Nifti1Image(img.get_data(), aff2)
@@ -162,10 +167,10 @@ The constructor requires the root to this structure
             return img2
         elif space in ('template', 'dartel'):
 
-            dartel_warp = self._get_spm_grid_transform(subj,"dartel","back")
+            dartel_warp = self._get_spm_grid_transform(subj, "dartel", "back")
             img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
                                   spacing2=(-1.5, 1.5, 1.5), interpolate=interpolate)
-            #origin, dimension and spacing come from template
+            # origin, dimension and spacing come from template
             return img3
         elif space[:2].lower() == 'ta':
             talairach_file = self._get_talairach_transform_name(subj)
@@ -174,9 +179,9 @@ The constructor requires the root to this structure
                                   interpolate=interpolate)
             return img3
         elif space[:4] in ('func', 'fmri'):
-            #functional space
+            # functional space
             paradigm = space[5:]
-            #print paradigm
+            # print paradigm
             paradigm = self._get_paradigm_name(paradigm)
             transform = self._read_func_transform(subj, paradigm, True)
             img3 = applyTransform(img2, transform, origin2=(78, -112, -50), dimension2=(79, 95, 68),
@@ -186,7 +191,8 @@ The constructor requires the root to this structure
         elif space == "diff":
             path = self._get_base_fibs_dir_name(subj)
             # notice we are reading the inverse transform diff -> world
-            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            trans = readFlirtMatrix(
+                'diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
             img3 = applyTransform(img2, trans, interpolate=interpolate)
             return img3
         else:
@@ -201,10 +207,10 @@ The constructor requires the root to this structure
             return img2
         elif space in ('template', 'dartel'):
 
-            dartel_warp = self._get_spm_grid_transform("dartel","forw")
+            dartel_warp = self._get_spm_grid_transform("dartel", "forw")
             img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
                                   spacing2=(-1.5, 1.5, 1.5), interpolate=interpolate)
-            #origin, dimension and spacing come from template
+            # origin, dimension and spacing come from template
             return img3
         elif space[:2].lower() == 'ta':
             talairach_file = self._get_talairach_transform_name(subj)
@@ -213,7 +219,7 @@ The constructor requires the root to this structure
                                   interpolate=interpolate)
             return img3
         elif space[:4] in ('func', 'fmri'):
-            #functional space
+            # functional space
             paradigm = space[5:]
             paradigm = self._get_paradigm_name(paradigm)
             transform = self._read_func_transform(subj, paradigm, True)
@@ -224,7 +230,8 @@ The constructor requires the root to this structure
         elif space == "diff":
             path = self._get_base_fibs_dir_name(subj)
             # notice we are reading the inverse transform diff -> world
-            trans = readFlirtMatrix('diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            trans = readFlirtMatrix(
+                'diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
             img3 = applyTransform(img2, trans, interpolate=interpolate)
             return img3
         else:
@@ -233,36 +240,36 @@ The constructor requires the root to this structure
             raise Exception('Unknown space %s' % space)
 
     #==========Free Surfer================
-    def _get_free_surfer_models_dir_name(self,subject):
+    def _get_free_surfer_models_dir_name(self, subject):
         return os.path.join(self.get_data_root(), subject, 'Models3')
 
-    def _get_talairach_transform_name(self,subject):
+    def _get_talairach_transform_name(self, subject):
         """xfm extension"""
         return os.path.join(self.get_data_root(), subject, 'Surf', 'talairach.xfm')
 
-    def _get_free_surfer_stats_dir_name(self,subject):
+    def _get_free_surfer_stats_dir_name(self, subject):
         return os.path.join(self.get_data_root(), subject, 'Models', 'stats')
 
     def _get_freesurfer_lut_name(self):
         return os.path.join(self.get_data_root(), 'FreeSurferColorLUT.txt')
 
-    def _get_free_surfer_morph_path(self,subj):
+    def _get_free_surfer_morph_path(self, subj):
         return os.path.join(self.get_data_root(), str(subj), 'Surf')
 
-    def _get_free_surfer_labels_path(self,subj):
+    def _get_free_surfer_labels_path(self, subj):
         return os.path.join(self.get_data_root(), str(subj), 'Surf')
 
-    def _get_freesurfer_surf_name(self,subj,name):
-        return os.path.join(self.get_data_root(),str(subj),"Surf",name )
+    def _get_freesurfer_surf_name(self, subj, name):
+        return os.path.join(self.get_data_root(), str(subj), "Surf", name)
 
-    def _get_tracula_map_name(self,subj):
+    def _get_tracula_map_name(self, subj):
         raise IOError("Tracula data not available")
 
     #=============Camino==================
-    def _get_base_fibs_name(self,subj):
+    def _get_base_fibs_name(self, subj):
         return os.path.join(self.get_data_root(), subj, 'camino', 'streams.vtk')
 
-    def _get_base_fibs_dir_name(self,subj):
+    def _get_base_fibs_dir_name(self, subj):
         """
         Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
         """
@@ -275,40 +282,41 @@ The constructor requires the root to this structure
         return "orig.nii.gz"
 
     def _get_md_lut(self):
-        lut = get_colorbrewer_lut(6e-10, 11e-10,"YlGnBu",9,invert=True)
+        lut = get_colorbrewer_lut(6e-10, 11e-10, "YlGnBu", 9, invert=True)
         return lut
 
     #==========SPM================
-    def _get_paradigm_name(self,paradigm_name):
+    def _get_paradigm_name(self, paradigm_name):
         return paradigm_name.upper()
 
-    def _get_paradigm_dir(self,subject,name,spm=False):
+    def _get_paradigm_dir(self, subject, name, spm=False):
         "If spm is True return the directory containing spm.mat, else return its parent"
         if not spm:
             return os.path.join(self.get_data_root(), subject, 'spm', name)
         else:
             return os.path.join(self.get_data_root(), subject, 'spm', name)
 
-    def _get_spm_grid_transform(self,subject,paradigm,direction,assume_bad_matrix=False):
+    def _get_spm_grid_transform(self, subject, paradigm, direction, assume_bad_matrix=False):
         """
         Get the spm non linear registration transform grid associated to the paradigm
         Use paradigm=dartel to get the transform associated to the dartel normalization
         """
-        assert direction in {"forw","back"}
-        cache_key = "y_%s_%s_%s.vtk"%(paradigm,subject,direction)
-        if paradigm=="dartel":
-            y_file = os.path.join(self.get_data_root(), 'Dartel', "y_%s-%s.nii.gz" % (subject,direction))
+        assert direction in {"forw", "back"}
+        cache_key = "y_%s_%s_%s.vtk" % (paradigm, subject, direction)
+        if paradigm == "dartel":
+            y_file = os.path.join(
+                self.get_data_root(), 'Dartel', "y_%s-%s.nii.gz" % (subject, direction))
         else:
-            y_file = os.path.join(self.get_data_root(), subject, 'spm',paradigm,'y_seg_%s.nii.gz' % direction)
-        return dartel2GridTransform_cached(y_file,cache_key,self,assume_bad_matrix)
+            y_file = os.path.join(
+                self.get_data_root(), subject, 'spm', paradigm, 'y_seg_%s.nii.gz' % direction)
+        return dartel2GridTransform_cached(y_file, cache_key, self, assume_bad_matrix)
 
-    def _read_func_transform(self,subject,paradigm_name,inverse=False):
+    def _read_func_transform(self, subject, paradigm_name, inverse=False):
         paradigm_name = self._get_paradigm_name(paradigm_name)
-        path = os.path.join(self.get_data_root(),subject,"spm" )
+        path = os.path.join(self.get_data_root(), subject, "spm")
         T1_func = os.path.join(path, paradigm_name, 'T1.nii.gz')
         T1_world = os.path.join(path, 'T1', 'T1.nii.gz')
-        return self._read_func_transform_internal(subject,paradigm_name,inverse,path,T1_func,T1_world)
-
+        return self._read_func_transform_internal(subject, paradigm_name, inverse, path, T1_func, T1_world)
 
     @staticmethod
     @memo_ten
@@ -348,7 +356,3 @@ The constructor requires the root to this structure
         else:
             max_cache = config["memory (mb)"]
         return Kmc40Reader(data_root, max_cache=max_cache)
-
-
-
-

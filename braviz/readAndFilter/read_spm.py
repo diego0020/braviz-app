@@ -25,6 +25,7 @@ import numpy as np
 
 __author__ = 'Diego'
 
+
 def get_contrasts_dict(spm_file_path):
     """
     Parse information about existing contrasts from an spm file
@@ -36,33 +37,35 @@ def get_contrasts_dict(spm_file_path):
         A dictionary with contrast indexes (starting at 1) for keys, and contrast names for values
     """
     spm_file = sio.loadmat(spm_file_path)
-    spm_struct = spm_file["SPM"][0,0]
+    spm_struct = spm_file["SPM"][0, 0]
     contrasts_info = spm_struct["xCon"]
     n_contrasts = contrasts_info.shape[1]
     contrast_names = {}
     for i in xrange(n_contrasts):
-        contrast_names[i+1] = contrasts_info[0,i]["name"][0]
+        contrast_names[i + 1] = contrasts_info[0, i]["name"][0]
     return contrast_names
 
-ContrastInfo = namedtuple("ContrastInfo",("name","design"))
-ConditionInfo = namedtuple("ConditionInfo",("name","onsets","durations"))
+ContrastInfo = namedtuple("ContrastInfo", ("name", "design"))
+ConditionInfo = namedtuple("ConditionInfo", ("name", "onsets", "durations"))
+
 
 class SpmFileReader(object):
+
     "Helper class to read data from an SPM file"
 
-    def __init__(self,spm_file_path):
+    def __init__(self, spm_file_path):
         """
         Helper class to read data from an SPM file"
 
         Args:
             spm_file_path (str) : Path to ``spm.mat`` file
         """
-        self.spm = sio.loadmat(spm_file_path)["SPM"][0,0]
-        self.__units = self.spm["xBF"]["UNITS"][0,0][0]
-        self.__time_bin= float(self.spm["xBF"][0,0]["dt"][0,0])
-        self.__tr_divisions = int(self.spm["xBF"][0,0]["T"][0,0])
-        self.__n_scans = int(self.spm["nscan"][0,0])
-        self.__tr = float(self.spm["xY"]["RT"][0,0][0,0])
+        self.spm = sio.loadmat(spm_file_path)["SPM"][0, 0]
+        self.__units = self.spm["xBF"]["UNITS"][0, 0][0]
+        self.__time_bin = float(self.spm["xBF"][0, 0]["dt"][0, 0])
+        self.__tr_divisions = int(self.spm["xBF"][0, 0]["T"][0, 0])
+        self.__n_scans = int(self.spm["nscan"][0, 0])
+        self.__tr = float(self.spm["xY"]["RT"][0, 0][0, 0])
         self.__conditions = None
         self.__constrasts = None
         self.__experiment_samples = None
@@ -73,23 +76,23 @@ class SpmFileReader(object):
         n_contrasts = contrasts_info.shape[1]
         contrasts = {}
         for i in xrange(n_contrasts):
-            name = contrasts_info[0,i]["name"][0]
-            design = contrasts_info[0,i]["c"].squeeze()
-            stat = contrasts_info[0,i]["STAT"][0]
+            name = contrasts_info[0, i]["name"][0]
+            design = contrasts_info[0, i]["c"].squeeze()
+            stat = contrasts_info[0, i]["STAT"][0]
             assert stat == "T"
-            contrasts[i+1] = ContrastInfo(name,design)
+            contrasts[i + 1] = ContrastInfo(name, design)
         self.__constrasts = contrasts
 
     def __parse_conditions(self):
         session = self.spm["Sess"]
-        n_conds = session["U"][0,0].shape[1]
+        n_conds = session["U"][0, 0].shape[1]
         conditions = []
         for i in xrange(n_conds):
             session_info = session["U"][0, 0][0, i]
-            cond_name = session_info["name"][0,0][0]
-            cond_onsets = session_info["ons"][:,0].astype(np.int)
-            cond_durations = session_info["dur"][:,0]
-            cond = ConditionInfo(cond_name,cond_onsets,cond_durations)
+            cond_name = session_info["name"][0, 0][0]
+            cond_onsets = session_info["ons"][:, 0].astype(np.int)
+            cond_durations = session_info["dur"][:, 0]
+            cond = ConditionInfo(cond_name, cond_onsets, cond_durations)
             conditions.append(cond)
         self.__conditions = conditions
 
@@ -140,16 +143,16 @@ class SpmFileReader(object):
         Returns:
             :class:`numpy.ndarray` with time values across the duration of the experiment
         """
-        #TODO: Decrease resolution
+        # TODO: Decrease resolution
         tr = self.tr
         n_scans = self.n_scans
         time_bin = self.__time_bin
-        time_vec = np.arange(0,tr*n_scans,time_bin)
+        time_vec = np.arange(0, tr * n_scans, time_bin)
         #time_vec = np.arange(0,tr*n_scans,TR)
         self.__experiment_samples = time_vec.shape
         return time_vec
 
-    def get_condition_block(self,index):
+    def get_condition_block(self, index):
         """
         Gets a block signal representing a condition
 
@@ -167,12 +170,14 @@ class SpmFileReader(object):
         if self.__experiment_samples is None:
             self.get_time_vector()
         condition = np.zeros(self.__experiment_samples)
-        for onset,duration in izip(cond_onsets,cond_durations):
-            onset_d = onset*tr_divisions if units == "scans" else int(onset/time_bin)
+        for onset, duration in izip(cond_onsets, cond_durations):
+            onset_d = onset * \
+                tr_divisions if units == "scans" else int(onset / time_bin)
             #onset_d = onset if units == "scans" else int(round(onset/tr))
-            dur_d = duration*tr_divisions if units == "scans" else int(duration/time_bin)
+            dur_d = duration * \
+                tr_divisions if units == "scans" else int(duration / time_bin)
             #dur_d = duration if units == "scans" else int(round(duration/tr))
-            condition[onset_d:onset_d+dur_d]=1
+            condition[onset_d:onset_d + dur_d] = 1
         return condition
 
     def get_contrast_names(self):
@@ -183,5 +188,5 @@ class SpmFileReader(object):
             A dictionary with contrast indexes (starting at 1) for keys and contrast names for values
         """
         contrasts = self.contrasts
-        contrast_names = dict(( (k,v.name) for k,v in contrasts.iteritems()))
+        contrast_names = dict(((k, v.name) for k, v in contrasts.iteritems()))
         return contrast_names

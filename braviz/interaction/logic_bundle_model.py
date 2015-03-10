@@ -27,6 +27,7 @@ import vtk
 
 
 class LogicBundleNode(object):
+
     """
     A node for a bundle based on a logical hierarchy
 
@@ -69,7 +70,8 @@ class LogicBundleNode(object):
             value : Value for the new son
             extra_data : Extra data for the new son
         """
-        new_son = LogicBundleNode(self, len(self.children), node_type, value, extra_data)
+        new_son = LogicBundleNode(
+            self, len(self.children), node_type, value, extra_data)
         assert self.__node_type == self.LOGIC
         self.children.append(new_son)
         return new_son
@@ -101,7 +103,6 @@ class LogicBundleNode(object):
         """
         self.__son_number -= 1
         assert self.__son_number >= 0
-
 
     def remove_kid(self, index):
         """
@@ -159,7 +160,8 @@ class LogicBundleNode(object):
             values (dict) : Recursive dictionary with the following keys:
                 node_type, value, extra_data, children (each of them as another dictionary with these keys)
         """
-        new_son = self.add_son(values["node_type"], values["value"], values["extra_data"])
+        new_son = self.add_son(
+            values["node_type"], values["value"], values["extra_data"])
         for k in values["children"]:
             new_son.add_son_from_dict(k)
 
@@ -173,6 +175,7 @@ class LogicBundleNode(object):
 
 
 class LogicBundleNodeWithVTK(LogicBundleNode):
+
     """
     Adds VTK drawing capabilities to the :class:`LogicBundleNode`
 
@@ -188,8 +191,10 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
             See :meth:`braviz.readAndFilter.base_reader.BaseReader.get`
 
     """
+
     def __init__(self, parent, son_number, node_type, value, extra_data=None, reader=None, subj=None, space="World"):
-        LogicBundleNode.__init__(self, parent, son_number, node_type, value, extra_data=extra_data)
+        LogicBundleNode.__init__(
+            self, parent, son_number, node_type, value, extra_data=extra_data)
         self.__reader = reader
         self.subj = subj
         self.space = space
@@ -200,7 +205,8 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
         elif node_type == self.STRUCT:
             if subj is not None:
                 try:
-                    self.__pd = reader.get("MODEL", subj_img, name=value, space=space)
+                    self.__pd = reader.get(
+                        "MODEL", subj_img, name=value, space=space)
                 except Exception:
                     self.__pd = None
             else:
@@ -237,10 +243,10 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
                 source_coords = geom_db.get_roi_space(roi_id=extra_data)
                 # source -> world
                 self.__sphere_world = reader.transform_points_to_space(self.__sphere_source.GetOutput(), source_coords,
-                                                                    subj_img, inverse=True)
+                                                                       subj_img, inverse=True)
                 # world -> current
                 self.__sphere_current = reader.transform_points_to_space(self.__sphere_world, self.space,
-                                                                      subj_img, inverse=False)
+                                                                         subj_img, inverse=False)
                 self.__mapper.SetInputData(self.__sphere_current)
         else:
             raise Exception("Wrong type")
@@ -272,12 +278,12 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
                 source_coords = geom_db.get_roi_space(roi_id=self.__roi_id)
                 # source -> world
                 self.__sphere_world = reader.transform_points_to_space(self.__sphere_source.GetOutput(), source_coords,
-                                                                    subj_img, inverse=True)
+                                                                       subj_img, inverse=True)
 
                 # world -> current
                 self.__sphere_current = reader.transform_points_to_space(self.__sphere_world, self.space,
 
-                                                                      subj_img, inverse=False)
+                                                                         subj_img, inverse=False)
             except Exception:
                 self.prop.SetVisibility(0)
             else:
@@ -288,14 +294,14 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
         reader = self.__reader
         subj_img = subj
         try:
-            self.__pd = reader.get("MODEL", subj_img, name=self.__value, space=space)
+            self.__pd = reader.get(
+                "MODEL", subj_img, name=self.__value, space=space)
         except Exception:
             self.__pd = None
             self.prop.SetVisibility(0)
         else:
             self.__mapper.SetInputData(self.__pd)
             self.prop.SetVisibility(1)
-
 
     def update(self, subj, space):
         """
@@ -375,16 +381,19 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
 
 
 class LogicBundleQtTree(QAbstractItemModel):
+
     """
     A Qt representation of a logical fiber bundle
 
     Args:
         root (braviz.interaction.logic_bundle_model.LogicBundleNode) : Root of the logic bundle tree
     """
+
     def __init__(self, root=None):
         QAbstractItemModel.__init__(self)
         if root is None:
-            self.__root = LogicBundleNode(None, 0, LogicBundleNode.LOGIC, "AND")
+            self.__root = LogicBundleNode(
+                None, 0, LogicBundleNode.LOGIC, "AND")
         else:
             assert isinstance(root, LogicBundleNode)
             self.__root = root
@@ -518,11 +527,9 @@ class LogicBundleQtTree(QAbstractItemModel):
         for c in node.children:
             self._rebuild_index(c)
 
-
     @property
     def root(self):
         """
         root node of the underlying tree
         """
         return self.__root
-

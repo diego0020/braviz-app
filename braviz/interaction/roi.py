@@ -47,14 +47,13 @@ def export_roi(subject, roi_id, space, out_file, reader=None):
 
     """
 
-    sphere_img,affine = generate_roi_image(subject,roi_id,space,reader)
-    nib_image = nib.Nifti1Image(sphere_img,affine)
+    sphere_img, affine = generate_roi_image(subject, roi_id, space, reader)
+    nib_image = nib.Nifti1Image(sphere_img, affine)
     nib_image.update_header()
     nib_image.to_filename(out_file)
 
 
-
-def generate_roi_image(subject, roi_id, space, reader=None,out_format="nii"):
+def generate_roi_image(subject, roi_id, space, reader=None, out_format="nii"):
     """
     Generates an image representation of an spherical ROI
 
@@ -79,19 +78,21 @@ def generate_roi_image(subject, roi_id, space, reader=None,out_format="nii"):
     sphere_src.SetRadius(r)
     sphere_src.SetPhiResolution(30)
     sphere_src.SetThetaResolution(30)
-    sphere_src.SetCenter(x,y,z)
+    sphere_src.SetCenter(x, y, z)
     sphere_src.Update()
     sphere_pd = sphere_src.GetOutput()
-    sphere_world = reader.transform_points_to_space(sphere_pd,sphere_space,subject,inverse=True)
-    sphere_out = reader.transform_points_to_space(sphere_world,space,subject,inverse=False)
+    sphere_world = reader.transform_points_to_space(
+        sphere_pd, sphere_space, subject, inverse=True)
+    sphere_out = reader.transform_points_to_space(
+        sphere_world, space, subject, inverse=False)
 
-    black_image = reader.get("MRI",subject,space=space,format="vtk")
+    black_image = reader.get("MRI", subject, space=space, format="vtk")
     nimg = dsa.WrapDataObject(black_image)
 
-    #zero the image
-    zero_array=nimg.PointData['ImageScalars'].dot(0).astype(np.uint8)
+    # zero the image
+    zero_array = nimg.PointData['ImageScalars'].dot(0).astype(np.uint8)
     black_image.GetPointData().RemoveArray('ImageScalars')
-    nimg.PointData.append(zero_array,'ImageScalars')
+    nimg.PointData.append(zero_array, 'ImageScalars')
     black_image.GetPointData().SetActiveScalars("ImageScalars")
 
     pol2sten = vtk.vtkPolyDataToImageStencil()
@@ -115,13 +116,12 @@ def generate_roi_image(subject, roi_id, space, reader=None,out_format="nii"):
         return sphere_img
 
     out_nimg = dsa.WrapDataObject(sphere_img)
-    out_data = np.array(out_nimg.GetPointData()["ImageScalars"].reshape(sphere_img.GetDimensions(), order="F"))
-    affine=np.eye(4)
-    affine[0:3,3]=sphere_img.GetOrigin()
-    affine[0,0],affine[1,1],affine[2,2] = sphere_img.GetSpacing()
+    out_data = np.array(out_nimg.GetPointData()["ImageScalars"].reshape(
+        sphere_img.GetDimensions(), order="F"))
+    affine = np.eye(4)
+    affine[0:3, 3] = sphere_img.GetOrigin()
+    affine[0, 0], affine[1, 1], affine[2, 2] = sphere_img.GetSpacing()
     return out_data, affine
-
-
 
 
 if __name__ == "__main__":
@@ -130,11 +130,10 @@ if __name__ == "__main__":
     import nibabel as nib
 
     subj = config_file.get_apps_config().get_default_subject()
-    export_roi(subj,1,"world","/home/diego/test.nii")
+    export_roi(subj, 1, "world", "/home/diego/test.nii")
 
     nimg = nib.load("/home/diego/test.nii")
     vimg = images.nibNii2vtk(nimg)
     v = braviz.visualization.simple_vtk.SimpleVtkViewer()
     v.addImg(vimg)
     v.start()
-

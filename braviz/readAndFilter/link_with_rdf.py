@@ -50,11 +50,13 @@ def get_free_surfer_pretty_names_dict_from_rdf():
 
 
 def get_free_surfer_long_names():
-    path = os.path.join(os.path.dirname(__file__),"data","free_surfer_long_names.csv")
-    with open(path,"rb") as f:
+    path = os.path.join(
+        os.path.dirname(__file__), "data", "free_surfer_long_names.csv")
+    with open(path, "rb") as f:
         r = csv.reader(f)
         pretty_names = dict(t for t in r)
     return pretty_names
+
 
 def cached_get_free_surfer_dict(reader=None):
     from braviz.readAndFilter import BravizAutoReader
@@ -84,10 +86,12 @@ def get_braint_hierarchy():
             evaluation_name = my_item['Evaluation']['value']
             test_name = my_item.get('TestName', {}).get('value', None)
             subtest_name = my_item.get('SubTestName', {}).get('value', None)
-            subsubtest_name = my_item.get('SubSubTestName', {}).get('value', None)
+            subsubtest_name = my_item.get(
+                'SubSubTestName', {}).get('value', None)
 
             if subsubtest_name is not None:
-                hierarchy_dict[evaluation_name][test_name][subtest_name][subsubtest_name]
+                hierarchy_dict[evaluation_name][test_name][
+                    subtest_name][subsubtest_name]
             elif subtest_name is not None:
                 hierarchy_dict[evaluation_name][test_name][subtest_name]
             elif test_name is not None:
@@ -101,7 +105,3 @@ if __name__ == '__main__':
     print cached_get_free_surfer_dict()
     evaluations_dict = get_braint_hierarchy()
     print evaluations_dict
-
-
-
-

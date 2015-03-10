@@ -34,6 +34,7 @@ __author__ = 'Diego'
 
 
 class RelationShipViewer(QMainWindow):
+
     def __init__(self):
         QMainWindow.__init__(self)
         self.__big_tree_model = braint_tree.BraintTree()
@@ -49,7 +50,6 @@ class RelationShipViewer(QMainWindow):
         self.ui.view_source_tree.expandToDepth(3)
         self.ui.view_rel_tree.expandToDepth(3)
         self.ui.link_tree.expandToDepth(3)
-
 
     def load_gui(self):
         self.ui = Ui_RelationshipViewer()
@@ -75,7 +75,8 @@ class RelationShipViewer(QMainWindow):
         self.ui.view_source_tree.clicked.connect(self.update_relations)
         self.ui.view_source_tree.activated.connect(self.update_relations)
         self.ui.view_rel_tree.expandToDepth(3)
-        self.ui.view_rel_tree.customContextMenuRequested.connect(self.show_remove_relation_context)
+        self.ui.view_rel_tree.customContextMenuRequested.connect(
+            self.show_remove_relation_context)
 
         self.ui.link_tree.setModel(self.__big_tree_model)
         self.ui.link_var_list.setModel(self.__vars_list)
@@ -83,7 +84,6 @@ class RelationShipViewer(QMainWindow):
         self.ui.link_tree.activated.connect(self.update_link)
         self.ui.link_tree.expandToDepth(3)
         self.ui.save_link_button.clicked.connect(self.save_link)
-
 
         self.ui.tabWidget.currentChanged.connect(self.page_change)
 
@@ -96,7 +96,8 @@ class RelationShipViewer(QMainWindow):
             father_id = father_node.var_id
         pretty_name = str(self.ui.pretty_name.text())
         tab_var_idx = self.ui.db_names_list.currentIndex()
-        tab_var_name = str(self.__vars_list.data(tab_var_idx, QtCore.Qt.DisplayRole))
+        tab_var_name = str(
+            self.__vars_list.data(tab_var_idx, QtCore.Qt.DisplayRole))
         if not tab_var_idx.isValid():
             tab_var_id = None
         elif tab_var_name == "NONE":
@@ -147,12 +148,12 @@ class RelationShipViewer(QMainWindow):
 
         def rename_node(index):
             node = self.__big_tree_model.get_node(index)
-            name,accepted = (QtGui.QInputDialog.getText(self,"Rename Node","Enter new name",
-                                                  QtGui.QLineEdit.Normal,node.label))
+            name, accepted = (QtGui.QInputDialog.getText(self, "Rename Node", "Enter new name",
+                                                         QtGui.QLineEdit.Normal, node.label))
             if accepted:
                 name = str(name)
                 parent = braint_db.get_var_parent(node.var_id)
-                braint_db.rename_node(node.var_id,name)
+                braint_db.rename_node(node.var_id, name)
                 self.__big_tree_model.clear()
                 self.__big_tree_model.fill_from_db()
                 ants = self.__big_tree_model.get_antecessors(parent)
@@ -160,12 +161,13 @@ class RelationShipViewer(QMainWindow):
                 for n in ants:
                     caller.expand(n)
 
-
         menu = QtGui.QMenu("Remove Node")
         delete_node_action = QtGui.QAction("delete %s" % label, caller)
-        delete_node_action.triggered.connect(partial_f(delete_node, current_node.var_id))
-        rename_node_action = QtGui.QAction("rename %s"%label,caller)
-        rename_node_action.triggered.connect(partial_f(rename_node,current_node_index))
+        delete_node_action.triggered.connect(
+            partial_f(delete_node, current_node.var_id))
+        rename_node_action = QtGui.QAction("rename %s" % label, caller)
+        rename_node_action.triggered.connect(
+            partial_f(rename_node, current_node_index))
         menu.addAction(delete_node_action)
         menu.addAction(rename_node_action)
         global_pos = caller.mapToGlobal(pos)
@@ -183,15 +185,16 @@ class RelationShipViewer(QMainWindow):
         origin_idx = self.__current_rel_source
 
         def delete_rel(dest_var_idx):
-            message = "deleting relation between %s and %s" % (origin_idx, dest_var_idx)
+            message = "deleting relation between %s and %s" % (
+                origin_idx, dest_var_idx)
             self.statusBar().showMessage(message, 1000)
             braint_db.delete_relation(origin_idx, dest_var_idx)
             self.update_relations()
 
-
         menu = QtGui.QMenu("Remove Relation")
         delete_rel_action = QtGui.QAction("delete relation to%s" % label, menu)
-        delete_rel_action.triggered.connect(partial_f(delete_rel, current_node.var_id))
+        delete_rel_action.triggered.connect(
+            partial_f(delete_rel, current_node.var_id))
         menu.addAction(delete_rel_action)
         global_pos = self.ui.view_rel_tree.mapToGlobal(pos)
         menu.exec_(global_pos)
@@ -222,8 +225,6 @@ class RelationShipViewer(QMainWindow):
         self.__rels_model.set_count(rels, direct_rels)
         self.aux_update_tree(self.__rels_model.root)
 
-
-
     def aux_update_tree(self, node):
         # update me
         idx = self.__rels_model.get_node_index(node, 1)
@@ -245,7 +246,6 @@ class RelationShipViewer(QMainWindow):
         ix = self.__vars_list.index(i, 0)
         self.ui.link_var_list.scrollTo(ix)
         self.ui.link_var_list.dataChanged(ix, ix)
-
 
     def save_link(self):
         braint_index = self.ui.link_tree.currentIndex()

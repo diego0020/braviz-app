@@ -28,15 +28,14 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 
 import braviz
 import braviz.utilities
-from braviz.visualization.simple_vtk import persistentImagePlane,build_grid,remove_nan_from_grid
+from braviz.visualization.simple_vtk import persistentImagePlane, build_grid, remove_nan_from_grid
 from braviz.readAndFilter import config_file
 
 if __name__ == "__main__":
     braviz.utilities.configure_logger_from_conf("mriOne")
 
-
     reader = braviz.readAndFilter.BravizAutoReader()
-    FUNCTIONAL_PARADIGMS=list(reader.get("fMRI",None,index=True))
+    FUNCTIONAL_PARADIGMS = list(reader.get("fMRI", None, index=True))
 
     initial_subject = reader.get("ids")[0]
 
@@ -48,7 +47,7 @@ if __name__ == "__main__":
     picker = vtk.vtkCellPicker()
     picker.SetTolerance(0.005)
 
-    #Visualization
+    # Visualization
     ren = vtk.vtkRenderer()
     renWin = vtk.vtkRenderWindow()
     renWin.AddRenderer(ren)
@@ -60,7 +59,6 @@ if __name__ == "__main__":
     planeWidget.SetPicker(picker)
     planeWidget.UpdatePlacement()
     renWin.SetSize(600, 600)
-
 
     # An outline is shown for context.
     outline = vtk.vtkOutlineFilter()
@@ -109,10 +107,9 @@ if __name__ == "__main__":
             color = list(fmri_color_int.GetColor(s)) + [1.0]
         fmri_lut.SetTableValue(i, color)
 
-
     def setSubj(event=None):
         global previous_img
-        #print subj
+        # print subj
         subj = select_subj_frame.get()
         if previous_img == 'MRI':
             planeWidget.GetWindowLevel(mri_window_level)
@@ -121,7 +118,8 @@ if __name__ == "__main__":
         img = None
         if selected_img in FUNCTIONAL_PARADIGMS:
             try:
-                mri_img = reader.get('MRI', subj, format='VTK', space=space_var.get())
+                mri_img = reader.get(
+                    'MRI', subj, format='VTK', space=space_var.get())
             except Exception:
                 mri_img = None
                 print "No mri img found"
@@ -133,7 +131,8 @@ if __name__ == "__main__":
             else:
                 fmri_name = selected_pdgm
             try:
-                fa_img = reader.get('fMRI', subj, format='vtk', space=space_var.get(), name=fmri_name)
+                fa_img = reader.get(
+                    'fMRI', subj, format='vtk', space=space_var.get(), name=fmri_name)
             except IOError:
                 print "%s not available for subject %s" % (fmri_name, subj)
                 fa_img = None
@@ -150,8 +149,8 @@ if __name__ == "__main__":
                 color_mapper1 = vtk.vtkImageMapToWindowLevelColors()
                 color_mapper1.SetInputData(mri_img)
                 color_mapper1.SetLookupTable(mri_lut)
-                #color_mapper1.SetWindow(mri_window_level[1])
-                #color_mapper1.SetLevel(mri_window_level[0])
+                # color_mapper1.SetWindow(mri_window_level[1])
+                # color_mapper1.SetLevel(mri_window_level[0])
 
                 blend.AddInputConnection(color_mapper1.GetOutputPort())
 
@@ -164,12 +163,12 @@ if __name__ == "__main__":
                 planeWidget.Off()
                 img = None
 
-
-            #img=fa_img
-            #print img
+            # img=fa_img
+            # print img
         else:
             try:
-                img = reader.get(selected_img, subj, format='VTK', space=space_var.get())
+                img = reader.get(
+                    selected_img, subj, format='VTK', space=space_var.get())
                 planeWidget.text1_to_std()
             except Exception:
                 img = None
@@ -188,12 +187,13 @@ if __name__ == "__main__":
             planeWidget.SetLookupTable(fa_lut)
             planeWidget.SetResliceInterpolateToCubic()
         elif selected_img in FUNCTIONAL_PARADIGMS:
-            #planeWidget.SetLookupTable(mri_lut)
+            # planeWidget.SetLookupTable(mri_lut)
             planeWidget.GetColorMap().SetLookupTable(None)
-            #planeWidget.UserControlledLookupTableOff()
+            # planeWidget.UserControlledLookupTableOff()
             planeWidget.SetResliceInterpolateToCubic()
         try:
-            aparc_img = reader.get('aparc', subj, format='VTK', space=space_var.get())
+            aparc_img = reader.get(
+                'aparc', subj, format='VTK', space=space_var.get())
         except Exception:
             aparc_img = None
         planeWidget.addLabels(aparc_img)
@@ -204,8 +204,7 @@ if __name__ == "__main__":
         previous_img = selected_img
         paint_fibers()
         show_transform_grid()
-        #renWin.Render() called by paint fibers
-
+        # renWin.Render() called by paint fibers
 
     #================================Fibers==============================
     fib_mapper = vtk.vtkPolyDataMapper()
@@ -214,12 +213,12 @@ if __name__ == "__main__":
     fib_actor.SetMapper(fib_mapper)
     ren.AddActor(fib_actor)
 
-
     def paint_fibers(event=None):
         if active_fibers.get():
             subj = select_subj_frame.get()
             try:
-                fibers = reader.get('fibers', subj, space=space_var.get(), color=tract_var.get())
+                fibers = reader.get(
+                    'fibers', subj, space=space_var.get(), color=tract_var.get())
             except Exception:
                 fib_actor.SetVisibility(0)
             else:
@@ -229,13 +228,11 @@ if __name__ == "__main__":
             fib_actor.SetVisibility(0)
         renWin.Render()
 
-
     grid_mapper = vtk.vtkPolyDataMapper()
     grid_actor = vtk.vtkActor()
     grid_actor.SetMapper(grid_mapper)
     ren.AddActor(grid_actor)
     grid_actor.SetVisibility(0)
-
 
     def show_transform_grid(event=None):
         if not select_show_warp_grid_status.get():
@@ -244,7 +241,7 @@ if __name__ == "__main__":
             renWin.Render()
             return
         subj = select_subj_frame.get()
-        #get original slice index
+        # get original slice index
         p1 = planeWidget.GetPoint1()
         p2 = planeWidget.GetPoint2()
         center = (np.array(p1) + np.array(p2)) / 2
@@ -256,37 +253,43 @@ if __name__ == "__main__":
             'Power': {'space': 'func_Power'},
         }
 
-        #get orig_img
+        # get orig_img
         orig_img_desc = orig_images[image_var.get()]
         if image_var.get() in FUNCTIONAL_PARADIGMS:
-            orig_img = reader.get('fmri', subj, format='vtk', name=image_var.get(), **orig_img_desc)
+            orig_img = reader.get(
+                'fmri', subj, format='vtk', name=image_var.get(), **orig_img_desc)
         else:
-            orig_img = reader.get(image_var.get(), subj, format='vtk', **orig_img_desc)
-        #target_space -> world
-        orig_center = reader.transform_points_to_space(center, space_var.get(), subj, True)
-        #world-> orig_space
-        orig_center = reader.transform_points_to_space(orig_center, orig_img_desc['space'], subj, False)
-        #to image coordinates
-        orig_img_center = (np.array(orig_center) - orig_img.GetOrigin()) / orig_img.GetSpacing()
+            orig_img = reader.get(
+                image_var.get(), subj, format='vtk', **orig_img_desc)
+        # target_space -> world
+        orig_center = reader.transform_points_to_space(
+            center, space_var.get(), subj, True)
+        # world-> orig_space
+        orig_center = reader.transform_points_to_space(
+            orig_center, orig_img_desc['space'], subj, False)
+        # to image coordinates
+        orig_img_center = (
+            np.array(orig_center) - orig_img.GetOrigin()) / orig_img.GetSpacing()
         orig_slice = round(orig_img_center[0])
         print orig_slice
-        #get grid
+        # get grid
         grid = build_grid(orig_img, orig_slice, 5)
-        #transform to current space
-        #orig_space -> world
-        grid = reader.transform_points_to_space(grid, orig_img_desc['space'], subj, True)
-        #world -> current space
-        grid = reader.transform_points_to_space(grid, space_var.get(), subj, False)
+        # transform to current space
+        # orig_space -> world
+        grid = reader.transform_points_to_space(
+            grid, orig_img_desc['space'], subj, True)
+        # world -> current space
+        grid = reader.transform_points_to_space(
+            grid, space_var.get(), subj, False)
         if space_var.get().lower() == 'dartel':
             grid = remove_nan_from_grid(grid)
-        #paint grid
+        # paint grid
         grid_mapper.SetInputData(grid)
         grid_actor.SetVisibility(1)
         planeWidget.GetTexturePlaneProperty().SetOpacity(0.8)
         renWin.Render()
 
-
-    #===============================================Inteface=================================
+    #===============================================Inteface==================
 
     root = tk.Tk()
     root.withdraw()
@@ -319,12 +322,11 @@ if __name__ == "__main__":
     image_label.pack(side='top')
     image_var = tk.StringVar()
     image_sel = ttk.Combobox(control_frame, textvariable=image_var)
-    image_sel['values'] = ('MRI', 'FA', 'APARC')+tuple(FUNCTIONAL_PARADIGMS)
+    image_sel['values'] = ('MRI', 'FA', 'APARC') + tuple(FUNCTIONAL_PARADIGMS)
     image_sel['state'] = 'readonly'
     image_sel.set('MRI')
     image_sel.pack(side='top')
     image_sel.bind('<<ComboboxSelected>>', setSubj)
-
 
     #---------------------------------------------------------
     separator = ttk.Separator(control_frame, orient='horizontal')
@@ -345,7 +347,6 @@ if __name__ == "__main__":
     tract_sel.pack(side='top')
     tract_sel.bind('<<ComboboxSelected>>', paint_fibers)
 
-
     #=====================================================================
     display_frame = tk.Frame(top)
     control_frame.pack(side="left", anchor="n", fill="y", expand="false")
@@ -358,7 +359,6 @@ if __name__ == "__main__":
                                                 rw=renWin, width=600,
                                                 height=600)
 
-
     def clean_exit():
         global renWin
         print "adios"
@@ -367,7 +367,6 @@ if __name__ == "__main__":
         render_widget.destroy()
         root.quit()
         root.destroy()
-
 
     top.protocol("WM_DELETE_WINDOW", clean_exit)
 

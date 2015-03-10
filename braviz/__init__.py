@@ -31,25 +31,27 @@ import vtk
 from braviz.visualization.simple_vtk import _test_arrow
 
 
-vtk_mayor=int(vtk.VTK_VERSION.split('.')[0])
+vtk_mayor = int(vtk.VTK_VERSION.split('.')[0])
 if not vtk_mayor >= 6:
     print "WARNING: This package requires VTK version 6 or greater, please update your VTK install"
-    raise UserWarning("This package requires VTK version 6 or greater, please update your VTK install")
-#keep space clean
+    raise UserWarning(
+        "This package requires VTK version 6 or greater, please update your VTK install")
+# keep space clean
 
 if platform.system() == 'Windows':
     import os
-    __vtk__output_window=vtk.vtkOutputWindow()
-    if isinstance(__vtk__output_window,vtk.vtkWin32OutputWindow):
-        __fow=vtk.vtkFileOutputWindow()
+    __vtk__output_window = vtk.vtkOutputWindow()
+    if isinstance(__vtk__output_window, vtk.vtkWin32OutputWindow):
+        __fow = vtk.vtkFileOutputWindow()
         __fow.SetInstance(__fow)
         #__fow.GlobalWarningDisplayOff()
-        __error_file=os.path.join(os.path.dirname(os.path.realpath(__file__)),"logs",'vtkError.log')
+        __error_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "logs", 'vtkError.log')
         __fow.SetFileName(__error_file)
         #__fow.AppendOn()
-        __fow.FlushOn();
+        __fow.FlushOn()
         log = logging.getLogger(__name__)
-        log.info("vtk errors going to %s"%os.path.realpath(__error_file))
+        log.info("vtk errors going to %s" % os.path.realpath(__error_file))
 
 
 import readAndFilter
@@ -62,5 +64,5 @@ if __name__ == "__main__":
     configure_logger_from_conf(__name__)
     viewer = simpleVtkViewer()
     reader = readAndFilter.BravizAutoReader()
-    apps_dir = os.path.join(os.path.dirname(__file__),"..","applications")
+    apps_dir = os.path.join(os.path.dirname(__file__), "..", "applications")
     get_conf = interaction.get_config(apps_dir)

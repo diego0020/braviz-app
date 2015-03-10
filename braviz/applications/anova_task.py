@@ -20,7 +20,6 @@
 from __future__ import division
 
 
-
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 from PyQt4.QtGui import QMainWindow
@@ -32,7 +31,7 @@ import braviz.applications.qt_sample_select_dialog
 from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, InteractionSelectDialog
 
 import braviz.interaction.r_functions
-from braviz.interaction.connection import MessageClient,MessageServer
+from braviz.interaction.connection import MessageClient, MessageServer
 from braviz.readAndFilter.config_file import get_config
 
 import braviz.interaction.qt_models as braviz_models
@@ -58,14 +57,16 @@ __author__ = 'Diego'
 
 config = get_config(__file__)
 def_vars = config.get_default_variables()
-INITIAL_OUTCOMES = map(braviz_tab_data.get_var_idx,[def_vars["ratio1"],def_vars["ratio2"]])
-INITIAL_OUTCOMES = filter(lambda x:x is not None,INITIAL_OUTCOMES)
+INITIAL_OUTCOMES = map(
+    braviz_tab_data.get_var_idx, [def_vars["ratio1"], def_vars["ratio2"]])
+INITIAL_OUTCOMES = filter(lambda x: x is not None, INITIAL_OUTCOMES)
 
-SAMPLE_TREE_COLUMNS = (def_vars["nom1"],def_vars["nom2"])
+SAMPLE_TREE_COLUMNS = (def_vars["nom1"], def_vars["nom2"])
 
 
 class AnovaApp(QMainWindow):
-    def __init__(self,scenario,server_broadcast_address,server_receive_address):
+
+    def __init__(self, scenario, server_broadcast_address, server_receive_address):
         QMainWindow.__init__(self)
         self.outcome_var_name = None
         self.anova = None
@@ -81,93 +82,110 @@ class AnovaApp(QMainWindow):
         self.last_viewed_subject = None
         self.mri_viewer_pipe = None
         self.sample = braviz_tab_data.get_subjects()
-        self.missing=None
+        self.missing = None
         self.ui = None
 
         if server_broadcast_address is not None or server_receive_address is not None:
-            self._message_client = MessageClient(server_broadcast_address,server_receive_address)
+            self._message_client = MessageClient(
+                server_broadcast_address, server_receive_address)
             self._message_client.message_received.connect(self.receive_message)
         else:
             self._message_client = None
-        #in case no central server exists
+        # in case no central server exists
         self._auxiliary_server = None
         self.setup_gui()
         if scenario is not None:
             scn_int = int(scenario)
-            if scn_int>0:
+            if scn_int > 0:
                 self.load_scenario_id(scenario)
+
     def setup_gui(self):
         self.ui = Ui_Anova_gui()
         self.ui.setupUi(self)
         for v_idx in INITIAL_OUTCOMES:
-            self.ui.outcome_sel.insertItem(0,braviz_tab_data.get_var_name(v_idx))
-        self.ui.outcome_sel.insertSeparator(self.ui.outcome_sel.count()-1)
-        self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count()-1)
+            self.ui.outcome_sel.insertItem(
+                0, braviz_tab_data.get_var_name(v_idx))
+        self.ui.outcome_sel.insertSeparator(self.ui.outcome_sel.count() - 1)
+        self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count() - 1)
         self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
-        self.ui.add_regressor_button.clicked.connect(self.launch_add_regressor_dialog)
+        self.ui.add_regressor_button.clicked.connect(
+            self.launch_add_regressor_dialog)
         self.ui.reg_table.setModel(self.regressors_model)
-        self.ui.reg_table.customContextMenuRequested.connect(self.launch_regressors_context_menu)
-        self.ui.add_interaction_button.clicked.connect(self.dispatch_interactions_dialog)
+        self.ui.reg_table.customContextMenuRequested.connect(
+            self.launch_regressors_context_menu)
+        self.ui.add_interaction_button.clicked.connect(
+            self.dispatch_interactions_dialog)
         self.ui.calculate_button.clicked.connect(self.calculate_anova)
         self.ui.results_table.setModel(self.result_model)
 
         self.ui.matplot_layout = QtGui.QVBoxLayout()
-        self.plot = MatplotWidget(initial_message="Welcome\n\nSelect Outcome and add Regressors to start")
+        self.plot = MatplotWidget(
+            initial_message="Welcome\n\nSelect Outcome and add Regressors to start")
         self.ui.matplot_layout.addWidget(self.plot)
         self.ui.plot_frame.setLayout(self.ui.matplot_layout)
         self.plot.box_outlier_pick_signal.connect(self.handle_box_outlier_pick)
         self.plot.scatter_pick_signal.connect(self.handle_scatter_pick)
         self.plot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.plot.customContextMenuRequested.connect(self.subject_details_from_plot)
-        self.ui.results_table.activated.connect(self.update_main_plot_from_results)
-        self.ui.reg_table.activated.connect(self.update_main_plot_from_regressors)
+        self.plot.customContextMenuRequested.connect(
+            self.subject_details_from_plot)
+        self.ui.results_table.activated.connect(
+            self.update_main_plot_from_results)
+        self.ui.reg_table.activated.connect(
+            self.update_main_plot_from_regressors)
 
         self.ui.sample_tree.setModel(self.sample_model)
         self.ui.sample_tree.activated.connect(self.add_subjects_to_plot)
         self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.ui.sample_tree.customContextMenuRequested.connect(self.subject_details_from_tree)
+        self.ui.sample_tree.customContextMenuRequested.connect(
+            self.subject_details_from_tree)
         self.ui.modify_sample_button.clicked.connect(self.load_sample)
         self.ui.modify_sample_button.setEnabled(True)
 
-        self.ui.actionSave_scneario.triggered.connect(self.save_scenario_dialog)
-        self.ui.actionLoad_scenario.triggered.connect(self.load_scenario_dialog)
+        self.ui.actionSave_scneario.triggered.connect(
+            self.save_scenario_dialog)
+        self.ui.actionLoad_scenario.triggered.connect(
+            self.load_scenario_dialog)
         self.ui.actionImages.triggered.connect(self.save_figure)
         self.ui.actionData.triggered.connect(self.save_data)
 
-
     def dispatch_outcome_select(self):
 
-        #print "outcome select %s / %s"%(self.ui.outcome_sel.currentIndex(),self.ui.outcome_sel.count()-1)
+        # print "outcome select %s /
+        # %s"%(self.ui.outcome_sel.currentIndex(),self.ui.outcome_sel.count()-1)
         if self.ui.outcome_sel.currentIndex() == self.ui.outcome_sel.count() - 1:
-            #print "dispatching dialog"
+            # print "dispatching dialog"
             params = {}
             plots = self.__create_plots_dictionary()
-            dialog = MultiPlotOutcomeSelectDialog(params,sample=self.sample,available_plots=plots)
+            dialog = MultiPlotOutcomeSelectDialog(
+                params, sample=self.sample, available_plots=plots)
             selection = dialog.exec_()
             logger = logging.getLogger(__name__)
-            logger.info("Outcome selection %s",params)
+            logger.info("Outcome selection %s", params)
             if selection > 0:
                 self.set_outcome_var_type(params["selected_outcome"])
             else:
                 self.set_outcome_var_type(None)
         else:
-            self.set_outcome_var_type(self.ui.outcome_sel.itemText(self.ui.outcome_sel.currentIndex()))
+            self.set_outcome_var_type(
+                self.ui.outcome_sel.itemText(self.ui.outcome_sel.currentIndex()))
 
     def __create_plots_dictionary(self):
         regs_df = self.regressors_model.get_data_frame()
         plots = dict()
-        for i,row in regs_df.iterrows():
+        for i, row in regs_df.iterrows():
             var_name = row["variable"]
             interaction = row["Interaction"]
             if interaction == 0:
-                plots["x = '%s'"%var_name]=("scatter",var_name)
-                var_nominal = braviz_tab_data.is_variable_name_nominal(var_name)
+                plots["x = '%s'" % var_name] = ("scatter", var_name)
+                var_nominal = braviz_tab_data.is_variable_name_nominal(
+                    var_name)
                 if var_nominal:
-                    plots["box (%s)"%var_name]=("box",var_name)
+                    plots["box (%s)" % var_name] = ("box", var_name)
             else:
                 comps = var_name.split("*")
                 if len(comps) == 2:
-                    plots["Interaction (%s)"%var_name]=("interaction",var_name)
+                    plots["Interaction (%s)" % var_name] = (
+                        "interaction", var_name)
 
         return plots
 
@@ -190,7 +208,7 @@ class AnovaApp(QMainWindow):
             var_type_text = "Type"
             self.ui.outcome_type.setText(var_type_text)
             self.outcome_var_name = None
-            #self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count()-1)
+            # self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count()-1)
             return
         new_bar = unicode(new_bar)
         if new_bar == self.outcome_var_name:
@@ -215,7 +233,8 @@ class AnovaApp(QMainWindow):
         self.check_if_ready()
 
     def launch_add_regressor_dialog(self):
-        reg_dialog = RegressorSelectDialog(self.outcome_var_name, self.regressors_model,sample=self.sample)
+        reg_dialog = RegressorSelectDialog(
+            self.outcome_var_name, self.regressors_model, sample=self.sample)
         result = reg_dialog.exec_()
         if self.regressors_model.rowCount() > 0:
             regn = self.regressors_model.get_regressors()[-1]
@@ -236,8 +255,8 @@ class AnovaApp(QMainWindow):
         whole_df = braviz_tab_data.get_data_frame_by_name(vars)
         whole_df = whole_df.loc[self.sample]
         whole_df.dropna(inplace=True)
-        self.missing = len(self.sample)-len(whole_df)
-        self.ui.missing_label.setText("Missing Values: %d"%self.missing)
+        self.missing = len(self.sample) - len(whole_df)
+        self.ui.missing_label.setText("Missing Values: %d" % self.missing)
 
     def launch_regressors_context_menu(self, pos):
         global_pos = self.ui.reg_table.mapToGlobal(pos)
@@ -253,14 +272,14 @@ class AnovaApp(QMainWindow):
         menu.addAction(remove_action)
         selected_item = menu.exec_(global_pos)
 
-
     def calculate_anova(self):
         log = logging.getLogger(__name__)
         log.info("calculating anova")
         try:
             self.anova = braviz.interaction.r_functions.calculate_anova(self.outcome_var_name,
                                                                         self.regressors_model.get_data_frame(),
-                                                                        self.regressors_model.get_interactors_dict(),
+                                                                        self.regressors_model.get_interactors_dict(
+                                                                        ),
                                                                         self.sample)
         except Exception as e:
             msg = QtGui.QMessageBox()
@@ -270,7 +289,7 @@ class AnovaApp(QMainWindow):
             log.warning("Anova Error")
             log.exception(e)
             msg.exec_()
-            #raise
+            # raise
         else:
             self.result_model = braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)
@@ -279,13 +298,15 @@ class AnovaApp(QMainWindow):
     def update_main_plot_from_results(self, index):
         row = index.row()
         var_name_index = self.result_model.index(row, 0)
-        var_name = unicode(self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
+        var_name = unicode(
+            self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
         self.update_main_plot(var_name)
 
     def update_main_plot_from_regressors(self, index):
         row = index.row()
         var_name_index = self.regressors_model.index(row, 0)
-        var_name = unicode(self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
+        var_name = unicode(
+            self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
         self.update_main_plot(var_name)
 
     def update_main_plot(self, var_name):
@@ -301,7 +322,7 @@ class AnovaApp(QMainWindow):
         if var_name == "Residuals":
             residuals = self.result_model.residuals
             fitted = self.result_model.fitted
-            self.plot.make_diagnostics(residuals,fitted)
+            self.plot.make_diagnostics(residuals, fitted)
             pass
         elif var_name == "(Intercept)":
             data = get_data_frame_by_name(self.outcome_var_name)
@@ -311,9 +332,10 @@ class AnovaApp(QMainWindow):
             self.plot_data_frame = data
             data_values = data[self.outcome_var_name].get_values()
 
-            ylims = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
+            ylims = braviz_tab_data.get_min_max_values_by_name(
+                self.outcome_var_name)
             self.plot.make_box_plot([data_values], "(Intercept)", self.outcome_var_name,
-                                    None, ylims,intercet=self.result_model.intercept)
+                                    None, ylims, intercet=self.result_model.intercept)
 
         else:
             if ":" in var_name:
@@ -328,24 +350,26 @@ class AnovaApp(QMainWindow):
     def two_factors_plot(self, factors_list):
         nominal_factors = []
         real_factors = []
-        #classify factors
+        # classify factors
         for f in factors_list:
             is_real = braviz_tab_data.is_variable_name_real(f)
             if is_real == 0:
                 nominal_factors.append(f)
             else:
                 real_factors.append(f)
-        #print nominal_factors
-        #print real_factors
+        # print nominal_factors
+        # print real_factors
         if len(real_factors) == 1:
 
-            top_labels_dict = braviz_tab_data.get_labels_dict_by_name(nominal_factors[0])
-            colors = sns.color_palette("Dark2",len(top_labels_dict))
-            #print top_labels_strings
+            top_labels_dict = braviz_tab_data.get_labels_dict_by_name(
+                nominal_factors[0])
+            colors = sns.color_palette("Dark2", len(top_labels_dict))
+            # print top_labels_strings
             colors_dict = dict(izip(top_labels_dict.iterkeys(), colors))
             self.plot_color = colors_dict
-            #Get Data
-            data = get_data_frame_by_name([real_factors[0], nominal_factors[0], self.outcome_var_name])
+            # Get Data
+            data = get_data_frame_by_name(
+                [real_factors[0], nominal_factors[0], self.outcome_var_name])
             data = data.loc[self.sample]
             data.dropna(inplace=True)
             self.plot_data_frame = data
@@ -359,37 +383,40 @@ class AnovaApp(QMainWindow):
                 if k is None:
                     continue
                 if v is None:
-                    v="?"
+                    v = "?"
                 labels.append(v)
                 colors.append(colors_dict[k])
                 #raise NotImplementedError("Error here")
-                datay.append(data[self.outcome_var_name][data[nominal_factors[0]] == k].get_values())
-                datax.append(data[real_factors[0]][data[nominal_factors[0]] == k].get_values())
-                urls.append(data[self.outcome_var_name][data[nominal_factors[0]] == k].index.get_values())
-            #print datax
+                datay.append(
+                    data[self.outcome_var_name][data[nominal_factors[0]] == k].get_values())
+                datax.append(
+                    data[real_factors[0]][data[nominal_factors[0]] == k].get_values())
+                urls.append(
+                    data[self.outcome_var_name][data[nominal_factors[0]] == k].index.get_values())
+            # print datax
             self.plot_x_var = real_factors[0]
             self.plot_z_var = nominal_factors[0]
 
-
-            self.plot.compute_scatter(datax, datay, real_factors[0], self.outcome_var_name, colors, labels, urls=urls)
-
+            self.plot.compute_scatter(
+                datax, datay, real_factors[0], self.outcome_var_name, colors, labels, urls=urls)
 
         elif len(real_factors) == 2:
             log = logging.getLogger(__name__)
             log.warning("Not yet implemented")
             self.plot.initial_text("Not yet implemented")
         else:
-            #get data
-            data = get_data_frame_by_name(nominal_factors + [self.outcome_var_name])
+            # get data
+            data = get_data_frame_by_name(
+                nominal_factors + [self.outcome_var_name])
             data = data.loc[self.sample]
             data.dropna(inplace=True)
-            #find number of levels for nominal
+            # find number of levels for nominal
             nlevels = {}
             for f in nominal_factors:
                 nlevels[f] = len(data[f].unique())
-            #print nlevels
+            # print nlevels
             nominal_factors.sort(key=nlevels.get, reverse=True)
-            #print nominal_factors
+            # print nominal_factors
 
             self.plot_data_frame = data
 
@@ -404,8 +431,9 @@ class AnovaApp(QMainWindow):
                     data_list.append(data_col)
                 data_lists_top.append(data_list)
 
-            #get ylims
-            miny, maxy = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
+            # get ylims
+            miny, maxy = braviz_tab_data.get_min_max_values_by_name(
+                self.outcome_var_name)
             if miny is None or maxy is None:
                 log = logging.getLogger(__name__)
                 log.critical("Incosistency in DB")
@@ -416,30 +444,29 @@ class AnovaApp(QMainWindow):
             self.plot.make_linked_box_plot(data, self.outcome_var_name, nominal_factors[0], nominal_factors[1],
                                            ylims=(miny, maxy))
 
-
     def one_reg_plot(self, var_name):
-        #find if variable is nominal
+        # find if variable is nominal
 
         is_reg_real = braviz_tab_data.is_variable_name_real(var_name)
-        #get outcome min and max values
-        #TODO This has to be updated when implementing logistic regression
-        miny, maxy = braviz_tab_data.get_min_max_values_by_name(self.outcome_var_name)
+        # get outcome min and max values
+        # TODO This has to be updated when implementing logistic regression
+        miny, maxy = braviz_tab_data.get_min_max_values_by_name(
+            self.outcome_var_name)
         self.plot_x_var = var_name
 
         if is_reg_real == 0:
-            #is nominal
-            #create whisker plot
+            # is nominal
+            # create whisker plot
             labels_dict = braviz_tab_data.get_labels_dict_by_name(var_name)
-            for k,v in labels_dict.iteritems():
-                if v is None or len(v)==0:
-                    labels_dict[k]="level_%s"%k
-            #print labels_dict
-            #get data from
+            for k, v in labels_dict.iteritems():
+                if v is None or len(v) == 0:
+                    labels_dict[k] = "level_%s" % k
+            # print labels_dict
+            # get data from
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
 
-
             data = data.loc[self.sample]
-            #remove nans
+            # remove nans
             data.dropna(inplace=True)
 
             label_nums = set(data[var_name])
@@ -451,12 +478,13 @@ class AnovaApp(QMainWindow):
                 data_col = data[self.outcome_var_name][data[var_name] == i]
                 data_list.append(data_col.get_values())
                 ticks.append(labels_dict.get(i, str(i)))
-            #print data_list
-            self.plot.make_box_plot(data_list, var_name, self.outcome_var_name, ticks, (miny, maxy))
+            # print data_list
+            self.plot.make_box_plot(
+                data_list, var_name, self.outcome_var_name, ticks, (miny, maxy))
 
         else:
-            #is real
-            #create scatter plot
+            # is real
+            # create scatter plot
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
             data = data.loc[self.sample]
 
@@ -467,19 +495,19 @@ class AnovaApp(QMainWindow):
                                       var_name,
                                       self.outcome_var_name, urls=data.index.get_values())
 
-    def add_subjects_to_plot(self,tree_indexes=None,subject_ids=None):
-        #tree_indexes used when called from tree
-        #find selected subjects
+    def add_subjects_to_plot(self, tree_indexes=None, subject_ids=None):
+        # tree_indexes used when called from tree
+        # find selected subjects
         if subject_ids is None:
             selection = self.ui.sample_tree.currentIndex()
             leafs = self.sample_model.get_leafs(selection)
             subject_ids = map(int, leafs)
 
-        if not isinstance(subject_ids,list):
+        if not isinstance(subject_ids, list):
             subject_ids = list(subject_ids)
 
-        #get data
-        #print subject_ids
+        # get data
+        # print subject_ids
         if self.plot_data_frame is None:
             return
         df = self.plot_data_frame.loc[subject_ids]
@@ -497,64 +525,71 @@ class AnovaApp(QMainWindow):
             if self.plot_color is not None:
                 colors = [self.plot_color[i] for i in z_data]
 
-        self.plot.add_subject_points(x_data, y_data,z_data, colors,urls=subject_ids)
+        self.plot.add_subject_points(
+            x_data, y_data, z_data, colors, urls=subject_ids)
 
     def change_subject_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
         subj = str(subj)
-        msg1 = "subject %s"%subj
+        msg1 = "subject %s" % subj
         log.info(msg1)
         if self._message_client is not None:
             self._message_client.send_message(msg1)
 
-    def receive_message(self,msg):
+    def receive_message(self, msg):
         log = logging.getLogger(__name__)
-        log.info("RECEIVED %s"%msg)
+        log.info("RECEIVED %s" % msg)
         if msg.startswith("subject"):
             subj = msg.split()[1]
             if subj is not None:
-                log.info("showing subject %s"%subj)
+                log.info("showing subject %s" % subj)
                 self.add_subjects_to_plot(subject_ids=(int(subj),))
 
-
     def handle_box_outlier_pick(self, x, y, position):
-        #print "received signal"
-        #print x_l,y_l
+        # print "received signal"
+        # print x_l,y_l
         if self.plot_data_frame is not None:
-            #identify subject
+            # identify subject
             df = self.plot_data_frame
             if self.plot_x_var is None:
                 subj = df[df[self.outcome_var_name] == y].index
             else:
-                subj = df[(df[self.plot_x_var] == x) & (df[self.outcome_var_name] == y)].index
-            #print subj[0]
+                subj = df[(df[self.plot_x_var] == x) & (
+                    df[self.outcome_var_name] == y)].index
+            # print subj[0]
             message = "Outlier: %s" % subj[0]
             self.last_viewed_subject = subj[0]
             QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
-            QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)), message, self.plot)
+            QtGui.QToolTip.showText(
+                self.plot.mapToGlobal(QtCore.QPoint(*position)), message, self.plot)
 
     def handle_scatter_pick(self, subj, position):
         message = "Subject: %s" % subj
-        QtGui.QToolTip.showText(self.plot.mapToGlobal(QtCore.QPoint(*position)), message, self.plot)
+        QtGui.QToolTip.showText(
+            self.plot.mapToGlobal(QtCore.QPoint(*position)), message, self.plot)
         self.last_viewed_subject = subj
         QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
 
-    def create_context_action(self,subject,scenario_id,scenario_name,show_name = None, new_viewer=True):
+    def create_context_action(self, subject, scenario_id, scenario_name, show_name=None, new_viewer=True):
         if show_name is None:
             show_name = scenario_name
         if scenario_id is None:
             scenario_id = 0
+
         def show_subject():
             self.change_subject_in_mri_viewer(subject)
             self.add_subjects_to_plot(subject_ids=(int(subject),))
+
         def launch_new_viewer():
-            self.launch_mri_viewer(subject,scenario_id)
+            self.launch_mri_viewer(subject, scenario_id)
             self.add_subjects_to_plot(subject_ids=(int(subject),))
         if new_viewer:
-            action = QtGui.QAction("Show subject %s's %s in new viewer" % (subject,show_name), None)
+            action = QtGui.QAction(
+                "Show subject %s's %s in new viewer" % (subject, show_name), None)
             action.triggered.connect(launch_new_viewer)
         else:
-            action = QtGui.QAction("Show %s in existing viewers" % subject, None)
+            action = QtGui.QAction(
+                "Show %s in existing viewers" % subject, None)
             action.triggered.connect(show_subject)
         return action
 
@@ -566,48 +601,52 @@ class AnovaApp(QMainWindow):
 
         scenarios = {}
         outcome_idx = braviz_tab_data.get_var_idx(self.outcome_var_name)
-        outcome_scenarios = braviz_user_data.get_variable_scenarios(outcome_idx)
-        if len(outcome_scenarios)>0:
-            scenarios[self.outcome_var_name]=outcome_scenarios.items()
+        outcome_scenarios = braviz_user_data.get_variable_scenarios(
+            outcome_idx)
+        if len(outcome_scenarios) > 0:
+            scenarios[self.outcome_var_name] = outcome_scenarios.items()
         regressors = self.regressors_model.get_regressors()
         for reg in regressors:
             reg_idx = braviz_tab_data.get_var_idx(reg)
             reg_scenarios = braviz_user_data.get_variable_scenarios(reg_idx)
             if len(reg_scenarios):
-                scenarios[reg]=reg_scenarios.items()
+                scenarios[reg] = reg_scenarios.items()
 
         menu = QtGui.QMenu("Subject %s" % subject)
-        show_action = self.create_context_action(subject,None,None,new_viewer=False)
+        show_action = self.create_context_action(
+            subject, None, None, new_viewer=False)
         menu.addAction(show_action)
-        launch_mri_action = self.create_context_action(subject,None,"MRI")
+        launch_mri_action = self.create_context_action(subject, None, "MRI")
         menu.addAction(launch_mri_action)
 
         log = logging.getLogger(__name__)
         log.debug(scenarios)
-        for var,scn_lists in scenarios.iteritems():
-            for scn_id,scn_name in scn_lists:
-                action = self.create_context_action(subject,scn_id,scn_name,var)
+        for var, scn_lists in scenarios.iteritems():
+            for scn_id, scn_name in scn_lists:
+                action = self.create_context_action(
+                    subject, scn_id, scn_name, var)
                 menu.addAction(action)
 
         menu.exec_(global_pos)
 
     def subject_details_from_plot(self, pos):
-        #print "context menu"
-        #print pos
+        # print "context menu"
+        # print pos
         global_pos = self.plot.mapToGlobal(pos)
         self.create_view_details_context_menu(global_pos)
 
     def subject_details_from_tree(self, pos):
         global_pos = self.ui.sample_tree.mapToGlobal(pos)
         selection = self.ui.sample_tree.currentIndex()
-        selection = self.sample_model.index(selection.row(), 0, selection.parent())
-        #check if it is a leaf
+        selection = self.sample_model.index(
+            selection.row(), 0, selection.parent())
+        # check if it is a leaf
         if self.sample_model.hasChildren(selection) is True:
             return
         else:
-            #print "this is a leaf"
+            # print "this is a leaf"
             subject = self.sample_model.data(selection, QtCore.Qt.DisplayRole)
-            #print subject
+            # print subject
             self.create_view_details_context_menu(global_pos, subject)
 
     def clear_last_viewed_subject(self):
@@ -617,36 +656,35 @@ class AnovaApp(QMainWindow):
         self._auxiliary_server = MessageServer(local_only=True)
         self._auxiliary_server.message_received.connect(self.receive_message)
 
-    def launch_mri_viewer(self,subject,scenario):
+    def launch_mri_viewer(self, subject, scenario):
         log = logging.getLogger(__name__)
 
         log.info("launching viewer")
         if self._message_client is None:
             log.info("Becoming an auxiliary server")
             self.launch_auxiliary_server()
-            self._message_client=MessageClient(self._auxiliary_server.broadcast_address,
-                                               self._auxiliary_server.receive_address)
-        args = [sys.executable,"-m","braviz.applications.subject_overview",str(scenario),
-                self._message_client.server_broadcast,self._message_client.server_receive,str(subject)]
+            self._message_client = MessageClient(self._auxiliary_server.broadcast_address,
+                                                 self._auxiliary_server.receive_address)
+        args = [sys.executable, "-m", "braviz.applications.subject_overview", str(scenario),
+                self._message_client.server_broadcast, self._message_client.server_receive, str(subject)]
 
         log.info(args)
         subprocess.Popen(args)
 
-
     def closeEvent(self, *args, **kwargs):
-        #if self.mri_viewer_process is not None:
-            #self.mri_viewer_process.terminate()
+        # if self.mri_viewer_process is not None:
+            # self.mri_viewer_process.terminate()
         log = logging.getLogger(__name__)
         log.info("Finishing")
 
     def get_state(self):
         state = {}
         vars_state = {}
-        vars_state["outcome"]=self.outcome_var_name
-        vars_state["regressors"]=self.regressors_model.get_regressors()
-        vars_state["interactions"]=self.regressors_model.get_interactions()
+        vars_state["outcome"] = self.outcome_var_name
+        vars_state["regressors"] = self.regressors_model.get_regressors()
+        vars_state["interactions"] = self.regressors_model.get_interactions()
         state["vars"] = vars_state
-        state["plot"] = {"var_name":self.plot_var_name}
+        state["plot"] = {"var_name": self.plot_var_name}
         state["sample"] = self.sample
 
         meta = dict()
@@ -661,16 +699,18 @@ class AnovaApp(QMainWindow):
         state = self.get_state()
         params = {}
         app_name = state["meta"]["application"]
-        dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(app_name,state,params)
-        res=dialog.exec_()
+        dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(
+            app_name, state, params)
+        res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:
-            #save main plot as screenshot
+            # save main plot as screenshot
             scn_id = params["scn_id"]
             pixmap = QtGui.QPixmap.grabWidget(self.plot)
-            file_name = "scenario_%d.png"%scn_id
+            file_name = "scenario_%d.png" % scn_id
             data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
-            file_path = os.path.join(data_root, "braviz_data","scenarios",file_name)
+            file_path = os.path.join(
+                data_root, "braviz_data", "scenarios", file_name)
             log.info(file_path)
             pixmap.save(file_path)
         log.info("saving")
@@ -679,28 +719,30 @@ class AnovaApp(QMainWindow):
     def load_scenario_dialog(self):
         app_name = os.path.splitext(os.path.basename(__file__))[0]
         wanted_state = {}
-        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(app_name,wanted_state)
-        res= dialog.exec_()
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(
+            app_name, wanted_state)
+        res = dialog.exec_()
         log = logging.getLogger(__name__)
-        if res==dialog.Accepted:
+        if res == dialog.Accepted:
             log.info("Loading state")
             log.info(wanted_state)
             self.restore_state(wanted_state)
 
-    def load_scenario_id(self,scn_id):
+    def load_scenario_id(self, scn_id):
         wanted_state = braviz_user_data.get_scenario_data_dict(scn_id)
         app = wanted_state.get("meta").get("application")
         if app == os.path.splitext(os.path.basename(__file__))[0]:
             self.restore_state(wanted_state)
         else:
             log = logging.getLogger(__file__)
-            log.error("Scenario id doesn't correspond to an anova scenario, ignoring")
+            log.error(
+                "Scenario id doesn't correspond to an anova scenario, ignoring")
 
-    def restore_state(self,wanted_state):
-        #restore outcome
-        #sample
+    def restore_state(self, wanted_state):
+        # restore outcome
+        # sample
         logger = logging.getLogger(__name__)
-        logger.info("loading state %s",wanted_state)
+        logger.info("loading state %s", wanted_state)
         sample = wanted_state.get("sample")
         if sample is not None:
             self.sample = sample
@@ -709,28 +751,28 @@ class AnovaApp(QMainWindow):
         reg_name = wanted_state["vars"].get("outcome")
         if reg_name is not None:
             index = self.ui.outcome_sel.findText(reg_name)
-            if index >=0:
+            if index >= 0:
                 self.ui.outcome_sel.setCurrentIndex(index)
             else:
-                self.ui.outcome_sel.insertItem(0,reg_name)
+                self.ui.outcome_sel.insertItem(0, reg_name)
                 self.ui.outcome_sel.setCurrentIndex(0)
         self.set_outcome_var_type(reg_name)
-        #restore regressors
-        regressors = wanted_state["vars"].get("regressors",tuple())
+        # restore regressors
+        regressors = wanted_state["vars"].get("regressors", tuple())
         self.regressors_model.reset_data(regressors)
-        #restore interactions
-        interactions = wanted_state["vars"].get("interactions",tuple())
-        #TODO: Must find a better way to encode interactions
+        # restore interactions
+        interactions = wanted_state["vars"].get("interactions", tuple())
+        # TODO: Must find a better way to encode interactions
         for inter in interactions:
             tokens = inter.split("*")
             self.regressors_model.add_interactor_by_names(tokens)
         self.regressors_model.show_interactions(True)
         self.regressors_model.show_regressors(True)
-        #calculate anova
+        # calculate anova
         self.check_if_ready()
         if self.ui.calculate_button.isEnabled():
             self.calculate_anova()
-        #set plot
+        # set plot
         plot_name = wanted_state["plot"].get("var_name")
         if plot_name is not None:
             self.update_main_plot(plot_name)
@@ -750,16 +792,18 @@ class AnovaApp(QMainWindow):
 
     def save_figure(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
-                                 "Save Plot",".","PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
+                                                             "Save Plot", ".", "PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
         self.plot.fig.savefig(filename)
 
     def save_data(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
-                             "Save Data",".","csv (*.csv)"))
-        if len(filename)>0:
-            vars = [self.outcome_var_name]+list(self.regressors_model.get_regressors())
+                                                             "Save Data", ".", "csv (*.csv)"))
+        if len(filename) > 0:
+            vars = [self.outcome_var_name] + \
+                list(self.regressors_model.get_regressors())
             out_df = braviz_tab_data.get_data_frame_by_name(vars)
             out_df.to_csv(filename)
+
 
 def run():
     import sys
@@ -769,16 +813,17 @@ def run():
     scenario = None
     server_broadcast_address = None
     server_receive_address = None
-    if len(args)>1:
+    if len(args) > 1:
         scenario = int(args[1])
-        if len(args)>2:
+        if len(args) > 2:
             server_broadcast_address = args[2]
-            if len(args)>3:
+            if len(args) > 3:
                 server_receive_address = args[3]
     app = QtGui.QApplication([])
     log = logging.getLogger(__name__)
     log.info("started")
-    main_window = AnovaApp(scenario,server_broadcast_address,server_receive_address)
+    main_window = AnovaApp(
+        scenario, server_broadcast_address, server_receive_address)
     main_window.show()
     try:
         app.exec_()

@@ -31,10 +31,11 @@ from braviz.readAndFilter.config_file import get_config
 __author__ = 'diego'
 
 
-#TODO: receive messages to highlight subjects
+# TODO: receive messages to highlight subjects
 
 
 class ParallelCoordinatesHandler(tornado.web.RequestHandler):
+
     """
     Implements a parallel coordinates view from variables in the database
 
@@ -64,10 +65,9 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
     """
 
     def __init__(self, application, request, **kwargs):
-        super(ParallelCoordinatesHandler, self).__init__(application, request, **kwargs)
+        super(ParallelCoordinatesHandler, self).__init__(
+            application, request, **kwargs)
         self.default_variables = None
-
-
 
     @staticmethod
     @memoize
@@ -79,67 +79,66 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             A string
         """
         conf = get_config(__file__)
-        vars=conf.get_default_variables()
-        var_keys=("nom1","nom2","ratio1","ratio2")
-        all_vars=map(vars.get,var_keys)
-        codes=map(tab_data.get_var_idx,all_vars)
-        def_vars=",".join(map(str,codes))
+        vars = conf.get_default_variables()
+        var_keys = ("nom1", "nom2", "ratio1", "ratio2")
+        all_vars = map(vars.get, var_keys)
+        codes = map(tab_data.get_var_idx, all_vars)
+        def_vars = ",".join(map(str, codes))
         return def_vars
 
     def get(self):
 
-        vars_s = self.get_query_argument("vars",self.default_variables)
+        vars_s = self.get_query_argument("vars", self.default_variables)
         if vars_s is None:
             vars_s = ParallelCoordinatesHandler.get_default_vars()
             self.default_variables = vars_s
-        sample = self.get_query_argument("sample",None)
-        vars=map(int,vars_s.split(","))
+        sample = self.get_query_argument("sample", None)
+        vars = map(int, vars_s.split(","))
         data = tab_data.get_data_frame_by_index(vars)
         if sample is not None:
             subjs = user_data.get_sample_data(sample)
-            data=data.loc[subjs]
+            data = data.loc[subjs]
 
         data2 = data.dropna()
-        missing = len(data)-len(data2)
-        #print "%d missing values"%missing
+        missing = len(data) - len(data2)
+        # print "%d missing values"%missing
         data = data2
 
         cols = data.columns
-        cols2=list(cols)
-        cols2[0]="category"
-        data.columns=cols2
+        cols2 = list(cols)
+        cols2[0] = "category"
+        data.columns = cols2
         labels = tab_data.get_labels_dict(vars[0])
 
-        for i,(k,v) in enumerate(labels.iteritems()):
+        for i, (k, v) in enumerate(labels.iteritems()):
             if v is None:
-                labels[k]="label%s"%k
+                labels[k] = "label%s" % k
             if v is None or len(v) == 0:
-                v="level_%d"%i
+                v = "level_%d" % i
             elif v[0].isdigit():
-                v = "c_"+v
-            labels[k]=v.replace(' ','_')
+                v = "c_" + v
+            labels[k] = v.replace(' ', '_')
 
-
-        #sanitize label name
+        # sanitize label name
         col0 = cols2[0]
-        data[col0]=data[col0].map(labels)
-        data["code"]=data.index
+        data[col0] = data[col0].map(labels)
+        data["code"] = data.index
 
         json_data = data.to_json(orient="records")
 
         caths = data[col0].unique()
         caths_json = json.dumps(list(caths))
 
-        #1: cathegories, 2: code
-        attrs=list(data.columns[1:-1])
+        # 1: cathegories, 2: code
+        attrs = list(data.columns[1:-1])
         attrs_json = json.dumps(attrs)
-        self.render("parallel_coordinates.html",data=json_data,caths=caths_json,vars=attrs_json,cath_name=col0,
-                    missing=missing,background_opac=5.0/len(data2))
+        self.render("parallel_coordinates.html", data=json_data, caths=caths_json, vars=attrs_json, cath_name=col0,
+                    missing=missing, background_opac=5.0 / len(data2))
 
     def post(self, *args, **kwargs):
-        name=self.get_body_argument("sample_name")
-        desc=self.get_body_argument("sample_desc","")
-        subjs=self.get_body_argument("sample_subjects")
+        name = self.get_body_argument("sample_name")
+        desc = self.get_body_argument("sample_desc", "")
+        subjs = self.get_body_argument("sample_subjects")
         log = logging.getLogger(__name__)
         log.info("Saving new sample")
         log.info(name)
@@ -150,12 +149,14 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             self.send_error(409)
         else:
             print "Name is unique"
-            subj_list=map(int,subjs.split(","))
+            subj_list = map(int, subjs.split(","))
             print subj_list
-            user_data.save_sub_sample(name,subj_list,desc)
+            user_data.save_sub_sample(name, subj_list, desc)
             self.write("ok")
 
+
 class IndexHandler(tornado.web.RequestHandler):
+
     """
     Displays the braviz start page
     """
@@ -172,8 +173,8 @@ class IndexHandler(tornado.web.RequestHandler):
     @memoize
     def read_index():
         import os
-        path = os.path.join(os.path.dirname(__file__),"web_static","index.html")
+        path = os.path.join(
+            os.path.dirname(__file__), "web_static", "index.html")
         with open(path) as f:
             data = f.read()
         return data
-

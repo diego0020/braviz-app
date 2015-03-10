@@ -43,40 +43,42 @@ def create_db(path):
     conn.execute(q)
     conn.commit()
 
-def get_descriptor(subj,structure,aseg,reader):
-    vol = reader.get("MODEL",subj,volume=True,name=structure)
-    area = structure_metrics.get_struct_metric(reader,structure,subj,"area")
-    label = int(reader.get("MODEL",subj,name=structure,label=True))
-    d1,d2,d3 = descriptors.get_descriptors(aseg,(label,))
-    return vol,area,d1,d2,d3
 
-def get_agg_descriptor(subj,structures,aseg,reader):
+def get_descriptor(subj, structure, aseg, reader):
+    vol = reader.get("MODEL", subj, volume=True, name=structure)
+    area = structure_metrics.get_struct_metric(reader, structure, subj, "area")
+    label = int(reader.get("MODEL", subj, name=structure, label=True))
+    d1, d2, d3 = descriptors.get_descriptors(aseg, (label,))
+    return vol, area, d1, d2, d3
+
+
+def get_agg_descriptor(subj, structures, aseg, reader):
     vols = []
     labels = []
     for s in structures:
-        vols.append(reader.get("MODEL",subj,volume=True,name=s))
-        labels.append(int(reader.get("MODEL",subj,name=s,label=True)))
-    d1,d2,d3 = descriptors.get_descriptors(aseg,labels)
+        vols.append(reader.get("MODEL", subj, volume=True, name=s))
+        labels.append(int(reader.get("MODEL", subj, name=s, label=True)))
+    d1, d2, d3 = descriptors.get_descriptors(aseg, labels)
     vol = sum(vols)
-    return vol,float("nan"),d1,d2,d3
+    return vol, float("nan"), d1, d2, d3
 
-def save_descs_in_db(conn,subj,name,descs):
-    vals = (int(subj),name,descs[0],descs[1],descs[2],descs[3],descs[4])
+
+def save_descs_in_db(conn, subj, name, descs):
+    vals = (int(subj), name, descs[0], descs[1], descs[2], descs[3], descs[4])
     q = "INSERT OR REPLACE into descriptors VALUES (?,?, ?,?, ?,?,?)"
-    conn.execute(q,vals)
+    conn.execute(q, vals)
     conn.commit()
 
 
-
 def save_subj_descs(subj):
-    print "subject = %s"%subj
+    print "subject = %s" % subj
     braviz.utilities.configure_console_logger("descriptors")
     log = logging.getLogger(__name__)
     reader = braviz.readAndFilter.BravizAutoReader(max_cache=1000)
-    db_name = os.path.join(reader.get_dyn_data_root(),"descriptors.sqlite")
+    db_name = os.path.join(reader.get_dyn_data_root(), "descriptors.sqlite")
     try:
-        structs = reader.get("MODEL",subj,index=True)
-        aseg = reader.get("APARC",subj,space="world")
+        structs = reader.get("MODEL", subj, index=True)
+        aseg = reader.get("APARC", subj, space="world")
         #wmaseg = reader.get("WMPARC",subj,space="world")
     except Exception as e:
         log.exception(e.message)
@@ -86,14 +88,14 @@ def save_subj_descs(subj):
         try:
             if s.startswith("wm-"):
                 descs = None
-                #skip wm
+                # skip wm
                 #d1 =  get_descriptor(subj,s,wmaseg,reader)
             elif s.startswith("ctx-"):
-                #continue
+                # continue
                 # not skip ctx
-                descs =  get_descriptor(subj,s,aseg,reader)
+                descs = get_descriptor(subj, s, aseg, reader)
             else:
-                descs =  get_descriptor(subj,s,aseg,reader)
+                descs = get_descriptor(subj, s, aseg, reader)
 
         except Exception as e:
             log.exception(e.message)
@@ -101,38 +103,42 @@ def save_subj_descs(subj):
 
         if descs is not None:
             try:
-                conn = sqlite3.connect(db_name,timeout=600,isolation_level="EXCLUSIVE")
-                save_descs_in_db(conn,subj,s,descs)
+                conn = sqlite3.connect(
+                    db_name, timeout=600, isolation_level="EXCLUSIVE")
+                save_descs_in_db(conn, subj, s, descs)
                 conn.close()
             except Exception as e:
                 log.exception(e)
 
-    cc = ['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior']
+    cc = ['CC_Anterior', 'CC_Central', 'CC_Mid_Anterior',
+          'CC_Mid_Posterior', 'CC_Posterior']
     try:
-        d2 = get_agg_descriptor(subj,cc,aseg,reader)
-        conn = sqlite3.connect(db_name,timeout=600,isolation_level="EXCLUSIVE")
-        save_descs_in_db(conn,subj,"CC-Full",d2)
+        d2 = get_agg_descriptor(subj, cc, aseg, reader)
+        conn = sqlite3.connect(
+            db_name, timeout=600, isolation_level="EXCLUSIVE")
+        save_descs_in_db(conn, subj, "CC-Full", d2)
         conn.close()
     except Exception as e:
         log.exception(e)
     reader.clear_mem_cache()
 
+
 def save_for_all(processes=1):
-    reader=braviz.readAndFilter.BravizAutoReader(max_cache=500)
-    ids=reader.get('ids')
-    create_db(os.path.join(reader.get_dyn_data_root(),"descriptors.sqlite"))
+    reader = braviz.readAndFilter.BravizAutoReader(max_cache=500)
+    ids = reader.get('ids')
+    create_db(os.path.join(reader.get_dyn_data_root(), "descriptors.sqlite"))
     del reader
-    if processes<=1:
+    if processes <= 1:
         for s in ids:
             save_subj_descs(s)
     else:
-        proc_pool=Pool(processes=processes)
-        proc_pool.map(save_subj_descs,ids)
+        proc_pool = Pool(processes=processes)
+        proc_pool.map(save_subj_descs, ids)
 
 if __name__ == "__main__":
     import sys
     braviz.utilities.configure_logger_from_conf("descriptors")
     procs = 2
-    if len(sys.argv)>=2:
+    if len(sys.argv) >= 2:
         procs = int(sys.argv[1])
     save_for_all(procs)

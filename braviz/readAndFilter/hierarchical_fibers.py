@@ -17,19 +17,20 @@
 ##############################################################################
 
 
-from braviz.readAndFilter import geom_db,tabular_data
+from braviz.readAndFilter import geom_db, tabular_data
 import logging
 import numpy as np
 
 from braviz.readAndFilter import extract_poly_data_subset
 from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere
 
-#from logic_bundle_model
+# from logic_bundle_model
 LOGIC = 0
 STRUCT = 1
 ROI = 2
 
-def read_logical_fibers(subj,space,tree_dict,reader,**kwargs):
+
+def read_logical_fibers(subj, space, tree_dict, reader, **kwargs):
     """
     Gets a :obj:`vtkPolyData` for a bundle described using a logical hierarchy
 
@@ -42,15 +43,16 @@ def read_logical_fibers(subj,space,tree_dict,reader,**kwargs):
     log = logging.getLogger(__file__)
 
     try:
-        valid_lines = get_valid_lines_from_node(subj,tree_dict,reader)
-        fibers=reader.get("FIBERS",subj,space=space,**kwargs)
+        valid_lines = get_valid_lines_from_node(subj, tree_dict, reader)
+        fibers = reader.get("FIBERS", subj, space=space, **kwargs)
     except Exception as e:
         log.exception(e)
         raise
     fibers2 = extract_poly_data_subset(fibers, valid_lines)
     return fibers2
 
-def get_valid_lines_from_node(subj,tree_node,reader):
+
+def get_valid_lines_from_node(subj, tree_node, reader):
     """
     Get ids of polylines that match the condition described in a tree node
 
@@ -61,17 +63,17 @@ def get_valid_lines_from_node(subj,tree_node,reader):
     """
     node_type = tree_node["node_type"]
     if node_type == LOGIC:
-        lines = get_valid_lines_from_logical(subj,tree_node,reader)
+        lines = get_valid_lines_from_logical(subj, tree_node, reader)
     elif node_type == STRUCT:
-        lines = get_valid_lines_from_struct(subj,tree_node["value"],reader)
+        lines = get_valid_lines_from_struct(subj, tree_node["value"], reader)
     elif node_type == ROI:
-        lines = get_valid_lines_from_roi(subj,tree_node["extra_data"],reader)
+        lines = get_valid_lines_from_roi(subj, tree_node["extra_data"], reader)
     else:
         raise Exception("Unknown data type")
     return lines
 
 
-def get_valid_lines_from_logical(subj,tree_node,reader):
+def get_valid_lines_from_logical(subj, tree_node, reader):
     """
     Get polyline ids that match the condition in a logical node
 
@@ -80,7 +82,8 @@ def get_valid_lines_from_logical(subj,tree_node,reader):
         tree_node (braviz.interaction.logic_bundle_model.LogicBundleNode) : Tree node, must have logical type
         reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
     """
-    subsets = [(get_valid_lines_from_node(subj,c,reader)) for c in tree_node["children"]]
+    subsets = [(get_valid_lines_from_node(subj, c, reader))
+               for c in tree_node["children"]]
     value = tree_node["value"]
     if value == "OR":
         if len(subsets) == 0:
@@ -89,12 +92,12 @@ def get_valid_lines_from_logical(subj,tree_node,reader):
             ans = set.union(*subsets)
     elif value == "AND":
         if len(subsets) == 0:
-            ans = get_all_lines(subj,reader)
+            ans = get_all_lines(subj, reader)
         else:
             ans = set.intersection(*subsets)
     elif value == "NOT":
-        all_lines = get_all_lines(subj,reader)
-        if len(subsets)>0:
+        all_lines = get_all_lines(subj, reader)
+        if len(subsets) > 0:
             ans = all_lines - set.union(*subsets)
         else:
             ans = all_lines
@@ -102,7 +105,8 @@ def get_valid_lines_from_logical(subj,tree_node,reader):
         raise Exception("Invalid logical value")
     return ans
 
-def get_all_lines(subj,reader):
+
+def get_all_lines(subj, reader):
     """
     Gets a list of the polyline ids of the whole tractography
 
@@ -110,13 +114,13 @@ def get_all_lines(subj,reader):
         subj : Subject id
         reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
     """
-    pd = reader.get("FIBERS",subj)
+    pd = reader.get("FIBERS", subj)
     assert pd.GetNumberOfCells() == pd.GetNumberOfLines()
     all_lines = set(xrange(pd.GetNumberOfCells()))
     return all_lines
 
 
-def get_valid_lines_from_struct(subj,struct,reader):
+def get_valid_lines_from_struct(subj, struct, reader):
     """
     Get polyline ids that match the condition in a structure node
 
@@ -126,10 +130,11 @@ def get_valid_lines_from_struct(subj,struct,reader):
         reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
     """
     img_subj = subj
-    valid_ids = reader.get('fibers',img_subj,waypoint=struct,ids=True)
+    valid_ids = reader.get('fibers', img_subj, waypoint=struct, ids=True)
     return set(valid_ids)
 
-def get_valid_lines_from_roi(subj,roi_id,reader):
+
+def get_valid_lines_from_roi(subj, roi_id, reader):
     """
     Get polyline ids that match the condition in a roi node
 
@@ -139,30 +144,29 @@ def get_valid_lines_from_roi(subj,roi_id,reader):
         reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object to get data from
     """
     space = geom_db.get_roi_space(roi_id=roi_id)
-    sphere_data = geom_db.load_sphere(roi_id,subj)
+    sphere_data = geom_db.load_sphere(roi_id, subj)
     if sphere_data is None:
         raise Exception("Sphere not found")
-    r,x,y,z = sphere_data
-    key="roi_fibers_%s_%s"%(subj,roi_id)
+    r, x, y, z = sphere_data
+    key = "roi_fibers_%s_%s" % (subj, roi_id)
     cached = reader.load_from_cache(key)
     if cached is not None:
         valid_ids, sphere_data_c = cached
         if sphere_data_c == sphere_data:
             return valid_ids
 
-    fibers = reader.get("Fibers",subj,space=space)
+    fibers = reader.get("Fibers", subj, space=space)
     filterer = FilterBundleWithSphere()
-    #Maybe overkill for only one sphere, but still fater than brute force
+    # Maybe overkill for only one sphere, but still fater than brute force
     filterer.set_bundle(fibers)
 
-    valid_ids = filterer.filter_bundle_with_sphere((x,y,z),r,get_ids=True)
-    reader.save_into_cache(key,(valid_ids,(r,x,y,z)))
+    valid_ids = filterer.filter_bundle_with_sphere((x, y, z), r, get_ids=True)
+    reader.save_into_cache(key, (valid_ids, (r, x, y, z)))
     return valid_ids
 
 
-
-def _brute_force_lines_in_sphere(fibers,ctr,radius):
-    #TODO try by loading first all points into a numpy array
+def _brute_force_lines_in_sphere(fibers, ctr, radius):
+    # TODO try by loading first all points into a numpy array
     ans = set()
     c = np.array(ctr)
     n_lines = fibers.GetNumberOfLines()
@@ -170,14 +174,13 @@ def _brute_force_lines_in_sphere(fibers,ctr,radius):
     r2 = radius**2
     assert n_lines == n_cells
 
-
     for i in xrange(n_lines):
         l = fibers.GetCell(i)
         pts = l.GetPoints()
         n_pts = l.GetNumberOfPoints()
         for j in xrange(n_pts):
             p = pts.GetPoint(j)
-            if np.dot((p-c),(p-c)) <= r2:
+            if np.dot((p - c), (p - c)) <= r2:
                 ans.add(i)
                 break
     return ans

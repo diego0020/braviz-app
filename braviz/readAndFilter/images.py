@@ -85,7 +85,7 @@ def numpy2vtk_img(d, data_type=None):
 
     importer = vtk.vtkImageImport()
     assert isinstance(d, np.ndarray)
-    importer.SetDataScalarTypeToShort() # default
+    importer.SetDataScalarTypeToShort()  # default
     if array_data_type is None:
         array_data_type = d.type
     if array_data_type == np.float64:
@@ -106,19 +106,21 @@ def numpy2vtk_img(d, data_type=None):
         #======================================
     dstring = d.flatten(order='F').tostring()
     if array_data_type.byteorder == '>':
-        #Fix byte order
+        # Fix byte order
         dflat_l = d.flatten(order='F').tolist()
         format_string = '<%id' % len(dflat_l)
         dstring = struct.pack(format_string, *dflat_l)
-        #importer.SetDataScalarTypeToInt()
+        # importer.SetDataScalarTypeToInt()
     importer.SetNumberOfScalarComponents(1)
     importer.CopyImportVoidPointer(dstring, len(dstring))
     dshape = d.shape
-    importer.SetDataExtent(0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
-    importer.SetWholeExtent(0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
+    importer.SetDataExtent(
+        0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
+    importer.SetWholeExtent(
+        0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
     importer.Update()
     imgData = importer.GetOutput()
-    #return imgData
+    # return imgData
     out_img = vtk.vtkImageData()
     out_img.DeepCopy(imgData)
     return out_img
@@ -143,8 +145,10 @@ def nifti_rgb2vtk(nifti_rgb):
     dstring = data2.flatten(order='F').tostring()
     importer.CopyImportVoidPointer(dstring, len(dstring))
     dshape = data.shape
-    importer.SetDataExtent(0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
-    importer.SetWholeExtent(0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
+    importer.SetDataExtent(
+        0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
+    importer.SetWholeExtent(
+        0, dshape[0] - 1, 0, dshape[1] - 1, 0, dshape[2] - 1)
 
     importer.Update()
     img = importer.GetOutput()
@@ -167,6 +171,7 @@ def nibNii2vtk(nii):
     """
     d = nii.get_data()
     return numpy2vtk_img(d)
+
 
 def vtk2numpy(vtk_image):
     """

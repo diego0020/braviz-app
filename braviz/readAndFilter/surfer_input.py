@@ -33,13 +33,17 @@ def _fread3(fobj):
     """Read a 3-byte int from an open binary file object."""
     b1, b2, b3 = np.fromfile(fobj, ">u1", 3)
     return (b1 << 16) + (b2 << 8) + b3
+
+
 def _fread3_many(fobj, n):
     """Read 3-byte ints from an open binary file object."""
     b1, b2, b3 = np.fromfile(fobj, ">u1", 3 * n).reshape(-1,
-                                                    3).astype(np.int).T
+                                                         3).astype(np.int).T
     return (b1 << 16) + (b2 << 8) + b3
 
 #==================================================================
+
+
 def read_surface(filepath):
     """
     reads a freesurfer wireframe structure
@@ -52,37 +56,37 @@ def read_surface(filepath):
         face, and geom is a dictionary containing ``['cras', 'volume',  'voxelsize',  'xras',  'yras',  'zras']`` which
         can be used to determine the affine transform required to move the surface to the MRI space
     """
-#based on pysurfer.io.read_geometry  '
-    with open(filepath,'rb') as fobj:
+# based on pysurfer.io.read_geometry  '
+    with open(filepath, 'rb') as fobj:
         magic = _fread3(fobj)
-        if magic != 16777214 :
+        if magic != 16777214:
             log = logging.getLogger(__name__)
-            log.error("Invalid file %s"%filepath)
+            log.error("Invalid file %s" % filepath)
             fobj.close()
             raise(Exception('Invalid file'))
         create_stamp = fobj.readline()
-        basura = fobj.readline() #reemplazar por _
+        basura = fobj.readline()  # reemplazar por _
         vnum = np.fromfile(fobj, ">i4", 1)[0]
         fnum = np.fromfile(fobj, ">i4", 1)[0]
         coords = np.fromfile(fobj, ">f4", vnum * 3).reshape(vnum, 3)
         faces = np.fromfile(fobj, ">i4", fnum * 3).reshape(fnum, 3)
 
-        #Read geometry information at the end of the file
-        #12 unknown bytes
+        # Read geometry information at the end of the file
+        # 12 unknown bytes
         u1 = np.fromfile(fobj, ">i4", 3)
-        #Always [ 2, 0 ,20 ] ?
-        info_valid_file=fobj.readline()
-        info_filename=fobj.readline()
-        geom={}
-        for i in range(0,6):
-            line=fobj.readline().split()
-            geom[line[0]]=tuple(line[2:])
-        info_log=fobj.readline()
-        return coords,faces,geom
+        # Always [ 2, 0 ,20 ] ?
+        info_valid_file = fobj.readline()
+        info_filename = fobj.readline()
+        geom = {}
+        for i in range(0, 6):
+            line = fobj.readline().split()
+            geom[line[0]] = tuple(line[2:])
+        info_log = fobj.readline()
+        return coords, faces, geom
 
 
 def read_morph_data(filepath):
-#copied directly from pysurfer.io
+    # copied directly from pysurfer.io
     """Read a Freesurfer morphometry data file.
 
     *copied directly from pysurfer.io*
@@ -116,8 +120,7 @@ def read_morph_data(filepath):
 
 
 def read_annot(filepath, orig_ids=False):
-    #copied directly from pysurfer.io
-
+    # copied directly from pysurfer.io
     """Read in a Freesurfer annotation from a .annot file.
 
     *copied directly from pysurfer.io*
@@ -181,7 +184,7 @@ def read_annot(filepath, orig_ids=False):
                 names.append(name)
                 ctab[i, :4] = np.fromfile(fobj, dt, 4)
                 ctab[i, 4] = (ctab[i, 0] + ctab[i, 1] * (2 ** 8) +
-                                ctab[i, 2] * (2 ** 16))
+                              ctab[i, 2] * (2 ** 16))
         ctab[:, 3] = 255
     if not orig_ids:
         ord = np.argsort(ctab[:, -1])
@@ -189,8 +192,7 @@ def read_annot(filepath, orig_ids=False):
     return labels, ctab, names
 
 
-
-def create_polydata(coords,faces):
+def create_polydata(coords, faces):
     """
     Creates a polydata using the coords and faces array (must contain only triangles)
 
@@ -203,22 +205,23 @@ def create_polydata(coords,faces):
     Returns:
         vtkPolyData with same points and faces
     """
-    poly=vtk.vtkPolyData()
-    points=vtk.vtkPoints()
+    poly = vtk.vtkPolyData()
+    points = vtk.vtkPoints()
     points.SetDataTypeToFloat()
     points.SetNumberOfPoints(coords.shape[0])
     for i, pt in enumerate(coords):
-        points.InsertPoint(i,pt)
+        points.InsertPoint(i, pt)
     poly.SetPoints(points)
     poly.Allocate()
     for f in faces:
-        idList=vtk.vtkIdList()
+        idList = vtk.vtkIdList()
         for i in f:
             idList.InsertNextId(i)
-        poly.InsertNextCell(vtk.VTK_TRIANGLE , idList)
+        poly.InsertNextCell(vtk.VTK_TRIANGLE, idList)
     return poly
 
-def apply_offset(coords,offset):
+
+def apply_offset(coords, offset):
     """
     applies an offset to all the coordinates in coords
 
@@ -227,10 +230,11 @@ def apply_offset(coords,offset):
 
     Returns: nx3 coordinates array of translated coordinates
     """
-    f_offset=map(float,offset)
+    f_offset = map(float, offset)
+
     def add_offset(a):
-        return [f_offset[i]+a[i] for i in [0,1,2]]
-    b=np.apply_along_axis(add_offset,1,coords)
+        return [f_offset[i] + a[i] for i in [0, 1, 2]]
+    b = np.apply_along_axis(add_offset, 1, coords)
     return b
 
 
@@ -243,23 +247,23 @@ def _cached_surface_read(surf_file):
 
     see :func:`surface2vtkPoly`
     """
-    #check cache
-    vtkFile=surf_file+'.vtk'
+    # check cache
+    vtkFile = surf_file + '.vtk'
     if os.path.isfile(vtkFile):
-        #print 'reading from vtk-file'
-        vtkreader=vtk.vtkPolyDataReader()
-        vtkreader.SetFileName(surf_file+'.vtk')
+        # print 'reading from vtk-file'
+        vtkreader = vtk.vtkPolyDataReader()
+        vtkreader.SetFileName(surf_file + '.vtk')
         vtkreader.Update()
         return vtkreader.GetOutput()
 
-    #print 'reading from surfer file'
-    poly=surface2vtkPolyData(surf_file)
-    #try to write to cache
+    # print 'reading from surfer file'
+    poly = surface2vtkPolyData(surf_file)
+    # try to write to cache
     log = logging.getLogger(__name__)
     try:
-        vtkWriter=vtk.vtkPolyDataWriter()
+        vtkWriter = vtk.vtkPolyDataWriter()
         vtkWriter.SetInputData(poly)
-        vtkWriter.SetFileName(surf_file+'.vtk')
+        vtkWriter.SetFileName(surf_file + '.vtk')
         vtkWriter.SetFileTypeToBinary()
         vtkWriter.Update()
     except Exception:
@@ -267,6 +271,7 @@ def _cached_surface_read(surf_file):
     if vtkWriter.GetErrorCode() != 0:
         log.warning('cache write failed')
     return poly
+
 
 def surface2vtkPolyData(surf_file):
     """
@@ -280,10 +285,12 @@ def surface2vtkPolyData(surf_file):
 
     """
     coords, faces, geom = read_surface(surf_file)
-    coords2=apply_offset(coords,geom['cras'])
-    poly=create_polydata(coords2,faces)
+    coords2 = apply_offset(coords, geom['cras'])
+    poly = create_polydata(coords2, faces)
     return poly
-def addScalars(surf_polydata,scalars):
+
+
+def addScalars(surf_polydata, scalars):
     """
     Add scalars to a vtkPolyData representation of a freesurfer surface
 
@@ -295,23 +302,25 @@ def addScalars(surf_polydata,scalars):
         vtkPolyData with scalar data
     """
 
-    surf=surf_polydata
+    surf = surf_polydata
     log = logging.getLogger(__name__)
-    if not len(scalars)==surf.GetNumberOfPoints():
+    if not len(scalars) == surf.GetNumberOfPoints():
         log.error("scalars don't match with input polydata")
         raise(Exception("scalars don't match with input polydata"))
-    if scalars.dtype.kind=='f':
-        vtk_scalars=vtk.vtkFloatArray()
+    if scalars.dtype.kind == 'f':
+        vtk_scalars = vtk.vtkFloatArray()
     else:
-        vtk_scalars=vtk.vtkIntArray()
+        vtk_scalars = vtk.vtkIntArray()
     vtk_scalars.SetNumberOfComponents(1)
     vtk_scalars.SetNumberOfValues(len(scalars))
-    for i,s in enumerate(scalars):
+    for i, s in enumerate(scalars):
         vtk_scalars.SetValue(i, s)
-    surf_polydata.GetPointData().RemoveArray(0)    
+    surf_polydata.GetPointData().RemoveArray(0)
     surf_polydata.GetPointData().SetScalars(vtk_scalars)
     return surf_polydata
-def surfLUT2VTK(ctab,names=None):
+
+
+def surfLUT2VTK(ctab, names=None):
     """
     Transform freesurfer lookuptable into a vtkLookupTable
 
@@ -325,22 +334,22 @@ def surfLUT2VTK(ctab,names=None):
     Retruns:
         vtkLookupTable with colors and annotations.
     """
-    out_lut=vtk.vtkLookupTable()
+    out_lut = vtk.vtkLookupTable()
     out_lut.SetNumberOfTableValues(ctab.shape[0])
     out_lut.IndexedLookupOn()
     out_lut.Build()
     if names:
         for i in xrange(ctab.shape[0]):
-            out_lut.SetAnnotation(i,names[i])
+            out_lut.SetAnnotation(i, names[i])
     else:
         for i in xrange(ctab.shape[0]):
-            out_lut.SetAnnotation(i,'-')
+            out_lut.SetAnnotation(i, '-')
     for i in xrange(ctab.shape[0]):
-        out_lut.SetTableValue(i,(ctab[i,0:4]/255) )
+        out_lut.SetTableValue(i, (ctab[i, 0:4] / 255))
     return out_lut
 
 
-def getColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
+def getColorTransferLUT(start, end, midpoint, sharpness, color0, color1, color2=None):
     """
     Creates a vtkLookUpTable from color0 to color1 or from color0 to color2 passing by color1
 
@@ -362,17 +371,21 @@ def getColorTransferLUT(start,end,midpoint,sharpness,color0,color1,color2=None):
         vtkColorTransferFunction
 
     """
-    lut=vtk.vtkColorTransferFunction()
+    lut = vtk.vtkColorTransferFunction()
     lut.SetColorSpaceToRGB()
     if color2:
-        mid=(start+end)/2
+        mid = (start + end) / 2
     else:
-        mid=end
-    lut.SetRange(start, end )
-    lut.AddRGBPoint(start, color0[0],color0[1],color0[2],    midpoint,sharpness)
-    lut.AddRGBPoint(mid,   color1[0],color1[1],color1[2], 1 - midpoint,sharpness)
+        mid = end
+    lut.SetRange(start, end)
+    lut.AddRGBPoint(
+        start, color0[0], color0[1], color0[2],    midpoint, sharpness)
+    lut.AddRGBPoint(
+        mid,   color1[0], color1[1], color1[2], 1 - midpoint, sharpness)
     if color2:
-        lut.AddRGBPoint(end,   color2[0],color2[1],color2[2],      midpoint,sharpness) #midpoint and sharpness ignored for last point
+        # midpoint and sharpness ignored for last point
+        lut.AddRGBPoint(
+            end,   color2[0], color2[1], color2[2],      midpoint, sharpness)
     return lut
 
 
@@ -391,13 +404,13 @@ def get_free_surfer_lut(name):
     Returns:
         vtkColorTransferFunction
     """
-    parameters_d={'curv' : (-0.5 ,0.5 , "RdYlGn", 11,True),
-              'avg_curv' : (-0.5 ,0.5 , "RdYlGn", 11,True),
-              'area' : (0 ,2 , "PuBuGn", 9 ),
-              'thickness': (0 ,5 , "RdYlGn", 11),
-              'volume' : (0 ,5,    "PuBuGn", 9 ),
-              'sulc' : (-2 ,2 , "RdYlGn",11,True),
-              }
+    parameters_d = {'curv': (-0.5, 0.5, "RdYlGn", 11, True),
+                    'avg_curv': (-0.5, 0.5, "RdYlGn", 11, True),
+                    'area': (0, 2, "PuBuGn", 9),
+                    'thickness': (0, 5, "RdYlGn", 11),
+                    'volume': (0, 5,    "PuBuGn", 9),
+                    'sulc': (-2, 2, "RdYlGn", 11, True),
+                    }
     try:
         params = parameters_d[name]
         out_lut = get_colorbrewer_lut(*params)

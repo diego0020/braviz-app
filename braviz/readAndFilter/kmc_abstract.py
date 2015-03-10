@@ -42,39 +42,38 @@ from braviz.readAndFilter.read_csv import read_free_surfer_csv_file
 import braviz.readAndFilter.color_fibers
 
 
-from braviz.readAndFilter.read_spm import get_contrasts_dict,SpmFileReader
+from braviz.readAndFilter.read_spm import get_contrasts_dict, SpmFileReader
 
 from braviz.readAndFilter.base_reader import BaseReader
 from braviz.readAndFilter.transforms import applyTransform, numpy2vtkMatrix, transformPolyData, readFreeSurferTransform, readFlirtMatrix
 
 
 class KmcAbstractReader(BaseReader):
+
     """
 A read and filter class designed to work with kmc projects. Implements common functionality in kmc40 and kmc400."""
 
-
-    def __init__(self, static_root,dynamic_route, max_cache=2000,**kwargs):
+    def __init__(self, static_root, dynamic_route, max_cache=2000, **kwargs):
         "The path pointing to the __root of the file structure must be set here"
         self.__static_root = os.path.normcase(static_root)
-        #Remove trailing slashes
+        # Remove trailing slashes
         self.__static_root = self.__static_root.rstrip('/\\')
         self.__dynaimc_data_root = dynamic_route.rstrip("/\\")
-        if self.__static_root[-1]==":":
-            self.__static_root+="\\"
-        if self.__dynaimc_data_root[-1]==":":
-            self.__dynaimc_data_root+="\\"
+        if self.__static_root[-1] == ":":
+            self.__static_root += "\\"
+        if self.__dynaimc_data_root[-1] == ":":
+            self.__dynaimc_data_root += "\\"
 
-        BaseReader.__init__(self,max_cache)
+        BaseReader.__init__(self, max_cache)
         self._fmri_LUT = None
         self._fa_lut = None
         self._free_surfer_aparc_lut = None
         self._free_surfer_lut = None
         self._free_surfer_labels = None
 
-        self._functional_paradigms=frozenset()
-        self._named_bundles=frozenset()
+        self._functional_paradigms = frozenset()
+        self._named_bundles = frozenset()
         self._tracula_bundles = []
-
 
     def transform_points_to_space(self, point_set, space, subj, inverse=False):
         """Access to the internal coordinate transform function. Moves from world to space.
@@ -83,7 +82,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         space = space.lower()
         return self._movePointsToSpace(point_set, space, subj, inverse)
 
-    def move_img_to_world(self,img,source_space,subj,interpolate=False):
+    def move_img_to_world(self, img, source_space, subj, interpolate=False):
         """
         Resample image to the world coordinate system
         :param img: image
@@ -94,10 +93,10 @@ A read and filter class designed to work with kmc projects. Implements common fu
         """
         subj = self._decode_subject(subj)
         source_space = source_space.lower()
-        img2 = self._move_img_to_world(subj,img,interpolate,source_space)
+        img2 = self._move_img_to_world(subj, img, interpolate, source_space)
         return img2
 
-    def move_img_from_world(self,img,target_space,subj,interpolate=False):
+    def move_img_from_world(self, img, target_space, subj, interpolate=False):
         """
         Resample image to the world coordinate system
         :param img: image
@@ -108,7 +107,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         """
         subj = self._decode_subject(subj)
         target_space = target_space.lower()
-        img2 = self._move_img_from_world(subj,img,interpolate,target_space)
+        img2 = self._move_img_from_world(subj, img, interpolate, target_space)
         return img2
 
     def save_into_cache(self, key, data):
@@ -165,7 +164,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             with open(cache_file, 'rb') as cache_descriptor:
                 try:
                     ans = cPickle.load(cache_descriptor)
-                except (cPickle.UnpicklingError,EOFError):
+                except (cPickle.UnpicklingError, EOFError):
                     log.error("File %s is corrupted " % cache_file)
                     return None
                 else:
@@ -190,9 +189,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
     def get_dyn_data_root(self):
         """Returns the dynamic data_root of this reader"""
         return self.__dynaimc_data_root
-#============================end of public API==========================================
+#============================end of public API============================
 
-#============================virtual methods============================================
+#============================virtual methods==============================
 
     @staticmethod
     @memo_ten
@@ -212,7 +211,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         "Auxiliary function to get the available ids"
         raise NotImplementedError
 
-    def _decode_subject(self,subj):
+    def _decode_subject(self, subj):
         raise NotImplementedError
 
     def _getImg(self, data, subj, space, **kw):
@@ -225,39 +224,39 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
     def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
         "moves an image from the world coordinate space to talairach or dartel spaces"
-        raise  NotImplementedError
-
-    #==========Free Surfer================
-    def _get_free_surfer_models_dir_name(self,subject):
         raise NotImplementedError
 
-    def _get_talairach_transform_name(self,subject):
-        """xfm extension"""
-        raise  NotImplementedError
+    #==========Free Surfer================
+    def _get_free_surfer_models_dir_name(self, subject):
+        raise NotImplementedError
 
-    def _get_free_surfer_stats_dir_name(self,subject):
+    def _get_talairach_transform_name(self, subject):
+        """xfm extension"""
+        raise NotImplementedError
+
+    def _get_free_surfer_stats_dir_name(self, subject):
         raise NotImplementedError
 
     def _get_freesurfer_lut_name(self):
         raise NotImplementedError
 
-    def _get_free_surfer_morph_path(self,subj):
+    def _get_free_surfer_morph_path(self, subj):
         raise NotImplementedError
 
-    def _get_free_surfer_labels_path(self,subj):
+    def _get_free_surfer_labels_path(self, subj):
         raise NotImplementedError
 
-    def _get_freesurfer_surf_name(self,subj,name):
+    def _get_freesurfer_surf_name(self, subj, name):
         raise NotImplementedError
 
-    def _get_tracula_map_name(self,subj):
+    def _get_tracula_map_name(self, subj):
         raise NotImplementedError
 
     #=============Camino==================
-    def _get_base_fibs_name(self,subj):
+    def _get_base_fibs_name(self, subj):
         raise NotImplementedError
 
-    def _get_base_fibs_dir_name(self,subj):
+    def _get_base_fibs_dir_name(self, subj):
         """
         Must contain 'diff2surf.mat', '<fa_img>', '<orig_img>'
         where fa_img and orig_img are defined by the following functions
@@ -274,26 +273,26 @@ A read and filter class designed to work with kmc projects. Implements common fu
         raise NotImplementedError
 
     #==========SPM================
-    def _get_paradigm_name(self,paradigm_name):
+    def _get_paradigm_name(self, paradigm_name):
         raise NotImplementedError
 
-    def _get_paradigm_dir(self,subject,name,spm=False):
+    def _get_paradigm_dir(self, subject, name, spm=False):
         "If spm is True return the direcory containing spm.mat, else return its parent"
         raise NotImplementedError
 
-    def _get_spm_grid_transform(self,subject,paradigm,direction,assume_bad_matrix=False):
-        #TODO: Cache shouldn't be here
+    def _get_spm_grid_transform(self, subject, paradigm, direction, assume_bad_matrix=False):
+        # TODO: Cache shouldn't be here
         """
         Get the spm non linear registration transform grid associated to the paradigm
         Use paradigm=dartel to get the transform associated to the dartel normalization
         """
         raise NotImplementedError
 
-    def _read_func_transform(self,subject,paradigm_name,inverse=False):
+    def _read_func_transform(self, subject, paradigm_name, inverse=False):
         raise NotImplementedError
-#==========================end of virtual methods=======================================
+#==========================end of virtual methods=========================
 
-#==============================common methods===========================================
+#==============================common methods=============================
 
     def _get(self, data, subj=None, space='world', **kw):
         "Internal: decode instruction and dispatch"
@@ -325,7 +324,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return self._readFibers(subj, space, **kw)
         elif data == 'TENSORS':
             return self._readTensors(subj, space, **kw)
-        elif data in {"APARC","WMPARC"}:
+        elif data in {"APARC", "WMPARC"}:
             if kw.get('lut'):
                 if self._free_surfer_aparc_lut is None:
                     self._free_surfer_aparc_lut = self._create_surfer_lut()
@@ -340,9 +339,10 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 return self._functional_paradigms
             return self._read_func(subj, space, **kw)
         elif data == 'BOLD':
-            if space[:4] not in {'func','fmri'}:
+            if space[:4] not in {'func', 'fmri'}:
                 log = logging.getLogger(__name__)
-                log.warning("BOLD data is only available in the native fMRI space")
+                log.warning(
+                    "BOLD data is only available in the native fMRI space")
             return self._read_bold(subj, kw['name'])
         elif data == "TRACULA":
             return self._read_tracula(subj, space, **kw)
@@ -351,30 +351,30 @@ A read and filter class designed to work with kmc projects. Implements common fu
             log.error("Data type not available")
             raise (Exception("Data type not available"))
 
-
     _spharm_models = {'Left-Amygdala': 'l_amygdala',
-                       'Left-Caudate': 'l_caudate',
-                       'Left-Hippocampus': 'l_hippocampus',
-                       'Right-Amygdala': 'r_amygdala',
-                       'Right-Caudate': 'r_caudate',
-                       'Right-Hippocampus': 'r_hippocampus'}
+                      'Left-Caudate': 'l_caudate',
+                      'Left-Hippocampus': 'l_hippocampus',
+                      'Right-Amygdala': 'r_amygdala',
+                      'Right-Caudate': 'r_caudate',
+                      'Right-Hippocampus': 'r_hippocampus'}
 
     def _load_free_surfer_model(self, subject, space, **kw):
         """Auxiliary function to read freesurfer models stored as vtk files or the freeSurfer colortable"""
-        #path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
-        #path=self.__root+'/'+str(subject)+'/Models2'
+        # path=self.__root+'/'+str(subject)+'/SlicerImages/segmentation/3DModels'
+        # path=self.__root+'/'+str(subject)+'/Models2'
         if subject is not None:
             path = self._get_free_surfer_models_dir_name(subject)
         else:
             path = None
-        #todo
+        # todo
         spharm_path = path
         log = logging.getLogger(__name__)
         if kw.get('index', False):
             contents = os.listdir(path)
             pattern = re.compile(r'.*\.vtk$')
-            models = [m[0:-4] for m in contents if pattern.match(m) is not None]
-            #look for spharm_models
+            models = [m[0:-4]
+                      for m in contents if pattern.match(m) is not None]
+            # look for spharm_models
             for k, val in self._spharm_models.iteritems():
                 if os.path.isfile(os.path.join(spharm_path, "%sSPHARM.vtk" % val)):
                     models.append(k + '-SPHARM')
@@ -391,29 +391,34 @@ A read and filter class designed to work with kmc projects. Implements common fu
                     return colors[name]
             elif kw.get('volume'):
                 if name.endswith('-SPHARM'):
-                    log.warning("Warning, spharm structure treated as non-spharm equivalent")
+                    log.warning(
+                        "Warning, spharm structure treated as non-spharm equivalent")
                     name = name[:-7]
                 return self._get_volume(subject, name)
             elif kw.get('label'):
                 if name.endswith('-SPHARM'):
-                    log.warning("Warning, spharm structure treated as non-spharm equivalent")
+                    log.warning(
+                        "Warning, spharm structure treated as non-spharm equivalent")
                     name = name[:-7]
                 if self._free_surfer_labels is None:
                     self._parse_fs_color_file()
                 return self._free_surfer_labels.get(name)
             else:
-                available = self._load_free_surfer_model(subject, space=None, index='T')
+                available = self._load_free_surfer_model(
+                    subject, space=None, index='T')
                 if not name in available:
-                    log.warning( 'Model %s not available' % name)
+                    log.warning('Model %s not available' % name)
                     raise Exception('Model %s not available' % name)
                 if name.endswith('-SPHARM'):
                     spharm_name = self._spharm_models[name[:-7]]
-                    filename = os.path.join(spharm_path, spharm_name + 'SPHARM.vtk')
+                    filename = os.path.join(
+                        spharm_path, spharm_name + 'SPHARM.vtk')
                     reader = vtk.vtkPolyDataReader()
                     reader.SetFileName(filename)
                     reader.Update()
                     output = reader.GetOutput()
-                    output = self._movePointsToSpace(output, 'spharm', subject, True)
+                    output = self._movePointsToSpace(
+                        output, 'spharm', subject, True)
                 else:
                     filename = os.path.join(path, name + '.vtk')
                     reader = vtk.vtkPolyDataReader()
@@ -432,23 +437,26 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
         data_dir = self._get_free_surfer_stats_dir_name(subject)
         if model_name[:2] == 'wm':
-            #we are dealing with white matter
+            # we are dealing with white matter
             file_name = 'wmparc.stats'
             complete_file_name = os.path.join(data_dir, file_name)
-            vol = read_free_surfer_csv_file(complete_file_name, model_name, 'StructName', 'Volume_mm3')
+            vol = read_free_surfer_csv_file(
+                complete_file_name, model_name, 'StructName', 'Volume_mm3')
         elif model_name[:3] == 'ctx':
-            #we are dealing with a cortex structure
+            # we are dealing with a cortex structure
             hemisphere = model_name[4]
             name = model_name[7:]
             file_name = '%sh.aparc.stats' % hemisphere
             complete_file_name = os.path.join(data_dir, file_name)
-            vol = read_free_surfer_csv_file(complete_file_name, name, 'StructName', 'GrayVol')
+            vol = read_free_surfer_csv_file(
+                complete_file_name, name, 'StructName', 'GrayVol')
         else:
-            #we are dealing with a normal structure
+            # we are dealing with a normal structure
             name = model_name
             file_name = 'aseg.stats'
             complete_file_name = os.path.join(data_dir, file_name)
-            vol = read_free_surfer_csv_file(complete_file_name, name, 'StructName', 'Volume_mm3')
+            vol = read_free_surfer_csv_file(
+                complete_file_name, name, 'StructName', 'Volume_mm3')
         if vol is None:
             vol = 'nan'
         return float(vol)
@@ -467,35 +475,37 @@ A read and filter class designed to work with kmc projects. Implements common fu
         with open(color_file_name) as color_file:
             color_lines = color_file.readlines()
             color_file.close()
-            color_lists = [l.split() for l in color_lines if l[0] not in ('#', '\n', ' ') ]
-            color_tuples = ((l[1], tuple([float(c) / 256 for c in l[2:]])) for l in color_lists if len(l)>0)
+            color_lists = [l.split()
+                           for l in color_lines if l[0] not in ('#', '\n', ' ')]
+            color_tuples = ((l[1], tuple([float(c) / 256 for c in l[2:]]))
+                            for l in color_lists if len(l) > 0)
             color_dict = dict(color_tuples)
             self.save_into_cache('free_surfer_color_lut_internal', color_dict)
-            labels_tuples = ((l[1],l[0]) for l in color_lists if len(l)>0)
-            labels_dict=dict(labels_tuples)
-            self.save_into_cache('free_surfer_labels_dict_internal',labels_dict)
+            labels_tuples = ((l[1], l[0]) for l in color_lists if len(l) > 0)
+            labels_dict = dict(labels_tuples)
+            self.save_into_cache(
+                'free_surfer_labels_dict_internal', labels_dict)
 
         self._free_surfer_lut = color_dict
         self._free_surfer_labels = labels_dict
 
-
-    def _cached_surface_read(self,subj,name):
+    def _cached_surface_read(self, subj, name):
         "cached function to read a freesurfer surface file"
-        #check cache
-        key = "surf_%s_%s"%(name,subj)
+        # check cache
+        key = "surf_%s_%s" % (name, subj)
         poly = self.load_from_cache(key)
-        #print 'reading from surfer file'
+        # print 'reading from surfer file'
         if poly is None:
-            filename = self._get_freesurfer_surf_name(subj,name)
-            poly=surface2vtkPolyData(filename)
-            self.save_into_cache(key,poly)
+            filename = self._get_freesurfer_surf_name(subj, name)
+            poly = surface2vtkPolyData(filename)
+            self.save_into_cache(key, poly)
         return poly
 
     def _load_free_surfer_surf(self, subj, space, **kw):
         """Auxiliary function to read the corresponding surface file for hemi and name.
         Scalars can be added to the output surface"""
         try:
-            #Check required arguments
+            # Check required arguments
             name = kw['hemi'] + 'h.' + kw['name']
         except KeyError:
             log = logging.getLogger(__name__)
@@ -503,8 +513,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
             raise Exception('Name=<surface> and hemi=<l|r> are required.')
         if not 'scalars' in kw:
 
-            output = self._cached_surface_read(subj,name)
-            if kw.get("normals",True):
+            output = self._cached_surface_read(subj, name)
+            if kw.get("normals", True):
                 normal_f = vtk.vtkPolyDataNormals()
                 normal_f.AutoOrientNormalsOn()
                 normal_f.SetInputData(output)
@@ -513,11 +523,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 output = normal_f.GetOutput()
             return self._movePointsToSpace(output, space, subj)
         else:
-            scalars = self.get('SURF_SCALAR', subj, hemi=name[0], scalars=kw['scalars'])
-            #Take advantage of cache
+            scalars = self.get(
+                'SURF_SCALAR', subj, hemi=name[0], scalars=kw['scalars'])
+            # Take advantage of cache
             kw.pop('scalars')
-            normals = kw.get('normals',True)
-            kw["normals"]=False
+            normals = kw.get('normals', True)
+            kw["normals"] = False
             orig = self.get('SURF', subj, space, **kw)
             addScalars(orig, scalars)
             if normals:
@@ -536,11 +547,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
         labels_path = self._get_free_surfer_labels_path(subj)
         log = logging.getLogger(__name__)
         if kw.get('index'):
-            hs='rh'
+            hs = 'rh'
             contents = os.listdir(morph_path)
             contents.extend(os.listdir(labels_path))
             pattern = re.compile(hs + r'.*\.annot$')
-            annots = [m[3:-6] for m in contents if pattern.match(m) is not None]
+            annots = [m[3:-6]
+                      for m in contents if pattern.match(m) is not None]
             morfs = [m for m in morph if hs + '.' + m in contents]
             return morfs + annots
         try:
@@ -553,7 +565,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
             if scalar_name in morph:
                 return get_free_surfer_lut(scalar_name)
             else:
-                annot_filename = os.path.join(labels_path , 'rh.' + scalar_name + '.annot')
+                annot_filename = os.path.join(
+                    labels_path, 'rh.' + scalar_name + '.annot')
                 labels, ctab, names = read_annot(annot_filename)
                 return surfLUT2VTK(ctab, names)
         try:
@@ -562,18 +575,19 @@ A read and filter class designed to work with kmc projects. Implements common fu
             log.error("hemi is required")
             raise (Exception("hemi is required"))
 
-
         if scalar_name in morph:
-            scalar_filename = os.path.join(morph_path,hemisphere + 'h.' + scalar_name)
+            scalar_filename = os.path.join(
+                morph_path, hemisphere + 'h.' + scalar_name)
             scalar_array = read_morph_data(scalar_filename)
             return scalar_array
         else:
-            #It should be an annotation
-            annot_filename = os.path.join(labels_path , hemisphere + 'h.' + scalar_name + '.annot')
+            # It should be an annotation
+            annot_filename = os.path.join(
+                labels_path, hemisphere + 'h.' + scalar_name + '.annot')
             labels, ctab, names = read_annot(annot_filename)
             return labels
 
-    def _cached_color_fibers(self, subj, color=None,scalars=None):
+    def _cached_color_fibers(self, subj, color=None, scalars=None):
         """function that reads colored fibers from cache,
         if not available creates the structure and attempts to save the cache"""
 
@@ -581,14 +595,14 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if (color is None) and (scalars is None):
             color = "orient"
 
-        #WE ARE IN DIFF SPACE
+        # WE ARE IN DIFF SPACE
         if color is not None:
             color = color.lower()
             if color.startswith('orient'):
-                #This one should always exist!!!!!
+                # This one should always exist!!!!!
                 file_name = self._get_base_fibs_name(subj)
                 if not os.path.isfile(file_name):
-                    log.error("Fibers file not found: %s"%file_name)
+                    log.error("Fibers file not found: %s" % file_name)
                     raise Exception("Fibers file not found")
                 pd_reader = vtk.vtkPolyDataReader()
                 pd_reader.SetFileName(file_name)
@@ -597,74 +611,84 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 pd_reader.CloseVTKFile()
                 #!!! This is the base case
                 return fibs
-            cache_key = 'streams_%s_%s.vtk' % (subj,color)
+            cache_key = 'streams_%s_%s.vtk' % (subj, color)
         else:
             scalars = scalars.lower()
-            cache_key = 'streams_%s_sc_%s.vtk' % (subj,scalars)
+            cache_key = 'streams_%s_sc_%s.vtk' % (subj, scalars)
 
         cached = self.load_from_cache(cache_key)
         if cached is not None:
-                return cached
+            return cached
         else:
-            #WE ARE IN DIFF SPACE
-            #base case
+            # WE ARE IN DIFF SPACE
+            # base case
             fibers = self._cached_color_fibers(subj, 'orient')
             if color == 'orient':
                 return fibers
             elif color == 'y':
                 color_fun = braviz.readAndFilter.color_fibers.color_by_z
-                braviz.readAndFilter.color_fibers.color_fibers_pts(fibers, color_fun)
+                braviz.readAndFilter.color_fibers.color_fibers_pts(
+                    fibers, color_fun)
             elif color == 'fa':
                 color_fun = braviz.readAndFilter.color_fibers.color_by_fa
-                fa_img = self.get('fa', subj, format='vtk',space="diff")
+                fa_img = self.get('fa', subj, format='vtk', space="diff")
                 fun_args = (fa_img,)
-                braviz.readAndFilter.color_fibers.color_fibers_pts(fibers, color_fun, *fun_args)
+                braviz.readAndFilter.color_fibers.color_fibers_pts(
+                    fibers, color_fun, *fun_args)
             elif color == 'rand':
                 color_fun = braviz.readAndFilter.color_fibers.random_line
-                braviz.readAndFilter.color_fibers.color_fibers_lines(fibers, color_fun)
+                braviz.readAndFilter.color_fibers.color_fibers_lines(
+                    fibers, color_fun)
             elif color == 'curv':
                 color_fun = braviz.readAndFilter.color_fibers.line_curvature
-                braviz.readAndFilter.color_fibers.color_fibers_lines(fibers, color_fun)
+                braviz.readAndFilter.color_fibers.color_fibers_lines(
+                    fibers, color_fun)
             elif scalars == "fa_p":
-                fa_img = self.get("FA",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_from_image(fibers,fa_img)
+                fa_img = self.get("FA", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image(
+                    fibers, fa_img)
             elif scalars == "fa_l":
-                fa_img = self.get("FA",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,fa_img)
+                fa_img = self.get("FA", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_lines_from_image(
+                    fibers, fa_img)
             elif scalars == "md_p":
-                md_img = self.get("MD",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_from_image(fibers,md_img)
+                md_img = self.get("MD", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image(
+                    fibers, md_img)
             elif scalars == "md_l":
-                md_img = self.get("MD",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_lines_from_image(fibers,md_img)
+                md_img = self.get("MD", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_lines_from_image(
+                    fibers, md_img)
             elif scalars == "length":
                 braviz.readAndFilter.color_fibers.scalars_from_length(fibers)
             elif scalars == "aparc":
-                aparc_img = self.get("APARC",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_from_image_int(fibers,aparc_img)
+                aparc_img = self.get("APARC", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image_int(
+                    fibers, aparc_img)
             elif scalars == "wmparc":
-                wmparc_img = self.get("WMPARC",subj,space="diff")
-                braviz.readAndFilter.color_fibers.scalars_from_image_int(fibers,wmparc_img)
+                wmparc_img = self.get("WMPARC", subj, space="diff")
+                braviz.readAndFilter.color_fibers.scalars_from_image_int(
+                    fibers, wmparc_img)
             else:
                 log.error('Unknown coloring scheme %s' % color)
                 raise Exception('Unknown coloring scheme %s' % color)
 
-            #Cache write
-            self.save_into_cache(cache_key,fibers)
+            # Cache write
+            self.save_into_cache(cache_key, fibers)
             return fibers
 
     def _cached_filter_fibers(self, subj, waypoint):
         "Only one waypoint, returns a set"
-        #print "filtering for model "+waypoint
+        # print "filtering for model "+waypoint
         cache_key = 'fibers_%s_%s' % (subj, waypoint)
         log = logging.getLogger(__name__)
         ids = self.load_from_cache(cache_key)
         if ids is not None:
             return ids
-        if waypoint[:3]=="wm-":
+        if waypoint[:3] == "wm-":
             img_name = "WMPARC"
-        elif waypoint[-7:]=="-SPHARM":
-            #have to do it in the old style
+        elif waypoint[-7:] == "-SPHARM":
+            # have to do it in the old style
             img_name = None
         else:
             img_name = "APARC"
@@ -672,40 +696,43 @@ A read and filter class designed to work with kmc projects. Implements common fu
             fibers = self.get('fibers', subj, space='world')
             model = self.get('model', subj, name=waypoint, space='world')
             if model:
-                ids = braviz.readAndFilter.filterPolylinesWithModel(fibers, model)
+                ids = braviz.readAndFilter.filterPolylinesWithModel(
+                    fibers, model)
             else:
                 ids = set()
         else:
             try:
-                fibers = self.get('fibers', subj, space='world',color=None,scalars=img_name)
+                fibers = self.get(
+                    'fibers', subj, space='world', color=None, scalars=img_name)
             except Exception as e:
                 log.exception(e)
-                log.error("%s image not found"%img_name)
+                log.error("%s image not found" % img_name)
                 return set()
             if self._free_surfer_labels is None:
                 self._parse_fs_color_file()
             lbl = self._free_surfer_labels.get(waypoint)
             if lbl is None:
                 raise Exception("Unknown structure")
-            ids = braviz.readAndFilter.filter_polylines_by_scalar(fibers,int(lbl))
+            ids = braviz.readAndFilter.filter_polylines_by_scalar(
+                fibers, int(lbl))
 
-        self.save_into_cache(cache_key,ids)
+        self.save_into_cache(cache_key, ids)
         return ids
 
-    def _readFibers_from_db(self,subj,db_id, space, **kw):
+    def _readFibers_from_db(self, subj, db_id, space, **kw):
         from braviz.readAndFilter import bundles_db
         from hierarchical_fibers import read_logical_fibers
         log = logging.getLogger(__name__)
         try:
             _, bundle_type, data = bundles_db.get_bundle_details(db_id)
         except Exception:
-            log.error("Fiber with id=%s nor found in database"%db_id)
-            raise Exception("Fiber with id=%s nor found in database"%db_id)
+            log.error("Fiber with id=%s nor found in database" % db_id)
+            raise Exception("Fiber with id=%s nor found in database" % db_id)
 
         bundle_type = int(bundle_type)
 
         if bundle_type == 0:
-            #named tract
+            # named tract
             assert "name" not in kw
             poly = self.get("Fibers", subj, space,  name=data, **kw)
             return poly
@@ -714,11 +741,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
             assert "operation" not in kw
             operation = "and" if bundle_type == 1 else "or"
             checkpoints = pickle.loads(data)
-            poly = self.get("Fibers", subj, waypoint=checkpoints, operation=operation,space=space, **kw)
+            poly = self.get(
+                "Fibers", subj, waypoint=checkpoints, operation=operation, space=space, **kw)
             return poly
         elif bundle_type == 10:
             tree_dict = pickle.loads(data)
-            poly = read_logical_fibers(subj,space,tree_dict,self,**kw)
+            poly = read_logical_fibers(subj, space, tree_dict, self, **kw)
             return poly
         else:
             log.error("Unknown data type")
@@ -737,7 +765,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             log.warning("The progress argument is deprecated")
             kw['progress'].set(5)
 
-        if kw.get("lut",False):
+        if kw.get("lut", False):
             scalars = kw.get("scalars")
             scalars = scalars.lower()
             if scalars is None:
@@ -747,74 +775,83 @@ A read and filter class designed to work with kmc projects. Implements common fu
             if scalars == "length":
                 lut = braviz.readAndFilter.color_fibers.get_length_lut()
                 return lut
-            elif scalars[:2]=="fa":
+            elif scalars[:2] == "fa":
                 lut = braviz.readAndFilter.color_fibers.get_fa_lut()
                 return lut
-            elif scalars[:2]=="md":
+            elif scalars[:2] == "md":
                 lut = self._get_md_lut()
                 return lut
-        #named tracts index
+        # named tracts index
         if kw.get('index', False):
             return self._named_bundles
 
-        #deal with database tracts:
+        # deal with database tracts:
         if "db_id" in kw:
             db_id = kw.pop("db_id")
-            poly = self._readFibers_from_db(subj,db_id,space=space,**kw)
+            poly = self._readFibers_from_db(subj, db_id, space=space, **kw)
             return poly
 
         if 'name' in kw:
-            #named tracts, special case
+            # named tracts, special case
             import braviz.readAndFilter.named_tracts
 
             try:
-                named_tract_func = getattr(braviz.readAndFilter.named_tracts, kw['name'])
+                named_tract_func = getattr(
+                    braviz.readAndFilter.named_tracts, kw['name'])
             except AttributeError:
                 raise Exception("unknown tract name %s" % kw['name'])
-            fibers, result_space = named_tract_func(self, subj, color=kw.get('color'),scalars=kw.get("scalars"))
-            #this are in result_splace coordinates, check if we need to change them
+            fibers, result_space = named_tract_func(
+                self, subj, color=kw.get('color'), scalars=kw.get("scalars"))
+            # this are in result_splace coordinates, check if we need to change
+            # them
             target_space = space
             if target_space == result_space:
                 return fibers
             if result_space != 'world':
-                fibers = self.transform_points_to_space(fibers, result_space, subj, inverse=True)
+                fibers = self.transform_points_to_space(
+                    fibers, result_space, subj, inverse=True)
             if target_space != 'world':
-                transformed_streams = self._movePointsToSpace(fibers, space, subj, inverse=False)
+                transformed_streams = self._movePointsToSpace(
+                    fibers, space, subj, inverse=False)
                 return transformed_streams
             return fibers
         if 'waypoint' not in kw:
             path = self._get_base_fibs_dir_name(subj)
-            streams = self._cached_color_fibers(subj, kw.get('color'),kw.get("scalars"))
+            streams = self._cached_color_fibers(
+                subj, kw.get('color'), kw.get("scalars"))
             if space in {'diff', 'native'}:
                 return streams
-            #move to world
-            matrix = readFlirtMatrix('diff2surf.mat', self._get_fa_img_name(), self._get_orig_img_name(), path)
+            # move to world
+            matrix = readFlirtMatrix(
+                'diff2surf.mat', self._get_fa_img_name(), self._get_orig_img_name(), path)
             #matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', '../orig.nii.gz', path)
             streams_mri = transformPolyData(streams, matrix)
             if space != 'world':
-                transformed_streams = self._movePointsToSpace(streams_mri, space, subj)
+                transformed_streams = self._movePointsToSpace(
+                    streams_mri, space, subj)
                 return transformed_streams
             return streams_mri
         else:
-            #dealing with waypoints
-            if kw.get('ids',False):
+            # dealing with waypoints
+            if kw.get('ids', False):
                 models = kw['waypoint']
                 if isinstance(models, basestring):
-                    return self._cached_filter_fibers(subj,models)
-                sub_ids = [self._cached_filter_fibers(subj,m) for m in models]
+                    return self._cached_filter_fibers(subj, models)
+                sub_ids = [self._cached_filter_fibers(subj, m) for m in models]
                 if (kw.get('operation', 'and') == 'and'):
                     return set.intersection(*sub_ids)
                 else:
                     return set.union(*sub_ids)
 
             if space == 'world':
-                #Do filtering in world coordinates
+                # Do filtering in world coordinates
                 models = kw.pop('waypoint')
                 if isinstance(models, basestring):
                     models = (models,)
                 if (kw.get('operation', 'and') == 'and') and len(models) == 0:
-                    #return all fibers
-                    fibers = self.get('fibers', subj, space='world', color=kw.get('color'),scalars=kw.get("scalars"))
+                    # return all fibers
+                    fibers = self.get('fibers', subj, space='world', color=kw.get(
+                        'color'), scalars=kw.get("scalars"))
                     return fibers
 
                 valid_ids = None
@@ -833,88 +870,92 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 if valid_ids is None:
                     valid_ids = set()
 
-                #Take advantage of buffer
-                fibers = self.get('fibers', subj, space='world', color=kw.get('color'),scalars=kw.get("scalars"))
+                # Take advantage of buffer
+                fibers = self.get('fibers', subj, space='world', color=kw.get(
+                    'color'), scalars=kw.get("scalars"))
                 fibers2 = extract_poly_data_subset(fibers, valid_ids)
                 return fibers2
             else:
                 #space is not world
-                #Always filter in world coordinates
+                # Always filter in world coordinates
                 target_space = space
                 filtered_fibers = self.get('fibers', subj, 'world', **kw)
-                transformed_streams = self._movePointsToSpace(filtered_fibers, target_space, subj)
+                transformed_streams = self._movePointsToSpace(
+                    filtered_fibers, target_space, subj)
                 return transformed_streams
 
-    def _read_tracula(self,subj, space, **kw):
+    def _read_tracula(self, subj, space, **kw):
         "Read tracula files"
-        if kw.get("index",False):
+        if kw.get("index", False):
             labels = self._tracula_bundles
             return labels
-        log= logging.getLogger(__name__)
+        log = logging.getLogger(__name__)
         track_name = kw.get("name")
         if track_name is None:
             log.error("Name is required")
             raise ValueError
         self._parse_fs_color_file()
-        if kw.get("color",False):
+        if kw.get("color", False):
             col = self._free_surfer_lut[track_name]
             return col[:3]
         idx = int(self._free_surfer_labels[track_name])
         idx %= 100
 
-        if kw.get("map",False):
-            format = kw.get("format","nii")
-            map = self._read_tracula_map(subj,idx,format=format)
-            if space in {"diff","native"}:
+        if kw.get("map", False):
+            format = kw.get("format", "nii")
+            map = self._read_tracula_map(subj, idx, format=format)
+            if space in {"diff", "native"}:
                 return map
             else:
                 if format == "vtk":
-                    w_img = self.move_img_to_world(map,"diff",subj,interpolate=True)
-                    s_img = self.move_img_from_world(w_img,space,subj,interpolate=True)
+                    w_img = self.move_img_to_world(
+                        map, "diff", subj, interpolate=True)
+                    s_img = self.move_img_from_world(
+                        w_img, space, subj, interpolate=True)
                     return s_img
                 else:
                     raise NotImplementedError
 
-        map = self._read_tracula_map(subj,idx,format="vtk")
+        map = self._read_tracula_map(subj, idx, format="vtk")
         smooth = vtk.vtkImageGaussianSmooth()
         smooth.SetDimensionality(3)
         smooth.SetStandardDeviation(1)
         smooth.SetInputData(map)
         smooth.Update()
 
-        maxi_val=smooth.GetOutput().GetScalarRange()[1]
-        thr = maxi_val*kw.get("contour",0.2)
+        maxi_val = smooth.GetOutput().GetScalarRange()[1]
+        thr = maxi_val * kw.get("contour", 0.2)
 
         contours = vtk.vtkContourFilter()
         contours.SetInputConnection(smooth.GetOutputPort())
         contours.SetNumberOfContours(1)
-        contours.SetValue(0,thr)
+        contours.SetValue(0, thr)
         contours.Update()
         cont = contours.GetOutput()
 
-        if space in {"diff","native"}:
+        if space in {"diff", "native"}:
             return cont
-        cont_w = self._movePointsToSpace(cont,"diff",subj,inverse=True)
-        cont_s = self._movePointsToSpace(cont_w,space,subj,inverse=False)
+        cont_w = self._movePointsToSpace(cont, "diff", subj, inverse=True)
+        cont_s = self._movePointsToSpace(cont_w, space, subj, inverse=False)
         return cont_s
 
-    def _read_tracula_map(self,subj,index,format="nii"):
-        affine,img_data = self._get_full_tracula_map(subj)
-        data2 = img_data[:,:,:,index]
+    def _read_tracula_map(self, subj, index, format="nii"):
+        affine, img_data = self._get_full_tracula_map(subj)
+        data2 = img_data[:, :, :, index]
         if format == "nii":
-            return nib.Nifti1Image(data2,affine)
+            return nib.Nifti1Image(data2, affine)
         elif format == "vtk":
             vtk_img = numpy2vtk_img(data2)
-            vtk_img2 = applyTransform(vtk_img,np.linalg.inv(affine))
+            vtk_img2 = applyTransform(vtk_img, np.linalg.inv(affine))
             return vtk_img2
 
     @memo_ten
-    def _get_full_tracula_map(self,subj):
+    def _get_full_tracula_map(self, subj):
         tracks_full_file = self._get_tracula_map_name(subj)
         tracks_img = nib.load(tracks_full_file)
         affine = tracks_img.get_affine()
         img_data = tracks_img.get_data()
-        return affine,img_data
+        return affine, img_data
 
     def _readTensors(self, subj, **kw):
         "Internal function to read a tensor file"
@@ -933,25 +974,30 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return transformPolyData(point_set, transform)
         elif space[:4] == 'diff':
             path = self._get_base_fibs_dir_name(subj)
-            #TODO: This looks wrong!!!!
-            transform = readFlirtMatrix('surf2diff.mat', self._get_orig_img_name(),self._get_fa_img_name(), path)
+            # TODO: This looks wrong!!!!
+            transform = readFlirtMatrix(
+                'surf2diff.mat', self._get_orig_img_name(), self._get_fa_img_name(), path)
             if inverse:
-                transform = readFlirtMatrix('diff2surf.mat', self._get_fa_img_name(), self._get_orig_img_name(), path)
+                transform = readFlirtMatrix(
+                    'diff2surf.mat', self._get_fa_img_name(), self._get_orig_img_name(), path)
 
             return transformPolyData(point_set, transform)
         elif space in ('template', 'dartel'):
             if inverse:
-                dartel_warp = self._get_spm_grid_transform(subj,"dartel","back")
+                dartel_warp = self._get_spm_grid_transform(
+                    subj, "dartel", "back")
             else:
-                dartel_warp = self._get_spm_grid_transform(subj,"dartel","forw")
+                dartel_warp = self._get_spm_grid_transform(
+                    subj, "dartel", "forw")
             return transformPolyData(point_set, dartel_warp)
         elif space[:4] in ('func', 'fmri'):
-            #functional space
+            # functional space
             paradigm = space[5:]
             trans = self._read_func_transform(subj, paradigm, inverse)
             return transformPolyData(point_set, trans)
         elif space == 'spharm':
-            #This is very hacky.... but works well, not explanation available :S
+            # This is very hacky.... but works well, not explanation available
+            # :S
             aparc_img = self.get('aparc', subj)
             m = aparc_img.get_affine()
             m2 = np.copy(m)
@@ -974,8 +1020,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
     def _create_surfer_lut(self):
         "returns a vtkLookUpTable based on the freeSurferColorLUT file"
         color_dict = self.load_from_cache('aparc_color_tuples_dictionary')
-        if color_dict is not None and len(color_dict)<180:
-            #pass
+        if color_dict is not None and len(color_dict) < 180:
+            # pass
             color_dict = None
         #color_dict = None
         if color_dict is None:
@@ -984,7 +1030,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             aparc_img = self.get('APARC', ref)
             aparc_data = aparc_img.get_data()
             aparc_values = set(np.unique(aparc_data.flat))
-            wmparc_img = self.get("WMPARC",ref)
+            wmparc_img = self.get("WMPARC", ref)
             wmparc_data = wmparc_img.get_data()
             wmparc_values = np.unique(wmparc_data.flat)
             aparc_values.update(wmparc_values)
@@ -997,10 +1043,10 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 raise
             color_lines = color_file.readlines()
             color_file.close()
-            color_lists = (l.split() for l in color_lines if l[0] not in ['#', '\n', ' ','\r'] )
+            color_lists = (l.split()
+                           for l in color_lines if l[0] not in ['#', '\n', ' ', '\r'])
             color_tuples = ((int(l[0]),
-                             ( tuple([float(c) / 256 for c in l[2:2 + 3]] + [1.0])
-                               , l[1]) )
+                             (tuple([float(c) / 256 for c in l[2:2 + 3]] + [1.0]), l[1]))
                             for l in color_lists if int(l[0]) in aparc_values)  # (index,(color,annot) )
             color_dict = dict(color_tuples)
             self.save_into_cache('aparc_color_tuples_dictionary', color_dict)
@@ -1008,12 +1054,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
         out_lut.SetNanColor(0.0, 1.0, 0.0, 1.0)
         out_lut.SetNumberOfTableValues(max(color_dict.iterkeys()) + 1)
         out_lut.IndexedLookupOn()
-        for k,v in color_dict.iteritems():
+        for k, v in color_dict.iteritems():
             out_lut.SetAnnotation(k, v[1])
-        for k,v in color_dict.iteritems():  # HACKY.... maybe there is a bug?
+        for k, v in color_dict.iteritems():  # HACKY.... maybe there is a bug?
             idx = out_lut.GetAnnotatedValueIndex(k)
             out_lut.SetTableValue(idx, v[0])
-        #self.save_into_cache('free_surfer_vtk_color_lut',out_lut)
+        # self.save_into_cache('free_surfer_vtk_color_lut',out_lut)
         return out_lut
 
     def _create_fa_lut(self):
@@ -1041,12 +1087,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
         return fmri_color_int
 
-
-    def _read_func_transform_internal(self,subject, paradigm_name, inverse, path, T1_func, T1_world,  ):
+    def _read_func_transform_internal(self, subject, paradigm_name, inverse, path, T1_func, T1_world,):
         "reads the transform from world to functional space"
         if inverse is False:
 
-            dartel_trans = self._get_spm_grid_transform(subject,paradigm_name,"forw", True)
+            dartel_trans = self._get_spm_grid_transform(
+                subject, paradigm_name, "forw", True)
             T1_func_img = nib.load(T1_func)
             T1_world_img = nib.load(T1_world)
             Tf = T1_func_img.get_affine()
@@ -1063,7 +1109,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
             concatenated_trans.Concatenate(dartel_trans)
             return concatenated_trans
         else:
-            dartel_trans = self._get_spm_grid_transform(subject,paradigm_name,"back", True)
+            dartel_trans = self._get_spm_grid_transform(
+                subject, paradigm_name, "back", True)
             T1_func_img = nib.load(T1_func)
             T1_world_img = nib.load(T1_world)
             Tf = T1_func_img.get_affine()
@@ -1094,19 +1141,19 @@ A read and filter class designed to work with kmc projects. Implements common fu
             log.warning(" functional paradigm %s not available" % name)
             return None
         name = self._get_paradigm_name(name)
-        path = self._get_paradigm_dir(subject,name,spm=True)
+        path = self._get_paradigm_dir(subject, name, spm=True)
         if "contrasts_dict" in kw:
-            spm_file_path = os.path.join(path,"SPM.mat")
+            spm_file_path = os.path.join(path, "SPM.mat")
             return get_contrasts_dict(spm_file_path)
         if kw.get("spm"):
-            spm_file = os.path.join(path,"SPM.mat")
+            spm_file = os.path.join(path, "SPM.mat")
             return SpmFileReader(spm_file)
-        contrast = kw.get("contrast",1)
-        contrast_n = "%.4d"%contrast
-        z_map = os.path.join(path, 'spmT_%s.hdr')%contrast_n
-        log.info("Loading map %s"%z_map)
+        contrast = kw.get("contrast", 1)
+        contrast_n = "%.4d" % contrast
+        z_map = os.path.join(path, 'spmT_%s.hdr') % contrast_n
+        log.info("Loading map %s" % z_map)
         nii_z_map = nib.load(z_map)
-        if kw.get('format', 'nifti').lower() in {'nifti','nii'}:
+        if kw.get('format', 'nifti').lower() in {'nifti', 'nii'}:
             return nii_z_map
         vtk_z_map = nibNii2vtk(nii_z_map)
         if space == 'native':
@@ -1121,18 +1168,16 @@ A read and filter class designed to work with kmc projects. Implements common fu
         spacing2 = T1_world.GetSpacing()
         fmri_trans = self._read_func_transform(subject, name)
         log.info("attempting to move to world")
-        world_z_map = applyTransform(vtk_z_map, fmri_trans, origin2, dimension2, spacing2)
+        world_z_map = applyTransform(
+            vtk_z_map, fmri_trans, origin2, dimension2, spacing2)
 
         return self._move_img_from_world(subject, world_z_map, True, space)
 
     def _read_bold(self, subj, paradigm):
         paradigm = self._get_paradigm_name(paradigm)
-        path = self._get_paradigm_dir(subj,paradigm)
-        route = os.path.join(path,'smoothed.nii.gz')
+        path = self._get_paradigm_dir(subj, paradigm)
+        route = os.path.join(path, 'smoothed.nii.gz')
         img_4d = nib.load(route)
         return img_4d
 
-#=========================end of common methods===========================================
-
-
-
+#=========================end of common methods===========================

@@ -29,9 +29,9 @@ from braviz.readAndFilter.transforms import numpy2vtkMatrix, transformGeneralDat
 from filter_fibers import filter_polylines_with_img, filterPolylinesWithModel, extract_poly_data_subset, \
     filter_polylines_by_scalar
 
-#Easy access to kmc readers
+# Easy access to kmc readers
 
-#read configuration file and decide which project to expose
+# read configuration file and decide which project to expose
 __config = __get_config()
 PROJECT = __config.get_project_name()
 
@@ -40,7 +40,8 @@ def get_reader_class(project):
     import importlib
     import inspect
     from braviz.readAndFilter.base_reader import BaseReader
-    module = importlib.import_module('braviz.readAndFilter.%s' % project.lower())
+    module = importlib.import_module(
+        'braviz.readAndFilter.%s' % project.lower())
     pred = lambda c: inspect.isclass(c) and issubclass(c, BaseReader)
     candidate_classes = [c for c in inspect.getmembers(module, pred)]
     project_upper = project.upper()

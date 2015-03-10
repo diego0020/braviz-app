@@ -48,14 +48,14 @@ if __name__ == "__main__":
     spatial_slice = 62
     current_coords = [spatial_slice, 25, 10]
     current_axis = 0
-    current_mode = 'space'  #time or space
+    current_mode = 'space'  # time or space
     #===============================================
-
 
     reader = braviz.readAndFilter.BravizAutoReader()
     subject = reader.get("ids")[0]
     initial_fmri = iter(reader.get("fmri", subject, index=True)).next()
-    t_stat_img = reader.get('fMRI', subject, format='VTK', space='func', name=initial_fmri)
+    t_stat_img = reader.get(
+        'fMRI', subject, format='VTK', space='func', name=initial_fmri)
     origin = t_stat_img.GetOrigin()
     spacing = t_stat_img.GetSpacing()
     dimensions = t_stat_img.GetDimensions()
@@ -63,12 +63,13 @@ if __name__ == "__main__":
     bold_img = reader.get('BOLD', subject, name=initial_fmri)
     bold_data = bold_img.get_data()
 
-    mri_img = reader.get('MRI', subject, format='VTK', space='fmri_%s' % initial_fmri.lower())
+    mri_img = reader.get(
+        'MRI', subject, format='VTK', space='fmri_%s' % initial_fmri.lower())
 
     picker = vtk.vtkCellPicker()
     picker.SetTolerance(0.001)
 
-    #Visualization
+    # Visualization
     ren = vtk.vtkRenderer()
     renWin = vtk.vtkRenderWindow()
     renWin.AddRenderer(ren)
@@ -78,12 +79,12 @@ if __name__ == "__main__":
     planeWidget.SetPicker(picker)
     planeWidget.UpdatePlacement()
 
-    blend = braviz.visualization.fmri_view.blend_fmri_and_mri(t_stat_img, mri_img, threshold=1.0, alfa=True)
+    blend = braviz.visualization.fmri_view.blend_fmri_and_mri(
+        t_stat_img, mri_img, threshold=1.0, alfa=True)
     fmri_lut = braviz.visualization.fmri_view.get_fmri_lut()
 
     planeWidget.SetInputData(blend.GetOutput())
-    #plane_widget.SetInputConnection(color_mapper2.GetOutputPort())
-
+    # plane_widget.SetInputConnection(color_mapper2.GetOutputPort())
 
     planeWidget.GetColorMap().SetLookupTable(None)
     planeWidget.DisplayTextOff()
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     ren.AddActor(slice_actor)
     slice_actor.set_time_point(current_volume)
     slice_actor.set_window_level(2000, 1000)
-    #start in spatial mode
+    # start in spatial mode
     slice_actor.SetVisibility(0)
     slice_actor.set_z_spacing(spacing[0])
 
@@ -112,10 +113,12 @@ if __name__ == "__main__":
     renWin.SetSize(600, 600)
     ren.AddActor(outline)
 
-    #context cortex
+    # context cortex
 
-    left_cortex = reader.get('surf', subject, hemi='l', name='pial', space='fmri_%s' % initial_fmri)
-    right_cortex = reader.get('surf', subject, hemi='r', name='pial', space='fmri_%s' % initial_fmri)
+    left_cortex = reader.get(
+        'surf', subject, hemi='l', name='pial', space='fmri_%s' % initial_fmri)
+    right_cortex = reader.get(
+        'surf', subject, hemi='r', name='pial', space='fmri_%s' % initial_fmri)
 
     cortex_append = vtk.vtkAppendPolyData()
     cortex_append.UserManagedInputsOn()
@@ -129,9 +132,6 @@ if __name__ == "__main__":
     cortex_prop = cortex_actor.GetProperty()
     cortex_prop.SetColor((0.6, 0.6, 0.6))
     cortex_actor.SetVisibility(0)
-
-
-
 
     #========================T-SCORE=============================
 
@@ -161,22 +161,22 @@ if __name__ == "__main__":
     ren.AddActor(line_plot)
     line_plot.set_renderer(ren)
 
-
     #=====================BOLD SIGNAL=========================
     min_bold = -1
     max_bold = 1
 
     def calculate_bold_signal(x, y, z):
         global min_bold, max_bold
-        #ignore first volume
+        # ignore first volume
         bold_signal = vol0.view()
-        #hold time dimension temporally
+        # hold time dimension temporally
         bold_signal.shape = list(bold_signal.shape) + [1]
         bold_signal = bold_signal.swapaxes(current_axis, 3)
         position = [x, y, z]
         position[current_axis] = 0
         try:
-            bold_signal = bold_signal[position[0], position[1], position[2], 1:]
+            bold_signal = bold_signal[
+                position[0], position[1], position[2], 1:]
         except IndexError:
             bold_signal = np.zeros(2)
 
@@ -195,7 +195,8 @@ if __name__ == "__main__":
         widths = (None, 1.0)
         markers = (vtk.vtkPlotPoints.CIRCLE, vtk.vtkPlotPoints.NONE)
 
-        line_plot.set_values((time_signal, bold_signal, experiment), colors, widths, markers)
+        line_plot.set_values(
+            (time_signal, bold_signal, experiment), colors, widths, markers)
 
         if current_mode == 'time':
             add_line_to_graph(current_volume * TR)
@@ -203,7 +204,6 @@ if __name__ == "__main__":
         renWin.Render()
 
     #=========================================================
-
 
     #================Experiment design========================
     base_design = ([-0.5] * 10 + [0.5] * 10) * 4
@@ -217,7 +217,7 @@ if __name__ == "__main__":
             design = np.zeros(len(time_signal)) + center
         return design
 
-    #=======================================LINE IN TIME PLOT===============================
+    #=======================================LINE IN TIME PLOT=================
     def add_line_to_graph(coord=None):
         line_plot.add_vertical_line(coord)
 
@@ -226,15 +226,15 @@ if __name__ == "__main__":
 
     def get_time_vol(spatial_slice_i, axis=0):
         global vol0, vtk0, n_time_slices
-        #vol0=bold_data[spatial_slice,:,:,:]
-        #vol0=np.rollaxis(vol0,2)
-        #swap the current axis with time axis
+        # vol0=bold_data[spatial_slice,:,:,:]
+        # vol0=np.rollaxis(vol0,2)
+        # swap the current axis with time axis
         vol0 = np.swapaxes(bold_data, axis, 3)
         # axis 3 is now the fixed in space axis
         if spatial_slice_i >= vol0.shape[3]:
             spatial_slice_i = vol0.shape[3] - 1
         vol0 = vol0[:, :, :, spatial_slice_i]
-        #time axis
+        # time axis
         n_time_slices = vol0.shape[axis]
         vtk0 = numpy2vtk_img(vol0)
         time_spacing = list(spacing)
@@ -245,12 +245,12 @@ if __name__ == "__main__":
         slice_actor.set_input(vtk0, spatial_slice, current_volume, axis)
         slice_actor.set_z_spacing(spacing[axis])
 
-
     def setSubj(Event=None):
         global origin, spacing, bold_data, mri_img, spatial_slice, subject, dimensions, t_stat_img
         subject = select_subj_frame.get()
         try:
-            t_stat_img = reader.get('fMRI', subject, format='VTK', space='func', name=paradigm_var.get())
+            t_stat_img = reader.get(
+                'fMRI', subject, format='VTK', space='func', name=paradigm_var.get())
         except Exception:
             print "%s not available for subject %s" % (paradigm_var.get(), subject)
             planeWidget.Off()
@@ -268,12 +268,13 @@ if __name__ == "__main__":
             bold_data = np.zeros((2, 2, 2, 2))
 
         try:
-            mri_img = reader.get('MRI', subject, format='VTK', space='fmri_%s' % paradigm_var.get())
+            mri_img = reader.get(
+                'MRI', subject, format='VTK', space='fmri_%s' % paradigm_var.get())
         except Exception:
             mri_img = None
         blend.change_imgs(mri_img, t_stat_img)
         spatial_slice = planeWidget.GetSliceIndex()
-        #planeWidget.SetInputConnection(blend.GetOutputPort())
+        # planeWidget.SetInputConnection(blend.GetOutputPort())
 
         get_time_vol(spatial_slice, current_axis)
         calculate_bold_signal(*current_coords)
@@ -283,19 +284,19 @@ if __name__ == "__main__":
             add_line_to_graph(current_volume * TR)
 
         if show_cortex_var.get():
-            left_cortex = reader.get('surf', subject, hemi='l', name='pial', space='fmri_precision')
-            right_cortex = reader.get('surf', subject, hemi='r', name='pial', space='fmri_precision')
+            left_cortex = reader.get(
+                'surf', subject, hemi='l', name='pial', space='fmri_precision')
+            right_cortex = reader.get(
+                'surf', subject, hemi='r', name='pial', space='fmri_precision')
 
             cortex_append.SetInputDataByNumber(0, left_cortex)
             cortex_append.SetInputDataByNumber(1, right_cortex)
 
         renWin.Render()
 
-
     def setThreshold(Event=None):
         blend.change_threshold(threshold_slider.get())
         renWin.Render()
-
 
     def change_orientation(Event=None):
         global current_axis, spatial_slice
@@ -317,7 +318,6 @@ if __name__ == "__main__":
         bar_plot.set_position(new_width - 110, new_height - 110, 100, 100)
         renWin.Render()
         top.after(20, renWin.Render)
-
 
     moving_cursor = False
 
@@ -345,9 +345,12 @@ if __name__ == "__main__":
             cortex_prop.SetOpacity(1.0)
 
     planeWidget.SetSliceIndex(spatial_slice)
-    planeWidget.AddObserver(planeWidget.cursor_change_event, partial(image_interaction, event_name='cursor_change'))
-    planeWidget.AddObserver(planeWidget.slice_change_event, partial(image_interaction, event_name='slice_change'))
-    planeWidget.AddObserver('EndInteractionEvent', partial(image_interaction, event_name='EndInteractionEvent'))
+    planeWidget.AddObserver(planeWidget.cursor_change_event, partial(
+        image_interaction, event_name='cursor_change'))
+    planeWidget.AddObserver(planeWidget.slice_change_event, partial(
+        image_interaction, event_name='slice_change'))
+    planeWidget.AddObserver('EndInteractionEvent', partial(
+        image_interaction, event_name='EndInteractionEvent'))
 
     click_to_pick_obs_id1 = None
 
@@ -356,7 +359,7 @@ if __name__ == "__main__":
     def click_to_pick(caller=None, event=None):
         global picking_time_slice, orig_cam_position
         ex, ey = iact.GetEventPosition()
-        #print event
+        # print event
         if event == 'LeftButtonPressEvent':
             picked = picker.Pick(ex, ey, 0, ren)
             if picking_time_slice:
@@ -373,9 +376,7 @@ if __name__ == "__main__":
             cortex_prop.SetOpacity(1)
             renWin.Render()
 
-
     picking_time_slice = False
-
 
     def click_event_handler(caller=None, event=None):
         global current_volume
@@ -384,17 +385,19 @@ if __name__ == "__main__":
         b_x, b_y, b_w, b_h = line_plot.get_position()
         t_x, t_y, t_w, t_h = bar_plot.get_position()
         if b_x < position[0] < (b_x + b_w) and b_y < position[1] < (b_y + b_h):
-            #print 'Click detected'
+            # print 'Click detected'
             if current_mode == 'space':
                 change_to_time_mode()
             ax = line_plot.x_axis
-            t = (position[0] - ax.GetPoint1()[0]) / (ax.GetPoint2()[0] - ax.GetPoint1()[0])
+            t = (position[0] - ax.GetPoint1()[0]) / \
+                (ax.GetPoint2()[0] - ax.GetPoint1()[0])
             coord = n_time_slices * t
             slice_idx = int(round(coord))
             current_volume = slice_idx
             add_line_to_graph(slice_idx * TR)
             slice_actor.set_time_point(slice_idx)
-            #slice_actor.SetPosition(-1*TR*slice_idx-2*spatial_slice,0,0)#To keep it still
+            # slice_actor.SetPosition(-1*TR*slice_idx-2*spatial_slice,0,0)#To
+            # keep it still
             command = caller.GetCommand(click_obs_id)
             command.SetAbortFlag(1)
         elif t_x < position[0] < (t_x + t_w) and t_y < position[1] < (t_y + t_h):
@@ -403,12 +406,10 @@ if __name__ == "__main__":
 
         renWin.Render()
 
-
     #=====================Time IMAGE PICKING=======================
 
-
     def picking_observer(caller=None, event=None):
-        #print "pica pica"
+        # print "pica pica"
         global picking_time_slice, current_coords
         if picking_time_slice is False:
             cortex_prop.SetOpacity(0.1)
@@ -419,28 +420,28 @@ if __name__ == "__main__":
         calculate_bold_signal(*current_coords)
         refresh_t_chart()
         #t_score = get_t_score(spatial_slice, x, y)
-        #print "t-score=%f"%t_score
+        # print "t-score=%f"%t_score
 
     slice_actor.AddObserver(vtk.vtkCommand.PickEvent, picking_observer)
 
     def change_to_space_mode():
         global current_mode, line_plot_id
-        #print "changing to space mode"
+        # print "changing to space mode"
         current_mode = 'space'
-        #remove line from time plot
+        # remove line from time plot
         line_plot.add_vertical_line(None)
-        #hide bold image
+        # hide bold image
         slice_actor.SetVisibility(0)
         planeWidget.EnabledOn()
         mode_button['text'] = 'Switch to time mode'
 
     def change_to_time_mode():
         global current_mode
-        #print "changing to time mode"
+        # print "changing to time mode"
         current_mode = 'time'
-        #add line again
+        # add line again
         add_line_to_graph(current_volume * TR)
-        #make bold image visible again
+        # make bold image visible again
         slice_actor.SetVisibility(1)
         planeWidget.EnabledOff()
         mode_button['text'] = 'Switch to space mode'
@@ -454,8 +455,10 @@ if __name__ == "__main__":
 
     def toggle_cortex(Event=None):
         if show_cortex_var.get():
-            left_cortex = reader.get('surf', subject, hemi='l', name='pial', space='fmri_precision')
-            right_cortex = reader.get('surf', subject, hemi='r', name='pial', space='fmri_precision')
+            left_cortex = reader.get(
+                'surf', subject, hemi='l', name='pial', space='fmri_precision')
+            right_cortex = reader.get(
+                'surf', subject, hemi='r', name='pial', space='fmri_precision')
 
             cortex_append.SetInputDataByNumber(0, left_cortex)
             cortex_append.SetInputDataByNumber(1, right_cortex)
@@ -464,7 +467,7 @@ if __name__ == "__main__":
             cortex_actor.SetVisibility(0)
         renWin.Render()
 
-    #===============================================Inteface=================================
+    #===============================================Inteface==================
 
     root = tk.Tk()
     root.withdraw()
@@ -479,13 +482,15 @@ if __name__ == "__main__":
 
     #--------------------
 
-    mode_button = tk.Button(control_frame, text="Switch to time mode", command=switch_mode)
+    mode_button = tk.Button(
+        control_frame, text="Switch to time mode", command=switch_mode)
     mode_button.grid(row=2, sticky='EW', padx=10, pady=20)
 
     #--------------------
     paradigm_panel = tk.Frame(control_frame)
     paradigm_var = tk.StringVar()
-    select_paradigm = ttk.Combobox(paradigm_panel, textvariable=paradigm_var, width=10)
+    select_paradigm = ttk.Combobox(
+        paradigm_panel, textvariable=paradigm_var, width=10)
     select_paradigm.grid(row=0, column=1)
     select_paradigm['values'] = list(reader.get("fmri", None, index=True))
     select_paradigm['state'] = 'readonly'
@@ -497,9 +502,7 @@ if __name__ == "__main__":
 
     paradigm_panel.grid(row=3, pady=10)
 
-
     #--------------------
-
 
     threshold_frame = tk.Frame(control_frame)
     threshold_label = tk.Label(threshold_frame, text="Threshold:")
@@ -517,7 +520,8 @@ if __name__ == "__main__":
     slice_frame = tk.Frame(control_frame)
     slice_label = tk.Label(slice_frame, text='Slice: ')
     slice_view_var = tk.StringVar()
-    select_slice = ttk.Combobox(slice_frame, textvariable=slice_view_var, width=10)
+    select_slice = ttk.Combobox(
+        slice_frame, textvariable=slice_view_var, width=10)
     select_slice['values'] = ('Axial', 'Coronal', 'Sagital')
     select_slice['state'] = 'readonly'
     select_slice.set('Sagital')
@@ -574,9 +578,12 @@ if __name__ == "__main__":
     picker.AddPickList(slice_actor)
     planeWidget.SetPicker(picker)
 
-    click_obs_id = iact.AddObserver('LeftButtonPressEvent', click_event_handler, 10)
-    mouse_press_event_id = iact.AddObserver('LeftButtonPressEvent', click_to_pick, 9)
-    mouse_move_event_id = iact.AddObserver('MouseMoveEvent', click_to_pick, 100)
+    click_obs_id = iact.AddObserver(
+        'LeftButtonPressEvent', click_event_handler, 10)
+    mouse_press_event_id = iact.AddObserver(
+        'LeftButtonPressEvent', click_to_pick, 9)
+    mouse_move_event_id = iact.AddObserver(
+        'MouseMoveEvent', click_to_pick, 100)
     iact.AddObserver('EndInteractionEvent', click_to_pick, 9)
     iact.AddObserver('LeftButtonReleaseEvent', click_to_pick, 9)
 

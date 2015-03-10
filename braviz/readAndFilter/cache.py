@@ -45,18 +45,18 @@ def cache_function(cache_container):
     def decorator(f):
         f.cache_container = cache_container
         f.cache = f.cache_container.cache
-        #print "max cache is %d"%max_cache_size
-        #cache will store tuples (output,date)
+        # print "max cache is %d"%max_cache_size
+        # cache will store tuples (output,date)
 
         @functools.wraps(f)
         def cached_f(*args, **kw_args):
-            #print "cache size=%d"%len(cache)
+            # print "cache size=%d"%len(cache)
             key = str(args) + str(kw_args)
             key = key.upper()
             if key not in f.cache:
                 output = f(*args, **kw_args)
                 if output is not None:
-                    #new method to test memory in cache
+                    # new method to test memory in cache
                     process_id = psutil.Process(os.getpid())
                     mem = process_id.get_memory_info()[0] / (2 ** 20)
                     if mem >= f.cache_container.max_cache:
@@ -66,22 +66,25 @@ def cache_function(cache_container):
                             while mem > 0.9 * f.cache_container.max_cache:
                                 for i in xrange(len(f.cache) // 10 + 1):
                                     rem_key, val = f.cache.popitem(last=False)
-                                    #print "removing %s with access time= %s"%(rem_key,val[1])
-                                mem = process_id.get_memory_info()[0] / (2 ** 20)
+                                    # print "removing %s with access time=
+                                    # %s"%(rem_key,val[1])
+                                mem = process_id.get_memory_info()[
+                                    0] / (2 ** 20)
                         except KeyError:
                             log = logging.getLogger(__name__)
-                            log.warning("Cache is empty and memory still too high! check your program for memory leaks")
+                            log.warning(
+                                "Cache is empty and memory still too high! check your program for memory leaks")
                     f.cache[key] = (output, time.time())
             else:
                 output, _ = f.cache[key]
-                #update access time
+                # update access time
                 f.cache[key] = (output, time.time())
-                #return a copy to keep integrity of objects in cache
+                # return a copy to keep integrity of objects in cache
             try:
                 output_copy = output.NewInstance()
                 output_copy.DeepCopy(output)
             except AttributeError:
-                #not a vtk object
+                # not a vtk object
                 try:
                     output_copy = copy.deepcopy(output)
                 except Exception:
@@ -94,9 +97,11 @@ def cache_function(cache_container):
 
 
 class CacheContainer(object):
+
     """
     Class used to cache data, see :func:`cache_function`
     """
+
     def __init__(self, max_cache=500):
         """
         Class used to cache data, see :func:`cache_function`
@@ -130,6 +135,7 @@ class CacheContainer(object):
 
 
 class LastUpdatedOrderedDict(OrderedDict):
+
     """Store items in the order the keys were last updated"""
 
     def __setitem__(self, key, value):

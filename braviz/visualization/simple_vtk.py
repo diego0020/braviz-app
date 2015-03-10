@@ -65,6 +65,7 @@ def _test_arrow(head, tail):
 
 
 class SimpleVtkViewer(object):
+
     """A very simple windows with vtk renderers and interactors.
 
     This class is intended for interactive work and fast prototyping. As such it is very simple and limited.
@@ -80,7 +81,7 @@ class SimpleVtkViewer(object):
         self.iren.SetRenderWindow(self.renWin)
         self.renWin.AddRenderer(self.ren)
         self.renWin.SetSize(600, 400)
-        #self.renWin.Initialize()
+        # self.renWin.Initialize()
         self.iren.Initialize()
         self.ren.Render()
         self.picker = vtk.vtkCellPicker()
@@ -114,8 +115,8 @@ class SimpleVtkViewer(object):
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
         self.ren.AddActor(actor)
-        #self.ren.ResetCameraClippingRange()
-        #self.ren.ResetCamera()
+        # self.ren.ResetCameraClippingRange()
+        # self.ren.ResetCamera()
         self.pd_actors.append(actor)
         self.ren.Render()
         return actor
@@ -164,8 +165,8 @@ class SimpleVtkViewer(object):
         planeWidget.SetInteractor(self.renWin.GetInteractor())
         planeWidget.PickingManagedOn()
         planeWidget.On()
-        #self.ren.ResetCameraClippingRange()
-        #self.ren.ResetCamera()
+        # self.ren.ResetCameraClippingRange()
+        # self.ren.ResetCamera()
         self.ren.Render()
         return planeWidget
 
@@ -176,7 +177,7 @@ class SimpleVtkViewer(object):
         self.pd_actors = []
 
 
-def save_ren_win_picture(ren_win,file_name):
+def save_ren_win_picture(ren_win, file_name):
     """
     Saves an screenshot of a render window
 
@@ -223,6 +224,7 @@ def remove_nan_from_grid(grid):
 
 
 class persistentImagePlane(vtkImagePlaneWidget):
+
     """A vtkImagePlaneWidget which can keep its state between calls to SetInputData.
 
     It adds a second text message showing the world coordinates of the cursors
@@ -282,7 +284,8 @@ class persistentImagePlane(vtkImagePlaneWidget):
         Args:
             iact (vtkRenderWindowInteractor) : Render window interactor
         """
-        #Initializes the second text message, and performs normal vtkImagePlaneWidget initialization
+        # Initializes the second text message, and performs normal
+        # vtkImagePlaneWidget initialization
 
         vtkImagePlaneWidget.SetInteractor(self, iact)
         text2 = vtk.vtkTextActor()
@@ -321,10 +324,10 @@ class persistentImagePlane(vtkImagePlaneWidget):
             x1 = x0 + dx * x
             y1 = y0 + dy * y
             z1 = z0 + dz * z
-            self.last_cursor_position = (x1,y1,z1)
+            self.last_cursor_position = (x1, y1, z1)
             if self.MiddleButton:
                 message = 'Slice: %d' % self.GetSliceIndex()
-                #create event, an observer can listen to this
+                # create event, an observer can listen to this
                 self.InvokeEvent(self.slice_change_event)
             else:
                 message = '(%d, %d, %d)' % (x1, y1, z1)
@@ -334,7 +337,8 @@ class persistentImagePlane(vtkImagePlaneWidget):
                     message += ': %s' % label
                 if self.alternative_text1:
                     ix, iy, iz = map(int, (x, y, z))
-                    value = self.alternative_img.GetScalarComponentAsDouble(ix, iy, iz, 0)
+                    value = self.alternative_img.GetScalarComponentAsDouble(
+                        ix, iy, iz, 0)
                     message2 = '( %d, %d, %d ) : %f' % (x, y, z, value)
                     self.text1.SetInput(message2)
                     self.text1.SetVisibility(1)
@@ -355,22 +359,24 @@ class persistentImagePlane(vtkImagePlaneWidget):
             else:
                 self.MiddleButton = False
 
-        #def detect_window_level_event(obj, event):
+        # def detect_window_level_event(obj, event):
         #    print self.GetWindow(), self.GetLevel()
 
-        self.GetInteractor().AddObserver('MiddleButtonPressEvent', detect_middle_button, 1000)
-        self.GetInteractor().AddObserver('MiddleButtonReleaseEvent', detect_middle_button, 1000)
+        self.GetInteractor().AddObserver(
+            'MiddleButtonPressEvent', detect_middle_button, 1000)
+        self.GetInteractor().AddObserver(
+            'MiddleButtonReleaseEvent', detect_middle_button, 1000)
         self.AddObserver('InteractionEvent', mouse_interaction)
         self.AddObserver('StartInteractionEvent', mouse_interaction)
         self.AddObserver('EndInteractionEvent', end_interact)
-        #self.AddObserver('WindowLevelEvent',detect_window_level_event)
+        # self.AddObserver('WindowLevelEvent',detect_window_level_event)
         self.text2 = text2
 
     def On(self):
         """
         Turn the widget on
         """
-        #Adds the second text actor to the current renderer
+        # Adds the second text actor to the current renderer
         vtkImagePlaneWidget.On(self)
         ren = self.GetCurrentRenderer()
         ren.AddActor(self.text2)
@@ -399,7 +405,6 @@ class persistentImagePlane(vtkImagePlaneWidget):
             self.labels_set = True
         else:
             self.labels_set = False
-
 
     def get_label(self, x, y, z):
         """
@@ -490,6 +495,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
 
 
 class OutlineActor(vtk.vtkActor):
+
     """A simple shortcut for displaying the outline of an object
 
     Encapsulates an outline filter, a mapper and an actor"""
@@ -527,9 +533,11 @@ class OutlineActor(vtk.vtkActor):
 
 
 class OrientationAxes(object):
+
     """
     An orientation cube with faces labeled for Right, Left, Anterior, Posterior, Superior and Inferior
     """
+
     def __init__(self):
         axes_actor = vtk.vtkAnnotatedCubeActor()
         axes_actor.SetXPlusFaceText("R")
@@ -573,7 +581,8 @@ def get_arrow(head, tail):
     points_array = vtk.vtkPoints()
     triangle_array = vtk.vtkCellArray()
     line_array = vtk.vtkCellArray()
-    arrow_points = [(-0.1, 0, 0), (-0.1, -0.5, 0), (0, 0, 0), (-0.1, 0.5, 0), (-1, 0, 0)]
+    arrow_points = [
+        (-0.1, 0, 0), (-0.1, -0.5, 0), (0, 0, 0), (-0.1, 0.5, 0), (-1, 0, 0)]
     for i, p in enumerate(arrow_points):
         points_array.InsertPoint(i, p)
 
@@ -642,6 +651,7 @@ Mean Length (mm) : %.2f
 
 
 class cursors(vtk.vtkPropAssembly):
+
     """
     Emulates the cursors in vtkImagePlaneWidget
 
@@ -742,8 +752,8 @@ class cursors(vtk.vtkPropAssembly):
 
 
         """
-        #current_slice=slice_mapper.GetSliceNumber()
-        #Attention to change in variables, now XY define the plane
+        # current_slice=slice_mapper.GetSliceNumber()
+        # Attention to change in variables, now XY define the plane
         dx, dy, dz = self.spacing
         ox, oy, oz = self.origin
         nx, ny, nz = self.dimensions
@@ -780,7 +790,7 @@ class cursors(vtk.vtkPropAssembly):
         self.actor_x2.SetPosition(actors_spacing2)
         self.actor_y2.SetPosition(actors_spacing2)
 
-    def set_delta(self,delta):
+    def set_delta(self, delta):
         """
         Sets separation between front and back cursors.
 
@@ -822,13 +832,13 @@ def build_grid(orig_img, slice, sampling_rate=5):
     grid = vtk.vtkPolyData()
     grid.SetPoints(points)
     lines = vtk.vtkCellArray()
-    #vertical:
+    # vertical:
     for j in xrange(dimensions[1]):
         if j % sampling_rate == 0:
             lines.InsertNextCell(dimensions[2])
             for k in xrange(dimensions[2]):
                 lines.InsertCellPoint(flat_index(j, k))
-    #horizontal
+    # horizontal
     for k in xrange(dimensions[2]):
         if k % sampling_rate == 0:
             lines.InsertNextCell(dimensions[1])
@@ -889,5 +899,5 @@ def get_window_level(img):
     stats = vtk.vtkImageHistogramStatistics()
     stats.SetInputData(img)
     stats.Update()
-    _,w = stats.GetAutoRange()
-    return w,w/2
+    _, w = stats.GetAutoRange()
+    return w, w / 2

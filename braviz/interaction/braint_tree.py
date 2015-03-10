@@ -24,6 +24,7 @@ __author__ = 'Diego'
 
 
 class BraintNode(object):
+
     def __init__(self, parent, son_number, label, var_id=None):
         self.__parent = parent
         self.__label = label
@@ -35,8 +36,8 @@ class BraintNode(object):
     def __str__(self):
         return str(self.__label)
 
-    def add_son(self, label,var_id=None):
-        new_son = BraintNode(self, len(self.children), label,var_id)
+    def add_son(self, label, var_id=None):
+        new_son = BraintNode(self, len(self.children), label, var_id)
         self.children.append(new_son)
         return new_son
 
@@ -55,14 +56,17 @@ class BraintNode(object):
     @property
     def label(self):
         return self.__label
+
     @label.setter
-    def label(self,value):
+    def label(self, value):
         self.__label = value
 
+
 class BraintTree(QAbstractItemModel):
+
     def __init__(self):
         QAbstractItemModel.__init__(self)
-        self.__root = BraintNode(None,0,"<root>",None)
+        self.__root = BraintNode(None, 0, "<root>", None)
         self.__id_index = dict()
         self.__id_index[id(self.__root)] = self.__root
         self.__var_id_index = {None: self.__root}
@@ -110,7 +114,7 @@ class BraintTree(QAbstractItemModel):
             if p_int_1 >= 0:
                 if 0 <= p_int < len(parent.children):
                     child = parent.children[p_int]
-                    index = self.get_node_index(child,p_int_1)
+                    index = self.get_node_index(child, p_int_1)
                     return index
         else:
             # root
@@ -118,12 +122,12 @@ class BraintTree(QAbstractItemModel):
             assert index.isValid()
             return index
 
-    def get_node_index(self, node,col=0):
+    def get_node_index(self, node, col=0):
         index = self.createIndex(node.son_number, col, id(node))
         assert index.isValid()
         return index
 
-    def add_node(self, parent, label,var_id=None):
+    def add_node(self, parent, label, var_id=None):
         self.beginResetModel()
         new_node = parent.add_son(label, var_id)
         self.__id_index[id(new_node)] = new_node
@@ -145,19 +149,19 @@ class BraintTree(QAbstractItemModel):
     def fill_from_db(self):
         self.beginResetModel()
         tuples = braint_db.get_all_variables()
-        for var_id, label,father in tuples:
+        for var_id, label, father in tuples:
             if var_id in self.__var_id_index:
-                pass # already in the tree
+                pass  # already in the tree
             else:
                 father = self.__var_id_index.get(father)
                 if father is None:
                     father = self.__root
-                new_son=father.add_son(label,var_id)
-                self.__id_index[id(new_son)]=new_son
-                self.__var_id_index[var_id]=new_son
+                new_son = father.add_son(label, var_id)
+                self.__id_index[id(new_son)] = new_son
+                self.__var_id_index[var_id] = new_son
         self.endResetModel()
 
-    def __get_antecessors(self,var_id):
+    def __get_antecessors(self, var_id):
         ans = []
         node = self.__var_id_index[var_id]
         if node.parent is None:
@@ -166,39 +170,41 @@ class BraintTree(QAbstractItemModel):
         ans.extend(self.__get_antecessors(node.parent.var_id))
         return ans
 
-    def get_antecessors(self,var_id):
+    def get_antecessors(self, var_id):
         nodes = self.__get_antecessors(var_id)
         nodes.append(self.__var_id_index[var_id])
-        indexes = map(self.get_node_index,nodes)
+        indexes = map(self.get_node_index, nodes)
         return indexes
 
-    def __delete_sons(self,node):
+    def __delete_sons(self, node):
         for c in reversed(node.children):
             self.__delete_sons(c)
         node.parent = None
         node.children = None
         del node
+
     def clear(self):
         self.beginResetModel()
         self.__delete_sons(self.__root)
         self.__id_index.clear()
         self.__var_id_index.clear()
-        self.__root = BraintNode(None,0,"<root>")
-        self.__id_index[id(self.__root)]=self.__root
-        self.__var_id_index[None]=self.__root
+        self.__root = BraintNode(None, 0, "<root>")
+        self.__id_index[id(self.__root)] = self.__root
+        self.__var_id_index[None] = self.__root
         self.endResetModel()
 
-    def aux_change_data(self,node):
-        #update sons
-        #update me
-        idx  = self.get_node_index(node,0)
+    def aux_change_data(self, node):
+        # update sons
+        # update me
+        idx = self.get_node_index(node, 0)
         self.modelAboutToBeReset.emit()
-        self.dataChanged.emit(idx,idx)
-        self.emit(QtCore.SIGNAL("dataChanged"),idx,idx)
+        self.dataChanged.emit(idx, idx)
+        self.emit(QtCore.SIGNAL("dataChanged"), idx, idx)
         self.modelReset.emit()
 
 
 class BraintTreeWithCount(BraintTree):
+
     def __init__(self):
         BraintTree.__init__(self)
         self.__count_dict = {}
@@ -213,13 +219,13 @@ class BraintTreeWithCount(BraintTree):
         node = self.get_node(QModelIndex)
         assert node.son_number == row
         if int_role == QtCore.Qt.DisplayRole:
-            if col==0:
+            if col == 0:
                 return str(node)
             else:
-                return self.__count_dict.get(node.var_id,0)
+                return self.__count_dict.get(node.var_id, 0)
         elif int_role == QtCore.Qt.FontRole:
-            count = self.__direct_count_dict.get(node.var_id,0)
-            if count>0:
+            count = self.__direct_count_dict.get(node.var_id, 0)
+            if count > 0:
                 font = QtGui.QFont()
                 font.setBold(font.Bold)
                 return font
@@ -229,43 +235,29 @@ class BraintTreeWithCount(BraintTree):
                 return desc
         return QtCore.QVariant()
 
-    _header = ("Identifier","Relations")
+    _header = ("Identifier", "Relations")
+
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation == QtCore.Qt.Horizontal:
             if int_role == QtCore.Qt.DisplayRole:
                 return self._header[p_int]
         return QtCore.QVariant()
 
-    def set_count(self,counts,direct_counts = None):
-        self.__count_dict=counts
+    def set_count(self, counts, direct_counts=None):
+        self.__count_dict = counts
         if direct_counts is None:
             self.__direct_count_dict = self.__count_dict
         else:
             self.__direct_count_dict = direct_counts
         self.aux_change_data(self.root)
 
-    def aux_change_data(self,node):
-        #update sons
+    def aux_change_data(self, node):
+        # update sons
         for k in node.children:
             self.aux_change_data(k)
-        #update me
-        idx  = self.get_node_index(node,1)
-        self.emit(QtCore.SIGNAL("dataChanged"),idx,idx)
+        # update me
+        idx = self.get_node_index(node, 1)
+        self.emit(QtCore.SIGNAL("dataChanged"), idx, idx)
 
-    def direct_relation(self,var_id):
-        return self.__direct_count_dict.get(var_id,0)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def direct_relation(self, var_id):
+        return self.__direct_count_dict.get(var_id, 0)

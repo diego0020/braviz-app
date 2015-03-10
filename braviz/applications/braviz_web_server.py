@@ -31,8 +31,8 @@ from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, I
 __author__ = 'da.angulo39'
 
 settings = {
-    "static_path":os.path.join(os.path.dirname(braviz.__file__),"visualization/web_static"),
-    "template_path":os.path.join(os.path.dirname(braviz.__file__),"visualization/web_templates")
+    "static_path": os.path.join(os.path.dirname(braviz.__file__), "visualization/web_static"),
+    "template_path": os.path.join(os.path.dirname(braviz.__file__), "visualization/web_templates")
 }
 
 if __name__ == "__main__":
@@ -40,17 +40,19 @@ if __name__ == "__main__":
     broadcast_address = None
     receive_address = None
 
-    if len(sys.argv)>3:
+    if len(sys.argv) > 3:
         broadcast_address = sys.argv[2]
         receive_address = sys.argv[3]
 
     message_handler = MessageFutureProxy()
-    message_client = GenericMessageClient(message_handler,broadcast_address,receive_address)
+    message_client = GenericMessageClient(
+        message_handler, broadcast_address, receive_address)
     application = tornado.web.Application(
         [
-        (r"/parallel", ParallelCoordinatesHandler),
-        (r"/messages", LongPollMessageHandler,{"message_client":message_client}),
-        (r"/", IndexHandler),
+            (r"/parallel", ParallelCoordinatesHandler),
+            (r"/messages", LongPollMessageHandler,
+             {"message_client": message_client}),
+            (r"/", IndexHandler),
         ],
         **settings)
     try:

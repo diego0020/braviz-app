@@ -26,6 +26,7 @@ __author__ = 'diego'
 
 
 class MessageHandler(tornado.web.RequestHandler):
+
     """
     Allow querying for messages and sending messages through http
 
@@ -35,11 +36,11 @@ class MessageHandler(tornado.web.RequestHandler):
     **POST** requests allow to send messages. It is required to have a ``"message"`` parameter in the
     request body
     """
+
     def __init__(self, application, request, **kwargs):
         super(MessageHandler, self).__init__(application, request, **kwargs)
 
-
-    def initialize(self,message_client):
+    def initialize(self, message_client):
         """
         Requires a :class:`braviz.interaction.connection.PassiveMessageClient`
         """
@@ -51,9 +52,9 @@ class MessageHandler(tornado.web.RequestHandler):
             self.write("")
             print "nanai"
         else:
-            i,m = self.message_client.get_last_message()
-            print i,m
-            self.write({"count":i,"message":m})
+            i, m = self.message_client.get_last_message()
+            print i, m
+            self.write({"count": i, "message": m})
 
     def post(self, *args, **kwargs):
         if self.message_client is None:
@@ -63,14 +64,17 @@ class MessageHandler(tornado.web.RequestHandler):
             print "message: "
             print m
             self.message_client.send_message(m)
-        self.set_status(202,"Message sent")
+        self.set_status(202, "Message sent")
 
 
 class MessageFutureProxy(object):
+
     """
     Interfaces tornado futures with zmq messages
     """
-    #Based on https://github.com/tornadoweb/tornado/blob/master/demos/chat/chatdemo.py
+    # Based on
+    # https://github.com/tornadoweb/tornado/blob/master/demos/chat/chatdemo.py
+
     def __init__(self,):
         self.waiters = set()
 
@@ -79,7 +83,7 @@ class MessageFutureProxy(object):
         self.waiters.add(msg_future)
         return msg_future
 
-    def cancel_wait (self, future):
+    def cancel_wait(self, future):
         self.waiters.remove(future)
 
     def handle_new_message(self, msg):
@@ -88,9 +92,8 @@ class MessageFutureProxy(object):
         self.waiters.clear()
 
 
-
-
 class LongPollMessageHandler(tornado.web.RequestHandler):
+
     """
     Allow querying for messages and sending messages through http
 
@@ -100,11 +103,12 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
     **POST** requests allow to send messages. It is required to have a ``"message"`` parameter in the
     request body
     """
+
     def __init__(self, application, request, **kwargs):
-        super(LongPollMessageHandler, self).__init__(application, request, **kwargs)
+        super(LongPollMessageHandler, self).__init__(
+            application, request, **kwargs)
 
-
-    def initialize(self,message_client):
+    def initialize(self, message_client):
         """
         Requires a :class:`braviz.interaction.connection.GenericMessageClient` with
         :class:`braviz.interaction.tornado_connection.MessageFutureProxy` as handler
@@ -119,7 +123,7 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
         msg = yield self.future
         if self.request.connection.stream.closed():
             return
-        self.write({"message":msg})
+        self.write({"message": msg})
 
     def on_connection_close(self):
         self.message_handler.cancel_wait(self.future)
@@ -132,4 +136,4 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
             print "message: "
             print m
             self.message_client.send_message(m)
-        self.set_status(202,"Message sent")
+        self.set_status(202, "Message sent")

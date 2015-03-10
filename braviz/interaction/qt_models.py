@@ -17,13 +17,12 @@
 ##############################################################################
 
 
-
 __author__ = 'Diego'
 from collections import namedtuple
 import logging
 
 import pandas as pd
-from PyQt4 import QtCore,QtGui
+from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import QAbstractListModel
 from PyQt4.QtCore import QAbstractTableModel, QAbstractItemModel
 
@@ -36,6 +35,7 @@ from braviz.interaction.qt_structures_model import StructureTreeModel
 
 
 class VarListModel(QAbstractListModel):
+
     """
     List of available variables, optionally with checkboxes
 
@@ -58,8 +58,7 @@ class VarListModel(QAbstractListModel):
         if checkeable:
             self.checked_set = set()
 
-
-    def update_list(self,mask=None):
+    def update_list(self, mask=None):
         """
         Update the variable list to show variables whose name match a mask
 
@@ -135,7 +134,6 @@ class VarListModel(QAbstractListModel):
             self.CheckedChanged.emit(sorted(self.checked_set))
             return True
 
-
     def select_items_by_name(self, items_list):
         """
         Add variables to the set of checked items
@@ -161,7 +159,7 @@ class VarListModel(QAbstractListModel):
             name = braviz_tab_data.get_var_name(i)
             self.checked_set.add(name)
 
-    def set_highlighted(self,highlighted_name=None):
+    def set_highlighted(self, highlighted_name=None):
         """
         The highlighted item will appear in bold
 
@@ -176,10 +174,12 @@ class VarListModel(QAbstractListModel):
         Removes checks from all variables
         """
         self.checked_set.clear()
-        self.dataChanged.emit(self.index(0),self.index(self.rowCount()))
+        self.dataChanged.emit(self.index(0), self.index(self.rowCount()))
         self.CheckedChanged.emit(sorted(self.checked_set))
 
+
 class VarAndGiniModel(QAbstractTableModel):
+
     """
     A table of variables which can include the gini index.
 
@@ -191,6 +191,7 @@ class VarAndGiniModel(QAbstractTableModel):
         outcome_var (str) : Name of variable to treat as outcome
         parent (QObject) : Qt parent for this object
     """
+
     def __init__(self, outcome_var=None, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self.data_frame = braviz_tab_data.get_variables()
@@ -209,7 +210,7 @@ class VarAndGiniModel(QAbstractTableModel):
     def data(self, QModelIndex, int_role=None):
         line = QModelIndex.row()
         col = QModelIndex.column()
-        df2 =  self.data_frame.loc[self.filtered_index]
+        df2 = self.data_frame.loc[self.filtered_index]
         if 0 <= line < len(df2):
             if col == 0:
                 if int_role == QtCore.Qt.DisplayRole:
@@ -248,7 +249,8 @@ class VarAndGiniModel(QAbstractTableModel):
                 self.calculate_gini_indexes()
                 self.ginni_calculated = True
             self.data_frame.sort("Ginni", ascending=reverse, inplace=True)
-            index2 = [i for i in self.data_frame.index  if i in self.filtered_index]
+            index2 = [
+                i for i in self.data_frame.index if i in self.filtered_index]
             df2 = self.data_frame.loc[index2]
             df2.sort("Ginni", ascending=reverse, inplace=True)
             self.filtered_index = df2.index
@@ -266,7 +268,7 @@ class VarAndGiniModel(QAbstractTableModel):
             return
         self.data_frame = calculate_ginni_index(self.outcome, self.data_frame)
 
-    def update_list(self,mask):
+    def update_list(self, mask):
         """
         Updates the list to include only variables whose names match a mask
 
@@ -277,7 +279,9 @@ class VarAndGiniModel(QAbstractTableModel):
         self.filtered_index = pdf.index
         self.modelReset.emit()
 
+
 class AnovaRegressorsModel(QAbstractTableModel):
+
     """
     Holds the regressors and interaction terms for a linear model
 
@@ -290,19 +294,21 @@ class AnovaRegressorsModel(QAbstractTableModel):
         regressors_list (list) : List of variable names to be used as regressors
         parent (QObject) : Qt parent
     """
+
     def __init__(self, regressors_list=tuple(), parent=None):
         QAbstractTableModel.__init__(self, parent)
         if len(regressors_list) > 0:
-            initial_data = ( (r, self._get_degrees_of_freedom(r), 0) for r in regressors_list )
+            initial_data = ((r, self._get_degrees_of_freedom(r), 0)
+                            for r in regressors_list)
         else:
             initial_data = None
-        self.data_frame = pd.DataFrame(initial_data, columns=["variable", "DF", "Interaction"])
+        self.data_frame = pd.DataFrame(
+            initial_data, columns=["variable", "DF", "Interaction"])
         self.display_view = self.data_frame
         self.__show_interactions = True
         self.__show_regressors = True
         self.__interactors_dict = dict()
         self.__next_index = len(regressors_list)
-
 
     def reset_data(self, regressors_list):
         """
@@ -312,10 +318,12 @@ class AnovaRegressorsModel(QAbstractTableModel):
             regressors_list (list) : List of variable names
         """
         if len(regressors_list) > 0:
-            initial_data = ( (r, self._get_degrees_of_freedom(r), 0) for r in regressors_list )
+            initial_data = ((r, self._get_degrees_of_freedom(r), 0)
+                            for r in regressors_list)
         else:
             initial_data = None
-        self.data_frame = pd.DataFrame(initial_data, columns=["variable", "DF", "Interaction"])
+        self.data_frame = pd.DataFrame(
+            initial_data, columns=["variable", "DF", "Interaction"])
         self.display_view = self.data_frame
         self.__show_interactions = True
         self.__show_regressors = True
@@ -332,10 +340,11 @@ class AnovaRegressorsModel(QAbstractTableModel):
             self.display_view = self.data_frame
         else:
             if self.__show_interactions is True:
-                self.display_view = self.data_frame[self.data_frame["Interaction"] == 1]
+                self.display_view = self.data_frame[
+                    self.data_frame["Interaction"] == 1]
             else:
-                self.display_view = self.data_frame[self.data_frame["Interaction"] == 0]
-
+                self.display_view = self.data_frame[
+                    self.data_frame["Interaction"] == 0]
 
     def show_interactions(self, value=True):
         """
@@ -358,7 +367,6 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self.__show_regressors = value
         self._update_display_view()
         self.modelReset.emit()
-
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.display_view)
@@ -397,7 +405,8 @@ class AnovaRegressorsModel(QAbstractTableModel):
         return QtCore.QVariant()
 
     def sort(self, p_int, Qt_SortOrder_order=None):
-        # We will be using type2 or type3 Sums of Squares, and therefore order is not important
+        # We will be using type2 or type3 Sums of Squares, and therefore order
+        # is not important
         reverse = True
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             reverse = False
@@ -419,11 +428,14 @@ class AnovaRegressorsModel(QAbstractTableModel):
             # ignore duplicates
             return
 
-        self.beginInsertRows(QtCore.QModelIndex(), len(self.data_frame), len(self.data_frame))
-        self.data_frame = self.data_frame.append(pd.DataFrame([(var_name, self._get_degrees_of_freedom(var_name), 0 )],
-                                                              columns=["variable", "DF", "Interaction"],
-                                                              index=(self.__next_index,)
-        ))
+        self.beginInsertRows(
+            QtCore.QModelIndex(), len(self.data_frame), len(self.data_frame))
+        self.data_frame = self.data_frame.append(pd.DataFrame([(var_name, self._get_degrees_of_freedom(var_name), 0)],
+                                                              columns=[
+                                                                  "variable", "DF", "Interaction"],
+                                                              index=(
+                                                                  self.__next_index,)
+                                                              ))
         self.__next_index += 1
         self.endInsertRows()
         self._update_display_view()
@@ -434,11 +446,12 @@ class AnovaRegressorsModel(QAbstractTableModel):
         indexes = list(self.data_frame.index)
         for i in xrange(count):
             r = indexes.pop(row)
-            #print r
+            # print r
             if r in self.__interactors_dict:
                 del self.__interactors_dict[r]
         if len(indexes) == 0:
-            self.data_frame = pd.DataFrame(columns=["variable", "DF", "Interaction"])
+            self.data_frame = pd.DataFrame(
+                columns=["variable", "DF", "Interaction"])
         else:
             log = logging.getLogger(__name__)
             log.debug(self.data_frame)
@@ -449,7 +462,6 @@ class AnovaRegressorsModel(QAbstractTableModel):
         self._update_display_view()
         self.endRemoveRows()
         self.modelReset.emit()
-
 
     def _get_degrees_of_freedom(self, var_name):
         is_real = braviz_tab_data.is_variable_name_real(var_name)
@@ -462,16 +474,17 @@ class AnovaRegressorsModel(QAbstractTableModel):
         """
         Get a list of single term regressors
         """
-        regs_col = self.data_frame["variable"][self.data_frame["Interaction"] == 0]
+        regs_col = self.data_frame["variable"][
+            self.data_frame["Interaction"] == 0]
         return regs_col.get_values()
 
     def get_interactions(self):
         """
         Get a list of interaction terms
         """
-        regs_col = self.data_frame["variable"][self.data_frame["Interaction"] == 1]
+        regs_col = self.data_frame["variable"][
+            self.data_frame["Interaction"] == 1]
         return regs_col.get_values()
-
 
     def add_interactor(self, factor_rw_indexes):
         """
@@ -483,19 +496,21 @@ class AnovaRegressorsModel(QAbstractTableModel):
                 interaction terms (or the row number when interaction terms are hidden)
         """
 
-        factors_data_frame = self.data_frame[self.data_frame["Interaction"] == 0]
-        factor_indexes = [factors_data_frame.index[i] for i in factor_rw_indexes]
+        factors_data_frame = self.data_frame[
+            self.data_frame["Interaction"] == 0]
+        factor_indexes = [factors_data_frame.index[i]
+                          for i in factor_rw_indexes]
         if len(factor_indexes) < 2:
-            #can't add interaction with just one factor
+            # can't add interaction with just one factor
             return
 
-        #check if already added:
+        # check if already added:
         if frozenset(factor_indexes) in self.__interactors_dict.values():
             log = logging.getLogger(__name__)
             log.warning("Trying to add duplicated interaction")
             return
 
-        #get var_names
+        # get var_names
         factor_names = self.data_frame["variable"].loc[factor_indexes]
         self.add_interactor_by_names(factor_names)
 
@@ -507,20 +522,22 @@ class AnovaRegressorsModel(QAbstractTableModel):
             factor_names (list) : List of variable names, already in the model, which make up the interaction
         """
         df = self.data_frame
-        factor_indexes = [df.index[df["variable"] == fn].values[0] for fn in factor_names]
+        factor_indexes = [df.index[df["variable"] == fn].values[0]
+                          for fn in factor_names]
         # create name
         interactor_name = '*'.join(factor_names)
         log = logging.getLogger(__name__)
         log.debug(interactor_name)
-        #get degrees of freedom
+        # get degrees of freedom
         interactor_df = self.data_frame["DF"].loc[factor_indexes].prod()
         log.debug(interactor_df)
-        #add to dictionary
+        # add to dictionary
         interactor_idx = self.__next_index
         self.__next_index += 1
         self.__interactors_dict[interactor_idx] = frozenset(factor_indexes)
-        #add to data frame
-        self.beginInsertRows(QtCore.QModelIndex(), len(self.data_frame), len(self.data_frame))
+        # add to data frame
+        self.beginInsertRows(
+            QtCore.QModelIndex(), len(self.data_frame), len(self.data_frame))
 
         temp_data_frame = pd.DataFrame([(interactor_name, interactor_df, 1)], columns=["variable", "DF", "Interaction"],
                                        index=(interactor_idx,))
@@ -568,6 +585,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
 
 
 class NominalVariablesMeta(QAbstractTableModel):
+
     """
     A table with numerical labels in the first column and corresponding text labels in the second column
 
@@ -577,6 +595,7 @@ class NominalVariablesMeta(QAbstractTableModel):
     Args:
         var_name (str) : Name of a nominal variable
     """
+
     def __init__(self, var_name, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self.var_name = var_name
@@ -632,7 +651,8 @@ class NominalVariablesMeta(QAbstractTableModel):
         row = QModelIndex.row()
         col = QModelIndex.column()
         if (int_role == QtCore.Qt.EditRole) and (col == 1 and 0 <= row < self.rowCount()):
-            self.names_dict[self.labels_list[row]] = unicode(QVariant.toString())
+            self.names_dict[self.labels_list[row]] = unicode(
+                QVariant.toString())
             self.dataChanged.emit(QModelIndex, QModelIndex)
             return True
         elif (int_role == QtCore.Qt.CheckStateRole) and (col == 0 and 0 <= row < self.rowCount()):
@@ -644,10 +664,10 @@ class NominalVariablesMeta(QAbstractTableModel):
                 self.unchecked.add(label)
             else:
                 return False
-            self.emit(QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)
+            self.emit(
+                QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)
             return True
         return False
-
 
     def flags(self, QModelIndex):
         row = QModelIndex.row()
@@ -678,7 +698,7 @@ class NominalVariablesMeta(QAbstractTableModel):
         self.names_dict = braviz_tab_data.get_labels_dict_by_name(var_name)
         self.labels_list = self.names_dict.keys()
 
-    def save_into_db(self, var_idx = None):
+    def save_into_db(self, var_idx=None):
         """
         Save the textual labels into the database
 
@@ -686,7 +706,7 @@ class NominalVariablesMeta(QAbstractTableModel):
             var_idx (int) : Index of the variable to which the labels will be saved, only required if *var_name*
                 is not set.
         """
-        tuples = ( (k, v) for k, v in self.names_dict.iteritems())
+        tuples = ((k, v) for k, v in self.names_dict.iteritems())
         if self.var_name is not None:
             braviz_tab_data.save_nominal_labels_by_name(self.var_name, tuples)
         else:
@@ -701,7 +721,7 @@ class NominalVariablesMeta(QAbstractTableModel):
         self.labels_list.append(len(self.labels_list) + 1)
         self.modelReset.emit()
 
-    def set_labels_dict(self,labels_dict):
+    def set_labels_dict(self, labels_dict):
         """
         Sets textual labels
 
@@ -735,6 +755,7 @@ class NominalVariablesMeta(QAbstractTableModel):
 
 
 class AnovaResultsModel(QAbstractTableModel):
+
     """
     A model to represent the results of an anova regression
 
@@ -747,9 +768,11 @@ class AnovaResultsModel(QAbstractTableModel):
         intercept (float) : Value of the intercept term of the regression
         fitted (list) : Vector of fitted values
     """
+
     def __init__(self, results_df=None, residuals=None, intercept=None, fitted=None):
         if results_df is None:
-            self.__df = pd.DataFrame(None, columns=["Factor", "Sum Sq", "Df", "F value", "Pr(>F)"])
+            self.__df = pd.DataFrame(
+                None, columns=["Factor", "Sum Sq", "Df", "F value", "Pr(>F)"])
         else:
             self.__df = results_df
 
@@ -782,7 +805,6 @@ class AnovaResultsModel(QAbstractTableModel):
         else:
             return "{:.3g}".format(data)
 
-
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
             return QtCore.QVariant()
@@ -794,7 +816,8 @@ class AnovaResultsModel(QAbstractTableModel):
         reverse = True
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             reverse = False
-        self.__df.sort(self.__df.columns[p_int], ascending=reverse, inplace=True)
+        self.__df.sort(
+            self.__df.columns[p_int], ascending=reverse, inplace=True)
         self.modelReset.emit()
 
     def flags(self, QModelIndex):
@@ -808,6 +831,7 @@ class AnovaResultsModel(QAbstractTableModel):
 
 
 class DataFrameModel(QAbstractTableModel):
+
     """
     This model is used for displaying data frames in a QT table view
 
@@ -819,7 +843,7 @@ class DataFrameModel(QAbstractTableModel):
         checks (bool) : Display checkboxes next to the first column
     """
 
-    def __init__(self, data_frame, columns=None, string_columns=tuple(),index_as_column=True, checks=False):
+    def __init__(self, data_frame, columns=None, string_columns=tuple(), index_as_column=True, checks=False):
         if not isinstance(data_frame, pd.DataFrame):
             raise ValueError("A pandas data frame is required")
         if columns is None:
@@ -830,7 +854,7 @@ class DataFrameModel(QAbstractTableModel):
         self.__checks = checks
         self.__checked = set()
         self.__disabled = set()
-        self.index_as_column=index_as_column
+        self.index_as_column = index_as_column
         super(DataFrameModel, self).__init__()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -848,7 +872,7 @@ class DataFrameModel(QAbstractTableModel):
         col = QModelIndex.column()
 
         if self.__checks is True and int_role == QtCore.Qt.CheckStateRole:
-            if col==0:
+            if col == 0:
                 idx = self.__df.index[line]
                 if idx in self.__checked:
                     return QtCore.Qt.Checked
@@ -882,10 +906,11 @@ class DataFrameModel(QAbstractTableModel):
             self.__checked.add(idx)
         elif state == QtCore.Qt.Unchecked:
             self.__checked.remove(idx)
-        self.emit(QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)
+        self.emit(
+            QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)
         return True
 
-    def get_item_index(self,QModelIndex):
+    def get_item_index(self, QModelIndex):
         if not QModelIndex.isValid():
             return
         row = QModelIndex.row()
@@ -909,7 +934,7 @@ class DataFrameModel(QAbstractTableModel):
                         return unicode(self.__df.index.name)
                     else:
                         return self.__cols[p_int - 1]
-                else :
+                else:
                     return self.__cols[p_int]
         elif Qt_Orientation == QtCore.Qt.Vertical:
             if int_role == QtCore.Qt.DisplayRole:
@@ -929,9 +954,11 @@ class DataFrameModel(QAbstractTableModel):
             self.__df.index.name = i_name
         else:
             if self.index_as_column:
-                self.__df.sort(self.__df.columns[p_int - 1], ascending=reverse, inplace=True)
+                self.__df.sort(
+                    self.__df.columns[p_int - 1], ascending=reverse, inplace=True)
             else:
-                self.__df.sort(self.__df.columns[p_int], ascending=reverse, inplace=True)
+                self.__df.sort(
+                    self.__df.columns[p_int], ascending=reverse, inplace=True)
         self.modelReset.emit()
 
     def flags(self, QModelIndex):
@@ -955,23 +982,24 @@ class DataFrameModel(QAbstractTableModel):
         return frozenset(self.__checked)
 
     @checked.setter
-    def checked(self,checked_names):
+    def checked(self, checked_names):
         self.modelAboutToBeReset.emit()
-        self.__checked=set(checked_names)
+        self.__checked = set(checked_names)
         self.modelReset.emit()
-
 
     @property
     def disabled_items(self):
         return frozenset(self.__disabled)
 
     @disabled_items.setter
-    def disabled_items(self,disabled_set):
+    def disabled_items(self, disabled_set):
         self.modelAboutToBeReset.emit()
         self.__disabled = set(disabled_set)
         self.modelReset.emit()
 
+
 class SampleTree(QAbstractItemModel):
+
     """
     Creates a tree for representing a sample
 
@@ -982,16 +1010,18 @@ class SampleTree(QAbstractItemModel):
     Args:
         columns (list) : List of nominal variable names to include in the tree.
     """
+
     def __init__(self, columns=None):
         super(SampleTree, self).__init__()
         if columns is None:
             conf = config_file.get_apps_config()
             vars = conf.get_default_variables()
-            columns = [vars["nom1"], vars["nom2"],vars["lat"]]
+            columns = [vars["nom1"], vars["nom2"], vars["lat"]]
         self.data_aspects = columns
         self.__headers = {0: "Attribute", 1: "N"}
         self.__data_frame = braviz_tab_data.get_data_frame_by_name(columns)
-        self.item_tuple = namedtuple("item_tuple", ["nid", "row", "label", "count", "parent", "children"])
+        self.item_tuple = namedtuple(
+            "item_tuple", ["nid", "row", "label", "count", "parent", "children"])
         self.__tree_list = []
         self.__id_index = {}
         self.__next_id = 0
@@ -1004,7 +1034,8 @@ class SampleTree(QAbstractItemModel):
         Args:
             new_sample (set) : Set of subjects in the new subsample
         """
-        self.__data_frame = braviz_tab_data.get_data_frame_by_name(self.data_aspects)
+        self.__data_frame = braviz_tab_data.get_data_frame_by_name(
+            self.data_aspects)
         self.__data_frame = self.__data_frame.loc[sorted(new_sample)]
         self.__tree_list = []
         self.__id_index = {}
@@ -1025,7 +1056,8 @@ class SampleTree(QAbstractItemModel):
         children_list = []
         for r, c in enumerate(children):
             iid = self.__get_next_id()
-            c_item = self.item_tuple(nid=iid, row=r, label=str(c), count=1, parent=parent_id, children=None)
+            c_item = self.item_tuple(
+                nid=iid, row=r, label=str(c), count=1, parent=parent_id, children=None)
             self.__id_index[iid] = c_item
             children_list.append(c_item)
         all_item = self.item_tuple(nid=parent_id, row=0, label="All", count=len(self.__data_frame), parent=None,
@@ -1033,8 +1065,7 @@ class SampleTree(QAbstractItemModel):
         self.__tree_list.append(all_item)
         self.__id_index[parent_id] = all_item
 
-
-        #Other aspectes
+        # Other aspectes
         for r, aspect in enumerate(self.data_aspects):
             aspect_id = self.__get_next_id()
             children = self._populate_aspect(aspect, aspect_id)
@@ -1043,23 +1074,25 @@ class SampleTree(QAbstractItemModel):
             self.__tree_list.append(new_item)
             self.__id_index[aspect_id] = new_item
 
-        #check index integrity
+        # check index integrity
         for i in xrange(self.__next_id):
             assert self.__id_index.has_key(i)
 
     def _populate_aspect(self, var_name, aspect_id):
         # get labels
-        d=braviz_tab_data.get_labels_dict_by_name(var_name)
+        d = braviz_tab_data.get_labels_dict_by_name(var_name)
         labels_list = []
         for i, (label, name) in enumerate(d.iteritems()):
             if label is None:
                 continue
             lab_id = self.__get_next_id()
-            children = self.__data_frame[self.__data_frame[var_name] == label].index
+            children = self.__data_frame[
+                self.__data_frame[var_name] == label].index
             children_list = []
             for r, c in enumerate(children):
                 c_id = self.__get_next_id()
-                c_item = self.item_tuple(nid=c_id, row=r, label=str(c), count=1, parent=lab_id, children=None)
+                c_item = self.item_tuple(
+                    nid=c_id, row=r, label=str(c), count=1, parent=lab_id, children=None)
                 children_list.append(c_item)
                 self.__id_index[c_id] = c_item
             lab_item = self.item_tuple(nid=lab_id, row=i, label=name, count=len(children_list), parent=aspect_id,
@@ -1067,7 +1100,6 @@ class SampleTree(QAbstractItemModel):
             labels_list.append(lab_item)
             self.__id_index[lab_id] = lab_item
         return labels_list
-
 
     def parent(self, QModelIndex=None):
         if not QModelIndex.isValid():
@@ -1083,7 +1115,7 @@ class SampleTree(QAbstractItemModel):
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         if not QModelIndex_parent.isValid():
             # print "top_row_count"
-            #print len(self.data_aspects)+1
+            # print len(self.data_aspects)+1
             return len(self.data_aspects) + 1
         nid = QModelIndex_parent.internalId()
         item = self.__id_index[nid]
@@ -1101,7 +1133,7 @@ class SampleTree(QAbstractItemModel):
             nid = QModelIndex.internalId()
             item = self.__id_index[nid]
             # print item
-            #print sid
+            # print sid
             if col == 0:
                 return item.label
             elif col == 1:
@@ -1131,7 +1163,6 @@ class SampleTree(QAbstractItemModel):
             assert out_index.isValid()
             return out_index
 
-
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation == QtCore.Qt.Horizontal and int_role == QtCore.Qt.DisplayRole:
             self.__headers.get(p_int, QtCore.QVariant())
@@ -1144,7 +1175,7 @@ class SampleTree(QAbstractItemModel):
             return True
         parent_item = self.__id_index[QModelIndex_parent.internalId()]
         # print "has children"
-        #print parent_item
+        # print parent_item
         if parent_item.children is None:
             return False
         else:
@@ -1171,8 +1202,8 @@ class SampleTree(QAbstractItemModel):
             return leafs
 
 
-
 class SubjectsTable(QAbstractTableModel):
+
     """
     A table of subjects and values for specified variables
 
@@ -1183,6 +1214,7 @@ class SubjectsTable(QAbstractTableModel):
         initial_columns (list) : List of initial variables indices to include as columns in the table
         sample (list) : List of subject ids to show in the table
     """
+
     def __init__(self, initial_columns=None, sample=None):
         QAbstractTableModel.__init__(self)
         if initial_columns is None:
@@ -1196,7 +1228,6 @@ class SubjectsTable(QAbstractTableModel):
         if sample is None:
             self.sample = braviz_tab_data.get_subjects()
         self.set_var_columns(initial_columns)
-
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.__df.shape[0]
@@ -1216,7 +1247,7 @@ class SubjectsTable(QAbstractTableModel):
 
     def data(self, QModelIndex, int_role=None):
         line = QModelIndex.row()
-        name = self.__df.iloc[line,0]
+        name = self.__df.iloc[line, 0]
         if int_role == QtCore.Qt.FontRole:
             if name == self.__highlight_subject:
                 font = QtGui.QFont()
@@ -1253,7 +1284,8 @@ class SubjectsTable(QAbstractTableModel):
         reverse = False
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             reverse = True
-        self.__df.sort(self.__df.columns[p_int], ascending=reverse, inplace=True)
+        self.__df.sort(
+            self.__df.columns[p_int], ascending=reverse, inplace=True)
         self.modelReset.emit()
 
     def set_var_columns(self, columns):
@@ -1265,17 +1297,20 @@ class SubjectsTable(QAbstractTableModel):
         """
         self.__col_indexes = columns
         vars_df = braviz_tab_data.get_data_frame_by_index(columns)
-        codes_df = pd.DataFrame(vars_df.index.get_values(), index=vars_df.index, columns=("Code",))
+        codes_df = pd.DataFrame(
+            vars_df.index.get_values(), index=vars_df.index, columns=("Code",))
         self.__df = codes_df.join(vars_df)
         self.__df = self.__df.loc[self.sample]
         is_var_code_real = braviz_tab_data.are_variables_real(columns)
         # we want to use the column number as index
-        self.__is_var_real = dict((i + 1, is_var_code_real[idx]) for i, idx in enumerate(columns))
+        self.__is_var_real = dict(
+            (i + 1, is_var_code_real[idx]) for i, idx in enumerate(columns))
         self.__labels = {}
         for i, is_real in self.__is_var_real.iteritems():
             if not is_real:
-                #column 0 is reserved for the Code
-                self.__labels[i] = braviz_tab_data.get_labels_dict(columns[i - 1])
+                # column 0 is reserved for the Code
+                self.__labels[i] = braviz_tab_data.get_labels_dict(
+                    columns[i - 1])
         self.modelReset.emit()
 
     def set_sample(self, new_sample):
@@ -1287,7 +1322,6 @@ class SubjectsTable(QAbstractTableModel):
         """
         self.sample = new_sample
         self.set_var_columns(self.__col_indexes)
-
 
     def get_current_columns(self):
         """
@@ -1313,11 +1347,13 @@ class SubjectsTable(QAbstractTableModel):
         return self.__highlight_subject
 
     @highlighted_subject.setter
-    def highlighted_subject(self,subj):
+    def highlighted_subject(self, subj):
         self.__highlight_subject = subj
         self.modelReset.emit()
 
+
 class ContextVariablesModel(QAbstractTableModel):
+
     """
     A table with three columns: Variable name, variable type, and a checkbox called "editable"
 
@@ -1332,21 +1368,23 @@ class ContextVariablesModel(QAbstractTableModel):
 
 
     """
+
     def __init__(self, context_vars_list=None, parent=None, editable_dict=None):
         QAbstractTableModel.__init__(self, parent)
         self.data_type_dict = dict()
         if context_vars_list is not None and len(context_vars_list) > 0:
             self.data_frame = pd.DataFrame(
-                [(braviz_tab_data.get_var_name(idx), self._get_type(idx)) for idx in context_vars_list],
+                [(braviz_tab_data.get_var_name(idx), self._get_type(idx))
+                 for idx in context_vars_list],
                 columns=["variable", "Type"], index=context_vars_list)
         else:
             self.data_frame = pd.DataFrame(columns=["variable", "Type"])
 
         self.editables_dict = editable_dict
         if self.editables_dict is None:
-            self.editables_dict = dict((idx, False) for idx in context_vars_list)
+            self.editables_dict = dict((idx, False)
+                                       for idx in context_vars_list)
         self.headers_dict = {0: "Variable", 1: "Type", 2: "Editable"}
-
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.data_frame)
@@ -1384,7 +1422,8 @@ class ContextVariablesModel(QAbstractTableModel):
             return QtCore.QVariant()
 
     def sort(self, p_int, Qt_SortOrder_order=None):
-        # We will be using type2 or type3 Sums of Squares, and therefore order is not important
+        # We will be using type2 or type3 Sums of Squares, and therefore order
+        # is not important
         reverse = True
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             reverse = False
@@ -1419,14 +1458,14 @@ class ContextVariablesModel(QAbstractTableModel):
             # ignore duplicates
             return
 
-        self.beginInsertRows(QtCore.QModelIndex(), len(self.data_frame), len(self.data_frame))
+        self.beginInsertRows(
+            QtCore.QModelIndex(), len(self.data_frame), len(self.data_frame))
         self.data_frame = self.data_frame.append(
             pd.DataFrame([(braviz_tab_data.get_var_name(var_idx), self._get_type(var_idx))],
                          columns=["variable", "Type"],
                          index=(var_idx,)))
         self.endInsertRows()
         self.editables_dict[var_idx] = False
-
 
     def removeRows(self, row, count, QModelIndex_parent=None, *args, **kwargs):
         # self.layoutAboutToBeChanged.emit()
@@ -1468,6 +1507,7 @@ class ContextVariablesModel(QAbstractTableModel):
 
 
 class SubjectDetails(QAbstractTableModel):
+
     """
     A table showing variable values for a single subject
 
@@ -1481,6 +1521,7 @@ class SubjectDetails(QAbstractTableModel):
         initial_subject : Code of the initial subject
 
     """
+
     def __init__(self, initial_vars=None, initial_subject=None):
         QAbstractTableModel.__init__(self)
         if initial_vars is None:
@@ -1491,7 +1532,6 @@ class SubjectDetails(QAbstractTableModel):
         self.__current_subject = initial_subject
         self.set_variables(initial_vars)
         self.headers = ("Variable", "Value")
-
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.__df.shape[0]
@@ -1539,7 +1579,8 @@ class SubjectDetails(QAbstractTableModel):
         Args:
             variable_ids : list of new variable ids to show in the table
         """
-        vars_df = braviz_tab_data.get_subject_variables(self.__current_subject, variable_ids)
+        vars_df = braviz_tab_data.get_subject_variables(
+            self.__current_subject, variable_ids)
         self.__df = vars_df
         self.__is_var_real = braviz_tab_data.are_variables_real(variable_ids)
         self.__normal_ranges = dict((int(idx), braviz_tab_data.get_variable_normal_range(int(idx)))
@@ -1577,9 +1618,10 @@ class SubjectDetails(QAbstractTableModel):
         # only accept drops between lines
         if QModelIndex.isValid():
             return False
-        data_stream = QtCore.QDataStream(QMimeData.data("application/x-qabstractitemmodeldatalist"))
+        data_stream = QtCore.QDataStream(
+            QMimeData.data("application/x-qabstractitemmodeldatalist"))
         source_row = data_stream.readInt()
-        #print "Moving from %d to %d"%(source_row,row)
+        # print "Moving from %d to %d"%(source_row,row)
         index_list = list(self.__df.index)
         source_id = index_list.pop(source_row)
         index_list.insert(row, source_id)
@@ -1596,16 +1638,18 @@ class SubjectDetails(QAbstractTableModel):
     def sort(self, p_int, Qt_SortOrder_order=None):
         if p_int == 0:
             ascending = not (Qt_SortOrder_order == QtCore.Qt.AscendingOrder)
-            self.__df.sort("name",inplace=True,ascending=ascending)
+            self.__df.sort("name", inplace=True, ascending=ascending)
             self.modelReset.emit()
 
 
 class NewVariableValues(QAbstractTableModel):
+
     """
     A table with on column for subject, and a writable second column for variable values
 
     Values are restricted to numbers
     """
+
     def __init__(self):
         super(NewVariableValues, self).__init__()
         self.subjects_list = braviz_tab_data.get_subjects()
@@ -1638,7 +1682,6 @@ class NewVariableValues(QAbstractTableModel):
                 return flags
         return QtCore.Qt.NoItemFlags
 
-
     def setData(self, QModelIndex, QVariant, int_role=None):
         row = QModelIndex.row()
         col = QModelIndex.column()
@@ -1647,7 +1690,8 @@ class NewVariableValues(QAbstractTableModel):
         if col != 1 or row < 0 or row >= self.rowCount():
             return False
         try:
-            self.values_dict[self.subjects_list[row]] = float(QVariant.toString())
+            self.values_dict[self.subjects_list[row]] = float(
+                QVariant.toString())
         except ValueError:
             return False
         self.dataChanged.emit(QModelIndex, QModelIndex)
@@ -1668,10 +1712,11 @@ class NewVariableValues(QAbstractTableModel):
         Args:
             var_idx (int) : Index of the variable to which the values should be saved
         """
-        value_tuples = ((s, self.values_dict.get(s, "nan")) for s in self.subjects_list)
+        value_tuples = ((s, self.values_dict.get(s, "nan"))
+                        for s in self.subjects_list)
         braviz_tab_data.update_variable_values(var_idx, value_tuples)
 
-    def set_values_dict(self,values_dict):
+    def set_values_dict(self, values_dict):
         """
         Set values for variables
 
@@ -1682,19 +1727,21 @@ class NewVariableValues(QAbstractTableModel):
         self.values_dict = values_dict
         self.modelReset.emit()
 
+
 class SimpleBundlesList(QAbstractListModel):
+
     """
     A list of database fiber bundles
 
     An optional special bundle, called "<From Segment>" may also be shown
     """
+
     def __init__(self):
         super(SimpleBundlesList, self).__init__()
         self.id_list = None
         self.names_list = None
         self.__showing_special = False
         self._restart_structures()
-
 
     def _restart_structures(self):
         """
@@ -1786,9 +1833,11 @@ class SimpleBundlesList(QAbstractListModel):
 
 
 class BundlesSelectionList(QAbstractListModel):
+
     """
     A list of bundles with checkboxes
     """
+
     def __init__(self):
         super(BundlesSelectionList, self).__init__()
         self.id_list = []
@@ -1862,6 +1911,7 @@ class BundlesSelectionList(QAbstractListModel):
 
 
 class ScenariosTableModel(QAbstractTableModel):
+
     """
     A table with available scenarios
 
@@ -1871,6 +1921,7 @@ class ScenariosTableModel(QAbstractTableModel):
     Args:
         app_name (str) : Name of application, if ``None`` scenarios for all applications are shown
     """
+
     def __init__(self, app_name):
         super(ScenariosTableModel, self).__init__()
         self.app_name = app_name
@@ -1881,7 +1932,6 @@ class ScenariosTableModel(QAbstractTableModel):
     def reload_data(self):
         self.df = braviz_user_data.get_scenarios_data_frame(self.app_name)
         self.modelReset.emit()
-
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation == QtCore.Qt.Horizontal:
@@ -1920,7 +1970,7 @@ class ScenariosTableModel(QAbstractTableModel):
         """
         return self.df.index[row]
 
-    def get_name(self,row):
+    def get_name(self, row):
         """
         Get the name of the scenario at a given row
         """
@@ -1928,9 +1978,11 @@ class ScenariosTableModel(QAbstractTableModel):
 
 
 class SimpleSetModel(QAbstractListModel):
+
     """
     Transforms a python :class:`set` into a Qt List Model
     """
+
     def __init__(self):
         super(SimpleSetModel, self).__init__()
         self.__internal_list = []
@@ -1962,11 +2014,14 @@ class SimpleSetModel(QAbstractListModel):
         self.__internal_list = sorted(list(data_set))
         self.modelReset.emit()
 
+
 class SimpleCheckModel(QAbstractListModel):
+
     """
     Provides a model for selecting items from a set of choices (represented with checkboxes in Qt Views)
     """
-    def __init__(self,choices):
+
+    def __init__(self, choices):
         """
         Provides a model for selecting items from a set of choices (represented with checkboxes in Qt Views)
 
@@ -2022,26 +2077,28 @@ class SimpleCheckModel(QAbstractListModel):
                         self.__selected.add(item)
                     else:
                         self.__selected.discard(item)
-                    self.dataChanged.emit(QModelIndex,QModelIndex)
+                    self.dataChanged.emit(QModelIndex, QModelIndex)
                     return True
         return False
 
-    def set_selection(self,selection):
+    def set_selection(self, selection):
         """
         Sets the currently selected items to those (and only those) in *selection*
 
         Args:
             selection (set) : New set of checked items
         """
-        self.__selected=set(selection)
+        self.__selected = set(selection)
         self.modelReset.emit()
-        self.dataChanged.emit(self.index(0,0),self.index(self.rowCount(),0))
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount(), 0))
 
 
 class SamplesFilterModel(QAbstractListModel):
+
     """
     A list of filters that can be applied to a sample
     """
+
     def __init__(self):
         super(SamplesFilterModel, self).__init__()
         self.__filters_list = []
@@ -2069,7 +2126,6 @@ class SamplesFilterModel(QAbstractListModel):
         self.beginInsertRows(QtCore.QModelIndex(), new_row, new_row)
         self.__filters_list.append((filter_name, filter_func))
         self.endInsertRows()
-
 
     def apply_filters(self, input_set):
         """
@@ -2100,17 +2156,18 @@ class SamplesFilterModel(QAbstractListModel):
 
 
 class SamplesSelectionModel(QAbstractTableModel):
+
     """
     A table showing available subsamples
 
     It has three columns: sample size, sample name, and sample description
     """
+
     def __init__(self):
         super(SamplesSelectionModel, self).__init__()
         self.data_frame = braviz_user_data.get_samples_df()
         self.columns = ("sample_size", "sample_name", "sample_desc")
         self.headers = ("Size", "Name", "Description")
-
 
     def reload(self):
         """
@@ -2144,7 +2201,8 @@ class SamplesSelectionModel(QAbstractTableModel):
         ascending = True
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             ascending = False
-        self.data_frame.sort(columns=sort_col, ascending=ascending, inplace=True)
+        self.data_frame.sort(
+            columns=sort_col, ascending=ascending, inplace=True)
         self.modelReset.emit()
 
     def get_sample(self, QModelIndex):
@@ -2184,7 +2242,9 @@ class SamplesSelectionModel(QAbstractTableModel):
             sample_name = self.data_frame["sample_name"].iloc[row]
             return sample_name
 
+
 class SubjectChecklist(QAbstractListModel):
+
     """
     A list of subjects with checkboxes
 
@@ -2192,7 +2252,8 @@ class SubjectChecklist(QAbstractListModel):
         initial_list (list) : List of subject ids
         show_checks (bool) : If ``False`` no checkboxes will be shown
     """
-    def __init__(self, initial_list=tuple(),show_checks=True):
+
+    def __init__(self, initial_list=tuple(), show_checks=True):
         QAbstractListModel.__init__(self)
         self.__list = list(initial_list)
         self.__checked = frozenset()
@@ -2206,7 +2267,6 @@ class SubjectChecklist(QAbstractListModel):
         """
         return self.__checked
 
-
     @checked.setter
     def checked(self, new_set):
         self.__checked = frozenset(new_set)
@@ -2217,7 +2277,7 @@ class SubjectChecklist(QAbstractListModel):
         return self.__highlight_subject
 
     @highlighted_subject.setter
-    def highlighted_subject(self,subj):
+    def highlighted_subject(self, subj):
         self.__highlight_subject = subj
         self.modelReset.emit()
 
@@ -2262,7 +2322,6 @@ class SubjectChecklist(QAbstractListModel):
 
         return QtCore.QVariant()
 
-
     def flags(self, QModelIndex):
         if QModelIndex.isValid():
             row = QModelIndex.row()
@@ -2272,6 +2331,7 @@ class SubjectChecklist(QAbstractListModel):
 
 
 class SubjectCheckTable(QAbstractTableModel):
+
     """
     A table of subjects with optional checkboxes
 
@@ -2281,15 +2341,16 @@ class SubjectCheckTable(QAbstractTableModel):
             lists, such that the value for the subject in position *i* is also located at position *i*
         headers (list) : List of strings used as headers for the table on top of each data column
     """
+
     def __init__(self, initial_list=tuple(), data_cols=tuple(), headers=("", "")):
         QAbstractTableModel.__init__(self)
-        assert len(data_cols) == len(headers)-1
+        assert len(data_cols) == len(headers) - 1
         self.__list = list(initial_list)
         self.__checked = set()
         self.__data = data_cols
         self.__headers = headers
 
-    def set_data_cols(self,new_cols):
+    def set_data_cols(self, new_cols):
         """
         Sets new data columns
 
@@ -2297,7 +2358,7 @@ class SubjectCheckTable(QAbstractTableModel):
             new_cols (list) : List of data columns, must have the same length as the headers. Each data column
                 is itself an iterable of the same length and indices as the subjects list
         """
-        assert len(new_cols)==len(self.__headers)-1
+        assert len(new_cols) == len(self.__headers) - 1
         self.__data = new_cols
         self.modelReset.emit()
 
@@ -2321,7 +2382,7 @@ class SubjectCheckTable(QAbstractTableModel):
         return len(self.__list)
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
-        return 1+len(self.__data)
+        return 1 + len(self.__data)
 
     def data(self, QModelIndex, int_role=None):
         if QModelIndex.isValid():
@@ -2342,13 +2403,12 @@ class SubjectCheckTable(QAbstractTableModel):
             else:
                 if int_role == QtCore.Qt.DisplayRole:
                     try:
-                        return unicode(self.__data[col-1][row])
+                        return unicode(self.__data[col - 1][row])
                     except IndexError:
                         return QtCore.QVariant()
                 if int_role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignHCenter
         return QtCore.QVariant()
-
 
     def flags(self, QModelIndex):
         if QModelIndex.isValid():
@@ -2365,7 +2425,7 @@ class SubjectCheckTable(QAbstractTableModel):
             if int_role == QtCore.Qt.DisplayRole:
                 return self.__headers[p_int]
             if int_role == QtCore.Qt.TextAlignmentRole:
-                if p_int>0:
+                if p_int > 0:
                     return QtCore.Qt.AlignHCenter
                 else:
                     return QtCore.Qt.AlignLeft
@@ -2375,7 +2435,7 @@ class SubjectCheckTable(QAbstractTableModel):
         if QModelIndex.isValid():
             col = QModelIndex.column()
             row = QModelIndex.row()
-            if col == 0 and int_role== QtCore.Qt.CheckStateRole:
+            if col == 0 and int_role == QtCore.Qt.CheckStateRole:
                 value = QVariant.toBool()
                 name = self.__list[row]
                 if value is True:

@@ -66,7 +66,8 @@ def get_mult_struct_metric(reader, struct_names, code, metric='volume'):
         if metric == 'nfibers':
             result = get_fibers_metric(reader, struct_names, code, 'number')
         elif metric == 'lfibers':
-            result = get_fibers_metric(reader, struct_names, code, 'mean_length')
+            result = get_fibers_metric(
+                reader, struct_names, code, 'mean_length')
         elif metric == 'fa_fibers':
             result = get_fibers_metric(reader, struct_names, code, 'mean_fa')
     elif metric in ('area', 'volume'):
@@ -122,7 +123,7 @@ def get_struct_metric(reader, struct_name, code, metric='volume'):
             return reader.get('model', code, name=struct_name, volume=1)
         except IOError:
             return float('nan')
-    #volume don't require the structure to exist
+    # volume don't require the structure to exist
     if not struct_name.startswith('Fib'):
         try:
             model = reader.get('model', code, name=struct_name)
@@ -173,20 +174,22 @@ def get_fibers_metric(reader, struct_name, code, metric='number', ):
     if hasattr(struct_name, "__iter__") and len(struct_name) == 1:
         struct_name = iter(struct_name).next()
     if (type(struct_name) == str) and struct_name.startswith('Fibs:'):
-        #print "we are dealing with special fibers"
+        # print "we are dealing with special fibers"
         try:
-            fibers = reader.get('fibers', code, name=struct_name[5:], color='fa')
+            fibers = reader.get(
+                'fibers', code, name=struct_name[5:], color='fa')
         except Exception:
             n = float('nan')
             return n
     else:
         try:
-            fibers = reader.get('fibers', code, waypoint=struct_name, color='fa', operation='or')
+            fibers = reader.get(
+                'fibers', code, waypoint=struct_name, color='fa', operation='or')
         except Exception:
             n = float('nan')
             return n
     if fibers is None:
-        #print "Problem loading fibers for subject %s"%code
+        # print "Problem loading fibers for subject %s"%code
         n = float('nan')
         return n
     elif metric == 'number':
@@ -195,7 +198,8 @@ def get_fibers_metric(reader, struct_name, code, metric='number', ):
         desc = braviz.interaction.get_fiber_bundle_descriptors(fibers)
         n = float(desc[1])
     elif metric == 'mean_fa':
-        desc = braviz.interaction.aggregate_fiber_scalar(fibers, norm_factor=1 / 255)
+        desc = braviz.interaction.aggregate_fiber_scalar(
+            fibers, norm_factor=1 / 255)
         del fibers
         n = float(desc[1])
     else:
@@ -256,13 +260,15 @@ def cached_get_struct_metric_col(reader, codes, struct_name, metric,
     if random.random() < 0.01:
         force_reload = True
     if hasattr(struct_name, '__iter__'):
-        #we have multiple sequences
+        # we have multiple sequences
         calc_function = get_mult_struct_metric
         standard_list = list(struct_name)
         standard_list.sort()
-        key = 'column_%s_%s' % (''.join(sorted(struct_name)).replace(':', '_'), metric.replace(':', '_'))
+        key = 'column_%s_%s' % (
+            ''.join(sorted(struct_name)).replace(':', '_'), metric.replace(':', '_'))
     else:
-        key = 'column_%s_%s' % (struct_name.replace(':', '_'), metric.replace(':', '_'))
+        key = 'column_%s_%s' % (
+            struct_name.replace(':', '_'), metric.replace(':', '_'))
     key += ';'.join(codes)
     if force_reload is not True:
         cached = reader.load_from_cache(key)
@@ -285,7 +291,8 @@ def cached_get_struct_metric_col(reader, codes, struct_name, metric,
             log.info("cancel flag received")
             state_variables['working'] = False
             return
-        struct_name2 = solve_laterality(laterality_dict.get(code, 'unknown'), struct_name)
+        struct_name2 = solve_laterality(
+            laterality_dict.get(code, 'unknown'), struct_name)
         scalar = calc_function(reader, struct_name2, code, metric)
         temp_struct_metrics_col.append(scalar)
         state_variables['number_calculated'] = len(temp_struct_metrics_col)
@@ -296,7 +303,8 @@ def cached_get_struct_metric_col(reader, codes, struct_name, metric,
 
 
 laterality_lut = {
-    # dominant or non_dominant, right_handed or left_handed : resulting hemisphere
+    # dominant or non_dominant, right_handed or left_handed : resulting
+    # hemisphere
     ('d', 'r'): 'l',
     ('d', 'l'): 'r',
     ('n', 'r'): 'r',
@@ -351,10 +359,12 @@ def solve_laterality(laterality, names):
         new_name = name
         if name.startswith('ctx-'):
             h = name[4]
-            new_name = ''.join((name[:4], get_right_or_left_hemisphere(h, laterality), name[5:]))
+            new_name = ''.join(
+                (name[:4], get_right_or_left_hemisphere(h, laterality), name[5:]))
         elif name.startswith('wm-'):
             h = name[3]
-            new_name = ''.join((name[:3], get_right_or_left_hemisphere(h, laterality), name[4:]))
+            new_name = ''.join(
+                (name[:3], get_right_or_left_hemisphere(h, laterality), name[4:]))
         elif name[-2:] in ('_d', '_n', '_r', '_l'):
             h = get_right_or_left_hemisphere(name[-1], laterality)
             new_name = name[:-1] + h
@@ -385,8 +395,8 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
     if isinstance(structures, basestring):
         structures = (structures,)
     # find label
-    #print "label:",label
-    #find voxels in structure
+    # print "label:",label
+    # find voxels in structure
     try:
         aparc_img = reader.get("APARC", subject, space="world", format="nii")
     except Exception:
@@ -399,20 +409,21 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
     locations3 = np.any(locations2, 3)
     indexes = np.where(locations3)
     n_voxels = len(indexes[0])
-    #print indexes
-    #find mm coordinates of voxels in aparc
+    # print indexes
+    # find mm coordinates of voxels in aparc
     img_coords = np.vstack(indexes)
     ones = np.ones(len(indexes[0]))
     img_coords = np.vstack((img_coords, ones))
     t = aparc_img.get_affine()
     mm_coords = img_coords.T.dot(t.T)
-    #print mm_coords
+    # print mm_coords
 
-    #find voxel coordinates in fa
+    # find voxel coordinates in fa
     if paradigm is None:
         target_img = reader.get(img2, subject, space="world", format="nii")
     else:
-        target_img = reader.get(img2, subject, space="world", format="nii", name=paradigm, contrast=contrast)
+        target_img = reader.get(
+            img2, subject, space="world", format="nii", name=paradigm, contrast=contrast)
     t2 = target_img.get_affine()
     t2i = np.linalg.inv(t2)
     fa_coords = mm_coords.dot(t2i.T)
@@ -429,6 +440,7 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
 
 
 class AggregateInRoi(object):
+
     """
     A class for doing repeated aggregations of image values inside different rois
 
@@ -436,6 +448,7 @@ class AggregateInRoi(object):
         reader (braviz.readAndFilter.base_reader.BaseReader) : Reader object used to read the data
 
     """
+
     def __init__(self, reader):
         self.reader = reader
         self.img_values = None
@@ -457,9 +470,11 @@ class AggregateInRoi(object):
         """
         reader = self.reader
         if paradigm is None:
-            target_img = reader.get(modality, subject, space=space, format="nii")
+            target_img = reader.get(
+                modality, subject, space=space, format="nii")
         else:
-            target_img = reader.get(modality, subject, space=space, format="nii", name=paradigm, contrast=contrast)
+            target_img = reader.get(
+                modality, subject, space=space, format="nii", name=paradigm, contrast=contrast)
 
         all_values = target_img.get_data()
 
@@ -498,7 +513,7 @@ class AggregateInRoi(object):
 
         bb_z0 = max(0, ctr_img[2] - max_factor)
         bb_z1 = int(np.ceil(ctr_img[2] + max_factor))
-        #create numpy grid
+        # create numpy grid
         grid = np.mgrid[bb_x0:bb_x1, bb_y0:bb_y1, bb_z0:bb_z1]
         grid = np.rollaxis(grid, 0, 4)
         points = grid.reshape((-1, 3))
@@ -514,7 +529,8 @@ class AggregateInRoi(object):
 
         points_inside = points[inside, :]
         all_values = self.img_values
-        values_inside = all_values[points_inside[:, 0], points_inside[:, 1], points_inside[:, 2]]
+        values_inside = all_values[
+            points_inside[:, 0], points_inside[:, 1], points_inside[:, 2]]
         if self.mean is True:
             ans = np.mean(values_inside)
         else:
@@ -544,7 +560,8 @@ def aggregate_in_roi(reader, subject, roi_ctr, roi_radius, roi_space, img2, para
     if paradigm is None:
         target_img = reader.get(img2, subject, space=roi_space, format="nii")
     else:
-        target_img = reader.get(img2, subject, space=roi_space, format="nii", name=paradigm, contrast=contrast)
+        target_img = reader.get(
+            img2, subject, space=roi_space, format="nii", name=paradigm, contrast=contrast)
     r_sq = roi_radius ** 2
     shape = target_img.get_shape()
     affine = target_img.get_affine()
@@ -564,7 +581,8 @@ def aggregate_in_roi(reader, subject, roi_ctr, roi_radius, roi_space, img2, para
 
     points_inside = points[inside, :]
     all_values = target_img.get_data()
-    values_inside = all_values[points_inside[:, 0], points_inside[:, 1], points_inside[:, 2]]
+    values_inside = all_values[
+        points_inside[:, 0], points_inside[:, 1], points_inside[:, 2]]
     if mean is True:
         ans = np.mean(values_inside)
     else:
@@ -611,7 +629,6 @@ def get_scalar_from_fiber_ploydata(poly_data, scalar):
         raise Exception("Unknown metric %s", scalar)
 
 
-
 def get_fiber_scalars_from_db(reader, subj_id, db_id, scalar):
     """
     Calculates the number of lines, mean length mean fa or mean md from a database fiber
@@ -641,7 +658,7 @@ def get_fiber_scalars_from_db(reader, subj_id, db_id, scalar):
             return n
     except Exception as e:
         log = logging.getLogger(__name__)
-        log.error("Couldn't calculate %s for subject %s"%(scalar,subj_id))
+        log.error("Couldn't calculate %s for subject %s" % (scalar, subj_id))
         log.exception(e)
         return float("nan")
 
@@ -665,7 +682,8 @@ def get_fiber_scalars_from_waypoints(reader, subj_id, waypoints, operation, scal
         lat = braviz.readAndFilter.tabular_data.get_laterality(subj_id)
         waypoints2 = solve_laterality(lat, waypoints)
         if scalar in ("number", "mean_length"):
-            pd = reader.get("FIBERS", subj_id, waypoint=waypoints2, operation=operation)
+            pd = reader.get(
+                "FIBERS", subj_id, waypoint=waypoints2, operation=operation)
             return get_scalar_from_fiber_ploydata(pd, scalar)
         elif scalar == "mean_fa":
             fiber = reader.get("FIBERS", subj_id,
@@ -679,6 +697,6 @@ def get_fiber_scalars_from_waypoints(reader, subj_id, waypoints, operation, scal
             return n
     except Exception as e:
         log = logging.getLogger(__name__)
-        log.error("Couldn't calculate %s for subject %s"%(scalar,subj_id))
+        log.error("Couldn't calculate %s for subject %s" % (scalar, subj_id))
         log.exception(e)
         return float("nan")

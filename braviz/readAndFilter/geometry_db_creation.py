@@ -17,12 +17,12 @@
 ##############################################################################
 
 
-
 from braviz.readAndFilter.tabular_data import _get_connection
 
 __author__ = 'Diego'
 
-def create_geom_rois_tables(conn = None):
+
+def create_geom_rois_tables(conn=None):
     """
     geom types
     0 : spheres
@@ -36,7 +36,7 @@ def create_geom_rois_tables(conn = None):
     1 : Talairach
     2 : Dartel
     """
-    q="""CREATE TABLE IF NOT EXISTS geom_rois (
+    q = """CREATE TABLE IF NOT EXISTS geom_rois (
     roi_id INTEGER PRIMARY KEY ,
     roi_name TEXT UNIQUE,
     roi_type INTEGER, -- 0 : sphere, 1? : line
@@ -44,12 +44,13 @@ def create_geom_rois_tables(conn = None):
     roi_coords INT -- 0:World,1:Talairach,2:Dartel
     );"""
     if conn is None:
-        conn=_get_connection()
+        conn = _get_connection()
     conn.execute(q)
     conn.commit()
 
-def create_spheres_table(conn = None):
-    q="""CREATE TABLE IF NOT EXISTS geom_spheres (
+
+def create_spheres_table(conn=None):
+    q = """CREATE TABLE IF NOT EXISTS geom_spheres (
     sphere_id INTEGER,
     subject REFERENCES subjects(subject),
     radius NUMERIC,
@@ -60,16 +61,17 @@ def create_spheres_table(conn = None):
     )
     """
     if conn is None:
-        conn=_get_connection()
+        conn = _get_connection()
     conn.execute(q)
     conn.commit()
 
-def create_lines_table(conn = None):
+
+def create_lines_table(conn=None):
     """
     Creates a table for storing measurement lines
     :return Nothing:
     """
-    q="""CREATE TABLE IF NOT EXISTS geom_lines (
+    q = """CREATE TABLE IF NOT EXISTS geom_lines (
     line_id INTEGER,
     subject REFERENCES subjects(subject),
     p1_x NUMERIC,
@@ -83,10 +85,10 @@ def create_lines_table(conn = None):
     )
     """
     if conn is None:
-        conn=_get_connection()
+        conn = _get_connection()
     conn.execute(q)
     conn.commit()
-    q="""CREATE INDEX IF NOT EXISTS
+    q = """CREATE INDEX IF NOT EXISTS
     line_lengths ON geom_lines (line_id,subject,length)
     """
     conn.execute(q)
@@ -94,4 +96,3 @@ def create_lines_table(conn = None):
 
 if __name__ == "__main__":
     print "This module should never be excecuted"
-

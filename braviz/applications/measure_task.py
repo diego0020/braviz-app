@@ -50,18 +50,20 @@ SAGITAL = 0
 CORONAL = 1
 
 _plane_names = {
-    2 : "axial",
-    0 : "sagital",
-    1 : "coronal",
+    2: "axial",
+    0: "sagital",
+    1: "coronal",
 }
 
 _plane_names_i = {
-    "axial" : 2,
-    "sagital" : 0,
-    "coronal" : 1,
+    "axial": 2,
+    "sagital": 0,
+    "coronal": 1,
 }
 
+
 class StartDialog(QDialog):
+
     def __init__(self):
         QDialog.__init__(self)
         self.ui = Ui_OpenMeasureApp()
@@ -79,7 +81,7 @@ class StartDialog(QDialog):
             self.name = new_roi_dialog.name
             coords = new_roi_dialog.coords
             desc = new_roi_dialog.desc
-            code = "line_"+_plane_names[new_roi_dialog.plane]
+            code = "line_" + _plane_names[new_roi_dialog.plane]
             assert coords == 1
             geom_db.create_roi(self.name, code, "talairach", desc)
             self.accept()
@@ -102,8 +104,10 @@ class StartDialog(QDialog):
         else:
             self.scenario_data = None
 
+
 class NewMeasure(QDialog):
-    def __init__(self,freeze_axis=None):
+
+    def __init__(self, freeze_axis=None):
         QDialog.__init__(self)
         self.ui = Ui_NewRoi()
         self.ui.setupUi(self)
@@ -113,7 +117,8 @@ class NewMeasure(QDialog):
             self.ui.plane_combo.setCurrentIndex(axis_i)
             self.ui.plane_combo.setEnabled(False)
         self.ui.error_msg.setText("")
-        self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(0)
+        self.ui.dialogButtonBox.button(
+            self.ui.dialogButtonBox.Save).setEnabled(0)
         self.ui.roi_name.textChanged.connect(self.check_name)
         self.name = None
         self.coords = None
@@ -128,7 +133,8 @@ class NewMeasure(QDialog):
             if geom_db.roi_name_exists(self.name):
                 self.ui.error_msg.setText("Name already exists")
             else:
-                self.ui.dialogButtonBox.button(self.ui.dialogButtonBox.Save).setEnabled(1)
+                self.ui.dialogButtonBox.button(
+                    self.ui.dialogButtonBox.Save).setEnabled(1)
                 self.ui.error_msg.setText("")
         else:
             self.ui.error_msg.setText("")
@@ -140,6 +146,7 @@ class NewMeasure(QDialog):
 
 
 class LoadRoiDialog(QDialog):
+
     def __init__(self):
         QDialog.__init__(self)
         self.ui = Ui_LoadRoiDialog()
@@ -158,6 +165,7 @@ class LoadRoiDialog(QDialog):
 
 
 class ConfirmSubjectChangeDialog(QDialog):
+
     def __init__(self):
         QDialog.__init__(self)
         self.ui = Ui_RoiConfirmChangeSubject()
@@ -165,14 +173,17 @@ class ConfirmSubjectChangeDialog(QDialog):
         self.save_requested = False
         self.ui.label.setText("Save changes to current measure?")
         self.setWindowTitle("Measure modified")
-        self.ui.buttonBox.button(self.ui.buttonBox.Save).clicked.connect(self.set_save)
-        self.ui.buttonBox.button(self.ui.buttonBox.Discard).clicked.connect(self.accept)
+        self.ui.buttonBox.button(
+            self.ui.buttonBox.Save).clicked.connect(self.set_save)
+        self.ui.buttonBox.button(
+            self.ui.buttonBox.Discard).clicked.connect(self.accept)
 
     def set_save(self):
         self.save_requested = True
 
 
 class MeasureApp(QMainWindow):
+
     def __init__(self, roi_name=None):
         log = logging.getLogger(__name__)
         config = get_config(__file__)
@@ -201,10 +212,11 @@ class MeasureApp(QMainWindow):
         try:
             self.meaure_axis = (geom_db.get_roi_type(roi_name))[5:]
         except Exception:
-            log.error("Invalid roi type, unknown measure axis, assuming SAGITAL")
+            log.error(
+                "Invalid roi type, unknown measure axis, assuming SAGITAL")
         self.vtk_widget = QMeasurerWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
-        self.vtk_viewer.set_measure_axis(self.meaure_axis,skip_render=True)
+        self.vtk_viewer.set_measure_axis(self.meaure_axis, skip_render=True)
 
         if self.__roi_id is not None:
             self.__checked_subjects = geom_db.subjects_with_line(self.__roi_id)
@@ -218,9 +230,8 @@ class MeasureApp(QMainWindow):
         self.__line_modified = True
 
         self.setup_ui()
-        self.__line_color = (255,255,255)
+        self.__line_color = (255, 255, 255)
         self.__aux_lut = None
-
 
     def setup_ui(self):
         self.ui = Ui_OrtoMeasure()
@@ -231,12 +242,18 @@ class MeasureApp(QMainWindow):
         self.ui.vtk_frame_layout.addWidget(self.vtk_widget)
         self.ui.vtk_frame.setLayout(self.ui.vtk_frame_layout)
         self.ui.vtk_frame_layout.setContentsMargins(0, 0, 0, 0)
-        self.ui.axial_check.stateChanged.connect(partial_f(self.show_image, AXIAL))
-        self.ui.coronal_check.stateChanged.connect(partial_f(self.show_image, CORONAL))
-        self.ui.sagital_check.stateChanged.connect(partial_f(self.show_image, SAGITAL))
-        self.ui.axial_slice.valueChanged.connect(partial_f(self.set_slice, AXIAL))
-        self.ui.coronal_slice.valueChanged.connect(partial_f(self.set_slice, CORONAL))
-        self.ui.sagital_slice.valueChanged.connect(partial_f(self.set_slice, SAGITAL))
+        self.ui.axial_check.stateChanged.connect(
+            partial_f(self.show_image, AXIAL))
+        self.ui.coronal_check.stateChanged.connect(
+            partial_f(self.show_image, CORONAL))
+        self.ui.sagital_check.stateChanged.connect(
+            partial_f(self.show_image, SAGITAL))
+        self.ui.axial_slice.valueChanged.connect(
+            partial_f(self.set_slice, AXIAL))
+        self.ui.coronal_slice.valueChanged.connect(
+            partial_f(self.set_slice, CORONAL))
+        self.ui.sagital_slice.valueChanged.connect(
+            partial_f(self.set_slice, SAGITAL))
         if self.meaure_axis == "axial":
             check = self.ui.axial_check
         elif self.meaure_axis == "coronal":
@@ -247,8 +264,9 @@ class MeasureApp(QMainWindow):
         check.setEnabled(False)
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
         self.vtk_widget.distance_changed.connect(self.update_measure)
-        self.ui.image_combo.currentIndexChanged.connect(self.select_image_modality)
-        paradigms = self.reader.get("fMRI",None,index=True)
+        self.ui.image_combo.currentIndexChanged.connect(
+            self.select_image_modality)
+        paradigms = self.reader.get("fMRI", None, index=True)
         for p in paradigms:
             self.ui.image_combo.addItem(p.title())
         self.ui.contrast_combo.setEnabled(0)
@@ -258,7 +276,8 @@ class MeasureApp(QMainWindow):
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
         self.ui.subjects_list.activated.connect(self.select_subject)
-        self.ui.subject_line_label.setText("Subject %s" % self.__current_subject)
+        self.ui.subject_line_label.setText(
+            "Subject %s" % self.__current_subject)
         self.ui.save_line.clicked.connect(self.save_line)
 
         self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
@@ -278,13 +297,13 @@ class MeasureApp(QMainWindow):
         if event.key() == QtCore.Qt.Key_Right:
             subj = self.__current_subject
             idx = self.__subjects_list.index(subj)
-            next_idx = (idx+1)%len(self.__subjects_list)
+            next_idx = (idx + 1) % len(self.__subjects_list)
             next_one = self.__subjects_list[next_idx]
             self.select_subject(subj=next_one)
         elif event.key() == QtCore.Qt.Key_Left:
             subj = self.__current_subject
             idx = self.__subjects_list.index(subj)
-            prev = self.__subjects_list[idx-1]
+            prev = self.__subjects_list[idx - 1]
             self.select_subject(subj=prev)
         elif event.key() == QtCore.Qt.Key_Up:
             sl = self.vtk_viewer.get_current_slice()[self.meaure_axis]
@@ -295,7 +314,7 @@ class MeasureApp(QMainWindow):
             sl -= 1
             self.vtk_viewer.image_planes[self.meaure_axis].set_image_slice(sl)
         else:
-            super(MeasureApp,self).keyPressEvent(event)
+            super(MeasureApp, self).keyPressEvent(event)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -313,20 +332,20 @@ class MeasureApp(QMainWindow):
     def reset_measure(self):
         self.vtk_viewer.reset_measure()
 
-    def update_measure(self,d):
-        self.ui.measure_label.setText("%.3f"%d)
+    def update_measure(self, d):
+        self.ui.measure_label.setText("%.3f" % d)
         self.ui.point_1.setText(point_to_str(self.vtk_viewer.point1))
         self.ui.point_2.setText(point_to_str(self.vtk_viewer.point2))
         self.line_just_changed()
 
-    def set_image(self, modality,contrast=None):
+    def set_image(self, modality, contrast=None):
         self.__current_image_mod = modality
         self.__current_contrast = contrast
         log = logging.getLogger(__name__)
         try:
-            self.vtk_viewer.change_image_modality(modality,contrast)
+            self.vtk_viewer.change_image_modality(modality, contrast)
         except Exception as e:
-            self.statusBar().showMessage(e.message,500)
+            self.statusBar().showMessage(e.message, 500)
             log.warning(e.message)
         self.update_slice_maximums()
 
@@ -337,8 +356,6 @@ class MeasureApp(QMainWindow):
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
         self.ui.sagital_slice.setMaximum(dims[SAGITAL])
         self.update_slice_controls()
-
-
 
     def update_slice_controls(self, new_slice=None):
         curr_slices = self.vtk_viewer.get_current_slice()
@@ -372,17 +389,18 @@ class MeasureApp(QMainWindow):
                 self.save_line()
         return True
 
-
-    def select_subject(self, index=None,subj=None):
+    def select_subject(self, index=None, subj=None):
         if subj is None:
-            subj = self.__subjects_check_model.data(index, QtCore.Qt.DisplayRole)
+            subj = self.__subjects_check_model.data(
+                index, QtCore.Qt.DisplayRole)
         if self.action_confirmed():
             self.change_subject(subj)
 
     def change_subject(self, new_subject):
         self.__current_subject = new_subject
         self.__subjects_check_model.highlighted_subject = self.__current_subject
-        self.ui.subject_line_label.setText("Subject %s" % self.__current_subject)
+        self.ui.subject_line_label.setText(
+            "Subject %s" % self.__current_subject)
         img_id = new_subject
         self.__current_img_id = img_id
         self.reload_contrast_names()
@@ -390,12 +408,11 @@ class MeasureApp(QMainWindow):
         try:
             self.vtk_viewer.change_subject(img_id)
         except Exception:
-            log.warning("Couldn't load data for subject %s",new_subject)
+            log.warning("Couldn't load data for subject %s", new_subject)
         else:
             self.update_slice_maximums()
         self.load_line(new_subject)
         self.__line_modified = False
-
 
     def reload_line(self):
         self.load_line(self.__current_subject)
@@ -405,7 +422,7 @@ class MeasureApp(QMainWindow):
     def save_line(self):
         p1 = self.vtk_viewer.point1
         p2 = self.vtk_viewer.point2
-        geom_db.save_line(self.__roi_id,self.__current_subject,p1,p2)
+        geom_db.save_line(self.__roi_id, self.__current_subject, p1, p2)
         self.refresh_checked()
         self.__line_modified = False
         self.ui.save_line.setEnabled(0)
@@ -421,7 +438,7 @@ class MeasureApp(QMainWindow):
         p1 = np.array(res[0:3])
         p2 = np.array(res[3:6])
 
-        self.vtk_viewer.set_points(p1,p2)
+        self.vtk_viewer.set_points(p1, p2)
         slice_position = p1[_plane_names_i[self.meaure_axis]]
         self.vtk_viewer.set_slice_coords(slice_position)
         self.__line_modified = False
@@ -433,7 +450,7 @@ class MeasureApp(QMainWindow):
         self.__subjects_check_model.checked = checked
 
     def reset_camera(self):
-        fp,pos,vu = self.vtk_viewer.get_camera_parameters()
+        fp, pos, vu = self.vtk_viewer.get_camera_parameters()
         print fp
         print pos
         print vu
@@ -442,80 +459,83 @@ class MeasureApp(QMainWindow):
     def select_image_modality(self, dummy_index):
         mod = str(self.ui.image_combo.currentText())
         if self.ui.image_combo.currentIndex() > 3:
-            #functional
+            # functional
             self.ui.contrast_combo.setEnabled(1)
             self.reload_contrast_names(mod)
-            contrast = int(self.ui.contrast_combo.currentIndex())+1
+            contrast = int(self.ui.contrast_combo.currentIndex()) + 1
         else:
             self.ui.contrast_combo.setEnabled(0)
             contrast = None
-        self.set_image(mod,contrast)
+        self.set_image(mod, contrast)
 
-    def reload_contrast_names(self,mod=None):
+    def reload_contrast_names(self, mod=None):
         if mod is None:
             mod = str(self.ui.image_combo.currentText())
-        if mod.upper() not in self.reader.get("FMRI",None,index=True):
+        if mod.upper() not in self.reader.get("FMRI", None, index=True):
             return
         previus_index = self.ui.contrast_combo.currentIndex()
         try:
-            contrasts_dict = self.reader.get("FMRI",self.__current_img_id,name=mod,contrasts_dict=True)
+            contrasts_dict = self.reader.get(
+                "FMRI", self.__current_img_id, name=mod, contrasts_dict=True)
         except Exception:
             pass
         else:
             self.ui.contrast_combo.clear()
             for i in xrange(len(contrasts_dict)):
-                self.ui.contrast_combo.addItem(contrasts_dict[i+1])
-            if 0<=previus_index<len(contrasts_dict):
+                self.ui.contrast_combo.addItem(contrasts_dict[i + 1])
+            if 0 <= previus_index < len(contrasts_dict):
                 self.ui.contrast_combo.setCurrentIndex(previus_index)
             else:
                 self.ui.contrast_combo.setCurrentIndex(0)
                 self.change_contrast()
 
-
-    def change_contrast(self,dummy_index=None):
-        new_contrast = self.ui.contrast_combo.currentIndex()+1
+    def change_contrast(self, dummy_index=None):
+        new_contrast = self.ui.contrast_combo.currentIndex() + 1
         mod = str(self.ui.image_combo.currentText())
-        self.set_image(mod,new_contrast)
+        self.set_image(mod, new_contrast)
 
     def get_state(self):
         state = dict()
         state["roi_id"] = self.__roi_id
-        #context
+        # context
         context_dict = {}
         context_dict["image_type"] = self.ui.image_combo.currentText()
-        context_dict["axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
-        context_dict["coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
-        context_dict["sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
+        context_dict[
+            "axial_on"] = self.ui.axial_check.checkState() == QtCore.Qt.Checked
+        context_dict[
+            "coronal_on"] = self.ui.coronal_check.checkState() == QtCore.Qt.Checked
+        context_dict[
+            "sagital_on"] = self.ui.sagital_check.checkState() == QtCore.Qt.Checked
 
         context_dict["axial_slice"] = int(self.ui.axial_slice.value())
         context_dict["coronal_slice"] = int(self.ui.coronal_slice.value())
         context_dict["sagital_slice"] = int(self.ui.sagital_slice.value())
-        state["context"]=context_dict
+        state["context"] = context_dict
 
-        #visual
+        # visual
         visual_dict = {}
         visual_dict["coords"] = self.__curent_space
-        #camera
+        # camera
         visual_dict["camera"] = self.vtk_viewer.get_camera_parameters()
         visual_dict["line_color"] = self.__line_color
         state["visual"] = visual_dict
 
-        #subject
+        # subject
         subjs_state = {}
         subjs_state["subject"] = self.__current_subject
         subjs_state["img_code"] = self.__current_img_id
         subjs_state["sample"] = self.__subjects_list
         state["subjects"] = subjs_state
 
-        #meta
+        # meta
         meta = {"date": datetime.datetime.now(), "exec": sys.argv, "machine": platform.node(),
                 "application": os.path.splitext(os.path.basename(__file__))[0]}
         state["meta"] = meta
         return state
 
-    def load_state(self,state):
+    def load_state(self, state):
         self.__roi_id = state["roi_id"]
-        self.meaure_axis = geom_db.get_roi_type(roi_id=self.__roi_id)%10
+        self.meaure_axis = geom_db.get_roi_type(roi_id=self.__roi_id) % 10
         self.vtk_viewer.set_measure_axis(self.meaure_axis)
         self.__roi_name = geom_db.get_roi_name(self.__roi_id)
         self.ui.measure_name.setText(self.__roi_name)
@@ -535,7 +555,7 @@ class MeasureApp(QMainWindow):
         self.__subjects_check_model.checked = self.__checked_subjects
         self.__line_modified = False
 
-        #context
+        # context
         context_dict = state["context"]
         img = context_dict["image_type"]
         idx = self.ui.image_combo.findText(img)
@@ -550,35 +570,34 @@ class MeasureApp(QMainWindow):
         self.ui.coronal_slice.setValue(context_dict["coronal_slice"])
         self.ui.sagital_slice.setValue(context_dict["sagital_slice"])
 
-        #visual
+        # visual
         visual_dict = state["visual"]
         self.__line_color = visual_dict["line_color"]
         self.vtk_viewer.set_measure_color(*self.__line_color)
-        fp,pos,vu = visual_dict["camera"]
-        self.vtk_viewer.set_camera(fp,pos,vu)
+        fp, pos, vu = visual_dict["camera"]
+        self.vtk_viewer.set_camera(fp, pos, vu)
 
         self.change_subject(self.__current_subject)
         self.__line_modified = False
         self.update_slice_maximums()
 
-
     def save_scenario(self):
         state = self.get_state()
         print state
         app_name = state["meta"]["application"]
-        dialog = SaveScenarioDialog(app_name,state)
+        dialog = SaveScenarioDialog(app_name, state)
         res = dialog.exec_()
         if res == dialog.Accepted:
             scn_id = dialog.params["scn_id"]
             self.save_screenshot(scn_id)
 
-
-    def save_screenshot(self,scenario_index):
-        file_name = "scenario_%d.png"%scenario_index
-        file_path = os.path.join(self.reader.get_dyn_data_root(), "braviz_data","scenarios",file_name)
+    def save_screenshot(self, scenario_index):
+        file_name = "scenario_%d.png" % scenario_index
+        file_path = os.path.join(
+            self.reader.get_dyn_data_root(), "braviz_data", "scenarios", file_name)
         log = logging.getLogger(__name__)
         log.info(file_path)
-        save_ren_win_picture(self.vtk_viewer.ren_win,file_path)
+        save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
 
     def load_scenario(self):
         if self.action_confirmed():
@@ -589,7 +608,6 @@ class MeasureApp(QMainWindow):
                 wanted_state = dialog.out_dict
                 self.load_state(wanted_state)
 
-
     def save_line_as(self):
         dialog = NewMeasure(self.meaure_axis)
         res = dialog.exec_()
@@ -598,11 +616,11 @@ class MeasureApp(QMainWindow):
             desc = dialog.desc
             roi_type = "line_" + self.meaure_axis
             assert self.__curent_space == "talairach"
-            new_id = geom_db.create_roi(new_name,roi_type,"talairach",desc)
-            self.change_line(new_id,new_name)
+            new_id = geom_db.create_roi(new_name, roi_type, "talairach", desc)
+            self.change_line(new_id, new_name)
             self.save_line()
 
-    def change_line(self,roi_id,roi_name):
+    def change_line(self, roi_id, roi_name):
         self.__roi_id = roi_id
         self.__roi_name = roi_name
         self.ui.measure_name.setText(self.__roi_name)
@@ -614,13 +632,15 @@ class MeasureApp(QMainWindow):
         if res == dialog.Accepted:
             new_name = dialog.name
             new_id = geom_db.get_roi_id(new_name)
-            self.change_line(new_id,new_name)
+            self.change_line(new_id, new_name)
 
     def set_line_color(self):
         color = QtGui.QColorDialog.getColor()
-        self.ui.color_button.setStyleSheet("#color_button{color : %s}"%color.name())
-        self.vtk_viewer.set_measure_color(color.red(),color.green(),color.blue())
-        self.__line_color = (color.red(),color.green(),color.blue())
+        self.ui.color_button.setStyleSheet(
+            "#color_button{color : %s}" % color.name())
+        self.vtk_viewer.set_measure_color(
+            color.red(), color.green(), color.blue())
+        self.__line_color = (color.red(), color.green(), color.blue())
         self.vtk_viewer.ren_win.Render()
 
 
@@ -654,12 +674,13 @@ def run():
         log.exception(e)
         raise
 
+
 def point_to_str(p):
     if p is None:
         return ""
     else:
-        ss = ",".join(("%.1f"%x for x in p))
-        return " ".join(("(",ss,")"))
+        ss = ",".join(("%.1f" % x for x in p))
+        return " ".join(("(", ss, ")"))
 
 if __name__ == '__main__':
     run()

@@ -51,7 +51,7 @@ _COORDINATES = {
     0: "world",
     1: "talairach",
     2: "dartel",
-    }
+}
 
 
 def roi_name_exists(name):
@@ -65,7 +65,8 @@ def roi_name_exists(name):
         ``True`` if a ROI with the given name exists in the database, ``False`` otherwise.
     """
     con = _get_connection()
-    cur = con.execute("SELECT count(*) FROM geom_rois WHERE roi_name = ?", (name,))
+    cur = con.execute(
+        "SELECT count(*) FROM geom_rois WHERE roi_name = ?", (name,))
     n = cur.fetchone()[0]
     return n > 0
 
@@ -106,7 +107,7 @@ def create_roi(name, roi_type, coords, desc=""):
     return cur.lastrowid
 
 
-def get_available_spheres_df(space = None):
+def get_available_spheres_df(space=None):
     """
     Get available spheres
 
@@ -142,7 +143,7 @@ def get_available_spheres_df(space = None):
             ON roi_id = sphere_id
             WHERE roi_type = 0 and roi_coords = ?
             """
-        df = sql.read_sql(q, con, index_col="name",params=(space_i,))
+        df = sql.read_sql(q, con, index_col="name", params=(space_i,))
     return df
 
 
@@ -357,7 +358,8 @@ def save_line(line_id, subject, point1, point2):
 
     q = "INSERT OR REPLACE INTO geom_lines VALUES (?,?, ?,?,?, ?,?,?, ?)"
     con = _get_connection()
-    con.execute(q, (line_id, subject, p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], length))
+    con.execute(
+        q, (line_id, subject, p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], length))
     con.commit()
 
 

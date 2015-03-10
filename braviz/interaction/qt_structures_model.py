@@ -17,7 +17,6 @@
 ##############################################################################
 
 
-
 from __future__ import division
 
 __author__ = 'Diego'
@@ -28,7 +27,9 @@ from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy_with_names
 import logging
 
+
 class StructureTreeNode(object):
+
     """
     Node for the freesurfer structures tree
 
@@ -37,6 +38,7 @@ class StructureTreeNode(object):
         name (str) : Name of this node
         son_number (int) : How many siblings are before this node
     """
+
     def __init__(self, parent=None, name="", son_number=0):
         self.parent_id = id(parent)
         self.parent = parent
@@ -128,6 +130,7 @@ class StructureTreeNode(object):
 
 
 class StructureTreeModel(QAbstractItemModel):
+
     """
     A tree of freesurfer segmented structures
 
@@ -151,10 +154,10 @@ class StructureTreeModel(QAbstractItemModel):
         self.leaf_inverse_ids = dict()
         self.optimistic_reload_hierarchy(dominant)
         if subj is None:
-            subj = reader.get("ids",None)[0]
+            subj = reader.get("ids", None)[0]
         self.subj = subj
 
-    def optimistic_reload_hierarchy(self,dominant):
+    def optimistic_reload_hierarchy(self, dominant):
         """
         Rebuilds the tree from the models of the first subject with models
 
@@ -163,17 +166,17 @@ class StructureTreeModel(QAbstractItemModel):
                 have dominant and non-dominant hemispheres
         """
         from braviz.readAndFilter import config_file
-        possibles = self.reader.get("ids",None)
+        possibles = self.reader.get("ids", None)
         favorite = config_file.get_apps_config().get_default_subject()
-        possibles.insert(0,favorite)
+        possibles.insert(0, favorite)
         for subj in possibles:
             try:
-                self.reload_hierarchy(subj,dominant)
+                self.reload_hierarchy(subj, dominant)
             except Exception as e:
-                log=logging.getLogger(__name__)
+                log = logging.getLogger(__name__)
                 log.exception(e)
-                self.hierarchy=tuple()
-            if len(self.hierarchy)>0:
+                self.hierarchy = tuple()
+            if len(self.hierarchy) > 0:
                 return
         raise Exception("Couldnt build structures index")
 
@@ -187,24 +190,25 @@ class StructureTreeModel(QAbstractItemModel):
                 have dominant and non-dominant hemispheres
         """
         if subj is None:
-            subj = self.reader.get("ids",None)[0]
+            subj = self.reader.get("ids", None)[0]
         log = logging.getLogger(__name__)
         log.debug("reloading hierarchy")
-        self.leaf_ids=set()
-        self.__id_index={}
+        self.leaf_ids = set()
+        self.__id_index = {}
         if self.__root is not None:
             self.__root.delete_children()
         self.__root = StructureTreeNode(None, "root")
 
         if dominant is True:
-            self.hierarchy = get_structural_hierarchy_with_names(self.reader, subj, True, False, False)
+            self.hierarchy = get_structural_hierarchy_with_names(
+                self.reader, subj, True, False, False)
         else:
-            self.hierarchy = get_structural_hierarchy_with_names(self.reader, subj, False, True, False)
+            self.hierarchy = get_structural_hierarchy_with_names(
+                self.reader, subj, False, True, False)
         self.__root = StructureTreeNode(None, "root")
         self.__id_index[id(self.__root)] = self.__root
         self.__load_sub_tree(self.__root, self.hierarchy)
         self.modelReset.emit()
-
 
     def __load_sub_tree(self, sub_root, hierarchy_dict):
         for k, v in sorted(hierarchy_dict.items(), key=lambda x: x[0]):
@@ -214,11 +218,11 @@ class StructureTreeModel(QAbstractItemModel):
             if isinstance(v, dict):
                 self.__load_sub_tree(new_node, v)
             else:
-                #is a leaf
+                # is a leaf
                 new_node.leaf_name = v
                 new_node.tooltip = self.pretty_names.get(v, v)
                 self.leaf_ids.add(new_node_id)
-                self.leaf_inverse_ids.setdefault(v,set()).add(new_node_id)
+                self.leaf_inverse_ids.setdefault(v, set()).add(new_node_id)
 
     def parent(self, QModelIndex=None):
         if QModelIndex.isValid():
@@ -226,9 +230,9 @@ class StructureTreeModel(QAbstractItemModel):
             node = self.__id_index[nid]
             parent = node.parent
             if parent is None:
-                #root node
+                # root node
                 return QtCore.QModelIndex()
-            #print "parent of %s is %s"%(node.name,parent.name)
+            # print "parent of %s is %s"%(node.name,parent.name)
             index = self.__get_node_index(parent)
             return index
 
@@ -239,7 +243,7 @@ class StructureTreeModel(QAbstractItemModel):
             nid = QModelIndex_parent.internalId()
             parent = self.__id_index[nid]
             return len(parent.children)
-        #Start at second level
+        # Start at second level
         return len(self.__root.children)
 
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -251,13 +255,13 @@ class StructureTreeModel(QAbstractItemModel):
         row = QModelIndex.row()
         node = self.__id_index[nid]
         assert node.son_number == row
-        #print "data", node.name
+        # print "data", node.name
         if int_role == QtCore.Qt.DisplayRole:
             return node.name
         elif int_role == QtCore.Qt.ToolTipRole:
             return node.tooltip
         elif int_role == QtCore.Qt.CheckStateRole:
-            #print node.name, node.checked
+            # print node.name, node.checked
             return node.checked
         return QtCore.QVariant()
 
@@ -268,18 +272,16 @@ class StructureTreeModel(QAbstractItemModel):
             if p_int_1 == 0:
                 if 0 <= p_int < len(parent.children):
                     child = parent.children[p_int]
-                    #print "index", child.name
+                    # print "index", child.name
                     index = self.__get_node_index(child)
                     return index
         else:
-            #asking for root nodes
+            # asking for root nodes
             meta_root = self.__root
             if (0 <= p_int < len(meta_root.children)) and (p_int_1 == 0):
                 root = meta_root.children[p_int]
                 index = self.__get_node_index(root)
                 return index
-
-
 
     def hasChildren(self, QModelIndex_parent=None, *args, **kwargs):
         if QModelIndex_parent.isValid():
@@ -295,16 +297,18 @@ class StructureTreeModel(QAbstractItemModel):
             assert node.son_number == QModelIndex.row()
             check = QVariant.toBool()
             leaf_names = node.get_leaf_names()
-            leaf_ids=set.union(*(self.leaf_inverse_ids.get(n,set()) for n in leaf_names))
+            leaf_ids = set.union(
+                *(self.leaf_inverse_ids.get(n, set()) for n in leaf_names))
             for n_i in leaf_ids:
                 node = self.__id_index[n_i]
                 node.check_and_update_tree(check)
                 self.__notify_parents(node)
             self.dataChanged.emit(QModelIndex, QModelIndex)
             #self.dataChanged.emit(QtCore.QModelIndex(), QtCore.QModelIndex())
-            #print "signaling"
-            self.emit(QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)
-            #parents
+            # print "signaling"
+            self.emit(
+                QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)
+            # parents
             self.__notify_parents(node)
             self.__notify_children(node)
             self.selection_changed.emit()
@@ -316,9 +320,10 @@ class StructureTreeModel(QAbstractItemModel):
         if parent is None:
             return
         index = self.__get_node_index(parent)
-        #print "notifying", parent.name
+        # print "notifying", parent.name
         self.dataChanged.emit(index, index)
-        self.emit(QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), index, index)
+        self.emit(
+            QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), index, index)
         self.__notify_parents(parent)
 
     def __notify_children(self, node):
@@ -328,7 +333,8 @@ class StructureTreeModel(QAbstractItemModel):
         last_children = node.children[-1]
         first_index = self.__get_node_index(first_children)
         last_index = self.__get_node_index(last_children)
-        self.emit(QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), first_index, last_index)
+        self.emit(
+            QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), first_index, last_index)
 
     def flags(self, QModelIndex):
         if QModelIndex.isValid():
@@ -350,7 +356,7 @@ class StructureTreeModel(QAbstractItemModel):
         # print "selected leafs names",selected_leaf_names
         return sorted(selected_leaf_names)
 
-    def set_selected_structures(self,selected_list):
+    def set_selected_structures(self, selected_list):
         """
         Selects the structures given in a list
 
@@ -365,5 +371,3 @@ class StructureTreeModel(QAbstractItemModel):
                 node.check_and_update_tree(False)
         self.selection_changed.emit()
         self.modelReset.emit()
-
-
