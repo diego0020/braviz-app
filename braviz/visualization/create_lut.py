@@ -46,7 +46,7 @@ def get_colorbrewer_lut(minimum, maximum, scheme, steps, invert=False, continuou
         sharpness = 0
     # load colorbrewer scheme
     try:
-        cb_list = sbs.color_palette(scheme,steps)
+        cb_list = sbs.color_palette(scheme, steps)
     except Exception as e:
         log = logging.getLogger(__name__)
         log.exception(e)
@@ -62,7 +62,7 @@ def get_colorbrewer_lut(minimum, maximum, scheme, steps, invert=False, continuou
         #c = map(lambda x: x / 255.0, c_int)
         #                                    x            ,r   ,g   , b, midpoint, sharpness
         scalar_lookup_table.AddRGBPoint(
-            minimum + delta * i, c[0], c[1], c[2], 0.5,  sharpness)
+            minimum + delta * i, c[0], c[1], c[2], 0.5, sharpness)
         # print minimum+delta*i, c_int
     scalar_lookup_table.SetNanColor(nan_color)
     #scalar_lookup_table.AdjustRange((minimum2, maximum2))
