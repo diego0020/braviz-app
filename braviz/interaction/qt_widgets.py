@@ -120,6 +120,16 @@ class ListValidator(QtGui.QValidator):
             else:
                 return QtGui.QValidator.Intermediate, p_int
 
+def repeatatable_plot(func):
+    @wraps(func)
+    def saved_plot_func(*args, **kwargs):
+        self = args[0]
+        self.last_plot_function = func
+        self.last_plot_arguments = args
+        self.last_plot_kw_arguments = kwargs
+        return func(*args, **kwargs)
+
+    return saved_plot_func
 
 class MatplotWidget(FigureCanvas):
     box_outlier_pick_signal = QtCore.pyqtSignal(float, float, tuple)
@@ -157,18 +167,6 @@ class MatplotWidget(FigureCanvas):
         self.last_plot_kw_arguments = None
 
         self.limits_vertical = True
-
-    @staticmethod
-    def repeatatable_plot(func):
-        @wraps(func)
-        def saved_plot_func(*args, **kwargs):
-            self = args[0]
-            self.last_plot_function = func
-            self.last_plot_arguments = args
-            self.last_plot_kw_arguments = kwargs
-            return func(*args, **kwargs)
-
-        return saved_plot_func
 
     def initial_text(self, message):
         if message is None:

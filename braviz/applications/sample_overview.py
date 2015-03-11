@@ -29,7 +29,7 @@ import braviz
 from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
-from braviz.readAndFilter.config_file import get_config
+from braviz.readAndFilter.config_file import get_apps_config
 import braviz.applications.qt_sample_select_dialog
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
@@ -48,10 +48,6 @@ import subprocess
 from braviz.interaction.connection import MessageClient, MessageServer
 
 
-config = get_config(__file__)
-default_vars = config.get_default_variables()
-NOMINAL_VARIABLE = braviz_tab_data.get_var_idx(default_vars["nom1"])
-RATIONAL_VARIBLE = braviz_tab_data.get_var_idx(default_vars["ratio1"])
 
 #SAMPLE_SIZE = 0.5
 if braviz.readAndFilter.PROJECT == "kmc40":
@@ -101,10 +97,18 @@ class SampleOverview(QtGui.QMainWindow):
         self._auxiliary_server = None
         self.ui = None
         self.context_menu_opened_recently = False
+        cfg = get_apps_config()
+        def_vars = cfg.get_default_variables()
+        ratio_var = braviz_tab_data.get_var_idx(def_vars["ratio1"])
+        nom_var = braviz_tab_data.get_var_idx(def_vars["nom1"])
+        self.rational_name = def_vars["ratio1"]
+        self.nominal_name = def_vars["nom1"]
+
         self.setup_gui()
         if initial_scenario is None:
             self.take_random_sample()
-            self.load_scalar_data(RATIONAL_VARIBLE, NOMINAL_VARIABLE)
+
+            self.load_scalar_data(ratio_var, nom_var)
             QtCore.QTimer.singleShot(100, self.add_subject_viewers)
         else:
             self.sample = []
@@ -135,12 +139,12 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.action_load_visualization.triggered.connect(
             self.load_visualization)
         self.ui.nomina_combo.addItem(
-            braviz_tab_data.get_var_name(NOMINAL_VARIABLE))
+            self.nominal_name)
         self.ui.nomina_combo.setCurrentIndex(1)
         self.ui.nomina_combo.currentIndexChanged.connect(
             self.select_nominal_variable)
         self.ui.rational_combo.addItem(
-            braviz_tab_data.get_var_name(RATIONAL_VARIBLE))
+            self.rational_name)
         self.ui.rational_combo.setCurrentIndex(1)
         self.ui.rational_combo.currentIndexChanged.connect(
             self.select_rational_variable)

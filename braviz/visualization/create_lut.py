@@ -58,8 +58,8 @@ def get_colorbrewer_lut(minimum, maximum, scheme, steps, invert=False, continuou
     delta = (maximum - minimum) / (steps - 1)
     scalar_lookup_table.RemoveAllPoints()
     for i in range(steps):
-        c_int = cb_list[i]
-        c = map(lambda x: x / 255.0, c_int)
+        c = cb_list[i]
+        #c = map(lambda x: x / 255.0, c_int)
         #                                    x            ,r   ,g   , b, midpoint, sharpness
         scalar_lookup_table.AddRGBPoint(
             minimum + delta * i, c[0], c[1], c[2], 0.5,  sharpness)

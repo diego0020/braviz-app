@@ -18,9 +18,12 @@
 
 
 """Braviz is a library for facilitating integrated visual analysis of brain data
-The readAndFilter module contains several functions for reading different brain data formats and tabular data
-The visualization module contains functions for displaying physical structures and charts of scalar values in the screen
-The interaction module contains functions for performing common interactions with the data and creating graphical interfaces"""
+The readAndFilter module contains several functions for reading different brain data formats
+and tabular data
+The visualization module contains functions for displaying physical structures and charts of
+scalar values in the screen
+The interaction module contains functions for performing common interactions with the data
+and creating graphical interfaces"""
 #'braviz v2.01'
 
 import platform
@@ -28,7 +31,6 @@ import logging
 
 
 import vtk
-from braviz.visualization.simple_vtk import _test_arrow
 
 
 vtk_mayor = int(vtk.VTK_VERSION.split('.')[0])
@@ -51,18 +53,16 @@ if platform.system() == 'Windows':
         #__fow.AppendOn()
         __fow.FlushOn()
         log = logging.getLogger(__name__)
-        log.info("vtk errors going to %s" % os.path.realpath(__error_file))
+        log.info("vtk errors going to %s", os.path.realpath(__error_file))
 
-
-import readAndFilter
-import visualization
-import interaction
 
 if __name__ == "__main__":
     import os
     from braviz.utilities import configure_logger_from_conf
+    from braviz import readAndFilter, interaction, visualization
+    from braviz.visualization.simple_vtk import SimpleVtkViewer
+    from braviz.readAndFilter.config_file import get_apps_config
     configure_logger_from_conf(__name__)
-    viewer = simpleVtkViewer()
+    viewer = SimpleVtkViewer()
     reader = readAndFilter.BravizAutoReader()
-    apps_dir = os.path.join(os.path.dirname(__file__), "..", "applications")
-    get_conf = interaction.get_config(apps_dir)
+    get_conf = get_apps_config()
