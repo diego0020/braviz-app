@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import division, print_function
 import braviz
 import braviz.utilities
 from braviz.interaction import descriptors, structure_metrics
@@ -71,7 +71,7 @@ def save_descs_in_db(conn, subj, name, descs):
 
 
 def save_subj_descs(subj):
-    print "subject = %s" % subj
+    print("subject = %s" % subj)
     braviz.utilities.configure_console_logger("descriptors")
     log = logging.getLogger(__name__)
     reader = braviz.readAndFilter.BravizAutoReader(max_cache=1000)

@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import print_function
 from braviz.readAndFilter.tabular_data import _get_connection
 
 __author__ = 'Diego'
@@ -95,4 +95,4 @@ def create_lines_table(conn=None):
     conn.commit()
 
 if __name__ == "__main__":
-    print "This module should never be excecuted"
+    print("This module should never be excecuted")

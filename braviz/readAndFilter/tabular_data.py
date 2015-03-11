@@ -17,8 +17,7 @@
 ##############################################################################
 
 
-__author__ = 'Diego'
-
+from __future__ import print_function
 import sqlite3
 from itertools import izip, repeat
 import os
@@ -31,6 +30,8 @@ import pandas as pd
 import braviz
 from braviz.utilities import remove_non_ascii, show_error
 from braviz.readAndFilter.config_file import get_apps_config
+
+__author__ = 'Diego'
 
 LATERALITY = None
 LEFT_HANDED = None
@@ -1003,7 +1004,7 @@ def add_data_frame(df):
 
     for i, c in enumerate(columns):
         with conn:
-            print "%d / %d : %s" % (i + 1, tot_cols, c)
+            print("%d / %d : %s" % (i + 1, tot_cols, c))
             if does_variable_name_exists(c):
                 var_idx = get_var_idx(c)
             else:
@@ -1018,7 +1019,7 @@ def add_data_frame(df):
             q2 = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
             VALUES ( ?, ?,?)"""
             conn.executemany(q2, izip(repeat(var_idx), subjs, vals))
-    print "done"
+    print("done")
 
 
 def recursive_delete_variable(var_idx):
@@ -1055,10 +1056,10 @@ def recursive_delete_variable(var_idx):
             q = "DELETE FROM variables WHERE var_idx = ?"
             conn.execute(q, (var_idx,))
     except sqlite3.IntegrityError as e:
-        print e.message
-        print "DataBase not modified"
+        print(e.message)
+        print("DataBase not modified")
     else:
-        print "Done"
+        print("Done")
 
 
 def recursive_delete_subject(subject):
@@ -1086,10 +1087,10 @@ def recursive_delete_subject(subject):
             q = "DELETE FROM subjects WHERE subject = ?"
             conn.execute(q, (subject,))
     except sqlite3.IntegrityError as e:
-        print e.message
-        print "DataBase not modified"
+        print(e.message)
+        print("DataBase not modified")
     else:
-        print "Done"
+        print("Done")
 
 
 def initialize_database(path):

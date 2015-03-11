@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 import logging
 from functools import partial as partial_f
 
@@ -351,7 +351,8 @@ class MeasureApp(QMainWindow):
 
     def update_slice_maximums(self):
         dims = self.vtk_viewer.get_number_of_slices()
-        print dims
+        log = logging.getLogger(__name__)
+        log.info(dims)
         self.ui.axial_slice.setMaximum(dims[AXIAL])
         self.ui.coronal_slice.setMaximum(dims[CORONAL])
         self.ui.sagital_slice.setMaximum(dims[SAGITAL])
@@ -451,9 +452,10 @@ class MeasureApp(QMainWindow):
 
     def reset_camera(self):
         fp, pos, vu = self.vtk_viewer.get_camera_parameters()
-        print fp
-        print pos
-        print vu
+        log = logging.getLogger(__name__)
+        log.info(fp)
+        log.info(pos)
+        log.info(vu)
         self.vtk_viewer.reset_camera()
 
     def select_image_modality(self, dummy_index):
@@ -575,7 +577,8 @@ class MeasureApp(QMainWindow):
 
     def save_scenario(self):
         state = self.get_state()
-        print state
+        log = logging.getLogger(__name__)
+        log.info(state)
         app_name = state["meta"]["application"]
         dialog = SaveScenarioDialog(app_name, state)
         res = dialog.exec_()

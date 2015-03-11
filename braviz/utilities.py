@@ -18,6 +18,7 @@
 
 
 """Utility functions used in braviz library but not directly related to the interactive visual analysis of brain data"""
+from __future__ import print_function
 import contextlib
 import os
 from collections import defaultdict
@@ -52,8 +53,8 @@ def configure_logger(app_name):
         logging.basicConfig(
             filename=log_file, level=logging.INFO, format=format_str)
     except Exception:
-        print "couldnt create file logger in file %s" % log_file
-        print "falling back to console logger"
+        print("couldnt create file logger in file %s" % log_file)
+        print("falling back to console logger")
         logging.basicConfig(level=logging.INFO, format=format_str)
     logging.captureWarnings(True)
 
@@ -125,4 +126,3 @@ def show_error(error_message):
         QtGui.QMessageBox.Critical, "Braviz", error_message, QtGui.QMessageBox.Abort)
     dialog.show()
     app.exec_()
-    print "ya"

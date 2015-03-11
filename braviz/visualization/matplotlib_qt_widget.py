@@ -288,7 +288,8 @@ class MatplotWidget(FigureCanvasQTAgg):
         return self.painted_plot.get_last_id()
 
     def add_subject_markers(self, ids):
-        print "attempting to add subjects %s" % ids
+        log = logging.getLogger(__name__)
+        log.info("attempting to add subjects %s", ids)
         self.painted_plot.add_subjects(ids)
         self.draw()
 

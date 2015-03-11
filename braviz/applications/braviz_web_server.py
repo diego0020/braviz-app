@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import print_function
 import os
 
 import tornado.ioloop
@@ -59,4 +59,4 @@ if __name__ == "__main__":
         application.listen(8100)
         tornado.ioloop.IOLoop.instance().start()
     except Exception:
-        print "Couldn't start server, maybe already running?"
+        print("Couldn't start server, maybe already running?")

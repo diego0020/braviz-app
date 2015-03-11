@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division,print_function
 
 
 import braviz
@@ -158,4 +158,4 @@ if __name__ == "__main__":
     reader = braviz.readAndFilter.BravizAutoReader()
     subj = reader.get("ids")[0]
     aseg = reader.get("APARC", subj)
-    print get_descriptors(aseg, labels, draw=True)
+    print(get_descriptors(aseg, labels, draw=True))

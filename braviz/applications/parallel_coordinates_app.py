@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
@@ -135,7 +135,6 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         else:
             var = self.ui.cathegory_combo.itemText(
                 self.ui.cathegory_combo.currentIndex())
-        print var
         self.cathegorical_var = braviz_tab_data.get_var_idx(var)
         self.generate_url()
         self.refresh_web_view()
@@ -155,7 +154,8 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
             else:
                 ret = self.server_process.poll()
                 if ret is not None:
-                    print "server has died, restarting"
+                    log=logging.getLogger(__name__)
+                    log.warning("server has died, restarting")
                     self.server_process = None
             QtCore.QTimer.singleShot(2000, self.refresh_web_view)
 
@@ -189,5 +189,6 @@ if __name__ == "__main__":
     main_window.show()
     app.exec_()
     if main_window.server_process is not None:
-        print "terminating server"
+        log = logging.getLogger(__name__)
+        log.info("terminating server")
         main_window.server_process.terminate()

@@ -17,25 +17,20 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 
 __author__ = 'Diego'
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import matplotlib.axes
-import matplotlib.gridspec as gridspec
 
 import braviz
-from itertools import izip
 
 import numpy as np
 from scipy import io as sio
-import pandas as pd
 import seaborn as sns
 import logging
 
@@ -178,7 +173,7 @@ class TimeseriesPlot(FigureCanvas):
             if self.__frozen_groups is None:
                 n_signals = [self.normalize_time_signal_length(
                     s) for s in self.__frozen_points_signals.itervalues()]
-                print len(n_signals)
+                print(len(n_signals))
                 if len(n_signals) > 0:
                     sns.tsplot(n_signals, time=self.volumes_times,
                                legend=False, color="k", ax=self.axes, ci=(95, 68))

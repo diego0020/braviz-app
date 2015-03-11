@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 
 __author__ = 'Diego'
 
@@ -328,8 +328,8 @@ def delete_scenario(scn_id):
             q = "DELETE FROM scenarios WHERE scn_id = ?"
             conn.execute(q, (scn_id,))
     except sqlite3.IntegrityError as e:
-        print e
-        print "DataBase not modified"
+        print(e)
+        print("DataBase not modified")
         raise
     else:
         # delete screenshot
@@ -337,6 +337,6 @@ def delete_scenario(scn_id):
             braviz.readAndFilter.braviz_auto_dynamic_data_root(), "braviz_data", "scenarios")
         scenario_name = "scenario_%d.png" % scn_id
         full_name = os.path.join(scenario_dir, scenario_name)
-        print full_name
+        print(full_name)
         if os.path.isfile(full_name):
             os.remove(full_name)

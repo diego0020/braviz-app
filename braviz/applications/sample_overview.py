@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 
 __author__ = 'diego'
 
@@ -289,7 +289,8 @@ class SampleOverview(QtGui.QMainWindow):
     def add_subject_viewers(self, scenario=None):
         # create parents:
         levels = self.scalar_data[self.nominal_name].unique()
-        print levels
+        log = logging.getLogger(__name__)
+        log.info(levels)
         for level in levels:
             if np.isnan(level):
                 level = "nan"
@@ -434,10 +435,11 @@ class SampleOverview(QtGui.QMainWindow):
         sample_order = list(self.plot_widget.painted_plot.data.index)
         sample_order += list(
             self.scalar_data.index[np.where(np.isnan(self.scalar_data[self.rational_name]))])
-        print sample_order
-        print len(sample_order)
-        print len(self.sample)
-        print self.plot_widget.painted_plot.data
+        log = logging.getLogger(__name__)
+        log.info(sample_order)
+        log.info(len(sample_order))
+        log.info(len(self.sample))
+        log.info(self.plot_widget.painted_plot.data)
         self.scalar_data.sort(
             self.rational_name, inplace=True, ascending=False)
         self.sample = sample_order

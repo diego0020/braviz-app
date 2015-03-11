@@ -17,11 +17,11 @@
 ##############################################################################
 
 
-__author__ = 'Diego'
-
+from __future__ import print_function
 import braviz
 from braviz.readAndFilter.tabular_data import _get_connection
 
+__author__ = 'Diego'
 
 def create_bundles_table(conn=None):
     """Tract bundle types:
@@ -45,7 +45,7 @@ def create_bundles_table(conn=None):
 def add_named_bundes_to_table(conn=None):
     reader = braviz.readAndFilter.BravizAutoReader()
     named_tracts = reader.get("FIBERS", None, index=True)
-    print named_tracts
+    print(named_tracts)
     if conn is None:
         conn = _get_connection()
     tuples = ((name, 0, name) for name in named_tracts)
@@ -54,4 +54,4 @@ def add_named_bundes_to_table(conn=None):
     conn.commit()
 
 if __name__ == "__main__":
-    print "This module should never be excecuted"
+    print("This module should never be excecuted")

@@ -957,7 +957,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         img_data = tracks_img.get_data()
         return affine, img_data
 
-    def _readTensors(self, subj, **kw):
+    def _readTensors(self, subj,space, **kw):
         """Internal function to read a tensor file"""
         raise NotImplementedError
 

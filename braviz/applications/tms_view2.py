@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 import Tkinter as tk
 import ttk
 import math
@@ -172,7 +172,7 @@ if __name__ == "__main__":
                 fibers = reader.get(
                     'fibers', subject, space='talairach', name='corpus_callosum')
             except Exception:
-                print "cc not found"
+                print("cc not found")
                 fibers_actor.SetVisibility(0)
                 orientation_message.SetVisibility(0)
             else:
@@ -204,7 +204,7 @@ if __name__ == "__main__":
                 orientation_message.SetVisibility(1)
                 orientation_message.SetInput('Right')
         else:
-            print "not supported yet"
+            print("not supported yet")
             fibers_actor.SetVisibility(0)
         if fibers_actor.GetVisibility():
             number_of_fibers_message.SetVisibility(1)
@@ -231,7 +231,7 @@ if __name__ == "__main__":
                 cam.SetViewUp(1, 0, 0)
                 cam.SetFocalPoint(-0.00880438, -6.19902, 5.5735)
             else:
-                print "Unkown image type"
+                print("Unkown image type")
             ren.ResetCameraClippingRange()
         previous_img_type = img_type
         render_widget.Render()
@@ -724,7 +724,6 @@ if __name__ == "__main__":
 
     def clean_exit(event=None):
         global renWin
-        print "adios"
         renWin.FastDelete()
         del renWin
         root.after_idle(root.quit)
@@ -738,11 +737,11 @@ if __name__ == "__main__":
     # render_widget.bind('<Destroy>',clean_exit,'+')
 
     def print_event(caller=None, event=None):
-        print event
+        print(event)
 
     def click_in_bar(event=None):
         if show_groups_var.get() and not showing_history:
-            print "Not implemented yet"
+            print("Not implemented yet")
             return
         select_subj_frame.subjects_list.selection_clear(0, tk.END)
         clicked_subj = bars_view1.get_current_name()

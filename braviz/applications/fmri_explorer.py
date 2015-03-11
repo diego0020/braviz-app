@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 from itertools import izip, repeat
 import logging
 
@@ -38,7 +38,6 @@ from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
 from braviz.readAndFilter.config_file import get_config
 
-# todo: receive messages and send, connect to menu
 __author__ = 'Diego'
 
 
@@ -79,8 +78,8 @@ class FmriExplorer(QtGui.QMainWindow):
         if scenario is None or scenario == 0:
             QtCore.QTimer.singleShot(0, self.load_initial_view)
         else:
-            print "Got scenario"
-            print scenario
+            log.info("Got scenario")
+            log.info(scenario)
 
     def start_ui(self):
         self.ui = Ui_fMRI_Explorer()
@@ -411,7 +410,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def set_timeline_colors(self, var_name):
         log = logging.getLogger(__name__)
-        log.info("Coloring by ", var_name)
+        log.info("Coloring by %s", var_name)
         if var_name is None:
             self.time_plot.set_frozen_colors(None)
             self.time_plot.set_frozen_groups_and_colors(None, None)

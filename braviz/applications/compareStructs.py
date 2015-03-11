@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 import Tkinter as tk
 import tkFont
 import ttk
@@ -29,7 +29,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 
 import braviz
 from braviz.visualization import persistentImagePlane, add_solid_balloon
-
+from braviz.readAndFilter.config_file import get_apps_config
 reader = braviz.readAndFilter.BravizAutoReader()
 
 
@@ -85,7 +85,7 @@ class CompareStructs(object):
         ren1.SetBackground(0.15, 0.1, 0.15)
 
         # config=braviz.interaction.get_config(__file__)
-        config = braviz.interaction.get_config()
+        config = get_apps_config()
         background = config.get_background()
         ren2.SetBackground(background)
 
@@ -303,7 +303,7 @@ class CompareStructs(object):
                 changeReference(entry_text)
             else:
                 ref_var.set(ref_subj)
-            print "testing"
+            print("testing")
 
         ref_frame = tk.Frame(control_frame)
         ref_label = tk.Label(
@@ -368,7 +368,7 @@ class CompareStructs(object):
             global dual_disp, initial_sphere_pos
             # print "new split=%s"%split_var.get()
             if split_var.get() == 'Together':
-                print 'hola'
+                print('hola')
                 render_widget.forget()
                 render_widget2.grid_forget()
 
@@ -497,7 +497,7 @@ class CompareStructs(object):
 
         def clean_exit():
             global renWin, renWin2
-            print "adios"
+            print("adios")
             renWin.Finalize()
             renWin2.Finalize()
             del renWin
@@ -703,7 +703,7 @@ class CompareStructs(object):
 
         def reset_planes():
             global ref_plane_Widget, ref_plane_Widget2, plane_reset_queued
-            print 'resetting'
+            print('resetting')
             keys = other_models.keys()
             for k in keys:
                 removeModel(k, False)
@@ -741,7 +741,7 @@ class CompareStructs(object):
                 # slave.SetNormal(ref.GetNormal())
                 slave.UpdatePlacement()
             except TypeError:
-                print "Fatal Error, don't move handlers out of render window please"
+                print("Fatal Error, don't move handlers out of render window please")
                 if not plane_reset_queued:
                     top.after(1000, reset_planes)
                     plane_reset_queued = True

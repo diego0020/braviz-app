@@ -1795,7 +1795,8 @@ class SimpleBundlesList(QAbstractListModel):
         try:
             idx = self.id_list.index(bid)
         except ValueError:
-            log = logging.error("Invalid bundle id")
+            log = logging.getLogger(__name__)
+            log.error("Invalid bundle id")
             raise
         return self.names_list[idx]
 

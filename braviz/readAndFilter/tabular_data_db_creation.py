@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 
 __author__ = 'Diego'
 
@@ -228,4 +228,4 @@ def tms_vars_descriptions():
 
 
 if __name__ == "__main__":
-    print "This module shouldn't be excecuted"
+    print("This module shouldn't be excecuted")

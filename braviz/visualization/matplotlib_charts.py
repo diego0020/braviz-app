@@ -18,11 +18,10 @@
 
 
 """Maptplotlib widgets which represent scalars in several charts"""
-from __future__ import division
+from __future__ import division, print_function
 
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-# implement the default mpl key bindings
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.text import Text as matplotlib_text
 

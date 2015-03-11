@@ -325,14 +325,18 @@ def filter_polylines_by_scalar(fibs, scalar):
     return valid_cell_ids
 
 if __name__ == "__main__":
+    from braviz.visualization.simple_vtk import SimpleVtkViewer
+    from braviz.readAndFilter.config_file import get_apps_config
+    cfg = get_apps_config()
+    subj = cfg.get_default_subject()
     reader = braviz.readAndFilter.BravizAutoReader()
-    fibers = reader.get("fibers", "093")
+    fibers = reader.get("fibers", subj)
     r = 20
     ctr = (32, -43, 9)
     test_filter = FilterBundleWithSphere()
     test_filter.set_bundle(fibers)
     out = test_filter.filter_bundle_with_sphere(ctr, r)
-    viewer = simpleVtkViewer()
+    viewer = SimpleVtkViewer()
     viewer.addPolyData(out)
     viewer.start()
 

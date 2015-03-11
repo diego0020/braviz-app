@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import print_function
 import sys
 from multiprocessing import Pool
 
@@ -31,10 +31,10 @@ def clear_cache():
 
 
 def populate_cache(subj):
-    print "creating cache for subject %s" % subj
+    print("creating cache for subject %s" % subj)
     reader2 = BravizAutoReader(max_cache=500)
     # Dartel Transform
-    print " %s: Dartel" % subj
+    print(" %s: Dartel" % subj)
     with ignored(Exception):
         reader2.get('MRI', subj, format='vtk', space='dartel')
     with ignored(Exception):
@@ -42,7 +42,7 @@ def populate_cache(subj):
     reader2.clear_mem_cache()
 
     # FreeSurferSurface
-    print " %s: Surfaces" % subj
+    print(" %s: Surfaces" % subj)
     surfaces = ('pial', 'white', 'orig', 'inflated', 'sphere')
     #surfaces = []
     hemis = ('l', 'r')
@@ -51,7 +51,7 @@ def populate_cache(subj):
             with ignored(Exception):
                 reader2.get('SURF', subj, name=s, hemi=h)
     # Fibers
-    print " %s: Colored Fibers" % subj
+    print(" %s: Colored Fibers" % subj)
     # with ignored(Exception):
     #    reader2.get('fibers',subj,color='fa')
     # with ignored(Exception):
@@ -75,17 +75,17 @@ def populate_cache(subj):
                  'Left-Cerebellum-Cortex', 'Left-Cerebellum-White-Matter', 'Left-Cerebral-White-Matter',
                  'Right-Cerebellum-Cortex', 'Right-Cerebellum-White-Matter', 'Right-Cerebral-White-Matter',
                  'ctx-lh-precentral', 'ctx-rh-precentral', 'wm-lh-precentral', 'wm-rh-precentral')
-    print " %s: Waypoints" % subj
+    print(" %s: Waypoints" % subj)
     for w in waypoints:
-        print " %s: Waypoints - %s" % (subj, w)
+        print(" %s: Waypoints - %s" % (subj, w))
         with ignored(Exception):
             reader2.get('fibers', subj, waypoint=w)
-    print " %s: Done" % subj
+    print(" %s: Done" % subj)
 
     # fMRI
     paradigms = reader2.get("fmri", None, index=True)
     for p in paradigms:
-        print p
+        print(p)
         with ignored(Exception):
             reader2.get('fMRI', subj, format='vtk', name=p, space='world')
         with ignored(Exception):
@@ -111,5 +111,5 @@ if __name__ == '__main__':
         processes = 1
     else:
         processes = int(sys.argv[1])
-    print "using %d processes" % processes
+    print("using %d processes" % processes)
     populate_all(processes)

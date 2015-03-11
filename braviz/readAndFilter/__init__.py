@@ -18,7 +18,7 @@
 
 
 # Import and filter
-from __future__ import division
+from __future__ import division, print_function
 
 from braviz.readAndFilter.cache import cache_function
 
@@ -60,4 +60,4 @@ braviz_auto_dynamic_data_root = project_reader.get_auto_dyn_data_root
 if __name__ == "__main__":
     __root = braviz_auto_data_root()
     __reader = BravizAutoReader()
-    print __root
+    print(__root)

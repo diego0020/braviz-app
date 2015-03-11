@@ -18,6 +18,7 @@
 
 
 """Creating hierarchies from free surfer names"""
+from __future__ import print_function
 import braviz
 from braviz.utilities import recursive_default_dict
 
@@ -155,6 +156,9 @@ def get_structural_hierarchy_with_names(reader, subj, dom_nondom=True, right_lef
 
 
 if __name__ == '__main__':
+    from braviz.readAndFilter.config_file import get_apps_config
+    cfg = get_apps_config()
+    subj=cfg.get_default_subject()
     reader2 = braviz.readAndFilter.BravizAutoReader()
-    hier = get_structural_hierarchy(reader2, '144')
-    print hier
+    hier = get_structural_hierarchy(reader2, subj)
+    print(hier)

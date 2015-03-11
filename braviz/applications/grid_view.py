@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 import Tkinter as tk
 import functools
 import ttk
@@ -465,7 +465,6 @@ if __name__ == "__main__":
 
     def clean_exit():
         global grid_view
-        print "adios"
         grid_view.FastDelete()
         del grid_view
 

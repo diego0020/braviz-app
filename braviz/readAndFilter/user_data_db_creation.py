@@ -16,15 +16,15 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
-__author__ = 'Diego'
-
+from __future__ import print_function
 import sys
 
 from braviz.readAndFilter.tabular_data import _get_connection
 
+__author__ = 'Diego'
+
 if __name__ == "__main__":
-    print "This file is not meant to be executed"
+    print("This file is not meant to be executed")
     sys.exit(0)
 
 

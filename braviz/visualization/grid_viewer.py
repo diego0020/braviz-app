@@ -19,6 +19,7 @@
 
 """A class for displaying multiple solids organized in a grid, and related functions"""
 
+from __future__ import print_function
 from __future__ import division
 import math
 from itertools import izip
@@ -243,7 +244,7 @@ class GridView(vtk.vtkRenderWindow):
 
         def print_event(caller=None, event=None):
             """Useful for tests"""
-            print event
+            print(event)
 
         # Unregister the modified actor when the event is showing a balloon
         self.balloon_w.AddObserver('AnyEvent', unregister_object)
@@ -486,8 +487,11 @@ class GridView(vtk.vtkRenderWindow):
     def set_color_bar_visibility(self, color_bar_visibility):
         """Displays or hides the color bar"""
         self.__color_bar_visibility = color_bar_visibility
-        if self.__scalar_bar_actor is not None and color_bar_visibility is False:
-            self.__color_bar_visibility.SetVisibility(0)
+        if self.__scalar_bar_actor is not None:
+            if color_bar_visibility is False:
+                self.__scalar_bar_actor.SetVisibility(0)
+            else:
+                self.__scalar_bar_actor.SetVisibility(1)
 
     def reset_camera(self):
         """Resets camera to a standard position"""

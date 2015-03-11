@@ -63,7 +63,8 @@ def write_nib_image(data, affine, out_file):
     """
     nib_img = nib.Nifti1Image(data, affine=affine)
     nib_img.to_filename(out_file)
-    print out_file
+    log=logging.getLogger(__name__)
+    log.info("%s written",out_file)
     return
 
 

@@ -16,6 +16,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
+from __future__ import print_function
+import logging
 import tornado.web
 
 from tornado.concurrent import Future
@@ -50,10 +52,8 @@ class MessageHandler(tornado.web.RequestHandler):
     def get(self, *args, **kwargs):
         if self.message_client is None:
             self.write("")
-            print "nanai"
         else:
             i, m = self.message_client.get_last_message()
-            print i, m
             self.write({"count": i, "message": m})
 
     def post(self, *args, **kwargs):
@@ -61,8 +61,6 @@ class MessageHandler(tornado.web.RequestHandler):
             self.write_error(503)
         else:
             m = str(self.get_body_argument("message"))
-            print "message: "
-            print m
             self.message_client.send_message(m)
         self.set_status(202, "Message sent")
 
@@ -133,7 +131,5 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
             self.write_error(503)
         else:
             m = str(self.get_body_argument("message"))
-            print "message: "
-            print m
             self.message_client.send_message(m)
         self.set_status(202, "Message sent")

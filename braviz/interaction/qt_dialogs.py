@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 
 import itertools
 import cPickle
@@ -88,7 +88,7 @@ class VariableSelectDialog(QtGui.QDialog):
         self.details_ui = None
         self.rational = {}
         self.matplot_widget = None
-        self.data = tuple()
+        self.data = np.zeros(0)
         self.nominal_model = None
         if sample is None:
             self.sample = braviz_tab_data.get_subjects()
@@ -282,7 +282,8 @@ class VariableSelectDialog(QtGui.QDialog):
             QtCore.QPoint(*position)), message, self.matplot_widget)
 
     def show_delete_menu(self, pos):
-        print "showing menu"
+        log = logging.getLogger(__name__)
+        log.info("showing menu")
         menu = QtGui.QMenu()
         mod = self.ui.tableView.model()
         cur_idx = self.ui.tableView.currentIndex()
@@ -296,13 +297,13 @@ class VariableSelectDialog(QtGui.QDialog):
                                                  QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,
                                                  QtGui.QMessageBox.Cancel)
             if confirm == QtGui.QMessageBox.Yes:
-                print "deleting"
+                log.info("deleting")
                 var_idx = braviz_tab_data.get_var_idx(var_name)
                 if var_idx is not None:
                     braviz_tab_data.recursive_delete_variable(var_idx)
                 mod.update_list(None)
             else:
-                "cancelled"
+                log.info("cancelled")
 
         action = QtGui.QAction("Delete %s" % var_name, menu)
         menu.addAction(action)
@@ -448,6 +449,8 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
             for k in available_plots.iterkeys():
                 self.ui.plot_type.addItem(k)
         self.available_plots = available_plots
+        self.data = np.zeros(0)
+        self.plot_data_frame = None
         self.finish_ui_setup()
 
         self.params_dict = params_dict
@@ -471,7 +474,8 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
         else:
             plot_str = str(self.ui.plot_type.currentText())
             plot_type = self.available_plots.get(plot_str, default_plot)
-        print plot_type
+        log = logging.getLogger(__name__)
+        log.info(plot_type)
         if plot_type[0] == "scatter":
             if plot_type[1] is None:
                 data = data.dropna()
@@ -1331,4 +1335,4 @@ if __name__ == "__main__":
     vsd = LoadLogicBundle()
 
     vsd.exec_()
-    print out
+

@@ -16,12 +16,12 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import print_function
 import numpy as np
 import vtk
 from vtk import vtkImagePlaneWidget
 from braviz.interaction import get_fiber_bundle_descriptors, compute_volume_and_area
-
+import logging
 
 __author__ = 'diego'
 
@@ -91,7 +91,7 @@ class SimpleVtkViewer(object):
         cam1.Azimuth(80)
         cam1.SetViewUp(0, 0, 1)
         self.pd_actors = []
-        print "call addPolyData or addImg to add data to the viewer\n call start to interact"
+        print("call addPolyData or addImg to add data to the viewer\n call start to interact")
 
     def addPolyData(self, polyData, LUT=None):
         """
@@ -111,7 +111,6 @@ class SimpleVtkViewer(object):
             mapper.UseLookupTableScalarRangeOn()
             mapper.SetLookupTable(LUT)
             mapper.SetColorModeToMapScalars()
-            print "lut set"
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
         self.ren.AddActor(actor)
@@ -128,7 +127,7 @@ class SimpleVtkViewer(object):
         Args:
             reset (bool) : If True the camera will be reset
         """
-        print "press 'Q' on viewer window to stop"
+        print("press 'Q' on viewer window to stop")
         import sys
         sys.stdout.flush()
         if reset is True:
@@ -609,8 +608,9 @@ def get_arrow(head, tail):
         rot_axis = np.cross(head - tail, (1, 0, 0))
         rot_angle = np.arcsin(np.linalg.norm(rot_axis) / length)
         if np.isnan(rot_angle):  # handles legendary rounding errors
-            print "please check output closely"
-            if np.norm((head - tail) / length - (1, 0, 0)) < length / 1000:
+            log = logging.getLogger(__name__)
+            log.warning("please check output closely")
+            if np.linalg.norm((head - tail) / length - (1, 0, 0)) < length / 1000:
                 rot_angle = 0
             else:
                 rot_angle = np.pi
@@ -635,7 +635,8 @@ def fibers_balloon_message(fib_actor, name=None):
     try:
         fib = mapper.GetInput()
     except AttributeError:
-        print "No fibers available"
+        log = logging.getLogger(__name__)
+        log.warning("No fibers available")
         return "No fibers available"
     d = get_fiber_bundle_descriptors(fib)
     message = """Number of fibers: %d

@@ -18,17 +18,17 @@
 
 
 """
-Exploring correlations between two variables
+Explore correlations between two variables
 """
-__author__ = 'Diego'
 
+from __future__ import print_function
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 import matplotlib
 
 import braviz.readAndFilter.tabular_data as tab_data
 from braviz.interaction.qt_models import VarListModel
-
+__author__ = 'Diego'
 
 matplotlib.use("Qt4Agg")
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -239,10 +239,10 @@ class RegFigure(FigureCanvas):
                 if len(index) == 1:
                     name = datum.index[0]
                     if event.artist == self.scatter_h_artist:
-                        print "recovering %s" % name
+                        print("recovering %s" % name)
                         self.hidden_subjs.remove(name)
                     else:
-                        print "hidding %s" % name
+                        print("hiding %s" % name)
                         self.hidden_subjs.add(name)
                     self.re_draw_reg()
 

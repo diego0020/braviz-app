@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 import Tkinter as tk
 import ttk
 
@@ -122,7 +122,7 @@ if __name__ == "__main__":
                     'MRI', subj, format='VTK', space=space_var.get())
             except Exception:
                 mri_img = None
-                print "No mri img found"
+                print("No mri img found")
             selected_pdgm = image_var.get()
             if selected_pdgm == 'Precision':
                 fmri_name = 'Precision'
@@ -134,7 +134,7 @@ if __name__ == "__main__":
                 fa_img = reader.get(
                     'fMRI', subj, format='vtk', space=space_var.get(), name=fmri_name)
             except IOError:
-                print "%s not available for subject %s" % (fmri_name, subj)
+                print("%s not available for subject %s" % (fmri_name, subj))
                 fa_img = None
 
             if fa_img is not None and mri_img is not None:
@@ -271,7 +271,7 @@ if __name__ == "__main__":
         orig_img_center = (
             np.array(orig_center) - orig_img.GetOrigin()) / orig_img.GetSpacing()
         orig_slice = round(orig_img_center[0])
-        print orig_slice
+        print(orig_slice)
         # get grid
         grid = build_grid(orig_img, orig_slice, 5)
         # transform to current space
@@ -361,7 +361,7 @@ if __name__ == "__main__":
 
     def clean_exit():
         global renWin
-        print "adios"
+        print("adios")
         renWin.Finalize()
         del renWin
         render_widget.destroy()

@@ -19,6 +19,7 @@
 
 __author__ = 'Diego'
 
+from __future__ import print_function
 import os
 import subprocess
 
@@ -47,7 +48,7 @@ def update_guis():
             subprocess.Popen(
                 ["pyrcc4", "-o", "resources_rc.py", "resources.qrc"])
     except OSError:
-        print "couldn't generate resources"
+        print("couldn't generate resources")
 
 if __name__ == "__main__":
     update_guis()

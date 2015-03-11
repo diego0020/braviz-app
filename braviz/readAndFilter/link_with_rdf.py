@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import print_function
 import os
 import logging
 import csv
@@ -102,6 +102,6 @@ def get_braint_hierarchy():
 
 
 if __name__ == '__main__':
-    print cached_get_free_surfer_dict()
+    print(cached_get_free_surfer_dict())
     evaluations_dict = get_braint_hierarchy()
-    print evaluations_dict
+    print(evaluations_dict)

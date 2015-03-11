@@ -2181,7 +2181,6 @@ class SurfaceManager(object):
         for trio in self.__surf_trios.itervalues():
             ac = trio[2]
             opac = self.__opacity / 100
-            print opac
             ac.GetProperty().SetOpacity(opac)
 
     def hide_cone(self):
@@ -3028,7 +3027,6 @@ class MeasurerViewer(object):
         r, g, b = r / 255, g / 255, b / 255
         self.measure_repr.GetLineProperty().SetColor(r, g, b)
         self.measure_repr.GetGlyphActor().GetProperty().SetColor(r, g, b)
-        print r, g, b
 
 
 class AdditionalCursors(object):

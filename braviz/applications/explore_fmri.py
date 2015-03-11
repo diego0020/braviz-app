@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 import Tkinter as tk
 import ttk
 from math import ceil, floor
@@ -31,6 +31,7 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
 import braviz
 from braviz.visualization.simple_vtk import persistentImagePlane, cursors, OutlineActor
 from braviz.readAndFilter.images import numpy2vtk_img
+from braviz.readAndFilter.config_file import get_apps_config
 import braviz.visualization.fmri_view
 import braviz.visualization.vtk_charts
 from braviz.utilities import configure_logger_from_conf
@@ -107,7 +108,7 @@ if __name__ == "__main__":
     outline = OutlineActor()
     outline.set_input_data(t_stat_img)
 
-    config = braviz.interaction.get_config(__file__)
+    config = get_apps_config()
     background = config.get_background()
     ren.SetBackground(background)
     renWin.SetSize(600, 600)
@@ -252,7 +253,7 @@ if __name__ == "__main__":
             t_stat_img = reader.get(
                 'fMRI', subject, format='VTK', space='func', name=paradigm_var.get())
         except Exception:
-            print "%s not available for subject %s" % (paradigm_var.get(), subject)
+            print("%s not available for subject %s" % (paradigm_var.get(), subject))
             planeWidget.Off()
         else:
             planeWidget.On()
@@ -552,7 +553,6 @@ if __name__ == "__main__":
 
     def clean_exit():
         global renWin
-        print "adios"
         renWin.Finalize()
         del renWin
         render_widget.destroy()

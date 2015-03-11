@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 
 import base64
 import os
@@ -340,7 +340,7 @@ data is requested. To get a more useful class you should create your own subclas
                 pass
             os.mkdir(cache_dir)
         else:
-            print "If you are sure you want to delete the cache dir, call this function with a True argument"
+            print("If you are sure you want to delete the cache dir, call this function with a True argument")
 
     def get_data_root(self):
         """Returns the root directory from which this instance reads data

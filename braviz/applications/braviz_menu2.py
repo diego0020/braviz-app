@@ -16,9 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
-__author__ = 'Diego'
-
+from __future__ import print_function
 import subprocess
 import sys
 import logging
@@ -26,6 +24,7 @@ import logging
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
+__author__ = 'Diego'
 
 try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
@@ -35,8 +34,8 @@ except ImportError as e:
     import braviz.interaction.generate_qt_guis
 
     braviz.interaction.generate_qt_guis.update_guis()
-    print e.message
-    print "Maybe needs to update gui, please try to load again"
+    print(e.message)
+    print("Maybe needs to update gui, please try to load again")
     dummy_in = raw_input("press enter to quit")
 
 
@@ -51,9 +50,9 @@ class BravizMenu2(QtGui.QMainWindow):
         self.ui = None
         self.setWindowTitle("Braviz Menu")
         self.messages_server = MessageServer(local_only=True)
-        print "Server Started"
-        print "Broadcast address: %s" % self.messages_server.broadcast_address
-        print "Receive address: %s" % self.messages_server.receive_address
+        print("Server Started")
+        print("Broadcast address: %s" % self.messages_server.broadcast_address)
+        print("Receive address: %s" % self.messages_server.receive_address)
 
         self.messages_server.message_received.connect(self.print_messages)
         self.setup_gui()
@@ -171,7 +170,7 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def print_messages(self, msg):
         # for testing
-        print "RECEIVED: %s" % msg
+        print("RECEIVED: %s" % msg)
 
     def toggle_connection(self, on):
         if on:
@@ -209,7 +208,7 @@ if __name__ == '__main__':
     try:
         run()
     except Exception as e:
-        print "ERROR"
+        print("ERROR")
         traceback.print_exc()
 
     dummy_input = raw_input("Press enter to close window")

@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 
 import os
 import re
@@ -327,7 +327,6 @@ The constructor requires the root to this structure
             config = get_host_config(project_name)
         except KeyError as e:
             log.exception(e)
-            print e.message
             raise
         data_root = config["data root"]
         return data_root
@@ -346,7 +345,6 @@ The constructor requires the root to this structure
             config = get_host_config(project_name)
         except KeyError as e:
             log.exception(e)
-            print e.message
             raise
         data_root = config["data root"]
         if kw_args.get('max_cache', 0) > 0:

@@ -351,11 +351,11 @@ if __name__ == "__main__":
     import braviz
     import os
     from braviz.utilities import configure_logger_from_conf
+    from braviz.readAndFilter.config_file import get_apps_config
     import logging
     configure_logger_from_conf(__file__)
     reader = braviz.readAndFilter.BravizAutoReader()
-    apps_dir = os.path.join(os.path.dirname(__file__), "..", "applications")
-    conf = braviz.interaction.get_config(apps_dir)
+    conf = get_apps_config()
     subj = conf.get_default_subject()
     log = logging.getLogger(__name__)
     log.info("md_p")

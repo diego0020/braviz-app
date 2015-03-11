@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 import logging
 from functools import partial as partial_f
 import datetime
@@ -195,7 +195,7 @@ class ExtrapolateDialog(QDialog):
         max_opt = self.ui.optimize_radius.value()
         if max_opt > 0:
             try:
-                print "optimizing"
+                log.info("optimizing")
                 subj_img_id = target
                 self.__pos_opt.get_optimum(
                     ctr, max_opt, subj_img_id, self.__roi_space, "FA")
@@ -473,6 +473,10 @@ class BuildRoiApp(QMainWindow):
         self.__filetred_pd = None
         self.__full_pd = None
         self.__fibers_filterer = None
+
+        self.__fa_affine = None
+        self.__fa_i_affine = None
+        self.__fa_smoothed = None
 
         if self.__roi_id is not None:
             self.__checked_subjects = geom_db.subjects_with_sphere(
@@ -1201,17 +1205,18 @@ class BuildRoiApp(QMainWindow):
         self.update_sphere_center()
 
     def get_optimum_position(self, ctr, max_opt):
-        print "optimizing"
+        log = logging.getLogger(__name__)
+        log.info("optimizing")
         if self.__fa_smoothed is None:
             fa_image = self.reader.get(
                 "FA", self.__current_img_id, space=self.__curent_space)
             self.__fa_affine = fa_image.get_affine()
-            print self.__fa_affine
+            log.info(self.__fa_affine)
             self.__fa_i_affine = np.linalg.inv(self.__fa_affine)
             self.__fa_smoothed = ndimage.gaussian_filter(
                 fa_image.get_data(), 3)
 
-        print ctr
+        log.info(ctr)
         ctr_h = np.ones(4)
         ctr_h[:3] = ctr
         ctr_coords = np.round(self.__fa_i_affine.dot(ctr_h))
@@ -1304,18 +1309,19 @@ class PositionOptimizer(object):
         pass
 
     def get_optimum(self, ctr, max_opt, img_id, space, img_type="FA"):
-        print "optimizing"
+        log = logging.getLogger(__name__)
+        log.info("optimizing")
         if self.__last_subj != img_id or self.__last_space != space:
             fa_image = self.reader.get(img_type, img_id, space=space)
             self.__fa_affine = fa_image.get_affine()
-            print self.__fa_affine
+            log.info(self.__fa_affine)
             self.__fa_i_affine = np.linalg.inv(self.__fa_affine)
             self.__fa_smoothed = ndimage.gaussian_filter(
                 fa_image.get_data(), 3)
             self.__last_subj = img_id
             self.__last_space = space
 
-        print ctr
+        log.info(ctr)
         ctr_h = np.ones(4)
         ctr_h[:3] = ctr
         ctr_coords = np.round(self.__fa_i_affine.dot(ctr_h))

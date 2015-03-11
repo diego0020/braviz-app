@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
+from __future__ import division, print_function
 import random
 
 import subprocess
@@ -807,9 +807,9 @@ class LinearModelApp(QMainWindow):
                                 isolating_factor, components, interaction_terms, beta_j)
                             if np.isfinite(beta_j_hat):
                                 beta_1 += beta_j_hat
-
-            print "beta1", beta_1
-            print "beta0", beta_0
+            log = logging.getLogger(__name__)
+            log.info("beta1: %s", beta_1)
+            log.info("beta0: %s", beta_0)
             df3[self.outcome_var_name][l] = beta_0 + beta_1 * \
                 df3[isolating_factor][l].values.squeeze().astype(np.int)
         df3[self.outcome_var_name] += res
@@ -860,11 +860,12 @@ class LinearModelApp(QMainWindow):
             labels2 = labels
 
         groups_series = df2[hue_var]
-        print "testing %s %s" % (reg1, reg2)
-        print "==============="
-        print df
-        print groups_series
-        print "==============="
+        log=logging.getLogger(__name__)
+        log.info("testing %s %s" % (reg1, reg2))
+        log.info("===============")
+        log.info(df)
+        log.info(groups_series)
+        log.info("===============")
         df2 = self.isolate_in_groups(x_var, outcome, hue_var, groups_series)
         df2[outcome] += self.regression_results["residuals"]
         # un standardize yvar

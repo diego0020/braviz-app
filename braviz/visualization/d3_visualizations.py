@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-from __future__ import division
+from __future__ import division, print_function
 
 import json
 import logging
@@ -29,9 +29,6 @@ from braviz.readAndFilter.config_file import get_config
 
 
 __author__ = 'diego'
-
-
-# TODO: receive messages to highlight subjects
 
 
 class ParallelCoordinatesHandler(tornado.web.RequestHandler):
@@ -145,12 +142,12 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         log.info(desc)
         log.info(subjs)
         if user_data.sample_name_existst(name):
-            print "Name already exists"
+            log.warning("Name already exists")
             self.send_error(409)
         else:
-            print "Name is unique"
+            log.info("Name is unique")
             subj_list = map(int, subjs.split(","))
-            print subj_list
+            log.info(subj_list)
             user_data.save_sub_sample(name, subj_list, desc)
             self.write("ok")
 

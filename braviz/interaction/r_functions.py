@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import print_function
 from collections import defaultdict
 
 __author__ = 'Diego'
@@ -49,7 +49,7 @@ def import_or_error(lib_name):
     try:
         lib = importr(lib_name)
     except rpy2.rinterface.RRuntimeError:
-        print "please install %s from R" % lib_name
+        print("please install %s from R" % lib_name)
         log = logging.getLogger(__name__)
         log.error("Couldn't load R package %s", lib_name)
         raise
@@ -339,6 +339,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     if not braviz_tab_data.is_variable_name_real(outcome):
         raise NotImplementedError(
             "Logistic regression not yet implemented, please select a rational outcome")
+    log=logging.getLogger(__name__)
     regressor_names = regressors_data_frame[
         regressors_data_frame["Interaction"] == 0]["variable"].tolist()
     all_variables = [outcome] + regressor_names
@@ -432,7 +433,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
         True, 1).names, conf_intervals.rx(True, 1), conf_intervals.rx(True, 2)))
 
     # now we have to extract the results
-    print standardized_model
+    log.info(standardized_model)
     r_coeffs = standardized_model.rx2("coefficients")
     coef_dict_std = dict(izip(r_coeffs.names, r_coeffs))
     std_errors_std = dict(izip(ses_r.names, ses_r))
@@ -559,5 +560,6 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
         "var_types": var_type,
         "dummy_levels": dummy_vars_levels,
     }
-    print dummy_vars_levels
+    log = logging.getLogger(__name__)
+    log.info(dummy_vars_levels)
     return out_dict

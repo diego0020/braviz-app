@@ -17,8 +17,7 @@
 ##############################################################################
 
 
-from __future__ import division
-
+from __future__ import division, print_function
 
 import os
 import re
@@ -190,7 +189,8 @@ This is done to protect raw data and to allow to share it between different user
                 self.get_data_root(), "slicer_models", str(subj))
             if kw.get("wm"):
                 filename = 'wmparc.nii.gz'
-                print "Warning... deprecated, use WMPARC instead"
+                log = logging.getLogger(__name__)
+                log.warning("Warning... deprecated, use WMPARC instead")
             else:
                 filename = 'aparc+aseg.nii.gz'
         elif data == "WMPARC":
@@ -368,7 +368,6 @@ This is done to protect raw data and to allow to share it between different user
             config = get_host_config(project_name)
         except KeyError as e:
             log.exception(e)
-            print e.message
             raise
         data_root = config["data root"]
         return data_root
@@ -382,7 +381,6 @@ This is done to protect raw data and to allow to share it between different user
             config = get_host_config(project_name)
         except KeyError as e:
             log.exception(e)
-            print e.message
             raise
         data_root = config["dynamic data root"]
         return data_root
@@ -396,7 +394,6 @@ This is done to protect raw data and to allow to share it between different user
             config = get_host_config(project_name)
         except KeyError as e:
             log.exception(e)
-            print e.message
             raise
         static_data_root = config["data root"]
         dyn_data_root = config["dynamic data root"]

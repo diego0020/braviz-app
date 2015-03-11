@@ -19,7 +19,7 @@
 
 """This module provides access to common operations on data and common interaction components"""
 
-from __future__ import division
+from __future__ import division, print_function
 import logging
 
 import vtk
@@ -102,8 +102,4 @@ def aggregate_fiber_scalar2(fib, component=0, norm_factor=1.0 / 255):
         d = np.dot(d, norm_factor)
     return len(d), np.mean(d), np.max(d), np.min(d), np.std(d)
 
-from braviz.interaction.tk_gui import subjects_list, structureList
 
-if __name__ == "__main__":
-    test = subjects_list()
-    test3 = structureList()
