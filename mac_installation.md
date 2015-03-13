@@ -8,9 +8,15 @@ If you don't have home brew installed, install it using:
 
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     
-For more information look at http://http://brew.sh/
+For more information look at the [homebrew page](http://brew.sh/)
 
 It is possible that it will give you warning about not having xcode, in this case you should install xcode from the apple app store and open it to accept the license.
+
+It is also a good idea to put the homebrew path (by default `/usr/local/bin` ) at the start of your path so that homebrew tools take precedence over osx. This can be done by
+
+    export PATH=/usr/local/bin:$PATH
+
+Add this line to your `.bash_profile` file so that it is executed automatically when starting the shell.
 
 ### Python
 
@@ -102,11 +108,11 @@ Go to the directory where you would like braviz files downloaded and do
 
 You can contact jhernand@uniandes.edu.co to get the repository adress
 
-You should now add the braviz directory containing the file setup.py to your PYTHONPATH environment variable
+You should now add the braviz directory containing the file setup.py to your *PYTHONPATH* environment variable
 
     export PYTHONPATH = $PYTHONPATH:<braviz_dict>
 
-You can add that line to your .bash_profile file in order to have braviz always available when you start a terminal
+You can add that line to your `.bash_profile` file in order to have braviz always available when you start a terminal
 
 
 ## Configuring
@@ -115,8 +121,8 @@ The ``braviz/applications`` directory contains several configuration files. Firs
 if it doesn't exist it will be automatically created when you first run the system. The second one is a file named
 ``<project>_hosts.cfg where <project>`` is the name of the project you will use (for example kmc400); this file contains
 the locations of the project files for different computers. Be sure your computer is there with the correct paths. For
-more information see  http://diego0020.github.io/braviz/graphical/configuration.html and 
-http://diego0020.github.io/braviz/library/configuring.html#host-configuration
+more information see  [braviz configuration](http://diego0020.github.io/braviz/graphical/configuration.html) and 
+[host configuration](http://diego0020.github.io/braviz/library/configuring.html#host-configuration)
 
 
 
