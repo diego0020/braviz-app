@@ -17,9 +17,11 @@
 ##############################################################################
 
 
-__author__ = 'Diego'
+
 
 from __future__ import print_function
+
+
 import os
 import subprocess
 
@@ -27,6 +29,7 @@ import PyQt4.uic
 
 import braviz.utilities
 
+__author__ = 'Diego'
 
 def update_guis():
     """
