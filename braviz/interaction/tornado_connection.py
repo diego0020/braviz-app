@@ -19,6 +19,7 @@
 from __future__ import print_function
 import logging
 import tornado.web
+import tornado.websocket
 
 from tornado.concurrent import Future
 import tornado.gen
@@ -136,3 +137,54 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
             m = str(self.get_body_argument("message"))
             self.message_client.send_message(m)
         self.set_status(202, "Message sent")
+
+
+class WebSocketManager(object):
+
+    """
+    Interfaces tornado futures with zmq messages
+    """
+    # Based on
+    # https://github.com/tornadoweb/tornado/blob/master/demos/chat/chatdemo.py
+
+    def __init__(self):
+        self.sockets = set()
+        self.message_client = None
+
+    def handle_new_message(self, msg):
+        for s in self.sockets:
+            s.write_message(msg)
+
+    def send_message(self,msg):
+        if self.message_client is None:
+            log=logging.getLogger(__name__)
+            log.error("Not message client set")
+            return
+        self.message_client.send_message(str(msg))
+
+
+class WebSocketMessageHandler(tornado.websocket.WebSocketHandler):
+
+    """
+    Allow querying for messages and sending messages through http
+
+
+    **POST** requests allow to send messages. It is required to have a ``"message"`` parameter in the
+    request body
+    """
+    def initialize(self, socket_manager):
+        """
+        Requires a :class:`braviz.interaction.connection.GenericMessageClient` with
+        :class:`braviz.interaction.tornado_connection.MessageFutureProxy` as handler
+        """
+        assert isinstance(socket_manager,WebSocketManager)
+        self.socket_manager = socket_manager
+        super(tornado.websocket.WebSocketHandler, self).initialize()
+    def open(self, *args, **kwargs):
+        self.socket_manager.sockets.add(self)
+
+    def on_message(self, message):
+        self.socket_manager.send_message(message)
+
+    def on_close(self):
+        self.socket_manager.sockets.remove(self)

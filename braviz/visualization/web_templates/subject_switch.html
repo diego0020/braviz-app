@@ -63,12 +63,17 @@ Braviz Subject
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="{{ static_url ("bootstrap-3.3.4/js/bootstrap.min.js") }}"></script>
 <script>
+    var ws = null;
+
+
     var subject_select= $("#current_subject");
 
     function send_message(value){
         console.log("sending .... subject: "+value);
         var msg="subject "+value
-        $.post("/messages",{message:msg});
+        if (ws) {
+        ws.send(msg);
+        }
     }
 
     function set_selection(value, send_msg){
@@ -121,43 +126,28 @@ Braviz Subject
     $("#next").click(next_subject);
 
 //---------------------------------connection--------------------------------------
-// based on https://github.com/tornadoweb/tornado/blob/master/demos/chat/static/chat.js
-var message_getter = {
-    errorSleepTime: 500,
-
-    poll: function() {
-        $.ajax({url: "/messages", type: "GET",
-                success: message_getter.onSuccess,
-                error: message_getter.onError});
-        console.log("yeah");
-    },
-
-    onSuccess: function(response) {
-        try {
-
-            message = response.message;
-            console.log("received ... "+ message);
-            if (message.substr(0,7) == "subject"){
+ var errorSleepTime = 500;
+ function openWS() {
+    var address = "ws://" + window.location.host + "/messages_ws";
+    ws = new WebSocket(address);
+    ws.onerror=function () {
+    if (errorSleepTime < 5000){
+    errorSleepTime*=2;
+    }
+    }
+    ws.onmessage = function(e) {
+      message = e.data;
+      if (message.substr(0,7) == "subject"){
                var code = message.substr(8);
                set_selection(code,false);
-            }
-        } catch (e) {
-            message_getter.onError();
-            return;
         }
-        message_getter.errorSleepTime = 500;
-        window.setTimeout(message_getter.poll, 0);
-    },
+    };
+    ws.onclose = function(e) {
+      window.setTimeout(openWS, errorSleepTime);
+    };
+  }
 
-    onError: function(response) {
-        message_getter.errorSleepTime *= 2;
-        console.log("Poll error; sleeping for", message_getter.errorSleepTime, "ms");
-        window.setTimeout(message_getter.poll, message_getter.errorSleepTime);
-    },
-
-};
-
-$(function (){message_getter.poll();})
+$(function (){openWS();})
 
 </script>
 </body>

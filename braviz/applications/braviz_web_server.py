@@ -25,6 +25,7 @@ import tornado.web
 import braviz
 from braviz.interaction.connection import GenericMessageClient
 from braviz.interaction.tornado_connection import LongPollMessageHandler, MessageFutureProxy
+from braviz.interaction.tornado_connection import WebSocketMessageHandler, WebSocketManager
 from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler, SubjectSwitchHandler
 
 
@@ -45,15 +46,22 @@ if __name__ == "__main__":
         receive_address = sys.argv[3]
 
     message_handler = MessageFutureProxy()
+    socket_manager = WebSocketManager()
     message_client = GenericMessageClient(
         message_handler, broadcast_address, receive_address)
+    message_client2 = GenericMessageClient(
+        socket_manager, broadcast_address, receive_address)
+    socket_manager.message_client = message_client2
     application = tornado.web.Application(
         [
             (r"/parallel", ParallelCoordinatesHandler),
             (r"/messages", LongPollMessageHandler,
              {"message_client": message_client}),
+            (r"/messages_ws",WebSocketMessageHandler,
+            {"socket_manager": socket_manager}),
             (r"/subject", SubjectSwitchHandler),
             (r"/", IndexHandler),
+
         ],
         **settings)
     try:
