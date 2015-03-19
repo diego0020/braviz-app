@@ -175,3 +175,13 @@ class IndexHandler(tornado.web.RequestHandler):
         with open(path) as f:
             data = f.read()
         return data
+
+class SubjectSwitchHandler(tornado.web.RequestHandler):
+
+    """
+    Implements a simple web page for changing the current subject from a mobile.
+
+    """
+    def get(self):
+        self.render("subject_switch.html")
+

@@ -25,7 +25,7 @@ import tornado.web
 import braviz
 from braviz.interaction.connection import GenericMessageClient
 from braviz.interaction.tornado_connection import LongPollMessageHandler, MessageFutureProxy
-from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler
+from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler, SubjectSwitchHandler
 
 
 __author__ = 'da.angulo39'
@@ -52,6 +52,7 @@ if __name__ == "__main__":
             (r"/parallel", ParallelCoordinatesHandler),
             (r"/messages", LongPollMessageHandler,
              {"message_client": message_client}),
+            (r"/subject", SubjectSwitchHandler),
             (r"/", IndexHandler),
         ],
         **settings)

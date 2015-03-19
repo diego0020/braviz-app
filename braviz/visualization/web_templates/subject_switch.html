@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Braviz Subject Switcher</title>
+    <link href="{{ static_url("bootstrap-3.3.4/css/bootstrap.min.css") }}" rel="stylesheet">
+
+    <style>
+        body {
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #eee;
+}
+
+.form-switch {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+
+
+.form-switch .form-control {
+  position: relative;
+  height: auto;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-switch .form-control:focus {
+  z-index: 2;
+}
+.form-switch button,select {
+ margin-bottom:10px;
+}
+    </style>
+
+
+</head>
+<body>
+
+<form class="form-switch" action="javascript:void(0);">
+<h1 class="text-center">
+Braviz Subject
+</h1>
+<button class="btn btn-lg btn-primary btn-block" id="prev">
+    Previous
+</button>
+<select class="form-control input-lg" id="current_subject" name="current_subject">
+    <option selected="selected" disabled>Choose subject</option>
+    <option value="uno">uno</option>
+    <option value="dos">dos</option>
+    <option value="tres">tres</option>
+</select>
+<button class="btn btn-lg btn-primary btn-block" id="next">
+    Next
+</button>
+</form>
+<script src="{{ static_url ("jquery-2.1.3.min.js") }}"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="{{ static_url ("bootstrap-3.3.4/js/bootstrap.min.js") }}"></script>
+<script>
+    var subject_select= $("#current_subject");
+
+    function set_selection(value){
+    console.log("setting "+value);
+    subject_select.val(value);
+    }
+
+    function next_subject(){
+        var current=subject_select.val();
+        if (current==null){
+            var first_val=subject_select.children("option:eq(1)").val();
+            set_selection(first_val);
+            return;
+        }
+        var selector='option[value="'+current+'"]';
+        var current_selection=subject_select.children(selector);
+        var next_subj=current_selection.next().val();
+        if (!next_subj){
+            var first_val=subject_select.children("option:eq(1)").val();
+            set_selection(first_val);
+            return;
+        }
+        set_selection(next_subj);
+    }
+
+    function prev_subject(){
+        var current=subject_select.val();
+        if (current==null){
+            var last_val=subject_select.children("option:eq(-1)").val();
+            set_selection(last_val);
+            return;
+        }
+        var selector='option[value="'+current+'"]';
+        var current_selection=subject_select.children(selector);
+        var prev_subj=current_selection.prev();
+        if (prev_subj.is("[disabled]")){
+            var last_val=subject_select.children("option:eq(-1)").val();
+            set_selection(last_val);
+            return;
+        }
+        prev_subj=prev_subj.val();
+        set_selection(prev_subj);
+    }
+
+
+    subject_select.change(function(){console.log(subject_select.val())});
+    $("#prev").click(prev_subject);
+    $("#next").click(next_subject);
+
+</script>
+</body>
+</html>
