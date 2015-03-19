@@ -79,6 +79,7 @@ class MessageFutureProxy(object):
     def wait_for_message(self):
         msg_future = Future()
         self.waiters.add(msg_future)
+        print("holding %d requests"%len(self.waiters))
         return msg_future
 
     def cancel_wait(self, future):
@@ -120,7 +121,9 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
         self.future = self.message_handler.wait_for_message()
         msg = yield self.future
         if self.request.connection.stream.closed():
+            print("stream closed")
             return
+        print("sending response")
         self.write({"message": msg})
 
     def on_connection_close(self):

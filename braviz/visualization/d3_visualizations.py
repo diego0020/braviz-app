@@ -183,5 +183,6 @@ class SubjectSwitchHandler(tornado.web.RequestHandler):
 
     """
     def get(self):
-        self.render("subject_switch.html")
+        subjs=[unicode(s) for s in tab_data.get_subjects()]
+        self.render("subject_switch.html",subjs=subjs)
 
