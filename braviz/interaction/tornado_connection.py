@@ -139,10 +139,15 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
 class WebSocketManager(object):
 
     """
-    Interfaces tornado futures with zmq messages
+    Manages a collection of opened web messages.
+
+    Can be connected to a
+    :class:`braviz.interaction.connection.GenericMessageClient`
+    such that messages will be propagated to all open sockets.
+    If a message client is set, front-end applications can send
+    messages to the system via the socket.
+
     """
-    # Based on
-    # https://github.com/tornadoweb/tornado/blob/master/demos/chat/chatdemo.py
 
     def __init__(self):
         self.sockets = set()
@@ -163,11 +168,8 @@ class WebSocketManager(object):
 class WebSocketMessageHandler(tornado.websocket.WebSocketHandler):
 
     """
-    Allow querying for messages and sending messages through http
+    Allows front-end web applications to connect to the system using a web socket
 
-
-    **POST** requests allow to send messages. It is required to have a ``"message"`` parameter in the
-    request body
     """
     def initialize(self, socket_manager):
         """
