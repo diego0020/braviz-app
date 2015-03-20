@@ -1,4 +1,4 @@
-##############################################################################
+# #############################################################################
 #    Braviz, Brain Data interactive visualization                            #
 #    Copyright (C) 2014  Diego Angulo                                        #
 #                                                                            #
@@ -36,7 +36,6 @@ __author__ = 'Diego'
 LATERALITY = None
 LEFT_HANDED = None
 UBICAC = None
-
 
 _connections = dict()
 
@@ -621,7 +620,7 @@ def get_subject_variables(subj_code, var_codes):
             cur = conn.execute("SELECT value FROM var_values WHERE var_idx = ? and subject = ?",
                                (int(idx), int(subj_code)))
             ans = cur.fetchone()
-            if ans is None:
+            if ans is None or ans[0] is None:
                 value = float("nan")
             else:
                 value = ans[0]
@@ -736,7 +735,7 @@ def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
         conn.execute(query,
                      (var_name, min_value,
                       max_value, opt_value)
-                     )
+        )
     except (KeyError, ValueError):
         pass
     else:
@@ -761,7 +760,7 @@ def save_real_meta(var_idx, min_value, max_value, opt_value):
         conn.execute(query,
                      (var_idx, min_value,
                       max_value, opt_value)
-                     )
+        )
     except (KeyError, ValueError):
         pass
     else:
@@ -960,7 +959,7 @@ def get_variable_normal_range(var_idx):
     # minimum,maximum
     q = """SELECT min(var_values.value), max(cast( var_values.value as numeric)) from var_values JOIN var_values as var_values2
      WHERE var_values.subject == var_values2.subject and var_values2.var_idx == ? and var_values2.value == ?
-     and var_values.var_idx = ?
+     and var_values.var_idx = ? and var_values.value notnull
         """
     if UBICAC is None:
         conf = get_apps_config()
@@ -973,6 +972,11 @@ def get_variable_normal_range(var_idx):
     if values is None:
         return float("nan"), float("nan")
     else:
+        values = list(values)
+        if values[0] is None:
+            values[0] = float('nan')
+        if values[1] is None:
+            values[1] = float('nan')
         return values
 
 
@@ -1103,4 +1107,5 @@ def initialize_database(path):
     conn = sqlite3.connect(path)
     conn.close()
     from braviz.readAndFilter.check_db import verify_db_completeness
+
     verify_db_completeness(path)
