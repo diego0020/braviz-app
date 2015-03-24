@@ -132,7 +132,7 @@ def repeatatable_plot(func):
     return saved_plot_func
 
 class MatplotWidget(FigureCanvas):
-    box_outlier_pick_signal = QtCore.pyqtSignal(float, float, tuple)
+    box_outlier_pick_signal = QtCore.pyqtSignal(str, tuple)
     scatter_pick_signal = QtCore.pyqtSignal(str, tuple)
     # TODO: instead of using blit create a @wrapper to save last render command to restore after drawing subjects
     # TODO: Unify with MatplotWidget in visualization
@@ -160,6 +160,7 @@ class MatplotWidget(FigureCanvas):
         self.setMouseTracking(True)
         self.mpl_connect('motion_notify_event', self.mouse_move_event_handler)
         self.x_order = None
+        self.x_order_i = None
         self.fliers_x_dict = None
 
         self.last_plot_function = None
@@ -315,17 +316,33 @@ class MatplotWidget(FigureCanvas):
         self.blit(self.axes.bbox)
 
     @repeatatable_plot
-    def make_box_plot(self, data, xlabel, ylabel, xticks_labels, ylims=None, intercet=None):
+    def make_box_plot(self, data, x_var, y_var,  xlabel, ylabel, xticks_labels, ylims=None, intercet=None):
+
+
+
+        if x_var is None:
+            data_list = [data[y_var]]
+            label_nums = [0]
+        else:
+            data_list = []
+            label_nums = list(set(data[x_var]))
+            for i in label_nums:
+                data_col = data[y_var][data[x_var] == i]
+                data_list.append(data_col.get_values())
+
+
         sns.set_style("darkgrid")
         self.fig.clear()
         self.axes = self.fig.add_subplot(1, 1, 1)
         # Sort data and labels according to median
-        x_permutation = range(len(data))
-        if xticks_labels is None:
-            xticks_labels = range(len(data))
-        data_labels = zip(data, xticks_labels, x_permutation)
+        x_permutation = range(1,len(label_nums)+1)
+        data_labels = zip(data_list, label_nums)
         data_labels.sort(key=lambda x: np.median(x[0]))
-        data, xticks_labels, x_permutation = zip(*data_labels)
+        data_list, label_nums = zip(*data_labels)
+        ticks = None
+        if xticks_labels is not None:
+            ticks = [xticks_labels.get(i ,"level %d" % i) for i in label_nums]
+
         self.axes.clear()
         self.axes.tick_params(
             'x', bottom='on', labelbottom='on', labeltop='off', top="off")
@@ -335,12 +352,25 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(auto=True)
         #artists_dict = self.axes.boxplot(data, sym='gD')
 
-        sns.boxplot(data, ax=self.axes, fliersize=10,
-                    names=xticks_labels, color="skyblue", widths=0.5)
+        self.x_order = dict(izip(label_nums,x_permutation))
+        self.x_order_i = dict(izip(x_permutation,label_nums))
+
+
+        sns.boxplot(data_list, ax=self.axes, fliersize=10,
+                    names=ticks, color="skyblue", widths=0.5)
         # find fliers
         for ls in self.axes.get_lines():
             if ls.get_markersize() == 10:
                 ls.set_picker(5)
+                poss_ids=dict()
+                for x,y in izip(*ls.get_data()):
+                    poss_ids.setdefault((x,y),set()).update(data.loc[(data[x_var] == self.x_order_i[x]) & (data[y_var] == y)].index)
+                print poss_ids
+                urls = []
+                for x,y in izip(*ls.get_data()):
+                    u=poss_ids[(x,y)].pop()
+                    urls.append(u)
+                ls.set_url(urls)
         self.axes.set_xlabel(xlabel)
         self.axes.set_ylabel(ylabel)
 
@@ -354,19 +384,15 @@ class MatplotWidget(FigureCanvas):
         if intercet is not None:
             self.add_intercept_line(intercet)
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
-        self.x_order = x_permutation
         self.ylim = None
         self.xlim = None
 
     @repeatatable_plot
     def make_linked_box_plot(self, data, outcome, x_name, z_name, ylims=None):
+        #TODO: change data to a dataframe
         sns.set_style("darkgrid")
         self.fig.clear()
         self.axes = self.fig.add_subplot(1, 1, 1)
-        #self.axes.tick_params('x', bottom='on', labelbottom='on', labeltop='off', top="off")
-        #self.axes.tick_params('y', left='off', labelleft='off', labelright='on', right="on")
-        # self.axes.yaxis.set_label_position("right")
-        # self.axes.set_ylim(auto=True)
 
         x_levels = list(data[x_name].unique())
         z_levels = list(data[z_name].unique())
@@ -423,7 +449,16 @@ class MatplotWidget(FigureCanvas):
         for ls in self.axes.get_lines():
             if ls.get_markersize() == 10:
                 ls.set_picker(5)
-
+                poss_ids = dict()
+                for i,y in izip(*ls.get_data()):
+                    x,z = fliers_x_dict[i]
+                    poss_ids.setdefault((i,y),set()).update(
+                        data.loc[(data[x_name] == x) & (data[z_name] == z) & (data[outcome] == y)].index
+                    )
+                urls = []
+                for i,y in izip(*ls.get_data()):
+                    urls.append(poss_ids[(i,y)].pop())
+                ls.set_url(urls)
         self.axes.set_ylabel(outcome)
         if ylims is not None:
             yspan = ylims[1] - ylims[0]
@@ -472,13 +507,13 @@ class MatplotWidget(FigureCanvas):
         # self.restore_region(self.back_fig)
         self.redraw_last_plot()
         if self.x_order is not None:
-            # labels go from 1 to n; permutation is from 0 to n-1
             if isinstance(self.x_order, dict):
-                x_coords = map(self.x_order.get, izip(x_coords, z_coords))
+                if z_coords is not None:
+                    x_coords = map(self.x_order.get, izip(x_coords, z_coords))
+                else:
+                    x_coords = map(self.x_order.get, x_coords)
             else:
-                assert 0 not in x_coords
-                x_coords = map(
-                    lambda k: self.x_order.index(int(k - 1)) + 1, x_coords)
+                raise Exception("deprecated")
         if color is None:
             color = "black"
         collection = self.axes.scatter(
@@ -498,20 +533,14 @@ class MatplotWidget(FigureCanvas):
     def generate_tooltip_event(self, e):
         # print type(e.artist)
         if type(e.artist) == matplotlib.lines.Line2D:
-            dx, dy = e.artist.get_data()
+            urls = e.artist.get_url()
             # print e.ind
             ind = e.ind
             if hasattr(ind, "__iter__"):
                 ind = ind[0]
-            x, y = dx[ind], dy[ind]
-            # correct x position from reordering
-            if self.x_order is not None:
-                if isinstance(self.x_order, dict):
-                    x, _ = self.fliers_x_dict[x]
-                else:
-                    x = self.x_order[int(x - 1)] + 1
+            u=urls[ind]
             self.box_outlier_pick_signal.emit(
-                x, y, (e.mouseevent.x, self.height() - e.mouseevent.y))
+                str(u), (e.mouseevent.x, self.height() - e.mouseevent.y))
         elif type(e.artist) == matplotlib.collections.PathCollection:
             if e.artist.get_urls()[0] is None:
                 return

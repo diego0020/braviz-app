@@ -330,11 +330,10 @@ class AnovaApp(QMainWindow):
             data.dropna(inplace=True)
 
             self.plot_data_frame = data
-            data_values = data[self.outcome_var_name].get_values()
 
             ylims = braviz_tab_data.get_min_max_values_by_name(
                 self.outcome_var_name)
-            self.plot.make_box_plot([data_values], "(Intercept)", self.outcome_var_name,
+            self.plot.make_box_plot(data,None,self.outcome_var_name, "(Intercept)", self.outcome_var_name,
                                     None, ylims, intercet=self.result_model.intercept)
 
         else:
@@ -449,12 +448,11 @@ class AnovaApp(QMainWindow):
 
         is_reg_real = braviz_tab_data.is_variable_name_real(var_name)
         # get outcome min and max values
-        # TODO This has to be updated when implementing logistic regression
         miny, maxy = braviz_tab_data.get_min_max_values_by_name(
             self.outcome_var_name)
         self.plot_x_var = var_name
 
-        if is_reg_real == 0:
+        if not is_reg_real:
             # is nominal
             # create whisker plot
             labels_dict = braviz_tab_data.get_labels_dict_by_name(var_name)
@@ -469,18 +467,11 @@ class AnovaApp(QMainWindow):
             # remove nans
             data.dropna(inplace=True)
 
-            label_nums = set(data[var_name])
             self.plot_data_frame = data
 
-            data_list = []
-            ticks = []
-            for i in label_nums:
-                data_col = data[self.outcome_var_name][data[var_name] == i]
-                data_list.append(data_col.get_values())
-                ticks.append(labels_dict.get(i, str(i)))
             # print data_list
             self.plot.make_box_plot(
-                data_list, var_name, self.outcome_var_name, ticks, (miny, maxy))
+                data,var_name, self.outcome_var_name, var_name, self.outcome_var_name, labels_dict, (miny, maxy))
 
         else:
             # is real
@@ -545,23 +536,14 @@ class AnovaApp(QMainWindow):
                 log.info("showing subject %s" % subj)
                 self.add_subjects_to_plot(subject_ids=(int(subj),))
 
-    def handle_box_outlier_pick(self, x, y, position):
+    def handle_box_outlier_pick(self, u, position):
         # print "received signal"
         # print x_l,y_l
-        if self.plot_data_frame is not None:
-            # identify subject
-            df = self.plot_data_frame
-            if self.plot_x_var is None:
-                subj = df[df[self.outcome_var_name] == y].index
-            else:
-                subj = df[(df[self.plot_x_var] == x) & (
-                    df[self.outcome_var_name] == y)].index
-            # print subj[0]
-            message = "Outlier: %s" % subj[0]
-            self.last_viewed_subject = subj[0]
-            QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
-            QtGui.QToolTip.showText(
-                self.plot.mapToGlobal(QtCore.QPoint(*position)), message, self.plot)
+        message = "Outlier: %s" % u
+        self.last_viewed_subject = u
+        QtCore.QTimer.singleShot(2000, self.clear_last_viewed_subject)
+        QtGui.QToolTip.showText(
+            self.plot.mapToGlobal(QtCore.QPoint(*position)), message, self.plot)
 
     def handle_scatter_pick(self, subj, position):
         message = "Subject: %s" % subj

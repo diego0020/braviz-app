@@ -499,14 +499,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
             data.dropna(inplace=True)
             label_nums = set(data[x])
             labels_dict = braviz_tab_data.get_labels_dict_by_name(x)
-            data_list = []
-            ticks = []
-            for i in label_nums:
-                data_col = data[y][data[x] == i]
-                data_list.append(data_col.get_values())
-                ticks.append(labels_dict.get(i, str(i)))
-                # print data_list
-            self.matplot_widget.make_box_plot(data_list, x, y, ticks)
+            self.matplot_widget.make_box_plot(data,x,y, x, y, labels_dict)
             self.matplot_widget.limits_vertical = False
         elif plot_type[0] == "interaction":
             factors = plot_type[1].split("*")
