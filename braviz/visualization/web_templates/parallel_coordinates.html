@@ -111,10 +111,10 @@
     <script type="text/javascript" src="{{ static_url ("d3/d3.js") }}"></script>
     <script type="text/javascript" src="{{ static_url ("d3/colorbrewer.js") }}"></script>
     <script type="text/javascript" src="{{ static_url ("jquery-2.1.3.min.js") }}"></script>
-    <script type="text/javascript" src="{{ static_url ("jquery.ui.position.js") }}"></script>
-    <script type="text/javascript" src="{{ static_url ("jquery.contextMenu.js") }}"></script>
+    <script type="text/javascript" src="{{ static_url ("d3-context-menu.js") }}"></script>
 
-     <link href="{{ static_url ("jquery.contextMenu.css") }}" rel="stylesheet" type="text/css" />
+
+     <link href="{{ static_url ("d3-context-menu.css") }}" rel="stylesheet" type="text/css" />
 </head>
 <body>
 
@@ -449,24 +449,18 @@ return;
 
 var hover_subj="";
 //------------------context menu---------------------------
+var menu = [
+    {
+        title: function(d) {return "Show "+d.code+" in other views"},
+        action : function(elm, d, i){
+        send_subject_message(d.code)
+        }
+    }
+];
+
+
 function add_context_menu(){
-    $.contextMenu({
-        selector: '.foreground',
-        trigger: 'hover',
-        delay : 2000,
-        build : function (trigger, pos){
-        return {
-        autoHide: false,
-        callback: function(key, options) {
-        send_subject_message(hover_subj)
-        },
-        items: {
-            show: {name: "Show "+ hover_subj +" in other viewers"},
-        }
-        }
-        }
-    });
-    $(".foreground path").attr("onmouseover","{hover_subj=this.firstChild.textContent;}");
+    foreground.on("contextmenu.menu",d3.contextMenu(menu));
 };
 
 function send_subject_message(subj){

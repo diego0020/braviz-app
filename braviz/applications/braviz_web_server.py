@@ -55,8 +55,8 @@ if __name__ == "__main__":
     application = tornado.web.Application(
         [
             (r"/parallel", ParallelCoordinatesHandler),
-            (r"/messages", LongPollMessageHandler,
-             {"message_client": message_client}),
+            #(r"/messages", LongPollMessageHandler,
+            # {"message_client": message_client}),
             (r"/messages_ws",WebSocketMessageHandler,
             {"socket_manager": socket_manager}),
             (r"/subject", SubjectSwitchHandler),
