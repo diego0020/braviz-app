@@ -519,7 +519,7 @@ class SampleOverview(QtGui.QMainWindow):
                     viewer.image.change_image_modality(
                         mod, paradigm=paradigm, skip_render=True)
                     viewer.image.show_image()
-                    viewer.image.image_plane_widget.SetInteraction(0)
+                    viewer.image.image_plane_widget.SetInteraction(1)
                     orient = image_state.get("orientation")
                     if orient is not None:
                         orientation_dict = {
