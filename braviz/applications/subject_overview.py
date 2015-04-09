@@ -136,6 +136,7 @@ class SubjectOverviewApp(QMainWindow):
                 "MRI", skip_render=True)
         except Exception as e:
             self.show_error(e.message)
+        self.reset_image_view_controls()
         # self.vtk_viewer.show_cone()
 
     def setup_gui(self):
