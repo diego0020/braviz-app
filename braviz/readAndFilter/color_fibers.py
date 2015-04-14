@@ -24,7 +24,7 @@ import math
 import vtk
 import numpy as np
 from scipy import ndimage
-
+from braviz.visualization import create_lut
 
 def color_by_z(pt):
     """
@@ -329,8 +329,7 @@ def get_fa_lut():
     Returns:
         vtkColorTransferFunction
     """
-    import braviz.visualization
-    lut = braviz.visualization.get_colorbrewer_lut(
+    lut = create_lut.get_colorbrewer_lut(
         0.35, 0.82, "YlGn", 9, invert=True, continuous=True, skip=1)
     return lut
 
@@ -342,14 +341,12 @@ def get_length_lut():
     Returns:
         vtkColorTransferFunction
     """
-    import braviz.visualization
-    lut = braviz.visualization.get_colorbrewer_lut(
+    lut = create_lut.get_colorbrewer_lut(
         41, 125, "YlOrBr", 9, invert=True)
     return lut
 
 if __name__ == "__main__":
     import braviz
-    import os
     from braviz.utilities import configure_logger_from_conf
     from braviz.readAndFilter.config_file import get_apps_config
     import logging
