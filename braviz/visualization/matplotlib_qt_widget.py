@@ -783,12 +783,18 @@ class ScatterPlot(AbstractPlot):
                 self.subject_markers.remove()
             except ValueError:
                 pass
-        subjs_df = self.df.loc[subjs]
-        x_coords = subjs_df[self.x_name]
-        y_coords = subjs_df[self.y_name]
-        self.subject_markers = self.axes.scatter(x_coords, y_coords, marker="o", s=120, edgecolors="k", alpha=0.80, zorder=40,
+        try:
+            subjs_df = self.df.loc[subjs]
+        except KeyError:
+            log = logging.getLogger(__name__)
+            log.info("subject %s not found",subjs)
+            self.subject_markers = None
+        else:
+            x_coords = subjs_df[self.x_name]
+            y_coords = subjs_df[self.y_name]
+            self.subject_markers = self.axes.scatter(x_coords, y_coords, marker="o", s=120, edgecolors="k", alpha=0.80, zorder=40,
                                                  linewidths=2)
-        self.subject_markers.set_facecolor('none')
+            self.subject_markers.set_facecolor('none')
 
     def highlight(self, subj):
         AbstractPlot.highlight(self, subj)
