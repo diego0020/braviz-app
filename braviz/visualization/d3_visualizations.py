@@ -183,6 +183,16 @@ class SubjectSwitchHandler(tornado.web.RequestHandler):
 
     """
     def get(self):
-        subjs=[unicode(s) for s in tab_data.get_subjects()]
-        self.render("subject_switch.html",subjs=subjs)
+        samples_df = user_data.get_samples_df()
+        sample_names = [(i,samples_df.sample_name[i]) for i in samples_df.index]
+        sample = self.get_argument("sample",None)
+        if sample is None:
+            subjs = [unicode(s) for s in tab_data.get_subjects()]
+            sample_id = ""
+        else:
+            subjs = [unicode(s) for s in sorted(user_data.get_sample_data(sample))]
+            sample_id = sample
+
+
+        self.render("subject_switch.html",subjs=subjs,samples=sample_names,sample_id=sample_id)
 

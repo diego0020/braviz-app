@@ -41,11 +41,19 @@
 
 </head>
 <body>
-
-<form class="form-switch" action="javascript:void(0);">
 <h1 class="text-center">
 Braviz Subject
 </h1>
+
+<form class="form-switch" action="javascript:void(0);">
+<label for="sample">Sample:</label>
+<select class="form-control" id="sample" name="sample_select">
+    <option selected="selected" disabled>Choose subsample</option>
+    {% for s in samples %}
+    <option value="{{ s[0] }}">{{ escape(s[1]) }}</option>
+    {% end %}
+</select>
+<label for="current_subject">Subject:</label>
 <button class="btn btn-lg btn-primary btn-block" id="prev">
     Previous
 </button>
@@ -63,9 +71,12 @@ Braviz Subject
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="{{ static_url ("bootstrap-3.3.4/js/bootstrap.min.js") }}"></script>
 <script>
+    // set sample
+    var sample_select = $("#sample");
+
+    sample_select.val({{sample_id}});
+
     var ws = null;
-
-
     var subject_select= $("#current_subject");
 
     function send_message(value){
@@ -124,6 +135,12 @@ Braviz Subject
     subject_select.change(function(){send_message(subject_select.val())});
     $("#prev").click(prev_subject);
     $("#next").click(next_subject);
+
+    function change_sample(){
+    document.location.assign(window.location.pathname+"?sample="+sample_select.val());
+    }
+
+    sample_select.change(change_sample);
 
 //---------------------------------connection--------------------------------------
  var errorSleepTime = 500;
