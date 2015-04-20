@@ -1,5 +1,3 @@
-from braviz import _test_arrow
-
 __author__ = 'Diego'
 
 import dipy
