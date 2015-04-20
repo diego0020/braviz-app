@@ -5,6 +5,7 @@ __author__ = 'Diego'
 import dipy
 import braviz
 import numpy as np
+from braviz.visualization.simple_vtk import SimpleVtkViewer
 reader = braviz.readAndFilter.BravizAutoReader()
 subject = "093" if braviz.readAndFilter.PROJECT == "kmc40" else "119"
 tracts = reader.get("FIBERS",subject)
@@ -50,7 +51,7 @@ for i in xrange(bundles.total_clusters):
 
 new_array.SetName("clusters")
 tracts.GetCellData().SetScalars(new_array)
-v = simpleVtkViewer()
+v = SimpleVtkViewer()
 ac = v.addPolyData(tracts)
 mp = ac.GetMapper()
 mp.SetScalarModeToUseCellData()
