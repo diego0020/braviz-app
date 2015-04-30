@@ -376,12 +376,42 @@ class LoadRoiDialog(QDialog):
         self.ui.tableView.setModel(self.model)
         self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(0)
         self.ui.tableView.clicked.connect(self.select)
+        self.ui.tableView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.ui.tableView.customContextMenuRequested.connect(
+            self.show_context_menu)
 
     def select(self, index):
         name_index = self.model.index(index.row(), 0)
         self.name = unicode(self.model.data(name_index, QtCore.Qt.DisplayRole))
         self.ui.buttonBox.button(self.ui.buttonBox.Open).setEnabled(1)
 
+    def show_context_menu(self,pos):
+        menu = QtGui.QMenu()
+        mod = self.ui.tableView.model()
+        cur_idx = self.ui.tableView.currentIndex()
+        idx2 = mod.index(cur_idx.row(), 0)
+        sphere_name = mod.data(idx2, QtCore.Qt.DisplayRole)
+        log = logging.getLogger(__name__)
+
+        def delete_sphere():
+            confirm = QtGui.QMessageBox.question(self,
+                                                 "Confirm delete sphere",
+                                                 "Are you sure you want to delete \n%s ?\nThis is not reversible" % sphere_name,
+                                                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,
+                                                 QtGui.QMessageBox.Cancel)
+            if confirm == QtGui.QMessageBox.Yes:
+                log.info("Deleting roi %s",sphere_name)
+                roi_id = geom_db.get_roi_id(sphere_name)
+                geom_db.recursive_delete_roi(roi_id)
+                spheres_df = geom_db.get_available_spheres_df()
+                self.model.set_df(spheres_df)
+
+
+        action = QtGui.QAction("Delete %s" % sphere_name, menu)
+        menu.addAction(action)
+        action.triggered.connect(delete_sphere)
+        global_pos = self.ui.tableView.mapToGlobal(pos)
+        menu.exec_(global_pos)
 
 class MultipleRoiDialog(QDialog):
 
@@ -401,6 +431,11 @@ class MultipleRoiDialog(QDialog):
         self.ui.tableView.setModel(self.model)
         self.new_button = QtGui.QPushButton("New Sphere")
         self.new_button.clicked.connect(self.show_new_sphere_dialog)
+
+        self.ui.tableView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.ui.tableView.customContextMenuRequested.connect(
+            self.show_delete_context_menu)
+
         self.ui.buttonBox.addButton(
             self.new_button, self.ui.buttonBox.ActionRole)
         self.model.dataChanged.connect(self.item_changed)
@@ -420,12 +455,17 @@ class MultipleRoiDialog(QDialog):
 
 
     def reload_list(self):
+
         spheres_df = geom_db.get_available_spheres_df(self.space)
         if self.model is None:
             self.model = DataFrameModel(
                 spheres_df, string_columns={0, 1}, checks=True)
         else:
+            checked = self.model.checked
             self.model.set_df(spheres_df)
+            items=set(spheres_df.index)
+            new_checked=items.intersection(checked)
+            self.model.checked = new_checked
 
 
     def show_new_sphere_dialog(self):
@@ -437,6 +477,32 @@ class MultipleRoiDialog(QDialog):
             space = self.space
             new_id = geom_db.create_roi(new_name, "sphere", space, desc)
             self.reload_list()
+
+    def show_delete_context_menu(self,pos):
+        menu = QtGui.QMenu()
+        mod = self.ui.tableView.model()
+        cur_idx = self.ui.tableView.currentIndex()
+        idx2 = mod.index(cur_idx.row(), 0)
+        sphere_name = mod.data(idx2, QtCore.Qt.DisplayRole)
+        log = logging.getLogger(__name__)
+
+        def delete_sphere():
+            confirm = QtGui.QMessageBox.question(self,
+                                                 "Confirm delete sphere",
+                                                 "Are you sure you want to delete \n%s ?\nThis is not reversible" % sphere_name,
+                                                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,
+                                                 QtGui.QMessageBox.Cancel)
+            if confirm == QtGui.QMessageBox.Yes:
+                log.info("Deleting roi %s",sphere_name)
+                roi_id = geom_db.get_roi_id(sphere_name)
+                geom_db.recursive_delete_roi(roi_id)
+                self.reload_list()
+
+        action = QtGui.QAction("Delete %s" % sphere_name, menu)
+        menu.addAction(action)
+        action.triggered.connect(delete_sphere)
+        global_pos = self.ui.tableView.mapToGlobal(pos)
+        menu.exec_(global_pos)
 
 
 class ConfirmSubjectChangeDialog(QDialog):

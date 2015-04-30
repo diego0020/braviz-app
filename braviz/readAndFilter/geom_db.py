@@ -341,6 +341,30 @@ def get_all_spheres(sphere_id):
     df = sql.read_sql(q, con, index_col="subject", params=(sphere_id,))
     return df
 
+def recursive_delete_roi(roi_id):
+    """
+    Removes a ROI from the database, including all its values.
+
+    .. warning::
+
+        This may delete large amounts of information and can't be reversed
+
+    Args:
+        roi_id (int) :  ROI id
+    """
+
+    con = _get_connection()
+    roi_type = get_roi_type(roi_id=roi_id)
+    if roi_type == "sphere":
+        q = "DELETE FROM geom_spheres WHERE sphere_id = ?"
+    else:
+        # it is a line
+        q = "DELETE FROM geom_lines WHERE line_id = ?"
+    q2 = "DELETE FROM geom_rois WHERE roi_id = ?"
+    with con:
+        con.execute(q,(roi_id,))
+        con.execute(q2,(roi_id,))
+
 
 def save_line(line_id, subject, point1, point2):
     """
