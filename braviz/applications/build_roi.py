@@ -485,6 +485,7 @@ class BuildRoiApp(QMainWindow):
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
 
+        # Be sure to turn to False at the end of setup
         self.__loading_sphere_from_db = True
         self.__fibers_map = None
         self.__fibers_ac = None
@@ -1170,10 +1171,28 @@ class BuildRoiApp(QMainWindow):
             desc = dialog.desc
             space = self.__curent_space
             new_id = geom_db.create_roi(new_name, "sphere", space, desc)
-            self.change_sphere(new_id, new_name)
-            self.save_sphere()
+            if len(self.__additional_spheres) == 0:
+                self.change_sphere(new_id, new_name,load=False)
+                self.save_sphere()
+            else:
+                self.__roi_id = new_id
+                self.__roi_name = new_name
+                self.save_sphere()
+                sphere_rois = set(self.__additional_spheres.keys())
+                sphere_rois.add(new_id)
+                spheres = [geom_db.get_roi_name(i) for i in sphere_rois]
+                self.ui.sphere_name_combo.clear()
+                for s in sorted(spheres):
+                    self.ui.sphere_name_combo.addItem(s, geom_db.get_roi_id(s))
+                self.ui.sphere_name_combo.insertSeparator(
+                    self.ui.sphere_name_combo.count())
+                self.ui.sphere_name_combo.addItem("<Multiple spheres>", None)
+                prev_idx = self.ui.sphere_name_combo.findText(new_name)
+                self.ui.sphere_name_combo.setCurrentIndex(prev_idx)
+                self.set_additional_spheres(
+                    geom_db.get_roi_id(s) for s in spheres)
 
-    def change_sphere(self, roi_id, roi_name):
+    def change_sphere(self, roi_id, roi_name,load=True):
         self.__roi_id = roi_id
         self.__roi_name = roi_name
         self.__curent_space = geom_db.get_roi_space(name=roi_name).title()
@@ -1184,9 +1203,12 @@ class BuildRoiApp(QMainWindow):
         self.ui.sphere_name_combo.insertSeparator(2)
         self.ui.sphere_name_combo.addItem("<Multiple spheres>", None)
         self.refresh_checked()
+        if load:
+            self.reload_sphere()
         self.show_fibers()
 
     def switch_sphere_dialog(self):
+        assert len(self.__additional_spheres) == 0
         dialog = LoadRoiDialog()
         res = dialog.exec_()
         if res == dialog.Accepted:
@@ -1282,17 +1304,21 @@ class BuildRoiApp(QMainWindow):
                 self.ui.sphere_name_combo.insertSeparator(
                     self.ui.sphere_name_combo.count())
                 self.ui.sphere_name_combo.addItem("<Multiple spheres>", None)
+                if last_checked is None:
+                    prev_idx = self.ui.sphere_name_combo.findText(self.__roi_name)
+                else:
+                    prev_idx = self.ui.sphere_name_combo.findText(last_checked)
+                self.ui.sphere_name_combo.setCurrentIndex(prev_idx)
                 self.set_additional_spheres(
                     geom_db.get_roi_id(s) for s in spheres)
-            if last_checked is None:
-                prev_idx = self.ui.sphere_name_combo.findText(self.__roi_name)
-            else:
-                prev_idx = self.ui.sphere_name_combo.findText(last_checked)
-            self.ui.sphere_name_combo.setCurrentIndex(prev_idx)
 
     def set_additional_spheres(self, roi_ids):
-        current_spheres = set(self.__additional_spheres.keys())
         requested_spheres = set(roi_ids)
+        assert self.__roi_id in requested_spheres
+        if len(requested_spheres) == 1:
+            requested_spheres = set()
+        current_spheres = set(self.__additional_spheres.keys())
+
         obsolete_spheres = current_spheres - requested_spheres
         new_spheres = requested_spheres - current_spheres
         for s in obsolete_spheres:
@@ -1305,6 +1331,11 @@ class BuildRoiApp(QMainWindow):
         self.show_fibers()
 
     def refresh_additional_spheres(self):
+        if len(self.__additional_spheres)==0:
+            self.ui.actionSwitch_sphere.setEnabled(True)
+            return
+        else:
+            self.ui.actionSwitch_sphere.setEnabled(False)
         for i, s in self.__additional_spheres.iteritems():
             if i == self.__roi_id:
                 s.hide()
