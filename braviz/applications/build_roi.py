@@ -394,12 +394,30 @@ class MultipleRoiDialog(QDialog):
         self.model = None
         self.reload_list()
         self.model.checked = tuple(initial_names_set) + (current_roi_name,)
+        if len(self.model.checked) == 1:
+            self.model.disabled_items = (self.current_roi_name,)
+        self.last_checked=None
 
         self.ui.tableView.setModel(self.model)
         self.new_button = QtGui.QPushButton("New Sphere")
         self.new_button.clicked.connect(self.show_new_sphere_dialog)
         self.ui.buttonBox.addButton(
             self.new_button, self.ui.buttonBox.ActionRole)
+        self.model.dataChanged.connect(self.item_changed)
+        self.connect(self.model,QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),self.item_changed)
+
+    def item_changed(self,top_left,bottom_right):
+        if top_left.column()==0:
+            datum = self.model.data(top_left,QtCore.Qt.DisplayRole)
+            check = self.model.data(top_left,QtCore.Qt.CheckStateRole) == QtCore.Qt.Checked
+            if check:
+                self.last_checked = datum
+            if len(self.model.checked) == 1:
+                only_one_left = iter(self.model.checked).next()
+                self.model.disabled_items = (only_one_left,)
+            else:
+                self.model.disabled_items = tuple()
+
 
     def reload_list(self):
         spheres_df = geom_db.get_available_spheres_df(self.space)
@@ -408,7 +426,7 @@ class MultipleRoiDialog(QDialog):
                 spheres_df, string_columns={0, 1}, checks=True)
         else:
             self.model.set_df(spheres_df)
-        self.model.disabled_items = (self.current_roi_name,)
+
 
     def show_new_sphere_dialog(self):
         dialog = NewRoi(self.space)
@@ -1257,6 +1275,7 @@ class BuildRoiApp(QMainWindow):
             res = dialog.exec_()
             if res == dialog.Accepted:
                 spheres = dialog.model.checked
+                last_checked = dialog.last_checked
                 self.ui.sphere_name_combo.clear()
                 for s in sorted(spheres):
                     self.ui.sphere_name_combo.addItem(s, geom_db.get_roi_id(s))
@@ -1265,7 +1284,10 @@ class BuildRoiApp(QMainWindow):
                 self.ui.sphere_name_combo.addItem("<Multiple spheres>", None)
                 self.set_additional_spheres(
                     geom_db.get_roi_id(s) for s in spheres)
-            prev_idx = self.ui.sphere_name_combo.findText(self.__roi_name)
+            if last_checked is None:
+                prev_idx = self.ui.sphere_name_combo.findText(self.__roi_name)
+            else:
+                prev_idx = self.ui.sphere_name_combo.findText(last_checked)
             self.ui.sphere_name_combo.setCurrentIndex(prev_idx)
 
     def set_additional_spheres(self, roi_ids):
