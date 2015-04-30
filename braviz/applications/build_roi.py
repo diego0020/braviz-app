@@ -509,6 +509,8 @@ class BuildRoiApp(QMainWindow):
         if self.__roi_id is not None:
             self.load_sphere(self.__current_subject)
 
+        self.__loading_sphere_from_db = False
+
         if self.__curent_space.lower() == "dartel":
             self.ui.optimize_button.setEnabled(0)
             self.ui.optimize_button.setToolTip("Not possible in dartel space")
