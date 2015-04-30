@@ -689,7 +689,7 @@ class NominalVariablesMeta(QAbstractTableModel):
         Args:
             var_name (str) : Read labels for this variable
         """
-        if self.var_name is None:
+        if var_name is None:
             # generic labels
             self.labels_list = range(1, 3)
             self.names_dict = {}

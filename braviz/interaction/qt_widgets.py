@@ -202,7 +202,6 @@ class MatplotWidget(FigureCanvas):
         self.fig.clear()
         if len(data) == 0:
             log.warning("Data Frame is empty")
-            return
         if isinstance(data, (pd.DataFrame, pd.Series)):
             assert pd.isnull(data).sum().sum() == 0
         elif isinstance(data, np.ndarray):
@@ -224,7 +223,7 @@ class MatplotWidget(FigureCanvas):
                 raise ValueError
         self.axes = self.fig.add_subplot(1, 1, 1)
         self.axes.clear()
-        self.draw()
+        #self.draw()
         self.axes.tick_params(
             'x', bottom='on', labelbottom='on', labeltop='off', top="off")
 

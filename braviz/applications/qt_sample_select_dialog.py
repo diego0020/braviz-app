@@ -337,26 +337,17 @@ class SampleCreateDilog(QtGui.QMainWindow):
         menu.exec_(global_pos)
 
     def create_indicator_variable(self):
+
         dialog = NewVariableDialog()
-
-        def set_values():
-            all_subjs = braviz_tab_data.get_subjects()
-            values = {}
-            sample = self.output_model.get_elements()
-            for s in all_subjs:
-                values[s] = 1 if s in sample else 0
-            dialog.nominal_model.set_labels_dict({0: "Out", 1: "In"})
-            dialog.values_model.set_values_dict(values)
-
-        def change_to_nominal_and_freeze():
-            dialog.nominal_model = braviz_models.NominalVariablesMeta(None)
-            dialog.ui.var_type_combo.setCurrentIndex(1)
-            dialog.create_meta_data_frame(1)
-            dialog.ui.var_type_combo.setEnabled(0)
-            QtCore.QTimer.singleShot(10, set_values)
-
-        QtCore.QTimer.singleShot(0, change_to_nominal_and_freeze)
-
+        dialog.ui.var_type_combo.setCurrentIndex(1)
+        dialog.ui.var_type_combo.setEnabled(0)
+        all_subjs = braviz_tab_data.get_subjects()
+        values = {}
+        sample = self.output_model.get_elements()
+        for s in all_subjs:
+            values[s] = 1 if s in sample else 0
+        dialog.values_model.set_values_dict(values)
+        dialog.override_nominal_labels({0: "Out", 1: "In"})
         dialog.exec_()
 
 
@@ -410,12 +401,23 @@ class AddFilterDialog(VariableSelectDialog):
         self.vars_list_model = braviz_models.VarListModel(checkeable=False)
         self.ui.tableView.setModel(self.vars_list_model)
         self.ui.tableView.activated.connect(self.update_right_side)
+        self.nominal_model = braviz_models.NominalVariablesMeta(None)
 
         self.data = None
         self.data_vals = None
         self.jitter = None
 
         self.finish_ui_setup()
+
+        #real details
+        self.ui.th_spin.valueChanged.connect(
+            self.update_limits_in_plot)
+
+        #nominal details
+        self.connect(self.nominal_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
+                     self.update_limits_in_plot)
+        self.nominal_model.dataChanged.connect(self.update_limits_in_plot)
+
 
     def setup_ui(self):
         self.ui = Ui_AddFilterDialog()
@@ -430,16 +432,10 @@ class AddFilterDialog(VariableSelectDialog):
         self.ui.select_button.setEnabled(True)
         super(AddFilterDialog, self).update_right_side(var_name)
 
-    def create_real_details(self):
+    def update_real_details(self):
         # print "creating real details"
-        details_ui = Ui_rational_details()
-        details_ui.setupUi(self.ui.details_frame)
-        self.details_ui = details_ui
-        self.details_ui.optimum_val.valueChanged.connect(
-            self.update_optimum_real_value)
         # try to read values from DB
-        db_values = braviz_tab_data.get_min_max_opt_values_by_name(
-            self.var_name)
+        db_values = braviz_tab_data.get_min_max_opt_values_by_name(self.var_name)
         if db_values is None:
             self.guess_max_min()
         else:
@@ -447,42 +443,34 @@ class AddFilterDialog(VariableSelectDialog):
             self.rational["max"] = db_values[1]
             self.rational["opt"] = db_values[2]
         self.set_real_controls()
-        self.details_ui.optimum_val.valueChanged.connect(
-            self.update_limits_in_plot)
-        self.details_ui.minimum_val.valueChanged.connect(
-            self.update_limits_in_plot)
-        self.details_ui.maximum_val.valueChanged.connect(
-            self.update_limits_in_plot)
-        self.details_ui.th_spin.valueChanged.connect(
-            self.update_limits_in_plot)
-        self.details_ui.th_spin.setValue(self.rational["opt"])
-        self.details_ui.th_spin.setMaximum(self.rational["max"])
-        self.details_ui.operation_combo.currentIndexChanged.connect(
+
+        self.ui.th_spin.setValue(self.rational["opt"])
+        self.ui.th_spin.setMaximum(self.rational["max"])
+        self.ui.operation_combo.currentIndexChanged.connect(
             self.update_limits_in_plot)
         self.update_plot(self.data)
         QtCore.QTimer.singleShot(20, self.update_limits_in_plot)
 
-    def create_nominal_details(self):
-        super(AddFilterDialog, self).create_nominal_details()
+    def update_nominal_details(self):
+        super(AddFilterDialog, self).update_nominal_details()
         self.nominal_model.set_checkeable(1)
-        self.nominal_model.dataChanged.connect(self.update_limits_in_plot)
-        self.connect(self.nominal_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
-                     self.update_limits_in_plot)
+
+
 
     def update_limits_in_plot(self, *args):
         if self.ui.var_type_combo.currentIndex() != 0:
             self.matplot_widget.add_max_min_opt_lines(None, None, None)
             self.filter_plot()
             return
-        mini = self.details_ui.minimum_val.value()
-        maxi = self.details_ui.maximum_val.value()
-        opti = self.details_ui.optimum_val.value()
+        mini = self.ui.minimum_val.value()
+        maxi = self.ui.maximum_val.value()
+        opti = self.ui.optimum_val.value()
         opti = mini + opti * (maxi - mini) / 100
         self.rational["max"] = maxi
         self.rational["min"] = mini
         self.rational["opt"] = opti
         self.matplot_widget.add_max_min_opt_lines(mini, opti, maxi)
-        threshold = self.details_ui.th_spin.value()
+        threshold = self.ui.th_spin.value()
         self.matplot_widget.add_threshold_line(threshold)
         self.filter_plot()
 
@@ -498,8 +486,8 @@ class AddFilterDialog(VariableSelectDialog):
             self.matplot_widget.add_grayed_scatter(
                 unchecked_data, unchecked_jitter)
         else:
-            th = self.details_ui.th_spin.value()
-            operation = self.details_ui.operation_combo.currentText()
+            th = self.ui.th_spin.value()
+            operation = self.ui.operation_combo.currentText()
             if operation == "<":
                 unselected = (self.data_vals >= th)
             elif operation == ">":
@@ -533,8 +521,8 @@ class AddFilterDialog(VariableSelectDialog):
                 "var_real"] = self.ui.var_type_combo.currentIndex() == 0
             if self.params_dict["var_real"]:
                 self.params_dict[
-                    "operation"] = self.details_ui.operation_combo.currentText()
-                self.params_dict["threshold"] = self.details_ui.th_spin.value()
+                    "operation"] = self.ui.operation_combo.currentText()
+                self.params_dict["threshold"] = self.ui.th_spin.value()
             else:
                 self.params_dict[
                     "checked_labels"] = self.nominal_model.get_checked()

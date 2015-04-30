@@ -85,7 +85,6 @@ class VariableSelectDialog(QtGui.QDialog):
         """remember to call finish_ui_setup() after setting up ui"""
         super(VariableSelectDialog, self).__init__()
         self.var_name = None
-        self.details_ui = None
         self.rational = {}
         self.matplot_widget = None
         self.data = np.zeros(0)
@@ -132,27 +131,13 @@ class VariableSelectDialog(QtGui.QDialog):
         # is_real=self.ui.var_type_combo.currentIndex()
         # print index
         # print "===="
-        self.clear_details_frame()
         if index == 0:
-            QtCore.QTimer.singleShot(0, self.create_real_details)
+            self.ui.details_frame.setCurrentIndex(1)
+            self.update_real_details()
         else:
-            QtCore.QTimer.singleShot(0, self.create_nominal_details)
+            self.ui.details_frame.setCurrentIndex(0)
+            self.update_nominal_details()
 
-    def clear_details_frame(self, layout=None):
-        if layout is None:
-            layout = self.ui.details_frame.layout()
-        if layout is None:
-            return
-        for i in reversed(xrange(layout.count())):
-            item = layout.takeAt(i)
-            if isinstance(item, QtGui.QWidgetItem):
-                item.widget().deleteLater()
-            elif isinstance(item, QtGui.QSpacerItem):
-                pass
-            else:
-                self.clearLayout(item.layout())
-
-        layout.deleteLater()
 
     def guess_max_min(self):
         data = self.data
@@ -167,36 +152,32 @@ class VariableSelectDialog(QtGui.QDialog):
         maxi = self.rational["max"]
         mini = self.rational["min"]
         medi = self.rational["opt"]
-        self.details_ui.maximum_val.setValue(maxi)
-        self.details_ui.minimum_val.setValue(mini)
-        self.details_ui.minimum_val.setMinimum(min(mini * 10, -100))
-        self.details_ui.maximum_val.setMinimum(min(mini * 10, -100))
+        self.ui.maximum_val.setValue(maxi)
+        self.ui.minimum_val.setValue(mini)
+        self.ui.minimum_val.setMinimum(min(mini * 10, -100))
+        self.ui.maximum_val.setMinimum(min(mini * 10, -100))
 
-        self.details_ui.minimum_val.setMaximum(max(maxi * 10, 1000))
-        self.details_ui.maximum_val.setMaximum(max(maxi * 10, 1000))
+        self.ui.minimum_val.setMaximum(max(maxi * 10, 1000))
+        self.ui.maximum_val.setMaximum(max(maxi * 10, 1000))
         try:
-            self.details_ui.optimum_val.setValue(
+            self.ui.optimum_val.setValue(
                 int((medi - mini) / (maxi - mini) * 100))
         except Exception:
-            self.details_ui.optimum_val.setValue(0)
+            self.ui.optimum_val.setValue(0)
         self.update_optimum_real_value()
 
     def update_optimum_real_value(self, perc_value=None):
         if perc_value is None:
-            perc_value = self.details_ui.optimum_val.value()
+            perc_value = self.ui.optimum_val.value()
         real_value = perc_value / 100 * \
             (self.rational["max"] - self.rational["min"]) + \
             self.rational["min"]
-        self.details_ui.optimum_real_value.setNum(real_value)
+        self.ui.optimum_real_value.setNum(real_value)
 
-    def create_real_details(self):
+    def update_real_details(self):
         log = logging.getLogger(__name__)
         log.info("creating real details")
-        details_ui = Ui_rational_details()
-        details_ui.setupUi(self.ui.details_frame)
-        self.details_ui = details_ui
-        self.details_ui.optimum_val.valueChanged.connect(
-            self.update_optimum_real_value)
+
         # try to read values from DB
         db_values = get_min_max_opt_values_by_name(self.var_name)
         if db_values is None:
@@ -206,15 +187,9 @@ class VariableSelectDialog(QtGui.QDialog):
             self.rational["max"] = db_values[1]
             self.rational["opt"] = db_values[2]
         self.set_real_controls()
-        self.details_ui.optimum_val.valueChanged.connect(
-            self.update_limits_in_plot)
-        self.details_ui.minimum_val.valueChanged.connect(
-            self.update_limits_in_plot)
-        self.details_ui.maximum_val.valueChanged.connect(
-            self.update_limits_in_plot)
         QtCore.QTimer.singleShot(0, self.update_limits_in_plot)
 
-    def create_nominal_details(self):
+    def update_nominal_details(self):
         var_name = self.var_name
         log = logging.getLogger(__name__)
         log.info("creating nominal details")
@@ -222,10 +197,7 @@ class VariableSelectDialog(QtGui.QDialog):
             self.nominal_model = braviz_models.NominalVariablesMeta(var_name)
         else:
             self.nominal_model.update_model(var_name)
-        details_ui = Ui_nominal_details_frame()
-        details_ui.setupUi(self.ui.details_frame)
-        details_ui.labels_names_table.setModel(self.nominal_model)
-        self.details_ui = details_ui
+        self.ui.labels_names_table.setModel(self.nominal_model)
         QtCore.QTimer.singleShot(0, self.update_limits_in_plot)
 
     def finish_ui_setup(self):
@@ -241,15 +213,28 @@ class VariableSelectDialog(QtGui.QDialog):
         self.ui.tableView.customContextMenuRequested.connect(
             self.show_delete_menu)
 
+        self.ui.details_frame.setCurrentIndex(1)
+
+        #Real details
+        self.ui.optimum_val.valueChanged.connect(
+            self.update_limits_in_plot)
+        self.ui.minimum_val.valueChanged.connect(
+            self.update_limits_in_plot)
+        self.ui.maximum_val.valueChanged.connect(
+            self.update_limits_in_plot)
+        self.ui.optimum_val.valueChanged.connect(
+            self.update_optimum_real_value)
+
+        self.ui.optimum_val.valueChanged.connect(self.ui.horizontalSlider.setValue)
+        self.ui.horizontalSlider.valueChanged.connect(self.ui.optimum_val.setValue)
+
     def update_limits_in_plot(self, *args):
         if self.ui.var_type_combo.currentIndex() != 0:
             self.matplot_widget.add_max_min_opt_lines(None, None, None)
             return
-        if self.details_ui is None:
-            return
-        mini = self.details_ui.minimum_val.value()
-        maxi = self.details_ui.maximum_val.value()
-        opti = self.details_ui.optimum_val.value()
+        mini = self.ui.minimum_val.value()
+        maxi = self.ui.maximum_val.value()
+        opti = self.ui.optimum_val.value()
         opti = mini + opti * (maxi - mini) / 100
         self.rational["max"] = maxi
         self.rational["min"] = mini
@@ -767,6 +752,7 @@ class NewVariableDialog(QtGui.QDialog):
 
     The dialog attempts to save the variable into the database, and if it fails shows an error message and lets the user
     change the variable name
+
     """
 
     def __init__(self):
@@ -775,12 +761,14 @@ class NewVariableDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.ui.var_type_combo.currentIndexChanged.connect(
             self.create_meta_data_frame)
-        self.details_ui = None
-        self.nominal_model = None
+        self.nominal_model = braviz_models.NominalVariablesMeta(None)
         # self.clear_details_frame():
         initial_nominal = 0
-        self.create_real_details()
         self.ui.var_type_combo.setCurrentIndex(initial_nominal)
+        if initial_nominal:
+            self.ui.details_frame.setCurrentIndex(0)
+        else:
+            self.ui.details_frame.setCurrentIndex(1)
         # self.create_meta_data_frame(initial_nominal)
         self.values_model = braviz_models.NewVariableValues()
         self.ui.values_table.setModel(self.values_model)
@@ -788,65 +776,47 @@ class NewVariableDialog(QtGui.QDialog):
             self.activate_save_button)
         self.ui.save_button.clicked.connect(self.save_new_variable)
 
-    def create_meta_data_frame(self, is_nominal):
-        self.clear_details_frame()
-        if is_nominal == 0:
-            # real
-            QtCore.QTimer.singleShot(0, self.create_real_details)
-        else:
-            QtCore.QTimer.singleShot(0, self.create_nominal_details)
+        #real details
+        self.ui.optimum_val.valueChanged.connect(self.update_optimum_real_value)
 
-    def create_real_details(self):
-        # print "creating real details"
-        details_ui = Ui_rational_details()
-        details_ui.setupUi(self.ui.details_frame)
-        self.details_ui = details_ui
-        self.details_ui.optimum_val.valueChanged.connect(
-            self.update_optimum_real_value)
+        #Nominal details
+        self.ui.labels_names_table.setModel(self.nominal_model)
+        add_label_button = QtGui.QPushButton("Add Label")
+        self.ui.verticalLayout.addWidget(add_label_button)
+        add_label_button.clicked.connect(self.nominal_model.add_label)
+
+
+    def create_meta_data_frame(self, is_nominal):
+        if is_nominal == 0:
+            self.ui.details_frame.setCurrentIndex(1)
+            self.setup_real_details()
+        else:
+            self.ui.details_frame.setCurrentIndex(0)
+            self.setup_nominal_details()
+
+    def setup_real_details(self):
         # try to read values from DB
-        self.details_ui.maximum_val.setValue(100)
-        self.details_ui.minimum_val.setValue(0)
-        self.details_ui.optimum_val.setValue(50)
+        self.ui.maximum_val.setValue(100)
+        self.ui.minimum_val.setValue(0)
+        self.ui.optimum_val.setValue(50)
         self.update_optimum_real_value()
 
-    def create_nominal_details(self):
+    def setup_nominal_details(self):
         # print "creating details"
+        self.nominal_model.update_model(None)
+
+    def override_nominal_labels(self, labels_dict):
         if self.nominal_model is None:
-            self.nominal_model = braviz_models.NominalVariablesMeta(None)
-        else:
-            self.nominal_model.update_model(None)
-        details_ui = Ui_nominal_details_frame()
-        details_ui.setupUi(self.ui.details_frame)
-
-        details_ui.labels_names_table.setModel(self.nominal_model)
-        add_label_button = QtGui.QPushButton("Add Label")
-        details_ui.verticalLayout.addWidget(add_label_button)
-        add_label_button.clicked.connect(self.nominal_model.add_label)
-        self.details_ui = details_ui
-
-    def clear_details_frame(self, layout=None):
-        if layout is None:
-            layout = self.ui.details_frame.layout()
-        if layout is None:
             return
-        for i in reversed(xrange(layout.count())):
-            item = layout.takeAt(i)
-            if isinstance(item, QtGui.QWidgetItem):
-                item.widget().deleteLater()
-            elif isinstance(item, QtGui.QSpacerItem):
-                pass
-            else:
-                self.clearLayout(item.layout())
-
-        layout.deleteLater()
+        self.nominal_model.set_labels_dict(labels_dict)
 
     def update_optimum_real_value(self, perc_value=None):
-        maxi = self.details_ui.maximum_val.value()
-        mini = self.details_ui.minimum_val.value()
+        maxi = self.ui.maximum_val.value()
+        mini = self.ui.minimum_val.value()
         if perc_value is None:
-            perc_value = self.details_ui.optimum_val.value()
+            perc_value = self.ui.optimum_val.value()
         real_value = perc_value / 100 * (maxi - mini) + mini
-        self.details_ui.optimum_real_value.setNum(real_value)
+        self.ui.optimum_real_value.setNum(real_value)
 
     def activate_save_button(self):
         if len(str(self.ui.var_name_input.text())) > 0:
@@ -864,9 +834,9 @@ class NewVariableDialog(QtGui.QDialog):
 
         # add meta data
         if is_real:
-            mini = self.details_ui.minimum_val.value()
-            maxi = self.details_ui.maximum_val.value()
-            opti = self.details_ui.optimum_val.value()
+            mini = self.ui.minimum_val.value()
+            maxi = self.ui.maximum_val.value()
+            opti = self.ui.optimum_val.value()
             opti = mini + opti * (maxi - mini) / 100
             save_real_meta(var_idx, mini, maxi, opti)
         else:
