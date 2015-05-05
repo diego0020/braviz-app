@@ -289,7 +289,7 @@ class AnovaApp(QMainWindow):
             log.warning("Anova Error")
             log.exception(e)
             msg.exec_()
-            # raise
+            #raise
         else:
             self.result_model = braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)

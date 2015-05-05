@@ -47,7 +47,7 @@ def import_or_error(lib_name):
         lib_name (str) : Name of an R package
     """
     try:
-        lib = importr(lib_name)
+        lib = importr(lib_name,robject_translations={"format_perc": "format_perc_2"})
     except rpy2.rinterface.RRuntimeError:
         print("please install %s from R" % lib_name)
         log = logging.getLogger(__name__)
