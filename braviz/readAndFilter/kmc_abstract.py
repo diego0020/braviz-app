@@ -310,8 +310,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
             if image_name is None:
                 log.error("Either index or name is required")
                 raise Exception("Either index or name is required")
+            image_name = image_name.upper()
             assert image_name in self._available_images
-            return self._get_img(image_name, subj, space, kw)
+            return self._get_img(image_name, subj, space, **kw)
         elif data == "DTI":
             return self._get_img(data, subj, space,  **kw)
         elif data == 'IDS':
@@ -333,6 +334,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
             if map_name is None:
                 log.error("Either index or name is required")
                 raise Exception("Either index or name is required")
+            map_name = map_name.upper()
             assert map_name in self._available_maps
             if kw.get('lut'):
                 if self._free_surfer_aparc_lut is None:
@@ -351,7 +353,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
             if space[:4] not in {'func', 'fmri'}:
                 log.warning(
                     "BOLD data is only available in the native fMRI space")
-            return self._read_bold(subj, kw['name'])
+            pdgm = kw.get('name')
+            if pdgm is None:
+                log.error("Paradigm is required")
+                raise Exception("Paradigm is required")
+            assert pdgm in self._functional_paradigms
+            return self._read_bold(subj, pdgm)
         elif data == "TRACULA":
             return self._read_tracula(subj, space, **kw)
         else:
@@ -638,7 +645,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                     fibers, color_fun)
             elif color == 'fa':
                 color_fun = braviz.readAndFilter.color_fibers.color_by_fa
-                fa_img = self.get('fa', subj, format='vtk', space="diff")
+                fa_img = self.get('image',subj, format='vtk', space="diff", name='fa')
                 fun_args = (fa_img,)
                 braviz.readAndFilter.color_fibers.color_fibers_pts(
                     fibers, color_fun, *fun_args)
@@ -651,29 +658,29 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 braviz.readAndFilter.color_fibers.color_fibers_lines(
                     fibers, color_fun)
             elif scalars == "fa_p":
-                fa_img = self.get("FA", subj, space="diff")
+                fa_img = self.get("IMAGE", subj, space="diff", name="fa")
                 braviz.readAndFilter.color_fibers.scalars_from_image(
                     fibers, fa_img)
             elif scalars == "fa_l":
-                fa_img = self.get("FA", subj, space="diff")
+                fa_img = self.get("IMAGE", subj, space="diff", name="fa")
                 braviz.readAndFilter.color_fibers.scalars_lines_from_image(
                     fibers, fa_img)
             elif scalars == "md_p":
-                md_img = self.get("MD", subj, space="diff")
+                md_img = self.get("IMAGE", subj, space="diff", name="MD")
                 braviz.readAndFilter.color_fibers.scalars_from_image(
                     fibers, md_img)
             elif scalars == "md_l":
-                md_img = self.get("MD", subj, space="diff")
+                md_img = self.get("IMAGE", subj, space="diff", name="MD")
                 braviz.readAndFilter.color_fibers.scalars_lines_from_image(
                     fibers, md_img)
             elif scalars == "length":
                 braviz.readAndFilter.color_fibers.scalars_from_length(fibers)
             elif scalars == "aparc":
-                aparc_img = self.get("APARC", subj, space="diff")
+                aparc_img = self.get("LABEL", subj, space="diff", name="APARC")
                 braviz.readAndFilter.color_fibers.scalars_from_image_int(
                     fibers, aparc_img)
             elif scalars == "wmparc":
-                wmparc_img = self.get("WMPARC", subj, space="diff")
+                wmparc_img = self.get("LABEL", subj, space="diff", name="WMPARC")
                 braviz.readAndFilter.color_fibers.scalars_from_image_int(
                     fibers, wmparc_img)
             else:
@@ -1005,7 +1012,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         elif space == 'spharm':
             # This is very hacky.... but works well, not explanation available
             # :S
-            aparc_img = self.get('aparc', subj)
+            aparc_img = self.get('image', subj, name="aparc")
             m = aparc_img.get_affine()
             m2 = np.copy(m)
             m2[0, 3] = 0
@@ -1034,10 +1041,10 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if color_dict is None:
             conf = config_file.get_apps_config()
             ref = conf.get_default_subject()
-            aparc_img = self.get('APARC', ref)
+            aparc_img = self.get('image', ref, name="aparc")
             aparc_data = aparc_img.get_data()
             aparc_values = set(np.unique(aparc_data.flat))
-            wmparc_img = self.get("WMPARC", ref)
+            wmparc_img = self.get("image", ref, name="wmparc")
             wmparc_data = wmparc_img.get_data()
             wmparc_values = np.unique(wmparc_data.flat)
             aparc_values.update(wmparc_values)
@@ -1169,7 +1176,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if space[:4] == 'func':
             return vtk_z_map
 
-        T1_world = self.get('mri', subject, format='vtk', space='world')
+        T1_world = self.get("image", subject, format='vtk', space='world', name='mri')
         origin2 = T1_world.GetOrigin()
         dimension2 = T1_world.GetDimensions()
         spacing2 = T1_world.GetSpacing()

@@ -64,6 +64,18 @@ def _test_arrow(head, tail):
     iren.Start()
 
 
+def estimate_window_level(image):
+    """
+    Estimates appropriate window and level values for the given image
+    """
+    hist = vtk.vtkImageHistogramStatistics()
+    hist.SetInputData(image)
+    hist.Update()
+    x0, xf = hist.GetAutoRange()
+    window = xf - x0
+    level = (xf + x0)*0.5
+    return window, level
+
 class SimpleVtkViewer(object):
 
     """A very simple windows with vtk renderers and interactors.

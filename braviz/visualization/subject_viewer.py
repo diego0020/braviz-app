@@ -25,7 +25,7 @@ from PyQt4 import QtCore
 from PyQt4.QtGui import QFrame, QHBoxLayout, QApplication
 from PyQt4.QtCore import pyqtSignal
 
-from braviz.visualization.simple_vtk import OrientationAxes, persistentImagePlane, cursors
+from braviz.visualization.simple_vtk import OrientationAxes, persistentImagePlane, cursors, estimate_window_level
 from braviz.visualization.fmri_view import fMRI_blender
 
 from braviz.interaction.structure_metrics import solve_laterality
@@ -574,14 +574,13 @@ class ImageManager(object):
             initial_subj = conf.get_default_subject()
         self.__current_subject = initial_subj
         self.__current_space = initial_space
-        self.__current_image = None
+        self.__current_image_class = None
+        self.__current_image_name = None
         self.__current_contrast = None
         self.__current_image_orientation = 0
-        self.__curent_fmri_paradigm = None
-        self.__current_mri_window_level = None
-        self.__current_fa_window_level = None
+        self.__past_window_levels = {}
         self.__image_plane_widget = None
-        self.__mri_lut = None
+        self.__window_level_lut = vtk.vtkWindowLevelLookupTable()
         self.__fmri_blender = fMRI_blender()
         self.__widget = widget
         self.__outline_filter = None
@@ -616,7 +615,7 @@ class ImageManager(object):
         """
         self.__hidden = False
         self.change_image_modality(
-            self.__current_image, self.__curent_fmri_paradigm, True, self.__current_contrast)
+            self.__current_image_class, self.__current_image_name, True, self.__current_contrast)
 
     @do_and_render
     def _create_image_plane_widget(self):
@@ -630,8 +629,8 @@ class ImageManager(object):
             self.__current_image_orientation)
         self.__image_plane_widget.SetInteractor(self.iren)
         self.__image_plane_widget.On()
-        self.__mri_lut = vtk.vtkWindowLevelLookupTable()
-        self.__mri_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
+        self.__window_level_lut = vtk.vtkWindowLevelLookupTable()
+        self.__window_level_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
 
         def slice_change_handler(source, event):
             new_slice = self.__image_plane_widget.GetSliceIndex()
@@ -671,7 +670,7 @@ class ImageManager(object):
         """
         self.__current_subject = new_subject
         if not self.__hidden:
-            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
+            self.change_image_modality(self.__current_image_class, self.__current_image_name, force_reload=True,
                                        contrast=self.__current_contrast)
 
     @do_and_render
@@ -685,46 +684,50 @@ class ImageManager(object):
             return
         self.__current_space = new_space
         if not self.__hidden:
-            self.change_image_modality(self.__current_image, self.__curent_fmri_paradigm, force_reload=True,
+            self.change_image_modality(self.__current_image_class, self.__current_image_name, force_reload=True,
                                        skip_render=True)
 
     @do_and_render
-    def change_image_modality(self, modality, paradigm=None, force_reload=False, contrast=1):
+    def change_image_modality(self, image_class, image_name, force_reload=False, contrast=1):
         """Changes the modality of the current image;
 
         In the case of fMRI modality should be fMRI and paradigm the name of the paradigm
 
         Args:
-            modality (str) : New image modality, may be one of  ``["mri","fa","md","dti","aparc","wmparc","fmri"]``
-            paradigm (str) : Name of paradigm in case modality is ``"fmri"``
+            image_class (str) : New image class, may be one of  ``["image","label","dti","fmri"]``
+            image_name (str) : New image modality name. Use ``None`` if *image_class* is ``"dti"``,
+                otherwise it should be inside the index of the given class.
+                In case of *FMRI* the paradigm should be entered here
+                See :meth:`~braviz.readAndFilter.base_reader.BaseReader.get`
             force_reload (bool) : if True, forces the plane to reload the image if it appears to be the same as before
-            contrast (int) : contrast to show in case modality is ``"fmri"``
+            contrast (int) : contrast to show in case image_class is ``"fmri"``
 
         """
 
-        if modality is not None:
-            modality = modality.upper()
+        if image_name is not None:
+            image_name = image_name.upper()
 
-        if (self.__current_image is not None) and (modality == self.__current_image) and (
-            paradigm == self.__curent_fmri_paradigm) and (contrast == self.__current_contrast) and \
-                not force_reload:
+        if image_class is not None:
+            image_class = image_class.upper()
+
+        if (self.__current_image_class is not None) and (image_class == self.__current_image_class) and \
+            (contrast == self.__current_contrast) and \
+            (self.__current_image_name == image_name) and not force_reload:
             # nothing to do
             return
 
-        # save previous state
-        if (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
-            if (self.__current_image == "MRI" or self.__current_image == "MD") and (
-                    self.__current_mri_window_level is not None):
-                self.__image_plane_widget.GetWindowLevel(
-                    self.__current_mri_window_level)
-            elif (self.__current_image == "FA") and (self.__current_fa_window_level is not None):
-                self.__image_plane_widget.GetWindowLevel(
-                    self.__current_fa_window_level)
+        # save window and level values (only for standard image class)
+        if self.__current_image_class == "IMAGE" and \
+            (self.__image_plane_widget is not None) and self.__image_plane_widget.GetEnabled():
+            window_level = [0, 0]
+            self.__image_plane_widget.GetWindowLevel(window_level)
+            self.__past_window_levels[self.__current_image_name] = window_level
 
-        self.__current_image = modality
+        self.__current_image_name = image_name
+        self.__current_image_class = image_class
         self.__current_contrast = contrast
 
-        if modality is None:
+        if image_class is None:
             if self.__image_plane_widget is not None:
                 self.__image_plane_widget.Off()
             return
@@ -739,13 +742,13 @@ class ImageManager(object):
         # update image labels:
         log = logging.getLogger(__name__)
         try:
-            if modality == "WMPARC":
+            if image_name == "WMPARC":
                 ref = "WMPARC"
             else:
                 ref = "APARC"
-            aparc_img = self.reader.get(
-                ref, self.__current_subject, format="VTK", space=self.__current_space)
-            aparc_lut = self.reader.get(ref, self.__current_subject, lut=True)
+            aparc_img = self.reader.get("LABEL", self.__current_subject, name=ref,
+                                        format="VTK", space=self.__current_space)
+            aparc_lut = self.reader.get("LABEL", self.__current_subject, name=ref, lut=True)
             self.__image_plane_widget.addLabels(aparc_img)
             self.__image_plane_widget.setLabelsLut(aparc_lut)
         except Exception as e:
@@ -754,32 +757,32 @@ class ImageManager(object):
             # raise Exception("Aparc not available")
             self.__image_plane_widget.addLabels(None)
 
-        if modality == "FMRI":
+        if image_class == "FMRI":
+            mri_image = self.reader.get("IMAGE", self.__current_subject, format="VTK", name="MRI",
+                                        space=self.__current_space)
             try:
-                mri_image = self.reader.get(
-                    "MRI", self.__current_subject, format="VTK", space=self.__current_space)
                 fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
-                                             name=paradigm, contrast=contrast)
+                                             name=image_name, contrast=contrast)
             except Exception:
                 fmri_image = None
-                log.warning("FMRI IMAGE NOT FOUND pdgm = %s" % paradigm)
+                log.warning("FMRI IMAGE NOT FOUND pdgm = %s" % image_name)
 
             if fmri_image is None:
                 self.image_plane_widget.Off()
                 # raise
                 raise Exception(
-                    "%s not available for subject %s" % (paradigm, self.__current_subject))
+                    "%s not available for subject %s" % (image_name, self.__current_subject))
             fmri_lut = self.reader.get(
                 "fMRI", self.__current_subject, lut=True)
-            if self.__current_mri_window_level is None:
-                # we need to load the mri image first to get a valid
-                # window_level
-                self.__image_plane_widget.SetLookupTable(self.__mri_lut)
-                self.__image_plane_widget.SetInputData(mri_image)
-                self.__current_mri_window_level = [0, 0]
-                self.reset_window_level(skip_render=True)
+            # we need to load the mri image first to get a valid
+            # window_level
+            w_l = self.__past_window_levels.get("MRI")
+            if w_l is None:
+                w_l = estimate_window_level(mri_image)
+            self.__window_level_lut.SetWindow(w_l[0])
+            self.__window_level_lut.SetLevel(w_l[1])
 
-            self.__fmri_blender.set_luts(self.__mri_lut, fmri_lut)
+            self.__fmri_blender.set_luts(self.__window_level_lut, fmri_lut)
             new_image = self.__fmri_blender.set_images(mri_image, fmri_image)
 
             self.__image_plane_widget.SetInputData(new_image)
@@ -787,19 +790,19 @@ class ImageManager(object):
 
             self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
-            self.__current_image = modality
-            self.__curent_fmri_paradigm = paradigm
+            self.__current_image_class = image_class
+            self.__current_image_name = image_name
             self.__image_plane_widget.text1_value_from_img(fmri_image)
             if not self.__hidden:
                 self.__image_plane_widget.On()
             return
 
-        elif modality == "DTI":
+        elif image_class == "DTI":
             try:
                 dti_image = self.reader.get(
                     "DTI", self.__current_subject, format="VTK", space=self.__current_space)
-                fa_image = self.reader.get(
-                    "FA", self.__current_subject, format="VTK", space=self.__current_space)
+                fa_image = self.reader.get("IMAGE", self.__current_subject, format="VTK", space=self.__current_space,
+                                           name="FA")
             except Exception:
                 log.warning("DTI, not available")
                 self.image_plane_widget.Off()
@@ -810,7 +813,7 @@ class ImageManager(object):
 
             self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
-            self.__current_image = modality
+            self.__current_image = image_name
             self.__image_plane_widget.text1_value_from_img(fa_image)
             if not self.__hidden:
                 self.__image_plane_widget.On()
@@ -819,8 +822,8 @@ class ImageManager(object):
         # Other images
         self.__image_plane_widget.text1_to_std()
         try:
-            new_image = self.reader.get(
-                modality, self.__current_subject, space=self.__current_space, format="VTK")
+            new_image = self.reader.get(image_class, self.__current_subject, space=self.__current_space,
+                                        name=image_name, format="VTK")
         except Exception:
             self.image_plane_widget.Off()
             raise
@@ -828,31 +831,18 @@ class ImageManager(object):
         self.__image_plane_widget.SetInputData(new_image)
         self.__outline_filter.SetInputData(new_image)
 
-        if modality == "MRI" or modality == "MD":
-            lut = self.__mri_lut
+        if image_class == "IMAGE":
+            lut = self.__window_level_lut
             self.__image_plane_widget.SetLookupTable(lut)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
-            if self.__current_mri_window_level is None:
-                self.__current_mri_window_level = [0, 0]
+            w_l = self.__past_window_levels.get(image_name)
+            if w_l is None:
                 self.reset_window_level(skip_render=True)
             else:
                 self.__image_plane_widget.SetWindowLevel(
-                    *self.__current_mri_window_level)
-        elif modality == "FA":
-            # lut = self.reader.get("FA", self.__current_subject, lut=True)
-            # self.__image_plane_widget.SetLookupTable(lut)
-            lut = self.__mri_lut
-            self.__image_plane_widget.SetLookupTable(lut)
-            self.__image_plane_widget.SetResliceInterpolateToCubic()
-            if self.__current_fa_window_level is None:
-                self.__current_fa_window_level = [0, 0]
-                self.reset_window_level(skip_render=True)
-            else:
-                self.__image_plane_widget.SetWindowLevel(
-                    *self.__current_fa_window_level)
-
-        elif modality in {"APARC", "WMPARC"}:
-            lut = self.reader.get("APARC", self.__current_subject, lut=True)
+                    *w_l)
+        elif image_class == "LABEL":
+            lut = self.reader.get("LABEL", self.__current_subject, lut=True, name=image_name)
             self.__image_plane_widget.SetLookupTable(lut)
 
             # Important:
@@ -968,30 +958,17 @@ class ImageManager(object):
             self.get_current_image_window(), new_level)
 
     @do_and_render
-    def reset_window_level(self):
+    def reset_window_level(self, _=None):
         """
         Resets window and level to standard values
         """
-
         if self.__image_plane_widget is None:
             return
-        if self.__current_image == "MRI" or self.__current_image == "MD" or self.__current_image == "FMRI":
-            if braviz.readAndFilter.PROJECT == "kmc40":
-                self.__image_plane_widget.SetWindowLevel(3000, 1500)
-            elif braviz.readAndFilter.PROJECT == "kmc400":
-                self.__image_plane_widget.SetWindowLevel(500, 200)
-            else:
-                raise Exception("Unknown project")
-            self.__image_plane_widget.GetWindowLevel(
-                self.__current_mri_window_level)
+        if self.__current_image_class == "IMAGE":
+            img = self.__image_plane_widget.GetInput()
+            window, level = estimate_window_level(img)
+            self.__image_plane_widget.SetWindowLevel(window, level)
             self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
-        elif self.__current_image == "FA":
-            self.__image_plane_widget.SetWindowLevel(1.20, 0.6)
-            self.__image_plane_widget.GetWindowLevel(
-                self.__current_fa_window_level)
-            self.__image_plane_widget.InvokeEvent("WindowLevelEvent")
-
-        return
 
 
 class ModelManager(object):

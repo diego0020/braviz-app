@@ -132,7 +132,7 @@ class SubjectOverviewApp(QMainWindow):
         self.change_subject(self.__curent_subject)
         self.vtk_viewer.change_current_space("Talairach", skip_render=True)
         try:
-            self.vtk_viewer.image.change_image_modality(
+            self.vtk_viewer.image.change_image_modality("IMAGE",
                 "MRI", skip_render=True)
         except Exception as e:
             self.show_error(e.message)
@@ -375,8 +375,14 @@ class SubjectOverviewApp(QMainWindow):
             return
 
         try:
-            if selection in ("MRI", "FA", "APARC", "WMPARC", "MD", "DTI"):
-                self.vtk_viewer.image.change_image_modality(selection)
+            if selection in ("MRI", "FA", "MD"):
+                self.vtk_viewer.image.change_image_modality("IMAGE", selection)
+                self.ui.contrast_combo.setEnabled(0)
+            elif selection in ("APARC", "WMPARC"):
+                self.vtk_viewer.image.change_image_modality("LABEL", selection)
+                self.ui.contrast_combo.setEnabled(0)
+            elif selection == "DTI":
+                self.vtk_viewer.image.change_image_modality(selection, None)
                 self.ui.contrast_combo.setEnabled(0)
             else:
                 self.ui.contrast_combo.setEnabled(1)

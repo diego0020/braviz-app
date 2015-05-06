@@ -70,28 +70,27 @@ data is requested. To get a more useful class you should create your own subclas
                 ===========  =====================================================
                 Ids          ids of all subjects in the study as a list
 
-                             *returns* a list of ids
+                             Returns a list of ids
                 -----------  -----------------------------------------------------
                 IMAGE        structural image of the given subject
-
                              requires ``name=<modality>``. The available modalities
-                             depend of the proyect, but some common values are
+                             depend of the project, but some common values are
                              MRI, FA, and MD.
 
-                             use ``index=True`` to get a list of available modalities.
+                             Use ``index=True`` to get a list of available modalities.
 
-                             All of these are single channel images. Other kinds are
-                             available under LABEL and DTI.
+                             All of these are single channel images.
+                             Other modalities
+                             may be available under DTI and Label.
 
-                             returns a nibabel image object, use ``format="VTK"`` to
+                             Returns a nibabel image object,
+                             use ``format="VTK"`` to
                              receive a vtkImageData instead.
-
                 -----------  -----------------------------------------------------
                 DTI          RGB DTI image
 
                              returns a nibabel image object, use ``format="VTK"`` to
                              receive a vtkImageData instead.
-
                 -----------  -----------------------------------------------------
                 Label        Read Label Map images
 
@@ -106,7 +105,6 @@ data is requested. To get a more useful class you should create your own subclas
                              receive a vtkImageData instead.
 
                              use ``lut=True`` to get a vtkLookupTable
-
                 -----------  -----------------------------------------------------
                 fMRI         SPM t-score map
 

@@ -117,7 +117,7 @@ This is done to protect raw data and to allow to share it between different user
         space = space.lower()
         if space == 'world':
             return img2
-        ref = self.get("mri", subj, space="world", format="vtk")
+        ref = self.get("image", subj, space="world", format="vtk",name="mri")
         origin = ref.GetOrigin()
         spacing = ref.GetSpacing()
         dims = ref.GetDimensions()
