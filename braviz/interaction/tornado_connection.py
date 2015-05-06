@@ -186,7 +186,8 @@ class WebSocketMessageHandler(tornado.websocket.WebSocketHandler):
         self.socket_manager.send_message(message)
 
     def on_close(self):
-        self.socket_manager.sockets.remove(self)
+        try:
+            self.socket_manager.sockets.remove(self)
+        except KeyError:
+            pass
 
-    def get(self, *args, **kwargs):
-        self.send_error(400)
