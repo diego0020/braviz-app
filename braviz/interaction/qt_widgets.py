@@ -114,7 +114,7 @@ class ListValidator(QtGui.QValidator):
             if len(str_value) == 0:
                 return QtGui.QValidator.Intermediate, p_int
             try:
-                i = int(str_value)
+                _ = int(str_value)
             except Exception:
                 return QtGui.QValidator.Invalid, p_int
             else:

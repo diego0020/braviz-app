@@ -130,7 +130,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         attrs = list(data.columns[1:-1])
         attrs_json = json.dumps(attrs)
         self.render("parallel_coordinates.html", data=json_data, caths=caths_json, vars=attrs_json, cath_name=col0,
-                    missing=missing, background_opac=5.0 / len(data2))
+                    missing=missing, background_opac=50.0 / len(data2))
 
     def post(self, *args, **kwargs):
         name = self.get_body_argument("sample_name")
