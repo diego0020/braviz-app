@@ -72,40 +72,41 @@ data is requested. To get a more useful class you should create your own subclas
 
                              *returns* a list of ids
                 -----------  -----------------------------------------------------
-                MRI          structural image of the given subject
+                IMAGE        structural image of the given subject
+
+                             requires ``name=<modality>``. The available modalities
+                             depend of the proyect, but some common values are
+                             MRI, FA, and MD.
+
+                             use ``index=True`` to get a list of available modalities.
+
+                             All of these are single channel images. Other kinds are
+                             available under LABEL and DTI.
 
                              returns a nibabel image object, use ``format="VTK"`` to
                              receive a vtkImageData instead.
 
-                -----------  -----------------------------------------------------
-                FA           fractional anisotropy image
-
-                             returns a nibabel image object, use ``format="VTK"`` to
-                             receive a vtkImageData instead.
-                -----------  -----------------------------------------------------
-                MD           Mean diffusivity image
-
-                             returns a nibabel image object, use ``format="VTK"`` to
-                             receive a vtkImageData instead.
                 -----------  -----------------------------------------------------
                 DTI          RGB DTI image
 
                              returns a nibabel image object, use ``format="VTK"`` to
                              receive a vtkImageData instead.
+
                 -----------  -----------------------------------------------------
-                Aparc        FreeSurfer Aparc (Auto Parcelation) image
+                Label        Read Label Map images
+
+                             requires ``name=<map>``. Some common maps are
+
+                             APARC: FreeSurfer Aparc (Auto Parcelation) image
+                             WMPARC: FreeSurfer WMParc (White Matter Parcelation) image
+
+                             use ``index=True`` to get a list of available maps
 
                              returns a nibabel image object, use ``format="VTK"`` to
                              receive a vtkImageData instead.
 
                              use ``lut=True`` to get a vtkLookupTable
-                -----------  -----------------------------------------------------
-                WMparc       FreeSurfer WMParc (White Matter Parcelation) image
 
-                             returns a nibabel image object, use ``format="VTK"`` to
-                             receive a vtkImageData instead.
-
-                             use ``lut=True`` to get a vtkLookupTable
                 -----------  -----------------------------------------------------
                 fMRI         SPM t-score map
 
@@ -248,8 +249,7 @@ data is requested. To get a more useful class you should create your own subclas
         Returns:
             Resliced image in world coordinate system
         """
-        subj = self._decode_subject(subj)
-        self.__raise_error()
+        raise NotImplementedError
 
     def move_img_from_world(self, img, target_space, subj, interpolate=False):
         """
@@ -263,8 +263,7 @@ data is requested. To get a more useful class you should create your own subclas
         Returns:
             Resliced image in *target_space* coordinates
         """
-        subj = self._decode_subject(subj)
-        self.__raise_error()
+        raise NotImplementedError
 
     def transform_points_to_space(self, point_set, space, subj, inverse=False):
         """
@@ -283,8 +282,7 @@ data is requested. To get a more useful class you should create your own subclas
         Returns:
             Transformed points
         """
-        subj = self._decode_subject(subj)
-        self.__raise_error()
+        raise NotImplementedError
 
     def clear_mem_cache(self):
         """
@@ -440,13 +438,11 @@ data is requested. To get a more useful class you should create your own subclas
     def _get(self, data, subj=None, space='world', **kw):
         """Internal: decode instruction and dispatch"""
         data = data.upper()
-        if data == 'MRI':
-            self.__raise_error()
-        elif data == "MD":
+        if data == 'IMAGE':
+            if kw.get("index"):
+                return []
             self.__raise_error()
         elif data == "DTI":
-            self.__raise_error()
-        elif data == 'FA':
             self.__raise_error()
         elif data == 'IDS':
             return []
@@ -464,7 +460,9 @@ data is requested. To get a more useful class you should create your own subclas
             self.__raise_error()
         elif data == 'TENSORS':
             self.__raise_error()
-        elif data in {"APARC", "WMPARC"}:
+        elif data == "LABEL":
+            if kw.get("index"):
+                return []
             self.__raise_error()
         elif data == "FMRI":
             if kw.get("index"):

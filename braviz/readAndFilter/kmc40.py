@@ -51,6 +51,7 @@ The constructor requires the root to this structure
     def __init__(self, path, max_cache=2000):
         """The path pointing to the __root of the file structure must be set here"""
         KmcAbstractReader.__init__(self, path, path, max_cache)
+        self._available_images = frozenset(("MRI", "FA", "MD"))
         self._functional_paradigms = frozenset(("PRECISION", "POWERGRIP"))
         self._named_bundles = frozenset(("cortico_spinal_l", "cortico_spinal_r", "cortico_spinal_n", "cortico_spinal_d",
                                          "corpus_callosum"))
@@ -69,31 +70,31 @@ The constructor requires the root to this structure
             subj = "0" * (3 - len(subj)) + subj
         return subj
 
-    def _getImg(self, data, subj, space,  **kw):
+    def _get_img(self, image_name, subj, space,  **kw):
         """Auxiliary function to read nifti images"""
         # path=self.getDataRoot()+'/'+subj+'/MRI'
-        if data == 'MRI':
+        if image_name == 'MRI':
             path = os.path.join(self.get_data_root(), subj, 'MRI')
             filename = '%s-MRI-full.nii.gz' % subj
-        elif data == 'FA':
+        elif image_name == 'FA':
             path = os.path.join(self.get_data_root(), subj, 'camino')
             if space.startswith('diff'):
                 filename = 'FA_masked.nii.gz'
             else:
                 filename = 'FA_mri_masked.nii.gz'
-        elif data == "MD":
+        elif image_name == "MD":
             path = os.path.join(self.get_data_root(), subj, 'camino')
             if space.startswith('diff'):
                 filename = 'MD_masked.nii.gz'
             else:
                 filename = 'MD_mri_masked.nii.gz'
-        elif data == "DTI":
+        elif image_name == "DTI":
             path = os.path.join(self.get_data_root(), subj, 'camino')
             if space.startswith('diff'):
                 filename = 'rgb_dti_masked.nii.gz'
             else:
                 filename = 'rgb_dti_mri_masked.nii.gz'
-        elif data == 'APARC':
+        elif image_name == 'APARC':
             path = os.path.join(self.get_data_root(), subj, 'Models')
             if kw.get("wm"):
                 log = logging.getLogger(__name__)
@@ -102,13 +103,13 @@ The constructor requires the root to this structure
                 filename = 'wmparc.nii.gz'
             else:
                 filename = 'aparc+aseg.nii.gz'
-        elif data == "WMPARC":
+        elif image_name == "WMPARC":
             path = os.path.join(self.get_data_root(), subj, 'Models3')
             filename = 'wmparc.nii.gz'
         else:
             log = logging.getLogger(__name__)
-            log.error('Unknown image type %s' % data)
-            raise Exception('Unknown image type %s' % data)
+            log.error('Unknown image type %s' % image_name)
+            raise Exception('Unknown image type %s' % image_name)
         wholeName = os.path.join(path, filename)
         try:
             img = nib.load(wholeName)
@@ -119,11 +120,11 @@ The constructor requires the root to this structure
             raise (Exception('File not found'))
 
         if kw.get('format', '').upper() == 'VTK':
-            if data == "MD":
+            if image_name == "MD":
                 img_data = img.get_data()
                 img_data *= 1e12
                 vtkImg = numpy2vtk_img(img_data)
-            elif data == "DTI":
+            elif image_name == "DTI":
                 vtkImg = nifti_rgb2vtk(img)
             else:
                 vtkImg = nibNii2vtk(img)
@@ -131,18 +132,18 @@ The constructor requires the root to this structure
                 return vtkImg
 
             interpolate = True
-            if data in {'APARC', "WMPARC"}:
+            if image_name in {'APARC', "WMPARC"}:
                 interpolate = False
                 # print "turning off interpolate"
 
             img2 = applyTransform(
                 vtkImg, transform=inv(img.get_affine()), interpolate=interpolate)
 
-            if space == "diff" and (data in {"FA", "MD", "DTI"}):
+            if space == "diff" and (image_name in {"FA", "MD", "DTI"}):
                 return img2
             return self._move_img_from_world(subj, img2, interpolate, space=space)
 
-        if space == "diff" and (data in {"FA", "MD", "DTI"}):
+        if space == "diff" and (image_name in {"FA", "MD", "DTI"}):
             return img
         elif space == "world":
             return img

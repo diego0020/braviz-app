@@ -71,6 +71,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
         self._free_surfer_lut = None
         self._free_surfer_labels = None
 
+        self._available_images = frozenset()
+        self._available_maps = frozenset(("APARC", "WMPARC"))
         self._functional_paradigms = frozenset()
         self._named_bundles = frozenset()
         self._tracula_bundles = []
@@ -214,7 +216,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
     def _decode_subject(self, subj):
         raise NotImplementedError
 
-    def _getImg(self, data, subj, space, **kw):
+    def _get_img(self, image_name, subj, space, **kw):
         """Auxiliary function to read nifti images"""
         raise NotImplementedError
 
@@ -298,20 +300,20 @@ A read and filter class designed to work with kmc projects. Implements common fu
         """Internal: decode instruction and dispatch"""
         data = data.upper()
         space = space.lower()
+        log = logging.getLogger(__name__)
         if subj is not None:
             subj = str(subj)
-        if data == 'MRI':
-            return self._getImg(data, subj, space, **kw)
-        elif data == "MD":
-            return self._getImg(data, subj, space,  **kw)
+        if data == 'IMAGE':
+            if kw.get("index"):
+                return self._available_images
+            image_name=kw.get("name")
+            if image_name is None:
+                log.error("Either index or name is required")
+                raise Exception("Either index or name is required")
+            assert image_name in self._available_images
+            return self._get_img(image_name, subj, space, kw)
         elif data == "DTI":
-            return self._getImg(data, subj, space,  **kw)
-        elif data == 'FA':
-            if kw.get('lut'):
-                if self._fa_lut is None:
-                    self._fa_lut = self._create_fa_lut()
-                return self._fa_lut
-            return self._getImg(data, subj, space, **kw)
+            return self._get_img(data, subj, space,  **kw)
         elif data == 'IDS':
             return self._getIds()
         elif data == 'MODEL':
@@ -324,12 +326,19 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return self._readFibers(subj, space, **kw)
         elif data == 'TENSORS':
             return self._readTensors(subj, space, **kw)
-        elif data in {"APARC", "WMPARC"}:
+        elif data == "LABEL":
+            if kw.get("index"):
+                return self._available_maps
+            map_name = kw.get("name")
+            if map_name is None:
+                log.error("Either index or name is required")
+                raise Exception("Either index or name is required")
+            assert map_name in self._available_maps
             if kw.get('lut'):
                 if self._free_surfer_aparc_lut is None:
                     self._free_surfer_aparc_lut = self._create_surfer_lut()
                 return self._free_surfer_aparc_lut
-            return self._getImg(data, subj, space, **kw)
+            return self._get_img(map_name, subj, space, **kw)
         elif data == "FMRI":
             if kw.get('lut'):
                 if self._fmri_LUT is None:
@@ -340,14 +349,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return self._read_func(subj, space, **kw)
         elif data == 'BOLD':
             if space[:4] not in {'func', 'fmri'}:
-                log = logging.getLogger(__name__)
                 log.warning(
                     "BOLD data is only available in the native fMRI space")
             return self._read_bold(subj, kw['name'])
         elif data == "TRACULA":
             return self._read_tracula(subj, space, **kw)
         else:
-            log = logging.getLogger(__name__)
             log.error("Data type not available")
             raise (Exception("Data type not available"))
 
