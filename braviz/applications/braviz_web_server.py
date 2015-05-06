@@ -27,7 +27,7 @@ from braviz.interaction.connection import GenericMessageClient
 from braviz.interaction.tornado_connection import LongPollMessageHandler, MessageFutureProxy
 from braviz.interaction.tornado_connection import WebSocketMessageHandler, WebSocketManager
 from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler, SubjectSwitchHandler
-
+import logging
 
 __author__ = 'da.angulo39'
 
@@ -40,6 +40,9 @@ if __name__ == "__main__":
     import sys
     broadcast_address = None
     receive_address = None
+
+    warning_log = logging.getLogger("tornado.access")
+    warning_log.setLevel(logging.ERROR)
 
     if len(sys.argv) > 3:
         broadcast_address = sys.argv[2]
