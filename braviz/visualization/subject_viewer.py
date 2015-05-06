@@ -811,10 +811,9 @@ class ImageManager(object):
             self.__image_plane_widget.SetInputData(dti_image)
             self.__outline_filter.SetInputData(dti_image)
 
-            self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             self.__image_plane_widget.SetResliceInterpolateToCubic()
-            self.__current_image = image_name
             self.__image_plane_widget.text1_value_from_img(fa_image)
+            self.__image_plane_widget.GetColorMap().SetLookupTable(None)
             if not self.__hidden:
                 self.__image_plane_widget.On()
             return
@@ -2239,7 +2238,8 @@ class OrthogonalPlanesViewer(object):
         # state
         self.__current_subject = None
         self.__current_space = "world"
-        self.__curent_modality = None
+        self.__current_class = None
+        self.__current_name = None
 
         # internal data
         self.__cursor = AdditionalCursors(self.ren)
@@ -2278,7 +2278,7 @@ class OrthogonalPlanesViewer(object):
 
         call after initializing the planes
         """
-        if self.__curent_modality not in ("DTI", "FMRI"):
+        if self.__current_class not in ("DTI", "FMRI"):
             self.y_image.image_plane_widget.SetLookupTable(
                 self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(
@@ -2382,7 +2382,7 @@ class OrthogonalPlanesViewer(object):
         self._link_window_level()
 
     @do_and_render
-    def change_image_modality(self, mod, contrast=None):
+    def change_image_modality(self, image_class, image_name, contrast=1):
         """
         Change image modality in all planes
 
@@ -2390,19 +2390,21 @@ class OrthogonalPlanesViewer(object):
 
 
         Args:
-            mod (str): New modality, for fMRI enter the paradigm here
+            image_class (str): New image class (IMAGE, LABELS or FMRI)
+            image_name (str): New image name, for fMRI enter the paradigm here
             contrast (int): If modality is fMRI the index of the contrast
         """
-        mod = mod.upper()
-        if contrast is not None:
-            pdgm = mod
-            mod = "FMRI"
-        else:
-            pdgm = None
+
+        if image_class is not None:
+            image_class = image_class.upper()
+        if image_name is not None:
+            image_name = image_name.upper()
+
         for im in self.__image_planes:
             im.change_image_modality(
-                mod, pdgm, mod, skip_render=True, contrast=contrast)
-        self.__curent_modality = mod
+                image_class, image_name, skip_render=True, contrast=contrast)
+        self.__current_class = image_class
+        self.__curent_name = image_name
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
         self._link_window_level()
 
@@ -2583,7 +2585,8 @@ class MeasurerViewer(object):
         # state
         self.__current_subject = None
         self.__current_space = "talairach"
-        self.__curent_modality = None
+        self.__current_modality = None
+        self.__current_class = None
 
         # internal data
 
@@ -2697,7 +2700,7 @@ class MeasurerViewer(object):
 
         call after initializing the planes
         """
-        if self.__curent_modality not in ("DTI", "FMRI"):
+        if self.__current_modality not in ("DTI", "FMRI"):
             self.y_image.image_plane_widget.SetLookupTable(
                 self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(
@@ -2803,7 +2806,7 @@ class MeasurerViewer(object):
         self._link_window_level()
 
     @do_and_render
-    def change_image_modality(self, mod, contrast=None):
+    def change_image_modality(self, image_class, mod, contrast=None):
         """
         Change image modality in all planes
 
@@ -2811,19 +2814,20 @@ class MeasurerViewer(object):
 
 
         Args:
-            mod (str): New modality, for fMRI enter the paradigm here
+            image_class (str): New image class, must be FMRI, IMAGE, LABEL or DTI
+            mod (str): New modality name, for fMRI enter the paradigm here
             contrast (int): If modality is fMRI the index of the contrast
         """
-        mod = mod.upper()
-        if contrast is not None:
-            pdgm = mod
-            mod = "FMRI"
-        else:
-            pdgm = None
+        if mod is not None:
+            mod = mod.upper()
+
+        if image_class is not None:
+            image_class = image_class.upper()
+
         for im in self.__image_planes:
-            im.change_image_modality(
-                mod, pdgm, mod, skip_render=True, contrast=contrast)
-        self.__curent_modality = mod
+            im.change_image_modality(image_class, mod, skip_render=True, contrast=contrast)
+        self.__current_modality = mod
+        self.__current_class = image_class
         self._link_window_level()
 
     def get_number_of_slices(self):

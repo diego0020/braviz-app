@@ -382,7 +382,7 @@ class SubjectOverviewApp(QMainWindow):
                 self.vtk_viewer.image.change_image_modality("LABEL", selection)
                 self.ui.contrast_combo.setEnabled(0)
             elif selection == "DTI":
-                self.vtk_viewer.image.change_image_modality(selection, None)
+                self.vtk_viewer.image.change_image_modality("DTI", None)
                 self.ui.contrast_combo.setEnabled(0)
             else:
                 self.ui.contrast_combo.setEnabled(1)

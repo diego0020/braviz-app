@@ -503,7 +503,6 @@ class SampleOverview(QtGui.QMainWindow):
                         log.info("Loading fMRI")
                         cont = image_state.get("contrast", 1)
                         # to load MRI window level
-
                         viewer.image.change_image_modality(
                             mod, paradigm, contrast=cont, skip_render=True)
                         window = image_state.get("window")
@@ -514,10 +513,15 @@ class SampleOverview(QtGui.QMainWindow):
                         if level is not None:
                             viewer.image.set_image_level(
                                 level, skip_render=True)
+                        viewer.image.change_image_modality("FMRI", mod , skip_render=True)
+                    elif mod in self.reader.get("IMAGE", None, index=True):
+                        viewer.image.change_image_modality("IMAGE", mod , skip_render=True)
+                    elif mod in self.reader.get("LABEL", None, index=True):
+                        viewer.image.change_image_modality("LABEL",mod , skip_render=True)
+                    elif mod == "DTI":
+                        viewer.image.change_image_modality("DTI", None , skip_render=True)
                     else:
-                        paradigm = None
-                    viewer.image.change_image_modality(
-                        mod, paradigm=paradigm, skip_render=True)
+                        raise Exception("Unknown data type")
                     viewer.image.show_image()
                     viewer.image.image_plane_widget.SetInteraction(1)
                     orient = image_state.get("orientation")

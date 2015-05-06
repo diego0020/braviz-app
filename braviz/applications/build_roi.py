@@ -721,8 +721,19 @@ class BuildRoiApp(QMainWindow):
         self.__current_image_mod = modality
         self.__current_contrast = contrast
         log = logging.getLogger(__name__)
+        modality = modality.upper()
+
+        if modality in {"MRI","FA","MD"}:
+            im_class = "IMAGE"
+        elif modality in {"APARC","WMPARC"}:
+            im_class = "LABEL"
+        elif modality == "DTI":
+            im_class = "DTI"
+            modality = None
+        else:
+            im_class = "FMRI"
         try:
-            self.vtk_viewer.change_image_modality(modality, contrast)
+            self.vtk_viewer.change_image_modality(im_class, modality, contrast)
         except Exception as e:
             self.statusBar().showMessage(e.message, 500)
             log.warning(e.message)

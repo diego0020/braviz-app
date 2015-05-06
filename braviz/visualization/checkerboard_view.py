@@ -80,7 +80,7 @@ class CheckboardView(object):
         self.__color_wl2 = vtk.vtkImageMapToWindowLevelColors()
         self.__color_wl1.SetOutputFormatToRGB()
         self.__color_wl2.SetOutputFormatToRGB()
-        self.__lut = self.reader.get("APARC", None, lut=True)
+        self.__lut = self.reader.get("LABEL", None, lut=True, name="APARC")
         self.__color_labels1 = vtk.vtkImageMapToColors()
         self.__color_labels2 = vtk.vtkImageMapToColors()
         self.__color_labels1.SetLookupTable(self.__lut)
@@ -288,9 +288,16 @@ class CheckboardView(object):
         elif contrast is not None:
             raise NotImplementedError
         else:
+            if modality in _NOMINAL_MODS:
+                im_class = "LABEL"
+            elif modality in _COLORED_MODS:
+                im_class = "DTI"
+            else:
+                assert modality in _WL_MODS
+                im_class = "IMAGE"
             try:
-                self.__img1 = self.reader.get(
-                    mod, subj, format="vtk", space=self.__current_space)
+                self.__img1 = self.reader.get(im_class, subj, format="vtk",
+                                              space=self.__current_space, name=modality)
             except Exception as e:
                 log = logging.getLogger(__name__)
                 log.exception(e)
@@ -330,9 +337,17 @@ class CheckboardView(object):
         elif contrast is not None:
             raise NotImplementedError
         else:
+            if modality in _NOMINAL_MODS:
+                im_class = "LABEL"
+            elif modality in _COLORED_MODS:
+                im_class = "DTI"
+            else:
+                assert modality in _WL_MODS
+                im_class = "IMAGE"
+
             try:
-                self.__img2 = self.reader.get(
-                    mod, subj, format="vtk", space=self.__current_space)
+                self.__img2 = self.reader.get(im_class, subj, format="vtk", space=self.__current_space,
+                                              name=modality)
             except Exception as e:
                 log = logging.getLogger(__name__)
                 log.exception(e)

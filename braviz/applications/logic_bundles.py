@@ -314,7 +314,18 @@ class LogicBundlesApp(QMainWindow):
         self.select_surface(None)
 
     def set_image(self, modality):
-        self.vtk_viewer.change_image_modality(modality)
+        modality = modality.upper()
+
+        if modality in {"MRI","FA","MD"}:
+            im_class = "IMAGE"
+        elif modality in {"APARC","WMPARC"}:
+            im_class = "LABEL"
+        elif modality == "DTI":
+            im_class = "DTI"
+            modality = None
+        else:
+            im_class = "FMRI"
+        self.vtk_viewer.change_image_modality(im_class,modality)
         self.__current_image_mod = modality
         self.update_slice_maximums()
 
@@ -368,10 +379,7 @@ class LogicBundlesApp(QMainWindow):
 
     def select_image_modality(self, index):
         mod = str(self.ui.image_combo.currentText())
-        self.change_image_modality(mod)
-
-    def change_image_modality(self, new_mod):
-        self.vtk_viewer.change_image_modality(new_mod)
+        self.set_image(mod)
 
     def select_surface_scalars(self, index):
         scalar_name = SURFACE_SCALARS_DICT[int(index)]
