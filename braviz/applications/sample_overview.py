@@ -508,7 +508,7 @@ class SampleOverview(QtGui.QMainWindow):
                     image_class = "DTI"
             else:
                 image_name = image_state["image_name"]
-                cont = image_state.get("contrast", 1)
+            cont = image_state.get("contrast", 1)
             try:
                 if image_class is None:
                     viewer.image.hide_image()

@@ -136,8 +136,7 @@ class SubjectOverviewApp(QMainWindow):
         self.change_subject(self.__curent_subject)
         self.vtk_viewer.change_current_space("Talairach", skip_render=True)
         try:
-            self.vtk_viewer.image.change_image_modality("IMAGE",
-                                                        "MRI", skip_render=True)
+            self.__image_combo_manager.set_image("IMAGE","MRI")
         except Exception as e:
             self.show_error(e.message)
         self.reset_image_view_controls()
@@ -372,7 +371,8 @@ class SubjectOverviewApp(QMainWindow):
         logger.warning(message)
         self.statusBar().showMessage(message, 5000)
 
-    def image_modality_change(self, image_class, image_name):
+    def image_modality_change(self, class_and_name):
+        image_class, image_name = class_and_name
         log = logging.getLogger(__name__)
         log.info("changing image mod to %s,%s" % (image_class,image_name))
         if image_class is None:
