@@ -40,7 +40,6 @@ from PyQt4 import QtGui
 
 
 class RotatedLabel(QtGui.QLabel):
-
     """
     A vertical label useful for labeling rows of data
 
@@ -92,7 +91,6 @@ class RotatedLabel(QtGui.QLabel):
 
 
 class ListValidator(QtGui.QValidator):
-
     """
     Can be applied to :obj:`QLineEdit` so that it will only accept input from a list of possible values.
 
@@ -120,6 +118,7 @@ class ListValidator(QtGui.QValidator):
             else:
                 return QtGui.QValidator.Intermediate, p_int
 
+
 def repeatatable_plot(func):
     @wraps(func)
     def saved_plot_func(*args, **kwargs):
@@ -130,6 +129,7 @@ def repeatatable_plot(func):
         return func(*args, **kwargs)
 
     return saved_plot_func
+
 
 class MatplotWidget(FigureCanvas):
     box_outlier_pick_signal = QtCore.pyqtSignal(str, tuple)
@@ -187,7 +187,7 @@ class MatplotWidget(FigureCanvas):
         for child in self.axes.get_children():
             if isinstance(child, matplotlib.spines.Spine):
                 child.set_visible(False)
-        # remove minor tick lines
+            # remove minor tick lines
         for line in self.axes.xaxis.get_ticklines(minor=True) + self.axes.yaxis.get_ticklines(minor=True):
             line.set_markersize(0)
         self.draw()
@@ -310,13 +310,12 @@ class MatplotWidget(FigureCanvas):
 
     def add_grayed_scatter(self, data, data2):
         colors = "#BBBBBB"
-        patches = self.axes.scatter(data, data2, color=colors,)
+        patches = self.axes.scatter(data, data2, color=colors, )
         self.axes.draw_artist(patches)
         self.blit(self.axes.bbox)
 
     @repeatatable_plot
-    def make_box_plot(self, data, x_var, y_var,  xlabel, ylabel, xticks_labels, ylims=None, intercet=None):
-
+    def make_box_plot(self, data, x_var, y_var, xlabel, ylabel, xticks_labels, ylims=None, intercet=None):
 
 
         if x_var is None:
@@ -329,18 +328,17 @@ class MatplotWidget(FigureCanvas):
                 data_col = data[y_var][data[x_var] == i]
                 data_list.append(data_col.get_values())
 
-
         sns.set_style("darkgrid")
         self.fig.clear()
         self.axes = self.fig.add_subplot(1, 1, 1)
         # Sort data and labels according to median
-        x_permutation = range(1,len(label_nums)+1)
+        x_permutation = range(1, len(label_nums) + 1)
         data_labels = zip(data_list, label_nums)
         data_labels.sort(key=lambda x: np.median(x[0]))
         data_list, label_nums = zip(*data_labels)
         ticks = None
         if xticks_labels is not None:
-            ticks = [xticks_labels.get(i ,"level %d" % i) for i in label_nums]
+            ticks = [xticks_labels.get(i, "level %d" % i) for i in label_nums]
 
         self.axes.clear()
         self.axes.tick_params(
@@ -351,9 +349,8 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(auto=True)
         #artists_dict = self.axes.boxplot(data, sym='gD')
 
-        self.x_order = dict(izip(label_nums,x_permutation))
-        self.x_order_i = dict(izip(x_permutation,label_nums))
-
+        self.x_order = dict(izip(label_nums, x_permutation))
+        self.x_order_i = dict(izip(x_permutation, label_nums))
 
         sns.boxplot(data_list, ax=self.axes, fliersize=10,
                     names=ticks, color="skyblue", widths=0.5)
@@ -361,13 +358,14 @@ class MatplotWidget(FigureCanvas):
         for ls in self.axes.get_lines():
             if ls.get_markersize() == 10:
                 ls.set_picker(5)
-                poss_ids=dict()
-                for x,y in izip(*ls.get_data()):
-                    poss_ids.setdefault((x,y),set()).update(data.loc[(data[x_var] == self.x_order_i[x]) & (data[y_var] == y)].index)
+                poss_ids = dict()
+                for x, y in izip(*ls.get_data()):
+                    poss_ids.setdefault((x, y), set()).update(
+                        data.loc[(data[x_var] == self.x_order_i[x]) & (data[y_var] == y)].index)
                 print poss_ids
                 urls = []
-                for x,y in izip(*ls.get_data()):
-                    u=poss_ids[(x,y)].pop()
+                for x, y in izip(*ls.get_data()):
+                    u = poss_ids[(x, y)].pop()
                     urls.append(u)
                 ls.set_url(urls)
         self.axes.set_xlabel(xlabel)
@@ -436,7 +434,7 @@ class MatplotWidget(FigureCanvas):
             vals = data[outcome][(data[x_name] == x) & (data[z_name] == z)]
             values.append(vals)
             pos = box_width / 2 + \
-                (group_width + group_pad) * ix + (box_width + box_pad) * iz
+                  (group_width + group_pad) * ix + (box_width + box_pad) * iz
             positions.append(pos)
             positions_dict[(x, z)] = pos
             fliers_x_dict[float(pos)] = (x, z)
@@ -449,14 +447,14 @@ class MatplotWidget(FigureCanvas):
             if ls.get_markersize() == 10:
                 ls.set_picker(5)
                 poss_ids = dict()
-                for i,y in izip(*ls.get_data()):
-                    x,z = fliers_x_dict[i]
-                    poss_ids.setdefault((i,y),set()).update(
+                for i, y in izip(*ls.get_data()):
+                    x, z = fliers_x_dict[i]
+                    poss_ids.setdefault((i, y), set()).update(
                         data.loc[(data[x_name] == x) & (data[z_name] == z) & (data[outcome] == y)].index
                     )
                 urls = []
-                for i,y in izip(*ls.get_data()):
-                    urls.append(poss_ids[(i,y)].pop())
+                for i, y in izip(*ls.get_data()):
+                    urls.append(poss_ids[(i, y)].pop())
                 ls.set_url(urls)
         self.axes.set_ylabel(outcome)
         if ylims is not None:
@@ -471,6 +469,7 @@ class MatplotWidget(FigureCanvas):
     @repeatatable_plot
     def make_diagnostics(self, residuals, fitted):
         import matplotlib.gridspec as gridspec
+
         gs = gridspec.GridSpec(1, 2, width_ratios=(2, 1))
         sns.set_style("darkgrid")
         self.fig.clear()
@@ -537,7 +536,7 @@ class MatplotWidget(FigureCanvas):
             ind = e.ind
             if hasattr(ind, "__iter__"):
                 ind = ind[0]
-            u=urls[ind]
+            u = urls[ind]
             self.box_outlier_pick_signal.emit(
                 str(u), (e.mouseevent.x, self.height() - e.mouseevent.y))
         elif type(e.artist) == matplotlib.collections.PathCollection:
@@ -566,7 +565,6 @@ class MatplotWidget(FigureCanvas):
 
 
 class ContextVariablesPanel(QtGui.QGroupBox):
-
     """
     A panel that displays and allows to edit variables for a given subject.
 
@@ -696,7 +694,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                 self.layout.addStretch()
             else:
                 first = False
-            # add label
+                # add label
             label = QtGui.QLabel("%s : " % self.__context_variable_names[idx])
             label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             self.__context_labels.append(label)
@@ -785,7 +783,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                 value = values[self.__context_variable_names[idx]]
             except KeyError:
                 value = float("nan")
-            # print self.__context_variable_names[idx], value
+                # print self.__context_variable_names[idx], value
             value_widget = self.__values_widgets[i]
             if self.__is_nominal[idx]:
 
@@ -815,6 +813,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             pos : Position of event
         """
         from braviz.interaction.qt_dialogs import ContextVariablesSelectDialog
+
         global_pos = self.mapToGlobal(pos)
         change_action = QtGui.QAction("Change Variables", None)
         menu = QtGui.QMenu()
@@ -854,7 +853,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                         value = None
                     else:
                         value = int(value)
-                # update value
+                    # update value
                 braviz_tab_data.updata_variable_value(
                     int(idx), self.__curent_subject, value)
                 # update internal
@@ -888,6 +887,48 @@ class ContextVariablesPanel(QtGui.QGroupBox):
             new_sample (list) : List of subject ids
         """
         self.sample = list(new_sample)
+
+
+class ImageComboBoxManager(QtCore.QObject):
+    image_changed = QtCore.pyqtSignal(tuple)
+
+    def __init__(self, reader):
+        super(ImageComboBoxManager,self).__init__()
+        grey_images = sorted(n.upper() for n in reader.get("IMAGE", None, index=True))
+        label_maps = sorted(n.upper() for n in reader.get("LABEL", None, index=True))
+        dti = ["DTI", ]
+        fmri_pdgms = sorted(n.upper() for n in reader.get("FMRI", None, index=True))
+
+        #check for collisions
+        assert len(grey_images) + len(label_maps) + len(dti) + len(fmri_pdgms) == \
+               len(set(grey_images + label_maps + fmri_pdgms + dti))
+
+        all_images = [("IMAGE", n) for n in grey_images] + \
+                     [("LABEL", n) for n in label_maps] + \
+                     [("DTI", n) for n in dti] + \
+                     [("FMRI", n) for n in fmri_pdgms]
+
+        self.available_images = all_images
+        self.combo_box = None
+        self.data_dict = {t: i for i, t in enumerate(all_images)}
+
+    def setup(self, combo_box):
+        combo_box.clear()
+        for im_class, name in self.available_images:
+            combo_box.addItem(name,(im_class, name))
+        combo_box.currentIndexChanged.connect(self.handle_index_change)
+        self.combo_box = combo_box
+
+    def set_image(self, image_class, image_name):
+        image_class = image_class.upper()
+        image_name = image_name.upper()
+        index = self.data_dict[(image_class,image_name)]
+        self.combo_box.setCurrentIndex(index)
+
+    def handle_index_change(self, index):
+        new_class, new_name = self.combo_box.itemData(index).toPyObject()
+        self.image_changed.emit((new_class,new_name))
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication([])

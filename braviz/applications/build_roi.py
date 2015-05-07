@@ -48,6 +48,7 @@ from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
 from braviz.interaction.structure_metrics import AggregateInRoi
 from braviz.interaction.roi import export_roi
+from braviz.interaction.qt_widgets import ImageComboBoxManager
 from braviz.readAndFilter.config_file import get_config
 __author__ = 'Diego'
 
@@ -527,6 +528,8 @@ class BuildRoiApp(QMainWindow):
         QMainWindow.__init__(self)
         config = get_config(__file__)
         self.ui = None
+        self.__image_combo_manager = None
+
         self.__roi_name = roi_name
         if roi_name is not None:
             self.__roi_id = geom_db.get_roi_id(roi_name)
@@ -541,12 +544,13 @@ class BuildRoiApp(QMainWindow):
         self.__current_subject = config.get_default_subject()
         self.__current_img_id = self.__current_subject
 
-        self.__current_image_mod = "MRI"
+        self.__current_image_class = "IMAGE"
+        self.__current_image_name = "MRI"
         self.__current_contrast = None
         try:
-            self.__curent_space = geom_db.get_roi_space(name=roi_name).title()
+            self.__current_space = geom_db.get_roi_space(name=roi_name).title()
         except Exception:
-            self.__curent_space = "World"
+            self.__current_space = "World"
 
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
@@ -587,7 +591,7 @@ class BuildRoiApp(QMainWindow):
 
         self.__mean_fa_in_roi_calculator = AggregateInRoi(self.reader)
         self.__mean_md_in_roi_calculator = AggregateInRoi(self.reader)
-        self.ui.sphere_space.setText(self.__curent_space)
+        self.ui.sphere_space.setText(self.__current_space)
         self.vtk_viewer.sphere.show()
         self.update_sphere_radius()
         self.update_sphere_center()
@@ -596,7 +600,7 @@ class BuildRoiApp(QMainWindow):
 
         self.__loading_sphere_from_db = False
 
-        if self.__curent_space.lower() == "dartel":
+        if self.__current_space.lower() == "dartel":
             self.ui.optimize_button.setEnabled(0)
             self.ui.optimize_button.setToolTip("Not possible in dartel space")
             self.ui.inside_check.setEnabled(0)
@@ -628,11 +632,10 @@ class BuildRoiApp(QMainWindow):
         self.ui.sagital_slice.valueChanged.connect(
             partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
-        self.ui.image_combo.currentIndexChanged.connect(
-            self.select_image_modality)
-        paradigms = self.reader.get("fMRI", None, index=True)
-        for p in paradigms:
-            self.ui.image_combo.addItem(p.title())
+
+        self.__image_combo_manager = ImageComboBoxManager(self.reader)
+        self.__image_combo_manager.setup(self.ui.image_combo)
+        self.__image_combo_manager.image_changed.connect(self.select_image_modality)
         self.ui.contrast_combo.setEnabled(0)
         self.ui.contrast_combo.setCurrentIndex(0)
         self.ui.contrast_combo.setEnabled(False)
@@ -705,35 +708,26 @@ class BuildRoiApp(QMainWindow):
 
     def start(self):
         self.vtk_widget.initialize_widget()
-        self.set_image("MRI")
+        self.__image_combo_manager.set_image("IMAGE", "MRI")
         try:
             self.vtk_viewer.show_image()
         except Exception as e:
             log = logging.getLogger(__file__)
             log.warning(e)
-        self.vtk_viewer.change_space(self.__curent_space)
+        self.vtk_viewer.change_space(self.__current_space)
         self.vtk_viewer.finish_initializing()
         if self.__roi_id is not None:
             self.change_subject(self.__current_subject)
         self.select_surface(None)
 
-    def set_image(self, modality, contrast=None):
-        self.__current_image_mod = modality
+    def set_image(self, image_class, image_name, contrast=None):
+        self.__current_image_class = image_class
+        self.__current_image_name = image_name
+
         self.__current_contrast = contrast
         log = logging.getLogger(__name__)
-        modality = modality.upper()
-
-        if modality in {"MRI","FA","MD"}:
-            im_class = "IMAGE"
-        elif modality in {"APARC","WMPARC"}:
-            im_class = "LABEL"
-        elif modality == "DTI":
-            im_class = "DTI"
-            modality = None
-        else:
-            im_class = "FMRI"
         try:
-            self.vtk_viewer.change_image_modality(im_class, modality, contrast)
+            self.vtk_viewer.change_image_modality(image_class, image_name, contrast)
         except Exception as e:
             self.statusBar().showMessage(e.message, 500)
             log.warning(e.message)
@@ -768,7 +762,7 @@ class BuildRoiApp(QMainWindow):
         if contrast is not None:
             self.ui.mean_inside_label.setText("Mean Z-score")
             self.ui.mean_inside_label.setToolTip("Mean Z-score inside the ROI")
-            self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__curent_space, "FMRI", modality,
+            self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__current_space, "FMRI", modality,
                                                      contrast,
                                                      mean=True)
         else:
@@ -776,12 +770,12 @@ class BuildRoiApp(QMainWindow):
                 self.ui.mean_inside_label.setText("Mean FA")
                 self.ui.mean_inside_label.setToolTip("Mean FA inside the ROI")
                 self.__mean_in_img_calculator.load_image(
-                    self.__current_img_id, self.__curent_space, "FA", mean=True)
+                    self.__current_img_id, self.__current_space, "FA", mean=True)
             elif modality in {"APARC", "WMPARC"}:
                 self.ui.mean_inside_label.setText("Label Mode")
                 self.ui.mean_inside_label.setToolTip(
                     "Mode of labels inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__curent_space, modality,
+                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__current_space, modality,
                                                          mean=False)
                 self.__aux_lut = self.reader.get(
                     self.__current_image_mod, None, lut=True)
@@ -790,12 +784,12 @@ class BuildRoiApp(QMainWindow):
                 self.ui.mean_inside_label.setText("Mean value")
                 self.ui.mean_inside_label.setToolTip(
                     "Mean value of image inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__curent_space, modality,
+                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__current_space, modality,
                                                          mean=True)
         self.__mean_fa_in_roi_calculator.load_image(
-            self.__current_img_id, self.__curent_space, "FA", mean=True)
+            self.__current_img_id, self.__current_space, "FA", mean=True)
         self.__mean_md_in_roi_calculator.load_image(
-            self.__current_img_id, self.__curent_space, "MD", mean=True)
+            self.__current_img_id, self.__current_space, "MD", mean=True)
         self.caclulate_image_in_roi()
 
     def caclulate_image_in_roi(self):
@@ -919,7 +913,7 @@ class BuildRoiApp(QMainWindow):
         if self.__full_pd is None:
             try:
                 self.__full_pd = self.reader.get(
-                    "fibers", self.__current_img_id, space=self.__curent_space)
+                    "fibers", self.__current_img_id, space=self.__current_space)
             except Exception:
                 self.__full_pd = "Unavailable"
                 self.__fibers_ac.SetVisibility(0)
@@ -1029,17 +1023,16 @@ class BuildRoiApp(QMainWindow):
         checked = geom_db.subjects_with_sphere(self.__roi_id)
         self.__subjects_check_model.checked = checked
 
-    def select_image_modality(self, dummy_index):
-        mod = str(self.ui.image_combo.currentText())
-        if self.ui.image_combo.currentIndex() > 4:
+    def select_image_modality(self, class_and_name):
+        image_class, image_name = class_and_name
+        if image_class == "FMRI":
             # functional
             self.ui.contrast_combo.setEnabled(1)
-            self.reload_contrast_names(mod)
+            self.reload_contrast_names(image_name)
             contrast = int(self.ui.contrast_combo.currentIndex()) + 1
         else:
-            self.ui.contrast_combo.setEnabled(0)
             contrast = None
-        self.set_image(mod, contrast)
+        self.set_image(image_class,image_name, contrast)
 
     def reload_contrast_names(self, mod=None):
         if mod is None:
@@ -1064,8 +1057,7 @@ class BuildRoiApp(QMainWindow):
 
     def change_contrast(self, dummy_index=None):
         new_contrast = self.ui.contrast_combo.currentIndex() + 1
-        mod = str(self.ui.image_combo.currentText())
-        self.set_image(mod, new_contrast)
+        self.set_image(self.__current_image_class,self.__current_image_name, new_contrast)
 
     def select_surface_scalars(self, index):
         scalar_name = SURFACE_SCALARS_DICT[int(index)]
@@ -1119,7 +1111,7 @@ class BuildRoiApp(QMainWindow):
 
         state["context"] = context_dict
         # visual
-        visual_dict = {"coords": self.__curent_space, "camera": self.vtk_viewer.get_camera_parameters(),
+        visual_dict = {"coords": self.__current_space, "camera": self.vtk_viewer.get_camera_parameters(),
                        "spher_rep": self.ui.sphere_rep.currentIndex(), "sphere_opac": self.ui.sphere_opac.value(),
                        "sphere_color": self.__sphere_color,
                        "show_fibers": self.ui.show_fibers_check.checkState() == QtCore.Qt.Checked}
@@ -1162,10 +1154,10 @@ class BuildRoiApp(QMainWindow):
         self.__current_subject = subjs_state["subject"]
         self.__current_img_id = subjs_state["img_code"]
         try:
-            self.__curent_space = geom_db.get_roi_space(self.__roi_name)
+            self.__current_space = geom_db.get_roi_space(self.__roi_name)
         except Exception:
-            self.__curent_space = "world"
-        self.vtk_viewer.change_space(self.__curent_space)
+            self.__current_space = "world"
+        self.vtk_viewer.change_space(self.__current_space)
         self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
         self.__subjects_check_model.checked = self.__checked_subjects
         self.__sphere_modified = False
@@ -1241,12 +1233,12 @@ class BuildRoiApp(QMainWindow):
                 self.load_state(wanted_state)
 
     def save_sphere_as(self):
-        dialog = NewRoi(self.__curent_space)
+        dialog = NewRoi(self.__current_space)
         res = dialog.exec_()
         if res == dialog.Accepted:
             new_name = dialog.name
             desc = dialog.desc
-            space = self.__curent_space
+            space = self.__current_space
             new_id = geom_db.create_roi(new_name, "sphere", space, desc)
             if len(self.__additional_spheres) == 0:
                 self.change_sphere(new_id, new_name,load=False)
@@ -1272,9 +1264,9 @@ class BuildRoiApp(QMainWindow):
     def change_sphere(self, roi_id, roi_name,load=True):
         self.__roi_id = roi_id
         self.__roi_name = roi_name
-        self.__curent_space = geom_db.get_roi_space(name=roi_name).title()
-        self.ui.sphere_space.setText(self.__curent_space)
-        self.vtk_viewer.change_space(self.__curent_space)
+        self.__current_space = geom_db.get_roi_space(name=roi_name).title()
+        self.ui.sphere_space.setText(self.__current_space)
+        self.vtk_viewer.change_space(self.__current_space)
         self.ui.sphere_name_combo.clear()
         self.ui.sphere_name_combo.addItem(self.__roi_name, self.__roi_id)
         self.ui.sphere_name_combo.insertSeparator(2)
@@ -1316,7 +1308,7 @@ class BuildRoiApp(QMainWindow):
     def optimize_sphere_from_button(self):
         max_opt = min(10, self.__sphere_radius)
         opt_ctr = self.__pos_optimizer.get_optimum(self.__sphere_center, max_opt, self.__current_img_id,
-                                                   self.__curent_space, "FA")
+                                                   self.__current_space, "FA")
         cx, cy, cz = opt_ctr
         self.ui.sphere_x.setValue(cx)
         self.ui.sphere_y.setValue(cy)
@@ -1328,7 +1320,7 @@ class BuildRoiApp(QMainWindow):
         log.info("optimizing")
         if self.__fa_smoothed is None:
             fa_image = self.reader.get(
-                "FA", self.__current_img_id, space=self.__curent_space)
+                "FA", self.__current_img_id, space=self.__current_space)
             self.__fa_affine = fa_image.get_affine()
             log.info(self.__fa_affine)
             self.__fa_i_affine = np.linalg.inv(self.__fa_affine)
@@ -1370,7 +1362,7 @@ class BuildRoiApp(QMainWindow):
             current_spheres = [
                 geom_db.get_roi_name(i) for i in self.__additional_spheres.iterkeys()]
             dialog = MultipleRoiDialog(
-                self.__curent_space, self.__roi_name, current_spheres)
+                self.__current_space, self.__roi_name, current_spheres)
             res = dialog.exec_()
             if res == dialog.Accepted:
                 spheres = dialog.model.checked
