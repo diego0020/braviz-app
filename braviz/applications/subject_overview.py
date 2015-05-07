@@ -41,7 +41,8 @@ from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, BundleSel
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 from braviz.readAndFilter.config_file import get_config
-from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel
+from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, ImageComboBoxManager, \
+    ContrastComboManager
 import subprocess
 from braviz.interaction.connection import MessageClient
 import cPickle
@@ -50,7 +51,7 @@ import logging
 
 __author__ = 'Diego'
 
-# TODO only load scalar metrics if visible
+# TODO only load scalar metrics if visible, lazy loading
 
 
 surfaces_scalars_dict = {0: "curv", 1: "avg_curv", 2: "thickness",
@@ -117,6 +118,9 @@ class SubjectOverviewApp(QMainWindow):
 
         # Init gui
         self.ui = None
+        self.__image_combo_manager = ImageComboBoxManager(self.reader, show_none=True)
+        self.__image_contrast_manager = ContrastComboManager(self.reader)
+        self.__contours_contrast_manager = ContrastComboManager(self.reader)
         self.setup_gui()
 
         if scenario is not None:
@@ -133,7 +137,7 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_viewer.change_current_space("Talairach", skip_render=True)
         try:
             self.vtk_viewer.image.change_image_modality("IMAGE",
-                "MRI", skip_render=True)
+                                                        "MRI", skip_render=True)
         except Exception as e:
             self.show_error(e.message)
         self.reset_image_view_controls()
@@ -178,7 +182,14 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.comments_save.clicked.connect(self.save_comments)
 
         # image controls
-        self.ui.image_mod_combo.activated.connect(self.image_modality_change)
+        self.__image_combo_manager.setup(self.ui.image_mod_combo)
+        self.__image_combo_manager.image_changed.connect(self.image_modality_change)
+
+        # contrast
+        self.__image_contrast_manager.setup(self.ui.contrast_combo)
+        self.__image_contrast_manager.contrast_changed.connect(self.img_change_contrast)
+
+
         self.ui.image_orientation.activated.connect(
             self.image_orientation_change)
         self.vtk_widget.slice_changed.connect(self.ui.slice_slider.setValue)
@@ -194,25 +205,23 @@ class SubjectOverviewApp(QMainWindow):
             self.vtk_viewer.image.set_image_level)
         self.ui.reset_window_level.clicked.connect(
             self.vtk_viewer.image.reset_window_level)
-        fmri_paradigms = self.reader.get("fmri", None, index=True)
-        for pdg in fmri_paradigms:
-            self.ui.image_mod_combo.addItem(pdg.title())
-            self.ui.fmri_paradigm_combo.addItem(pdg.title())
-        self.ui.contrast_combo.setEnabled(0)
-        self.ui.contrast_combo.setCurrentIndex(0)
-        # MRI
-        self.ui.image_mod_combo.setCurrentIndex(1)
-        self.ui.contrast_combo.activated.connect(self.img_change_contrast)
 
         # fMRI Contours controls
-        # paradigms combo filled above
+
+        available_paradigms = self.reader.get("FMRI", None, index = True)
+        self.ui.fmri_paradigm_combo.clear()
+        for p in available_paradigms:
+            self.ui.fmri_paradigm_combo.addItem(p.title())
         self.ui.fmri_paradigm_combo.activated.connect(self.fmri_change_pdgm)
-        self.ui.fmri_contrast_combo.activated.connect(
-            self.fmri_change_contrast)
+
+        self.__contours_contrast_manager.setup(self.ui.fmri_contrast_combo)
+        self.__contours_contrast_manager.contrast_changed.connect(self.fmri_change_contrast)
+
         self.ui.fmri_show_contours_check.clicked.connect(
             self.fmri_update_contours)
         self.ui.fmri_show_contours_value.valueChanged.connect(
             self.fmri_update_contours)
+
 
         # segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
@@ -344,10 +353,14 @@ class SubjectOverviewApp(QMainWindow):
             # raise
         else:
             self.statusBar().showMessage("%s: ok" % new_subject, 5000)
-        pdgm = str(self.ui.image_mod_combo.currentText())
-        self.reload_contrast_names(self.ui.contrast_combo, pdgm)
+
+        current_img_class, current_image_name = self.__image_combo_manager.current_class_and_name
+        if current_img_class == "FMRI":
+            self.__image_contrast_manager.change_paradigm(new_subject, current_image_name)
+
         pdgm2 = str(self.ui.fmri_paradigm_combo.currentText())
-        self.reload_contrast_names(self.ui.fmri_contrast_combo, pdgm2)
+        self.__contours_contrast_manager.change_paradigm(new_subject, pdgm2)
+
         self.reset_image_view_controls()
         # context
         self.update_segmentation_scalar()
@@ -359,11 +372,10 @@ class SubjectOverviewApp(QMainWindow):
         logger.warning(message)
         self.statusBar().showMessage(message, 5000)
 
-    def image_modality_change(self):
-        selection = str(self.ui.image_mod_combo.currentText())
+    def image_modality_change(self, image_class, image_name):
         log = logging.getLogger(__name__)
-        log.info("changing image mod to %s" % selection)
-        if selection == "None":
+        log.info("changing image mod to %s,%s" % (image_class,image_name))
+        if image_class is None:
             self.vtk_viewer.image.hide_image()
             self.ui.image_orientation.setEnabled(0)
             self.ui.image_window.setEnabled(0)
@@ -375,22 +387,13 @@ class SubjectOverviewApp(QMainWindow):
             return
 
         try:
-            if selection in ("MRI", "FA", "MD"):
-                self.vtk_viewer.image.change_image_modality("IMAGE", selection)
-                self.ui.contrast_combo.setEnabled(0)
-            elif selection in ("APARC", "WMPARC"):
-                self.vtk_viewer.image.change_image_modality("LABEL", selection)
-                self.ui.contrast_combo.setEnabled(0)
-            elif selection == "DTI":
-                self.vtk_viewer.image.change_image_modality("DTI", None)
-                self.ui.contrast_combo.setEnabled(0)
+            if image_class == "FMRI":
+                self.__image_contrast_manager.change_paradigm(self.__curent_subject, image_name)
+                contrast = self.__image_contrast_manager.get_previous_contrast(image_name)
             else:
-                self.ui.contrast_combo.setEnabled(1)
-                pdgm = str(self.ui.image_mod_combo.currentText())
-                self.reload_contrast_names(self.ui.contrast_combo, selection)
-                self.img_change_contrast()
-                self.vtk_viewer.image.change_image_modality("FMRI", selection,
-                                                            contrast=self.ui.contrast_combo.currentIndex() + 1)
+                self.__image_contrast_manager.change_paradigm(self.__curent_subject, None)
+                contrast = None
+            self.vtk_viewer.image.change_image_modality(image_class, image_name, contrast=contrast)
             self.vtk_viewer.image.show_image()
         except Exception as e:
             log.warning(e.message)
@@ -405,27 +408,25 @@ class SubjectOverviewApp(QMainWindow):
             self.vtk_viewer.image.get_number_of_image_slices())
         self.reset_image_view_controls()
 
-        window_level_control = 1 if selection in (
-            "MRI", "FA", "MD", "Precision", "Power") else 0
+        window_level_control = image_class == "IMAGE"
         self.ui.image_window.setEnabled(window_level_control)
         self.ui.image_level.setEnabled(window_level_control)
         self.ui.reset_window_level.setEnabled(window_level_control)
 
-    def img_change_contrast(self, dummy_index=None):
-        selection = str(self.ui.image_mod_combo.currentText()).upper()
-        if selection not in self.reader.get("fMRI", None, index=True):
-            return
-        self.vtk_viewer.image.change_image_modality("FMRI", selection,
-                                                    contrast=self.ui.contrast_combo.currentIndex() + 1)
+    def img_change_contrast(self, contrast):
+        image_class, image_name = self.__image_combo_manager.current_class_and_name
+        self.vtk_viewer.image.change_image_modality(image_class, image_name,
+                                                    contrast=contrast)
 
     def fmri_change_pdgm(self):
         pdgm = str(self.ui.fmri_paradigm_combo.currentText())
-        self.reload_contrast_names(self.ui.fmri_contrast_combo, pdgm)
+        self.__contours_contrast_manager.change_paradigm(self.__curent_subject, pdgm)
         self.fmri_change_contrast()
 
-    def fmri_change_contrast(self):
+    def fmri_change_contrast(self, contrast = None):
         pdgm = str(self.ui.fmri_paradigm_combo.currentText())
-        contrast = self.ui.fmri_contrast_combo.currentIndex() + 1
+        if contrast is None:
+            contrast = self.__contours_contrast_manager.get_previous_contrast(pdgm)
         self.vtk_viewer.set_fmri_contours_image(pdgm, contrast)
         self.fmri_update_contours()
 
@@ -435,27 +436,6 @@ class SubjectOverviewApp(QMainWindow):
         if visible:
             value = self.ui.fmri_show_contours_value.value()
             self.vtk_viewer.contours.set_value(value)
-
-    def reload_contrast_names(self, combo, pdgm):
-        if pdgm is None:
-            return
-        if pdgm.upper() not in self.reader.get("fMRI", None, index=True):
-            return
-        previus_contrast = combo.currentIndex()
-        img_code = self.__curent_subject
-        try:
-            available_contrasts = self.reader.get(
-                "FMRI", img_code, name=pdgm, contrasts_dict=True)
-            combo.clear()
-            for i in xrange(len(available_contrasts)):
-                cont_name = available_contrasts[i + 1]
-                combo.addItem(cont_name)
-            if 0 <= previus_contrast < len(available_contrasts):
-                combo.setCurrentIndex(previus_contrast)
-            else:
-                combo.setCurrentIndex(0)
-        except Exception:
-            pass
 
     def image_orientation_change(self):
         orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
@@ -917,9 +897,11 @@ class SubjectOverviewApp(QMainWindow):
 
         # images panel
         image_state = dict()
-        image_state["modality"] = str(self.ui.image_mod_combo.currentText())
-        image_state["contrast"] = int(
-            self.ui.contrast_combo.currentIndex()) + 1
+        image_state["image_class"], image_state["image_name"] = self.__image_combo_manager.current_class_and_name
+        if image_state["image_class"] == "FMRI":
+            image_state["contrast"] = self.__image_contrast_manager.get_previous_contrast(image_state["image_name"])
+        else:
+            image_state["contrast"] = None
         image_state["orientation"] = str(
             self.ui.image_orientation.currentText())
         image_state["window"] = float(self.ui.image_window.value())
@@ -1069,12 +1051,26 @@ class SubjectOverviewApp(QMainWindow):
         # images panel
         image_state = wanted_state.get("image_state")
         if image_state is not None:
-            mod = image_state.get("modality")
-            if mod is not None:
-                ix = self.ui.image_mod_combo.findText(mod)
-                self.ui.image_mod_combo.setCurrentIndex(ix)
-                self.image_modality_change()
+            image_class = image_state.get("image_class")
+            if image_class is None:
+                log.warning("Couldn't get image class, trying compatibility mode")
+                mod = image_state.get("modality")
+                image_name = str(mod).upper()
+                image_class = None
+                for t in ("IMAGE","LABEL","FMRI"):
+                    if image_name in self.reader.get(t,None,index=True):
+                        image_class = t
+                        break
+                if image_name == "DTI":
+                    image_class = "DTI"
+            else:
+                image_name = image_state["image_name"]
+
+            cont = image_state.get("contrast", 1)
             orient = image_state.get("orientation")
+            self.__image_combo_manager.set_image(image_class, image_name)
+            self.__image_contrast_manager.set_contrast(cont)
+
             if orient is not None:
                 ix = self.ui.image_orientation.findText(orient)
                 self.ui.image_orientation.setCurrentIndex(ix)
@@ -1088,8 +1084,7 @@ class SubjectOverviewApp(QMainWindow):
             img_ = image_state.get("slice")
             if img_ is not None:
                 self.ui.slice_spin.setValue(img_)
-            cont = image_state.get("contrast", 1)
-            self.ui.contrast_combo.setCurrentIndex(cont - 1)
+
 
         # fmri Contours panel
         contours_state = wanted_state.get("contour_state")
@@ -1107,7 +1102,7 @@ class SubjectOverviewApp(QMainWindow):
                 self.ui.fmri_paradigm_combo.setCurrentIndex(idx)
                 self.reload_contrast_names(self.ui.fmri_contrast_combo, pdgm)
                 if ctrst is not None:
-                    self.ui.fmri_contrast_combo.setCurrentIndex(ctrst - 1)
+                    self.__contours_contrast_manager.set_contrast(ctrst)
                 self.ui.fmri_show_contours_check.setChecked(vis)
                 self.ui.fmri_show_contours_value.setValue(val)
                 self.fmri_change_pdgm()

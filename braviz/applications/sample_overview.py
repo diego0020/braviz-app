@@ -493,59 +493,50 @@ class SampleOverview(QtGui.QMainWindow):
         image_state = wanted_state.get("image_state")
         log.info(image_state)
         if image_state is not None:
-            mod = image_state.get("modality")
-            if mod is not None:
-                mod = mod.upper()
-                try:
-                    if mod in self.reader.get("fMRI", None, index=True):
-                        paradigm = mod
-                        mod = "fMRI"
-                        log.info("Loading fMRI")
-                        cont = image_state.get("contrast", 1)
-                        # to load MRI window level
-                        viewer.image.change_image_modality(
-                            mod, paradigm, contrast=cont, skip_render=True)
-                        window = image_state.get("window")
-                        if window is not None:
-                            viewer.image.set_image_window(
-                                window, skip_render=True)
-                        level = image_state.get("level")
-                        if level is not None:
-                            viewer.image.set_image_level(
-                                level, skip_render=True)
-                        viewer.image.change_image_modality("FMRI", mod , skip_render=True)
-                    elif mod in self.reader.get("IMAGE", None, index=True):
-                        viewer.image.change_image_modality("IMAGE", mod , skip_render=True)
-                    elif mod in self.reader.get("LABEL", None, index=True):
-                        viewer.image.change_image_modality("LABEL",mod , skip_render=True)
-                    elif mod == "DTI":
-                        viewer.image.change_image_modality("DTI", None , skip_render=True)
-                    else:
-                        raise Exception("Unknown data type")
+            image_class = image_state.get("image_class", False)
+            # None indicates no image
+            if image_class is False:
+                log.warning("Couldn't get image class, trying compatibility mode")
+                mod = image_state.get("modality")
+                image_name = str(mod).upper()
+                image_class = None
+                for t in ("IMAGE","LABEL","FMRI"):
+                    if image_name in self.reader.get(t,None,index=True):
+                        image_class = t
+                        break
+                if image_name == "DTI":
+                    image_class = "DTI"
+            else:
+                image_name = image_state["image_name"]
+                cont = image_state.get("contrast", 1)
+            try:
+                if image_class is None:
+                    viewer.image.hide_image()
+                else:
                     viewer.image.show_image()
                     viewer.image.image_plane_widget.SetInteraction(1)
+                    viewer.image.change_image_modality(image_class, image_name, contrast=cont)
                     orient = image_state.get("orientation")
                     if orient is not None:
                         orientation_dict = {
                             "Axial": 2, "Coronal": 1, "Sagital": 0}
                         viewer.image.change_image_orientation(
-                            orientation_dict[orient], skip_render=True)
+                        orientation_dict[orient], skip_render=True)
                     img_slice = image_state.get("slice")
                     if img_slice is not None:
                         viewer.image.set_image_slice(
-                            int(img_slice), skip_render=True)
+                        int(img_slice), skip_render=True)
                     window = image_state.get("window")
                     if window is not None:
                         viewer.image.set_image_window(window, skip_render=True)
                     level = image_state.get("level")
                     if level is not None:
                         viewer.image.set_image_level(level, skip_render=True)
-
-                except Exception as e:
-                    log.warning(e.message)
-                    #viewer.image.change_image_modality(None, paradigm=None, skip_render=True)
-            else:
+            except Exception as e:
+                log.warning(e.message)
+                #viewer.image.change_image_modality(None, paradigm=None, skip_render=True)
                 viewer.image.hide_image()
+
         QtGui.QApplication.instance().processEvents()
         # fmri panel
         contours_state = wanted_state.get("contour_state")

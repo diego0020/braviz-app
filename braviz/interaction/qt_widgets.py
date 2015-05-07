@@ -892,7 +892,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
 class ImageComboBoxManager(QtCore.QObject):
     image_changed = QtCore.pyqtSignal(tuple)
 
-    def __init__(self, reader):
+    def __init__(self, reader, show_none = False):
         super(ImageComboBoxManager,self).__init__()
         grey_images = sorted(n.upper() for n in reader.get("IMAGE", None, index=True))
         label_maps = sorted(n.upper() for n in reader.get("LABEL", None, index=True))
@@ -908,6 +908,8 @@ class ImageComboBoxManager(QtCore.QObject):
                      [("DTI", n) for n in dti] + \
                      [("FMRI", n) for n in fmri_pdgms]
 
+        if show_none:
+            all_images = [(None, "None")] + all_images
         self.available_images = all_images
         self.combo_box = None
         self.data_dict = {t: i for i, t in enumerate(all_images)}
@@ -928,6 +930,25 @@ class ImageComboBoxManager(QtCore.QObject):
     def _handle_index_change(self, index):
         new_class, new_name = self.combo_box.itemData(index).toPyObject()
         self.image_changed.emit((new_class,new_name))
+
+    @property
+    def current_class(self):
+        idx = self.combo_box.currentIndex()
+        data = self.combo_box.itemData(idx).toPyObject()
+        return data[0]
+
+    @property
+    def current_name(self):
+        idx = self.combo_box.currentIndex()
+        data = self.combo_box.itemData(idx).toPyObject()
+        return data[1]
+
+    @property
+    def current_class_and_name(self):
+        idx = self.combo_box.currentIndex()
+        data = self.combo_box.itemData(idx).toPyObject()
+        return data
+
 
 class ContrastComboManager(QtCore.QObject):
     contrast_changed = QtCore.pyqtSignal(int)
