@@ -48,7 +48,7 @@ from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
 from braviz.interaction.structure_metrics import AggregateInRoi
 from braviz.interaction.roi import export_roi
-from braviz.interaction.qt_widgets import ImageComboBoxManager
+from braviz.interaction.qt_widgets import ImageComboBoxManager, ContrastComboManager
 from braviz.readAndFilter.config_file import get_config
 __author__ = 'Diego'
 
@@ -529,6 +529,7 @@ class BuildRoiApp(QMainWindow):
         config = get_config(__file__)
         self.ui = None
         self.__image_combo_manager = None
+        self.__contrast_combo_manager = None
 
         self.__roi_name = roi_name
         if roi_name is not None:
@@ -633,13 +634,16 @@ class BuildRoiApp(QMainWindow):
             partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
 
+        #Image Combo
         self.__image_combo_manager = ImageComboBoxManager(self.reader)
         self.__image_combo_manager.setup(self.ui.image_combo)
         self.__image_combo_manager.image_changed.connect(self.select_image_modality)
-        self.ui.contrast_combo.setEnabled(0)
-        self.ui.contrast_combo.setCurrentIndex(0)
-        self.ui.contrast_combo.setEnabled(False)
-        self.ui.contrast_combo.activated.connect(self.change_contrast)
+
+        #Contrast Combo
+        self.__contrast_combo_manager = ContrastComboManager(self.reader)
+        self.__contrast_combo_manager.setup(self.ui.contrast_combo)
+        self.__contrast_combo_manager.contrast_changed.connect(self.change_contrast)
+
         self.ui.sphere_radius.valueChanged.connect(self.update_sphere_radius)
         self.ui.sphere_x.valueChanged.connect(self.update_sphere_center)
         self.ui.sphere_y.valueChanged.connect(self.update_sphere_center)
@@ -965,7 +969,8 @@ class BuildRoiApp(QMainWindow):
             "Subject %s" % self.__current_subject)
         img_id = new_subject
         self.__current_img_id = img_id
-        self.reload_contrast_names()
+        if self.__current_image_class == "FMRI":
+            self.__contrast_combo_manager.change_paradigm(new_subject, self.__current_image_name)
         log = logging.getLogger(__file__)
         try:
             self.vtk_viewer.change_subject(img_id)
@@ -1027,33 +1032,13 @@ class BuildRoiApp(QMainWindow):
         image_class, image_name = class_and_name
         if image_class == "FMRI":
             # functional
-            self.ui.contrast_combo.setEnabled(1)
-            self.reload_contrast_names(image_name)
-            contrast = int(self.ui.contrast_combo.currentIndex()) + 1
+            contrast = self.__contrast_combo_manager.get_previous_contrast(image_name)
+            self.__contrast_combo_manager.change_paradigm(self.__current_subject, image_name)
         else:
+            self.__contrast_combo_manager.change_paradigm(self.__current_subject, None)
             contrast = None
-        self.set_image(image_class,image_name, contrast)
 
-    def reload_contrast_names(self, mod=None):
-        if mod is None:
-            mod = str(self.ui.image_combo.currentText())
-        if mod.upper() not in self.reader.get("FMRI", None, index=True):
-            return
-        previus_index = self.ui.contrast_combo.currentIndex()
-        try:
-            contrasts_dict = self.reader.get(
-                "FMRI", self.__current_img_id, name=mod, contrasts_dict=True)
-        except Exception:
-            pass
-        else:
-            self.ui.contrast_combo.clear()
-            for i in xrange(len(contrasts_dict)):
-                self.ui.contrast_combo.addItem(contrasts_dict[i + 1])
-            if 0 <= previus_index < len(contrasts_dict):
-                self.ui.contrast_combo.setCurrentIndex(previus_index)
-            else:
-                self.ui.contrast_combo.setCurrentIndex(0)
-                self.change_contrast()
+        self.set_image(image_class,image_name, contrast)
 
     def change_contrast(self, dummy_index=None):
         new_contrast = self.ui.contrast_combo.currentIndex() + 1
@@ -1172,6 +1157,7 @@ class BuildRoiApp(QMainWindow):
             #Compatibility with old scenarios
             log.warning("No image_class found, swtiching to compatibility mode")
             image_name = str(context_dict.get("image_type")).upper()
+            image_class = None
             for t in ("IMAGE","LABEL","FMRI"):
                 if image_name in self.reader.get(t,None,index=True):
                     image_class = t
@@ -1179,13 +1165,17 @@ class BuildRoiApp(QMainWindow):
             if image_name == "DTI":
                 image_class = "DTI"
             image_contrast = None
+            if image_class is None:
+                log.warning("couldnt determine image, falling back to MRI")
+                image_class = "IMAGE"
+                image_name = "MRI"
         else:
             image_name = context_dict.get("image_name")
             image_contrast = context_dict.get("image_contrast")
 
         self.__image_combo_manager.set_image(image_class,image_name)
         if image_class == "FMRI" and image_contrast is not None:
-            self.ui.contrast_combo.setCurrentIndex(image_contrast-1)
+            self.__contrast_combo_manager.set_contrast(image_contrast)
             self.change_contrast()
         self.ui.axial_check.setChecked(context_dict["axial_on"])
         self.ui.coronal_check.setChecked(context_dict["coronal_on"])

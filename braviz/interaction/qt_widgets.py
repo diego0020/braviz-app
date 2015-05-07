@@ -916,7 +916,7 @@ class ImageComboBoxManager(QtCore.QObject):
         combo_box.clear()
         for im_class, name in self.available_images:
             combo_box.addItem(name,(im_class, name))
-        combo_box.currentIndexChanged.connect(self.handle_index_change)
+        combo_box.currentIndexChanged.connect(self._handle_index_change)
         self.combo_box = combo_box
 
     def set_image(self, image_class, image_name):
@@ -925,10 +925,90 @@ class ImageComboBoxManager(QtCore.QObject):
         index = self.data_dict[(image_class,image_name)]
         self.combo_box.setCurrentIndex(index)
 
-    def handle_index_change(self, index):
+    def _handle_index_change(self, index):
         new_class, new_name = self.combo_box.itemData(index).toPyObject()
         self.image_changed.emit((new_class,new_name))
 
+class ContrastComboManager(QtCore.QObject):
+    contrast_changed = QtCore.pyqtSignal(int)
+
+    def __init__(self, reader):
+        super(ContrastComboManager,self).__init__()
+        self.valid_paradigms = reader.get("FMRI",None,index=True)
+        self.__last_contrast = {}
+        self.combo_box = None
+        self.reader = reader
+        self._contrast_dict = None
+        self._index_dict = {}
+        self._setting_up = False
+        self._current_pdgm = None
+
+    def setup(self, combo_box, initial_subject = None, initial_pdgm = None):
+        combo_box.clear()
+        combo_box.currentIndexChanged.connect(self._handle_index_change)
+        self.combo_box = combo_box
+        if initial_pdgm is not None and initial_subject is not None:
+            self.change_paradigm(initial_subject, initial_pdgm)
+
+    def change_paradigm(self, subject, pdgm):
+        if self._current_pdgm == pdgm and self._contrast_dict is not None:
+            # no update necessary
+            return
+
+        self._current_pdgm = pdgm
+        self._setting_up = True
+        if pdgm is not None:
+            pdgm = pdgm.upper()
+        log = logging.getLogger(__name__)
+        if pdgm not in self.valid_paradigms:
+            self.combo_box.clear()
+            self.combo_box.setEnabled(False)
+            self._setting_up = False
+            return
+
+        try:
+            contrast_dict = self.reader.get("FMRI", subject, name=pdgm, contrasts_dict=True)
+        except Exception:
+            log.warning("Couldn't get contrast dict")
+            contrast_dict = None
+        self._contrast_dict = contrast_dict
+        self._index_dict = {}
+        if contrast_dict is None:
+            self.combo_box.setEnabled(False)
+        else:
+            items = sorted(contrast_dict.items(), key=lambda x: x[0])
+
+            self.combo_box.clear()
+            for i, (k, n) in enumerate(items):
+                self.combo_box.addItem(n, k)
+                self._index_dict[i] = k
+
+            last_contrast = self.__last_contrast.get(pdgm)
+            if last_contrast is not None:
+                idx = self.combo_box.findData(last_contrast)
+                self.combo_box.setCurrentIndex(idx)
+            self.combo_box.setEnabled(True)
+
+        self._setting_up = False
+
+    def set_contrast(self, contrast):
+        idx = self._index_dict.get(contrast)
+        if idx is None:
+            log = logging.getLogger(__name__)
+            log.warning("Contrast not currently in box")
+            return
+        self.combo_box.setCurrentIndex(idx)
+
+    def get_previous_contrast(self, pdgm):
+        return self.__last_contrast.get(pdgm, 1)
+
+    def _handle_index_change(self, index):
+        if self._setting_up:
+            return
+        contrast_n, success = self.combo_box.itemData(index).toInt()
+        assert success == True
+        self.__last_contrast[self._current_pdgm] = contrast_n
+        self.contrast_changed.emit(contrast_n)
 
 if __name__ == "__main__":
     app = QtGui.QApplication([])

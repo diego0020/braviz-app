@@ -47,6 +47,7 @@ from braviz.readAndFilter.hierarchical_fibers import read_logical_fibers
 from braviz.interaction import compute_fiber_lengths
 from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog, SaveLogicFibersBundleDialog, LoadLogicBundle
+from braviz.interaction.qt_widgets import ImageComboBoxManager
 from braviz.readAndFilter import user_data as braviz_user_data
 from braviz.readAndFilter.config_file import get_config
 
@@ -136,6 +137,7 @@ class LogicBundlesApp(QMainWindow):
         QMainWindow.__init__(self)
         config = get_config(__file__)
         self.ui = None
+        self.__image_combo_manager = None
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.subjects_list = tabular_data.get_subjects()
@@ -143,7 +145,9 @@ class LogicBundlesApp(QMainWindow):
         self.__current_subject = config.get_default_subject()
         self.__current_img_id = self.__current_subject
 
-        self.__current_image_mod = "MRI"
+        self.__current_image_class = None
+        self.__current_image_name = None
+        self.__current_contrast = None
         self.__curent_space = "World"
 
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
@@ -192,8 +196,9 @@ class LogicBundlesApp(QMainWindow):
         self.ui.sagital_slice.valueChanged.connect(
             partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
-        self.ui.image_combo.currentIndexChanged.connect(
-            self.select_image_modality)
+        self.__image_combo_manager = ImageComboBoxManager(self.reader)
+        self.__image_combo_manager.setup(self.ui.image_combo)
+        self.__image_combo_manager.image_changed.connect(self.select_image_modality)
         self.ui.space_combo.currentIndexChanged.connect(self.select_space)
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
@@ -302,7 +307,7 @@ class LogicBundlesApp(QMainWindow):
 
     def start(self):
         self.vtk_widget.initialize_widget()
-        self.set_image("MRI")
+        self.__image_combo_manager.set_image("IMAGE", "MRI")
         try:
             self.vtk_viewer.show_image()
         except Exception as e:
@@ -313,20 +318,13 @@ class LogicBundlesApp(QMainWindow):
         self.change_subject(self.__current_subject)
         self.select_surface(None)
 
-    def set_image(self, modality):
-        modality = modality.upper()
+    def set_image(self, image_class, image_name):
+        image_class = image_class.upper()
+        image_name = image_name.upper()
 
-        if modality in {"MRI","FA","MD"}:
-            im_class = "IMAGE"
-        elif modality in {"APARC","WMPARC"}:
-            im_class = "LABEL"
-        elif modality == "DTI":
-            im_class = "DTI"
-            modality = None
-        else:
-            im_class = "FMRI"
-        self.vtk_viewer.change_image_modality(im_class,modality)
-        self.__current_image_mod = modality
+        self.vtk_viewer.change_image_modality(image_class,image_name)
+        self.__current_image_class = image_class
+        self.__current_image_name = image_name
         self.update_slice_maximums()
 
     def update_slice_maximums(self):
@@ -377,9 +375,9 @@ class LogicBundlesApp(QMainWindow):
         self.update_fibers()
         # self.update_scalar_metric()
 
-    def select_image_modality(self, index):
-        mod = str(self.ui.image_combo.currentText())
-        self.set_image(mod)
+    def select_image_modality(self, class_and_name):
+        image_class, image_name = class_and_name
+        self.set_image(image_class, image_name)
 
     def select_surface_scalars(self, index):
         scalar_name = SURFACE_SCALARS_DICT[int(index)]
@@ -575,7 +573,8 @@ class LogicBundlesApp(QMainWindow):
         # current tree
         state["logic_tree"] = self.vtk_tree.to_dict()
         # context
-        context_dict = {"image_type": self.__current_image_mod,
+        context_dict = {"image_class": self.__current_image_class,
+                        "image_name": self.__current_image_name,
                         "axial_on": self.ui.axial_check.checkState() == QtCore.Qt.Checked,
                         "coronal_on": self.ui.coronal_check.checkState() == QtCore.Qt.Checked,
                         "sagital_on": self.ui.sagital_check.checkState() == QtCore.Qt.Checked,
@@ -610,6 +609,7 @@ class LogicBundlesApp(QMainWindow):
 
     def load_state(self, state):
         # subject
+        log = logging.getLogger(__name__)
         subjs_state = state["subjects"]
         subj = subjs_state["subject"]
         self.change_subject(subj)
@@ -617,11 +617,25 @@ class LogicBundlesApp(QMainWindow):
         self.subjects_list = subjs_state["sample"]
         # context
         context_dict = state["context"]
-        img = context_dict["image_type"]
-        idx = self.ui.image_combo.findText(img)
-        assert idx >= 0
-        self.ui.image_combo.setCurrentIndex(idx)
-        assert self.__current_image_mod == img
+        image_class = state.get("image_class")
+        if image_class is None:
+            log.warning("No image class found, switching to compatibility mode")
+            image_name = str(context_dict.get("image_type")).upper()
+            image_class = None
+            for t in ("IMAGE","LABEL","FMRI"):
+                if image_name in self.reader.get(t,None,index=True):
+                    image_class = t
+                    break
+            if image_name == "DTI":
+                image_class = "DTI"
+            image_contrast = None
+            if image_class is None:
+                log.warning("couldnt determine image, falling back to MRI")
+                image_class = "IMAGE"
+                image_name = "MRI"
+        else:
+            image_name = context_dict["image_name"]
+        self.set_image(image_class, image_name)
         self.ui.axial_check.setChecked(context_dict["axial_on"])
         self.ui.coronal_check.setChecked(context_dict["coronal_on"])
         self.ui.sagital_check.setChecked(context_dict["sagital_on"])
