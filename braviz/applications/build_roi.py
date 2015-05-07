@@ -1096,7 +1096,9 @@ class BuildRoiApp(QMainWindow):
         state["roi_id"] = self.__roi_id
         state["additional_rois"] = self.__additional_spheres.keys()
         # context
-        context_dict = {"image_type": self.ui.image_combo.currentText(),
+        context_dict = {"image_class": self.__current_image_class,
+                        "image_name": self.__current_image_name,
+                        "image_contrast": self.__current_contrast,
                         "axial_on": self.ui.axial_check.checkState() == QtCore.Qt.Checked,
                         "coronal_on": self.ui.coronal_check.checkState() == QtCore.Qt.Checked,
                         "sagital_on": self.ui.sagital_check.checkState() == QtCore.Qt.Checked,
@@ -1130,6 +1132,7 @@ class BuildRoiApp(QMainWindow):
         return state
 
     def load_state(self, state):
+        log = logging.getLogger(__name__)
         self.__roi_id = state["roi_id"]
         self.__roi_name = geom_db.get_roi_name(self.__roi_id)
         additional_spheres = state.get("additional_rois")
@@ -1164,11 +1167,26 @@ class BuildRoiApp(QMainWindow):
 
         # context
         context_dict = state["context"]
-        img = context_dict["image_type"]
-        idx = self.ui.image_combo.findText(img)
-        assert idx >= 0
-        self.ui.image_combo.setCurrentIndex(idx)
-        assert self.__current_image_mod == img
+        image_class = context_dict.get("image_class")
+        if image_class is None:
+            #Compatibility with old scenarios
+            log.warning("No image_class found, swtiching to compatibility mode")
+            image_name = str(context_dict.get("image_type")).upper()
+            for t in ("IMAGE","LABEL","FMRI"):
+                if image_name in self.reader.get(t,None,index=True):
+                    image_class = t
+                    break
+            if image_name == "DTI":
+                image_class = "DTI"
+            image_contrast = None
+        else:
+            image_name = context_dict.get("image_name")
+            image_contrast = context_dict.get("image_contrast")
+
+        self.__image_combo_manager.set_image(image_class,image_name)
+        if image_class == "FMRI" and image_contrast is not None:
+            self.ui.contrast_combo.setCurrentIndex(image_contrast-1)
+            self.change_contrast()
         self.ui.axial_check.setChecked(context_dict["axial_on"])
         self.ui.coronal_check.setChecked(context_dict["coronal_on"])
         self.ui.sagital_check.setChecked(context_dict["sagital_on"])
@@ -1383,7 +1401,7 @@ class BuildRoiApp(QMainWindow):
 
     def set_additional_spheres(self, roi_ids):
         requested_spheres = set(roi_ids)
-        assert self.__roi_id in requested_spheres
+        assert (self.__roi_id in requested_spheres) or (len(roi_ids) == 0)
         if len(requested_spheres) == 1:
             requested_spheres = set()
         current_spheres = set(self.__additional_spheres.keys())
