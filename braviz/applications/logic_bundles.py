@@ -383,6 +383,8 @@ class LogicBundlesApp(QMainWindow):
         self.__current_subject = new_subject
         self.__subjects_check_model.highlighted_subject = self.__current_subject
         img_id = new_subject
+        if self.__current_image_class == "FMRI":
+            self.__contrast_combo_manager.change_paradigm(new_subject, self.__current_image_name)
         self.__current_img_id = img_id
         log = logging.getLogger(__file__)
         self.vtk_tree.update(new_subject, self.__curent_space)

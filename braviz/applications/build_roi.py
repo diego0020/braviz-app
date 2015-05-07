@@ -727,7 +727,6 @@ class BuildRoiApp(QMainWindow):
     def set_image(self, image_class, image_name, contrast=None):
         self.__current_image_class = image_class
         self.__current_image_name = image_name
-
         self.__current_contrast = contrast
         log = logging.getLogger(__name__)
         try:

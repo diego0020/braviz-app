@@ -37,6 +37,7 @@ from braviz.visualization.simple_vtk import save_ren_win_picture
 from braviz.interaction.qt_models import SubjectChecklist, DataFrameModel
 from braviz.readAndFilter import geom_db, tabular_data
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog
+from braviz.interaction.qt_widgets import ImageComboBoxManager, ContrastComboManager
 import datetime
 import platform
 import os
@@ -189,6 +190,8 @@ class MeasureApp(QMainWindow):
         config = get_config(__file__)
         QMainWindow.__init__(self)
         self.ui = None
+        self.__image_combo_manager = None
+        self.__contrast_combo_manager = None
         self.__roi_name = roi_name
         if roi_name is not None:
             self.__roi_id = geom_db.get_roi_id(roi_name)
@@ -201,7 +204,8 @@ class MeasureApp(QMainWindow):
         self.__current_subject = config.get_default_subject()
         self.__current_img_id = self.__current_subject
 
-        self.__current_image_mod = "MRI"
+        self.__current_image_class = "IMAGE"
+        self.__current_image_name = "MRI"
         self.__current_contrast = None
         try:
             self.__curent_space = geom_db.get_roi_space(roi_name)
@@ -264,15 +268,16 @@ class MeasureApp(QMainWindow):
         check.setEnabled(False)
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
         self.vtk_widget.distance_changed.connect(self.update_measure)
-        self.ui.image_combo.currentIndexChanged.connect(
-            self.select_image_modality)
-        paradigms = self.reader.get("fMRI", None, index=True)
-        for p in paradigms:
-            self.ui.image_combo.addItem(p.title())
-        self.ui.contrast_combo.setEnabled(0)
-        self.ui.contrast_combo.setCurrentIndex(0)
-        self.ui.contrast_combo.setEnabled(False)
-        self.ui.contrast_combo.activated.connect(self.change_contrast)
+
+        #image combo
+        self.__image_combo_manager = ImageComboBoxManager(self.reader)
+        self.__image_combo_manager.setup(self.ui.image_combo)
+        self.__image_combo_manager.image_changed.connect(self.select_image_modality)
+
+        #contrast combo
+        self.__contrast_combo_manager = ContrastComboManager(self.reader)
+        self.__contrast_combo_manager.setup(self.ui.contrast_combo)
+        self.__contrast_combo_manager.contrast_changed.connect(self.change_contrast)
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
         self.ui.subjects_list.activated.connect(self.select_subject)
@@ -318,7 +323,7 @@ class MeasureApp(QMainWindow):
 
     def start(self):
         self.vtk_widget.initialize_widget()
-        self.set_image("MRI")
+        self.__image_combo_manager.set_image("IMAGE","MRI")
         try:
             self.vtk_viewer.show_image()
         except Exception as e:
@@ -338,24 +343,14 @@ class MeasureApp(QMainWindow):
         self.ui.point_2.setText(point_to_str(self.vtk_viewer.point2))
         self.line_just_changed()
 
-    def set_image(self, modality, contrast=None):
-        self.__current_image_mod = modality
+    def set_image(self, image_class, image_name, contrast=None):
+        self.__current_image_class = image_class
+        self.__current_image_name = image_name
         self.__current_contrast = contrast
         log = logging.getLogger(__name__)
 
-        modality = modality.upper()
-
-        if modality in {"MRI","FA","MD"}:
-            im_class = "IMAGE"
-        elif modality in {"APARC","WMPARC"}:
-            im_class = "LABEL"
-        elif modality == "DTI":
-            im_class = "DTI"
-            modality = None
-        else:
-            im_class = "FMRI"
         try:
-            self.vtk_viewer.change_image_modality(im_class, modality, contrast)
+            self.vtk_viewer.change_image_modality(image_class, image_name, contrast)
         except Exception as e:
             self.statusBar().showMessage(e.message, 500)
             log.warning(e.message)
@@ -416,7 +411,9 @@ class MeasureApp(QMainWindow):
             "Subject %s" % self.__current_subject)
         img_id = new_subject
         self.__current_img_id = img_id
-        self.reload_contrast_names()
+        if self.__current_image_class == "FMRI":
+            self.__contrast_combo_manager.change_paradigm(new_subject, self.__current_image_name)
+
         log = logging.getLogger(__file__)
         try:
             self.vtk_viewer.change_subject(img_id)
@@ -470,49 +467,27 @@ class MeasureApp(QMainWindow):
         log.info(vu)
         self.vtk_viewer.reset_camera()
 
-    def select_image_modality(self, dummy_index):
-        mod = str(self.ui.image_combo.currentText())
-        if self.ui.image_combo.currentIndex() > 3:
+    def select_image_modality(self, class_and_name):
+        image_class, image_name = class_and_name
+        if image_class == "FMRI":
             # functional
-            self.ui.contrast_combo.setEnabled(1)
-            self.reload_contrast_names(mod)
-            contrast = int(self.ui.contrast_combo.currentIndex()) + 1
+            self.__contrast_combo_manager.change_paradigm(self.__current_subject, image_name)
+            contrast = self.__contrast_combo_manager.get_previous_contrast(image_name)
         else:
-            self.ui.contrast_combo.setEnabled(0)
+            self.__contrast_combo_manager.change_paradigm(self.__current_subject, None)
             contrast = None
-        self.set_image(mod, contrast)
+        self.set_image(image_class, image_name, contrast)
 
-    def reload_contrast_names(self, mod=None):
-        if mod is None:
-            mod = str(self.ui.image_combo.currentText())
-        if mod.upper() not in self.reader.get("FMRI", None, index=True):
-            return
-        previus_index = self.ui.contrast_combo.currentIndex()
-        try:
-            contrasts_dict = self.reader.get(
-                "FMRI", self.__current_img_id, name=mod, contrasts_dict=True)
-        except Exception:
-            pass
-        else:
-            self.ui.contrast_combo.clear()
-            for i in xrange(len(contrasts_dict)):
-                self.ui.contrast_combo.addItem(contrasts_dict[i + 1])
-            if 0 <= previus_index < len(contrasts_dict):
-                self.ui.contrast_combo.setCurrentIndex(previus_index)
-            else:
-                self.ui.contrast_combo.setCurrentIndex(0)
-                self.change_contrast()
-
-    def change_contrast(self, dummy_index=None):
-        new_contrast = self.ui.contrast_combo.currentIndex() + 1
-        mod = str(self.ui.image_combo.currentText())
-        self.set_image(mod, new_contrast)
+    def change_contrast(self, contrast):
+        self.set_image(self.__current_image_class, self.__current_image_name, contrast)
 
     def get_state(self):
         state = dict()
         state["roi_id"] = self.__roi_id
         # context
-        context_dict = {"image_type": self.ui.image_combo.currentText(),
+        context_dict = {"image_class": self.__current_image_class,
+                        "image_name": self.__current_image_name,
+                        "image_contrast": self.__current_contrast,
                         "axial_on": self.ui.axial_check.checkState() == QtCore.Qt.Checked,
                         "coronal_on": self.ui.coronal_check.checkState() == QtCore.Qt.Checked,
                         "sagital_on": self.ui.sagital_check.checkState() == QtCore.Qt.Checked,
@@ -563,11 +538,29 @@ class MeasureApp(QMainWindow):
 
         # context
         context_dict = state["context"]
-        img = context_dict["image_type"]
-        idx = self.ui.image_combo.findText(img)
-        assert idx >= 0
-        self.ui.image_combo.setCurrentIndex(idx)
-        assert self.__current_image_mod == img
+        image_class = context_dict.get("image_class")
+        if image_class is None:
+            log = logging.getLogger(__name__)
+            log.warning("Image class not found, switching to compatibility mode")
+            image_name = str(context_dict.get("image_type")).upper()
+            image_class = None
+            for t in ("IMAGE","LABEL","FMRI"):
+                if image_name in self.reader.get(t,None,index=True):
+                    image_class = t
+                    break
+            if image_name == "DTI":
+                image_class = "DTI"
+            image_contrast = None
+            if image_class is None:
+                log.warning("couldnt determine image, falling back to MRI")
+                image_class = "IMAGE"
+                image_name = "MRI"
+        else:
+            image_name = context_dict["image_name"]
+            image_contrast = context_dict["image_contrast"]
+
+        self.__image_combo_manager.set_image(image_class, image_name)
+        self.__contrast_combo_manager.set_contrast(image_contrast)
         self.ui.axial_check.setChecked(context_dict["axial_on"])
         self.ui.coronal_check.setChecked(context_dict["coronal_on"])
         self.ui.sagital_check.setChecked(context_dict["sagital_on"])
