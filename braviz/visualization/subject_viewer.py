@@ -2278,7 +2278,7 @@ class OrthogonalPlanesViewer(object):
 
         call after initializing the planes
         """
-        if self.__current_class not in ("DTI", "FMRI"):
+        if self.__current_class == "IMAGE":
             self.y_image.image_plane_widget.SetLookupTable(
                 self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(
@@ -2404,7 +2404,7 @@ class OrthogonalPlanesViewer(object):
             im.change_image_modality(
                 image_class, image_name, skip_render=True, contrast=contrast)
         self.__current_class = image_class
-        self.__curent_name = image_name
+        self.__current_name = image_name
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())
         self._link_window_level()
 
@@ -2700,7 +2700,7 @@ class MeasurerViewer(object):
 
         call after initializing the planes
         """
-        if self.__current_modality not in ("DTI", "FMRI"):
+        if self.__current_class == "IMAGE":
             self.y_image.image_plane_widget.SetLookupTable(
                 self.x_image.image_plane_widget.GetLookupTable())
             self.z_image.image_plane_widget.SetLookupTable(
