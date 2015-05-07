@@ -27,7 +27,7 @@ import seaborn as sns
 import numpy as np
 
 import braviz
-from braviz.interaction.qt_widgets import ListValidator
+from braviz.interaction.qt_widgets import ListValidator, ContrastComboManager
 import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
 from braviz.readAndFilter import tabular_data as braviz_tab_data
@@ -37,6 +37,7 @@ from braviz.interaction.connection import MessageClient
 from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
 from braviz.readAndFilter.config_file import get_config
+
 
 __author__ = 'Diego'
 
@@ -62,6 +63,7 @@ class FmriExplorer(QtGui.QMainWindow):
             self.__frozen_points, string_columns=(1, 2), index_as_column=False)
 
         self.ui = None
+        self.__contrast_combo_manager = None
         self.three_d_widget = None
         self.image_view = None
         self.time_plot = None
@@ -109,9 +111,11 @@ class FmriExplorer(QtGui.QMainWindow):
         for p in paradigms:
             self.ui.paradigm_combo.addItem(p)
         self.ui.paradigm_combo.setCurrentIndex(0)
-        self.ui.contrast_combo.clear()
-        self.ui.contrast_combo.activated.connect(self.update_fmri_data_view)
         self.ui.paradigm_combo.activated.connect(self.update_fmri_data_view)
+
+        self.__contrast_combo_manager = ContrastComboManager(self.__reader)
+        self.__contrast_combo_manager.setup(self.ui.contrast_combo)
+        self.__contrast_combo_manager.contrast_changed.connect(self.update_fmri_data_view)
 
         # subject
         self.ui.subj_completer = QtGui.QCompleter(list(self.__valid_ids))
@@ -182,7 +186,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.subject_edit.setText(str(self.__current_subject))
         self.update_fmri_data_view()
 
-    def update_fmri_data_view(self):
+    def update_fmri_data_view(self, dummy = None):
         log = logging.getLogger(__name__)
         subj = str(self.ui.subject_edit.text())
         if subj in self.__valid_ids:
@@ -199,25 +203,16 @@ class FmriExplorer(QtGui.QMainWindow):
                 return
         image_code = self.__current_subject
         self.__current_paradigm = new_paradigm
-        self.__current_contrast = self.ui.contrast_combo.currentIndex() + 1
+        self.__contrast_combo_manager.change_paradigm(self.__current_subject, new_paradigm)
+        self.__current_contrast = self.__contrast_combo_manager.get_previous_contrast(new_paradigm)
 
         try:
             spm_data = self.__reader.get(
                 "fmri", image_code, name=self.__current_paradigm, spm=True)
-            contrasts = spm_data.get_contrast_names()
         except Exception:
             log.warning("Couldn't read spm file")
             spm_data = None
-        else:
-            self.ui.contrast_combo.clear()
-            for i in xrange(len(contrasts)):
-                self.ui.contrast_combo.addItem(contrasts[i + 1])
-            if 1 <= self.__current_contrast <= len(contrasts):
-                self.ui.contrast_combo.setCurrentIndex(
-                    self.__current_contrast - 1)
-            else:
-                self.ui.contrast_combo.setCurrentIndex(0)
-                self.__current_contrast = 1  # 0+1
+
         try:
             self.image_view.set_all(
                 image_code, self.__current_paradigm, self.__current_contrast)
