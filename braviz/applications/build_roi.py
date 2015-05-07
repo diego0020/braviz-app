@@ -1040,8 +1040,7 @@ class BuildRoiApp(QMainWindow):
 
         self.set_image(image_class,image_name, contrast)
 
-    def change_contrast(self, dummy_index=None):
-        new_contrast = self.ui.contrast_combo.currentIndex() + 1
+    def change_contrast(self, new_contrast):
         self.set_image(self.__current_image_class,self.__current_image_name, new_contrast)
 
     def select_surface_scalars(self, index):

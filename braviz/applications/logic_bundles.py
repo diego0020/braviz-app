@@ -47,7 +47,7 @@ from braviz.readAndFilter.hierarchical_fibers import read_logical_fibers
 from braviz.interaction import compute_fiber_lengths
 from braviz.interaction.structure_metrics import get_scalar_from_fiber_ploydata
 from braviz.interaction.qt_dialogs import SaveScenarioDialog, LoadScenarioDialog, SaveLogicFibersBundleDialog, LoadLogicBundle
-from braviz.interaction.qt_widgets import ImageComboBoxManager
+from braviz.interaction.qt_widgets import ImageComboBoxManager, ContrastComboManager
 from braviz.readAndFilter import user_data as braviz_user_data
 from braviz.readAndFilter.config_file import get_config
 
@@ -138,6 +138,7 @@ class LogicBundlesApp(QMainWindow):
         config = get_config(__file__)
         self.ui = None
         self.__image_combo_manager = None
+        self.__contrast_combo_manager = None
 
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.subjects_list = tabular_data.get_subjects()
@@ -196,9 +197,17 @@ class LogicBundlesApp(QMainWindow):
         self.ui.sagital_slice.valueChanged.connect(
             partial_f(self.set_slice, SAGITAL))
         self.vtk_widget.slice_changed.connect(self.update_slice_controls)
+
+        #Image combo
         self.__image_combo_manager = ImageComboBoxManager(self.reader)
         self.__image_combo_manager.setup(self.ui.image_combo)
         self.__image_combo_manager.image_changed.connect(self.select_image_modality)
+
+        #Contrast combo
+        self.__contrast_combo_manager = ContrastComboManager(self.reader)
+        self.__contrast_combo_manager.setup(self.ui.contrast_combo)
+        self.__contrast_combo_manager.contrast_changed.connect(self.change_contrast)
+
         self.ui.space_combo.currentIndexChanged.connect(self.select_space)
 
         self.ui.subjects_list.setModel(self.__subjects_check_model)
@@ -318,11 +327,22 @@ class LogicBundlesApp(QMainWindow):
         self.change_subject(self.__current_subject)
         self.select_surface(None)
 
-    def set_image(self, image_class, image_name):
+    def change_contrast(self, contrast):
+        self.__current_contrast = contrast
+        self.set_image(self.__current_image_class, self.__current_image_name, contrast)
+
+    def set_image(self, image_class, image_name, contrast = None):
         image_class = image_class.upper()
         image_name = image_name.upper()
+        if image_class == "FMRI":
+            self.__contrast_combo_manager.change_paradigm(self.__current_subject, image_name)
+            if contrast is None:
+                contrast = self.__contrast_combo_manager.get_previous_contrast(image_name)
+        else:
+            self.__contrast_combo_manager.change_paradigm(self.__current_subject, None)
+            contrast = None
 
-        self.vtk_viewer.change_image_modality(image_class,image_name)
+        self.vtk_viewer.change_image_modality(image_class,image_name, contrast)
         self.__current_image_class = image_class
         self.__current_image_name = image_name
         self.update_slice_maximums()
@@ -575,6 +595,7 @@ class LogicBundlesApp(QMainWindow):
         # context
         context_dict = {"image_class": self.__current_image_class,
                         "image_name": self.__current_image_name,
+                        "image_contrast": self.__current_contrast,
                         "axial_on": self.ui.axial_check.checkState() == QtCore.Qt.Checked,
                         "coronal_on": self.ui.coronal_check.checkState() == QtCore.Qt.Checked,
                         "sagital_on": self.ui.sagital_check.checkState() == QtCore.Qt.Checked,
@@ -635,7 +656,8 @@ class LogicBundlesApp(QMainWindow):
                 image_name = "MRI"
         else:
             image_name = context_dict["image_name"]
-        self.set_image(image_class, image_name)
+            image_contrast = context_dict["image_contrast"]
+        self.set_image(image_class, image_name, image_contrast)
         self.ui.axial_check.setChecked(context_dict["axial_on"])
         self.ui.coronal_check.setChecked(context_dict["coronal_on"])
         self.ui.sagital_check.setChecked(context_dict["sagital_on"])
