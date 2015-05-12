@@ -1174,7 +1174,6 @@ class BuildRoiApp(QMainWindow):
         self.__image_combo_manager.set_image(image_class,image_name)
         if image_class == "FMRI" and image_contrast is not None:
             self.__contrast_combo_manager.set_contrast(image_contrast)
-            self.change_contrast()
         self.ui.axial_check.setChecked(context_dict["axial_on"])
         self.ui.coronal_check.setChecked(context_dict["coronal_on"])
         self.ui.sagital_check.setChecked(context_dict["sagital_on"])

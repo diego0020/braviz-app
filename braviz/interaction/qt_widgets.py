@@ -892,12 +892,15 @@ class ContextVariablesPanel(QtGui.QGroupBox):
 class ImageComboBoxManager(QtCore.QObject):
     image_changed = QtCore.pyqtSignal(tuple)
 
-    def __init__(self, reader, show_none = False):
+    def __init__(self, reader, show_none=False, show_fmri=True):
         super(ImageComboBoxManager,self).__init__()
         grey_images = sorted(n.upper() for n in reader.get("IMAGE", None, index=True))
         label_maps = sorted(n.upper() for n in reader.get("LABEL", None, index=True))
         dti = ["DTI", ]
-        fmri_pdgms = sorted(n.upper() for n in reader.get("FMRI", None, index=True))
+        if show_fmri:
+            fmri_pdgms = sorted(n.upper() for n in reader.get("FMRI", None, index=True))
+        else:
+            fmri_pdgms = []
 
         #check for collisions
         assert len(grey_images) + len(label_maps) + len(dti) + len(fmri_pdgms) == \
@@ -917,7 +920,7 @@ class ImageComboBoxManager(QtCore.QObject):
     def setup(self, combo_box):
         combo_box.clear()
         for im_class, name in self.available_images:
-            combo_box.addItem(name,(im_class, name))
+            combo_box.addItem(name.title(),(im_class, name))
         combo_box.currentIndexChanged.connect(self._handle_index_change)
         self.combo_box = combo_box
 

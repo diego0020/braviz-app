@@ -606,7 +606,7 @@ class FmriExplorer(QtGui.QMainWindow):
             self.set_timeline_aggregate(agg)
 
         frozen = timeline_state.get("frozen")
-        if frozen is not None:
+        if frozen is not None and len(frozen)>0:
             self.clear_frozen()
             ixs, conts = izip(*frozen)
             self.batch_add_points(ixs, conts)

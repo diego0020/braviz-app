@@ -30,10 +30,6 @@ from braviz.visualization.subject_viewer import do_and_render
 
 __author__ = 'Diego'
 
-_NOMINAL_MODS = {"APARC", "WMPARC"}
-_COLORED_MODS = {"DTI", "NONE"}
-_WL_MODS = {"MRI", "FA", "MD"}
-
 
 class CheckboardView(object):
 
@@ -268,96 +264,83 @@ class CheckboardView(object):
                 self.__plane_widget.slice_change_event, slice_change_handler)
 
     @do_and_render
-    def set_img1(self, subj, mod, contrast=None, force=False):
+    def set_img1(self, subj, img_class, img_name, contrast=1, force=False):
         """
         Sets the first image
 
         Args:
             subj : Subject image code
-            mod (str) : modality (see :meth:`braviz.visualization.subject_viewer.ImageManager.change_image_modality`)
+            img_class (str) : image class (see :meth:`braviz.visualization.subject_viewer.ImageManager.change_image_modality`)
+            img_name (str) : image name (see :meth:`braviz.visualization.subject_viewer.ImageManager.change_image_modality`)
             contrast (int) : contrast for fMRI images
             force (bool) : if ``True`` force reloading the data
         """
-        params = (subj, mod.upper(), contrast)
+        if img_class is not None:
+            img_class = img_class.upper()
+        img_name = img_name.upper()
+        params = (subj, img_class, img_name, contrast)
         if params == self.__img1_params and not force:
             return
         self.__img1_params = params
-        modality = params[1]
-        if modality == "NONE":
+        if img_class is None:
             self.__img1 = None
-        elif contrast is not None:
-            raise NotImplementedError
         else:
-            if modality in _NOMINAL_MODS:
-                im_class = "LABEL"
-            elif modality in _COLORED_MODS:
-                im_class = "DTI"
-            else:
-                assert modality in _WL_MODS
-                im_class = "IMAGE"
             try:
-                self.__img1 = self.reader.get(im_class, subj, format="vtk",
-                                              space=self.__current_space, name=modality)
+                self.__img1 = self.reader.get(img_class, subj, format="vtk",
+                                              space=self.__current_space, name=img_name)
             except Exception as e:
                 log = logging.getLogger(__name__)
                 log.exception(e)
                 self.__img1 = None
 
-        if modality in _NOMINAL_MODS:
+        if img_class == "LABEL":
             self.__color1_type = "NOM"
-        elif modality in _COLORED_MODS:
+        elif img_class == "DTI":
             self.__color1_type = "PT"
-        elif modality in _WL_MODS:
+        elif img_class == "IMAGE":
             self.__color1_type = "WL"
+        elif img_class is None:
+            pass
         else:
             raise NotImplementedError
 
         self.update_pipeline()
 
     @do_and_render
-    def set_img2(self, subj, mod, contrast=None, force=False):
+    def set_img2(self, subj, img_class, img_name, contrast=None, force=False):
         """
         Sets the second image
 
-
-
         Args:
             subj : Subject image code
-            mod (str) : modality (see :meth:`braviz.visualization.subject_viewer.ImageManager.change_image_modality`)
+            img_class (str) : image class (see :meth:`braviz.visualization.subject_viewer.ImageManager.change_image_modality`)
+            img_name (str) : image name (see :meth:`braviz.visualization.subject_viewer.ImageManager.change_image_modality`)
             contrast (int) : contrast for fMRI images
             force (bool) : if ``True`` force reloading the data
         """
-        params = (subj, mod.upper(), contrast)
-        if params == self.__img2_params and not force:
+        if img_class is not None:
+            img_class = img_class.upper()
+        img_name = img_name.upper()
+        params = (subj, img_class, img_name, contrast)
+        if params == self.__img1_params and not force:
             return
         self.__img2_params = params
-        modality = params[1]
-        if modality == "NONE":
+        if img_class is None:
             self.__img2 = None
-        elif contrast is not None:
-            raise NotImplementedError
         else:
-            if modality in _NOMINAL_MODS:
-                im_class = "LABEL"
-            elif modality in _COLORED_MODS:
-                im_class = "DTI"
-            else:
-                assert modality in _WL_MODS
-                im_class = "IMAGE"
-
             try:
-                self.__img2 = self.reader.get(im_class, subj, format="vtk", space=self.__current_space,
-                                              name=modality)
+                self.__img2 = self.reader.get(img_class, subj, format="vtk",
+                                              space=self.__current_space, name=img_name)
             except Exception as e:
                 log = logging.getLogger(__name__)
                 log.exception(e)
-                self.__img1 = None
+                self.__img2 = None
 
-        if modality in _NOMINAL_MODS:
+        if img_class == "LABEL":
             self.__color2_type = "NOM"
-        elif modality in _COLORED_MODS:
+        elif img_class == "DTI":
             self.__color2_type = "PT"
-        elif modality in _WL_MODS:
+        elif img_class == "IMAGE":
             self.__color2_type = "WL"
         else:
             raise NotImplementedError
@@ -397,8 +380,8 @@ class CheckboardView(object):
         """
         Test
         """
-        self.set_img1(119, "MRI")
-        self.set_img2(119, "APARC")
+        self.set_img1(119, "IMAGE", "MRI")
+        self.set_img2(119, "LABEL", "APARC")
 
     @do_and_render
     def change_space(self, new_space):

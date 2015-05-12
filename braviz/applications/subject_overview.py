@@ -913,7 +913,7 @@ class SubjectOverviewApp(QMainWindow):
         contours_state = dict()
         contours_state["pdgm"] = str(self.ui.fmri_paradigm_combo.currentText())
         contours_state[
-            "ctrst"] = self.ui.fmri_contrast_combo.currentIndex() + 1
+            "ctrst"] = self.__contours_contrast_manager.get_previous_contrast(contours_state["pdgm"])
         contours_state[
             "visible"] = self.ui.fmri_show_contours_check.isChecked()
         contours_state["value"] = self.ui.fmri_show_contours_value.value()
@@ -1100,7 +1100,6 @@ class SubjectOverviewApp(QMainWindow):
             else:
                 idx = self.ui.fmri_paradigm_combo.findText(pdgm)
                 self.ui.fmri_paradigm_combo.setCurrentIndex(idx)
-                self.reload_contrast_names(self.ui.fmri_contrast_combo, pdgm)
                 if ctrst is not None:
                     self.__contours_contrast_manager.set_contrast(ctrst)
                 self.ui.fmri_show_contours_check.setChecked(vis)

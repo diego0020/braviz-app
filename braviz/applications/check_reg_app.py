@@ -25,7 +25,7 @@ from PyQt4.QtGui import QMainWindow
 
 from braviz.interaction.qt_guis.check_reg import Ui_check_reg_app
 from braviz.visualization.checkerboard_view import QCheckViewer
-from braviz.interaction.qt_widgets import ListValidator
+from braviz.interaction.qt_widgets import ListValidator, ImageComboBoxManager
 from braviz.readAndFilter import tabular_data
 from braviz.readAndFilter.config_file import get_config
 
@@ -41,6 +41,8 @@ class CheckRegApp(QMainWindow):
         QMainWindow.__init__(self)
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.ui = None
+        self.image_combo_manager_1 = ImageComboBoxManager(self.reader, show_none=True, show_fmri=False)
+        self.image_combo_manager_2 = ImageComboBoxManager(self.reader, show_none=True, show_fmri=False)
         self.vtk_widget = None
         self.vtk_viewer = None
         self.valid_ids = [str(i) for i in tabular_data.get_subjects()]
@@ -63,8 +65,8 @@ class CheckRegApp(QMainWindow):
         self.ui.vtk_frame_layout.setContentsMargins(0, 0, 0, 0)
 
         # image 1
-        self.ui.mod1.activated.connect(self.update_image1)
-        # self.ui.con1.activated.connect(self.update_image1)
+        self.image_combo_manager_1.setup(self.ui.mod1)
+        self.image_combo_manager_1.image_changed.connect(self.update_image1)
 
         self.ui.subj1.editingFinished.connect(self.update_image1)
         self.ui.subj1.setText("%s" % initial_subj)
@@ -72,8 +74,8 @@ class CheckRegApp(QMainWindow):
         self.ui.subj1.setCompleter(self.completer)
 
         # image 2
-        self.ui.mod2.activated.connect(self.update_image2)
-        # self.ui.con2.activated.connect(self.update_image2)
+        self.image_combo_manager_2.setup(self.ui.mod2)
+        self.image_combo_manager_2.image_changed.connect(self.update_image2)
 
         self.ui.subj2.editingFinished.connect(self.update_image2)
         self.ui.subj2.setValidator(self.subjs_validator)
@@ -92,17 +94,23 @@ class CheckRegApp(QMainWindow):
         # load test
         # self.vtk_viewer.viewer.load_test_view()
 
-    def update_image1(self, dummy=None):
+    def update_image1(self, class_and_name=None):
+        if class_and_name is not None:
+            img_class, img_name = class_and_name
+        else:
+            img_class, img_name = self.image_combo_manager_1.current_class_and_name
         subj = int(self.ui.subj1.text())
-        mod = str(self.ui.mod1.currentText())
-        self.vtk_viewer.set_img1(subj, mod)
+        self.vtk_viewer.set_img1(subj, img_class, img_name)
         self.ui.slice_slider.setMaximum(
             self.vtk_viewer.get_number_of_image_slices())
 
-    def update_image2(self, dummy=None):
+    def update_image2(self, class_and_name=None):
+        if class_and_name is not None:
+            img_class, img_name = class_and_name
+        else:
+            img_class, img_name = self.image_combo_manager_2.current_class_and_name
         subj = int(self.ui.subj2.text())
-        mod = str(self.ui.mod2.currentText())
-        self.vtk_viewer.set_img2(subj, mod)
+        self.vtk_viewer.set_img2(subj, img_class, img_name)
         self.ui.slice_slider.setMaximum(
             self.vtk_viewer.get_number_of_image_slices())
 

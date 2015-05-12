@@ -54,7 +54,7 @@ This is done to protect raw data and to allow to share it between different user
         """The path pointing to the __root of the file structure must be set here"""
         KmcAbstractReader.__init__(self, static_root, dynamic_route, max_cache)
 
-        self._available_images = frozenset(("MRI", "FA", "MD"))
+        self._available_images = frozenset(("MRI", "FA", "MD", "FLAIR", "T2"))
         self._functional_paradigms = frozenset(
             ('ATENCION', 'COORDINACION', 'MEMORIA', 'MIEDO', 'PRENSION'))
         self._tracula_bundles = ['CC-ForcepsMajor', 'CC-ForcepsMinor', 'LAntThalRadiation', 'LCingulumAngBundle', 'LCingulumCingGyrus', 'LCorticospinalTract', 'LInfLongFas', 'LSupLongFasParietal',
@@ -198,6 +198,12 @@ This is done to protect raw data and to allow to share it between different user
             path = os.path.join(
                 self.get_data_root(), "slicer_models", str(subj))
             filename = 'wmparc.nii.gz'
+        elif image_name == 'T2':
+            path = os.path.join(self.get_data_root(), "nii", str(subj))
+            filename = 'eT2WTSEPEBCLEAR.nii.gz'
+        elif image_name == 'FLAIR':
+            path = os.path.join(self.get_data_root(), "nii", str(subj))
+            filename = 'eFLAIRLongTRSENSE.nii.gz'
         else:
             log = logging.getLogger(__name__)
             log.error('Unknown image type %s' % image_name)
