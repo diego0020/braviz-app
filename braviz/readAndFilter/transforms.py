@@ -1,6 +1,6 @@
 ##############################################################################
-#    Braviz, Brain Data interactive visualization                            #
-#    Copyright (C) 2014  Diego Angulo                                        #
+# Braviz, Brain Data interactive visualization                            #
+# Copyright (C) 2014  Diego Angulo                                        #
 #                                                                            #
 #    This program is free software: you can redistribute it and/or modify    #
 #    it under the terms of the GNU Lesser General Public License as          #
@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import division
 import logging
 import os
 import nibabel as nib
@@ -50,23 +50,41 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
     if isinstance(transform, vtk.vtkMatrix4x4):
         vtkTrans = vtk.vtkMatrixToHomogeneousTransform()
         vtkTrans.SetInput(transform)
-        if origin2 is None or spacing2 is None:
+        if spacing2 is None or origin2 is None:
             transform_i = transform.NewInstance()
             transform_i.DeepCopy(transform)
             transform_i.Invert()
-            if origin2 is None:
-                # TODO: Use a better strategy to find the new origin; this doesn't
-                # work with large rotations or reflections
-                origin = img.GetOrigin()
-                origin = list(origin) + [1]
-                origin2 = transform_i.MultiplyDoublePoint(origin)[:-1]
-        if spacing2 is None:
-            def get_spacing(i):
-                line = [transform_i.GetElement(i, 0), transform_i.GetElement(
-                    i, 1), transform_i.GetElement(i, 2)]
-                return max(line, key=abs)
+            if spacing2 is None:
+                spacing2 = [transform_i.GetElement(0, 0), transform_i.GetElement(1, 1), transform_i.GetElement(2, 2)]
+            if origin2 is None or spacing2 is None:
 
-            spacing2 = [get_spacing(i) for i in range(3)]
+                if origin2 is None:
+                    # TODO: Use a better strategy to find the new origin; this doesn't
+                    # work with large rotations or reflections
+                    x_min, x_max, y_min, y_max, z_min, z_max = img.GetBounds()
+                    corners = [(x_min, y_min, z_min), (x_min, y_min, z_max), (x_min, y_max, z_min),
+                               (x_min, y_max, z_max),
+                               (x_max, y_min, z_min), (x_max, y_min, z_max), (x_max, y_max, z_min),
+                               (x_max, y_max, z_max)]
+
+                    corners2 = []
+                    for c in corners:
+                        ch = c + (1,)
+                        corners2.append(transform_i.MultiplyDoublePoint(ch))
+                    x2_min, y2_min, z2_min, _ = np.min(corners2, axis=0)
+                    x2_max, y2_max, z2_max, _ = np.max(corners2, axis=0)
+                    origin2 = [0, 0, 0]
+                    origin2[0] = x2_min if spacing2[0] >= 0 else x2_max
+                    origin2[1] = y2_min if spacing2[1] >= 0 else y2_max
+                    origin2[2] = z2_min if spacing2[2] >= 0 else z2_max
+
+                    if dimension2 is None:
+                        dimension2 = [0, 0, 0]
+                        dimension2[0] = int(np.ceil(np.abs((x2_min - x2_max) / spacing2[0])))
+                        dimension2[1] = int(np.ceil(np.abs((y2_min - y2_max) / spacing2[1])))
+                        dimension2[2] = int(np.ceil(np.abs((z2_min - z2_max) / spacing2[2])))
+
+
     elif isinstance(transform, vtk.vtkAbstractTransform):
         vtkTrans = transform
         if None == spacing2 or None == origin2:
