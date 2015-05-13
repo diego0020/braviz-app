@@ -112,7 +112,10 @@ class VariableSelectDialog(QtGui.QDialog):
         self.var_name = var_name
         data = get_data_frame_by_name(self.var_name)
         data.dropna(inplace=True)
-        self.data = data.loc[self.sample]
+        try:
+            self.data = data.loc[self.sample]
+        except KeyError:
+            self.data = data.loc[[]]
         # update scatter
         self.update_plot(self.data)
         var_description = get_var_description_by_name(var_name)
@@ -251,7 +254,7 @@ class VariableSelectDialog(QtGui.QDialog):
 
         # save description
         desc_text = self.ui.var_description.toPlainText()
-        save_var_description_by_name(self.var_name, str(desc_text))
+        save_var_description_by_name(self.var_name, unicode(desc_text))
 
         # save other values
         if var_type == 1:
@@ -457,7 +460,7 @@ class MultiPlotOutcomeSelectDialog(OutcomeSelectDialog):
         if self.available_plots is None:
             plot_type = default_plot
         else:
-            plot_str = str(self.ui.plot_type.currentText())
+            plot_str = unicode(self.ui.plot_type.currentText())
             plot_type = self.available_plots.get(plot_str, default_plot)
         log = logging.getLogger(__name__)
         log.info(plot_type)
@@ -623,7 +626,7 @@ class RegressorSelectDialog(VariableSelectDialog):
     *outcome_var*
 
     Args:
-        outcome_var (str) : Variable to use as reference. It will be the *y* axis of plots, look above
+        outcome_var (unicode) : Variable to use as reference. It will be the *y* axis of plots, look above
             for more uses
         regressors_model (braviz.interaction.qt_models.AnovaRegressorsModel): All operations will update this model
         sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
@@ -819,12 +822,12 @@ class NewVariableDialog(QtGui.QDialog):
         self.ui.optimum_real_value.setNum(real_value)
 
     def activate_save_button(self):
-        if len(str(self.ui.var_name_input.text())) > 0:
+        if len(unicode(self.ui.var_name_input.text())) > 0:
             self.ui.save_button.setEnabled(True)
 
     def save_new_variable(self):
         # create new variable
-        var_name = str(self.ui.var_name_input.text())
+        var_name = unicode(self.ui.var_name_input.text())
         is_real = 1 - self.ui.var_type_combo.currentIndex()
         var_idx = register_new_variable(var_name, is_real)
         if var_idx is None:
@@ -842,7 +845,7 @@ class NewVariableDialog(QtGui.QDialog):
         else:
             self.nominal_model.save_into_db(var_idx)
             # description
-        desc = str(self.ui.var_description.toPlainText())
+        desc = unicode(self.ui.var_description.toPlainText())
         save_var_description(var_idx, desc)
         # values
         self.values_model.save_into_db(var_idx)
@@ -1019,7 +1022,7 @@ class SaveFibersBundleDialog(QtGui.QDialog):
         self._and = operation_is_and
 
     def check_name(self):
-        name = str(self.ui.lineEdit.text())
+        name = unicode(self.ui.lineEdit.text())
         if len(name) < 2:
             self.ui.buttonBox.button(
                 QtGui.QDialogButtonBox.Save).setEnabled(False)
@@ -1037,8 +1040,8 @@ class SaveFibersBundleDialog(QtGui.QDialog):
     def accept_save(self):
         log = logging.getLogger(__name__)
         log.info("saving")
-        name = str(self.ui.lineEdit.text())
-        log.info(str(self.ui.lineEdit.text()))
+        name = unicode(self.ui.lineEdit.text())
+        log.info(name)
         op = "and" if self._and else "or"
         log.info(op)
         log.info(self._checkpoints)
@@ -1087,7 +1090,7 @@ class SaveLogicFibersBundleDialog(QtGui.QDialog):
             QtGui.QDialogButtonBox.Ok).clicked.connect(self.accept)
 
     def check_name(self):
-        name = str(self.ui.lineEdit.text())
+        name = unicode(self.ui.lineEdit.text())
         if len(name) < 2:
             self.ui.buttonBox.button(
                 QtGui.QDialogButtonBox.Save).setEnabled(False)
@@ -1105,8 +1108,8 @@ class SaveLogicFibersBundleDialog(QtGui.QDialog):
     def accept_save(self):
         log = logging.getLogger(__name__)
         log.info("saving")
-        name = str(self.ui.lineEdit.text())
-        log.info(str(self.ui.lineEdit.text()))
+        name = unicode(self.ui.lineEdit.text())
+        log.info(name)
         tree_dict = self.__tree_model.root.to_dict()
         log.info(tree_dict)
         try:
@@ -1128,7 +1131,7 @@ class SaveScenarioDialog(QtGui.QDialog):
     A dialog for saving scenarios, it doesn't save an screen-shot, this should be done afterwards by the application
 
     Args:
-        app_name (str) : Name of application for which the scenario is created
+        app_name (unicode) : Name of application for which the scenario is created
         state (dict) : Dictionary of application state
         params (dict) : Optional, when the dialog closes, this object will contain
             the key ``scn_id`` and its value will be the index of the newly created scenario.
@@ -1157,7 +1160,7 @@ class SaveScenarioDialog(QtGui.QDialog):
         self.ui.succesful_message.setText("")
 
     def save_into_db(self):
-        scenario_name = str(self.ui.scenario_name.text())
+        scenario_name = unicode(self.ui.scenario_name.text())
         if len(scenario_name) == 0:
             scenario_name = "<Unnamed>"
         description = unicode(self.ui.scn_description.toPlainText())
@@ -1175,7 +1178,7 @@ class LoadScenarioDialog(QtGui.QDialog):
     Dialog that shows the user a list of available scenarios, with screen-shots, and allows him to select one
 
     Args:
-        app_name (str) : Restrict the list of scenarios to those created with an specific application
+        app_name (unicode) : Restrict the list of scenarios to those created with an specific application
         out_dict (dict) : When the dialog finishes this dictionary will contain the selected scenario data
     """
 
@@ -1276,7 +1279,7 @@ class LoadLogicBundle(QtGui.QDialog):
         self.accepted.connect(self.before_accepting)
 
     def update_tree(self, index):
-        name = str(self.__bundles_model.data(index, QtCore.Qt.DisplayRole))
+        name = unicode(self.__bundles_model.data(index, QtCore.Qt.DisplayRole))
         data = bundles_db.get_logic_bundle_dict(bundle_name=name)
         self.current_data = data
         self.__tree_root = LogicBundleNode.from_dict(data)

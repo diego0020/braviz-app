@@ -357,7 +357,7 @@ class SubjectOverviewApp(QMainWindow):
         if current_img_class == "FMRI":
             self.__image_contrast_manager.change_paradigm(new_subject, current_image_name)
 
-        pdgm2 = str(self.ui.fmri_paradigm_combo.currentText())
+        pdgm2 = unicode(self.ui.fmri_paradigm_combo.currentText())
         self.__contours_contrast_manager.change_paradigm(new_subject, pdgm2)
 
         self.reset_image_view_controls()
@@ -419,12 +419,12 @@ class SubjectOverviewApp(QMainWindow):
                                                     contrast=contrast)
 
     def fmri_change_pdgm(self):
-        pdgm = str(self.ui.fmri_paradigm_combo.currentText())
+        pdgm = unicode(self.ui.fmri_paradigm_combo.currentText())
         self.__contours_contrast_manager.change_paradigm(self.__curent_subject, pdgm)
         self.fmri_change_contrast()
 
     def fmri_change_contrast(self, contrast = None):
-        pdgm = str(self.ui.fmri_paradigm_combo.currentText())
+        pdgm = unicode(self.ui.fmri_paradigm_combo.currentText())
         if contrast is None:
             contrast = self.__contours_contrast_manager.get_previous_contrast(pdgm)
         self.vtk_viewer.set_fmri_contours_image(pdgm, contrast)

@@ -44,8 +44,8 @@ def save_description(var_name, desc, do_save=False, verbose=False):
     if verbose or not do_save:
         print("%s : %s" % (var_name, desc))
     try:
-        var_name2 = var_name.decode('latin-1', errors="ignore")
-        desc2 = desc.decode('latin-1', errors="ignore")
+        var_name2 = var_name.decode('utf8', errors="ignore")
+        desc2 = desc.decode('utf8', errors="ignore")
         if do_save:
             tabular_data.save_var_description_by_name(var_name2, desc2)
     except Exception as e:
@@ -110,7 +110,7 @@ def save_comments(data_frame, do_save=False, verbose=False):
         if verbose or not do_save:
             print("%d : %s" % (k, v))
         if do_save:
-            user_data.update_comment(int(k), v.decode("latin-1"))
+            user_data.update_comment(int(k), v.decode("utf8"))
 
 
 def save_data_frame(data_frame, do_save=False, verbose=False):

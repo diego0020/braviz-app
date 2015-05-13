@@ -160,7 +160,7 @@ def get_data_frame_by_name(columns, ):
         WHERE var_idx = (SELECT var_idx FROM variables WHERE var_name = ?)
         """
         col = sql.read_sql(
-            query, conn, index_col="subject", params=(str(var),), coerce_float=True)
+            query, conn, index_col="subject", params=(unicode(var),), coerce_float=True)
         data[var] = col.astype(pd.np.float64)
 
     return data

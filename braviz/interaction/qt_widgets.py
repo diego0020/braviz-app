@@ -538,7 +538,7 @@ class MatplotWidget(FigureCanvas):
                 ind = ind[0]
             u = urls[ind]
             self.box_outlier_pick_signal.emit(
-                str(u), (e.mouseevent.x, self.height() - e.mouseevent.y))
+                u(u), (e.mouseevent.x, self.height() - e.mouseevent.y))
         elif type(e.artist) == matplotlib.collections.PathCollection:
             if e.artist.get_urls()[0] is None:
                 return
