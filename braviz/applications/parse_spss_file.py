@@ -27,7 +27,7 @@ __author__ = 'da.angulo39'
 
 
 def parse_spss_meta(file_name, do_save=False, verbose=False):
-    reader = savReaderWriter.SavReader(file_name)
+    reader = savReaderWriter.SavReader(file_name, ioUtf8=True)
     with reader:
         info = reader.getSavFileInfo()
         descriptions = info[5]
@@ -44,10 +44,8 @@ def save_description(var_name, desc, do_save=False, verbose=False):
     if verbose or not do_save:
         print("%s : %s" % (var_name, desc))
     try:
-        var_name2 = var_name.decode('utf8', errors="ignore")
-        desc2 = desc.decode('utf8', errors="ignore")
         if do_save:
-            tabular_data.save_var_description_by_name(var_name2, desc2)
+            tabular_data.save_var_description_by_name(var_name, desc)
     except Exception as e:
 
         print(e.message)
@@ -77,7 +75,7 @@ def post_process(data_frame, verbose=False):
         c = data_frame[n]
         try:
             valid = c.str.strip().str.len() > 0
-            c[valid] = c[valid].astype(np.float)
+            c.loc[valid] = c[valid].astype(np.float)
             c[np.logical_not(valid)] = np.nan
             data_frame[n] = c.astype(np.float)
         except ValueError:
@@ -110,7 +108,7 @@ def save_comments(data_frame, do_save=False, verbose=False):
         if verbose or not do_save:
             print("%d : %s" % (k, v))
         if do_save:
-            user_data.update_comment(int(k), v.decode("utf8"))
+            user_data.update_comment(int(k), v)
 
 
 def save_data_frame(data_frame, do_save=False, verbose=False):
@@ -148,7 +146,7 @@ def save_labels(var_name, labels, do_save=False, verbose=False):
         return
     if do_save:
         tabular_data.save_is_real(var_idx, False)
-    tuples = [(int(k), unicode(v, errors="ignore"))
+    tuples = [(int(k), v,)
               for k, v in labels.iteritems()]
     if verbose or not do_save:
         print(tuples)
