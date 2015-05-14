@@ -155,6 +155,12 @@ class VariableSelectDialog(QtGui.QDialog):
         maxi = self.rational["max"]
         mini = self.rational["min"]
         medi = self.rational["opt"]
+        if maxi is None:
+            maxi = 10
+        if mini is None:
+            mini = 0
+        if medi is None:
+            medi = 0
         self.ui.maximum_val.setValue(maxi)
         self.ui.minimum_val.setValue(mini)
         self.ui.minimum_val.setMinimum(min(mini * 10, -100))
@@ -172,9 +178,12 @@ class VariableSelectDialog(QtGui.QDialog):
     def update_optimum_real_value(self, perc_value=None):
         if perc_value is None:
             perc_value = self.ui.optimum_val.value()
-        real_value = perc_value / 100 * \
+        try:
+            real_value = perc_value / 100 * \
             (self.rational["max"] - self.rational["min"]) + \
             self.rational["min"]
+        except TypeError:
+            real_value = 0
         self.ui.optimum_real_value.setNum(real_value)
 
     def update_real_details(self):
@@ -685,7 +694,8 @@ class RegressorSelectDialog(VariableSelectDialog):
                 both_data = regressor_data.join(outcome_data)
             both_data.dropna(inplace=True)
 
-            self.matplot_widget.compute_scatter(both_data.iloc[:, 0].get_values(), both_data.iloc[:, 1].get_values(),
+            self.matplot_widget.compute_scatter(both_data[data.columns[0]].get_values(),
+                                                both_data[self.outcome_var].get_values(),
                                                 x_lab=self.var_name, y_lab=self.outcome_var,
                                                 urls=both_data.index.get_values())
         else:

@@ -202,7 +202,7 @@ class MatplotWidget(FigureCanvas):
         self.fig.clear()
         if len(data) == 0:
             log.warning("Data Frame is empty")
-        if isinstance(data, (pd.DataFrame, pd.Series)):
+        elif isinstance(data, (pd.DataFrame, pd.Series)):
             assert pd.isnull(data).sum().sum() == 0
         elif isinstance(data, np.ndarray):
             assert np.sum(np.isnan(data)) == 0
@@ -212,7 +212,9 @@ class MatplotWidget(FigureCanvas):
         else:
             raise ValueError
         if data2 is not None:
-            if isinstance(data2, (pd.DataFrame, pd.Series)):
+            if len(data2) == 0:
+                log.warning("Data2  is empty")
+            elif isinstance(data2, (pd.DataFrame, pd.Series)):
                 assert pd.isnull(data2).sum().sum() == 0
             elif isinstance(data2, np.ndarray):
                 assert np.sum(np.isnan(data2)) == 0
@@ -242,7 +244,9 @@ class MatplotWidget(FigureCanvas):
         if y_lab is not None:
             self.axes.set_ylabel(y_lab)
 
-        if colors is None:
+        if len(data) == 0:
+            pass
+        elif colors is None:
             colors = "#2ca25f"
             self.axes.scatter(
                 data, data2, color=colors, picker=5, urls=urls, alpha=0.8)
@@ -538,7 +542,7 @@ class MatplotWidget(FigureCanvas):
                 ind = ind[0]
             u = urls[ind]
             self.box_outlier_pick_signal.emit(
-                u(u), (e.mouseevent.x, self.height() - e.mouseevent.y))
+                str(u), (e.mouseevent.x, self.height() - e.mouseevent.y))
         elif type(e.artist) == matplotlib.collections.PathCollection:
             if e.artist.get_urls()[0] is None:
                 return
