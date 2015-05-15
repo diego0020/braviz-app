@@ -519,7 +519,7 @@ class MatplotWidget(FigureCanvas):
         if color is None:
             color = "black"
         collection = self.axes.scatter(
-            x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5, zorder=10)
+            x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5, zorder=10, linewidths=3)
         collection.set_facecolor('none')
 
         self.axes.draw_artist(collection)

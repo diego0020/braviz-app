@@ -689,6 +689,7 @@ class NominalVariablesMeta(QAbstractTableModel):
         Args:
             var_name (str) : Read labels for this variable
         """
+        self.modelAboutToBeReset.emit()
         if var_name is None:
             # generic labels
             self.labels_list = range(1, 3)
@@ -697,6 +698,7 @@ class NominalVariablesMeta(QAbstractTableModel):
         self.var_name = var_name
         self.names_dict = braviz_tab_data.get_labels_dict_by_name(var_name)
         self.labels_list = self.names_dict.keys()
+        self.modelReset.emit()
 
     def save_into_db(self, var_idx=None):
         """
