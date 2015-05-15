@@ -295,7 +295,7 @@ class StructureTreeModel(QAbstractItemModel):
             nid = QModelIndex.internalId()
             node = self.__id_index[nid]
             assert node.son_number == QModelIndex.row()
-            check = QVariant.toBool()
+            check = QVariant == QtCore.Qt.Checked
             leaf_names = node.get_leaf_names()
             leaf_ids = set.union(
                 *(self.leaf_inverse_ids.get(n, set()) for n in leaf_names))

@@ -572,7 +572,7 @@ class CoefficientsPlot(AbstractPlot):
         self.axes.clear()
         self.axes.set_ylim(-0.5, self.n_coefs - 0.5, auto=False)
         self.axes.set_xlim(-1, 1, auto=True)
-        self.axes.axvline(0, ls="--", c=(0.4, 0.4, 0.4))
+        self.axes.axvline(0, ls="--", color=(0.4, 0.4, 0.4))
         self.axes.minorticks_off()
 
         # draw centers

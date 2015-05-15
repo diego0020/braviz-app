@@ -168,7 +168,7 @@ class TimeseriesPlot(FigureCanvas):
                 else:
                     color = self.__frozen_colors(k)
                 self.axes.plot(
-                    self.volumes_times, vn, c=color, zorder=5, alpha=0.4, url=k)
+                    self.volumes_times, vn, color=color, zorder=5, alpha=0.4, url=k)
         else:
             if self.__frozen_groups is None:
                 n_signals = [self.normalize_time_signal_length(

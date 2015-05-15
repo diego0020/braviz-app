@@ -410,8 +410,8 @@ class FmriExplorer(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         log.info("Coloring by %s", var_name)
         if var_name is None:
-            self.time_plot.set_frozen_colors(None)
             self.time_plot.set_frozen_groups_and_colors(None, None)
+            self.time_plot.set_frozen_colors(None)
         else:
             df = braviz_tab_data.get_data_frame_by_name(var_name)
             df = df.set_index(df.index.astype(int))

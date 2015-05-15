@@ -99,7 +99,7 @@ class CorrelationMatrixFigure(FigureCanvas):
         self.on_draw()
 
     def get_tooltip_message(self, event):
-        QtGui.QToolTip.hideText()
+        #QtGui.QToolTip.hideText()
         if event.inaxes == self.ax and self.df is not None:
             x_int, y_int = int(round(event.xdata)), int(round(event.ydata))
             if y_int <= x_int:
@@ -215,7 +215,7 @@ class RegFigure(FigureCanvas):
         self.ax.pick(event)
 
     def handle_pick_event(self, event):
-        QtGui.QToolTip.hideText()
+        #QtGui.QToolTip.hideText()
         mouse_event = event.mouseevent
         if isinstance(event.artist, matplotlib.collections.PathCollection):
             index = event.ind

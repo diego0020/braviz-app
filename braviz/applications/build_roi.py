@@ -757,7 +757,8 @@ class BuildRoiApp(QMainWindow):
             self.ui.mean_md.setEnabled(0)
             return
 
-        modality = self.__current_image_mod
+        img_class = self.__current_image_class
+        img_name = self.__current_image_name
         contrast = self.__current_contrast
         if self.__sphere_center is None or self.__sphere_radius is None:
             self.ui.mean_inside_text.clear()
@@ -765,37 +766,33 @@ class BuildRoiApp(QMainWindow):
         self.ui.mean_inside_text.setEnabled(1)
         self.ui.mean_fa.setEnabled(1)
         self.ui.mean_md.setEnabled(1)
-        if contrast is not None:
+        if img_class == "FMRI":
             self.ui.mean_inside_label.setText("Mean Z-score")
             self.ui.mean_inside_label.setToolTip("Mean Z-score inside the ROI")
-            self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__current_space, "FMRI", modality,
-                                                     contrast,
-                                                     mean=True)
-        else:
-            if modality in {"DTI", "FA"}:
-                self.ui.mean_inside_label.setText("Mean FA")
-                self.ui.mean_inside_label.setToolTip("Mean FA inside the ROI")
+            self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__current_space, "FMRI", img_name,
+                                                     contrast, mean=True)
+        elif img_class in {"IMAGE", "DTI"}:
+                if img_class == "DTI" or img_name == "FA":
+                    self.ui.mean_inside_label.setText("Mean FA")
+                    self.ui.mean_inside_label.setToolTip("Mean FA inside the ROI")
+                elif img_name == "MRI":
+                    self.ui.mean_inside_label.setText("Mean value")
+                    self.ui.mean_inside_label.setToolTip(
+                        "Mean value of image inside the ROI")
                 self.__mean_in_img_calculator.load_image(
-                    self.__current_img_id, self.__current_space, "FA", mean=True)
-            elif modality in {"APARC", "WMPARC"}:
+                    self.__current_img_id, self.__current_space, img_class, img_name, mean=True)
+        elif img_class == "LABEL":
                 self.ui.mean_inside_label.setText("Label Mode")
                 self.ui.mean_inside_label.setToolTip(
                     "Mode of labels inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__current_space, modality,
+                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__current_space, img_class, img_name,
                                                          mean=False)
                 self.__aux_lut = self.reader.get(
-                    self.__current_image_mod, None, lut=True)
-            else:
-                assert modality == "MRI"
-                self.ui.mean_inside_label.setText("Mean value")
-                self.ui.mean_inside_label.setToolTip(
-                    "Mean value of image inside the ROI")
-                self.__mean_in_img_calculator.load_image(self.__current_img_id, self.__current_space, modality,
-                                                         mean=True)
+                    "LABEL", None, lut=True, name=img_name)
         self.__mean_fa_in_roi_calculator.load_image(
-            self.__current_img_id, self.__current_space, "FA", mean=True)
+            self.__current_img_id, self.__current_space, "IMAGE", "FA", mean=True)
         self.__mean_md_in_roi_calculator.load_image(
-            self.__current_img_id, self.__current_space, "MD", mean=True)
+            self.__current_img_id, self.__current_space, "IMAGE", "MD", mean=True)
         self.caclulate_image_in_roi()
 
     def caclulate_image_in_roi(self):
@@ -807,7 +804,7 @@ class BuildRoiApp(QMainWindow):
                 self.__sphere_center, self.__sphere_radius)
         except Exception:
             value = np.nan
-        if self.__current_image_mod in {"APARC", "WMPARC"}:
+        if self.__current_image_class == "LABEL":
             int_val = int(value[0])
             idx = self.__aux_lut.GetAnnotatedValueIndex(int_val)
             label = self.__aux_lut.GetAnnotation(idx)

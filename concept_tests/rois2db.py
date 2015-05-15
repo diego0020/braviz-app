@@ -15,8 +15,8 @@ def roi2db(roi_ids,vars_dict,roi_names,subj):
     agg_md = AggregateInRoi(reader)
     measures = {"fa":agg_fa,"md":agg_md}
 
-    agg_fa.load_image(s,"Talairach","FA")
-    agg_md.load_image(s,"Talairach","MD")
+    agg_fa.load_image(s, "Talairach", "IMAGE", "FA")
+    agg_md.load_image(s, "Talairach", "IMAGE", "MD")
 
     tuples = []
     for roi_id in roi_ids:

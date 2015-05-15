@@ -105,18 +105,18 @@ class ListValidator(QtGui.QValidator):
         self.valid = frozenset(valid_options)
 
     def validate(self, QString, p_int):
-        str_value = str(QString)
+        str_value = QString
         if str_value in self.valid:
-            return QtGui.QValidator.Acceptable, p_int
+            return QtGui.QValidator.Acceptable, QString, p_int
         else:
             if len(str_value) == 0:
-                return QtGui.QValidator.Intermediate, p_int
+                return QtGui.QValidator.Intermediate, QString, p_int
             try:
                 _ = int(str_value)
             except Exception:
-                return QtGui.QValidator.Invalid, p_int
+                return QtGui.QValidator.Invalid, QString, p_int
             else:
-                return QtGui.QValidator.Intermediate, p_int
+                return QtGui.QValidator.Intermediate, QString, p_int
 
 
 def repeatatable_plot(func):

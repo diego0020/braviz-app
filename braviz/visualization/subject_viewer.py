@@ -758,16 +758,17 @@ class ImageManager(object):
             self.__image_plane_widget.addLabels(None)
 
         if image_class == "FMRI":
-            mri_image = self.reader.get("IMAGE", self.__current_subject, format="VTK", name="MRI",
-                                        space=self.__current_space)
             try:
+                mri_image = self.reader.get("IMAGE", self.__current_subject, format="VTK", name="MRI",
+                                            space=self.__current_space)
                 fmri_image = self.reader.get("fMRI", self.__current_subject, format="VTK", space=self.__current_space,
                                              name=image_name, contrast=contrast)
             except Exception:
                 fmri_image = None
+                mri_image = None
                 log.warning("FMRI IMAGE NOT FOUND pdgm = %s" % image_name)
 
-            if fmri_image is None:
+            if fmri_image is None or mri_image is None:
                 self.image_plane_widget.Off()
                 # raise
                 raise Exception(

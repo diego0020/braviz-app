@@ -456,26 +456,29 @@ class AggregateInRoi(object):
         self.mean = True
         self.img = None
 
-    def load_image(self, subject, space, modality, paradigm=None, contrast=1, mean=True):
+    def load_image(self, subject, space, img_class, img_name, contrast=1, mean=True):
         """
         Loads an image into the class
 
         Args:
             subject : subject id
             space (str) : Coordinate system in which the roi is defined
-            modality (str) : Modality in which to calculate mean or mode.
-            paradigm (str) : In case modality is fMRI, the paradigm to use
-            contrast (int) : In case modality is fMRI, the contrast to use
+            img_class (str) : Image class in which to calculate mean or mode.
+            img_name (str) : Image name in the given img_class
+            contrast (int) : In case img_class is fMRI, the contrast to use
             mean (bool) : If ``True`` :meth:`get_value` will return the mean inside the roi, otherwise it will
                 return the *mode*.
         """
         reader = self.reader
-        if paradigm is None:
+        if img_class == "DTI":
+            img_class = "IMAGE"
+            img_name = "FA"
+        if img_class != "FMRI":
             target_img = reader.get(
-                modality, subject, space=space, format="nii")
+                img_class, subject, space=space, format="nii", name=img_name)
         else:
             target_img = reader.get(
-                modality, subject, space=space, format="nii", name=paradigm, contrast=contrast)
+                img_class, subject, space=space, format="nii", name=img_name, contrast=contrast)
 
         all_values = target_img.get_data()
 

@@ -18,6 +18,9 @@
     <normalon>:/icons/some_fibers.PNG</normalon>
    </iconset>
   </property>
+  <property name="toolTip">
+   <string>Go back to the last subject</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <property name="bottomMargin">
@@ -1332,6 +1335,17 @@
              </spacer>
             </item>
             <item>
+             <widget class="QToolButton" name="reload_last_subject">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/reload.png</normaloff>:/icons/reload.png</iconset>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QToolButton" name="previus_subject">
               <property name="toolTip">
                <string>Move to previus subject (left arrow)</string>
@@ -1441,7 +1455,7 @@
      <x>0</x>
      <y>0</y>
      <width>857</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

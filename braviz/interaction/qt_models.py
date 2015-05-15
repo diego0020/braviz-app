@@ -127,7 +127,7 @@ class VarListModel(QAbstractListModel):
             return False
         else:
             idx = QModelIndex.row()
-            if QVariant.toBool() is True:
+            if QVariant == QtCore.Qt.Checked:
                 self.checked_set.add(self.internal_data[idx])
             else:
                 self.checked_set.remove(self.internal_data[idx])
@@ -651,8 +651,7 @@ class NominalVariablesMeta(QAbstractTableModel):
         row = QModelIndex.row()
         col = QModelIndex.column()
         if (int_role == QtCore.Qt.EditRole) and (col == 1 and 0 <= row < self.rowCount()):
-            self.names_dict[self.labels_list[row]] = unicode(
-                QVariant)
+            self.names_dict[self.labels_list[row]] = QVariant
             self.dataChanged.emit(QModelIndex, QModelIndex)
             return True
         elif (int_role == QtCore.Qt.CheckStateRole) and (col == 0 and 0 <= row < self.rowCount()):
@@ -902,7 +901,7 @@ class DataFrameModel(QAbstractTableModel):
         col = QModelIndex.column()
         row = QModelIndex.row()
         assert col == 0
-        state = QVariant.toInt()[0]
+        state = QVariant
         idx = self.__df.index[row]
         if state == QtCore.Qt.Checked:
             self.__checked.add(idx)
@@ -1487,7 +1486,7 @@ class ContextVariablesModel(QAbstractTableModel):
             row = QModelIndex.row()
             if QModelIndex.column() != 2:
                 return False
-            self.editables_dict[self.data_frame.index[row]] = QVariant.toBool()
+            self.editables_dict[self.data_frame.index[row]] = QVariant == QtCore.Qt.Checked
             return True
 
     def flags(self, QModelIndex):
@@ -1692,8 +1691,7 @@ class NewVariableValues(QAbstractTableModel):
         if col != 1 or row < 0 or row >= self.rowCount():
             return False
         try:
-            self.values_dict[self.subjects_list[row]] = float(
-                QVariant)
+            self.values_dict[self.subjects_list[row]] = QVariant
         except ValueError:
             return False
         self.dataChanged.emit(QModelIndex, QModelIndex)
@@ -1906,7 +1904,7 @@ class BundlesSelectionList(QAbstractListModel):
             row = QModelIndex.row()
             if int_role == QtCore.Qt.CheckStateRole:
                 if 0 <= row < len(self.id_list):
-                    value = QVariant.toBool()
+                    value = QVariant == QtCore.Qt.Checked
                     bid = self.id_list[row]
                     self._selected[bid] = value
                     return True
@@ -2074,7 +2072,7 @@ class SimpleCheckModel(QAbstractListModel):
             row = QModelIndex.row()
             if int_role == QtCore.Qt.CheckStateRole:
                 if 0 <= row < len(self.choices_list):
-                    value = QVariant.toBool()
+                    value = QVariant == QtCore.Qt.Checked
                     item = self.choices_list[row]
                     if value:
                         self.__selected.add(item)
@@ -2439,7 +2437,7 @@ class SubjectCheckTable(QAbstractTableModel):
             col = QModelIndex.column()
             row = QModelIndex.row()
             if col == 0 and int_role == QtCore.Qt.CheckStateRole:
-                value = QVariant.toBool()
+                value = QVariant == QtCore.Qt.Checked
                 name = self.__list[row]
                 if value is True:
                     self.checked.add(name)

@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>reload.png</file>
     <file>internet-web-browser.png</file>
     <file>peertopeer.png</file>
     <file>thg-password.svg</file>
