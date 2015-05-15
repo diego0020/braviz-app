@@ -93,6 +93,7 @@ class SubjectOverviewApp(QMainWindow):
         self.sample = braviz_tab_data.get_subjects()
 
         self.__frozen_subject = False
+        self.__previous_subject = None
 
         # context panel
         self.context_frame = None
@@ -164,6 +165,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.previus_subject.clicked.connect(self.go_to_previus_subject)
 
         self.ui.freeze_subject.toggled.connect(self.toggle_subject_freeze)
+        self.ui.reload_last_subject.clicked.connect(self.reload_last_subject)
 
         # Subject selection
         self.ui.subjects_table.setModel(self.subjects_model)
@@ -313,6 +315,10 @@ class SubjectOverviewApp(QMainWindow):
         new_subj = int(self.ui.subject_id.text())
         self.change_subject(new_subj)
 
+    def reload_last_subject(self):
+        if self.__previous_subject is not None:
+            self.change_subject(self.__previous_subject)
+
     def change_subject(self, new_subject=None, broadcast_message=True):
         logger = logging.getLogger(__name__)
         if self.__frozen_subject:
@@ -328,6 +334,8 @@ class SubjectOverviewApp(QMainWindow):
         if self._messages_client is not None and new_subject != self.__curent_subject and broadcast_message:
             self._messages_client.send_message('subject %s' % new_subject)
         # label
+        if new_subject != self.__curent_subject:
+            self.__previous_subject = self.__curent_subject
 
         logger.info("Changing subject to %s" % new_subject)
         self.__curent_subject = new_subject
