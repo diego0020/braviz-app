@@ -25,7 +25,7 @@ import tornado.web
 
 from braviz.readAndFilter import tabular_data as tab_data, user_data
 from braviz.readAndFilter.cache import memoize
-from braviz.readAndFilter.config_file import get_config
+from braviz.readAndFilter.config_file import get_apps_config
 
 
 __author__ = 'diego'
@@ -75,12 +75,12 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         Returns:
             A string
         """
-        conf = get_config(__file__)
+        conf = get_apps_config()
         variables = conf.get_default_variables()
         var_keys = ("nom1", "nom2", "ratio1", "ratio2")
         all_vars = map(variables.get, var_keys)
-        codes = map(tab_data.get_var_idx, all_vars)
-        def_vars = ",".join(map(str, codes))
+        codes = [tab_data.get_var_idx(v) for v in all_vars if v is not None]
+        def_vars = ",".join(str(c) for c in codes if c is not None)
         return def_vars
 
     def get(self):

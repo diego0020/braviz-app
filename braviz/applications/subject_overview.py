@@ -313,7 +313,7 @@ class SubjectOverviewApp(QMainWindow):
         new_subj = int(self.ui.subject_id.text())
         self.change_subject(new_subj)
 
-    def change_subject(self, new_subject=None):
+    def change_subject(self, new_subject=None, broadcast_message=True):
         logger = logging.getLogger(__name__)
         if self.__frozen_subject:
             logger.info("Frozen subject, ignoring change")
@@ -325,7 +325,7 @@ class SubjectOverviewApp(QMainWindow):
             new_subject = self.subjects_model.data(
                 subj_code_index, QtCore.Qt.DisplayRole)
 
-        if self._messages_client is not None and new_subject != self.__curent_subject:
+        if self._messages_client is not None and new_subject != self.__curent_subject and broadcast_message:
             self._messages_client.send_message('subject %s' % new_subject)
         # label
 
@@ -1243,7 +1243,7 @@ class SubjectOverviewApp(QMainWindow):
         log.info("RECEIVED: %s" % msg)
         if msg.startswith("subject"):
             subj = msg.split()[1]
-            self.change_subject(subj)
+            self.change_subject(subj, broadcast_message=False)
 
     def reload_comments(self):
         comment = braviz_user_data.get_comment(self.__curent_subject)

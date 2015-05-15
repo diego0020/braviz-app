@@ -55,7 +55,11 @@ def applyTransform(img, transform, origin2=None, dimension2=None, spacing2=None,
             transform_i.DeepCopy(transform)
             transform_i.Invert()
             if spacing2 is None:
-                spacing2 = [transform_i.GetElement(0, 0), transform_i.GetElement(1, 1), transform_i.GetElement(2, 2)]
+                org = np.array(transform_i.MultiplyDoublePoint((0,0,0,1)))
+                next_pt = np.array(transform_i.MultiplyDoublePoint((1,1,1,1)))
+                delta = (org[0:3]/org[3]) - (next_pt[0:3]/next_pt[3])
+                spacing2 = delta
+                #spacing2 = [transform_i.GetElement(0, 0), transform_i.GetElement(1, 1), transform_i.GetElement(2, 2)]
             if origin2 is None or spacing2 is None:
 
                 if origin2 is None:
