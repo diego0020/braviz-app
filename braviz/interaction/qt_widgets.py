@@ -852,7 +852,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                     value = float(value_widget.value())
                 elif isinstance(value_widget, QtGui.QComboBox):
                     value = value_widget.itemData(value_widget.currentIndex())
-                    value = value.toDouble()[0]
+                    value = value
                     if np.isnan(float(value)):
                         value = None
                     else:
@@ -935,25 +935,25 @@ class ImageComboBoxManager(QtCore.QObject):
         self.combo_box.setCurrentIndex(index)
 
     def _handle_index_change(self, index):
-        new_class, new_name = self.combo_box.itemData(index).toPyObject()
+        new_class, new_name = self.combo_box.itemData(index)
         self.image_changed.emit((new_class,new_name))
 
     @property
     def current_class(self):
         idx = self.combo_box.currentIndex()
-        data = self.combo_box.itemData(idx).toPyObject()
+        data = self.combo_box.itemData(idx)
         return data[0]
 
     @property
     def current_name(self):
         idx = self.combo_box.currentIndex()
-        data = self.combo_box.itemData(idx).toPyObject()
+        data = self.combo_box.itemData(idx)
         return data[1]
 
     @property
     def current_class_and_name(self):
         idx = self.combo_box.currentIndex()
-        data = self.combo_box.itemData(idx).toPyObject()
+        data = self.combo_box.itemData(idx)
         return data
 
 
@@ -1033,8 +1033,7 @@ class ContrastComboManager(QtCore.QObject):
     def _handle_index_change(self, index):
         if self._setting_up:
             return
-        contrast_n, success = self.combo_box.itemData(index).toInt()
-        assert success == True
+        contrast_n = self.combo_box.itemData(index)
         self.__last_contrast[self._current_pdgm] = contrast_n
         self.contrast_changed.emit(contrast_n)
 

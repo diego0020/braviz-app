@@ -17,6 +17,8 @@
 ##############################################################################
 
 
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
 import braviz
 import pandas as pd
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog

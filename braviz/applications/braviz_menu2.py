@@ -17,6 +17,9 @@
 ##############################################################################
 
 from __future__ import print_function
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
+
 import subprocess
 import sys
 import logging

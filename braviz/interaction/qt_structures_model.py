@@ -263,7 +263,7 @@ class StructureTreeModel(QAbstractItemModel):
         elif int_role == QtCore.Qt.CheckStateRole:
             # print node.name, node.checked
             return node.checked
-        return QtCore.QVariant()
+        return None
 
     def index(self, p_int, p_int_1, QModelIndex_parent=None, *args, **kwargs):
         if QModelIndex_parent.isValid():

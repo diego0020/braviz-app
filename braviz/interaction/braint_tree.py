@@ -105,7 +105,7 @@ class BraintTree(QAbstractItemModel):
             if desc is not None:
                 return desc
 
-        return QtCore.QVariant()
+        return None
 
     def index(self, p_int, p_int_1, QModelIndex_parent=None, *args, **kwargs):
         if QModelIndex_parent.isValid():
@@ -233,7 +233,7 @@ class BraintTreeWithCount(BraintTree):
             desc = braint_db.get_description(node.var_id)
             if desc is not None:
                 return desc
-        return QtCore.QVariant()
+        return None
 
     _header = ("Identifier", "Relations")
 
@@ -241,7 +241,7 @@ class BraintTreeWithCount(BraintTree):
         if Qt_Orientation == QtCore.Qt.Horizontal:
             if int_role == QtCore.Qt.DisplayRole:
                 return self._header[p_int]
-        return QtCore.QVariant()
+        return None
 
     def set_count(self, counts, direct_counts=None):
         self.__count_dict = counts

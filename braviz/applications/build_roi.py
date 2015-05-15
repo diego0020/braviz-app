@@ -18,6 +18,9 @@
 
 
 from __future__ import division, print_function
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
+
 import logging
 from functools import partial as partial_f
 import datetime
@@ -1351,7 +1354,7 @@ class BuildRoiApp(QMainWindow):
         if index < 0:
             # When the combo box is cleared
             return
-        roi_id, success = self.ui.sphere_name_combo.itemData(index).toInt()
+        roi_id, success = self.ui.sphere_name_combo.itemData(index)
         if self.__roi_id != roi_id and not self.action_confirmed():
             prev_idx = self.ui.sphere_name_combo.findText(self.__roi_name)
             self.ui.sphere_name_combo.setCurrentIndex(prev_idx)

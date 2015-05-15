@@ -94,15 +94,15 @@ class VarListModel(QAbstractListModel):
                     font.setBold(font.Bold)
                 return font
         else:
-            return QtCore.QVariant()
+            return None
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if int_role != QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
+            return None
         if Qt_Orientation == QtCore.Qt.Horizontal and p_int == 0:
             return self.header
         else:
-            return QtCore.QVariant()
+            return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         reverse = True
@@ -220,11 +220,11 @@ class VarAndGiniModel(QAbstractTableModel):
             elif col == 1:
                 if int_role == QtCore.Qt.DisplayRole:
                     return str(df2.iloc[line, 1])
-        return QtCore.QVariant()
+        return None
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
-            return QtCore.QVariant()
+            return None
         if int_role == QtCore.Qt.DisplayRole:
             if p_int == 0:
                 return "Variable"
@@ -236,7 +236,7 @@ class VarAndGiniModel(QAbstractTableModel):
             elif p_int == 1:
                 return "This measure is calculated as how effective each variable is at predicting the outcome"
         else:
-            return QtCore.QVariant()
+            return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         reverse = True
@@ -376,7 +376,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
-            return QtCore.QVariant()
+            return None
 
         if int_role == QtCore.Qt.DisplayRole:
             if p_int == 0:
@@ -386,7 +386,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
         elif int_role == QtCore.Qt.ToolTipRole and p_int == 1:
             return "Degrees of freedom"
         else:
-            return QtCore.QVariant()
+            return None
 
     def data(self, QModelIndex, int_role=None):
         line = QModelIndex.row()
@@ -402,7 +402,7 @@ class AnovaRegressorsModel(QAbstractTableModel):
             elif col == 1:
                 if int_role == QtCore.Qt.DisplayRole:
                     return str(self.display_view["DF"].iloc[line])
-        return QtCore.QVariant()
+        return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         # We will be using type2 or type3 Sums of Squares, and therefore order
@@ -626,19 +626,19 @@ class NominalVariablesMeta(QAbstractTableModel):
                 if (int_role == QtCore.Qt.DisplayRole) or (int_role == QtCore.Qt.EditRole):
                     return self.names_dict.get(self.labels_list[line], "")
             else:
-                return QtCore.QVariant()
-        return QtCore.QVariant()
+                return None
+        return None
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if int_role != QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
+            return None
         if Qt_Orientation == QtCore.Qt.Horizontal:
             if p_int == 0:
                 return "Label"
             elif p_int == 1:
                 return "Name"
         else:
-            return QtCore.QVariant()
+            return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         reverse = True
@@ -652,11 +652,11 @@ class NominalVariablesMeta(QAbstractTableModel):
         col = QModelIndex.column()
         if (int_role == QtCore.Qt.EditRole) and (col == 1 and 0 <= row < self.rowCount()):
             self.names_dict[self.labels_list[row]] = unicode(
-                QVariant.toString())
+                QVariant)
             self.dataChanged.emit(QModelIndex, QModelIndex)
             return True
         elif (int_role == QtCore.Qt.CheckStateRole) and (col == 0 and 0 <= row < self.rowCount()):
-            state = QVariant.toInt()[0]
+            state = QVariant
             label = self.labels_list[row]
             if state == QtCore.Qt.Checked:
                 self.unchecked.remove(label)
@@ -791,7 +791,7 @@ class AnovaResultsModel(QAbstractTableModel):
 
     def data(self, QModelIndex, int_role=None):
         if not (int_role == QtCore.Qt.DisplayRole):
-            return QtCore.QVariant()
+            return None
         line = QModelIndex.row()
         col = QModelIndex.column()
         data = self.__df.iloc[line, col]
@@ -809,10 +809,10 @@ class AnovaResultsModel(QAbstractTableModel):
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
-            return QtCore.QVariant()
+            return None
         if int_role == QtCore.Qt.DisplayRole:
             return self.__df.columns[p_int]
-        return QtCore.QVariant()
+        return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         reverse = True
@@ -882,7 +882,7 @@ class DataFrameModel(QAbstractTableModel):
                     return QtCore.Qt.Unchecked
 
         if not (int_role == QtCore.Qt.DisplayRole):
-            return QtCore.QVariant()
+            return None
 
         if self.index_as_column:
             if col == 0:
@@ -942,7 +942,7 @@ class DataFrameModel(QAbstractTableModel):
             if int_role == QtCore.Qt.DisplayRole:
                 return str(self.__df.index[p_int])
 
-        return QtCore.QVariant()
+        return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         reverse = True
@@ -1141,7 +1141,7 @@ class SampleTree(QAbstractItemModel):
             elif col == 1:
                 return item.count
 
-        return QtCore.QVariant()
+        return None
 
     def index(self, p_int, p_int_1, QModelIndex_parent, *args, **kwargs):
         if not QModelIndex_parent.isValid():
@@ -1167,9 +1167,9 @@ class SampleTree(QAbstractItemModel):
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation == QtCore.Qt.Horizontal and int_role == QtCore.Qt.DisplayRole:
-            self.__headers.get(p_int, QtCore.QVariant())
-            return self.__headers.get(p_int, QtCore.QVariant())
-        return QtCore.QVariant()
+            self.__headers.get(p_int, None)
+            return self.__headers.get(p_int, None)
+        return None
 
     def hasChildren(self, QModelIndex_parent=None, *args, **kwargs):
         if not QModelIndex_parent.isValid():
@@ -1239,13 +1239,13 @@ class SubjectsTable(QAbstractTableModel):
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if not (int_role in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole)):
-            return QtCore.QVariant()
+            return None
         if Qt_Orientation == QtCore.Qt.Vertical:
-            return QtCore.QVariant()
+            return None
         elif 0 <= p_int < self.__df.shape[1]:
             return self.__df.columns[p_int]
         else:
-            return QtCore.QVariant()
+            return None
 
     def data(self, QModelIndex, int_role=None):
         line = QModelIndex.row()
@@ -1262,7 +1262,7 @@ class SubjectsTable(QAbstractTableModel):
                 brush.setStyle(QtCore.Qt.SolidPattern)
                 return brush
         if not (int_role in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole)):
-            return QtCore.QVariant()
+            return None
 
         col = QModelIndex.column()
         if (0 <= line < len(self.__df)) and (0 <= col < self.__df.shape[1]):
@@ -1280,7 +1280,7 @@ class SubjectsTable(QAbstractTableModel):
                     return label
 
         else:
-            return QtCore.QVariant()
+            return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         reverse = False
@@ -1397,10 +1397,10 @@ class ContextVariablesModel(QAbstractTableModel):
     def headerData(self, p_int, Qt_Orientation, int_role=None):
 
         if Qt_Orientation != QtCore.Qt.Horizontal:
-            return QtCore.QVariant()
+            return None
         if int_role == QtCore.Qt.DisplayRole:
-            return self.headers_dict.get(p_int, QtCore.QVariant())
-        return QtCore.QVariant()
+            return self.headers_dict.get(p_int, None)
+        return None
 
     def data(self, QModelIndex, int_role=None):
         line = QModelIndex.row()
@@ -1416,12 +1416,12 @@ class ContextVariablesModel(QAbstractTableModel):
             return braviz_tab_data.get_var_description(var_idx)
 
         if not (int_role == QtCore.Qt.DisplayRole):
-            return QtCore.QVariant()
+            return None
 
         if (0 <= line < self.rowCount()) and (0 <= col < 2):
             return self.data_frame.iloc[line, col]
         else:
-            return QtCore.QVariant()
+            return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         # We will be using type2 or type3 Sums of Squares, and therefore order
@@ -1543,14 +1543,14 @@ class SubjectDetails(QAbstractTableModel):
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if not (int_role in (QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole)):
-            return QtCore.QVariant()
+            return None
         if Qt_Orientation == QtCore.Qt.Vertical:
-            return QtCore.QVariant()
+            return None
         elif 0 <= p_int < len(self.headers):
             name = self.headers[p_int]
             return name
         else:
-            return QtCore.QVariant()
+            return None
 
     def data(self, QModelIndex, int_role=None):
         line = QModelIndex.row()
@@ -1560,7 +1560,7 @@ class SubjectDetails(QAbstractTableModel):
             desc = braviz_tab_data.get_var_description(var_idx)
             return desc
         if not int_role == QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
+            return None
         if (0 <= line < len(self.__df)) and (0 <= col < self.__df.shape[1]):
             datum = self.__df.iloc[line, col]
             var_idx = self.__df.index[line]
@@ -1572,7 +1572,7 @@ class SubjectDetails(QAbstractTableModel):
                 return message
             return unicode(datum)
         else:
-            return QtCore.QVariant()
+            return None
 
     def set_variables(self, variable_ids):
         """
@@ -1671,7 +1671,7 @@ class NewVariableValues(QAbstractTableModel):
                 return self.subjects_list[row]
             elif col == 1:
                 return self.values_dict.get(self.subjects_list[row], "")
-        return QtCore.QVariant()
+        return None
 
     def flags(self, QModelIndex):
         row = QModelIndex.row()
@@ -1693,7 +1693,7 @@ class NewVariableValues(QAbstractTableModel):
             return False
         try:
             self.values_dict[self.subjects_list[row]] = float(
-                QVariant.toString())
+                QVariant)
         except ValueError:
             return False
         self.dataChanged.emit(QModelIndex, QModelIndex)
@@ -1705,7 +1705,7 @@ class NewVariableValues(QAbstractTableModel):
                 return "Subject"
             elif p_int == 1:
                 return "Value"
-        return QtCore.QVariant()
+        return None
 
     def save_into_db(self, var_idx):
         """
@@ -1769,10 +1769,10 @@ class SimpleBundlesList(QAbstractListModel):
                     return self.names_list[row]
                 if int_role == QtCore.Qt.UserRole:
                     return self.id_list[row]
-        return QtCore.QVariant()
+        return None
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
-        return QtCore.QVariant()
+        return None
 
     def add_bundle(self, bundle_id, name):
         """
@@ -1888,10 +1888,10 @@ class BundlesSelectionList(QAbstractListModel):
                     else:
                         return QtCore.Qt.Unchecked
 
-        return QtCore.QVariant()
+        return None
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
-        return QtCore.QVariant()
+        return None
 
     def flags(self, QModelIndex):
         if QModelIndex.isValid():
@@ -1941,7 +1941,7 @@ class ScenariosTableModel(QAbstractTableModel):
             if 0 <= p_int < self.df.shape[1]:
                 if int_role == QtCore.Qt.DisplayRole:
                     return self.headers[p_int]
-        return QtCore.QVariant()
+        return None
 
     def data(self, QModelIndex, int_role=None):
         if QModelIndex.isValid():
@@ -1952,7 +1952,7 @@ class ScenariosTableModel(QAbstractTableModel):
                     return str(self.df[self.columns[col]].iloc[row])
                 elif int_role == QtCore.Qt.UserRole:
                     return self.df.index[row]
-        return QtCore.QVariant()
+        return None
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.df.shape[0]
@@ -1999,7 +1999,7 @@ class SimpleSetModel(QAbstractListModel):
             if 0 <= row < len(self.__internal_list):
                 if int_role == QtCore.Qt.DisplayRole:
                     return str(self.__internal_list[row])
-        return QtCore.QVariant()
+        return None
 
     def get_elements(self):
         """
@@ -2056,10 +2056,10 @@ class SimpleCheckModel(QAbstractListModel):
                         return QtCore.Qt.Checked
                     else:
                         return QtCore.Qt.Unchecked
-        return QtCore.QVariant()
+        return None
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
-        return QtCore.QVariant()
+        return None
 
     def flags(self, QModelIndex):
         if QModelIndex.isValid():
@@ -2115,7 +2115,7 @@ class SamplesFilterModel(QAbstractListModel):
             if 0 <= row < len(self.__filters_list):
                 if int_role == QtCore.Qt.DisplayRole:
                     return str(self.__filters_list[row][0])
-        return QtCore.QVariant()
+        return None
 
     def add_filter(self, filter_name, filter_func):
         """
@@ -2185,7 +2185,7 @@ class SamplesSelectionModel(QAbstractTableModel):
             col = QModelIndex.column()
             if int_role == QtCore.Qt.DisplayRole or int_role == QtCore.Qt.ToolTipRole:
                 return str(self.data_frame[self.columns[col]].iloc[row])
-        return QtCore.QVariant()
+        return None
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.data_frame.shape[0]
@@ -2197,7 +2197,7 @@ class SamplesSelectionModel(QAbstractTableModel):
         if Qt_Orientation == QtCore.Qt.Horizontal:
             if int_role == QtCore.Qt.DisplayRole:
                 return self.headers[p_int]
-        return QtCore.QVariant()
+        return None
 
     def sort(self, p_int, Qt_SortOrder_order=None):
         sort_col = self.columns[p_int]
@@ -2303,7 +2303,7 @@ class SubjectChecklist(QAbstractListModel):
             try:
                 name = self.__list[row]
             except IndexError:
-                return QtCore.QVariant()
+                return None
             if int_role == QtCore.Qt.DisplayRole:
                 return name
             if (int_role == QtCore.Qt.CheckStateRole) and self.__show_checks:
@@ -2323,7 +2323,7 @@ class SubjectChecklist(QAbstractListModel):
                     brush.setStyle(QtCore.Qt.SolidPattern)
                     return brush
 
-        return QtCore.QVariant()
+        return None
 
     def flags(self, QModelIndex):
         if QModelIndex.isValid():
@@ -2395,7 +2395,7 @@ class SubjectCheckTable(QAbstractTableModel):
                 try:
                     name = self.__list[row]
                 except IndexError:
-                    return QtCore.QVariant()
+                    return None
                 if int_role == QtCore.Qt.DisplayRole:
                     return name
                 if int_role == QtCore.Qt.CheckStateRole:
@@ -2408,10 +2408,10 @@ class SubjectCheckTable(QAbstractTableModel):
                     try:
                         return unicode(self.__data[col - 1][row])
                     except IndexError:
-                        return QtCore.QVariant()
+                        return None
                 if int_role == QtCore.Qt.TextAlignmentRole:
                     return QtCore.Qt.AlignHCenter
-        return QtCore.QVariant()
+        return None
 
     def flags(self, QModelIndex):
         if QModelIndex.isValid():
@@ -2432,7 +2432,7 @@ class SubjectCheckTable(QAbstractTableModel):
                     return QtCore.Qt.AlignHCenter
                 else:
                     return QtCore.Qt.AlignLeft
-        return QtCore.QVariant()
+        return None
 
     def setData(self, QModelIndex, QVariant, int_role=None):
         if QModelIndex.isValid():

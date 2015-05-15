@@ -102,10 +102,10 @@ class variable_table(QtCore.QAbstractTableModel):
         if 0 <= line < len(self.data) and 0<=col<2 and int_role==QtCore.Qt.DisplayRole:
             return self.data[line][col]
         else:
-            return QtCore.QVariant()
+            return None
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if int_role != QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
+            return None
         if Qt_Orientation==QtCore.Qt.Vertical:
             return p_int
         else:

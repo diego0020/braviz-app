@@ -18,6 +18,8 @@
 
 
 from __future__ import division, print_function
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
 
 __author__ = 'diego'
 

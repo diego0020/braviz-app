@@ -18,6 +18,9 @@
 
 
 from PyQt4 import QtCore, QtGui
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
+
 import logging
 
 from PyQt4.QtGui import QMainWindow

@@ -18,6 +18,9 @@
 
 
 from __future__ import division
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
+
 import logging
 from functools import partial as partial_f
 

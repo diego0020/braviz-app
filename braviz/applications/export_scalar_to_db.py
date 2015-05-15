@@ -20,6 +20,9 @@
 from __future__ import division
 
 __author__ = 'Diego'
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
+
 import time
 import threading
 

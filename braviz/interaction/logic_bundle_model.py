@@ -430,7 +430,7 @@ class LogicBundleQtTree(QAbstractItemModel):
         if int_role == QtCore.Qt.DisplayRole:
             return str(node)
 
-        return QtCore.QVariant()
+        return None
 
     def index(self, p_int, p_int_1, QModelIndex_parent=None, *args, **kwargs):
         if QModelIndex_parent.isValid():

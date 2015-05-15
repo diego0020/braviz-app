@@ -24,6 +24,15 @@ import os
 from collections import defaultdict
 import logging
 
+def set_pyqt_api_2():
+    import sip
+    sip.setapi('QDate',2)
+    sip.setapi('QDateTime',2)
+    sip.setapi('QString',2)
+    sip.setapi('QTextStream',2)
+    sip.setapi('QTime',2)
+    sip.setapi('QUrl',2)
+    sip.setapi('QVariant',2)
 
 def configure_logger_from_conf(app_name="Braviz"):
     from braviz.readAndFilter.config_file import get_apps_config

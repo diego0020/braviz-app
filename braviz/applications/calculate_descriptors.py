@@ -17,6 +17,9 @@
 ##############################################################################
 
 from __future__ import division, print_function
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
+
 import braviz
 import braviz.utilities
 from braviz.interaction import descriptors, structure_metrics

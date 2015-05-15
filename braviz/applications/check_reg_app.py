@@ -18,6 +18,8 @@
 
 
 from __future__ import division
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
 
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore

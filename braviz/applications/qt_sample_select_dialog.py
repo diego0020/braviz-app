@@ -18,6 +18,8 @@
 
 
 from __future__ import division
+from braviz.utilities import set_pyqt_api_2
+set_pyqt_api_2()
 
 __author__ = 'Diego'
 
@@ -164,7 +166,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
         elif new_index == self.ui.comboBox.count() - 1:
             d = SampleLoadDialog(False)
             if d.exec_() and d.current_sample is not None:
-                self.set_base_sample(d.current_sample_idx)
+                self.set_base_sample(int(d.current_sample_idx))
                 self.base_sample_name = d.current_sample_name
                 self.ui.comboBox.insertItem(1, self.base_sample_name)
                 self.ui.comboBox.setItemData(1, int(d.current_sample_idx))
@@ -175,7 +177,7 @@ class SampleCreateDilog(QtGui.QMainWindow):
                 if i >= 0:
                     self.ui.comboBox.setCurrentIndex(i)
         else:
-            sample_idx = self.ui.comboBox.itemData(new_index).toInt()[0]
+            sample_idx = self.ui.comboBox.itemData(new_index)
             self.set_base_sample(sample_idx)
 
     def change_output_sample(self, new_set):
