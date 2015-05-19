@@ -147,7 +147,7 @@ var height = window.innerHeight*0.90;
 
 var m = [50, 100, 50, 100];
 m[2] = m[2]+30*categories.length;
-m[3] += window.innerWidth*0.05*0.5
+m[3] += window.innerWidth*0.05*0.5;
 var w = width - m[1] - m[3],
     h = height - m[0] - m[2];
 
@@ -274,11 +274,10 @@ function tabulate(data, columns, selected_codes) {
     if (selected_codes.indexOf(String(a.code)) >= 0 && selected_codes.indexOf(String(b.code)) < 0){return 1}
     if (selected_codes.indexOf(String(a.code)) < 0 && selected_codes.indexOf(String(b.code)) >= 0){return -1}
     return 0;
-    } ).order()
+    } ).order();
 
     var sel_title=document.getElementById("selection_div").getElementsByTagName("H3")[0]
-    var title_name = "Selection "+data.length+"/"+flowers.length
-    sel_title.textContent  = title_name
+    sel_title.textContent  = "Selection " + data.length + "/" + flowers.length;
     var table = d3.select("#selected").html("").append("table"),
         thead = table.append("thead"),
         tbody = table.append("tbody");
@@ -332,7 +331,7 @@ function brush() {
 
   if (! p.classList.contains("fade"))
   {
-  var t=p.getElementsByTagName("title")[0]
+  var t=p.getElementsByTagName("title")[0];
   var code = t.textContent;
   selected_indeces.push(i);
   selected_codes.push(code);
@@ -363,7 +362,7 @@ function brush() {
 function send_sample(data){
 
   var XHR = new XMLHttpRequest();
-  var urlEncodedData = "";
+  var urlEncodedData ;
   var urlEncodedDataPairs = [];
   var name;
 
@@ -421,7 +420,7 @@ var errorSleepTime = 500;
     if (errorSleepTime < 5000){
     errorSleepTime*=2;
     }
-    }
+    };
     message_getter.onmessage = function(e) {
       message = e.data;
       if (message.substr(0,7) == "subject"){
@@ -441,13 +440,14 @@ var g=document.getElementById("highlight_path_node");
 while (g.firstChild) {
     g.removeChild(g.firstChild);
 }
-$("#selected table tr").removeClass("highlighted_row");
+var table_row=$("#selected").find("table tr");
+table_row.removeClass("highlighted_row");
 if (subj != null) {
 var s=d3.selectAll(".foreground path").filter(function (f) {return f.code == subj});
 var n = s[0][0];
 var n2=n.cloneNode(true);
-n2.classList.add("bg")
-n2.onmouseover=null
+n2.classList.add("bg");
+n2.onmouseover=null;
 var n3=n.cloneNode(true);
 n3.classList.add("fg");
 g.appendChild(n2);
@@ -455,7 +455,7 @@ g.appendChild(n3);
 
 // in table
 
-$("#selected table tr").filter(function(i){return this.firstChild.textContent == subj}).addClass("highlighted_row");
+table_row.filter(function(i){return this.firstChild.textContent == subj}).addClass("highlighted_row");
 
 }
 return;
@@ -490,8 +490,7 @@ window.onload=function(){
   var data2 = [];
   tabulate(data2,["code","category"].concat(traits),[]);
   var sel_title=document.getElementById("selection_div").getElementsByTagName("H3")[0];
-  var title = "Selection 0/"+flowers.length;
-  sel_title.innerText=title;
+  sel_title.innerText="Selection 0/" + flowers.length;
   document.getElementById("main_svg").onclick=function(){highlight_subj_path(null);};
   openWS();
   add_context_menu();
@@ -513,9 +512,9 @@ window.onload=function(){
 <div id="save_sample">
     <h3>Save selection</h3>
     <form name="save_sample" action="#saved" onsubmit="return send_sample(this)">
-        <p>Name: <input type="text" name="sample_name" required></p>
-        <p>Description:<br>
-        <textarea name="sample_desc"></textarea><br>
+        <p><label for="sample_name">Name:</label> <input type="text" name="sample_name" required id="sample_name"></p>
+        <p><label for="sample_desc">Description:</label><br>
+        <textarea name="sample_desc" id="sample_desc"></textarea><br>
         </p>
         <input type="hidden" name="sample_subjects" value="">
         <input type="submit">
