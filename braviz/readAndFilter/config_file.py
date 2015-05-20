@@ -40,7 +40,7 @@ class BravizConfig(RawConfigParser):
            Use a gray or degraded gray background
 
         Returns:
-            RGB value as a float tuple
+            tuple : RGB value as a float tuple
         """
         back_string = self.get('VTK', 'background')
         back_list = back_string.split(' ')
@@ -78,7 +78,7 @@ class BravizConfig(RawConfigParser):
         Default variables from configuration file
 
         Returns:
-            A dictionary containing the default variables. The keys are
+            dict : A dictionary containing the default variables. The keys are
             ``{"nom1","nom2","ratio1","ratio2","lat"}``
         """
         nom1 = self.get('Default_Variables', 'nominal1')
@@ -129,10 +129,14 @@ class BravizConfig(RawConfigParser):
 
 def get_apps_config():
     """
-    Reads configuration from the 'braviz.applications' directory
+    Reads configuration from the 'braviz.applications' directory :class:`BravizConfig`
+
+    Args:
+        lala (str): mamama :class:`BravizConfig`
 
     Returns:
-        An instance of :class:`BravizConfig`
+        BravizConfig : An instance of :class:`BravizConfig` containing the configuration specified in the file at
+        the applications directory
     """
     apps_dir = os.path.join(os.path.dirname(__file__), "..", "applications")
     return get_config(apps_dir)
@@ -150,7 +154,8 @@ def get_config(custom_dir=None):
             For convenience a file can also be passed and the directory containing it will be used
 
     Returns:
-        An instance of :class:`BravizConfig`
+        BravizConfig : An instance of :class:`BravizConfig` containing the configuration specified in the file at
+        the specified directory
     """
     config_dir = os.path.dirname(os.path.realpath(__file__))
     config_file_name = 'braviz.cfg'
@@ -231,7 +236,7 @@ def get_host_config(project, hostname=None):
             as returned by :func:`platform.node` will be used
 
     Returns:
-        A dictionary containing the requested configuration parameters.
+        dict : A dictionary containing the requested configuration parameters.
     """
     if hostname is None:
         import platform

@@ -247,8 +247,8 @@ def get_samples_df():
     Get available samples
 
     Returns:
-        A class:`~pandas.DataFrame` with columns for sample name, sample description, and sample size;
-         indexed by the sample index
+        pandas.DataFrame : A class:`~pandas.DataFrame` with columns for sample name, sample description, and sample size;
+        indexed by the sample index
 
     """
     conn = _get_connection()

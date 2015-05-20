@@ -78,7 +78,7 @@ class AbstractPlot(object):
 
         Args:
             event (matplotlib.backend_bases.MouseEvent) : Matplotlib MouseEvent that caused the request,
-            extract the position from here
+                extract the position from here
 
         Returns:
             string to show as tooltip, empty string if you don't want to show anything

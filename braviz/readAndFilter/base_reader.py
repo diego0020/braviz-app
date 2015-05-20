@@ -276,7 +276,7 @@ data is requested. To get a more useful class you should create your own subclas
             space (str): origin or destination coordinate system, depending on *inverse*
             subj: Subject to whom the points belong
             inverse (bool): If false points are moved from world to *space*, else the points are moved from
-            *space* to world.
+                *space* to world.
         Returns:
             Transformed points
         """
