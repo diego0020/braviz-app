@@ -31,7 +31,7 @@ div.header, div.content, div.footer {
 
 div.header-wrapper {
   background: {{ theme_headerbg }};
-  border-bottom: 3px solid #2e3436;
+  border-bottom: 3px solid #1F414C;
 }
 
 nav.parents ol {
@@ -44,14 +44,14 @@ nav.parents ol {
 nav.parents ol li {
     float: left;
     text-transform: uppercase;
-    color: #fcaf3e;
+    color: #7A552E;
 
 }
 nav.parents ol li a{
     margin : 0px 5px 0px 12px;
     text-transform: uppercase;
     letter-spacing: .1em;
-    color: #fcaf3e;
+    color:{{ theme_headerlinkcolor }};
 }
 
 nav.parents ol li:first-child a{
@@ -173,9 +173,21 @@ div.header div.rel a {
   text-transform: uppercase;
 }
 
-p.logo {
-    float: right;
+.header-wrapper p.logo img.logo{
+    max-width: 90%
+
 }
+
+.sphinxsidebarwrapper p.logo {
+    display: none;
+
+}
+
+.sphinxsidebarwrapper p.logo img.logo{
+    display: none;
+
+}
+
 
 img.logo {
     border: 0;
@@ -487,6 +499,9 @@ div.viewcode-block:target {
 }
 
 /*-- Braviz --------------------------------------------------------------------*/
+
+
+
 div.document td:only-of-type {
     padding-top: 1.5em;
 }
@@ -509,7 +524,7 @@ div.document td.field-body table.docutils tr .docutils.literal{
     margin: 0.2px;
     padding: 0.5px;
     white-space: nowrap;
-    border: 1px solid #eaeaea;
+    border: 1px solid #688189;
     background-color: #f8f8f8;
     border-radius: 3px;
     border-radius-webkit: 3px;
@@ -528,7 +543,7 @@ div.documentwrapper tt.docutils.literal {
 }
 
 div.document td.field-body table.docutils tr:hover {
-    background-color: rgba(52, 101, 175, 0.5);
+    background-color: #91A1A7;
 }
 
 div.document td.field-body table.docutils td {

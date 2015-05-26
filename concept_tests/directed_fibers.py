@@ -20,5 +20,5 @@ iren.Initialize()
 sphere_w = vtk.vtkSphereWidget2()
 sphere_w.SetInteractor(iren)
 sphere_w.CreateDefaultRepresentation()
-
+sphere_w.On()
 iren.Start()

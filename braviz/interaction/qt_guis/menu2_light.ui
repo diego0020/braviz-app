@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>617</width>
-    <height>805</height>
+    <height>724</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,13 +20,12 @@
    <string>Braviz Menu</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normalon>:/icons/gridLayout_aligntop.png</normalon>
-   </iconset>
+   <iconset resource="resources.qrc">
+    <normaloff>:/icons/braviz_dianita.png</normaloff>:/icons/braviz_dianita.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget#centralwidget{
-background-image: url(:/icons/imagine2.svg);
+background-image: url(:/icons/braviz_dianita_small.png);
 background-repeat: no-repeat;
 background-position: bottom right;
 background-origin: content;
@@ -704,7 +703,7 @@ Export variables to the database</string>
      <x>0</x>
      <y>0</y>
      <width>617</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

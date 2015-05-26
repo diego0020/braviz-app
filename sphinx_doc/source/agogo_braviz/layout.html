@@ -17,6 +17,11 @@
 
 {% block header %}
     {% if pagename == theme_main_page %}
+    <div class="main-logo">
+      <p class="logo"><a href="{{ pathto(master_doc) }}">
+        <img class="logo" src="{{ pathto('_static/' + logo, 1) }}" alt="Logo"/>
+      </a></p>
+    </div>
     {% else %}
     <div class="header-wrapper">
       <div class="header">
@@ -26,8 +31,10 @@
           </a></p>
         {%- endif %}
         {%- block headertitle %}
+          <!--
         <div class="headertitle"><a
-          href="{{ pathto(master_doc) }}"> Braviz Documentation </a></div>
+          href="{{ pathto(master_doc) }}"> Documentation </a></div>
+          -->
         {%- endblock %}
           <nav class="parents">
               <ol>
