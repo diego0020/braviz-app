@@ -32,7 +32,7 @@ __author__ = 'Diego'
 try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
     import braviz.interaction.qt_dialogs
-    import braviz.applications.qt_sample_select_dialog
+    import braviz.applications.sample_select
 except ImportError as e:
     import braviz.interaction.generate_qt_guis
 
@@ -49,7 +49,8 @@ class BravizMenu2(QtGui.QMainWindow):
         from braviz.interaction.connection import MessageServer
 
         self.reader = None
-
+        self.sub_processes = []
+        self.check_sub_processes_timer = QtCore.QTimer()
         self.ui = None
         self.setWindowTitle("Braviz Menu")
         self.messages_server = MessageServer(local_only=True)
@@ -59,6 +60,8 @@ class BravizMenu2(QtGui.QMainWindow):
 
         self.messages_server.message_received.connect(self.print_messages)
         self.setup_gui()
+        self.check_sub_processes_timer.start(60000)
+        self.check_sub_processes_timer.timeout.connect(self.wait_for_subprocesses)
 
     def setup_gui(self):
         self.ui = Ui_BavizMenu()
@@ -127,7 +130,8 @@ class BravizMenu2(QtGui.QMainWindow):
             button.setEnabled(True)
 
         def launch_app():
-            subprocess.Popen(args)
+            proc = subprocess.Popen(args)
+            self.sub_processes.append(proc)
             button.setEnabled(False)
             QtCore.QTimer.singleShot(3000, restore_icon)
 
@@ -140,14 +144,15 @@ class BravizMenu2(QtGui.QMainWindow):
         dialog.exec_()
 
     def launch_samples_dialog(self):
-        dialog = braviz.applications.qt_sample_select_dialog.SampleLoadDialog()
+        dialog = braviz.applications.sample_select.SampleLoadDialog()
         ret = dialog.exec_()
         if ret == dialog.Accepted:
             idx = dialog.current_sample_idx
             interpreter = sys.executable
             args = [
-                interpreter, "-m", "braviz.applications.qt_sample_select_dialog", str(idx)]
-            subprocess.Popen(args)
+                interpreter, "-m", "braviz.applications.sample_select_dialog", str(idx)]
+            proc = subprocess.Popen(args)
+            self.sub_processes.append(proc)
 
     def launch_scenarios_dialog(self):
         if self.reader is None:
@@ -163,7 +168,8 @@ class BravizMenu2(QtGui.QMainWindow):
             interpreter = sys.executable
             args = [interpreter, "-m", "braviz.applications.%s" %
                     app, str(scn_id)]
-            subprocess.Popen(args)
+            proc = subprocess.Popen(args)
+            self.sub_processes.append(proc)
 
     def open_help(self):
         import webbrowser
@@ -181,6 +187,20 @@ class BravizMenu2(QtGui.QMainWindow):
         else:
             self.messages_server.pause = True
 
+    def wait_for_subprocesses(self):
+        finished = []
+        log = logging.getLogger(__name__)
+        log.info("Checking for finished sub_processes")
+        for i,p in enumerate(self.sub_processes):
+            status = p.poll()
+            if status is not None:
+                finished.append(i)
+                log.info("process %s terminated",p.pid )
+        for i in reversed(finished):
+            self.sub_processes.pop(i)
+        if log.isEnabledFor(logging.INFO):
+            pids = [str(p.pid) for p in self.sub_processes]
+            log.info("Acttive subprocesses: %s"," ".join(pids))
 
 def run():
     import sys
