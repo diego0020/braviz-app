@@ -36,6 +36,7 @@ from PyQt4 import QtGui, QtCore
 from braviz.interaction.qt_dialogs import VariableSelectDialog, NewVariableDialog
 import braviz.interaction.qt_models as braviz_models
 import subprocess
+from collections import deque
 
 import numpy as np
 import sys
@@ -55,6 +56,7 @@ class SampleLoadDialog(QtGui.QDialog):
         self.current_sample_name = None
         self.ui.tableView.activated.connect(self.load_action)
         self.ui.tableView.clicked.connect(self.load_action)
+
         self.ui.tableView.customContextMenuRequested.connect(
             self.show_context_menu)
         if new_button:
@@ -114,17 +116,18 @@ class SampleLoadDialog(QtGui.QDialog):
         menu.exec_(global_pos)
 
 
-class SampleCreateDilog(QtGui.QMainWindow):
+class SampleCreateDialog(QtGui.QMainWindow):
 
-    def __init__(self):
-        super(SampleCreateDilog, self).__init__()
+    def __init__(self, parent=None):
+        super(SampleCreateDialog, self).__init__()
 
         self.working_model = SimpleSetModel()
         self.output_model = SimpleSetModel()
         self.filters_model = SamplesFilterModel()
         self.base_sample = []
         self.base_sample_name = None
-        self.history = []
+        self.history = deque(maxlen=50)
+        self.parent = parent
 
         self.ui = None
         self.setup_ui()
@@ -154,6 +157,9 @@ class SampleCreateDilog(QtGui.QMainWindow):
         self.ui.load_button.clicked.connect(self.show_load_sample)
         self.ui.create_ind_variable.clicked.connect(
             self.create_indicator_variable)
+        self.ui.set_in_parent.setEnabled(self.parent is not None)
+        self.ui.set_in_parent.clicked.connect(self.send_to_parent)
+        self.ui.send_to_all.clicked.connect(self.send_to_all)
         self.ui.comboBox.insertSeparator(self.ui.comboBox.count())
         self.ui.comboBox.addItem("Select")
         self.ui.comboBox.activated.connect(self.change_base_sample)
@@ -351,6 +357,11 @@ class SampleCreateDilog(QtGui.QMainWindow):
         dialog.override_nominal_labels({0: "Out", 1: "In"})
         dialog.exec_()
 
+    def send_to_all(self):
+        pass
+
+    def send_to_parent(self):
+        pass
 
 def get_filter_name(params):
     if params["var_real"] is True:
@@ -585,8 +596,14 @@ if __name__ == "__main__":
 
     configure_logger_from_conf("sample_creation")
     app = QtGui.QApplication([])
-    main_window = SampleCreateDilog()
+    main_window = SampleCreateDialog()
     main_window.show()
+    parent = None
+    if len(sys.argv) >=3:
+        try:
+            parent = int(sys.argv[2])
+        except ValueError:
+            parent = None
     if len(sys.argv) >= 2:
         sample_id = int(sys.argv[1])
         sample = braviz_user_data.get_sample_data(sample_id)

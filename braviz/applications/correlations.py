@@ -38,7 +38,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
-from braviz.applications import qt_sample_select_dialog
+from braviz.applications import sample_select
 
 import numpy as np
 import seaborn as sns
@@ -296,7 +296,7 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.vars_model.update_list(mask)
 
     def set_sample(self):
-        dialog = qt_sample_select_dialog.SampleLoadDialog()
+        dialog = sample_select.SampleLoadDialog()
         res = dialog.exec_()
         if res == dialog.Accepted:
             new_sample = dialog.current_sample

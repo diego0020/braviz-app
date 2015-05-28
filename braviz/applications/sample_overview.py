@@ -32,7 +32,7 @@ from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
 from braviz.readAndFilter.config_file import get_apps_config
-import braviz.applications.qt_sample_select_dialog
+import braviz.applications.sample_select
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.readAndFilter import user_data as braviz_user_data
@@ -1043,7 +1043,7 @@ class SampleOverview(QtGui.QMainWindow):
             self._message_client.send_message("subject %s" % subj)
 
     def show_select_sample_dialog(self):
-        dialog = braviz.applications.qt_sample_select_dialog.SampleLoadDialog()
+        dialog = braviz.applications.sample_select.SampleLoadDialog()
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:

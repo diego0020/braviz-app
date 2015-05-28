@@ -39,7 +39,7 @@ from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, Structur
 from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
-from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
+from braviz.applications.sample_select import SampleLoadDialog
 from braviz.readAndFilter.config_file import get_config
 from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, ImageComboBoxManager, \
     ContrastComboManager

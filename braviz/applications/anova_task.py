@@ -29,7 +29,7 @@ import numpy as np
 
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 import braviz.interaction.qt_dialogs
-import braviz.applications.qt_sample_select_dialog
+import braviz.applications.sample_select
 from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, InteractionSelectDialog
 
 import braviz.interaction.r_functions
@@ -760,7 +760,7 @@ class AnovaApp(QMainWindow):
             self.update_main_plot(plot_name)
 
     def load_sample(self):
-        dialog = braviz.applications.qt_sample_select_dialog.SampleLoadDialog()
+        dialog = braviz.applications.sample_select.SampleLoadDialog()
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:

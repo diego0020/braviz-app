@@ -37,7 +37,7 @@ from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
 from braviz.interaction.connection import MessageClient
-from braviz.applications.qt_sample_select_dialog import SampleLoadDialog
+from braviz.applications.sample_select import SampleLoadDialog
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
 from braviz.readAndFilter.config_file import get_config
 
