@@ -23,7 +23,7 @@ from PyQt4.QtCore import pyqtSignal
 import threading
 import logging
 import time
-
+import json
 __author__ = 'Diego'
 
 
@@ -71,10 +71,11 @@ class MessageServer(QtCore.QObject):
 
         def server_loop():
             while not self._stop:
-                msg = self._listen_socket.recv()
+                net_msg = self._listen_socket.recv()
                 if not self.__paused:
+                    msg = json.loads(net_msg)
                     self.message_received.emit(msg)
-                    self._forward_socket.send(msg)
+                    self._forward_socket.send(net_msg)
         self._server_thread = threading.Thread(target=server_loop)
         self._server_thread.setDaemon(True)
         self._server_thread.start()
@@ -98,15 +99,16 @@ class MessageServer(QtCore.QObject):
         Send a message in the broadcast address
 
         Args:
-            msg (str) : Message to broadcast
+            msg (dict) : Message to broadcast, will be encoded as JSON
         """
-        self._forward_socket.send(msg)
+        net_msg = json.dumps(msg)
+        self._forward_socket.send(net_msg)
 
     def stop_server(self):
         """
         Stops the server thread
         """
-        # atomi operation
+        # atomic operation
         self._stop = True
 
     @property
@@ -164,11 +166,12 @@ class MessageClient(QtCore.QObject):
 
             def receive_loop():
                 while not self._stop:
-                    msg = self._receive_socket.recv()
+                    net_msg = self._receive_socket.recv()
                     # Ignore bouncing messages
-                    if msg != self._last_message or (time.time() - self._last_send_time > 5):
+                    if net_msg != self._last_message or (time.time() - self._last_send_time > 5):
+                        msg = json.loads(net_msg)
                         self.message_received.emit(msg)
-                        self._last_message = msg
+                        self._last_message = net_msg
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
@@ -178,7 +181,7 @@ class MessageClient(QtCore.QObject):
         Send a message
 
         Args:
-            msg (str) : Message to send to the server
+            msg (dict) : Message to send to the server, will be encoded as JSON
         """
         log = logging.getLogger(__file__)
 
@@ -188,9 +191,10 @@ class MessageClient(QtCore.QObject):
 
         try:
             # self._send_socket.send(msg,zmq.DONTWAIT)
-            self._last_message = msg
+            net_msg = json.dumps(msg)
+            self._last_message = net_msg
             self._last_send_time = time.time()
-            self._send_socket.send(msg)
+            self._send_socket.send(net_msg)
         except zmq.Again:
             log.error("Couldn't send message %s", msg)
 
@@ -258,10 +262,10 @@ class PassiveMessageClient(object):
 
             def receive_loop():
                 while not self._stop:
-                    msg = self._receive_socket.recv()
+                    net_msg = self._receive_socket.recv()
                     # Filter some messages to avoid loops
-                    if msg != self._last_seen_message or (time.time() - self._last_send_time > 1):
-                        self._last_seen_message = msg
+                    if net_msg != self._last_seen_message or (time.time() - self._last_send_time > 1):
+                        self._last_seen_message = net_msg
                         self._message_counter += 1
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
@@ -272,7 +276,7 @@ class PassiveMessageClient(object):
         Send a message
 
         Args:
-            msg (str) : Message to send to the server
+            msg (dict) : Message to send to the server
         """
         log = logging.getLogger(__file__)
 
@@ -281,10 +285,11 @@ class PassiveMessageClient(object):
             return
 
         try:
-            self._last_seen_message = msg
+            net_msg = json.dumps(msg)
+            self._last_seen_message = net_msg
             self._message_counter += 1
             self._last_send_time = time.time()
-            self._send_socket.send(msg)
+            self._send_socket.send(net_msg)
         except zmq.Again:
             log.error("Couldn't send message %s", msg)
 
@@ -315,7 +320,7 @@ class PassiveMessageClient(object):
         Returns:
             ``number, message_text``; where the number will increase each time a new message arrives
         """
-        return self._message_counter, self._last_seen_message
+        return self._message_counter, json.loads(self._last_seen_message)
 
 
 class GenericMessageClient(object):
@@ -338,6 +343,8 @@ class GenericMessageClient(object):
         self._receive_socket = None
         self._receive_thread = None
         self._stop = False
+        self._last_message = None
+        self._last_send_time = time.time()
         self.handler = handler
         self.connect_to_server()
 
@@ -359,7 +366,8 @@ class GenericMessageClient(object):
 
             def receive_loop():
                 while not self._stop:
-                    msg = self._receive_socket.recv()
+                    net_msg = self._receive_socket.recv()
+                    msg = json.loads(net_msg)
                     # Ignore bouncing messages
                     self.handler.handle_new_message(msg)
             self._receive_thread = threading.Thread(target=receive_loop)
@@ -373,7 +381,7 @@ class GenericMessageClient(object):
         .. Warning:: This message will also bounce to the handler, be careful with loops
 
         Args:
-            msg (str) : Message to send to the server
+            msg (dict) : Message to send to the server
         """
         log = logging.getLogger(__file__)
 
@@ -383,11 +391,35 @@ class GenericMessageClient(object):
 
         try:
             # self._send_socket.send(msg,zmq.DONTWAIT)
-            self._last_message = msg
+            net_msg = json.dumps(msg)
+            self._last_message = net_msg
             self._last_send_time = time.time()
-            self._send_socket.send(msg)
+            self._send_socket.send(net_msg)
         except zmq.Again:
             log.error("Couldn't send message %s", msg)
+
+    def send_json_message(self, net_msg):
+        """
+        Send a message already encoded as json
+
+        .. Warning:: This message will also bounce to the handler, be careful with loops
+
+        Args:
+            net_msg (str) : Message to send to the server
+        """
+        log = logging.getLogger(__file__)
+
+        if self._send_socket is None:
+            log.error("Trying to send message without connection to server")
+            return
+
+        try:
+            # self._send_socket.send(msg,zmq.DONTWAIT)
+            self._last_message = net_msg
+            self._last_send_time = time.time()
+            self._send_socket.send(net_msg)
+        except zmq.Again:
+            log.error("Couldn't send message %s", net_msg)
 
     def stop(self):
         """

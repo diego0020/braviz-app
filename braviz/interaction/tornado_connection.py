@@ -62,7 +62,7 @@ class MessageHandler(tornado.web.RequestHandler):
             self.write_error(503)
         else:
             m = str(self.get_body_argument("message"))
-            self.message_client.send_message(m)
+            self.message_client.send_json_message(m)
         self.set_status(202, "Message sent")
 
 
@@ -132,7 +132,7 @@ class LongPollMessageHandler(tornado.web.RequestHandler):
             self.write_error(503)
         else:
             m = str(self.get_body_argument("message"))
-            self.message_client.send_message(m)
+            self.message_client.send_json_message(m)
         self.set_status(202, "Message sent")
 
 
@@ -162,7 +162,7 @@ class WebSocketManager(object):
             log=logging.getLogger(__name__)
             log.error("Not message client set")
             return
-        self.message_client.send_message(str(msg))
+        self.message_client.send_json_message(str(msg))
 
 
 class WebSocketMessageHandler(tornado.websocket.WebSocketHandler):
