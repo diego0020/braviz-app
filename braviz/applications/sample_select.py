@@ -19,6 +19,7 @@
 
 from __future__ import division
 from braviz.utilities import set_pyqt_api_2
+
 set_pyqt_api_2()
 
 __author__ = 'Diego'
@@ -36,6 +37,7 @@ from braviz.readAndFilter import user_data as braviz_user_data
 from PyQt4 import QtGui, QtCore
 from braviz.interaction.qt_dialogs import VariableSelectDialog, NewVariableDialog
 import braviz.interaction.qt_models as braviz_models
+from braviz.interaction.connection import MessageClient
 from collections import deque
 
 import numpy as np
@@ -83,7 +85,8 @@ class SampleLoadDialog(QtGui.QDialog):
                 executable = sys.executable
                 braviz.utilities.launch_sub_process([executable, __file__])
                 self.new_button.setEnabled(False)
-                QtCore.QTimer.singleShot(5000, lambda :self.new_button.setEnabled(True))
+                QtCore.QTimer.singleShot(5000, lambda: self.new_button.setEnabled(True))
+
             self.new_button.clicked.connect(launch_new_sample_sub_process)
 
             # "Open" button
@@ -98,7 +101,7 @@ class SampleLoadDialog(QtGui.QDialog):
                 executable = sys.executable
                 braviz.utilities.launch_sub_process([executable, __file__, str(self.current_sample_idx)])
                 self.open_button.setEnabled(False)
-                QtCore.QTimer.singleShot(5000, lambda :self.open_button.setEnabled(True))
+                QtCore.QTimer.singleShot(5000, lambda: self.open_button.setEnabled(True))
 
             self.open_button.clicked.connect(launch_open_sample_sub_process)
 
@@ -134,10 +137,10 @@ class SampleLoadDialog(QtGui.QDialog):
 
 
 class SampleCreateDialog(QtGui.QMainWindow):
-
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, server_broadcast = None, server_receive = None):
         super(SampleCreateDialog, self).__init__()
 
+        self.message_client = MessageClient(server_broadcast, server_receive)
         self.working_model = SimpleSetModel()
         self.output_model = SimpleSetModel()
         self.filters_model = SamplesFilterModel()
@@ -380,6 +383,7 @@ class SampleCreateDialog(QtGui.QMainWindow):
     def send_to_parent(self):
         pass
 
+
 def get_filter_name(params):
     if params["var_real"] is True:
         name = "%s %s %f" % (
@@ -417,11 +421,11 @@ def get_filter_function(params):
             return False
         else:
             return f(x)
+
     return filter_func
 
 
 class AddFilterDialog(VariableSelectDialog):
-
     def __init__(self, params):
         super(AddFilterDialog, self).__init__()
         self.params_dict = params
@@ -438,15 +442,14 @@ class AddFilterDialog(VariableSelectDialog):
 
         self.finish_ui_setup()
 
-        #real details
+        # real details
         self.ui.th_spin.valueChanged.connect(
             self.update_limits_in_plot)
 
-        #nominal details
+        # nominal details
         self.connect(self.nominal_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
                      self.update_limits_in_plot)
         self.nominal_model.dataChanged.connect(self.update_limits_in_plot)
-
 
     def setup_ui(self):
         self.ui = Ui_AddFilterDialog()
@@ -483,8 +486,6 @@ class AddFilterDialog(VariableSelectDialog):
     def update_nominal_details(self):
         super(AddFilterDialog, self).update_nominal_details()
         self.nominal_model.set_checkeable(1)
-
-
 
     def update_limits_in_plot(self, *args):
         if self.ui.var_type_combo.currentIndex() != 0:
@@ -572,7 +573,6 @@ class AddFilterDialog(VariableSelectDialog):
 
 
 class SubSampleSelectDialog(QtGui.QDialog):
-
     def __init__(self, original_length):
         super(SubSampleSelectDialog, self).__init__()
         self.subsample_size = 0
@@ -591,7 +591,6 @@ class SubSampleSelectDialog(QtGui.QDialog):
 
 
 class SaveSubSampleDialog(QtGui.QDialog):
-
     def __init__(self, contents, description):
         super(SaveSubSampleDialog, self).__init__()
         self.ui = Ui_SaveSample()
@@ -609,22 +608,34 @@ class SaveSubSampleDialog(QtGui.QDialog):
 
 
 if __name__ == "__main__":
+    # args [-1|sample_idx] [server_broadcast_address, server_receive_address] [parent_pid]
     from braviz.utilities import configure_logger_from_conf
 
     configure_logger_from_conf("sample_creation")
     app = QtGui.QApplication([])
-    main_window = SampleCreateDialog()
-    main_window.show()
     parent = None
-    if len(sys.argv) >=3:
+    server_bc = None
+    server_rcv = None
+
+    if len(sys.argv) >= 5:
         try:
-            parent = int(sys.argv[2])
+            parent = int(sys.argv[4])
         except ValueError:
             parent = None
+    if len(sys.argv) >=4:
+        server_rcv = sys.argv[3]
+        server_bc = sys.argv[2]
+    main_window = SampleCreateDialog(parent, server_bc, server_rcv)
+    main_window.show()
     if len(sys.argv) >= 2:
-        sample_id = int(sys.argv[1])
-        sample = braviz_user_data.get_sample_data(sample_id)
-        main_window.change_output_sample(sample)
+        try:
+            sample_id = int(sys.argv[1])
+        except ValueError:
+            pass
+        else:
+            if sample_id >= 0:
+                sample = braviz_user_data.get_sample_data(sample_id)
+                main_window.change_output_sample(sample)
     main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     try:
         sys.exit(app.exec_())
