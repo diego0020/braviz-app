@@ -2174,8 +2174,11 @@ class SamplesSelectionModel(QAbstractTableModel):
         """
         Reload subsamples from the database
         """
-        self.data_frame = braviz_user_data.get_samples_df()
-        self.modelReset.emit()
+        df = braviz_user_data.get_samples_df()
+        if not df.equals(self.data_frame):
+            self.modelAboutToBeReset.emit()
+            self.data_frame = df
+            self.modelReset.emit()
 
     def data(self, QModelIndex, int_role=None):
         if QModelIndex.isValid():

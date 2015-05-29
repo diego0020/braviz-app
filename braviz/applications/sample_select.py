@@ -36,7 +36,6 @@ from braviz.readAndFilter import user_data as braviz_user_data
 from PyQt4 import QtGui, QtCore
 from braviz.interaction.qt_dialogs import VariableSelectDialog, NewVariableDialog
 import braviz.interaction.qt_models as braviz_models
-import subprocess
 from collections import deque
 
 import numpy as np
@@ -45,8 +44,15 @@ import logging
 
 
 class SampleLoadDialog(QtGui.QDialog):
+    """
+    This dialog gives the user the option to select a sub_sample
 
-    def __init__(self, new_button=True):
+    Args:
+        new_and_load (bool): If true buttons labeled *load* and *new* will also be shown. This buttons
+            will open a :class:`SampleCreateDialog`, where the user can further customize the sample
+    """
+
+    def __init__(self, new__and_load=True):
         super(SampleLoadDialog, self).__init__()
         self.model = SamplesSelectionModel()
         self.ui = Ui_LoadSampleDialog()
@@ -57,34 +63,44 @@ class SampleLoadDialog(QtGui.QDialog):
         self.current_sample_name = None
         self.ui.tableView.activated.connect(self.load_action)
         self.ui.tableView.clicked.connect(self.load_action)
+        self.refresh_list_timer = QtCore.QTimer()
+        self.refresh_list_timer.timeout.connect(self.model.reload)
+        # check for new subsamples each 5 seconds
+        self.refresh_list_timer.start(5000)
+        self.ui.buttonBox.accepted.connect(self.load_action)
 
         self.ui.tableView.customContextMenuRequested.connect(
             self.show_context_menu)
-        if new_button:
+
+        if new__and_load:
+            # "New" button
             self.new_button = QtGui.QPushButton("New")
             self.ui.buttonBox.addButton(
                 self.new_button, QtGui.QDialogButtonBox.ActionRole)
-            self.new_sample_app = None
-            self.check_state_timer = None
-            self.ui.buttonBox.accepted.connect(self.load_action)
-
-            def refresh_list_and_re_enamble_new():
-                return_value = self.new_sample_app.poll()
-                if return_value is not None:
-                    self.new_button.setEnabled(1)
-                    self.model.reload()
-                    self.check_state_timer.stop()
+            self.new_button.setToolTip("Define a new sub sample")
 
             def launch_new_sample_sub_process():
-                self.new_button.setEnabled(0)
                 executable = sys.executable
                 braviz.utilities.launch_sub_process([executable, __file__])
-                self.check_state_timer = QtCore.QTimer(self)
-                self.check_state_timer.timeout.connect(
-                    refresh_list_and_re_enamble_new)
-                self.check_state_timer.start(1000)
-
+                self.new_button.setEnabled(False)
+                QtCore.QTimer.singleShot(5000, lambda :self.new_button.setEnabled(True))
             self.new_button.clicked.connect(launch_new_sample_sub_process)
+
+            # "Open" button
+            self.open_button = QtGui.QPushButton("Open")
+            self.ui.buttonBox.addButton(
+                self.open_button, QtGui.QDialogButtonBox.ActionRole)
+            self.open_button.setToolTip("Open the subsample in the subsample editor")
+
+            def launch_open_sample_sub_process():
+                if self.current_sample_idx is None:
+                    return
+                executable = sys.executable
+                braviz.utilities.launch_sub_process([executable, __file__, str(self.current_sample_idx)])
+                self.open_button.setEnabled(False)
+                QtCore.QTimer.singleShot(5000, lambda :self.open_button.setEnabled(True))
+
+            self.open_button.clicked.connect(launch_open_sample_sub_process)
 
     def load_action(self, index=None):
         if index is None:
@@ -275,7 +291,7 @@ class SampleCreateDialog(QtGui.QMainWindow):
             name, self.output_model.get_elements(), description)
 
     def show_load_sample(self):
-        dialog = SampleLoadDialog(new_button=False)
+        dialog = SampleLoadDialog(new__and_load=False)
         res = dialog.exec_()
         if res == dialog.Accepted:
             loaded_sample = dialog.current_sample
