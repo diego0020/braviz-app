@@ -378,11 +378,13 @@ class SampleCreateDialog(QtGui.QMainWindow):
         dialog.exec_()
 
     def send_to_all(self):
-        pass
+        msg = {"sample": self.output_model.get_elements()}
+        self.message_client.send_message(msg)
 
     def send_to_parent(self):
-        pass
-
+        msg = {"sample": self.output_model.get_elements(),
+               "target": self.parent}
+        self.message_client.send_message(msg)
 
 def get_filter_name(params):
     if params["var_real"] is True:
