@@ -636,7 +636,7 @@ class SubjectOverviewApp(QMainWindow):
         process_line = [
             sys.executable, "-m", "braviz.applications.export_scalar_to_db", ]
         # print process_line
-        subprocess.Popen(process_line + export_dialog_args)
+        braviz.utilities.launch_sub_process(process_line + export_dialog_args)
 
         self.ui.export_segmentation_to_db.setEnabled(0)
 
@@ -810,7 +810,7 @@ class SubjectOverviewApp(QMainWindow):
             scalar_text), str(operation), str(db_id), ] + structs
         process_line = [
             sys.executable, "-m", "braviz.applications.export_scalar_to_db", ]
-        subprocess.Popen(process_line + export_args)
+        braviz.utilities.launch_sub_process(process_line + export_args)
 
         self.ui.export_fiber_scalars_to_db.setEnabled(0)
 

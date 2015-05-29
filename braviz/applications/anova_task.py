@@ -45,7 +45,6 @@ import seaborn as sns
 
 from itertools import izip
 
-import subprocess
 import sys
 import datetime
 import os
@@ -653,7 +652,7 @@ class AnovaApp(QMainWindow):
                 self._message_client.server_broadcast, self._message_client.server_receive, str(subject)]
 
         log.info(args)
-        subprocess.Popen(args)
+        braviz.utilities.launch_sub_process(args)
 
     def closeEvent(self, *args, **kwargs):
         # if self.mri_viewer_process is not None:

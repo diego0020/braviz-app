@@ -32,8 +32,7 @@ from braviz.applications.sample_select import SampleLoadDialog
 from braviz.readAndFilter.config_file import get_config
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
-import subprocess
-import sys
+from braviz.utilities import launch_sub_process
 
 import logging
 
@@ -153,7 +152,7 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
                 else:
                     args = [
                         interpreter, "-m", "braviz.applications.braviz_web_server"]
-                self.server_process = subprocess.Popen(args)
+                launch_sub_process(args)
             else:
                 ret = self.server_process.poll()
                 if ret is not None:

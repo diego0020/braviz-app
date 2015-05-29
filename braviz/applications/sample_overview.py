@@ -1034,7 +1034,7 @@ class SampleOverview(QtGui.QMainWindow):
                 self._message_client.server_broadcast, self._message_client.server_receive, str(subject)]
 
         log.info(args)
-        subprocess.Popen(args)
+        braviz.utilities.launch_sub_process(args)
 
     def show_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)

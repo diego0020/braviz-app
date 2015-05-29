@@ -23,6 +23,7 @@ set_pyqt_api_2()
 
 __author__ = 'Diego'
 
+import braviz
 from braviz.interaction.qt_guis.new_sample_screen import Ui_NewSampleWindow
 from braviz.interaction.qt_guis.add_filter_dialog import Ui_AddFilterDialog
 from braviz.interaction.qt_guis.select_subsample_dialog import Ui_SelectSubsample
@@ -77,7 +78,7 @@ class SampleLoadDialog(QtGui.QDialog):
             def launch_new_sample_sub_process():
                 self.new_button.setEnabled(0)
                 executable = sys.executable
-                self.new_sample_app = subprocess.Popen([executable, __file__])
+                braviz.utilities.launch_sub_process([executable, __file__])
                 self.check_state_timer = QtCore.QTimer(self)
                 self.check_state_timer.timeout.connect(
                     refresh_list_and_re_enamble_new)

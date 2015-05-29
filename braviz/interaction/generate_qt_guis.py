@@ -48,7 +48,7 @@ def update_guis():
     try:
         with braviz.utilities.working_directory(os.path.join(os.path.dirname(__file__), "qt_guis")):
 
-            subprocess.Popen(
+            subprocess.call(
                 ["pyrcc4", "-o", "resources_rc.py", "resources.qrc"])
     except OSError:
         print("couldn't generate resources")

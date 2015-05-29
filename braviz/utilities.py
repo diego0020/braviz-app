@@ -23,6 +23,7 @@ import contextlib
 import os
 from collections import defaultdict
 import logging
+import subprocess
 
 def set_pyqt_api_2():
     import sip
@@ -135,3 +136,41 @@ def show_error(error_message):
         QtGui.QMessageBox.Critical, "Braviz", error_message, QtGui.QMessageBox.Abort)
     dialog.show()
     app.exec_()
+
+_child_processes = []
+_collect_processes_timer = None
+
+def launch_sub_process(*args,**kwargs):
+    """
+    Uses :class:`subprocess.Popen` to launch a new process.
+
+    A qtimer is used to periodically collect exit status of finished processes and in this way
+    avoid zombie processes. Requires the QT event loop to be running.
+
+    All arguments are passed through to the Popen Constructor.
+
+    """
+    global _collect_processes_timer
+    p = subprocess.Popen(*args, **kwargs)
+    _child_processes.append(p)
+    if _collect_processes_timer is None:
+        from PyQt4.QtCore import QTimer
+
+        def wait_for_sub_processes():
+            finished = []
+            log = logging.getLogger(__name__)
+            log.info("Checking for finished sub_processes")
+            for i, p in enumerate(_child_processes):
+                status = p.poll()
+                if status is not None:
+                    finished.append(i)
+                    log.info("process %s terminated",p.pid )
+            for i in reversed(finished):
+                _child_processes.pop(i)
+            if log.isEnabledFor(logging.INFO):
+                pids = [str(p.pid) for p in _child_processes]
+                log.info("Acttive subprocesses: %s"," ".join(pids))
+        _collect_processes_timer = QTimer()
+        _collect_processes_timer.timeout.connect(wait_for_sub_processes)
+        # timeout each five minutes or 300 seconds
+        _collect_processes_timer.start(300000)
