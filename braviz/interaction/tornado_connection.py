@@ -157,7 +157,7 @@ class WebSocketManager(object):
         for s in self.sockets:
             s.write_message(msg)
 
-    def send_message(self,msg):
+    def send_json_message(self,msg):
         if self.message_client is None:
             log=logging.getLogger(__name__)
             log.error("Not message client set")
@@ -173,8 +173,7 @@ class WebSocketMessageHandler(tornado.websocket.WebSocketHandler):
     """
     def initialize(self, socket_manager):
         """
-        Requires a :class:`braviz.interaction.connection.GenericMessageClient` with
-        :class:`braviz.interaction.tornado_connection.MessageFutureProxy` as handler
+        Requires a :class:`braviz.interaction.tornado_connection.WebSocketManager`
         """
         assert isinstance(socket_manager,WebSocketManager)
         self.socket_manager = socket_manager
@@ -183,7 +182,7 @@ class WebSocketMessageHandler(tornado.websocket.WebSocketHandler):
         self.socket_manager.sockets.add(self)
 
     def on_message(self, message):
-        self.socket_manager.send_message(message)
+        self.socket_manager.send_json_message(message)
 
     def on_close(self):
         try:

@@ -332,7 +332,7 @@ class SubjectOverviewApp(QMainWindow):
                 subj_code_index, QtCore.Qt.DisplayRole)
 
         if self._messages_client is not None and new_subject != self.__curent_subject and broadcast_message:
-            self._messages_client.send_message('subject %s' % new_subject)
+            self._messages_client.send_message({'subject': new_subject})
         # label
         if new_subject != self.__curent_subject:
             self.__previous_subject = self.__curent_subject
@@ -1249,8 +1249,8 @@ class SubjectOverviewApp(QMainWindow):
     def receive_message(self, msg):
         log = logging.getLogger(__file__)
         log.info("RECEIVED: %s" % msg)
-        if msg.startswith("subject"):
-            subj = msg.split()[1]
+        subj = msg.get("subject")
+        if subj is not None:
             self.change_subject(subj, broadcast_message=False)
 
     def reload_comments(self):

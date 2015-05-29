@@ -1040,7 +1040,7 @@ class SampleOverview(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         log.info("showing subject %s" % subj)
         if self._message_client is not None:
-            self._message_client.send_message("subject %s" % subj)
+            self._message_client.send_message({"subject": str(subj)})
 
     def show_select_sample_dialog(self):
         dialog = braviz.applications.sample_select.SampleLoadDialog()
@@ -1055,8 +1055,8 @@ class SampleOverview(QtGui.QMainWindow):
             self.re_arrange_viewers()
 
     def receive_message(self, msg):
-        if msg.startswith("subject"):
-            subj = msg.split()[1]
+        subj = msg.get("subject")
+        if subj is not None:
             self.locate_subj(subj)
 
 

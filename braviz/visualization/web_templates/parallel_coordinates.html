@@ -422,9 +422,9 @@ var errorSleepTime = 500;
     }
     };
     message_getter.onmessage = function(e) {
-      message = e.data;
-      if (message.substr(0,7) == "subject"){
-               var code = message.substr(8);
+      message = JSON.parse(e.data);
+      var code = message.subject;
+      if (code != null){
                highlight_subj_path(code);
         }
     };
@@ -478,7 +478,7 @@ function add_context_menu(){
 };
 
 function send_subject_message(subj){
-var msg="subject "+subj
+var msg=JSON.stringify({"subject": subj})
 if (message_getter){
 message_getter.send(msg);
 }

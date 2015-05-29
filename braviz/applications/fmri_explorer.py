@@ -194,7 +194,7 @@ class FmriExplorer(QtGui.QMainWindow):
         subj = str(self.ui.subject_edit.text())
         if subj in self.__valid_ids:
             if self._messages_client is not None and subj != self.__current_subject and broadcast_message:
-                self._messages_client.send_message('subject %s' % subj)
+                self._messages_client.send_message({'subject': subj})
             self.__current_subject = subj
         new_paradigm = str(self.ui.paradigm_combo.currentText())
         if new_paradigm != self.__current_paradigm:
@@ -628,12 +628,11 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
-        if msg.startswith("subject"):
-            subj = msg.split()[1]
-            if subj in self.__valid_ids and subj != self.__current_subject:
-                self.ui.subject_edit.setText(subj)
-                log.info("Changing to subj %s" % subj)
-                self.update_fmri_data_view(broadcast_message=False)
+        subj = msg.get("subject")
+        if subj is not None and subj in self.__valid_ids and subj != self.__current_subject:
+            self.ui.subject_edit.setText(subj)
+            log.info("Changing to subj %s" % subj)
+            self.update_fmri_data_view(broadcast_message=False)
 
     def change_sample(self, new_sample):
         log = logging.getLogger(__name__)

@@ -480,7 +480,7 @@ class LinearModelApp(QMainWindow):
     def change_subject_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
         subj = str(subj)
-        msg1 = "subject %s" % subj
+        msg1 = {"subject": subj}
         log.info(msg1)
         if self._message_client is not None:
             self._message_client.send_message(msg1)
@@ -488,11 +488,10 @@ class LinearModelApp(QMainWindow):
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
         log.info("RECEIVED %s" % msg)
-        if msg.startswith("subject"):
-            subj = msg.split()[1]
-            if subj is not None:
-                log.info("showing subject %s" % subj)
-                self.add_subjects_to_plot(subject_ids=(int(subj),))
+        subj = msg.get("subject")
+        if subj is not None:
+            log.info("showing subject %s" % subj)
+            self.add_subjects_to_plot(subject_ids=(int(subj),))
 
     def create_context_action(self, subject, scenario_id, scenario_name, show_name=None, new_viewer=True):
         if show_name is None:

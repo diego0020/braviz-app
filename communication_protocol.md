@@ -21,7 +21,7 @@ Communicate a change in the current focus sample
 For all processes
 ```javascript
 {
-sample : <subjects list>,
+sample : <subjects list>
 }
 ```
 

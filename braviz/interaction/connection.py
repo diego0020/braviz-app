@@ -40,7 +40,7 @@ class MessageServer(QtCore.QObject):
         local_only (bool) : If ``True`` the server will only accept connections from localhost
 
     """
-    message_received = pyqtSignal(basestring)
+    message_received = pyqtSignal(dict)
 
     def __init__(self, local_only=True):
         super(MessageServer, self).__init__()
@@ -101,6 +101,7 @@ class MessageServer(QtCore.QObject):
         Args:
             msg (dict) : Message to broadcast, will be encoded as JSON
         """
+        assert isinstance(msg,dict)
         net_msg = json.dumps(msg)
         self._forward_socket.send(net_msg)
 
@@ -134,7 +135,7 @@ class MessageClient(QtCore.QObject):
         server_broadcast (str) : Address of the server broadcast port
         server_receive (str) : Address of the server receive port
     """
-    message_received = pyqtSignal(basestring)
+    message_received = pyqtSignal(dict)
 
     def __init__(self, server_broadcast=None, server_receive=None):
         super(MessageClient, self).__init__()
@@ -183,7 +184,8 @@ class MessageClient(QtCore.QObject):
         Args:
             msg (dict) : Message to send to the server, will be encoded as JSON
         """
-        log = logging.getLogger(__file__)
+        assert isinstance(msg,dict)
+        log = logging.getLogger(__name__)
 
         if self._send_socket is None:
             log.error("Trying to send message without connection to server")
@@ -278,7 +280,8 @@ class PassiveMessageClient(object):
         Args:
             msg (dict) : Message to send to the server
         """
-        log = logging.getLogger(__file__)
+        assert isinstance(msg,dict)
+        log = logging.getLogger(__name__)
 
         if self._send_socket is None:
             log.error("Trying to send message without connection to server")
@@ -383,7 +386,8 @@ class GenericMessageClient(object):
         Args:
             msg (dict) : Message to send to the server
         """
-        log = logging.getLogger(__file__)
+        assert isinstance(msg,dict)
+        log = logging.getLogger(__name__)
 
         if self._send_socket is None:
             log.error("Trying to send message without connection to server")
@@ -407,7 +411,7 @@ class GenericMessageClient(object):
         Args:
             net_msg (str) : Message to send to the server
         """
-        log = logging.getLogger(__file__)
+        log = logging.getLogger(__name__)
 
         if self._send_socket is None:
             log.error("Trying to send message without connection to server")

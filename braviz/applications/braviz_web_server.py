@@ -48,18 +48,13 @@ if __name__ == "__main__":
         broadcast_address = sys.argv[2]
         receive_address = sys.argv[3]
 
-    message_handler = MessageFutureProxy()
     socket_manager = WebSocketManager()
-    message_client = GenericMessageClient(
-        message_handler, broadcast_address, receive_address)
     message_client2 = GenericMessageClient(
         socket_manager, broadcast_address, receive_address)
     socket_manager.message_client = message_client2
     application = tornado.web.Application(
         [
             (r"/parallel", ParallelCoordinatesHandler),
-            #(r"/messages", LongPollMessageHandler,
-            # {"message_client": message_client}),
             (r"/messages_ws",WebSocketMessageHandler,
             {"socket_manager": socket_manager}),
             (r"/subject", SubjectSwitchHandler),
