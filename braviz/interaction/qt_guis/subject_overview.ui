@@ -45,7 +45,16 @@
         <enum>QFrame::Raised</enum>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
-        <property name="margin">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
          <number>0</number>
         </property>
         <item>
@@ -111,12 +120,12 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="select_sample_button">
+             <widget class="QPushButton" name="modify_sample_button">
               <property name="enabled">
                <bool>true</bool>
               </property>
               <property name="text">
-               <string>Select Sample</string>
+               <string>Modify Sample</string>
               </property>
              </widget>
             </item>
@@ -541,7 +550,16 @@
                <enum>QFrame::Raised</enum>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
-               <property name="margin">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
                 <number>0</number>
                </property>
                <item>
@@ -598,7 +616,16 @@
                <property name="fieldGrowthPolicy">
                 <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
                </property>
-               <property name="margin">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
                 <number>0</number>
                </property>
                <item row="0" column="0">
@@ -735,7 +762,16 @@
                <property name="fieldGrowthPolicy">
                 <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
                </property>
-               <property name="margin">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
                 <number>0</number>
                </property>
                <item row="0" column="0">
@@ -1105,7 +1141,16 @@
            <string>View</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_4">
-           <property name="margin">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
             <number>0</number>
            </property>
            <item>
@@ -1249,7 +1294,16 @@
         <enum>QFrame::Raised</enum>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
-        <property name="margin">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
          <number>0</number>
         </property>
         <item>
@@ -1455,16 +1509,29 @@
      <x>0</x>
      <y>0</y>
      <width>857</width>
-     <height>21</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuAccept_sample">
+     <property name="title">
+      <string>Accept sample</string>
+     </property>
+     <addaction name="actionAsk"/>
+     <addaction name="actionAlways"/>
+     <addaction name="actionNever"/>
+    </widget>
     <addaction name="actionSave_scenario"/>
     <addaction name="actionLoad_scenario"/>
     <addaction name="actionAuto_loop"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_sample"/>
+    <addaction name="actionModify_sample"/>
+    <addaction name="actionSend_sample"/>
+    <addaction name="menuAccept_sample"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -1488,6 +1555,48 @@
    </property>
    <property name="toolTip">
     <string>Automatically loop through the subjects in the table</string>
+   </property>
+  </action>
+  <action name="actionLoad_sample">
+   <property name="text">
+    <string>Load sample</string>
+   </property>
+  </action>
+  <action name="actionModify_sample">
+   <property name="text">
+    <string>Modify sample</string>
+   </property>
+  </action>
+  <action name="actionSend_sample">
+   <property name="text">
+    <string>Send sample</string>
+   </property>
+  </action>
+  <action name="actionAsk">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Ask</string>
+   </property>
+  </action>
+  <action name="actionAlways">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Always</string>
+   </property>
+  </action>
+  <action name="actionNever">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Never</string>
    </property>
   </action>
  </widget>

@@ -976,8 +976,9 @@ class LinearModelApp(QMainWindow):
         log.info(new_sample)
         self.sample = new_sample
         self.sample_model.set_sample(new_sample)
-        self.update_main_plot_from_regressors(
-            self.regressors_model.index(self.plot_name[0], 0), var_name=self.plot_name[1])
+        if self.plot_name is not None:
+            self.update_main_plot_from_regressors(
+                self.regressors_model.index(self.plot_name[0], 0), var_name=self.plot_name[1])
         self.get_missing_values()
 
     def load_sample(self):
@@ -991,6 +992,10 @@ class LinearModelApp(QMainWindow):
             self.set_sample(new_sample)
 
     def send_sample(self):
+        if self._message_client is None:
+            log = logging.getLogger(__name__)
+            log.warning("Can't send message, no menu found")
+            return
         msg = {"sample" : list(self.sample)}
         self._message_client.send_message(msg)
 

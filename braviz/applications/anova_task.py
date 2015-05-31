@@ -782,6 +782,10 @@ class AnovaApp(QMainWindow):
         self.get_missing_values()
 
     def send_sample(self):
+        if self._message_client is None:
+            log = logging.getLogger(__name__)
+            log.warning("Can't send message, no menu found")
+            return
         msg = {"sample" : list(self.sample)}
         self._message_client.send_message(msg)
 

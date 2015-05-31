@@ -43,7 +43,6 @@ from braviz.applications.sample_select import SampleLoadDialog
 from braviz.readAndFilter.config_file import get_config
 from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, ImageComboBoxManager, \
     ContrastComboManager
-import subprocess
 from braviz.interaction.connection import MessageClient
 import cPickle
 import functools
@@ -70,6 +69,7 @@ class SubjectOverviewApp(QMainWindow):
         self.__curent_subject = config.get_default_subject()
         log = logging.getLogger(__name__)
         self._messages_client = None
+        self.sample_message_policy = "ask"
         if server_broadcast_address is not None or server_receive_address is not None:
             self._messages_client = MessageClient(
                 server_broadcast_address, server_receive_address)
@@ -172,8 +172,8 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.select_subject_table_vars.clicked.connect(
             self.launch_subject_variable_select_dialog)
         self.ui.subjects_table.activated.connect(self.change_subject)
-        self.ui.select_sample_button.clicked.connect(
-            self.show_select_sample_dialog)
+        self.ui.modify_sample_button.clicked.connect(
+            self.modify_sample)
 
         # subject details
         self.ui.subject_details_table.setModel(self.subject_details_model)
@@ -294,6 +294,14 @@ class SubjectOverviewApp(QMainWindow):
             self.load_scenario_dialog)
         self.ui.actionAuto_loop.toggled.connect(self.toggle_demo_mode)
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
+
+        self.ui.actionLoad_sample.triggered.connect(self.load_sample)
+        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
+        self.ui.actionSend_sample.triggered.connect(self.send_sample)
+        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
+        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
+        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
+
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -503,16 +511,26 @@ class SubjectOverviewApp(QMainWindow):
             logger = logging.getLogger(__name__)
             logger.info("new models %s" % new_selection)
 
-    def show_select_sample_dialog(self):
+    #Samples
+    def receive_message(self, msg):
+        log = logging.getLogger(__file__)
+        log.info("RECEIVED: %s" % msg)
+        subj = msg.get("subject")
+        if subj is not None:
+            self.change_subject(subj, broadcast_message=False)
+        if "sample" in msg:
+            self.handle_sample_message(msg)
+
+    def load_sample(self):
         dialog = SampleLoadDialog()
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
             log.info("*sample changed*")
-            self.change_sample(new_sample)
             logger = logging.getLogger(__name__)
             logger.info("new sample: %s" % new_sample)
+            self.change_sample(new_sample)
 
     def change_sample(self, new_sample):
         self.sample = sorted(new_sample)
@@ -527,6 +545,77 @@ class SubjectOverviewApp(QMainWindow):
         self.subjects_model.set_sample(self.sample)
         # update context frame
         self.context_frame.set_sample(self.sample)
+
+    def send_sample(self):
+        if self._messages_client is None:
+            log = logging.getLogger(__name__)
+            log.warning("Can't send message, no menu found")
+            return
+        msg = {"sample" : list(self.sample)}
+        self._messages_client.send_message(msg)
+
+    def modify_sample(self):
+        self.ui.modify_sample_button.setEnabled(False)
+        if self._messages_client is not None:
+            braviz.applications.sample_select.launch_sample_create_dialog(
+                server_broadcast=self._messages_client.server_broadcast,
+                server_receive=self._messages_client.server_receive,
+                parent_id=os.getpid(),
+                sample=self.sample
+            )
+        else:
+            braviz.applications.sample_select.launch_sample_create_dialog(
+                sample=self.sample
+            )
+        QtCore.QTimer.singleShot(5000, lambda: self.ui.modify_sample_button.setEnabled(True))
+
+    def handle_sample_message(self, msg):
+        sample = msg.get("sample", tuple())
+        target = msg.get("target")
+        if target is not None:
+            accept = target == os.getpid()
+        else:
+            accept = self.accept_samples()
+        if accept:
+            self.change_sample(sample)
+
+    def accept_samples(self):
+        if self.sample_message_policy == "ask":
+            answer = QtGui.QMessageBox.question(
+                self, "Sample Received", "Accept sample?",
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
+                QtGui.QMessageBox.Yes)
+            if answer == QtGui.QMessageBox.Yes:
+                return True
+            elif answer == QtGui.QMessageBox.YesToAll:
+                self.update_samples_policy("always")
+                return True
+            elif answer == QtGui.QMessageBox.No:
+                return False
+            elif answer == QtGui.QMessageBox.NoToAll:
+                self.update_samples_policy("never")
+                return False
+        elif self.sample_message_policy == "always":
+            return True
+        else:
+            return False
+
+    def update_samples_policy(self, item):
+        if item == "ask":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(True)
+        elif item == "never":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(True)
+            self.ui.actionAsk.setChecked(False)
+        elif item == "always":
+            self.ui.actionAlways.setChecked(True)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(False)
+        else:
+            assert False
+        self.sample_message_policy = item
 
     def launch_details_variable_select_dialog(self):
         params = {}
@@ -1245,13 +1334,6 @@ class SubjectOverviewApp(QMainWindow):
                 self.context_frame.set_variables(variables, editables)
                 self.context_frame.set_subject(self.__curent_subject)
         return
-
-    def receive_message(self, msg):
-        log = logging.getLogger(__file__)
-        log.info("RECEIVED: %s" % msg)
-        subj = msg.get("subject")
-        if subj is not None:
-            self.change_subject(subj, broadcast_message=False)
 
     def reload_comments(self):
         comment = braviz_user_data.get_comment(self.__curent_subject)
