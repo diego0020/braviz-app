@@ -126,6 +126,7 @@
 
 <script type="text/javascript">
 var flowers = {% raw data %} ;
+
 var categories = {% raw caths %} ,
     traits = {% raw vars %};
 
@@ -542,6 +543,13 @@ console.log(msg);
     message_getter.send(msg);
     }
 }
+
+// ------------------update data---------------------
+// var flowers2;
+// d3.json("data"+location.search, function(error,data){flowers2 = data});
+// $.get("data", {args:JSON.stringify({sample : [1,2,3], vars=[1,2,3]} ) },
+// function(data){alert(data);}, "json");
+
 
 // -------------------on load-------------------------
 

@@ -123,7 +123,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
 
         json_data = data.to_json(orient="records")
 
-        caths = data[col0].unique()
+        caths = labels.values()
         caths_json = json.dumps(list(caths))
 
         # 1: cathegories, 2: code
@@ -196,3 +196,42 @@ class SubjectSwitchHandler(tornado.web.RequestHandler):
 
         self.render("subject_switch.html",subjs=subjs,samples=sample_names,sample_id=sample_id)
 
+class DataHandler(tornado.web.RequestHandler):
+
+    """
+    Returns data for the given sample and variables as a json object
+
+    """
+    def get(self):
+        vars_s = self.get_query_argument("vars")
+        sample = self.get_query_argument("sample", None)
+        variables = map(int, vars_s.split(","))
+        data = tab_data.get_data_frame_by_index(variables)
+        if sample is not None:
+            subjs = user_data.get_sample_data(sample)
+            data = data.loc[subjs]
+        data2 = data.dropna()
+        data = data2
+
+        cols = data.columns
+        cols2 = list(cols)
+        cols2[0] = "category"
+        data.columns = cols2
+        labels = tab_data.get_labels_dict(variables[0])
+        for i, (k, v) in enumerate(labels.iteritems()):
+            if v is None:
+                labels[k] = "label%s" % k
+            if v is None or len(v) == 0:
+                v = "level_%d" % i
+            elif v[0].isdigit():
+                v = "c_" + v
+            labels[k] = v.replace(' ', '_')
+
+        # sanitize label name
+        col0 = cols2[0]
+        data[col0] = data[col0].map(labels)
+        data["code"] = data.index
+
+        json_data = data.to_json(orient="records")
+        self.write(json_data)
+        self.set_header("Content-Type", "application/json")

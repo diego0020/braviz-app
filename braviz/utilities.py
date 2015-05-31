@@ -169,7 +169,7 @@ def launch_sub_process(*args,**kwargs):
                 _child_processes.pop(i)
             if log.isEnabledFor(logging.INFO):
                 pids = [str(p.pid) for p in _child_processes]
-                log.info("Acttive subprocesses: %s"," ".join(pids))
+                log.info("Active subprocesses: %s"," ".join(pids))
         _collect_processes_timer = QTimer()
         _collect_processes_timer.timeout.connect(wait_for_sub_processes)
         # timeout each five minutes or 300 seconds
