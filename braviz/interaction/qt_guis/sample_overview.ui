@@ -240,18 +240,30 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>26</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuReceive_Samples">
+     <property name="title">
+      <string>Accept samples</string>
+     </property>
+     <addaction name="actionAsk"/>
+     <addaction name="actionAlways"/>
+     <addaction name="actionNever"/>
+    </widget>
     <addaction name="action_save_scenario"/>
     <addaction name="action_load_scenario"/>
     <addaction name="separator"/>
     <addaction name="action_load_visualization"/>
-    <addaction name="actionSelect_Sample"/>
+    <addaction name="separator"/>
+    <addaction name="actionSelect_sample"/>
+    <addaction name="actionModify_sample"/>
+    <addaction name="actionSend_sample"/>
+    <addaction name="menuReceive_Samples"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -276,9 +288,46 @@
     <string>Save_screenshot</string>
    </property>
   </action>
-  <action name="actionSelect_Sample">
+  <action name="actionSelect_sample">
    <property name="text">
-    <string>Select Sample</string>
+    <string>Load sample</string>
+   </property>
+  </action>
+  <action name="actionModify_sample">
+   <property name="text">
+    <string>Modify sample</string>
+   </property>
+  </action>
+  <action name="actionSend_sample">
+   <property name="text">
+    <string>Send sample</string>
+   </property>
+  </action>
+  <action name="actionAsk">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Ask</string>
+   </property>
+  </action>
+  <action name="actionAlways">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Always</string>
+   </property>
+  </action>
+  <action name="actionNever">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Never</string>
    </property>
   </action>
  </widget>

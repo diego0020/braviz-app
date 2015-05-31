@@ -44,7 +44,7 @@ from collections import deque
 import numpy as np
 import sys
 import logging
-import os
+
 
 class SampleLoadDialog(QtGui.QDialog):
     """

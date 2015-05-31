@@ -420,6 +420,7 @@
     <addaction name="actionLoad_scenario"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_sample"/>
+    <addaction name="actionModify_sample"/>
     <addaction name="actionSend_sample"/>
     <addaction name="menuAccept_samples"/>
     <addaction name="separator"/>
@@ -483,6 +484,11 @@
   <action name="actionSend_sample">
    <property name="text">
     <string>Send sample</string>
+   </property>
+  </action>
+  <action name="actionModify_sample">
+   <property name="text">
+    <string>Modify sample</string>
    </property>
   </action>
  </widget>

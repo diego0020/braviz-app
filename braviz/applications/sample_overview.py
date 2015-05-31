@@ -44,14 +44,9 @@ from collections import Counter
 import os
 import datetime
 import functools
-import cPickle
-import subprocess
 
 from braviz.interaction.connection import MessageClient, MessageServer
 
-
-
-#SAMPLE_SIZE = 0.5
 if braviz.readAndFilter.PROJECT == "kmc40":
     SAMPLE_SIZE = 0.3
 else:
@@ -70,6 +65,8 @@ class SampleOverview(QtGui.QMainWindow):
         self.widgets_dict = {}
         self.widget_observers = {}
         self.current_space = "Talairach"
+
+        self.sample_message_policy = "ask"
 
         self.inside_layouts = dict()
         self.row_scroll_widgets = dict()
@@ -96,7 +93,6 @@ class SampleOverview(QtGui.QMainWindow):
         else:
             self._message_client = None
 
-        self._auxiliary_server = None
         self.ui = None
         self.context_menu_opened_recently = False
         cfg = get_apps_config()
@@ -153,8 +149,15 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.action_save_scenario.triggered.connect(self.save_scenario)
         self.ui.action_load_scenario.triggered.connect(
             self.load_scenario_dialog)
-        self.ui.actionSelect_Sample.triggered.connect(
-            self.show_select_sample_dialog)
+
+        self.ui.actionSelect_sample.triggered.connect(
+            self.load_sample)
+        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
+        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
+        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
+        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
+        self.ui.actionSend_sample.triggered.connect(self.send_sample)
+
 
         self.ui.progress_bar.setValue(0)
 
@@ -1013,10 +1016,6 @@ class SampleOverview(QtGui.QMainWindow):
             self.current_scenario = visualization_dict
         self.reload_viewers(self.current_scenario)
 
-    def launch_auxiliary_server(self):
-        self._auxiliary_server = MessageServer(local_only=True)
-        self._auxiliary_server.message_received.connect(self.receive_message)
-
     def launch_mri_viewer(self, subject):
         log = logging.getLogger(__name__)
         if self.current_scenario is not None:
@@ -1026,14 +1025,10 @@ class SampleOverview(QtGui.QMainWindow):
 
         log.info("launching viewer")
         if self._message_client is None:
-            log.info("Becoming an auxiliary server")
-            self.launch_auxiliary_server()
-            self._message_client = MessageClient(self._auxiliary_server.broadcast_address,
-                                                 self._auxiliary_server.receive_address)
+            log.warning("Menu not available, can't launch new viewer")
+            return
         args = [sys.executable, "-m", "braviz.applications.subject_overview", str(scenario),
                 self._message_client.server_broadcast, self._message_client.server_receive, str(subject)]
-
-        log.info(args)
         braviz.utilities.launch_sub_process(args)
 
     def show_in_mri_viewer(self, subj):
@@ -1042,22 +1037,110 @@ class SampleOverview(QtGui.QMainWindow):
         if self._message_client is not None:
             self._message_client.send_message({"subject": str(subj)})
 
-    def show_select_sample_dialog(self):
-        dialog = braviz.applications.sample_select.SampleLoadDialog()
-        res = dialog.exec_()
-        log = logging.getLogger(__name__)
-        if res == dialog.Accepted:
-            new_sample = dialog.current_sample
-            log.info("new sample: %s" % new_sample)
-            self.change_sample(list(new_sample))
-            self.load_scalar_data(
-                self.rational_index, self.nominal_index, force=True)
-            self.re_arrange_viewers()
-
     def receive_message(self, msg):
         subj = msg.get("subject")
         if subj is not None:
             self.locate_subj(subj)
+        if "sample" in msg:
+            self.handle_sample_message(msg)
+
+    def set_sample(self, new_sample):
+        log = logging.getLogger(__name__)
+        log.info("new sample: %s" % new_sample)
+        self.change_sample(list(new_sample))
+        self.load_scalar_data(
+            self.rational_index, self.nominal_index, force=True)
+        self.re_arrange_viewers()
+
+    def load_sample(self):
+        dialog = braviz.applications.sample_select.SampleLoadDialog(
+            new__and_load=True,
+            server_broadcast=None if self._message_client is None else self._message_client.server_broadcast,
+            server_receive=None if self._message_client is None else self._message_client.server_receive,
+        )
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            self.set_sample(new_sample)
+
+    def send_sample(self):
+        msg = {"sample" : list(self.sample)}
+        self._message_client.send_message(msg)
+
+    def modify_sample(self):
+        if self._message_client is not None:
+            braviz.applications.sample_select.launch_sample_create_dialog(
+                server_broadcast=self._message_client.server_broadcast,
+                server_receive=self._message_client.server_receive,
+                parent_id=os.getpid(),
+                sample=self.sample
+            )
+        else:
+            braviz.applications.sample_select.launch_sample_create_dialog(
+                sample=self.sample
+            )
+
+    def handle_sample_message(self, msg):
+        sample = msg.get("sample", tuple())
+        target = msg.get("target")
+        if target is not None:
+            accept = target == os.getpid()
+        else:
+            accept = self.accept_samples(len(sample))
+        if accept:
+            self.set_sample(sample)
+
+    def accept_samples(self, sample_size):
+        if self.sample_message_policy == "ask":
+            answer = QtGui.QMessageBox.question(
+                self, "Sample Received", "Size=%d\nAccept sample?"%sample_size,
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
+                QtGui.QMessageBox.Yes)
+            if answer == QtGui.QMessageBox.Yes:
+                return True
+            elif answer == QtGui.QMessageBox.YesToAll:
+                self.update_samples_policy("always")
+                return True
+            elif answer == QtGui.QMessageBox.No:
+                return False
+            elif answer == QtGui.QMessageBox.NoToAll:
+                self.update_samples_policy("never")
+                return False
+        elif self.sample_message_policy == "always":
+            return True
+        else:
+            return False
+
+    def update_samples_policy(self, item):
+        if item == "ask":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(True)
+        elif item == "never":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(True)
+            self.ui.actionAsk.setChecked(False)
+        elif item == "always":
+            self.ui.actionAlways.setChecked(True)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(False)
+        else:
+            assert False
+        self.sample_message_policy = item
+
+    def save_figure(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
+                                                             "Save Plot", ".", "PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
+        self.plot.fig.savefig(filename)
+
+    def save_data(self):
+        filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
+                                                             "Save Data", ".", "csv (*.csv)"))
+        if len(filename) > 0:
+            s_vars = [self.outcome_var_name] + \
+                     list(self.regressors_model.get_regressors())
+            out_df = braviz_tab_data.get_data_frame_by_name(s_vars)
+            out_df.to_csv(filename)
 
 
 def say_ciao():

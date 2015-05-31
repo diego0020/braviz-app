@@ -149,7 +149,7 @@ class AnovaApp(QMainWindow):
         self.ui.actionLoad_sample.triggered.connect(self.load_sample)
         self.ui.actionImages.triggered.connect(self.save_figure)
         self.ui.actionData.triggered.connect(self.save_data)
-
+        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
         self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
         self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
         self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
