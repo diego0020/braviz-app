@@ -153,7 +153,7 @@ class WebSocketManager(object):
         self.sockets = set()
         self.message_client = None
 
-    def handle_new_message(self, msg):
+    def handle_json_message(self, msg):
         for s in self.sockets:
             s.write_message(msg)
 

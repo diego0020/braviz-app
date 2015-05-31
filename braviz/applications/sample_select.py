@@ -18,6 +18,7 @@
 
 
 from __future__ import division
+import os
 from braviz.utilities import set_pyqt_api_2
 
 set_pyqt_api_2()
@@ -117,12 +118,12 @@ class SampleLoadDialog(QtGui.QDialog):
                         sample_idx=self.current_sample_idx,
                         server_broadcast=server_broadcast,
                         server_receive=server_receive,
-                        parent_id="-1" if parent is None else str(parent),
+                        parent_id=str(os.getpid()),
                     )
                 else:
                     launch_sample_create_dialog(
                         sample_idx=self.current_sample_idx,
-                        parent_id="-1" if parent is None else str(parent),
+                        parent_id=str(os.getpid()),
                     )
                 self.open_button.setEnabled(False)
                 QtCore.QTimer.singleShot(5000, lambda: self.open_button.setEnabled(True))
@@ -201,7 +202,7 @@ class SampleCreateDialog(QtGui.QMainWindow):
         self.ui.load_button.clicked.connect(self.show_load_sample)
         self.ui.create_ind_variable.clicked.connect(
             self.create_indicator_variable)
-        self.ui.set_in_parent.setEnabled(self.parent is not None)
+        self.ui.set_in_parent.setEnabled(self.parent is not None and server_bc is not None)
         self.ui.send_to_all.setEnabled(server_bc is not None)
         if server_bc is None:
             self.ui.send_to_all.setToolTip("Requires the menu to be running")

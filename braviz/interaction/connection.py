@@ -381,9 +381,11 @@ class GenericMessageClient(object):
             def receive_loop():
                 while not self._stop:
                     net_msg = self._receive_socket.recv()
-                    msg = json.loads(net_msg)
-                    # Ignore bouncing messages
-                    self.handler.handle_new_message(msg)
+                    try:
+                        self.handler.handle_json_message(net_msg)
+                    except AttributeError:
+                        msg = json.loads(net_msg)
+                        self.handler.handle_new_message(msg)
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
