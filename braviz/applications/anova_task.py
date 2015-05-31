@@ -84,6 +84,7 @@ class AnovaApp(QMainWindow):
         self.mri_viewer_pipe = None
         self.sample = braviz_tab_data.get_subjects()
         self.missing = None
+        self.sample_message_policy = "ask"
         self.ui = None
 
         if server_broadcast_address is not None or server_receive_address is not None:
@@ -149,6 +150,10 @@ class AnovaApp(QMainWindow):
         self.ui.actionLoad_sample.triggered.connect(self.load_sample)
         self.ui.actionImages.triggered.connect(self.save_figure)
         self.ui.actionData.triggered.connect(self.save_data)
+
+        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
+        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
+        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
 
     def dispatch_outcome_select(self):
 
@@ -550,7 +555,33 @@ class AnovaApp(QMainWindow):
             self.set_sample(sample)
 
     def accept_samples(self):
-        return True
+        if self.sample_message_policy == "ask":
+            answer = QtGui.QMessageBox.question(
+                self, "Sample Received", "Accept sample?",
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesAll | QtGui.QMessageBox.NoAll,
+                QtGui.QMessageBox.Yes)
+            print answer
+        elif self.sample_message_policy == "always":
+            return True
+        else:
+            return False
+
+    def update_samples_policy(self, item):
+        if item == "ask":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(True)
+        elif item == "never":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(True)
+            self.ui.actionAsk.setChecked(False)
+        elif item == "always":
+            self.ui.actionAlways.setChecked(True)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(False)
+        else:
+            assert False
+        self.sample_message_policy = item
 
     def handle_box_outlier_pick(self, u, position):
         # print "received signal"

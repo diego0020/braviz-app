@@ -205,7 +205,7 @@ def run():
         log.exception(e)
         raise
     # kill server
-    log.ingo("Terminating web server")
+    log.info("Terminating web server")
     main_window.server.terminate()
 
 if __name__ == '__main__':

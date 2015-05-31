@@ -408,9 +408,18 @@
      <addaction name="actionImages"/>
      <addaction name="actionData"/>
     </widget>
+    <widget class="QMenu" name="menuAccept_samples">
+     <property name="title">
+      <string>Accept samples</string>
+     </property>
+     <addaction name="actionAsk"/>
+     <addaction name="actionAlways"/>
+     <addaction name="actionNever"/>
+    </widget>
     <addaction name="actionSave_scneario"/>
     <addaction name="actionLoad_scenario"/>
     <addaction name="actionLoad_sample"/>
+    <addaction name="menuAccept_samples"/>
     <addaction name="separator"/>
     <addaction name="menuExport"/>
    </widget>
@@ -440,6 +449,33 @@
   <action name="actionLoad_sample">
    <property name="text">
     <string>Load sample</string>
+   </property>
+  </action>
+  <action name="actionAsk">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Ask</string>
+   </property>
+  </action>
+  <action name="actionAlways">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Always</string>
+   </property>
+  </action>
+  <action name="actionNever">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Never</string>
    </property>
   </action>
  </widget>
