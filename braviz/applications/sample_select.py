@@ -43,7 +43,7 @@ from collections import deque
 import numpy as np
 import sys
 import logging
-
+import os
 
 class SampleLoadDialog(QtGui.QDialog):
     """
@@ -52,9 +52,11 @@ class SampleLoadDialog(QtGui.QDialog):
     Args:
         new_and_load (bool): If true buttons labeled *load* and *new* will also be shown. This buttons
             will open a :class:`SampleCreateDialog`, where the user can further customize the sample
+        server_broadcast (str): Will be passed to child SampleCreateDilogs
+        server_receive (str): Will be passed to child SampleCreateDilogs
     """
 
-    def __init__(self, new__and_load=True):
+    def __init__(self, new__and_load=True, server_broadcast=None, server_receive=None):
         super(SampleLoadDialog, self).__init__()
         self.model = SamplesSelectionModel()
         self.ui = Ui_LoadSampleDialog()
@@ -67,6 +69,9 @@ class SampleLoadDialog(QtGui.QDialog):
         self.ui.tableView.clicked.connect(self.load_action)
         self.refresh_list_timer = QtCore.QTimer()
         self.refresh_list_timer.timeout.connect(self.model.reload)
+        self.server_bcst = server_broadcast
+        self.server_rcv = server_receive
+
         # check for new subsamples each 5 seconds
         self.refresh_list_timer.start(5000)
         self.ui.buttonBox.accepted.connect(self.load_action)
@@ -83,7 +88,11 @@ class SampleLoadDialog(QtGui.QDialog):
 
             def launch_new_sample_sub_process():
                 executable = sys.executable
-                braviz.utilities.launch_sub_process([executable, __file__])
+                pre_args = [executable, __file__, -1]
+                if server_broadcast is not None and server_receive is not None:
+                    pre_args += [server_broadcast, server_receive, os.getpid()]
+                args = [str(x) for x in pre_args]
+                braviz.utilities.launch_sub_process(args)
                 self.new_button.setEnabled(False)
                 QtCore.QTimer.singleShot(5000, lambda: self.new_button.setEnabled(True))
 
@@ -99,7 +108,11 @@ class SampleLoadDialog(QtGui.QDialog):
                 if self.current_sample_idx is None:
                     return
                 executable = sys.executable
-                braviz.utilities.launch_sub_process([executable, __file__, str(self.current_sample_idx)])
+                pre_args = [executable, __file__, self.current_sample_idx]
+                if server_broadcast is not None and server_receive is not None:
+                    pre_args += [server_broadcast, server_receive, os.getpid()]
+                args = [str(x) for x in pre_args]
+                braviz.utilities.launch_sub_process(args)
                 self.open_button.setEnabled(False)
                 QtCore.QTimer.singleShot(5000, lambda: self.open_button.setEnabled(True))
 
@@ -178,6 +191,9 @@ class SampleCreateDialog(QtGui.QMainWindow):
         self.ui.create_ind_variable.clicked.connect(
             self.create_indicator_variable)
         self.ui.set_in_parent.setEnabled(self.parent is not None)
+        self.ui.send_to_all.setEnabled(server_bc is not None)
+        if server_bc is None:
+            self.ui.send_to_all.setToolTip("Requires the menu to be running")
         self.ui.set_in_parent.clicked.connect(self.send_to_parent)
         self.ui.send_to_all.clicked.connect(self.send_to_all)
         self.ui.comboBox.insertSeparator(self.ui.comboBox.count())
@@ -378,11 +394,11 @@ class SampleCreateDialog(QtGui.QMainWindow):
         dialog.exec_()
 
     def send_to_all(self):
-        msg = {"sample": self.output_model.get_elements()}
+        msg = {"sample": list(self.output_model.get_elements())}
         self.message_client.send_message(msg)
 
     def send_to_parent(self):
-        msg = {"sample": self.output_model.get_elements(),
+        msg = {"sample": list(self.output_model.get_elements()),
                "target": self.parent}
         self.message_client.send_message(msg)
 
@@ -610,10 +626,11 @@ class SaveSubSampleDialog(QtGui.QDialog):
 
 
 if __name__ == "__main__":
-    # args [-1|sample_idx] [server_broadcast_address, server_receive_address] [parent_pid]
+    # args [-1|sample_idx] [server_broadcast_address, server_receive_address] [parent_pid] [S0, S1, .... Sn]
     from braviz.utilities import configure_logger_from_conf
-
     configure_logger_from_conf("sample_creation")
+    log = logging.getLogger(__name__)
+    log.info(sys.argv)
     app = QtGui.QApplication([])
     parent = None
     server_bc = None
@@ -627,6 +644,10 @@ if __name__ == "__main__":
     if len(sys.argv) >=4:
         server_rcv = sys.argv[3]
         server_bc = sys.argv[2]
+        if ":" not in server_rcv:
+            server_rcv = None
+        if ":" not in server_bc:
+            server_bc = None
     main_window = SampleCreateDialog(parent, server_bc, server_rcv)
     main_window.show()
     if len(sys.argv) >= 2:
@@ -635,9 +656,12 @@ if __name__ == "__main__":
         except ValueError:
             pass
         else:
-            if sample_id >= 0:
+            if sample_id > 0:
                 sample = braviz_user_data.get_sample_data(sample_id)
                 main_window.change_output_sample(sample)
+    if len(sys.argv) > 5:
+        sample = [int(x) for x in sys.argv[5:]]
+        main_window.change_output_sample(sample)
     main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     try:
         sys.exit(app.exec_())

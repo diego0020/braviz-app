@@ -20,6 +20,7 @@
 from __future__ import division
 
 from braviz.utilities import set_pyqt_api_2
+
 set_pyqt_api_2()
 
 import PyQt4.QtGui as QtGui
@@ -52,7 +53,7 @@ import platform
 
 import logging
 from braviz.interaction.qt_widgets import MatplotWidget
-
+from braviz.utilities import launch_sub_process
 
 __author__ = 'Diego'
 
@@ -66,7 +67,6 @@ SAMPLE_TREE_COLUMNS = (def_vars["nom1"], def_vars["nom2"])
 
 
 class AnovaApp(QMainWindow):
-
     def __init__(self, scenario, server_broadcast_address, server_receive_address):
         QMainWindow.__init__(self)
         self.outcome_var_name = None
@@ -92,7 +92,7 @@ class AnovaApp(QMainWindow):
             self._message_client.message_received.connect(self.receive_message)
         else:
             self._message_client = None
-        # in case no central server exists
+            # in case no central server exists
         self._auxiliary_server = None
         self.setup_gui()
         if scenario is not None:
@@ -139,13 +139,14 @@ class AnovaApp(QMainWindow):
         self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.sample_tree.customContextMenuRequested.connect(
             self.subject_details_from_tree)
-        self.ui.modify_sample_button.clicked.connect(self.load_sample)
+        self.ui.modify_sample_button.clicked.connect(self.modify_sample)
         self.ui.modify_sample_button.setEnabled(True)
 
         self.ui.actionSave_scneario.triggered.connect(
             self.save_scenario_dialog)
         self.ui.actionLoad_scenario.triggered.connect(
             self.load_scenario_dialog)
+        self.ui.actionLoad_sample.triggered.connect(self.load_sample)
         self.ui.actionImages.triggered.connect(self.save_figure)
         self.ui.actionData.triggered.connect(self.save_data)
 
@@ -334,7 +335,7 @@ class AnovaApp(QMainWindow):
 
             ylims = braviz_tab_data.get_min_max_values_by_name(
                 self.outcome_var_name)
-            self.plot.make_box_plot(data,None,self.outcome_var_name, "(Intercept)", self.outcome_var_name,
+            self.plot.make_box_plot(data, None, self.outcome_var_name, "(Intercept)", self.outcome_var_name,
                                     None, ylims, intercet=self.result_model.intercept)
 
         else:
@@ -357,7 +358,7 @@ class AnovaApp(QMainWindow):
                 nominal_factors.append(f)
             else:
                 real_factors.append(f)
-        # print nominal_factors
+            # print nominal_factors
         # print real_factors
         if len(real_factors) == 1:
 
@@ -393,7 +394,7 @@ class AnovaApp(QMainWindow):
                     data[real_factors[0]][data[nominal_factors[0]] == k].get_values())
                 urls.append(
                     data[self.outcome_var_name][data[nominal_factors[0]] == k].index.get_values())
-            # print datax
+                # print datax
             self.plot_x_var = real_factors[0]
             self.plot_z_var = nominal_factors[0]
 
@@ -414,7 +415,7 @@ class AnovaApp(QMainWindow):
             nlevels = {}
             for f in nominal_factors:
                 nlevels[f] = len(data[f].unique())
-            # print nlevels
+                # print nlevels
             nominal_factors.sort(key=nlevels.get, reverse=True)
             # print nominal_factors
 
@@ -460,7 +461,7 @@ class AnovaApp(QMainWindow):
             for k, v in labels_dict.iteritems():
                 if v is None or len(v) == 0:
                     labels_dict[k] = "level_%s" % k
-            # print labels_dict
+                # print labels_dict
             # get data from
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
 
@@ -472,7 +473,7 @@ class AnovaApp(QMainWindow):
 
             # print data_list
             self.plot.make_box_plot(
-                data,var_name, self.outcome_var_name, var_name, self.outcome_var_name, labels_dict, (miny, maxy))
+                data, var_name, self.outcome_var_name, var_name, self.outcome_var_name, labels_dict, (miny, maxy))
 
         else:
             # is real
@@ -535,6 +536,21 @@ class AnovaApp(QMainWindow):
         if subj is not None:
             log.info("showing subject %s" % subj)
             self.add_subjects_to_plot(subject_ids=(int(subj),))
+        if "sample" in msg:
+            self.handle_sample_message(msg)
+
+    def handle_sample_message(self, msg):
+        sample = msg.get("sample", tuple())
+        target = msg.get("target")
+        if target is not None and target == os.getpid():
+            accept = True
+        else:
+            accept = self.accept_samples()
+        if accept:
+            self.set_sample(sample)
+
+    def accept_samples(self):
+        return True
 
     def handle_box_outlier_pick(self, u, position):
         # print "received signal"
@@ -565,6 +581,7 @@ class AnovaApp(QMainWindow):
         def launch_new_viewer():
             self.launch_mri_viewer(subject, scenario_id)
             self.add_subjects_to_plot(subject_ids=(int(subject),))
+
         if new_viewer:
             action = QtGui.QAction(
                 "Show subject %s's %s in new viewer" % (subject, show_name), None)
@@ -654,8 +671,8 @@ class AnovaApp(QMainWindow):
         braviz.utilities.launch_sub_process(args)
 
     def closeEvent(self, *args, **kwargs):
-        # if self.mri_viewer_process is not None:
-            # self.mri_viewer_process.terminate()
+    # if self.mri_viewer_process is not None:
+    # self.mri_viewer_process.terminate()
         log = logging.getLogger(__name__)
         log.info("Finishing")
 
@@ -752,23 +769,44 @@ class AnovaApp(QMainWindow):
         self.check_if_ready()
         if self.ui.calculate_button.isEnabled():
             self.calculate_anova()
-        # set plot
+            # set plot
         plot_name = wanted_state["plot"].get("var_name")
         if plot_name is not None:
             self.update_main_plot(plot_name)
 
     def load_sample(self):
-        dialog = braviz.applications.sample_select.SampleLoadDialog()
+        dialog = braviz.applications.sample_select.SampleLoadDialog(
+            new__and_load=True,
+            server_broadcast=self._message_client.server_broadcast,
+            server_receive=self._message_client.server_receive)
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
             log.info("new sample")
             log.info(new_sample)
-            self.sample = new_sample
-            self.sample_model.set_sample(new_sample)
-            self.update_main_plot(self.plot_var_name)
-            self.get_missing_values()
+            self.set_sample(new_sample)
+
+    def set_sample(self, new_sample):
+        self.sample = new_sample
+        self.sample_model.set_sample(new_sample)
+        self.update_main_plot(self.plot_var_name)
+        self.get_missing_values()
+
+    def modify_sample(self):
+        self.ui.modify_sample_button.setEnabled(False)
+        if self._message_client is not None:
+            pre_args = [sys.executable, "-m", "braviz.applications.sample_select", -1,
+                        self._message_client.server_broadcast, self._message_client.server_receive,
+                        os.getpid()]
+        else:
+            pre_args = [sys.executable, "-m", "braviz.applications.sample_select", -1,
+                        -1, -1, os.getpid()]
+        pre_args += list(self.sample)
+        args = [str(x) for x in pre_args]
+        launch_sub_process(args)
+        QtCore.QTimer.singleShot(5000, lambda: self.ui.modify_sample_button.setEnabled(True))
+
 
     def save_figure(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
@@ -780,7 +818,7 @@ class AnovaApp(QMainWindow):
                                                              "Save Data", ".", "csv (*.csv)"))
         if len(filename) > 0:
             s_vars = [self.outcome_var_name] + \
-                list(self.regressors_model.get_regressors())
+                     list(self.regressors_model.get_regressors())
             out_df = braviz_tab_data.get_data_frame_by_name(s_vars)
             out_df.to_csv(filename)
 
@@ -788,6 +826,7 @@ class AnovaApp(QMainWindow):
 def run():
     import sys
     from braviz.utilities import configure_logger_from_conf
+
     configure_logger_from_conf("anova_app")
     args = sys.argv
     scenario = None
@@ -810,6 +849,7 @@ def run():
     except Exception as e:
         log.exception(e)
         raise
+
 
 if __name__ == '__main__':
     run()
