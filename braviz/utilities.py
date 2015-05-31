@@ -174,3 +174,4 @@ def launch_sub_process(*args,**kwargs):
         _collect_processes_timer.timeout.connect(wait_for_sub_processes)
         # timeout each five minutes or 300 seconds
         _collect_processes_timer.start(300000)
+    return p

@@ -32,7 +32,7 @@ from braviz.applications.sample_select import SampleLoadDialog
 from braviz.readAndFilter.config_file import get_config
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data
-from braviz.utilities import launch_sub_process
+
 
 import logging
 
@@ -60,7 +60,6 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         self.sample_id = None
         self.vars_model = VarListModel(checkeable=True)
         self.vars_model.select_items(self.attributes)
-        self.server_process = None
 
         self.generate_url()
         self.setup_ui()
@@ -80,7 +79,6 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         self.ui.cathegory_combo.addItem("<Select cathegory>")
         self.ui.cathegory_combo.activated.connect(self.change_cathegory)
         self.ui.cathegory_combo.setCurrentIndex(0)
-        self.ui.webView.loadFinished.connect(self.start_web_server)
         self.ui.actionSelect_Sample.triggered.connect(self.set_sample)
         self.ui.clear_button.clicked.connect(self.clear_selection)
 
@@ -141,26 +139,6 @@ class ParallelCoordinatesApp(QtGui.QMainWindow):
         self.generate_url()
         self.refresh_web_view()
 
-    def start_web_server(self, ok):
-        # test if already started
-        if not ok:
-            if self.server_process is None:
-                interpreter = sys.executable
-                if self.broadcast is not None and self.receive is not None:
-                    args = [interpreter, "-m", "braviz.applications.braviz_web_server",
-                            "0", self.broadcast, self.receive]
-                else:
-                    args = [
-                        interpreter, "-m", "braviz.applications.braviz_web_server"]
-                launch_sub_process(args)
-            else:
-                ret = self.server_process.poll()
-                if ret is not None:
-                    log=logging.getLogger(__name__)
-                    log.warning("server has died, restarting")
-                    self.server_process = None
-            QtCore.QTimer.singleShot(2000, self.refresh_web_view)
-
     def set_sample(self):
         dialog = SampleLoadDialog()
         res = dialog.exec_()
@@ -190,7 +168,4 @@ if __name__ == "__main__":
     main_window = ParallelCoordinatesApp(scenario, broadcast, receive)
     main_window.show()
     app.exec_()
-    if main_window.server_process is not None:
-        log = logging.getLogger(__name__)
-        log.info("terminating server")
-        main_window.server_process.terminate()
+

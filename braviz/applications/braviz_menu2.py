@@ -20,7 +20,6 @@ from __future__ import print_function
 from braviz.utilities import set_pyqt_api_2
 set_pyqt_api_2()
 
-import subprocess
 import sys
 import logging
 
@@ -58,6 +57,9 @@ class BravizMenu2(QtGui.QMainWindow):
         print("Receive address: %s" % self.messages_server.receive_address)
 
         self.messages_server.message_received.connect(self.print_messages)
+        args = [sys.executable, "-m", "braviz.applications.braviz_web_server", "0",
+                self.messages_server.broadcast_address, self.messages_server.receive_address]
+        self.server = launch_sub_process(args)
         self.setup_gui()
 
     def setup_gui(self):
@@ -194,6 +196,7 @@ def run():
     check_db.verify_db_completeness()
 
     app = QtGui.QApplication(sys.argv)
+
     main_window = BravizMenu2()
     main_window.show()
     try:
@@ -201,7 +204,9 @@ def run():
     except Exception as e:
         log.exception(e)
         raise
-
+    # kill server
+    log.ingo("Terminating web server")
+    main_window.server.terminate()
 
 if __name__ == '__main__':
     import traceback
@@ -213,5 +218,4 @@ if __name__ == '__main__':
     except Exception as e:
         print("ERROR")
         traceback.print_exc()
-
     _ = raw_input("Press enter to close window")
