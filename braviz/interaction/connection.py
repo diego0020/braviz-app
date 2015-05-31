@@ -24,7 +24,18 @@ import threading
 import logging
 import time
 import json
+import numpy as np
 __author__ = 'Diego'
+
+class NpJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, np.number):
+            if isinstance(o, np.integer):
+                o2 = int(o)
+            else:
+                o2 = float(o)
+            return o2
+        return json.JSONEncoder.default(self, o)
 
 
 class MessageServer(QtCore.QObject):
@@ -102,7 +113,7 @@ class MessageServer(QtCore.QObject):
             msg (dict) : Message to broadcast, will be encoded as JSON
         """
         assert isinstance(msg,dict)
-        net_msg = json.dumps(msg)
+        net_msg = json.dumps(msg, cls=NpJSONEncoder)
         self._forward_socket.send(net_msg)
 
     def stop_server(self):
@@ -193,7 +204,7 @@ class MessageClient(QtCore.QObject):
 
         try:
             # self._send_socket.send(msg,zmq.DONTWAIT)
-            net_msg = json.dumps(msg)
+            net_msg = json.dumps(msg, cls=NpJSONEncoder)
             self._last_message = net_msg
             self._last_send_time = time.time()
             self._send_socket.send(net_msg)
@@ -288,7 +299,7 @@ class PassiveMessageClient(object):
             return
 
         try:
-            net_msg = json.dumps(msg)
+            net_msg = json.dumps(msg, cls=NpJSONEncoder)
             self._last_seen_message = net_msg
             self._message_counter += 1
             self._last_send_time = time.time()
@@ -395,7 +406,7 @@ class GenericMessageClient(object):
 
         try:
             # self._send_socket.send(msg,zmq.DONTWAIT)
-            net_msg = json.dumps(msg)
+            net_msg = json.dumps(msg, cls=NpJSONEncoder)
             self._last_message = net_msg
             self._last_send_time = time.time()
             self._send_socket.send(net_msg)

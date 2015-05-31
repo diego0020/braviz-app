@@ -485,7 +485,7 @@
      <x>0</x>
      <y>0</y>
      <width>899</width>
-     <height>26</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -499,8 +499,20 @@
      <addaction name="actionImages"/>
      <addaction name="actionData"/>
     </widget>
+    <widget class="QMenu" name="menuAccept_samples">
+     <property name="title">
+      <string>Accept samples</string>
+     </property>
+     <addaction name="actionAsk"/>
+     <addaction name="actionAlways"/>
+     <addaction name="actionNever"/>
+    </widget>
     <addaction name="actionSave_scneario"/>
     <addaction name="actionLoad_scenario"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_sample"/>
+    <addaction name="actionSend_sample"/>
+    <addaction name="menuAccept_samples"/>
     <addaction name="separator"/>
     <addaction name="menuExport"/>
    </widget>
@@ -525,6 +537,46 @@
   <action name="actionData">
    <property name="text">
     <string>Data</string>
+   </property>
+  </action>
+  <action name="actionLoad_sample">
+   <property name="text">
+    <string>Load sample</string>
+   </property>
+  </action>
+  <action name="actionSend_sample">
+   <property name="text">
+    <string>Send sample</string>
+   </property>
+  </action>
+  <action name="actionAlways">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Always</string>
+   </property>
+  </action>
+  <action name="actionAsk">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Ask</string>
+   </property>
+  </action>
+  <action name="actionNever">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Never</string>
    </property>
   </action>
  </widget>

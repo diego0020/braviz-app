@@ -418,7 +418,9 @@
     </widget>
     <addaction name="actionSave_scneario"/>
     <addaction name="actionLoad_scenario"/>
+    <addaction name="separator"/>
     <addaction name="actionLoad_sample"/>
+    <addaction name="actionSend_sample"/>
     <addaction name="menuAccept_samples"/>
     <addaction name="separator"/>
     <addaction name="menuExport"/>
@@ -476,6 +478,11 @@
    </property>
    <property name="text">
     <string>Never</string>
+   </property>
+  </action>
+  <action name="actionSend_sample">
+   <property name="text">
+    <string>Send sample</string>
    </property>
   </action>
  </widget>

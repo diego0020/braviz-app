@@ -93,8 +93,7 @@ class AnovaApp(QMainWindow):
             self._message_client.message_received.connect(self.receive_message)
         else:
             self._message_client = None
-            # in case no central server exists
-        self._auxiliary_server = None
+
         self.setup_gui()
         if scenario is not None:
             scn_int = int(scenario)
@@ -154,6 +153,7 @@ class AnovaApp(QMainWindow):
         self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
         self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
         self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
+        self.ui.actionSend_sample.triggered.connect(self.send_sample)
 
     def dispatch_outcome_select(self):
 
@@ -544,45 +544,6 @@ class AnovaApp(QMainWindow):
         if "sample" in msg:
             self.handle_sample_message(msg)
 
-    def handle_sample_message(self, msg):
-        sample = msg.get("sample", tuple())
-        target = msg.get("target")
-        if target is not None and target == os.getpid():
-            accept = True
-        else:
-            accept = self.accept_samples()
-        if accept:
-            self.set_sample(sample)
-
-    def accept_samples(self):
-        if self.sample_message_policy == "ask":
-            answer = QtGui.QMessageBox.question(
-                self, "Sample Received", "Accept sample?",
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesAll | QtGui.QMessageBox.NoAll,
-                QtGui.QMessageBox.Yes)
-            print answer
-        elif self.sample_message_policy == "always":
-            return True
-        else:
-            return False
-
-    def update_samples_policy(self, item):
-        if item == "ask":
-            self.ui.actionAlways.setChecked(False)
-            self.ui.actionNever.setChecked(False)
-            self.ui.actionAsk.setChecked(True)
-        elif item == "never":
-            self.ui.actionAlways.setChecked(False)
-            self.ui.actionNever.setChecked(True)
-            self.ui.actionAsk.setChecked(False)
-        elif item == "always":
-            self.ui.actionAlways.setChecked(True)
-            self.ui.actionNever.setChecked(False)
-            self.ui.actionAsk.setChecked(False)
-        else:
-            assert False
-        self.sample_message_policy = item
-
     def handle_box_outlier_pick(self, u, position):
         # print "received signal"
         # print x_l,y_l
@@ -682,19 +643,15 @@ class AnovaApp(QMainWindow):
     def clear_last_viewed_subject(self):
         self.last_viewed_subject = None
 
-    def launch_auxiliary_server(self):
-        self._auxiliary_server = MessageServer(local_only=True)
-        self._auxiliary_server.message_received.connect(self.receive_message)
 
     def launch_mri_viewer(self, subject, scenario):
         log = logging.getLogger(__name__)
 
         log.info("launching viewer")
         if self._message_client is None:
-            log.info("Becoming an auxiliary server")
-            self.launch_auxiliary_server()
-            self._message_client = MessageClient(self._auxiliary_server.broadcast_address,
-                                                 self._auxiliary_server.receive_address)
+            log.warning("Menu is not available, can't launch viewer")
+            return
+
         args = [sys.executable, "-m", "braviz.applications.subject_overview", str(scenario),
                 self._message_client.server_broadcast, self._message_client.server_receive, str(subject)]
 
@@ -824,20 +781,72 @@ class AnovaApp(QMainWindow):
         self.update_main_plot(self.plot_var_name)
         self.get_missing_values()
 
+    def send_sample(self):
+        msg = {"sample" : list(self.sample)}
+        self._message_client.send_message(msg)
+
     def modify_sample(self):
         self.ui.modify_sample_button.setEnabled(False)
         if self._message_client is not None:
-            pre_args = [sys.executable, "-m", "braviz.applications.sample_select", -1,
-                        self._message_client.server_broadcast, self._message_client.server_receive,
-                        os.getpid()]
+            braviz.applications.sample_select.launch_sample_create_dialog(
+                server_broadcast=self._message_client.server_broadcast,
+                server_receive=self._message_client.server_receive,
+                parent_id=os.getpid(),
+                sample=self.sample
+            )
         else:
-            pre_args = [sys.executable, "-m", "braviz.applications.sample_select", -1,
-                        -1, -1, os.getpid()]
-        pre_args += list(self.sample)
-        args = [str(x) for x in pre_args]
-        launch_sub_process(args)
+            braviz.applications.sample_select.launch_sample_create_dialog(
+                sample=self.sample
+            )
         QtCore.QTimer.singleShot(5000, lambda: self.ui.modify_sample_button.setEnabled(True))
 
+    def handle_sample_message(self, msg):
+        sample = msg.get("sample", tuple())
+        target = msg.get("target")
+        if target is not None:
+            accept = target == os.getpid()
+        else:
+            accept = self.accept_samples()
+        if accept:
+            self.set_sample(sample)
+
+    def accept_samples(self):
+        if self.sample_message_policy == "ask":
+            answer = QtGui.QMessageBox.question(
+                self, "Sample Received", "Accept sample?",
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
+                QtGui.QMessageBox.Yes)
+            if answer == QtGui.QMessageBox.Yes:
+                return True
+            elif answer == QtGui.QMessageBox.YesToAll:
+                self.update_samples_policy("always")
+                return True
+            elif answer == QtGui.QMessageBox.No:
+                return False
+            elif answer == QtGui.QMessageBox.NoToAll:
+                self.update_samples_policy("never")
+                return False
+        elif self.sample_message_policy == "always":
+            return True
+        else:
+            return False
+
+    def update_samples_policy(self, item):
+        if item == "ask":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(True)
+        elif item == "never":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(True)
+            self.ui.actionAsk.setChecked(False)
+        elif item == "always":
+            self.ui.actionAlways.setChecked(True)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(False)
+        else:
+            assert False
+        self.sample_message_policy = item
 
     def save_figure(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,

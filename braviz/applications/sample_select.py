@@ -38,6 +38,7 @@ from PyQt4 import QtGui, QtCore
 from braviz.interaction.qt_dialogs import VariableSelectDialog, NewVariableDialog
 import braviz.interaction.qt_models as braviz_models
 from braviz.interaction.connection import MessageClient
+from braviz.utilities import launch_sub_process
 from collections import deque
 
 import numpy as np
@@ -87,12 +88,16 @@ class SampleLoadDialog(QtGui.QDialog):
             self.new_button.setToolTip("Define a new sub sample")
 
             def launch_new_sample_sub_process():
-                executable = sys.executable
-                pre_args = [executable, __file__, -1]
                 if server_broadcast is not None and server_receive is not None:
-                    pre_args += [server_broadcast, server_receive, os.getpid()]
-                args = [str(x) for x in pre_args]
-                braviz.utilities.launch_sub_process(args)
+                    launch_sample_create_dialog(
+                        server_broadcast=server_broadcast,
+                        server_receive=server_receive,
+                        parent_id="-1" if parent is None else str(parent),
+                    )
+                else:
+                    launch_sample_create_dialog(
+                        parent_id="-1" if parent is None else str(parent),
+                    )
                 self.new_button.setEnabled(False)
                 QtCore.QTimer.singleShot(5000, lambda: self.new_button.setEnabled(True))
 
@@ -107,12 +112,18 @@ class SampleLoadDialog(QtGui.QDialog):
             def launch_open_sample_sub_process():
                 if self.current_sample_idx is None:
                     return
-                executable = sys.executable
-                pre_args = [executable, __file__, self.current_sample_idx]
                 if server_broadcast is not None and server_receive is not None:
-                    pre_args += [server_broadcast, server_receive, os.getpid()]
-                args = [str(x) for x in pre_args]
-                braviz.utilities.launch_sub_process(args)
+                    launch_sample_create_dialog(
+                        sample_idx=self.current_sample_idx,
+                        server_broadcast=server_broadcast,
+                        server_receive=server_receive,
+                        parent_id="-1" if parent is None else str(parent),
+                    )
+                else:
+                    launch_sample_create_dialog(
+                        sample_idx=self.current_sample_idx,
+                        parent_id="-1" if parent is None else str(parent),
+                    )
                 self.open_button.setEnabled(False)
                 QtCore.QTimer.singleShot(5000, lambda: self.open_button.setEnabled(True))
 
@@ -623,6 +634,16 @@ class SaveSubSampleDialog(QtGui.QDialog):
     def before_exiting(self):
         self.name = self.ui.sample_name.text()
         self.description = self.ui.sample_description.toPlainText()
+
+
+def launch_sample_create_dialog(sample_idx = None, server_broadcast = None, server_receive = None, parent_id = None,
+                                sample = None):
+    args = [sys.executable, __file__, "-1" if sample_idx is None else str(sample_idx),
+            "-1" if server_broadcast is None else server_broadcast, "-1" if server_receive is None else server_receive,
+            "-1" if parent_id is None else str(parent_id)]
+    if sample is not None:
+        args += [str(x) for x in sample]
+    launch_sub_process(args)
 
 
 if __name__ == "__main__":

@@ -23,7 +23,6 @@ set_pyqt_api_2()
 
 import random
 
-import subprocess
 import sys
 
 import datetime
@@ -50,6 +49,7 @@ import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.connection import MessageClient, MessageServer
 from braviz.readAndFilter.config_file import get_config
+from braviz.utilities import launch_sub_process
 
 __author__ = 'Diego'
 
@@ -81,6 +81,7 @@ class LinearModelApp(QMainWindow):
         self.coefs_df = None
         self.regression_results = None
         self.missing = None
+        self.sample_message_policy = "ask"
         self.ui = None
 
         if server_broadcast_address is not None or server_receive_address is not None:
@@ -89,9 +90,6 @@ class LinearModelApp(QMainWindow):
             self._message_client.message_received.connect(self.receive_message)
         else:
             self._message_client = None
-        # in case no central server exists
-        self._auxiliary_server = None
-
         self.setup_gui()
 
     def setup_gui(self):
@@ -136,7 +134,7 @@ class LinearModelApp(QMainWindow):
         self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.sample_tree.customContextMenuRequested.connect(
             self.subject_details_from_tree)
-        self.ui.modify_sample_button.clicked.connect(self.load_sample)
+        self.ui.modify_sample_button.clicked.connect(self.modify_sample)
         self.ui.modify_sample_button.setEnabled(True)
 
         self.ui.actionSave_scneario.triggered.connect(
@@ -145,6 +143,13 @@ class LinearModelApp(QMainWindow):
             self.load_scenario_dialog)
         self.ui.actionData.triggered.connect(self.save_data)
         self.ui.actionImages.triggered.connect(self.save_figure)
+
+        self.ui.actionLoad_sample.triggered.connect(self.load_sample)
+        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
+        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
+        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
+        self.ui.actionSend_sample.triggered.connect(self.send_sample)
+
 
     def dispatch_outcome_select(self):
 
@@ -492,6 +497,8 @@ class LinearModelApp(QMainWindow):
         if subj is not None:
             log.info("showing subject %s" % subj)
             self.add_subjects_to_plot(subject_ids=(int(subj),))
+        if "sample" in msg:
+            self.handle_sample_message(msg)
 
     def create_context_action(self, subject, scenario_id, scenario_name, show_name=None, new_viewer=True):
         if show_name is None:
@@ -572,19 +579,14 @@ class LinearModelApp(QMainWindow):
             # print subject
             self.create_view_details_context_menu(global_pos, subject)
 
-    def launch_auxiliary_server(self):
-        self._auxiliary_server = MessageServer(local_only=True)
-        self._auxiliary_server.message_received.connect(self.receive_message)
 
     def launch_mri_viewer(self, subject, scenario):
         log = logging.getLogger(__name__)
 
         log.info("launching viewer")
         if self._message_client is None:
-            log.info("Becoming an auxiliary server")
-            self.launch_auxiliary_server()
-            self._message_client = MessageClient(self._auxiliary_server.broadcast_address,
-                                                 self._auxiliary_server.receive_address)
+            log.warning("Menu is not available, can't launch viewer")
+            return
         args = [sys.executable, "-m", "braviz.applications.subject_overview", str(scenario),
                 self._message_client.server_broadcast, self._message_client.server_receive, str(subject)]
 
@@ -709,19 +711,6 @@ class LinearModelApp(QMainWindow):
             else:
                 logger.error("Unknown plot type %s", plot_type)
 
-    def load_sample(self):
-        dialog = braviz.applications.sample_select.SampleLoadDialog()
-        res = dialog.exec_()
-        log = logging.getLogger(__name__)
-        if res == dialog.Accepted:
-            new_sample = dialog.current_sample
-            log.info("new sample")
-            log.info(new_sample)
-            self.sample = new_sample
-            self.sample_model.set_sample(new_sample)
-            self.update_main_plot_from_regressors(
-                self.regressors_model.index(self.plot_name[0], 0), var_name=self.plot_name[1])
-            self.get_missing_values()
 
     def isolate_one(self, isolating_factor, un_standardize=True):
         standarized_data = self.regression_results["standardized_model"]
@@ -979,6 +968,93 @@ class LinearModelApp(QMainWindow):
             log = logging.getLogger(__file__)
             log.error(
                 "Scenario id doesn't correspond to an anova scenario, ignoring")
+
+    def set_sample(self, new_sample):
+        log = logging.getLogger(__name__)
+        log.info("new sample")
+        log.info(new_sample)
+        self.sample = new_sample
+        self.sample_model.set_sample(new_sample)
+        self.update_main_plot_from_regressors(
+            self.regressors_model.index(self.plot_name[0], 0), var_name=self.plot_name[1])
+        self.get_missing_values()
+
+    def load_sample(self):
+        dialog = braviz.applications.sample_select.SampleLoadDialog(
+            new__and_load=True,
+            server_broadcast=self._message_client.server_broadcast,
+            server_receive=self._message_client.server_receive)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            self.set_sample(new_sample)
+
+    def send_sample(self):
+        msg = {"sample" : list(self.sample)}
+        self._message_client.send_message(msg)
+
+    def modify_sample(self):
+        self.ui.modify_sample_button.setEnabled(False)
+        if self._message_client is not None:
+            braviz.applications.sample_select.launch_sample_create_dialog(
+                server_broadcast=self._message_client.server_broadcast,
+                server_receive=self._message_client.server_receive,
+                parent_id=os.getpid(),
+                sample=self.sample
+            )
+        else:
+            braviz.applications.sample_select.launch_sample_create_dialog(
+                sample=self.sample
+            )
+        QtCore.QTimer.singleShot(5000, lambda: self.ui.modify_sample_button.setEnabled(True))
+
+    def handle_sample_message(self, msg):
+        sample = msg.get("sample", tuple())
+        target = msg.get("target")
+        if target is not None:
+            accept = target == os.getpid()
+        else:
+            accept = self.accept_samples()
+        if accept:
+            self.set_sample(sample)
+
+    def accept_samples(self):
+        if self.sample_message_policy == "ask":
+            answer = QtGui.QMessageBox.question(
+                self, "Sample Received", "Accept sample?",
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
+                QtGui.QMessageBox.Yes)
+            if answer == QtGui.QMessageBox.Yes:
+                return True
+            elif answer == QtGui.QMessageBox.YesToAll:
+                self.update_samples_policy("always")
+                return True
+            elif answer == QtGui.QMessageBox.No:
+                return False
+            elif answer == QtGui.QMessageBox.NoToAll:
+                self.update_samples_policy("never")
+                return False
+        elif self.sample_message_policy == "always":
+            return True
+        else:
+            return False
+
+    def update_samples_policy(self, item):
+        if item == "ask":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(True)
+        elif item == "never":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(True)
+            self.ui.actionAsk.setChecked(False)
+        elif item == "always":
+            self.ui.actionAlways.setChecked(True)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(False)
+        else:
+            assert False
+        self.sample_message_policy = item
 
 
 def run():
