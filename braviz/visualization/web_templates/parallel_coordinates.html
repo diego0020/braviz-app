@@ -18,7 +18,7 @@
 .foreground path {
   fill: none;
   stroke-opacity: .8;
-  stroke-width: 1.5px;
+  stroke-width: 2px;
 }
 
 .foreground path:hover {
@@ -28,13 +28,18 @@
 }
 
 .foreground path.path-fade:hover {
-  stroke-width: 1;
+  stroke-width: 1px;
   stroke-opacity: 1.0;
 }
 
+.foreground path.path-disabled {
+  stroke: pink;
+  display : none;
+}
+
 .foreground path.path-fade {
-  stroke: #000;
-  stroke-opacity: {% raw background_opac %} ;
+  stroke: #aaa;
+  stroke-opacity: 0.3;
   z-index: -1;
   stroke-width: 1px;
 }
@@ -126,6 +131,9 @@
 
 <script type="text/javascript">
 var flowers = {% raw data %} ;
+var sample = {% raw sample %};
+var codes_w_missing = {%raw missing%}
+var current_subsample_list = [];
 
 var categories = {% raw caths %} ,
     traits = {% raw vars %};
@@ -279,7 +287,7 @@ function tabulate(data, columns, selected_codes) {
     } ).order();
 
     var sel_title=document.getElementById("selection_div").getElementsByTagName("H3")[0]
-    sel_title.textContent  = "Selection " + data.length + "/" + flowers.length;
+    sel_title.textContent  = "Selection " + data.length + "/" + sample.length;
     var table = d3.select("#selected").html("").append("table"),
         thead = table.append("thead"),
         tbody = table.append("tbody");
@@ -312,28 +320,14 @@ function tabulate(data, columns, selected_codes) {
     return table;
 }
 
-var current_subsample_list = [];
-
-// Handles a brush event, toggling the display of foreground lines.
-
-var make_table_timeout;
-function brush() {
-  var actives = traits.filter(function(p) { return !y[p].brush.empty(); }),
-      extents = actives.map(function(p) { return y[p].brush.extent(); });
-  foreground.classed("path-fade", function(d) {
-    return !actives.every(function(p, i) {
-      return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-    });
-  });
-
+function prepare_tabulate(){
   var selected_codes=[];
   var selected_indeces=[];
   var f2 = foreground[0];
 
   for (i=0;i<f2.length;i++){
   var p=f2[i];
-
-  if (! p.classList.contains("path-fade"))
+  if (! (p.classList.contains("path-fade") || p.classList.contains("path-disabled")))
   {
   var t=p.getElementsByTagName("title")[0];
   var code = t.textContent;
@@ -351,18 +345,35 @@ function brush() {
     window.clearTimeout(make_table_timeout);
   }
   make_table_timeout=window.setTimeout(function(){
-  var data2 = [];
-  for(i=0; i<selected_indeces.length; i++)
-  {
-  var j=selected_indeces[i];
-  data2.push(flowers[j]);
-  }
+    var data2 = [];
+    for(i=0; i<selected_indeces.length; i++)
+    {
+        var j=selected_indeces[i];
+        data2.push(flowers[j]);
+    }
 
-  tabulate(data2,["code","category"].concat(traits),selected_codes);
-  }
+    tabulate(data2,["code","category"].concat(traits),selected_codes);
+    }
   , 1000);
-
 }
+
+
+// Handles a brush event, toggling the display of foreground lines.
+
+var make_table_timeout;
+function brush() {
+  var actives = traits.filter(function(p) { return !y[p].brush.empty(); }),
+      extents = actives.map(function(p) { return y[p].brush.extent(); });
+  foreground.classed("path-fade", function(d) {
+    return !actives.every(function(p, i) {
+      return extents[i][0] <= d[p] && d[p] <= extents[i][1];
+    });
+  });
+
+  prepare_tabulate()
+}
+
+
 
 function send_sample(data){
 
@@ -431,9 +442,9 @@ var errorSleepTime = 500;
       return;
       }
       message = JSON.parse(e.data);
-      var sample = message.sample;
-      if (sample != null){
-        handle_sample_message(sample);
+      var m_sample = message.sample;
+      if (m_sample != null){
+        handle_sample_message(m_sample);
       }
       var code = message.subject;
       if (code != null){
@@ -454,10 +465,10 @@ $("#sample-never").click(function(){sample_accept_policy="never";});
 }
 
 var received_sample;
-function handle_sample_message(sample){
+function handle_sample_message(m_sample){
 if (sample_accept_policy == "ask"){
-    document.getElementById("sample-size").textContent="Size: "+sample.length;
-    received_sample = sample;
+    document.getElementById("sample-size").textContent="Size: "+m_sample.length;
+    received_sample = m_sample;
     var modal_opened=$("#myModal").hasClass("in");
         if (modal_opened){
         }
@@ -466,7 +477,7 @@ if (sample_accept_policy == "ask"){
         }
     }
 else if(sample_accept_policy == "always"){
-    set_sample(sample);
+    set_sample(m_sample);
 }
 else
 {
@@ -474,9 +485,32 @@ return;
 }
 }
 
-function set_sample(sample){
-console.log("changing sample");
-console.log(sample);
+// --------------- Set Sample Function -------------------
+function set_sample(new_sample){
+    console.log("changing sample");
+    console.log(new_sample);
+    var good_in_sample = [];
+    var n_missing = 0;
+    for (i=0; i<new_sample.length ; i++){
+        if (codes_w_missing.indexOf(new_sample[i]) >=0){
+            n_missing += 1;
+        }
+        else {
+            good_in_sample.push(new_sample[i]);
+        }
+    }
+    foreground.classed("path-disabled",
+       function(d,i) {
+         if (good_in_sample.indexOf(d.code) >= 0){
+            return false;
+         }
+         return true;
+       }
+    );
+    sample = new_sample;
+    document.getElementById("n_missing_label").textContent="Missing Values: "+n_missing;
+    document.getElementById("n_missing_label").textContent="Missing Values: "+n_missing;
+    prepare_tabulate();
 }
 
 
@@ -563,6 +597,7 @@ window.onload=function(){
   add_context_menu();
   $("#send-sample").click(send_sample_message);
   connect_sample_modal();
+  set_sample(sample);
 };
 
 
@@ -570,8 +605,8 @@ window.onload=function(){
 
 
     </script>
-<div class="missing">
-    Missing Values: {{missing}}
+<div class="missing" id="n_missing_label">
+    Missing Values: N
 </div>
 
 <div id="selection_div">

@@ -26,7 +26,7 @@ import tornado.web
 from braviz.readAndFilter import tabular_data as tab_data, user_data
 from braviz.readAndFilter.cache import memoize
 from braviz.readAndFilter.config_file import get_apps_config
-
+from braviz.interaction.connection import NpJSONEncoder
 
 __author__ = 'diego'
 
@@ -89,16 +89,18 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         if vars_s is None:
             vars_s = ParallelCoordinatesHandler.get_default_vars()
             self.default_variables = vars_s
-        sample = self.get_query_argument("sample", None)
+        sample_idx = self.get_query_argument("sample", None)
         variables = map(int, vars_s.split(","))
         data = tab_data.get_data_frame_by_index(variables)
-        if sample is not None:
-            subjs = user_data.get_sample_data(sample)
-            data = data.loc[subjs]
+        if sample_idx is not None:
+            sample = sorted(user_data.get_sample_data(sample_idx))
+        else:
+            sample = data.index
 
+        sample_json = json.dumps(sample, cls=NpJSONEncoder)
         data2 = data.dropna()
-        missing = len(data) - len(data2)
-        # print "%d missing values"%missing
+        missing = sorted(set(data.index) - set(data2.index))
+        missing_json = json.dumps(missing, cls=NpJSONEncoder)
         data = data2
 
         cols = data.columns
@@ -126,11 +128,12 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         caths = labels.values()
         caths_json = json.dumps(list(caths))
 
+
         # 1: cathegories, 2: code
         attrs = list(data.columns[1:-1])
         attrs_json = json.dumps(attrs)
         self.render("parallel_coordinates.html", data=json_data, caths=caths_json, vars=attrs_json, cath_name=col0,
-                    missing=missing, background_opac=50.0 / len(data2))
+                    missing=missing_json, sample=sample_json)
 
     def post(self, *args, **kwargs):
         name = self.get_body_argument("sample_name")
