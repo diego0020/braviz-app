@@ -379,11 +379,12 @@ class GenericMessageClient(object):
             self._receive_socket.setsockopt(zmq.SUBSCRIBE, "")
 
             def receive_loop():
+                handles_json = hasattr(self.handler, "handle_json_message")
                 while not self._stop:
                     net_msg = self._receive_socket.recv()
-                    try:
+                    if handles_json:
                         self.handler.handle_json_message(net_msg)
-                    except AttributeError:
+                    else:
                         msg = json.loads(net_msg)
                         self.handler.handle_new_message(msg)
             self._receive_thread = threading.Thread(target=receive_loop)
