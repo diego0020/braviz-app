@@ -231,10 +231,12 @@ class LinearModelApp(QMainWindow):
 
     def check_if_ready(self):
         if (self.outcome_var_name is not None) and (self.regressors_model.rowCount() > 0):
-            self.ui.calculate_button.setEnabled(True)
+            ready = True
         else:
-            self.ui.calculate_button.setEnabled(False)
+            ready = False
         self.get_missing_values()
+        self.ui.calculate_button.setEnabled(ready)
+        return ready
 
     def get_missing_values(self):
         a_vars = list(self.regressors_model.get_regressors())
@@ -261,7 +263,7 @@ class LinearModelApp(QMainWindow):
         menu.addAction(remove_action)
         selected_item = menu.exec_(global_pos)
 
-    def calculate_linear_reg(self):
+    def calculate_linear_reg(self, plot_coefficients=True):
         log = logging.getLogger(__name__)
         log.info("calculating lm")
         try:
@@ -294,7 +296,8 @@ class LinearModelApp(QMainWindow):
             self.result_model.set_df(coeffs_df)
             self.coefs_df = coeffs_df
             self.regression_results = res
-            self.draw_coefficints_plot()
+            if plot_coefficients:
+                self.draw_coefficints_plot()
             self.ui.calculate_button.setEnabled(1)
             return
 
@@ -308,7 +311,7 @@ class LinearModelApp(QMainWindow):
         self.coefs_df = None
         self.regression_results = None
 
-    def update_main_plot_from_results(self, index, var_name=None):
+    def update_main_plot_from_results(self, index=None, var_name=None):
         if var_name is None:
             row = index.row()
             var_name_index = self.result_model.index(row, 0)
@@ -352,7 +355,7 @@ class LinearModelApp(QMainWindow):
                 self.plot.set_figure_title("Mean effect of %s" % target_var)
         return
 
-    def update_main_plot_from_regressors(self, index, var_name=None):
+    def update_main_plot_from_regressors(self, index=None, var_name=None):
         if var_name is None:
             row = index.row()
             var_name_index = self.regressors_model.index(row, 0)
@@ -702,9 +705,9 @@ class LinearModelApp(QMainWindow):
         if plot_name is not None:
             plot_type, args = plot_name
             if plot_type == 1:
-                self.update_main_plot_from_regressors(args)
+                self.update_main_plot_from_results(var_name=args)
             elif plot_type == 2:
-                self.update_main_plot_from_results(args)
+                self.update_main_plot_from_regressors(var_name=args)
             elif plot_type == 3:
                 self.draw_coefficints_plot()
             elif plot_type == 4:
@@ -976,9 +979,21 @@ class LinearModelApp(QMainWindow):
         log.info(new_sample)
         self.sample = new_sample
         self.sample_model.set_sample(new_sample)
-        if self.plot_name is not None:
-            self.update_main_plot_from_regressors(
-                self.regressors_model.index(self.plot_name[0], 0), var_name=self.plot_name[1])
+        plot_name = self.plot_name
+        if plot_name is not None:
+            plot_type, args = plot_name
+            if self.check_if_ready() and plot_type != 2:
+                self.calculate_linear_reg(plot_coefficients=False)
+            else:
+                self.clear_regression_results()
+            if plot_type == 1:
+                self.update_main_plot_from_results(var_name=args)
+            elif plot_type == 2:
+                self.update_main_plot_from_regressors(var_name=args)
+            elif plot_type == 3:
+                self.draw_coefficints_plot()
+            elif plot_type == 4:
+                self.draw_residuals_plot()
         self.get_missing_values()
 
     def load_sample(self):

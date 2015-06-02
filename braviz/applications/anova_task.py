@@ -302,6 +302,10 @@ class AnovaApp(QMainWindow):
             self.ui.results_table.setModel(self.result_model)
             self.update_main_plot("Residuals")
 
+    def clear_results(self):
+        self.result_model = braviz_models.AnovaResultsModel()
+        self.ui.results_table.setModel(self.result_model)
+
     def update_main_plot_from_results(self, index):
         row = index.row()
         var_name_index = self.result_model.index(row, 0)
@@ -330,7 +334,6 @@ class AnovaApp(QMainWindow):
             residuals = self.result_model.residuals
             fitted = self.result_model.fitted
             self.plot.make_diagnostics(residuals, fitted)
-            pass
         elif var_name == "(Intercept)":
             data = get_data_frame_by_name(self.outcome_var_name)
             data = data.loc[self.sample]
@@ -778,7 +781,11 @@ class AnovaApp(QMainWindow):
     def set_sample(self, new_sample):
         self.sample = new_sample
         self.sample_model.set_sample(new_sample)
-        self.update_main_plot(self.plot_var_name)
+        self.clear_results()
+        if self.plot_var_name == "Residuals":
+            self.plot.initial_text("Select Regressors to Plot\nor Calculate Anova")
+        else:
+            self.update_main_plot(self.plot_var_name)
         self.get_missing_values()
 
     def send_sample(self):
