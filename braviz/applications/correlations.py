@@ -39,12 +39,13 @@ import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
 from braviz.applications import sample_select
+from braviz.interaction.connection import MessageClient
 
 import numpy as np
 import seaborn as sns
 import scipy.stats
 import pandas as pd
-
+from functools import partial
 
 class CorrelationMatrixFigure(FigureCanvas):
     SquareSelected = QtCore.pyqtSignal(pd.DataFrame)
@@ -129,8 +130,7 @@ class CorrelationMatrixFigure(FigureCanvas):
 
 
 class RegFigure(FigureCanvas):
-
-    def __init__(self):
+    def __init__(self, message_client):
         self.f, self.ax = plt.subplots(figsize=(9, 9))
         super(RegFigure, self).__init__(self.f)
         palette = self.palette()
@@ -144,6 +144,7 @@ class RegFigure(FigureCanvas):
         self.dfh = None
         self.scatter_h_artist = None
         self.limits = None
+        self._message_client = message_client
 
     def draw_initial_message(self):
         self.ax.clear()
@@ -168,7 +169,6 @@ class RegFigure(FigureCanvas):
             'y', left='on', right='off', labelleft='off', labelright='on')
         self.ax.tick_params(
             'x', top='off', bottom='on', labelbottom='on', labeltop='off')
-        plt.sca(self.ax)
         plt.sca(self.ax)
         df = df.dropna()
         self.df = df.copy()
@@ -218,14 +218,14 @@ class RegFigure(FigureCanvas):
         #QtGui.QToolTip.hideText()
         mouse_event = event.mouseevent
         if isinstance(event.artist, matplotlib.collections.PathCollection):
-            index = event.ind
+            event_index = event.ind
             message_pieces = []
             # if the pick involves different subjects
             if event.artist == self.scatter_h_artist:
                 dfp = self.dfh
             else:
                 dfp = self.df2
-            for i in index:
+            for i in event_index:
                 datum = dfp.iloc[[i]]
                 message = "Subject %s\n%s : %g\n%s : %g" %\
                     (datum.index[0],
@@ -239,7 +239,7 @@ class RegFigure(FigureCanvas):
             g_point = self.mapToGlobal(point)
             QtGui.QToolTip.showText(g_point, big_message)
             if mouse_event.button == 1:
-                if len(index) == 1:
+                if len(event_index) == 1:
                     name = datum.index[0]
                     if event.artist == self.scatter_h_artist:
                         print("recovering %s" % name)
@@ -248,6 +248,17 @@ class RegFigure(FigureCanvas):
                         print("hiding %s" % name)
                         self.hidden_subjs.add(name)
                     self.re_draw_reg()
+            elif mouse_event.button == 3 and mouse_event.name == 'button_press_event':
+                context_menu = QtGui.QMenu()
+                for i in event_index[:10]:
+                    subj = dfp.index[i]
+                    action = QtGui.QAction("Show %s in other viewers"%subj, context_menu)
+                    action.triggered.connect(partial(self.send_subject_message,subj))
+                    context_menu.addAction(action)
+                context_menu.exec_(g_point)
+
+    def send_subject_message(self, subj):
+        self._message_client.send_message({"subject": subj})
 
     def selection_changed(self, selection):
         if self.df is None:
@@ -259,14 +270,29 @@ class RegFigure(FigureCanvas):
             self.df = None
             self.draw_initial_message()
 
+    def highlight_subject(self, subj):
+        if self.df is None:
+            return
+        self.re_draw_reg()
+        try:
+            subj_data = self.df.loc[int(subj)]
+        except KeyError:
+            return
+        y,x = subj_data[0], subj_data[1]
+        plt.scatter([x],[y],marker="o",s=300, linewidths=4, edgecolors="black", c="none")
+        self.draw()
+        print("highlighting %s"%subj)
+
 
 class CorrelationsApp(QtGui.QMainWindow):
 
-    def __init__(self):
+    def __init__(self, server_broadcast = None, server_receive = None):
         super(CorrelationsApp, self).__init__()
         self.ui = None
+        self._message_client = MessageClient(server_broadcast, server_receive)
+        self._message_client.message_received.connect(self.receive_message)
         self.cor_mat = CorrelationMatrixFigure()
-        self.reg_plot = RegFigure()
+        self.reg_plot = RegFigure(self._message_client)
         self.vars_model = VarListModel(checkeable=True)
         self.setup_ui()
 
@@ -291,6 +317,11 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.ui.search_box.returnPressed.connect(self.filter_list)
         self.cor_mat.SquareSelected.connect(self.reg_plot.draw_reg)
 
+    def receive_message(self, msg):
+        subj = msg.get("subject")
+        if subj is not None:
+            self.reg_plot.highlight_subject(subj)
+
     def filter_list(self):
         mask = "%%%s%%" % self.ui.search_box.text()
         self.vars_model.update_list(mask)
@@ -314,7 +345,13 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.reg_plot.f.savefig(filename)
 
 if __name__ == "__main__":
+    import sys
     app = QtGui.QApplication([])
-    main_window = CorrelationsApp()
+    if len(sys.argv) >= 4:
+        scenario = sys.argv[1]
+        server_broadcast, server_receive = sys.argv[2], sys.argv[3]
+    else:
+        server_broadcast, server_receive = None, None
+    main_window = CorrelationsApp(server_broadcast, server_receive)
     main_window.show()
     app.exec_()
