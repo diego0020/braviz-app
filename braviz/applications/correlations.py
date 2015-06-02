@@ -46,6 +46,8 @@ import seaborn as sns
 import scipy.stats
 import pandas as pd
 from functools import partial
+import logging
+import os
 
 class CorrelationMatrixFigure(FigureCanvas):
     SquareSelected = QtCore.pyqtSignal(pd.DataFrame)
@@ -57,8 +59,10 @@ class CorrelationMatrixFigure(FigureCanvas):
         palette = self.palette()
         self.f.set_facecolor(palette.background().color().getRgbF()[0:3])
         self.df = None
+        self.full_df = None
         self.corr = None
         self.sample = tab_data.get_subjects()
+        self.last_square = None;
         self.cmap = sns.blend_palette(["#00008B", "#6A5ACD", "#F0F8FF",
                                        "#FFE6F8", "#C71585", "#8B0000"], as_cmap=True)
         self.mpl_connect("motion_notify_event", self.get_tooltip_message)
@@ -90,12 +94,16 @@ class CorrelationMatrixFigure(FigureCanvas):
 
     def set_variables(self, vars_list):
         # print vars_list
+        if self.last_square is not None:
+            x_name, y_name = self.last_square
+            if x_name not in vars_list or y_name not in vars_list:
+                self.last_square = None;
         if len(vars_list) < 2:
             self.df = None
             self.corr = None
         else:
-            self.df = tab_data.get_data_frame_by_name(vars_list)
-            self.df = self.df.loc[self.sample].copy()
+            self.full_df = tab_data.get_data_frame_by_name(vars_list)
+            self.df = self.full_df.loc[self.sample].copy()
             self.corr = self.df.corr()
         self.on_draw()
 
@@ -122,11 +130,16 @@ class CorrelationMatrixFigure(FigureCanvas):
             x_name, y_name = self.df.columns[x_int], self.df.columns[y_int]
             df2 = self.df[[x_name, y_name]]
             self.SquareSelected.emit(df2)
+            self.last_square = x_name, y_name
 
     def set_sample(self, new_sample):
         self.sample = list(new_sample)
-        self.df = self.df.loc[self.sample].copy()
+        self.df = self.full_df.loc[self.sample].copy()
         self.on_draw()
+        if self.last_square is not None:
+            x_name, y_name = self.last_square
+            df2 = self.df[[x_name, y_name]]
+            self.SquareSelected.emit(df2)
 
 
 class RegFigure(FigureCanvas):
@@ -145,6 +158,11 @@ class RegFigure(FigureCanvas):
         self.scatter_h_artist = None
         self.limits = None
         self._message_client = message_client
+
+    def clear_hidden_subjects(self):
+        self.hidden_subjs.clear()
+        if self.df is not None:
+            self.re_draw_reg()
 
     def draw_initial_message(self):
         self.ax.clear()
@@ -294,6 +312,7 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.cor_mat = CorrelationMatrixFigure()
         self.reg_plot = RegFigure(self._message_client)
         self.vars_model = VarListModel(checkeable=True)
+        self.sample_message_policy = "ask"
         self.setup_ui()
 
     def setup_ui(self):
@@ -311,28 +330,116 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.ui.reg_frame.setLayout(self.ui.reg_layout)
         self.ui.reg_layout.addWidget(self.reg_plot)
 
-        self.ui.actionChange_Sample.triggered.connect(self.set_sample)
         self.ui.actionSave_Matrix.triggered.connect(self.save_matrix)
         self.ui.actionSave_Scatter.triggered.connect(self.save_reg)
         self.ui.search_box.returnPressed.connect(self.filter_list)
         self.cor_mat.SquareSelected.connect(self.reg_plot.draw_reg)
 
+        #sample
+        self.ui.actionLoad_sample.triggered.connect(self.load_sample)
+        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
+        self.ui.actionRestore_sample.triggered.connect(self.reg_plot.clear_hidden_subjects)
+        self.ui.actionSend_sample.triggered.connect(self.send_sample)
+        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
+        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
+        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
+
     def receive_message(self, msg):
         subj = msg.get("subject")
         if subj is not None:
             self.reg_plot.highlight_subject(subj)
+        if "sample" in msg:
+            self.handle_sample_message(msg)
 
     def filter_list(self):
         mask = "%%%s%%" % self.ui.search_box.text()
         self.vars_model.update_list(mask)
 
-    def set_sample(self):
-        dialog = sample_select.SampleLoadDialog()
+    def load_sample(self):
+        dialog = sample_select.SampleLoadDialog(
+            new__and_load=True,
+            server_broadcast=self._message_client.server_broadcast,
+            server_receive=self._message_client.server_receive)
         res = dialog.exec_()
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
-            self.cor_mat.set_sample(new_sample)
-            self.reg_plot.draw_initial_message()
+            self.set_sample(new_sample)
+
+    def set_sample(self, new_sample):
+        self.reg_plot.clear_hidden_subjects()
+        self.cor_mat.set_sample(new_sample)
+
+    def modify_sample(self):
+        effective_sample = [i for i in self.cor_mat.sample if i not in self.reg_plot.hidden_subjs]
+        if self._message_client is not None:
+            sample_select.launch_sample_create_dialog(
+                server_broadcast=self._message_client.server_broadcast,
+                server_receive=self._message_client.server_receive,
+                parent_id=os.getpid(),
+                sample=effective_sample
+            )
+        else:
+            sample_select.launch_sample_create_dialog(
+                effective_sample
+            )
+
+
+    def send_sample(self):
+        if self._message_client is None:
+            log = logging.getLogger(__name__)
+            log.warning("Can't send message, no menu found")
+            return
+        effective_sample = [i for i in self.cor_mat.sample if i not in self.reg_plot.hidden_subjs]
+        msg = {"sample" : effective_sample}
+        self._message_client.send_message(msg)
+
+    def handle_sample_message(self, msg):
+        sample = msg.get("sample", tuple())
+        target = msg.get("target")
+        if target is not None:
+            accept = target == os.getpid()
+        else:
+            accept = self.accept_samples()
+        if accept:
+            self.set_sample(sample)
+
+    def accept_samples(self):
+        if self.sample_message_policy == "ask":
+            answer = QtGui.QMessageBox.question(
+                self, "Sample Received", "Accept sample?",
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
+                QtGui.QMessageBox.Yes)
+            if answer == QtGui.QMessageBox.Yes:
+                return True
+            elif answer == QtGui.QMessageBox.YesToAll:
+                self.update_samples_policy("always")
+                return True
+            elif answer == QtGui.QMessageBox.No:
+                return False
+            elif answer == QtGui.QMessageBox.NoToAll:
+                self.update_samples_policy("never")
+                return False
+        elif self.sample_message_policy == "always":
+            return True
+        else:
+            return False
+
+    def update_samples_policy(self, item):
+        if item == "ask":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(True)
+        elif item == "never":
+            self.ui.actionAlways.setChecked(False)
+            self.ui.actionNever.setChecked(True)
+            self.ui.actionAsk.setChecked(False)
+        elif item == "always":
+            self.ui.actionAlways.setChecked(True)
+            self.ui.actionNever.setChecked(False)
+            self.ui.actionAsk.setChecked(False)
+        else:
+            assert False
+        self.sample_message_policy = item
 
     def save_matrix(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
