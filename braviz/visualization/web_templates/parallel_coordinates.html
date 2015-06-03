@@ -174,7 +174,7 @@ function create_plot(new_flowers, categories, new_traits) {
             y = {};
 
 
-    d3.select("#parallel-coords")
+    d3.select("#parallel-coords").html("");
     var svg = d3.select("#parallel-coords").append("svg:svg")
             .attr("width", w + m[1] + m[3])
             .attr("height", h + m[0] + m[2])
@@ -636,6 +636,16 @@ function set_all_data(in_sample, in_missing, in_flowers, in_categories, in_trait
   current_subsample_list = [];
   create_plot(in_flowers, in_categories, in_traits);
   tabulate(data2,["code","category"].concat(traits),[]);
+  add_context_menu();
+}
+
+function load_new_variables(vars){
+    var new_missing;
+    var new_data;
+    var new_categories;
+    var new_traits ;
+    set_all_data(sample, new_missing, new_data, new_categories, new_traits)
+
 }
 
 // -------------------on load-------------------------
@@ -650,7 +660,6 @@ window.onload=function(){
   set_all_data(sample2, codes_w_missing2, flowers2, categories2, traits2 );
   document.getElementById("main_svg").onclick=function(){highlight_subj_path(null);};
   openWS();
-  add_context_menu();
   $("#send-sample").click(send_sample_message);
   connect_sample_modal();
   set_sample(sample);
