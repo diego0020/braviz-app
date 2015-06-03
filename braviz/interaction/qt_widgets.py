@@ -916,7 +916,7 @@ class ImageComboBoxManager(QtCore.QObject):
                      [("FMRI", n) for n in fmri_pdgms]
 
         if show_none:
-            all_images = [(None, "None")] + all_images
+            all_images = [(None, "NONE")] + all_images
         self.available_images = all_images
         self.combo_box = None
         self.data_dict = {t: i for i, t in enumerate(all_images)}
@@ -929,7 +929,7 @@ class ImageComboBoxManager(QtCore.QObject):
         self.combo_box = combo_box
 
     def set_image(self, image_class, image_name):
-        image_class = image_class.upper()
+        image_class = image_class.upper() if image_class is not None else None
         image_name = image_name.upper()
         index = self.data_dict[(image_class,image_name)]
         self.combo_box.setCurrentIndex(index)

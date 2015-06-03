@@ -117,7 +117,7 @@ class MessageServer(QtCore.QObject):
         """
         assert isinstance(msg,dict)
         net_msg = json.dumps(msg, cls=NpJSONEncoder)
-        self._forward_socket.send(net_msg)
+        self._forward_socket.send(net_msg, zmq.DONTWAIT)
 
     def stop_server(self):
         """
@@ -210,7 +210,7 @@ class MessageClient(QtCore.QObject):
             net_msg = json.dumps(msg, cls=NpJSONEncoder)
             self._last_message = net_msg
             self._last_send_time = time.time()
-            self._send_socket.send(net_msg)
+            self._send_socket.send(net_msg, zmq.DONTWAIT)
         except zmq.Again:
             log.error("Couldn't send message %s", msg)
 
@@ -306,7 +306,7 @@ class PassiveMessageClient(object):
             self._last_seen_message = net_msg
             self._message_counter += 1
             self._last_send_time = time.time()
-            self._send_socket.send(net_msg)
+            self._send_socket.send(net_msg, zmq.DONTWAIT)
         except zmq.Again:
             log.error("Couldn't send message %s", msg)
 
@@ -415,7 +415,7 @@ class GenericMessageClient(object):
             net_msg = json.dumps(msg, cls=NpJSONEncoder)
             self._last_message = net_msg
             self._last_send_time = time.time()
-            self._send_socket.send(net_msg)
+            self._send_socket.send(net_msg, zmq.DONTWAIT)
         except zmq.Again:
             log.error("Couldn't send message %s", msg)
 

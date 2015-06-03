@@ -537,6 +537,7 @@ class AnovaApp(QMainWindow):
         if self._message_client is not None:
             self._message_client.send_message(msg1)
 
+
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
         log.info("RECEIVED %s" % msg)

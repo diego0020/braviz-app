@@ -277,6 +277,7 @@ class RegFigure(FigureCanvas):
 
     def send_subject_message(self, subj):
         self._message_client.send_message({"subject": subj})
+        self.highlight_subject(subj)
 
     def selection_changed(self, selection):
         if self.df is None:
