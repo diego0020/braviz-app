@@ -26,7 +26,7 @@ import braviz
 from braviz.interaction.connection import GenericMessageClient
 from braviz.interaction.tornado_connection import WebSocketMessageHandler, WebSocketManager
 from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler, SubjectSwitchHandler,\
-    DataHandler
+    ParallelCoordsDataHandler
 import logging
 
 __author__ = 'da.angulo39'
@@ -49,20 +49,20 @@ if __name__ == "__main__":
         receive_address = sys.argv[3]
 
     socket_manager = WebSocketManager()
-    message_client2 = GenericMessageClient(
-        socket_manager, broadcast_address, receive_address)
-    socket_manager.message_client = message_client2
     application = tornado.web.Application(
         [
+            (r"/parallel/data/(.*)", ParallelCoordsDataHandler),
             (r"/parallel", ParallelCoordinatesHandler),
             (r"/messages_ws",WebSocketMessageHandler,
             {"socket_manager": socket_manager}),
             (r"/subject", SubjectSwitchHandler),
-            (r"/data", DataHandler),
             (r"/", IndexHandler),
 
         ],
         **settings)
+    message_client2 = GenericMessageClient(
+        socket_manager, broadcast_address, receive_address)
+    socket_manager.message_client = message_client2
     try:
         application.listen(8100)
         tornado.ioloop.IOLoop.instance().start()

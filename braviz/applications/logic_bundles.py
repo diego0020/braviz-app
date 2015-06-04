@@ -831,7 +831,7 @@ class ExportScalarToDB(QDialog):
     def calculate_one(self, subj):
         self.caller.change_subject(subj)
         val = self.caller.scalar_metric_value
-        tabular_data.updata_variable_value(self.var_id, subj, val)
+        tabular_data.update_variable_value(self.var_id, subj, val)
 
     def cancel(self):
         self.cancel_flag = True

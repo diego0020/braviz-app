@@ -59,6 +59,26 @@ def get_variables(mask=None):
                             index_col="var_idx")
     return data
 
+def get_variables_and_type(mask=None):
+    """
+    Gets available variables
+
+    Args:
+        mask (str) : If not None, limit answer to results whose name match the given mask (sql ``like`` syntax)
+
+    Returns:
+        :class:`pandas.DataFrame` with variable indexes as index, a column with variable names, and a with ``1`` for
+            numerical values and ``0`` for nominal variables
+    """
+    conn = _get_connection()
+    if mask is None:
+        data = sql.read_sql(
+            "SELECT var_idx, var_name, is_real  from variables;", conn, index_col="var_idx")
+    else:
+        data = sql.read_sql("SELECT var_idx, var_name, is_real from variables WHERE var_name like ?;", conn, params=(mask,),
+                            index_col="var_idx")
+    return data
+
 
 def _get_connection():
     """
@@ -907,7 +927,7 @@ def update_multiple_variable_values(idx_subject_value_tuples):
     conn.commit()
 
 
-def updata_variable_value(var_idx, subject, new_value):
+def update_variable_value(var_idx, subject, new_value):
     """
     Updates a single value for a variable and a subject
 

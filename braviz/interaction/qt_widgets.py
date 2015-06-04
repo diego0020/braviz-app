@@ -858,7 +858,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                     else:
                         value = int(value)
                     # update value
-                braviz_tab_data.updata_variable_value(
+                braviz_tab_data.update_variable_value(
                     int(idx), self.__curent_subject, value)
                 # update internal
                 var_name = self.__context_variable_names[idx]

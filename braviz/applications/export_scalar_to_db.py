@@ -183,7 +183,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
                 value = self.get_scalar_value(subj)
             except Exception:
                 value = float("nan")
-            braviz_tab_data.updata_variable_value(self.var_idx, subj, value)
+            braviz_tab_data.update_variable_value(self.var_idx, subj, value)
             self.progress = (i + 1) / len(all_subjects) * 100
             log = logging.getLogger(__name__)
             log.debug("%s %s : %f" % (self.metric_code, subj, value))

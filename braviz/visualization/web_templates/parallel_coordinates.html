@@ -131,12 +131,15 @@ div.variable-list{
   max-height: 60vh;
   height: 60vh;
 }
+
+
     </style>
 
     <script type="text/javascript" src="{{ static_url ("d3/d3.js") }}"></script>
     <script type="text/javascript" src="{{ static_url ("d3/colorbrewer.js") }}"></script>
     <script type="text/javascript" src="{{ static_url ("jquery-2.1.3.min.js") }}"></script>
     <script type="text/javascript" src="{{ static_url ("d3-context-menu.js") }}"></script>
+    <script type="text/javascript" src="{{ static_url ("spin.min.js") }}"></script>
     <script src="{{ static_url ("bootstrap-3.3.4/js/bootstrap.min.js") }}"></script>
 
 
@@ -169,29 +172,6 @@ div.variable-list{
 
 <div class="well variable-list">
 
-  <div><label> <input type="checkbox" value="" > Var 1 </label></div>
-  <div><label> <input type="checkbox" value=""> Var 1 </label></div>
-    <div><label> <input type="checkbox" value=""> Var 1 </label></div>
-      <div><label> <input type="checkbox" value="">Var 1 </label></div>
-        <div><label> <input type="checkbox" value="">Var 1 </label></div>  <div><label> <input type="checkbox" value="">Var 1 </label></div>
-          <div><label> <input type="checkbox" value="">Var 1 </label></div>
-            <div><label> <input type="checkbox" value="">Var 1 </label></div>
-              <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                  <div><label> <input type="checkbox" value="">Var 1 </label></div>  <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                    <div><label> <input type="checkbox" value="">Var 1 </label></div>
-
-                      <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                        <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                          <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                            <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                              <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                                <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                                  <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                                    <div><label> <input type="checkbox" value="">Var 1 </label></div>
-
-                                      <div><label> <input type="checkbox" value="">Var 1 </label></div>
-                                        <div><label> <input type="checkbox" value="">Var 1 </label></div>
 
 </div>
 </div>
@@ -200,23 +180,10 @@ div.variable-list{
 
 <div class="form-group">
 <label for="search-vars">Search</label>
-<input id="search-vars" placeholder="Enter part of variable name" class="form-control">
+<input id="search-cats" placeholder="Enter part of variable name" class="form-control">
 </div>
 
 <div class="well variable-list">
-
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
 
 
 </div>
@@ -226,10 +193,10 @@ div.variable-list{
 </div>
 <div class="btn-group btn-group-justified" role="group" aria-label="variable selection controls">
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-success">Apply</button>
+    <button type="button" class="btn btn-success" id="apply-variable-change">Apply</button>
   </div>
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-primary">Clear</button>
+    <button type="button" class="btn btn-primary" id="clear_checked_variables">Clear</button>
   </div>
   <div class="btn-group" role="group">
     <button type="button" class="btn btn-danger" id="cancel_variable_selection">Cancel</button>
@@ -309,6 +276,8 @@ var codes_w_missing ;
 var current_subsample_list = [];
 
 var traits ;
+var traits_indices;
+var caths_index;
 
 var foreground;
 
@@ -795,14 +764,12 @@ console.log(msg);
 }
 
 // ------------------update data---------------------
-// var flowers2;
-// d3.json("data"+location.search, function(error,data){flowers2 = data});
-// $.get("data", {args:JSON.stringify({sample : [1,2,3], vars=[1,2,3]} ) },
-// function(data){alert(data);}, "json");
 
 
-function set_all_data(in_sample, in_missing, in_flowers, in_categories, in_traits){
+function set_all_data(in_sample, in_missing, in_flowers, in_categories, in_traits, in_traits_indices, in_cath_idx){
   data2 = [];
+  traits_indices = in_traits_indices;
+  caths_index = in_cath_idx;
   sample = in_sample;
   codes_w_missing = in_missing;
   current_subsample_list = [];
@@ -822,9 +789,43 @@ function load_new_variables(vars){
 
 // -------------------interface-----------------------
 
+var vars_spinner = new Spinner();
+var cats_spinner = new Spinner();
 function show_variable_select_panel(){
+
 $("#variable-select-panel").removeClass("hidden");
 $("#change-vars-buttons").addClass("hidden");
+
+var vars_list = $("#select-variables-tab div.variable-list");
+var cats_list = $("#categories-list-tab div.variable-list");
+
+vars_list.html("");
+cats_list.html("");
+vars_spinner.spin();
+cats_spinner.spin();
+vars_list.append(vars_spinner.el);
+cats_list.append(cats_spinner.el);
+
+
+$.getJSON("parallel/data/variables", function(data) {
+vars_spinner.stop();
+cats_spinner.stop();
+    for (i=0; i<data.variables.length; i++){
+
+  //<div><label> <input type="checkbox" value="" > Var 1 </label></div>
+       var v=data.variables[i];
+       $('<label></label>').text(v.name).prepend('<input type="checkbox" value="'+v.var_id+'" >').appendTo(vars_list).wrap('<div class="checkbox"></div>');
+       if (v.type == "nominal"){
+       //  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+       $('<label></label>').text(v.name).prepend('<input type="radio" name="categories" value="'+v.var_id+'" >').appendTo(cats_list).wrap('<div class="radio"></div>');
+       }
+    }
+    // find checked variables
+    vars_list.find("input").filter(function(index, element){return traits_indices.indexOf(Number(element.value))>=0;}).prop("checked", true);
+    // find cathegory
+    cats_list.find("input").filter(function(index, element){return caths_index == element.value;}).prop("checked", true);
+    } );
+
 }
 
 function hide_variable_select_panel(){
@@ -836,11 +837,51 @@ $("#change-vars-buttons").click(show_variable_select_panel);
 $("#variable-select-panel button.close").click(hide_variable_select_panel);
 $("#cancel_variable_selection").click(hide_variable_select_panel);
 
+function filter_variables_list(list, mask){
+mask=mask.toUpperCase();
+$(list).children("div.variable-list div").addClass("hidden");
+$(list).children("div.variable-list div").filter(function (){return this.textContent.toUpperCase().indexOf(mask)>=0 }).removeClass("hidden");
+}
+
+$("#search-vars").change(function(){
+            filter_variables_list($("#select-variables-tab div.variable-list"),
+            $("#search-vars").val());
+            });
+
+$("#search-cats").change(function(){
+            filter_variables_list($("#categories-list-tab div.variable-list"),
+            $("#search-cats").val());
+            });
+
+function clear_list(){
+$("#select-variables-tab").find("div.variable-list input").prop("checked", false);
+}
+$("#clear_checked_variables").click(clear_list);
+
 $('#variable-control-tabs a').click(function (e) {
   e.preventDefault()
   $(this).tab('show')
 })
 
+
+function apply_new_variables(){
+var new_cat_idx = $("#categories-list-tab div.variable-list").find("input").filter(function(i,e){return e.checked;}).val();
+var checked_boxes = $("#select-variables-tab div.variable-list").find("input").filter(function(i,e){return e.checked;});
+var new_traits = "";
+for (i=0; i<checked_boxes.length; i++){
+if (i>0) new_traits+=",";
+new_traits+=checked_boxes[i].value;
+}
+url = "parallel/data/values?category="+new_cat_idx+"&variables="+new_traits;
+console.log(url);
+hide_variable_select_panel();
+$.getJSON(url, function(r){
+
+set_all_data(sample, r.missing, r.data, r.categories, r.vars, r.var_indices, r.cat_idx );
+});
+}
+
+$("#apply-variable-change").click(apply_new_variables);
 
 
 
@@ -854,7 +895,9 @@ window.onload=function(){
   var flowers2 = {% raw data %} ;
   var categories2 = {% raw caths %} ;
   var traits2 = {% raw vars %};
-  set_all_data(sample2, codes_w_missing2, flowers2, categories2, traits2 );
+  var traits_idx2 = {% raw var_indices %};
+  var cath_idx2 = {% raw cath_index %};
+  set_all_data(sample2, codes_w_missing2, flowers2, categories2, traits2, traits_idx2, cath_idx2 );
   document.getElementById("main_svg").onclick=function(){highlight_subj_path(null);};
   openWS();
   $("#send-sample").click(send_sample_message);

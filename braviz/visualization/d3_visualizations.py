@@ -91,6 +91,9 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             self.default_variables = vars_s
         sample_idx = self.get_query_argument("sample", None)
         variables = map(int, vars_s.split(","))
+        traits_idx_json = json.dumps(variables[1:])
+        cath_idx = variables[0]
+
         data = tab_data.get_data_frame_by_index(variables)
         if sample_idx is not None:
             sample = sorted(user_data.get_sample_data(sample_idx))
@@ -129,11 +132,11 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         caths_json = json.dumps(list(caths))
 
 
-        # 1: cathegories, 2: code
+        # 1: cathegories, -1: code
         attrs = list(data.columns[1:-1])
         attrs_json = json.dumps(attrs)
         self.render("parallel_coordinates.html", data=json_data, caths=caths_json, vars=attrs_json, cath_name=col0,
-                    missing=missing_json, sample=sample_json)
+                    missing=missing_json, sample=sample_json, cath_index=cath_idx, var_indices=traits_idx_json)
 
     def post(self, *args, **kwargs):
         name = self.get_body_argument("sample_name")
@@ -154,6 +157,71 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             user_data.save_sub_sample(name, subj_list, desc)
             self.write("ok")
 
+class ParallelCoordsDataHandler(tornado.web.RequestHandler):
+
+    """
+    Returns data for the given sample and variables as a json object
+
+    """
+    def get(self, data_type):
+        out = {}
+        if data_type == "variables":
+            out = self.get_variable_lists()
+        elif data_type == "values":
+            cats = self.get_argument("category")
+            variables = self.get_argument("variables").split(",")
+            out = self.get_values(cats, variables)
+        else:
+            self.send_error("404")
+        self.write(out)
+
+    def get_variable_lists(self):
+        vars_df = tab_data.get_variables_and_type()
+        vars_df.sort("var_name",inplace=True)
+        vars_df["var_id"]=vars_df.index
+        vars_df.rename(columns={"is_real": "type", "var_name": "name"}, inplace=True)
+        nominal = vars_df["type"]==0
+        vars_df["type"] = "numeric"
+        vars_df["type"][nominal] = "nominal"
+        return {"variables": vars_df.to_dict("records")}
+
+    def get_values(self, cat, vs):
+        vars_list = [int(cat)] +[int(v) for v in vs]
+        data = tab_data.get_data_frame_by_index(vars_list)
+        data2 = data.dropna()
+        missing = sorted(set(data.index) - set(data2.index))
+        data = data2
+        #cleaning
+        cols = data.columns
+        cols2 = list(cols)
+        cols2[0] = "category"
+        data.columns = cols2
+        labels = tab_data.get_labels_dict(vars_list[0])
+
+        for i, (k, v) in enumerate(labels.iteritems()):
+            if v is None:
+                labels[k] = "label%s" % k
+            if v is None or len(v) == 0:
+                v = "level_%d" % i
+            elif v[0].isdigit():
+                v = "c_" + v
+            labels[k] = v.replace(' ', '_')
+
+        # sanitize label name
+        col0 = cols2[0]
+        data[col0] = data[col0].map(labels)
+        data["code"] = data.index
+        data_dict = data.to_dict("records")
+        cats = labels.values()
+        attrs = list(data.columns[1:-1])
+        return {"data": data_dict,
+                "categories" : cats,
+                "vars": attrs,
+                "cat_name" : col0,
+                "missing" : missing,
+                "cat_idx" : vars_list[0],
+                "var_indices" :vars_list[1:]
+                }
 
 class IndexHandler(tornado.web.RequestHandler):
 
@@ -199,42 +267,3 @@ class SubjectSwitchHandler(tornado.web.RequestHandler):
 
         self.render("subject_switch.html",subjs=subjs,samples=sample_names,sample_id=sample_id)
 
-class DataHandler(tornado.web.RequestHandler):
-
-    """
-    Returns data for the given sample and variables as a json object
-
-    """
-    def get(self):
-        vars_s = self.get_query_argument("vars")
-        sample = self.get_query_argument("sample", None)
-        variables = map(int, vars_s.split(","))
-        data = tab_data.get_data_frame_by_index(variables)
-        if sample is not None:
-            subjs = user_data.get_sample_data(sample)
-            data = data.loc[subjs]
-        data2 = data.dropna()
-        data = data2
-
-        cols = data.columns
-        cols2 = list(cols)
-        cols2[0] = "category"
-        data.columns = cols2
-        labels = tab_data.get_labels_dict(variables[0])
-        for i, (k, v) in enumerate(labels.iteritems()):
-            if v is None:
-                labels[k] = "label%s" % k
-            if v is None or len(v) == 0:
-                v = "level_%d" % i
-            elif v[0].isdigit():
-                v = "c_" + v
-            labels[k] = v.replace(' ', '_')
-
-        # sanitize label name
-        col0 = cols2[0]
-        data[col0] = data[col0].map(labels)
-        data["code"] = data.index
-
-        json_data = data.to_json(orient="records")
-        self.write(json_data)
-        self.set_header("Content-Type", "application/json")
