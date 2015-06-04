@@ -114,6 +114,23 @@
         margin-top:1em;
         }
 
+button#change-vars-buttons {
+  position: absolute;
+  right: 1em;
+  top: 1em;
+}
+div#variable-select-panel {
+        max-width: 50%;
+        z-index : 2;
+        position: absolute;
+        right: 1em;
+        top: 1em;
+        }
+div.variable-list{
+  overflow: scroll;
+  max-height: 60vh;
+  height: 60vh;
+}
     </style>
 
     <script type="text/javascript" src="{{ static_url ("d3/d3.js") }}"></script>
@@ -123,13 +140,168 @@
     <script src="{{ static_url ("bootstrap-3.3.4/js/bootstrap.min.js") }}"></script>
 
 
-     <link href="{{ static_url ("d3-context-menu.css") }}" rel="stylesheet" type="text/css" />
+     <link href="{{ static_url ("d3-context-menu.css") }}" rel="stylesheet" type="text/css">
 </head>
+
 <body>
+
+<button class="btn btn-default" id="change-vars-buttons"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
+
+<div class="panel panel-default hidden" id="variable-select-panel">
+<div class="panel-body">
+<button type="button" class="close pull-right" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+<form>
+
+<div role="tabpanel">
+ <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist" id="variable-control-tabs">
+    <li role="presentation" class="active"><a href="#select-variables-tab" aria-controls="home" role="tab" data-toggle="tab">Variables</a></li>
+    <li role="presentation"><a href="#categories-list-tab" aria-controls="profile" role="tab" data-toggle="tab">Categories</a></li>
+  </ul>
+  <!-- Tab panes -->
+<div class="tab-content">
+<div role="tabpanel" class="tab-pane active" id="select-variables-tab">
+
+<div class="form-group">
+<label for="search-vars">Search</label>
+<input id="search-vars" placeholder="Enter part of variable name" class="form-control">
+</div>
+
+<div class="well variable-list">
+
+  <div><label> <input type="checkbox" value="" > Var 1 </label></div>
+  <div><label> <input type="checkbox" value=""> Var 1 </label></div>
+    <div><label> <input type="checkbox" value=""> Var 1 </label></div>
+      <div><label> <input type="checkbox" value="">Var 1 </label></div>
+        <div><label> <input type="checkbox" value="">Var 1 </label></div>  <div><label> <input type="checkbox" value="">Var 1 </label></div>
+          <div><label> <input type="checkbox" value="">Var 1 </label></div>
+            <div><label> <input type="checkbox" value="">Var 1 </label></div>
+              <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                  <div><label> <input type="checkbox" value="">Var 1 </label></div>  <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                    <div><label> <input type="checkbox" value="">Var 1 </label></div>
+
+                      <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                        <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                          <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                            <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                              <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                                <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                                  <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                                    <div><label> <input type="checkbox" value="">Var 1 </label></div>
+
+                                      <div><label> <input type="checkbox" value="">Var 1 </label></div>
+                                        <div><label> <input type="checkbox" value="">Var 1 </label></div>
+
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="categories-list-tab">
+
+<div class="form-group">
+<label for="search-vars">Search</label>
+<input id="search-vars" placeholder="Enter part of variable name" class="form-control">
+</div>
+
+<div class="well variable-list">
+
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
+
+
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="btn-group btn-group-justified" role="group" aria-label="variable selection controls">
+  <div class="btn-group" role="group">
+    <button type="button" class="btn btn-success">Apply</button>
+  </div>
+  <div class="btn-group" role="group">
+    <button type="button" class="btn btn-primary">Clear</button>
+  </div>
+  <div class="btn-group" role="group">
+    <button type="button" class="btn btn-danger" id="cancel_variable_selection">Cancel</button>
+  </div>
+</div>
+</form>
+</div>
+</div>
 
 <div id="parallel-coords"></div>
 
+<div class="missing" id="n_missing_label">
+    Missing Values: N
+</div>
+
+<div id="selection_div">
+
+<h3>Selection
+</h3>
+<div id="save_sample" class="pull-right">
+    <h3>Selected SubSample</h3>
+    <button class="btn btn-default btn-block" id="send-sample"> Send to all </button>
+    <div class="panel panel-default" id="save-sample-box">
+  <div class="panel-heading">
+    <h4 class="panel-title">Save</h4>
+  </div>
+    <div class="panel-body">
+    <form name="save_sample" action="#saved" onsubmit="return send_sample(this)" >
+        <div class="form-group">
+        <label for="sample_name">Name:</label>
+        <input type="text" name="sample_name" required id="sample_name" class="form-control" placeholder="Sample Name">
+        </div>
+        <div class="form-group">
+        <label for="sample_desc">Description:</label><br>
+        <textarea name="sample_desc" id="sample_desc" class="form-control" placeholder="Sample Description"></textarea>
+        </div>
+        <input type="hidden" name="sample_subjects" value="">
+        <input type="submit" class="form-control btn btn-default">
+    </form>
+    <div id="result"></div>
+    </div>
+    </div>
+</div>
+<span id="selected">
+    Nothing yet
+</span>
+
+</div>
+
+<!-- Sample Message Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Sample Received</h4>
+      </div>
+      <div class="modal-body" id="sample-size">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal" id="sample-reject">Reject</button>
+        <button type="button" class="btn btn-danger" data-dismiss="modal" id="sample-never">Always Reject</button>
+        <button type="button" class="btn btn-success" data-dismiss="modal" id="sample-accept">Accept</button>
+        <button type="button" class="btn btn-success" data-dismiss="modal" id="sample-always">Always Accept</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
+
+//------------------Parallel coordinates-----------------------
 var data2 = [];
 var flowers;
 var sample ;
@@ -648,6 +820,31 @@ function load_new_variables(vars){
 
 }
 
+// -------------------interface-----------------------
+
+function show_variable_select_panel(){
+$("#variable-select-panel").removeClass("hidden");
+$("#change-vars-buttons").addClass("hidden");
+}
+
+function hide_variable_select_panel(){
+$("#variable-select-panel").addClass("hidden");
+$("#change-vars-buttons").removeClass("hidden");
+}
+
+$("#change-vars-buttons").click(show_variable_select_panel);
+$("#variable-select-panel button.close").click(hide_variable_select_panel);
+$("#cancel_variable_selection").click(hide_variable_select_panel);
+
+$('#variable-control-tabs a').click(function (e) {
+  e.preventDefault()
+  $(this).tab('show')
+})
+
+
+
+
+
 // -------------------on load-------------------------
 
 window.onload=function(){
@@ -666,67 +863,7 @@ window.onload=function(){
 };
 
 
-
-
-
     </script>
-<div class="missing" id="n_missing_label">
-    Missing Values: N
-</div>
-
-<div id="selection_div">
-
-<h3>Selection
-</h3>
-<div id="save_sample" class="pull-right">
-    <h3>Selected SubSample</h3>
-    <button class="btn btn-default btn-block" id="send-sample"> Send to all </button>
-    <div class="panel panel-default" id="save-sample-box">
-  <div class="panel-heading">
-    <h4 class="panel-title">Save</h4>
-  </div>
-    <div class="panel-body">
-    <form name="save_sample" action="#saved" onsubmit="return send_sample(this)" >
-        <div class="form-group">
-        <label for="sample_name">Name:</label>
-        <input type="text" name="sample_name" required id="sample_name" class="form-control" placeholder="Sample Name">
-        </div>
-        <div class="form-group">
-        <label for="sample_desc">Description:</label><br>
-        <textarea name="sample_desc" id="sample_desc" class="form-control" placeholder="Sample Description"></textarea>
-        </div>
-        <input type="hidden" name="sample_subjects" value="">
-        <input type="submit" class="form-control btn btn-default">
-    </form>
-    <div id="result"></div>
-    </div>
-    </div>
-</div>
-<span id="selected">
-    Nothing yet
-</span>
-
-</div>
-
-<!-- Sample Message Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabel">Sample Received</h4>
-      </div>
-      <div class="modal-body" id="sample-size">
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-danger" data-dismiss="modal" id="sample-reject">Reject</button>
-        <button type="button" class="btn btn-danger" data-dismiss="modal" id="sample-never">Always Reject</button>
-        <button type="button" class="btn btn-success" data-dismiss="modal" id="sample-accept">Accept</button>
-        <button type="button" class="btn btn-success" data-dismiss="modal" id="sample-always">Always Accept</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
