@@ -182,7 +182,7 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
         vars_df.rename(columns={"is_real": "type", "var_name": "name"}, inplace=True)
         nominal = vars_df["type"]==0
         vars_df["type"] = "numeric"
-        vars_df["type"][nominal] = "nominal"
+        vars_df.loc[nominal, "type"] = "nominal"
         return {"variables": vars_df.to_dict("records")}
 
     def get_values(self, cat, vs):
