@@ -876,10 +876,13 @@ url = "parallel/data/values?category="+new_cat_idx+"&variables="+new_traits;
 console.log(url);
 hide_variable_select_panel();
 $.getJSON(url, function(r){
-
+state_obj = {cat:new_cat_idx, variables:new_traits};
+history.replaceState(state_obj, "", "parallel?vars="+new_cat_idx+","+new_traits);
 set_all_data(sample, r.missing, r.data, r.categories, r.vars, r.var_indices, r.cat_idx );
 });
 }
+
+
 
 $("#apply-variable-change").click(apply_new_variables);
 
