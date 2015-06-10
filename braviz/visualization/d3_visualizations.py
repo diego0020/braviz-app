@@ -32,7 +32,6 @@ __author__ = 'diego'
 
 
 class ParallelCoordinatesHandler(tornado.web.RequestHandler):
-
     """
     Implements a parallel coordinates view from variables in the database
 
@@ -157,12 +156,13 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             user_data.save_sub_sample(name, subj_list, desc)
             self.write("ok")
 
-class ParallelCoordsDataHandler(tornado.web.RequestHandler):
 
+class ParallelCoordsDataHandler(tornado.web.RequestHandler):
     """
     Returns data for the given sample and variables as a json object
 
     """
+
     def get(self, data_type):
         out = {}
         if data_type == "variables":
@@ -173,25 +173,27 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
             out = self.get_values(cats, variables)
         else:
             self.send_error("404")
+
         self.write(out)
+        self.set_header('Content-Type', "application/json")
 
     def get_variable_lists(self):
         vars_df = tab_data.get_variables_and_type()
-        vars_df.sort("var_name",inplace=True)
-        vars_df["var_id"]=vars_df.index
+        vars_df.sort("var_name", inplace=True)
+        vars_df["var_id"] = vars_df.index
         vars_df.rename(columns={"is_real": "type", "var_name": "name"}, inplace=True)
-        nominal = vars_df["type"]==0
+        nominal = vars_df["type"] == 0
         vars_df["type"] = "numeric"
         vars_df.loc[nominal, "type"] = "nominal"
-        return {"variables": vars_df.to_dict("records")}
+        return json.dumps({"variables": vars_df.to_dict("records")}, cls=NpJSONEncoder)
 
     def get_values(self, cat, vs):
-        vars_list = [int(cat)] +[int(v) for v in vs]
+        vars_list = [int(cat)] + [int(v) for v in vs]
         data = tab_data.get_data_frame_by_index(vars_list)
         data2 = data.dropna()
         missing = sorted(set(data.index) - set(data2.index))
         data = data2
-        #cleaning
+        # cleaning
         cols = data.columns
         cols2 = list(cols)
         cols2[0] = "category"
@@ -214,17 +216,17 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
         data_dict = data.to_dict("records")
         cats = labels.values()
         attrs = list(data.columns[1:-1])
-        return {"data": data_dict,
-                "categories" : cats,
-                "vars": attrs,
-                "cat_name" : col0,
-                "missing" : missing,
-                "cat_idx" : vars_list[0],
-                "var_indices" :vars_list[1:]
-                }
+        return json.dumps({"data": data_dict,
+                           "categories": cats,
+                           "vars": attrs,
+                           "cat_name": col0,
+                           "missing": missing,
+                           "cat_idx": vars_list[0],
+                           "var_indices": vars_list[1:]
+                           }, cls=NpJSONEncoder)
+
 
 class IndexHandler(tornado.web.RequestHandler):
-
     """
     Displays the braviz start page
     """
@@ -233,7 +235,6 @@ class IndexHandler(tornado.web.RequestHandler):
         super(IndexHandler, self).__init__(application, request, **kwargs)
 
     def get(self):
-
         index = IndexHandler.read_index()
         self.write(index)
 
@@ -241,22 +242,24 @@ class IndexHandler(tornado.web.RequestHandler):
     @memoize
     def read_index():
         import os
+
         path = os.path.join(
             os.path.dirname(__file__), "web_static", "index.html")
         with open(path) as f:
             data = f.read()
         return data
 
-class SubjectSwitchHandler(tornado.web.RequestHandler):
 
+class SubjectSwitchHandler(tornado.web.RequestHandler):
     """
     Implements a simple web page for changing the current subject from a mobile.
 
     """
+
     def get(self):
         samples_df = user_data.get_samples_df()
-        sample_names = [(i,samples_df.sample_name[i]) for i in samples_df.index]
-        sample = self.get_argument("sample",None)
+        sample_names = [(i, samples_df.sample_name[i]) for i in samples_df.index]
+        sample = self.get_argument("sample", None)
         if sample is None:
             subjs = [unicode(s) for s in tab_data.get_subjects()]
             sample_id = ""
@@ -264,6 +267,4 @@ class SubjectSwitchHandler(tornado.web.RequestHandler):
             subjs = [unicode(s) for s in sorted(user_data.get_sample_data(sample))]
             sample_id = sample
 
-
-        self.render("subject_switch.html",subjs=subjs,samples=sample_names,sample_id=sample_id)
-
+        self.render("subject_switch.html", subjs=subjs, samples=sample_names, sample_id=sample_id)
