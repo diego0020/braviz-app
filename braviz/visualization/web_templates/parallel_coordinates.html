@@ -628,7 +628,7 @@ var errorSleepTime = 500;
       }
       message = JSON.parse(e.data);
       var m_sample = message.sample;
-      if (m_sample != null){
+      if (m_sample != null && !message.target){
         handle_sample_message(m_sample);
       }
       var code = message.subject;
@@ -913,5 +913,3 @@ window.onload=function(){
 
 </body>
 </html>
-
-
