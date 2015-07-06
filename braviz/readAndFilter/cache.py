@@ -58,7 +58,7 @@ def cache_function(cache_container):
                 if output is not None:
                     # new method to test memory in cache
                     process_id = psutil.Process(os.getpid())
-                    mem = process_id.get_memory_info()[0] / (2 ** 20)
+                    mem = process_id.memory_info()[0] / (2 ** 20)
                     if mem >= f.cache_container.max_cache:
                         log = logging.getLogger(__name__)
                         log.info("freeing cache")
