@@ -4,9 +4,8 @@
 
 1. QT
 2. Python 2
-3. Visual Studio (version matching the one used to build QT)
-4. PyQt4 (Compiled against the QT and Visual Studio specified above)
-5. VTK 6 (Compiled against QT, and Python specified above)
+4. PyQt4 
+5. VTK 6 ([standalone vtk-python installer](http://www.vtk.org/download/) )
 6. R
 
 ## Additional Python packages
@@ -39,6 +38,8 @@ Pure python, install using [pip](https://pip.pypa.io/en/latest/installing.html)
 
 ## R-packages
 
+From the R console run `install.packages("<package-name>")`
+
 1. randomForest
 2. arm
 3. car
@@ -46,6 +47,11 @@ Pure python, install using [pip](https://pip.pypa.io/en/latest/installing.html)
 # Initial setup
 Configure projects and populate cache
 
+
+# Environment Variables
+
+Be sure the VTK-python bin folder is in your *PATH* environment variable.
+Add the braviz root folder and the VTK-python *bin\Lib\site-packages* folder to the *PYTHONPATH* environment variable
 
 
 

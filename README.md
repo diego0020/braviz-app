@@ -1,5 +1,9 @@
 #Braviz
 Interactive Brain Data Visualization
+
+## Web
+http://diego0020.github.io/braviz
+
 ## Install:
 Add the location of this directory to PYTHONPATH environment variable.
 Prerequisites:
@@ -31,3 +35,7 @@ R packages:
 - RandomForest
 - ARM
 - car
+
+## Configuration
+
+Look at the [configuring](http://diego0020.github.io/braviz/library/configuring.html) section of the documentation to see the structure of configuration files and create the initial configuration
