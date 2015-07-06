@@ -8,3 +8,4 @@ braviz/applications/braviz.cfg
 sphinx_doc/build/*
 braviz/readAndFilter/*.py.orig
 braviz/interaction/qt_guis/*.ui.orig
+braviz/applications/*_hosts.cfg
