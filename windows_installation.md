@@ -46,6 +46,11 @@ Pure python, install using [pip](https://pip.pypa.io/en/latest/installing.html)
 Configure projects and populate cache
 
 
+# Environment Variables
+
+Be sure the VTK-python bin folder is in your *PATH* environment variable.
+Add the braviz root folder and the *bin\Lib\site-packages* to the *PYTHONPATH* environment variable
+
 
 
 
