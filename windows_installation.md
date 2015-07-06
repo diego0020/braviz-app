@@ -4,9 +4,8 @@
 
 1. QT
 2. Python 2
-3. Visual Studio (version matching the one used to build QT)
-4. PyQt4 (Compiled against the QT and Visual Studio specified above)
-5. VTK 6 (Compiled against QT, and Python specified above)
+4. PyQt4 
+5. VTK 6 ([standalone vtk-python installer](http://www.vtk.org/download/) )
 6. R
 
 ## Additional Python packages
