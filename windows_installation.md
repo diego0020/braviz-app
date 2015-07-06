@@ -38,6 +38,8 @@ Pure python, install using [pip](https://pip.pypa.io/en/latest/installing.html)
 
 ## R-packages
 
+From the R console run `install.packages("<package-name>")`
+
 1. randomForest
 2. arm
 3. car
