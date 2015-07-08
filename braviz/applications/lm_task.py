@@ -30,6 +30,7 @@ import os
 import platform
 import logging
 from itertools import izip
+from functools import partial
 
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
@@ -109,7 +110,7 @@ class LinearModelApp(QMainWindow):
             self.launch_regressors_context_menu)
         self.ui.add_interaction_button.clicked.connect(
             self.dispatch_interactions_dialog)
-        self.ui.calculate_button.clicked.connect(self.calculate_linear_reg)
+        self.ui.calculate_button.clicked.connect(partial(self.calculate_linear_reg,True))
         self.ui.results_table.setModel(self.result_model)
 
         self.ui.matplot_layout = QtGui.QVBoxLayout()
