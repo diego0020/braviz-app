@@ -81,7 +81,7 @@ def save_subj_descs(subj):
     db_name = os.path.join(reader.get_dyn_data_root(), "descriptors.sqlite")
     try:
         structs = reader.get("MODEL", subj, index=True)
-        aseg = reader.get("APARC", subj, space="world")
+        aseg = reader.get("LABEL",subj, name="APARC", space="world")
         #wmaseg = reader.get("WMPARC",subj,space="world")
     except Exception as e:
         log.exception(e.message)
@@ -129,6 +129,7 @@ def save_subj_descs(subj):
 def save_for_all(processes=1):
     reader = braviz.readAndFilter.BravizAutoReader(max_cache=500)
     ids = reader.get('ids')
+    #ids = [150, 155, 382, 441, 758, 820, 932]
     create_db(os.path.join(reader.get_dyn_data_root(), "descriptors.sqlite"))
     del reader
     if processes <= 1:

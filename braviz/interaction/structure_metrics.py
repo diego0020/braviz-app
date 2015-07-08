@@ -399,7 +399,7 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
     # print "label:",label
     # find voxels in structure
     try:
-        aparc_img = reader.get("APARC", subject, space="world", format="nii")
+        aparc_img = reader.get("LABEL", subject, name="APARC", space="world", format="nii")
     except Exception:
         return float("nan")
     locations = [_get_locations(reader, subject, name) for name in structures]
@@ -421,10 +421,10 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
 
     # find voxel coordinates in fa
     if paradigm is None:
-        target_img = reader.get(img2, subject, space="world", format="nii")
+        target_img = reader.get("IMAGE",subject, name=img2 , space="world", format="nii")
     else:
         target_img = reader.get(
-            img2, subject, space="world", format="nii", name=paradigm, contrast=contrast)
+            "FMRI", subject, space="world", format="nii", name=paradigm, contrast=contrast)
     t2 = target_img.get_affine()
     t2i = np.linalg.inv(t2)
     fa_coords = mm_coords.dot(t2i.T)
@@ -562,10 +562,10 @@ def aggregate_in_roi(reader, subject, roi_ctr, roi_radius, roi_space, img2, para
         Mean or mode of the image inside a sphere
     """
     if paradigm is None:
-        target_img = reader.get(img2, subject, space=roi_space, format="nii")
+        target_img = reader.get("IMAGE", subject,name=img2, space=roi_space, format="nii")
     else:
         target_img = reader.get(
-            img2, subject, space=roi_space, format="nii", name=paradigm, contrast=contrast)
+            "fmri", subject, space=roi_space, format="nii", name=paradigm, contrast=contrast)
     r_sq = roi_radius ** 2
     shape = target_img.get_shape()
     affine = target_img.get_affine()
@@ -598,9 +598,9 @@ def _get_locations(reader, subject, struct_name):
 
     label = int(reader.get("Model", subject, name=struct_name, label=True))
     if struct_name.startswith("wm"):
-        aparc_img = reader.get("WMPARC", subject, space="world", format="nii")
+        aparc_img = reader.get("LABEL", subject, name="WMPARC", space="world", format="nii")
     else:
-        aparc_img = reader.get("APARC", subject, space="world", format="nii")
+        aparc_img = reader.get("LABEL", subject, name="APARC", space="world", format="nii")
     aparc_data = aparc_img.get_data()
     return aparc_data == label
 
