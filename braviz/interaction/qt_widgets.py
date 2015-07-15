@@ -17,6 +17,8 @@
 ##############################################################################
 
 
+
+
 from __future__ import division
 import cPickle
 from functools import wraps
@@ -29,14 +31,16 @@ from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import os
 
 from braviz.readAndFilter import tabular_data as braviz_tab_data, user_data as braviz_user_data, config_file
-from braviz.readAndFilter.tabular_data import get_var_name, is_variable_nominal, get_labels_dict, get_data_frame_by_index, get_maximum_value, get_min_max_values
-
-__author__ = 'Diego'
+from braviz.readAndFilter.tabular_data import get_var_name, is_variable_nominal, get_labels_dict, \
+    get_data_frame_by_index, get_maximum_value, get_min_max_values
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+
+__author__ = 'Diego'
 
 
 class RotatedLabel(QtGui.QLabel):
@@ -78,7 +82,7 @@ class RotatedLabel(QtGui.QLabel):
         # print "t:",fm.boundingRect(text)
         g = self.rect()
         x = g.width() / 2 + (fm.ascent() / 2)
-        #-10 is for the square
+        # -10 is for the square
         y = g.height() / 2 + fm.width(text) / 2 - 15
         # print "x:",x
         painter.translate(x, y)
@@ -187,7 +191,7 @@ class MatplotWidget(FigureCanvas):
         for child in self.axes.get_children():
             if isinstance(child, matplotlib.spines.Spine):
                 child.set_visible(False)
-            # remove minor tick lines
+                # remove minor tick lines
         for line in self.axes.xaxis.get_ticklines(minor=True) + self.axes.yaxis.get_ticklines(minor=True):
             line.set_markersize(0)
         self.draw()
@@ -225,7 +229,7 @@ class MatplotWidget(FigureCanvas):
                 raise ValueError
         self.axes = self.fig.add_subplot(1, 1, 1)
         self.axes.clear()
-        #self.draw()
+        # self.draw()
         self.axes.tick_params(
             'x', bottom='on', labelbottom='on', labeltop='off', top="off")
 
@@ -321,7 +325,6 @@ class MatplotWidget(FigureCanvas):
     @repeatatable_plot
     def make_box_plot(self, data, x_var, y_var, xlabel, ylabel, xticks_labels, ylims=None, intercet=None):
 
-
         if x_var is None:
             data_list = [data[y_var]]
             label_nums = [0]
@@ -351,7 +354,7 @@ class MatplotWidget(FigureCanvas):
             'y', left='off', labelleft='off', labelright='on', right="on")
         self.axes.yaxis.set_label_position("right")
         self.axes.set_ylim(auto=True)
-        #artists_dict = self.axes.boxplot(data, sym='gD')
+        # artists_dict = self.axes.boxplot(data, sym='gD')
 
         self.x_order = dict(izip(label_nums, x_permutation))
         self.x_order_i = dict(izip(x_permutation, label_nums))
@@ -390,7 +393,7 @@ class MatplotWidget(FigureCanvas):
 
     @repeatatable_plot
     def make_linked_box_plot(self, data, outcome, x_name, z_name, ylims=None):
-        #TODO: change data to a dataframe
+        # TODO: change data to a dataframe
         sns.set_style("darkgrid")
         self.fig.clear()
         self.axes = self.fig.add_subplot(1, 1, 1)
@@ -621,7 +624,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         # size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(1)
         self.setSizePolicy(size_policy)
-        #self.setMaximumSize(QtCore.QSize(16777215, 56))
+        # self.setMaximumSize(QtCore.QSize(16777215, 56))
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setObjectName("context_frame")
         # self.setFrameStyle(self.NoFrame)
@@ -857,7 +860,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                         value = None
                     else:
                         value = int(value)
-                    # update value
+                        # update value
                 braviz_tab_data.update_variable_value(
                     int(idx), self.__curent_subject, value)
                 # update internal
@@ -900,7 +903,7 @@ class ImageComboBoxManager(QtCore.QObject):
     image_changed = QtCore.pyqtSignal(tuple)
 
     def __init__(self, reader, show_none=False, show_fmri=True):
-        super(ImageComboBoxManager,self).__init__()
+        super(ImageComboBoxManager, self).__init__()
         grey_images = sorted(n.upper() for n in reader.get("IMAGE", None, index=True))
         label_maps = sorted(n.upper() for n in reader.get("LABEL", None, index=True))
         dti = ["DTI", ]
@@ -909,7 +912,7 @@ class ImageComboBoxManager(QtCore.QObject):
         else:
             fmri_pdgms = []
 
-        #check for collisions
+        # check for collisions
         assert len(grey_images) + len(label_maps) + len(dti) + len(fmri_pdgms) == \
                len(set(grey_images + label_maps + fmri_pdgms + dti))
 
@@ -927,19 +930,19 @@ class ImageComboBoxManager(QtCore.QObject):
     def setup(self, combo_box):
         combo_box.clear()
         for im_class, name in self.available_images:
-            combo_box.addItem(name.title(),(im_class, name))
+            combo_box.addItem(name.title(), (im_class, name))
         combo_box.currentIndexChanged.connect(self._handle_index_change)
         self.combo_box = combo_box
 
     def set_image(self, image_class, image_name):
         image_class = image_class.upper() if image_class is not None else None
         image_name = image_name.upper()
-        index = self.data_dict[(image_class,image_name)]
+        index = self.data_dict[(image_class, image_name)]
         self.combo_box.setCurrentIndex(index)
 
     def _handle_index_change(self, index):
         new_class, new_name = self.combo_box.itemData(index)
-        self.image_changed.emit((new_class,new_name))
+        self.image_changed.emit((new_class, new_name))
 
     @property
     def current_class(self):
@@ -967,8 +970,8 @@ class ContrastComboManager(QtCore.QObject):
     contrast_changed = QtCore.pyqtSignal(int)
 
     def __init__(self, reader):
-        super(ContrastComboManager,self).__init__()
-        self.valid_paradigms = reader.get("FMRI",None,index=True)
+        super(ContrastComboManager, self).__init__()
+        self.valid_paradigms = reader.get("FMRI", None, index=True)
         self.__last_contrast = {}
         self.combo_box = None
         self.reader = reader
@@ -977,7 +980,7 @@ class ContrastComboManager(QtCore.QObject):
         self._setting_up = False
         self._current_pdgm = None
 
-    def setup(self, combo_box, initial_subject = None, initial_pdgm = None):
+    def setup(self, combo_box, initial_subject=None, initial_pdgm=None):
         combo_box.clear()
         combo_box.currentIndexChanged.connect(self._handle_index_change)
         self.combo_box = combo_box
@@ -1043,22 +1046,143 @@ class ContrastComboManager(QtCore.QObject):
         self.__last_contrast[self._current_pdgm] = contrast_n
         self.contrast_changed.emit(contrast_n)
 
+
 class SampleManager(QtCore.QObject):
     """
     Reusable component for handling sample messages and sample changes in a BRAVIZ application
     """
-    sample_changed = QtCore.pyqtSignal(set)
+    sample_changed = QtCore.pyqtSignal(frozenset)
 
-    def __init__(self):
-        super(SampleManager,self).__init__()
+    def __init__(self, message_client=None, initial_sample=None):
+        super(SampleManager, self).__init__()
+        if initial_sample is None:
+            self._sample = set()
+        else:
+            self._sample = set(initial_sample)
+
+        self._sample_policy = "ask"
+        self._message_client = message_client
+        self._menu_actions = {}
 
     @property
     def current_sample(self):
-        pass
+        return frozenset(self._sample)
 
     @current_sample.setter
     def current_sample(self, new_sample):
-        pass
+        self._sample = set(new_sample)
+        self.sample_changed.emit(frozenset(self._sample))
+
+    @property
+    def sample_policy(self):
+        return self._sample_policy
+
+    @sample_policy.setter
+    def sample_policy(self, new_policy):
+        self._update_sample_policy_menu(new_policy)
+
+    def _update_sample_policy_menu(self, new_policy):
+        if new_policy in {"ask", "never", "always"}:
+            self._sample_policy = new_policy
+        else:
+            raise ValueError("Valid sample policies are 'ask', 'always' and 'never'")
+
+        for k, v in self._menu_actions.iteritems():
+            if k == new_policy:
+                v.setChecked(True)
+            else:
+                v.setChecked(False)
+
+        self.sample_message_policy = new_policy
+
+    def load_sample(self):
+        import braviz.applications.sample_select
+        s_bc = None
+        s_rcv = None
+        if self._message_client is not None:
+            s_bc = self._message_client.server_broadcast
+            s_rcv = self._message_client.server_receive
+
+        dialog = braviz.applications.sample_select.SampleLoadDialog(
+            new__and_load=True,
+            server_broadcast=s_bc,
+            server_receive=s_rcv)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            self.current_sample = new_sample
+
+    def modify_sample(self):
+        import braviz.applications.sample_select
+        s_bc = None
+        s_rcv = None
+        if self._message_client is not None:
+            s_bc = self._message_client.server_broadcast
+            s_rcv = self._message_client.server_receive
+
+        braviz.applications.sample_select.launch_sample_create_dialog(
+            server_broadcast=s_bc,
+            server_receive=s_rcv,
+            parent_id=os.getpid(),
+            sample=self.current_sample
+        )
+
+    def send_sample(self):
+        if self._message_client is None:
+            log = logging.getLogger(__name__)
+            log.warning("Can't send message, no server found")
+            return
+        msg = {"sample": list(self.sample)}
+        self._message_client.send_message(msg)
+
+    def configure_sample_policy_menu(self, parent_menu):
+        assert isinstance(parent_menu, QtGui.QMenu)
+        self._menu_actions["ask"] = QtGui.QAction("Ask", parent_menu)
+        self._menu_actions["never"] = QtGui.QAction("Never", parent_menu)
+        self._menu_actions["always"] = QtGui.QAction("Always", parent_menu)
+
+        self._menu_actions["ask"].triggered.connect(lambda: self._update_sample_policy_menu("ask"))
+        self._menu_actions["never"].triggered.connect(lambda: self._update_sample_policy_menu("never"))
+        self._menu_actions["always"].triggered.connect(lambda: self._update_sample_policy_menu("always"))
+
+        for a in self._menu_actions.itervalues():
+            a.setCheckable(True)
+
+        for k in ["ask", "never", "always"]:
+            parent_menu.addAction(self._menu_actions[k])
+
+        self._update_sample_policy_menu(self.sample_policy)
+
+    def process_sample_message(self, msg):
+        sample = msg.get("sample", tuple())
+        target = msg.get("target")
+        if target is not None:
+            accept = target == os.getpid()
+        else:
+            accept = self._accept_samples()
+        if accept:
+            self.current_sample = sample
+
+    def _accept_samples(self):
+        if self.sample_policy == "ask":
+            answer = QtGui.QMessageBox.question(
+                "Sample Received", "Accept sample?",
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
+                QtGui.QMessageBox.Yes)
+            if answer == QtGui.QMessageBox.Yes:
+                return True
+            elif answer == QtGui.QMessageBox.YesToAll:
+                self.sample_policy = "always"
+                return True
+            elif answer == QtGui.QMessageBox.No:
+                return False
+            elif answer == QtGui.QMessageBox.NoToAll:
+                self.sample_policy = "never"
+                return False
+        elif self.sample_policy == "always":
+            return True
+        else:
+            return False
 
 
 if __name__ == "__main__":

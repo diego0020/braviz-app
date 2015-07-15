@@ -36,7 +36,7 @@ from braviz.interaction.qt_models import SimpleSetModel, SamplesFilterModel, Sam
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.readAndFilter import user_data as braviz_user_data
 from PyQt4 import QtGui, QtCore
-from braviz.interaction.qt_dialogs import VariableSelectDialog, NewVariableDialog
+import braviz.interaction.qt_dialogs as braviz_dialogs
 import braviz.interaction.qt_models as braviz_models
 from braviz.interaction.connection import MessageClient
 from braviz.utilities import launch_sub_process
@@ -393,7 +393,7 @@ class SampleCreateDialog(QtGui.QMainWindow):
 
     def create_indicator_variable(self):
 
-        dialog = NewVariableDialog()
+        dialog = braviz_dialogs.NewVariableDialog()
         dialog.ui.var_type_combo.setCurrentIndex(1)
         dialog.ui.var_type_combo.setEnabled(0)
         all_subjs = braviz_tab_data.get_subjects()
@@ -455,7 +455,7 @@ def get_filter_function(params):
     return filter_func
 
 
-class AddFilterDialog(VariableSelectDialog):
+class AddFilterDialog(braviz_dialogs.VariableSelectDialog):
     def __init__(self, params):
         super(AddFilterDialog, self).__init__()
         self.params_dict = params

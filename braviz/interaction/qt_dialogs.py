@@ -27,13 +27,9 @@ import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 import numpy as np
 
-from braviz.interaction.qt_widgets import MatplotWidget
-
 import braviz
 from braviz.interaction.qt_guis.outcome_select import Ui_SelectOutcomeDialog
 from braviz.interaction.qt_guis.outcome_select_multi_plot import Ui_SelectOutcomeMPDialog
-from braviz.interaction.qt_guis.nominal_details_frame import Ui_nominal_details_frame
-from braviz.interaction.qt_guis.rational_details_frame import Ui_rational_details
 from braviz.interaction.qt_guis.regressors_select import Ui_AddRegressorDialog
 from braviz.interaction.qt_guis.interactions_dialog import Ui_InteractionsDiealog
 from braviz.interaction.qt_guis.context_variables_select import Ui_ContextVariablesDialog
@@ -47,6 +43,7 @@ from braviz.interaction.qt_guis.load_logic_bundle import Ui_LoadLogicDialog
 
 from braviz.interaction.logic_bundle_model import LogicBundleNode, LogicBundleQtTree
 
+import braviz.interaction.qt_widgets
 import braviz.interaction.qt_models as braviz_models
 from braviz.readAndFilter.tabular_data import get_data_frame_by_name, get_var_idx, get_min_max_values_by_name, \
     is_variable_name_real, get_var_description_by_name, save_is_real_by_name, \
@@ -215,7 +212,7 @@ class VariableSelectDialog(QtGui.QDialog):
     def finish_ui_setup(self):
         target = self.ui.plot_frame
         layout = QtGui.QVBoxLayout()
-        self.matplot_widget = MatplotWidget(
+        self.matplot_widget = braviz.interaction.qt_widgets.MatplotWidget(
             initial_message="Double click on variables\nto see plots")
         layout.addWidget(self.matplot_widget)
         target.setLayout(layout)

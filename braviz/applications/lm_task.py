@@ -19,6 +19,7 @@
 
 from __future__ import division, print_function
 from braviz.utilities import set_pyqt_api_2
+
 set_pyqt_api_2()
 
 import random
@@ -46,6 +47,7 @@ from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectD
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 import braviz.interaction.r_functions
 import braviz.interaction.qt_models as braviz_models
+from braviz.interaction.qt_widgets import SampleManager
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.connection import MessageClient, MessageServer
@@ -64,7 +66,6 @@ SAMPLE_TREE_COLUMNS = (def_vars["nom1"], def_vars["nom2"])
 
 
 class LinearModelApp(QMainWindow):
-
     def __init__(self, scenario, server_broadcast_address, server_receive_address):
         QMainWindow.__init__(self)
         self.outcome_var_name = None
@@ -78,11 +79,9 @@ class LinearModelApp(QMainWindow):
         self.sample_model = braviz_models.SampleTree(SAMPLE_TREE_COLUMNS)
         self.plot = None
         self.plot_name = None
-        self.sample = braviz_tab_data.get_subjects()
         self.coefs_df = None
         self.regression_results = None
         self.missing = None
-        self.sample_message_policy = "ask"
         self.ui = None
 
         if server_broadcast_address is not None or server_receive_address is not None:
@@ -91,6 +90,9 @@ class LinearModelApp(QMainWindow):
             self._message_client.message_received.connect(self.receive_message)
         else:
             self._message_client = None
+
+        sample = braviz_tab_data.get_subjects()
+        self.sample_manager = SampleManager(message_client=self._message_client, initial_sample=sample)
         self.setup_gui()
 
     def setup_gui(self):
@@ -110,7 +112,7 @@ class LinearModelApp(QMainWindow):
             self.launch_regressors_context_menu)
         self.ui.add_interaction_button.clicked.connect(
             self.dispatch_interactions_dialog)
-        self.ui.calculate_button.clicked.connect(partial(self.calculate_linear_reg,True))
+        self.ui.calculate_button.clicked.connect(partial(self.calculate_linear_reg, True))
         self.ui.results_table.setModel(self.result_model)
 
         self.ui.matplot_layout = QtGui.QVBoxLayout()
@@ -135,7 +137,7 @@ class LinearModelApp(QMainWindow):
         self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.sample_tree.customContextMenuRequested.connect(
             self.subject_details_from_tree)
-        self.ui.modify_sample_button.clicked.connect(self.modify_sample)
+        self.ui.modify_sample_button.clicked.connect(self.sample_manager.modify_sample)
         self.ui.modify_sample_button.setEnabled(True)
 
         self.ui.actionSave_scneario.triggered.connect(
@@ -145,13 +147,12 @@ class LinearModelApp(QMainWindow):
         self.ui.actionData.triggered.connect(self.save_data)
         self.ui.actionImages.triggered.connect(self.save_figure)
 
-        self.ui.actionLoad_sample.triggered.connect(self.load_sample)
-        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
-        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
-        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
-        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
-        self.ui.actionSend_sample.triggered.connect(self.send_sample)
+        self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_samples)
+        self.sample_manager.sample_changed.connect(self.update_sample)
 
+        self.ui.actionLoad_sample.triggered.connect(self.sample_manager.load_sample)
+        self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
+        self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
 
     def dispatch_outcome_select(self):
 
@@ -160,7 +161,7 @@ class LinearModelApp(QMainWindow):
         if self.ui.outcome_sel.currentIndex() == self.ui.outcome_sel.count() - 1:
             # print "dispatching dialog"
             params = {}
-            dialog = OutcomeSelectDialog(params, sample=self.sample)
+            dialog = OutcomeSelectDialog(params, sample=self.sample_manager.current_sample)
             selection = dialog.exec_()
             logger = logging.getLogger(__name__)
             logger.info("Outcome selection %s", params)
@@ -221,7 +222,7 @@ class LinearModelApp(QMainWindow):
 
     def launch_add_regressor_dialog(self):
         reg_dialog = RegressorSelectDialog(
-            self.outcome_var_name, self.regressors_model, sample=self.sample)
+            self.outcome_var_name, self.regressors_model, sample=self.sample_manager.current_sample)
         result = reg_dialog.exec_()
         if result == reg_dialog.Accepted:
             if self.regressors_model.rowCount() > 0:
@@ -244,9 +245,9 @@ class LinearModelApp(QMainWindow):
         if self.outcome_var_name is not None:
             a_vars.append(self.outcome_var_name)
         whole_df = braviz_tab_data.get_data_frame_by_name(a_vars)
-        whole_df = whole_df.loc[self.sample]
+        whole_df = whole_df.loc[self.sample_manager.current_sample]
         whole_df.dropna(inplace=True)
-        self.missing = len(self.sample) - len(whole_df)
+        self.missing = len(self.sample_manager.current_sample) - len(whole_df)
 
         self.ui.missing_label.setText("Missing Values: %d" % self.missing)
 
@@ -273,7 +274,7 @@ class LinearModelApp(QMainWindow):
             self.ui.calculate_button.setEnabled(0)
             res = braviz.interaction.r_functions.calculate_normalized_linear_regression(self.outcome_var_name,
                                                                                         regressors, interactions,
-                                                                                        self.sample)
+                                                                                        self.sample_manager.current_sample)
         except Exception as e:
             msg = QtGui.QMessageBox()
             msg.setText(str(e.message))
@@ -321,11 +322,11 @@ class LinearModelApp(QMainWindow):
         self.plot_name = (1, var_name)
         if var_name == "(Intercept)":
             df2 = self.regression_results["data"]
-            #df2["Jitter"] = np.random.random(len(df2))
+            # df2["Jitter"] = np.random.random(len(df2))
             # df2.dropna(inplace=True)
-            #self.plot.draw_scatter(df2, "Jitter", self.outcome_var_name, reg_line=False)
-            #b = np.mean(df2[self.outcome_var_name])
-            #self.plot.axes.axhline(b, ls="--", c=(0.3, 0.3, 0.3))
+            # self.plot.draw_scatter(df2, "Jitter", self.outcome_var_name, reg_line=False)
+            # b = np.mean(df2[self.outcome_var_name])
+            # self.plot.axes.axhline(b, ls="--", c=(0.3, 0.3, 0.3))
             self.plot.draw_intercept(df2, self.outcome_var_name)
             # self.plot.draw()
         else:
@@ -399,7 +400,7 @@ class LinearModelApp(QMainWindow):
     def draw_simple_scatter_plot(self, regressor_name):
         df = braviz_tab_data.get_data_frame_by_name(
             [self.outcome_var_name, regressor_name])
-        df = df.loc[self.sample]
+        df = df.loc[self.sample_manager.current_sample]
         df.dropna(inplace=True)
         if braviz_tab_data.is_variable_name_real(regressor_name):
             reg_line = True
@@ -472,7 +473,7 @@ class LinearModelApp(QMainWindow):
     def draw_two_vars_scatter_plot(self, regressor1, regressor2):
         df = braviz_tab_data.get_data_frame_by_name(
             [regressor1, regressor2, self.outcome_var_name])
-        df = df.loc[self.sample]
+        df = df.loc[self.sample_manager.current_sample]
         df.dropna(inplace=True)
         df, x_var, hue_var, outcome, labels, qualitative_map, x_labels = self.cut_and_sort(
             regressor1, regressor2, df)
@@ -503,7 +504,7 @@ class LinearModelApp(QMainWindow):
             log.info("showing subject %s" % subj)
             self.add_subjects_to_plot(subject_ids=(int(subj),))
         if "sample" in msg:
-            self.handle_sample_message(msg)
+            self.sample_manager.process_sample_message(msg)
 
     def create_context_action(self, subject, scenario_id, scenario_name, show_name=None, new_viewer=True):
         if show_name is None:
@@ -518,6 +519,7 @@ class LinearModelApp(QMainWindow):
         def launch_new_viewer():
             self.launch_mri_viewer(subject, scenario_id)
             self.add_subjects_to_plot(subject_ids=(int(subject),))
+
         if new_viewer:
             action = QtGui.QAction(
                 "Show subject %s's %s in new viewer" % (subject, show_name), None)
@@ -584,7 +586,6 @@ class LinearModelApp(QMainWindow):
             # print subject
             self.create_view_details_context_menu(global_pos, subject)
 
-
     def launch_mri_viewer(self, subject, scenario):
         log = logging.getLogger(__name__)
 
@@ -610,7 +611,7 @@ class LinearModelApp(QMainWindow):
                       "interactions": self.regressors_model.get_interactions()}
         state["vars"] = vars_state
         state["plot"] = {"var_name": self.plot_name}
-        state["sample"] = self.sample
+        state["sample"] = self.sample_manager.current_sample
 
         meta = dict()
         meta["date"] = datetime.datetime.now()
@@ -651,7 +652,7 @@ class LinearModelApp(QMainWindow):
                                                              "Save Data", ".", "csv (*.csv)"))
         if len(filename) > 0:
             a_vars = [self.outcome_var_name] + \
-                list(self.regressors_model.get_regressors())
+                     list(self.regressors_model.get_regressors())
             out_df = braviz_tab_data.get_data_frame_by_name(a_vars)
             out_df.to_csv(filename)
 
@@ -674,7 +675,7 @@ class LinearModelApp(QMainWindow):
         logger.info("loading state %s", wanted_state)
         sample = wanted_state.get("sample")
         if sample is not None:
-            self.sample = sample
+            self.sample_manager.current_sample = sample
             self.sample_model.set_sample(sample)
         self.ui.calculate_button.setEnabled(0)
         reg_name = wanted_state["vars"].get("outcome")
@@ -716,13 +717,12 @@ class LinearModelApp(QMainWindow):
             else:
                 logger.error("Unknown plot type %s", plot_type)
 
-
     def isolate_one(self, isolating_factor, un_standardize=True):
         standarized_data = self.regression_results["standardized_model"]
         coefs = self.coefs_df
         res = self.regression_results["residuals"]
         INTERCEPT = "(Intercept)"
-        #data = self.regression_results["data"]
+        # data = self.regression_results["data"]
 
         df3 = pd.DataFrame(standarized_data[isolating_factor])
         df3[self.outcome_var_name] = np.nan
@@ -807,7 +807,7 @@ class LinearModelApp(QMainWindow):
             log.info("beta1: %s", beta_1)
             log.info("beta0: %s", beta_0)
             df3[self.outcome_var_name][l] = beta_0 + beta_1 * \
-                df3[isolating_factor][l].values.squeeze().astype(np.int)
+                                                     df3[isolating_factor][l].values.squeeze().astype(np.int)
         df3[self.outcome_var_name] += res
         if un_standardize is False:
             return df3
@@ -856,7 +856,7 @@ class LinearModelApp(QMainWindow):
             labels2 = labels
 
         groups_series = df2[hue_var]
-        log=logging.getLogger(__name__)
+        log = logging.getLogger(__name__)
         log.info("testing %s %s" % (reg1, reg2))
         log.info("===============")
         log.info(df)
@@ -974,11 +974,10 @@ class LinearModelApp(QMainWindow):
             log.error(
                 "Scenario id doesn't correspond to an anova scenario, ignoring")
 
-    def set_sample(self, new_sample):
+    def update_sample(self, new_sample):
         log = logging.getLogger(__name__)
         log.info("new sample")
         log.info(new_sample)
-        self.sample = new_sample
         self.sample_model.set_sample(new_sample)
         plot_name = self.plot_name
         if plot_name is not None:
@@ -996,87 +995,6 @@ class LinearModelApp(QMainWindow):
             elif plot_type == 4:
                 self.draw_residuals_plot()
         self.get_missing_values()
-
-    def load_sample(self):
-        dialog = braviz.applications.sample_select.SampleLoadDialog(
-            new__and_load=True,
-            server_broadcast=self._message_client.server_broadcast,
-            server_receive=self._message_client.server_receive)
-        res = dialog.exec_()
-        if res == dialog.Accepted:
-            new_sample = dialog.current_sample
-            self.set_sample(new_sample)
-
-    def send_sample(self):
-        if self._message_client is None:
-            log = logging.getLogger(__name__)
-            log.warning("Can't send message, no menu found")
-            return
-        msg = {"sample" : list(self.sample)}
-        self._message_client.send_message(msg)
-
-    def modify_sample(self):
-        self.ui.modify_sample_button.setEnabled(False)
-        if self._message_client is not None:
-            braviz.applications.sample_select.launch_sample_create_dialog(
-                server_broadcast=self._message_client.server_broadcast,
-                server_receive=self._message_client.server_receive,
-                parent_id=os.getpid(),
-                sample=self.sample
-            )
-        else:
-            braviz.applications.sample_select.launch_sample_create_dialog(
-                sample=self.sample
-            )
-        QtCore.QTimer.singleShot(5000, lambda: self.ui.modify_sample_button.setEnabled(True))
-
-    def handle_sample_message(self, msg):
-        sample = msg.get("sample", tuple())
-        target = msg.get("target")
-        if target is not None:
-            accept = target == os.getpid()
-        else:
-            accept = self.accept_samples()
-        if accept:
-            self.set_sample(sample)
-
-    def accept_samples(self):
-        if self.sample_message_policy == "ask":
-            answer = QtGui.QMessageBox.question(
-                self, "Sample Received", "Accept sample?",
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
-                QtGui.QMessageBox.Yes)
-            if answer == QtGui.QMessageBox.Yes:
-                return True
-            elif answer == QtGui.QMessageBox.YesToAll:
-                self.update_samples_policy("always")
-                return True
-            elif answer == QtGui.QMessageBox.No:
-                return False
-            elif answer == QtGui.QMessageBox.NoToAll:
-                self.update_samples_policy("never")
-                return False
-        elif self.sample_message_policy == "always":
-            return True
-        else:
-            return False
-
-    def update_samples_policy(self, item):
-        if item == "ask":
-            self.ui.actionAlways.setChecked(False)
-            self.ui.actionNever.setChecked(False)
-            self.ui.actionAsk.setChecked(True)
-        elif item == "never":
-            self.ui.actionAlways.setChecked(False)
-            self.ui.actionNever.setChecked(True)
-            self.ui.actionAsk.setChecked(False)
-        elif item == "always":
-            self.ui.actionAlways.setChecked(True)
-            self.ui.actionNever.setChecked(False)
-            self.ui.actionAsk.setChecked(False)
-        else:
-            assert False
-        self.sample_message_policy = item
 
 
 def run():
@@ -1099,7 +1017,7 @@ def run():
     log.info("started")
     main_window = LinearModelApp(
         scenario, server_broadcast_address, server_receive_address)
-    #ic = main_window.windowIcon()
+    # ic = main_window.windowIcon()
     main_window.show()
     try:
         app.exec_()
