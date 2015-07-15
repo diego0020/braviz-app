@@ -894,6 +894,9 @@ class ContextVariablesPanel(QtGui.QGroupBox):
 
 
 class ImageComboBoxManager(QtCore.QObject):
+    """
+    Reusable component for selecting images from a braviz reader
+    """
     image_changed = QtCore.pyqtSignal(tuple)
 
     def __init__(self, reader, show_none=False, show_fmri=True):
@@ -958,6 +961,9 @@ class ImageComboBoxManager(QtCore.QObject):
 
 
 class ContrastComboManager(QtCore.QObject):
+    """
+    Reusable component for selecting fMRI constrasts from a braviz reader
+    """
     contrast_changed = QtCore.pyqtSignal(int)
 
     def __init__(self, reader):
@@ -1036,6 +1042,24 @@ class ContrastComboManager(QtCore.QObject):
         contrast_n = self.combo_box.itemData(index)
         self.__last_contrast[self._current_pdgm] = contrast_n
         self.contrast_changed.emit(contrast_n)
+
+class SampleManager(QtCore.QObject):
+    """
+    Reusable component for handling sample messages and sample changes in a BRAVIZ application
+    """
+    sample_changed = QtCore.pyqtSignal(set)
+
+    def __init__(self):
+        super(SampleManager,self).__init__()
+
+    @property
+    def current_sample(self):
+        pass
+
+    @current_sample.setter
+    def current_sample(self, new_sample):
+        pass
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication([])
