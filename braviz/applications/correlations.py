@@ -143,6 +143,8 @@ class CorrelationMatrixFigure(FigureCanvas):
 
 
 class RegFigure(FigureCanvas):
+    hidden_points_change = QtCore.pyqtSignal(int)
+
     def __init__(self, message_client):
         self.f, self.ax = plt.subplots(figsize=(9, 9))
         super(RegFigure, self).__init__(self.f)
@@ -163,6 +165,7 @@ class RegFigure(FigureCanvas):
         self.hidden_subjs.clear()
         if self.df is not None:
             self.re_draw_reg()
+        self.hidden_points_change.emit(len(self.hidden_subjs))
 
     def draw_initial_message(self):
         self.ax.clear()
@@ -265,6 +268,7 @@ class RegFigure(FigureCanvas):
                     else:
                         print("hiding %s" % name)
                         self.hidden_subjs.add(name)
+                    self.hidden_points_change.emit(len(self.hidden_subjs))
                     self.re_draw_reg()
             elif mouse_event.button == 3 and mouse_event.name == 'button_press_event':
                 context_menu = QtGui.QMenu()
@@ -330,6 +334,8 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.ui.reg_layout = QtGui.QHBoxLayout()
         self.ui.reg_frame.setLayout(self.ui.reg_layout)
         self.ui.reg_layout.addWidget(self.reg_plot)
+        self.ui.restore_points.clicked.connect(self.reg_plot.clear_hidden_subjects)
+        self.reg_plot.hidden_points_change.connect(lambda i: self.ui.ignored_label.setText(str(i)))
 
         self.ui.actionSave_Matrix.triggered.connect(self.save_matrix)
         self.ui.actionSave_Scatter.triggered.connect(self.save_reg)

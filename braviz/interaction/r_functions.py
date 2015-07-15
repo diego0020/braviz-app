@@ -25,7 +25,8 @@ import logging
 from itertools import izip
 
 import pandas as pd
-import pandas.rpy.common as com
+from rpy2.robjects import pandas2ri
+pandas2ri.activate()
 import rpy2.rinterface
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
@@ -107,7 +108,7 @@ def calculate_ginni_index(outcome, data_frame):
     values_data_frame.columns = [
         "c%s" % i for i in xrange(len(values_data_frame.columns))]
 
-    r_df = com.convert_to_r_dataframe(values_data_frame)
+    r_df = values_data_frame
     # if oucome is nominal transform into factor
     outcome_variable_index = original_column_names.get_loc(outcome_idx)
     r_environment = robjects.globalenv
@@ -151,7 +152,7 @@ def calculate_ginni_index(outcome, data_frame):
     # print imp_data_frame
     data_frame["Ginni"] = imp_data_frame
     data_frame.replace(np.nan, 0, inplace=True)
-    data_frame["Ginni"][outcome_idx] = np.inf
+    data_frame.loc[outcome_idx,"Ginni"] = np.inf
     # print self.data_frame
     return data_frame
 
@@ -216,7 +217,7 @@ def calculate_anova(outcome, regressors_data_frame, interactions_dict, sample):
     new_names[-1] = "o"
 
     pandas_df.columns = new_names
-    r_df = com.convert_to_r_dataframe(pandas_df)
+    r_df = pandas_df
     # print r_df
 
     # reformat r_df
@@ -388,11 +389,11 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     standard_var_names = ["var_%d_R" % i for i in xrange(len(all_variables))]
     # now create a data frame with the new names
     data_frame_std = data_frame.copy()
-    assert all(data_frame_std.columns == all_variables)
+    assert np.all(data_frame_std.columns == all_variables)
     data_frame_std.columns = standard_var_names
 
     # now we are ready to go into the R world
-    r_data_frame = com.convert_to_r_dataframe(data_frame_std)
+    r_data_frame = data_frame_std
     # create factor variables
     r_environment = robjects.globalenv
     r_environment["r_df"] = r_data_frame
@@ -440,7 +441,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
     t_stats_std = dict(izip(cof_t_r.names, cof_t_r))
     coefs_p_std = dict(izip(cof_p_r.names, cof_p_r))
     residuals = list(standardized_model.rx2("residuals"))
-    std_model = com.convert_robj(standardized_model.rx2("model"))
+    std_model = standardized_model.rx2("model")
 
     fitted = list(standardized_model.rx2("fitted.values"))
     intercept = "(Intercept)"
@@ -537,6 +538,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
             pass
             assert False
 
+    std_model = pandas2ri.ri2py(std_model)
     std_model.columns = [std_names2orig_names[c] for c in std_model.columns]
 
     adjusted_r_squared = fit_summary.rx2("adj.r.squared")[0]

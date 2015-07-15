@@ -83,7 +83,12 @@ class AnovaApp(QMainWindow):
         self.last_viewed_subject = None
         self.mri_viewer_pipe = None
         self.sample = braviz_tab_data.get_subjects()
+
+        # number of missing values
         self.missing = None
+        # sample - missing
+        self.active_sample = self.sample
+
         self.sample_message_policy = "ask"
         self.ui = None
 
@@ -169,11 +174,11 @@ class AnovaApp(QMainWindow):
             logger = logging.getLogger(__name__)
             logger.info("Outcome selection %s", params)
             if selection > 0:
-                self.set_outcome_var_type(params["selected_outcome"])
+                self.set_outcome_var(params["selected_outcome"])
             else:
-                self.set_outcome_var_type(None)
+                self.set_outcome_var(None)
         else:
-            self.set_outcome_var_type(
+            self.set_outcome_var(
                 self.ui.outcome_sel.itemText(self.ui.outcome_sel.currentIndex()))
 
     def __create_plots_dictionary(self):
@@ -209,7 +214,7 @@ class AnovaApp(QMainWindow):
         elif len(ints) > 0:
             self.update_main_plot(ints[-1])
 
-    def set_outcome_var_type(self, new_bar):
+    def set_outcome_var(self, new_bar):
         log = logging.getLogger(__name__)
         if new_bar is None:
             var_type_text = "Type"
@@ -236,17 +241,18 @@ class AnovaApp(QMainWindow):
         else:
             var_type_text = "Real" if var_is_real else "Nominal"
         self.ui.outcome_type.setText(var_type_text)
-        self.update_main_plot(self.plot_var_name)
         self.check_if_ready()
+        self.update_main_plot()
 
     def launch_add_regressor_dialog(self):
         reg_dialog = RegressorSelectDialog(
             self.outcome_var_name, self.regressors_model, sample=self.sample)
         result = reg_dialog.exec_()
+        self.check_if_ready()
         if self.regressors_model.rowCount() > 0:
             regn = self.regressors_model.get_regressors()[-1]
             self.update_main_plot(regn)
-        self.check_if_ready()
+
 
     def check_if_ready(self):
         if (self.outcome_var_name is not None) and (self.regressors_model.rowCount() > 0):
@@ -263,6 +269,7 @@ class AnovaApp(QMainWindow):
         whole_df = whole_df.loc[self.sample]
         whole_df.dropna(inplace=True)
         self.missing = len(self.sample) - len(whole_df)
+        self.active_sample = whole_df.index
         self.ui.missing_label.setText("Missing Values: %d" % self.missing)
 
     def launch_regressors_context_menu(self, pos):
@@ -274,6 +281,8 @@ class AnovaApp(QMainWindow):
 
         def remove_item(*args):
             self.regressors_model.removeRows(selection.row(), 1)
+            self.check_if_ready()
+            self.update_main_plot()
 
         remove_action.triggered.connect(remove_item)
         menu.addAction(remove_action)
@@ -320,8 +329,11 @@ class AnovaApp(QMainWindow):
             self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
         self.update_main_plot(var_name)
 
-    def update_main_plot(self, var_name):
-        self.plot_var_name = var_name
+    def update_main_plot(self, var_name=None):
+        if var_name is None:
+            var_name = self.plot_var_name
+        else:
+            self.plot_var_name = var_name
         self.plot_x_var = None
         self.plot_data_frame = None
         self.plot_z_var = None
@@ -379,7 +391,7 @@ class AnovaApp(QMainWindow):
             # Get Data
             data = get_data_frame_by_name(
                 [real_factors[0], nominal_factors[0], self.outcome_var_name])
-            data = data.loc[self.sample]
+            data = data.loc[self.active_sample]
             data.dropna(inplace=True)
             self.plot_data_frame = data
 
@@ -417,7 +429,7 @@ class AnovaApp(QMainWindow):
             # get data
             data = get_data_frame_by_name(
                 nominal_factors + [self.outcome_var_name])
-            data = data.loc[self.sample]
+            data = data.loc[self.active_sample]
             data.dropna(inplace=True)
             # find number of levels for nominal
             nlevels = {}
@@ -473,7 +485,7 @@ class AnovaApp(QMainWindow):
             # get data from
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
 
-            data = data.loc[self.sample]
+            data = data.loc[self.active_sample]
             # remove nans
             data.dropna(inplace=True)
 
@@ -487,7 +499,7 @@ class AnovaApp(QMainWindow):
             # is real
             # create scatter plot
             data = get_data_frame_by_name([self.outcome_var_name, var_name])
-            data = data.loc[self.sample]
+            data = data.loc[self.active_sample]
 
             self.plot_data_frame = data
             data.dropna(inplace=True)
@@ -511,7 +523,10 @@ class AnovaApp(QMainWindow):
         # print subject_ids
         if self.plot_data_frame is None:
             return
-        df = self.plot_data_frame.loc[subject_ids]
+        try:
+            df = self.plot_data_frame.loc[subject_ids]
+        except KeyError:
+            df = self.plot_data_frame.loc[[]]
         df = df.dropna()
         y_data = df[self.outcome_var_name].get_values()
         subject_ids = df.index.get_values()
@@ -663,8 +678,8 @@ class AnovaApp(QMainWindow):
         braviz.utilities.launch_sub_process(args)
 
     def closeEvent(self, *args, **kwargs):
-    # if self.mri_viewer_process is not None:
-    # self.mri_viewer_process.terminate()
+        # if self.mri_viewer_process is not None:
+        # self.mri_viewer_process.terminate()
         log = logging.getLogger(__name__)
         log.info("Finishing")
 
@@ -745,7 +760,7 @@ class AnovaApp(QMainWindow):
             else:
                 self.ui.outcome_sel.insertItem(0, reg_name)
                 self.ui.outcome_sel.setCurrentIndex(0)
-        self.set_outcome_var_type(reg_name)
+        self.set_outcome_var(reg_name)
         # restore regressors
         regressors = wanted_state["vars"].get("regressors", tuple())
         self.regressors_model.reset_data(regressors)
