@@ -177,6 +177,8 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.actionGraph.triggered.connect(self.export_time_plot)
         self.ui.actionSignals.triggered.connect(self.export_signals)
 
+        self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_Samples)
+
     def start(self):
         self.three_d_widget.initialize_widget()
 

@@ -349,7 +349,7 @@
      <x>0</x>
      <y>0</y>
      <width>1128</width>
-     <height>21</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -364,10 +364,16 @@
      <addaction name="actionSignals"/>
      <addaction name="actionFrozen_Table"/>
     </widget>
+    <widget class="QMenu" name="menuAccept_Samples">
+     <property name="title">
+      <string>Accept Samples</string>
+     </property>
+    </widget>
     <addaction name="actionSave_scenario"/>
     <addaction name="actionLoad_scenario"/>
     <addaction name="separator"/>
     <addaction name="actionSelect_Sample"/>
+    <addaction name="menuAccept_Samples"/>
     <addaction name="menuExport"/>
    </widget>
    <addaction name="menuFile"/>
@@ -401,6 +407,11 @@
   <action name="actionFrozen_Table">
    <property name="text">
     <string>Frozen Table</string>
+   </property>
+  </action>
+  <action name="actionSda">
+   <property name="text">
+    <string>sda</string>
    </property>
   </action>
  </widget>
