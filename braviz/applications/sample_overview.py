@@ -32,7 +32,6 @@ from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
 from braviz.readAndFilter.config_file import get_apps_config
-import interaction.sample_select
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.readAndFilter import user_data as braviz_user_data
@@ -45,7 +44,8 @@ import os
 import datetime
 import functools
 
-from braviz.interaction.connection import MessageClient, MessageServer
+from braviz.interaction.connection import MessageClient
+from braviz.interaction.qt_widgets import SampleManager
 
 if braviz.readAndFilter.PROJECT == "kmc40":
     SAMPLE_SIZE = 0.3
@@ -60,13 +60,10 @@ class SampleOverview(QtGui.QMainWindow):
         self.reader = braviz.readAndFilter.BravizAutoReader()
         log = logging.getLogger(__name__)
         self.plot_widget = None
-        self.sample = braviz_tab_data.get_subjects()
         self.viewers_dict = {}
         self.widgets_dict = {}
         self.widget_observers = {}
         self.current_space = "Talairach"
-
-        self.sample_message_policy = "ask"
 
         self.inside_layouts = dict()
         self.row_scroll_widgets = dict()
@@ -93,6 +90,11 @@ class SampleOverview(QtGui.QMainWindow):
         else:
             self._message_client = None
 
+        sample = braviz_tab_data.get_subjects()
+        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=sample)
+        self.sample_manager.sample_changed.connect(self.update_sample)
+        self.ordered_sample = tuple(sample)
+
         self.ui = None
         self.context_menu_opened_recently = False
         cfg = get_apps_config()
@@ -109,7 +111,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.load_scalar_data(ratio_var, nom_var)
             QtCore.QTimer.singleShot(100, self.add_subject_viewers)
         else:
-            self.sample = []
+            self.ordered_sample = []
             state = braviz_user_data.get_scenario_data_dict(initial_scenario)
             load_scn_funct = functools.partial(
                 self.load_scenario, state, False)
@@ -150,15 +152,11 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.action_load_scenario.triggered.connect(
             self.load_scenario_dialog)
 
-        self.ui.actionSelect_sample.triggered.connect(
-            self.load_sample)
-        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
-        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
-        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
-        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
-        self.ui.actionSend_sample.triggered.connect(self.send_sample)
+        self.ui.actionSelect_sample.triggered.connect(self.sample_manager.load_sample)
+        self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
+        self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
 
-
+        self.sample_manager.configure_sample_policy_menu(self.ui.menuReceive_Samples)
         self.ui.progress_bar.setValue(0)
 
     def change_nominal_variable(self, new_var_index):
@@ -249,7 +247,7 @@ class SampleOverview(QtGui.QMainWindow):
             for i in xrange(0, lay.columnCount()):
                 lay.setColumnMinimumWidth(i, 0)
         cnt = Counter()
-        for subj in self.sample:
+        for subj in self.ordered_sample:
             viewer = self.widgets_dict[subj]
             level = self.scalar_data.ix[subj, self.nominal_name]
             if np.isnan(level):
@@ -282,8 +280,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def take_random_sample(self):
         sample = braviz_tab_data.get_subjects()
-        self.sample = list(
-            np.random.choice(sample, np.ceil(len(sample) * SAMPLE_SIZE), replace=False))
+        self.sample_manager.current_sample = np.random.choice(sample, np.ceil(len(sample) * SAMPLE_SIZE), replace=False)
 
     def callback_maker(self, subj):
         def cb(obj, event):
@@ -331,7 +328,7 @@ class SampleOverview(QtGui.QMainWindow):
             contents.setLayout(inside_lay)
             scroll.setWidget(contents)
 
-        for subj in self.sample:
+        for subj in self.sample_manager.current_sample:
             level = self.scalar_data.ix[subj, self.nominal_name]
             if np.isnan(level):
                 level = "nan"
@@ -342,7 +339,7 @@ class SampleOverview(QtGui.QMainWindow):
             QtGui.QApplication.instance().processEvents()
 
         # add viewers to rows
-        for subj in self.sample:
+        for subj in self.ordered_sample:
             viewer = self.widgets_dict[subj]
             level = self.scalar_data.ix[subj, self.nominal_name]
             if np.isnan(level):
@@ -371,7 +368,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.progress_bar.show()
         log = logging.getLogger(__name__)
         for i, (subj, viewer) in enumerate(self.viewers_dict.iteritems()):
-            self.ui.progress_bar.setValue(i / len(self.sample) * 100)
+            self.ui.progress_bar.setValue(i / len(self.sample_manager.current_sample) * 100)
             log.info("loading viewer %d " % subj)
             try:
                 if scenario is None:
@@ -397,7 +394,7 @@ class SampleOverview(QtGui.QMainWindow):
     def locate_subj(self, subj):
         # restore previous
         subj = int(subj)
-        if not subj in self.sample:
+        if not subj in self.sample_manager.current_sample:
             return
         if self.current_selection is not None:
             i_widget = self.widgets_dict[self.current_selection]
@@ -430,7 +427,7 @@ class SampleOverview(QtGui.QMainWindow):
             (rational_var_index, nominal_var_index), self.reader)
         self.rational_name = self.scalar_data.columns[0]
         self.nominal_name = self.scalar_data.columns[1]
-        self.scalar_data = self.scalar_data.loc[self.sample]
+        self.scalar_data = self.scalar_data.loc[self.sample_manager.current_sample]
         # self.scalar_data[np.isnan(self.scalar_data[self.rational_name])][self.rational_name]=np.inf
         labels_dict = braviz_tab_data.get_labels_dict(nominal_var_index)
         self.labels_dict = labels_dict
@@ -443,13 +440,13 @@ class SampleOverview(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         log.info(sample_order)
         log.info(len(sample_order))
-        log.info(len(self.sample))
+        log.info(len(self.sample_manager.current_sample))
         log.info(self.plot_widget.painted_plot.data)
         self.scalar_data.sort(
             self.rational_name, inplace=True, ascending=False)
-        self.sample = sample_order
+        self.ordered_sample = sample_order
         log.debug("sample: ")
-        log.debug(self.sample)
+        log.debug(self.ordered_sample)
 
     def select_from_bar(self, subj_id):
         log = logging.getLogger(__name__)
@@ -792,7 +789,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.ui.progress_bar.show()
         log = logging.getLogger(__name__)
         for i, v in enumerate(self.viewers_dict.itervalues()):
-            self.ui.progress_bar.setValue(i / len(self.sample) * 100)
+            self.ui.progress_bar.setValue(i / len(self.sample_manager.current_sample) * 100)
             try:
                 v.change_current_space(self.current_space)
             except Exception as e:
@@ -807,7 +804,7 @@ class SampleOverview(QtGui.QMainWindow):
         if index == 0:
             params = {}
             dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=True,
-                                                                               accept_real=False, sample=self.sample)
+                                                                               accept_real=False, sample=self.sample_manager.current_sample)
             dialog.setWindowTitle("Select Nominal Variable")
             dialog.exec_()
             selected_facet_name = params.get("selected_outcome")
@@ -836,7 +833,7 @@ class SampleOverview(QtGui.QMainWindow):
         if index == 0:
             params = {}
             dialog = braviz.interaction.qt_dialogs.SelectOneVariableWithFilter(params, accept_nominal=False,
-                                                                               accept_real=True, sample=self.sample)
+                                                                               accept_real=True, sample=self.sample_manager.current_sample)
             dialog.setWindowTitle("Select Nominal Variable")
             dialog.exec_()
             selected_facet_name = params.get("selected_outcome")
@@ -876,12 +873,12 @@ class SampleOverview(QtGui.QMainWindow):
             "nominal": self.nominal_index, "rational": self.rational_index}
         state["variables"] = var_state
         # sample
-        sample_state = {"ids": self.sample}
+        sample_state = {"ids": self.sample_manager.current_sample}
         state["sample"] = sample_state
         # visualization
         vis_state = {"scenario": self.current_scenario}
         cameras = {}
-        for subj in self.sample:
+        for subj in self.sample_manager.current_sample:
             cameras[subj] = self.viewers_dict[subj].get_camera_parameters()
         vis_state["cameras"] = cameras
         vis_state["space"] = self.current_space
@@ -947,7 +944,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.load_scalar_data(
                 var_state["rational"], var_state["nominal"], force=True)
         else:
-            self.sample = list(new_sample)
+            self.sample_manager.current_sample = list(new_sample)
             var_state = state["variables"]
             self.load_scalar_data(
                 var_state["rational"], var_state["nominal"], force=True)
@@ -960,11 +957,15 @@ class SampleOverview(QtGui.QMainWindow):
 
         # cameras
         cameras = vis_state["cameras"]
-        for subj in self.sample:
+        for subj in self.sample_manager.current_sample:
             self.viewers_dict[subj].set_camera(*cameras[subj])
 
     def change_sample(self, new_sample, visualization_dict=None):
         # remove selection
+
+        new_sample = list(new_sample)
+        old_sample = list(self.viewers_dict.keys())
+
         logger = logging.getLogger(__name__)
         logger.info("new sample: %s", new_sample)
         if self.current_selection is not None:
@@ -972,7 +973,7 @@ class SampleOverview(QtGui.QMainWindow):
             i_widget.setFrameStyle(QtGui.QFrame.NoFrame)
             self.current_selection = None
 
-        old_sample = self.sample
+
         # reuse old widgets
         new_viewers_dict = {}
         new_widgets_dict = {}
@@ -992,6 +993,7 @@ class SampleOverview(QtGui.QMainWindow):
             lay = self.inside_layouts[level]
             lay.removeWidget(widget)
             widget.deleteLater()
+
         # create new widgets
         log = logging.getLogger(__name__)
         for ns in new_sample[len(old_sample):]:
@@ -1000,12 +1002,15 @@ class SampleOverview(QtGui.QMainWindow):
             new_viewers_dict[ns] = viewer.subject_viewer
             new_widgets_dict[ns] = viewer
             # needs to show before initializing
-            level0 = self.scalar_data[self.nominal_name].iloc[0]
+            if self.scalar_data is None:
+                level0 = 0
+            else:
+                level0 = self.scalar_data[self.nominal_name].iloc[0]
             self.inside_layouts[level0].addWidget(viewer, 0, 0)
             viewer.initialize_widget()
             QtGui.QApplication.instance().processEvents()
 
-        self.sample = new_sample
+        self.sample_manager.current_sample = new_sample
         self.load_scalar_data(
             self.rational_index, self.nominal_index, force=True)
         self.viewers_dict = new_viewers_dict

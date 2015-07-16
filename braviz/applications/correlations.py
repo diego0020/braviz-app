@@ -23,6 +23,7 @@ Explore correlations between two variables
 
 from __future__ import print_function
 from braviz.utilities import set_pyqt_api_2
+
 set_pyqt_api_2()
 
 import PyQt4.QtGui as QtGui
@@ -38,16 +39,15 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
-from interaction import sample_select
 from braviz.interaction.connection import MessageClient
+from interaction.qt_widgets import SampleManager
 
 import numpy as np
 import seaborn as sns
 import scipy.stats
 import pandas as pd
 from functools import partial
-import logging
-import os
+
 
 class CorrelationMatrixFigure(FigureCanvas):
     SquareSelected = QtCore.pyqtSignal(pd.DataFrame)
@@ -314,10 +314,10 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.ui = None
         self._message_client = MessageClient(server_broadcast, server_receive)
         self._message_client.message_received.connect(self.receive_message)
+        self.sample_manager = SampleManager(parent=self, message_client=self._message_client)
         self.cor_mat = CorrelationMatrixFigure()
         self.reg_plot = RegFigure(self._message_client)
         self.vars_model = VarListModel(checkeable=True)
-        self.sample_message_policy = "ask"
         self.setup_ui()
 
     def setup_ui(self):
@@ -343,13 +343,11 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.cor_mat.SquareSelected.connect(self.reg_plot.draw_reg)
 
         #sample
-        self.ui.actionLoad_sample.triggered.connect(self.load_sample)
-        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
+        self.ui.actionLoad_sample.triggered.connect(self.sample_manager.load_sample)
+        self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
+        self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
         self.ui.actionRestore_sample.triggered.connect(self.reg_plot.clear_hidden_subjects)
-        self.ui.actionSend_sample.triggered.connect(self.send_sample)
-        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
-        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
-        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
+        self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_samples)
 
     def receive_message(self, msg):
         subj = msg.get("subject")

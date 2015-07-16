@@ -39,10 +39,11 @@ from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, Structur
 from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
-from interaction.sample_select import SampleLoadDialog
+
 from braviz.readAndFilter.config_file import get_config
 from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, ImageComboBoxManager, \
-    ContrastComboManager
+    ContrastComboManager, SampleManager
+
 from braviz.interaction.connection import MessageClient
 import cPickle
 import functools
@@ -69,7 +70,6 @@ class SubjectOverviewApp(QMainWindow):
         self.__curent_subject = config.get_default_subject()
         log = logging.getLogger(__name__)
         self._messages_client = None
-        self.sample_message_policy = "ask"
         if server_broadcast_address is not None or server_receive_address is not None:
             self._messages_client = MessageClient(
                 server_broadcast_address, server_receive_address)
@@ -90,7 +90,8 @@ class SubjectOverviewApp(QMainWindow):
         self.subjects_model = SubjectsTable(initial_vars)
         self.__demo_timer = QtCore.QTimer()
         self.__demo_timer.timeout.connect(self.go_to_next_subject)
-        self.sample = braviz_tab_data.get_subjects()
+        sample = braviz_tab_data.get_subjects()
+        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=sample)
 
         self.__frozen_subject = False
         self.__previous_subject = None
@@ -295,13 +296,11 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.actionAuto_loop.toggled.connect(self.toggle_demo_mode)
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
-        self.ui.actionLoad_sample.triggered.connect(self.load_sample)
-        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
-        self.ui.actionSend_sample.triggered.connect(self.send_sample)
-        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
-        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
-        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
+        self.ui.actionLoad_sample.triggered.connect(self.sample_manager.load_sample)
+        self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
+        self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
 
+        self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_samples)
 
     def keyPressEvent(self, event):
         key = event.key()

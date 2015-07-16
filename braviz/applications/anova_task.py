@@ -52,7 +52,7 @@ import os
 import platform
 
 import logging
-from braviz.interaction.qt_widgets import MatplotWidget
+from braviz.interaction.qt_widgets import MatplotWidget, SampleManager
 from braviz.utilities import launch_sub_process
 
 __author__ = 'Diego'
@@ -81,16 +81,6 @@ class AnovaApp(QMainWindow):
         self.plot_color = None
         self.plot_var_name = None
         self.last_viewed_subject = None
-        self.mri_viewer_pipe = None
-        self.sample = braviz_tab_data.get_subjects()
-
-        # number of missing values
-        self.missing = None
-        # sample - missing
-        self.active_sample = self.sample
-
-        self.sample_message_policy = "ask"
-        self.ui = None
 
         if server_broadcast_address is not None or server_receive_address is not None:
             self._message_client = MessageClient(
@@ -99,11 +89,22 @@ class AnovaApp(QMainWindow):
         else:
             self._message_client = None
 
+        sample = braviz_tab_data.get_subjects()
+        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=sample)
+
+        # Missing values
+        self.missing = 0
+        # sample - missing
+        self.active_sample = self.sample_manager.current_sample
+        self.ui = None
+
         self.setup_gui()
         if scenario is not None:
             scn_int = int(scenario)
             if scn_int > 0:
                 self.load_scenario_id(scenario)
+
+        self.sample_manager.sample_changed.connect(self.update_sample)
 
     def setup_gui(self):
         self.ui = Ui_Anova_gui()
@@ -144,21 +145,26 @@ class AnovaApp(QMainWindow):
         self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.sample_tree.customContextMenuRequested.connect(
             self.subject_details_from_tree)
-        self.ui.modify_sample_button.clicked.connect(self.modify_sample)
+        self.ui.modify_sample_button.clicked.connect(self.modify_sample_with_delay)
         self.ui.modify_sample_button.setEnabled(True)
 
         self.ui.actionSave_scneario.triggered.connect(
             self.save_scenario_dialog)
         self.ui.actionLoad_scenario.triggered.connect(
             self.load_scenario_dialog)
-        self.ui.actionLoad_sample.triggered.connect(self.load_sample)
+
         self.ui.actionImages.triggered.connect(self.save_figure)
         self.ui.actionData.triggered.connect(self.save_data)
-        self.ui.actionModify_sample.triggered.connect(self.modify_sample)
-        self.ui.actionAsk.triggered.connect(lambda: self.update_samples_policy("ask"))
-        self.ui.actionNever.triggered.connect(lambda: self.update_samples_policy("never"))
-        self.ui.actionAlways.triggered.connect(lambda: self.update_samples_policy("always"))
-        self.ui.actionSend_sample.triggered.connect(self.send_sample)
+
+        self.ui.actionLoad_sample.triggered.connect(self.sample_manager.load_sample)
+        self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
+        self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
+        self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_samples)
+
+    def modify_sample_with_delay(self):
+        self.ui.modify_sample_button.setEnabled(False)
+        self.sample_manager.modify_sample()
+        QtCore.QTimer.singleShot(5000, lambda:self.ui.modify_sample_button.setEnabled(True))
 
     def dispatch_outcome_select(self):
 
@@ -169,7 +175,7 @@ class AnovaApp(QMainWindow):
             params = {}
             plots = self.__create_plots_dictionary()
             dialog = MultiPlotOutcomeSelectDialog(
-                params, sample=self.sample, available_plots=plots)
+                params, sample=self.sample_manager.current_sample, available_plots=plots)
             selection = dialog.exec_()
             logger = logging.getLogger(__name__)
             logger.info("Outcome selection %s", params)
@@ -246,7 +252,7 @@ class AnovaApp(QMainWindow):
 
     def launch_add_regressor_dialog(self):
         reg_dialog = RegressorSelectDialog(
-            self.outcome_var_name, self.regressors_model, sample=self.sample)
+            self.outcome_var_name, self.regressors_model, sample=self.sample_manager.current_sample)
         result = reg_dialog.exec_()
         self.check_if_ready()
         if self.regressors_model.rowCount() > 0:
@@ -266,9 +272,9 @@ class AnovaApp(QMainWindow):
         if self.outcome_var_name is not None:
             a_vars.append(self.outcome_var_name)
         whole_df = braviz_tab_data.get_data_frame_by_name(a_vars)
-        whole_df = whole_df.loc[self.sample]
+        whole_df = whole_df.loc[self.sample_manager.current_sample]
         whole_df.dropna(inplace=True)
-        self.missing = len(self.sample) - len(whole_df)
+        self.missing = len(self.sample_manager.current_sample) - len(whole_df)
         self.active_sample = whole_df.index
         self.ui.missing_label.setText("Missing Values: %d" % self.missing)
 
@@ -296,7 +302,7 @@ class AnovaApp(QMainWindow):
                                                                         self.regressors_model.get_data_frame(),
                                                                         self.regressors_model.get_interactors_dict(
                                                                         ),
-                                                                        self.sample)
+                                                                        self.sample_manager.current_sample)
         except Exception as e:
             msg = QtGui.QMessageBox()
             msg.setText(str(e.message))
@@ -348,7 +354,7 @@ class AnovaApp(QMainWindow):
             self.plot.make_diagnostics(residuals, fitted)
         elif var_name == "(Intercept)":
             data = get_data_frame_by_name(self.outcome_var_name)
-            data = data.loc[self.sample]
+            data = data.loc[self.sample_manager.current_sample]
             data.dropna(inplace=True)
 
             self.plot_data_frame = data
@@ -689,7 +695,7 @@ class AnovaApp(QMainWindow):
                       "interactions": self.regressors_model.get_interactions()}
         state["vars"] = vars_state
         state["plot"] = {"var_name": self.plot_var_name}
-        state["sample"] = self.sample
+        state["sample"] = self.sample_manager.current_sample
 
         meta = dict()
         meta["date"] = datetime.datetime.now()
@@ -749,7 +755,7 @@ class AnovaApp(QMainWindow):
         logger.info("loading state %s", wanted_state)
         sample = wanted_state.get("sample")
         if sample is not None:
-            self.sample = sample
+            self.sample_manager.current_sample = sample
             self.sample_model.set_sample(sample)
         self.ui.calculate_button.setEnabled(0)
         reg_name = wanted_state["vars"].get("outcome")
@@ -782,7 +788,6 @@ class AnovaApp(QMainWindow):
             self.update_main_plot(plot_name)
 
     def update_sample(self, new_sample):
-        self.sample = new_sample
         self.sample_model.set_sample(new_sample)
         self.clear_results()
         if self.plot_var_name == "Residuals":
