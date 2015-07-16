@@ -82,6 +82,8 @@ class SampleOverview(QtGui.QMainWindow):
         self.current_selection = None
         self.current_scenario = None
 
+        self.initialized = False
+
         if server_broadcast_address is not None or server_receive_address is not None:
             self._message_client = MessageClient(
                 server_broadcast_address, server_receive_address)
@@ -289,6 +291,8 @@ class SampleOverview(QtGui.QMainWindow):
         return cb
 
     def add_subject_viewers(self, scenario=None):
+        self.initialized = True
+
         # create parents:
         levels = self.scalar_data[self.nominal_name].unique()
         log = logging.getLogger(__name__)
@@ -352,6 +356,7 @@ class SampleOverview(QtGui.QMainWindow):
             widget.initialize_widget()
             QtGui.QApplication.instance().processEvents()
 
+        assert frozenset(self.viewers_dict.iterkeys()) == frozenset(self.widgets_dict.iterkeys())
         self.reload_viewers(scenario)
 
     def get_rotated_label(self, parent, text, color):
@@ -962,9 +967,12 @@ class SampleOverview(QtGui.QMainWindow):
 
     def change_sample(self, new_sample, visualization_dict=None):
         # remove selection
+        assert frozenset(self.viewers_dict.iterkeys()) == frozenset(self.widgets_dict.iterkeys())
 
         new_sample = list(new_sample)
         old_sample = list(self.viewers_dict.keys())
+
+
 
         logger = logging.getLogger(__name__)
         logger.info("new sample: %s", new_sample)
@@ -1010,9 +1018,10 @@ class SampleOverview(QtGui.QMainWindow):
             viewer.initialize_widget()
             QtGui.QApplication.instance().processEvents()
 
-        self.sample_manager.current_sample = new_sample
         self.load_scalar_data(
             self.rational_index, self.nominal_index, force=True)
+
+        assert frozenset(new_viewers_dict.iterkeys()) == frozenset(new_widgets_dict.iterkeys())
         self.viewers_dict = new_viewers_dict
         self.widgets_dict = new_widgets_dict
         log.info("loading visualization dict:")
@@ -1050,6 +1059,8 @@ class SampleOverview(QtGui.QMainWindow):
             self.handle_sample_message(msg)
 
     def update_sample(self, new_sample):
+        if not self.initialized:
+            return
         log = logging.getLogger(__name__)
         log.info("new sample: %s" % new_sample)
         self.change_sample(list(new_sample))
