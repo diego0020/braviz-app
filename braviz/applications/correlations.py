@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
 from braviz.interaction.connection import MessageClient
-from interaction.qt_widgets import SampleManager
+from braviz.interaction.qt_widgets import SampleManager
 
 import numpy as np
 import seaborn as sns
@@ -62,6 +62,7 @@ class CorrelationMatrixFigure(FigureCanvas):
         self.full_df = None
         self.corr = None
         self.sample_manager = sample_manager
+        sample_manager.sample_changed.connect(self.update_sample)
 
         self.last_square = None;
         self.cmap = sns.blend_palette(["#00008B", "#6A5ACD", "#F0F8FF",
@@ -104,7 +105,7 @@ class CorrelationMatrixFigure(FigureCanvas):
             self.corr = None
         else:
             self.full_df = tab_data.get_data_frame_by_name(vars_list)
-            self.df = self.full_df.loc[self.sample].copy()
+            self.df = self.full_df.loc[self.sample_manager.current_sample].copy()
             self.corr = self.df.corr()
         self.on_draw()
 
@@ -133,9 +134,8 @@ class CorrelationMatrixFigure(FigureCanvas):
             self.SquareSelected.emit(df2)
             self.last_square = x_name, y_name
 
-    def set_sample(self, new_sample):
-        self.sample = list(new_sample)
-        self.df = self.full_df.loc[self.sample].copy()
+    def update_sample(self, _):
+        self.df = self.full_df.loc[self.sample_manager.current_sample].copy()
         self.on_draw()
         if self.last_square is not None:
             x_name, y_name = self.last_square
@@ -155,6 +155,7 @@ class RegFigure(FigureCanvas):
         self.mpl_connect("motion_notify_event", self.motion_to_pick)
         self.mpl_connect("pick_event", self.handle_pick_event)
         self.sample_manager=sample_manager
+        sample_manager.sample_changed.connect(self.update_sample)
         self.hidden_subjs = set()
         self.df = None
         self.df2 = None
@@ -167,6 +168,10 @@ class RegFigure(FigureCanvas):
         self.hidden_subjs.clear()
         if self.df is not None:
             self.re_draw_reg()
+        self.hidden_points_change.emit(len(self.hidden_subjs))
+
+    def update_sample(self, new_sample):
+        self.hidden_subjs -= new_sample
         self.hidden_points_change.emit(len(self.hidden_subjs))
 
     def draw_initial_message(self):
@@ -316,8 +321,7 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.ui = None
         self._message_client = MessageClient(server_broadcast, server_receive)
         self._message_client.message_received.connect(self.receive_message)
-        self.sample_manager = SampleManager(parent=self, message_client=self._message_client)
-        self.sample_manager.sample_changed.connect(self.update_sample)
+        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=tab_data.get_subjects())
         self.cor_mat = CorrelationMatrixFigure(self.sample_manager)
         self.reg_plot = RegFigure(self._message_client, self.sample_manager)
         self.vars_model = VarListModel(checkeable=True)
@@ -348,7 +352,7 @@ class CorrelationsApp(QtGui.QMainWindow):
         #sample
         self.ui.actionLoad_sample.triggered.connect(self.sample_manager.load_sample)
         self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
-        self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
+        self.ui.actionSend_sample.triggered.connect(self.send_reduced_sample)
         self.ui.actionRestore_sample.triggered.connect(self.reg_plot.clear_hidden_subjects)
         self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_sample)
 
@@ -359,12 +363,12 @@ class CorrelationsApp(QtGui.QMainWindow):
         if "sample" in msg:
             self.sample_manager.process_sample_message(msg)
 
+    def send_reduced_sample(self):
+        self.sample_manager.send_custom_sample(self.sample_manager.current_sample-self.reg_plot.hidden_subjs)
+
     def filter_list(self):
         mask = "%%%s%%" % self.ui.search_box.text()
         self.vars_model.update_list(mask)
-
-    def update_sample(self, new_sample):
-        self.cor_mat.set_sample(new_sample)
 
     def save_matrix(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
@@ -375,6 +379,8 @@ class CorrelationsApp(QtGui.QMainWindow):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
                                                              "Save Scatter", ".", "PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
         self.reg_plot.f.savefig(filename)
+
+
 
 if __name__ == "__main__":
     import sys

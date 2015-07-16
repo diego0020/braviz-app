@@ -30,14 +30,13 @@ import seaborn as sns
 import numpy as np
 
 import braviz
-from braviz.interaction.qt_widgets import ListValidator, ContrastComboManager
+from braviz.interaction.qt_widgets import ListValidator, ContrastComboManager, SampleManager
 import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
 from braviz.interaction.connection import MessageClient
-from interaction.sample_select import SampleLoadDialog
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
 from braviz.readAndFilter.config_file import get_config
 
@@ -54,8 +53,6 @@ class FmriExplorer(QtGui.QMainWindow):
 
         self.__reader = braviz.readAndFilter.BravizAutoReader()
 
-        self.__valid_ids = frozenset(str(i)
-                                     for i in braviz_tab_data.get_subjects())
         self.__current_subject = config.get_default_subject()
         self.__current_paradigm = None
         self.__current_contrast = 1
@@ -70,7 +67,6 @@ class FmriExplorer(QtGui.QMainWindow):
         self.three_d_widget = None
         self.image_view = None
         self.time_plot = None
-        self.start_ui()
 
         self._messages_client = None
         if server_broadcast_address is not None or server_receive_address is not None:
@@ -79,6 +75,13 @@ class FmriExplorer(QtGui.QMainWindow):
             self._messages_client.message_received.connect(
                 self.receive_message)
             log.info("started messages client")
+
+        all_subjs =  frozenset(str(i)
+                                     for i in braviz_tab_data.get_subjects())
+        self.sample_manager = SampleManager(parent=self, initial_sample=all_subjs, message_client=self._messages_client)
+        self.sample_manager.sample_changed.connect(self.change_sample)
+
+        self.start_ui()
 
         if scenario is None or scenario == 0:
             QtCore.QTimer.singleShot(0, self.load_initial_view)
@@ -121,9 +124,9 @@ class FmriExplorer(QtGui.QMainWindow):
         self.__contrast_combo_manager.contrast_changed.connect(self.update_fmri_data_view)
 
         # subject
-        self.ui.subj_completer = QtGui.QCompleter(list(self.__valid_ids))
+        self.ui.subj_completer = QtGui.QCompleter([str(i) for i in self.sample_manager.current_sample])
         self.ui.subject_edit.setCompleter(self.ui.subj_completer)
-        self.ui.subj_validator = ListValidator(self.__valid_ids)
+        self.ui.subj_validator = ListValidator([str(i) for i in self.sample_manager.current_sample])
         self.ui.subject_edit.setValidator(self.ui.subj_validator)
         self.ui.subject_edit.editingFinished.connect(
             self.update_fmri_data_view)
@@ -167,7 +170,7 @@ class FmriExplorer(QtGui.QMainWindow):
             self.timeline_aggregrate_combo)
 
         # menu
-        self.ui.actionSelect_Sample.triggered.connect(self.select_sample)
+        self.ui.actionSelect_Sample.triggered.connect(self.sample_manager.load_sample)
         self.ui.actionSave_scenario.triggered.connect(self.save_scenario)
         self.ui.actionLoad_scenario.triggered.connect(self.load_scenario)
         self.ui.actionFrozen_Table.triggered.connect(self.export_frozen_table)
@@ -192,7 +195,7 @@ class FmriExplorer(QtGui.QMainWindow):
     def update_fmri_data_view(self, dummy = None, broadcast_message = True):
         log = logging.getLogger(__name__)
         subj = str(self.ui.subject_edit.text())
-        if subj in self.__valid_ids:
+        if subj in self.sample_manager.current_sample:
             if self._messages_client is not None and subj != self.__current_subject and broadcast_message:
                 self._messages_client.send_message({'subject': subj})
             self.__current_subject = subj
@@ -345,7 +348,7 @@ class FmriExplorer(QtGui.QMainWindow):
             sbj = int(i[0])
             cx, cy, cz = i[1:4]
             s_img = sbj
-            progress = j / (len(self.__valid_ids)) * 100
+            progress = j / (len(self.sample_manager.current_sample)) * 100
             self.ui.progressBar.setValue(progress)
             QtCore.QCoreApplication.instance().processEvents()
             if i not in self.__frozen_points.index:
@@ -381,7 +384,7 @@ class FmriExplorer(QtGui.QMainWindow):
         contrast = str(self.ui.contrast_combo.currentText())
         if coords is None:
             return
-        subjs = self.__valid_ids
+        subjs = self.sample_manager.current_sample
         subj_coords = izip(subjs, repeat(x), repeat(y), repeat(z))
         self.batch_add_points(subj_coords, contrast)
 
@@ -389,7 +392,7 @@ class FmriExplorer(QtGui.QMainWindow):
         if self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count() - 2:
             params = {}
             dialog = qt_dialogs.SelectOneVariableWithFilter(
-                params, accept_real=False, sample=self.__valid_ids)
+                params, accept_real=False, sample=self.sample_manager.current_sample)
             res = dialog.exec_()
             if res == dialog.Accepted:
                 var_name = params.get("selected_outcome")
@@ -415,7 +418,7 @@ class FmriExplorer(QtGui.QMainWindow):
         else:
             df = braviz_tab_data.get_data_frame_by_name(var_name)
             df = df.set_index(df.index.astype(int))
-            df = df.loc[[int(i) for i in self.__valid_ids]]
+            df = df.loc[self.sample_manager.current_sample]
             series = df[var_name].astype(int)
             values = set(series.astype(int))
             values.add(None)
@@ -475,7 +478,7 @@ class FmriExplorer(QtGui.QMainWindow):
         import platform
         import os
 
-        state = {"sample": list(self.__valid_ids)}
+        state = {"sample": list(self.sample_manager.current_sample)}
         # sample
 
         # fMRI
@@ -537,7 +540,7 @@ class FmriExplorer(QtGui.QMainWindow):
         # fmri
         sample = wanted_state["sample"]
         if sample is not None:
-            self.change_sample(sample)
+            self.sample_manager.current_sample = sample
 
         fmri_state = wanted_state["fmri"]
         subj = fmri_state.get("subject")
@@ -629,28 +632,24 @@ class FmriExplorer(QtGui.QMainWindow):
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
         subj = msg.get("subject")
-        if subj is not None and subj in self.__valid_ids and subj != self.__current_subject:
+        if subj is not None and subj in self.sample_manager.current_sample and subj != self.__current_subject:
             self.ui.subject_edit.setText(subj)
             log.info("Changing to subj %s" % subj)
             self.update_fmri_data_view(broadcast_message=False)
+        if "sample" in msg:
+            self.sample_manager.process_sample_message(msg)
 
     def change_sample(self, new_sample):
         log = logging.getLogger(__name__)
         log.info("*sample changed*")
-        self.__valid_ids = {"%s" % s for s in new_sample}
+        valid_ids = {"%s" % s for s in new_sample}
         logger = logging.getLogger(__name__)
         logger.info("new sample: %s" % new_sample)
-        self.ui.subj_completer = QtGui.QCompleter(list(self.__valid_ids))
+        self.ui.subj_completer = QtGui.QCompleter(list(valid_ids))
         self.ui.subject_edit.setCompleter(self.ui.subj_completer)
-        self.ui.subj_validator = ListValidator(self.__valid_ids)
+        self.ui.subj_validator = ListValidator(valid_ids)
         self.ui.subject_edit.setValidator(self.ui.subj_validator)
 
-    def select_sample(self):
-        dialog = SampleLoadDialog()
-        res = dialog.exec_()
-        if res == dialog.Accepted:
-            new_sample = dialog.current_sample
-            self.change_sample(new_sample)
 
     def export_time_plot(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(

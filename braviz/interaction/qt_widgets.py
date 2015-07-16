@@ -39,6 +39,8 @@ from PyQt4 import QtGui
 from braviz.readAndFilter import tabular_data as braviz_tab_data, user_data as braviz_user_data, config_file
 from braviz.readAndFilter.tabular_data import get_var_name, is_variable_nominal, get_labels_dict, \
     get_data_frame_by_index, get_maximum_value, get_min_max_values
+from braviz.interaction import sample_select
+
 
 __author__ = 'Diego'
 
@@ -1097,14 +1099,13 @@ class SampleManager(QtCore.QObject):
         self.sample_message_policy = new_policy
 
     def load_sample(self):
-        import interaction.sample_select
         s_bc = None
         s_rcv = None
         if self._message_client is not None:
             s_bc = self._message_client.server_broadcast
             s_rcv = self._message_client.server_receive
 
-        dialog = interaction.sample_select.SampleLoadDialog(
+        dialog = sample_select.SampleLoadDialog(
             new__and_load=True,
             server_broadcast=s_bc,
             server_receive=s_rcv)
@@ -1114,14 +1115,13 @@ class SampleManager(QtCore.QObject):
             self.current_sample = new_sample
 
     def modify_sample(self):
-        import interaction.sample_select
         s_bc = None
         s_rcv = None
         if self._message_client is not None:
             s_bc = self._message_client.server_broadcast
             s_rcv = self._message_client.server_receive
 
-        interaction.sample_select.launch_sample_create_dialog(
+        sample_select.launch_sample_create_dialog(
             server_broadcast=s_bc,
             server_receive=s_rcv,
             parent_id=os.getpid(),
@@ -1134,6 +1134,14 @@ class SampleManager(QtCore.QObject):
             log.warning("Can't send message, no server found")
             return
         msg = {"sample": list(self.sample)}
+        self._message_client.send_message(msg)
+
+    def send_custom_sample(self, custom_sample):
+        if self._message_client is None:
+            log = logging.getLogger(__name__)
+            log.warning("Can't send message, no server found")
+            return
+        msg = {"sample": list(custom_sample)}
         self._message_client.send_message(msg)
 
     def configure_sample_policy_menu(self, parent_menu):
