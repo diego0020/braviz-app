@@ -30,11 +30,11 @@ import numpy as np
 
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 import braviz.interaction.qt_dialogs
-import braviz.applications.sample_select
+import interaction.sample_select
 from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, InteractionSelectDialog
 
 import braviz.interaction.r_functions
-from braviz.interaction.connection import MessageClient, MessageServer
+from braviz.interaction.connection import MessageClient
 from braviz.readAndFilter.config_file import get_config
 
 import braviz.interaction.qt_models as braviz_models
@@ -782,7 +782,7 @@ class AnovaApp(QMainWindow):
             self.update_main_plot(plot_name)
 
     def load_sample(self):
-        dialog = braviz.applications.sample_select.SampleLoadDialog(
+        dialog = interaction.sample_select.SampleLoadDialog(
             new__and_load=True,
             server_broadcast=self._message_client.server_broadcast,
             server_receive=self._message_client.server_receive)
@@ -815,14 +815,14 @@ class AnovaApp(QMainWindow):
     def modify_sample(self):
         self.ui.modify_sample_button.setEnabled(False)
         if self._message_client is not None:
-            braviz.applications.sample_select.launch_sample_create_dialog(
+            interaction.sample_select.launch_sample_create_dialog(
                 server_broadcast=self._message_client.server_broadcast,
                 server_receive=self._message_client.server_receive,
                 parent_id=os.getpid(),
                 sample=self.sample
             )
         else:
-            braviz.applications.sample_select.launch_sample_create_dialog(
+            interaction.sample_select.launch_sample_create_dialog(
                 sample=self.sample
             )
         QtCore.QTimer.singleShot(5000, lambda: self.ui.modify_sample_button.setEnabled(True))

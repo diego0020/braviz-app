@@ -38,7 +38,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
-from braviz.applications import sample_select
+from interaction import sample_select
 from braviz.interaction.connection import MessageClient
 
 import numpy as np

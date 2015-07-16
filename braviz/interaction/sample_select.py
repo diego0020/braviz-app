@@ -25,7 +25,6 @@ set_pyqt_api_2()
 
 __author__ = 'Diego'
 
-import braviz
 from braviz.interaction.qt_guis.new_sample_screen import Ui_NewSampleWindow
 from braviz.interaction.qt_guis.add_filter_dialog import Ui_AddFilterDialog
 from braviz.interaction.qt_guis.select_subsample_dialog import Ui_SelectSubsample

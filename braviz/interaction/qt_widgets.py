@@ -25,20 +25,20 @@ from functools import wraps
 from itertools import izip
 import itertools
 import logging
+import os
+
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import os
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 from braviz.readAndFilter import tabular_data as braviz_tab_data, user_data as braviz_user_data, config_file
 from braviz.readAndFilter.tabular_data import get_var_name, is_variable_nominal, get_labels_dict, \
     get_data_frame_by_index, get_maximum_value, get_min_max_values
-
-from PyQt4 import QtCore
-from PyQt4 import QtGui
 
 __author__ = 'Diego'
 
@@ -1096,14 +1096,14 @@ class SampleManager(QtCore.QObject):
         self.sample_message_policy = new_policy
 
     def load_sample(self):
-        import braviz.applications.sample_select
+        import interaction.sample_select
         s_bc = None
         s_rcv = None
         if self._message_client is not None:
             s_bc = self._message_client.server_broadcast
             s_rcv = self._message_client.server_receive
 
-        dialog = braviz.applications.sample_select.SampleLoadDialog(
+        dialog = interaction.sample_select.SampleLoadDialog(
             new__and_load=True,
             server_broadcast=s_bc,
             server_receive=s_rcv)
@@ -1113,14 +1113,14 @@ class SampleManager(QtCore.QObject):
             self.current_sample = new_sample
 
     def modify_sample(self):
-        import braviz.applications.sample_select
+        import interaction.sample_select
         s_bc = None
         s_rcv = None
         if self._message_client is not None:
             s_bc = self._message_client.server_broadcast
             s_rcv = self._message_client.server_receive
 
-        braviz.applications.sample_select.launch_sample_create_dialog(
+        interaction.sample_select.launch_sample_create_dialog(
             server_broadcast=s_bc,
             server_receive=s_rcv,
             parent_id=os.getpid(),

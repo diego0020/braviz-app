@@ -28,7 +28,7 @@ import PyQt4.QtCore as QtCore
 from braviz.interaction.qt_guis.parallel_coordinates import Ui_parallel_coordinates
 from braviz.interaction.qt_models import VarListModel
 from braviz.interaction.qt_dialogs import SelectOneVariableWithFilter
-from braviz.applications.sample_select import SampleLoadDialog
+from interaction.sample_select import SampleLoadDialog
 from braviz.readAndFilter.config_file import get_config
 
 import braviz.readAndFilter.tabular_data as braviz_tab_data

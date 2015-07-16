@@ -41,7 +41,6 @@ import pandas as pd
 
 from braviz.interaction.qt_guis.linear_reg import Ui_LinearModel
 import braviz.interaction.qt_dialogs
-import braviz.applications.sample_select
 from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectDialog,
                                            InteractionSelectDialog)
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget

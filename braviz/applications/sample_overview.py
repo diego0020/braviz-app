@@ -32,7 +32,7 @@ from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_guis.sample_overview import Ui_SampleOverview
 import braviz.interaction.qt_dialogs
 from braviz.readAndFilter.config_file import get_apps_config
-import braviz.applications.sample_select
+import interaction.sample_select
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.readAndFilter import user_data as braviz_user_data
@@ -1053,7 +1053,7 @@ class SampleOverview(QtGui.QMainWindow):
         self.re_arrange_viewers()
 
     def load_sample(self):
-        dialog = braviz.applications.sample_select.SampleLoadDialog(
+        dialog = interaction.sample_select.SampleLoadDialog(
             new__and_load=True,
             server_broadcast=None if self._message_client is None else self._message_client.server_broadcast,
             server_receive=None if self._message_client is None else self._message_client.server_receive,
@@ -1073,14 +1073,14 @@ class SampleOverview(QtGui.QMainWindow):
 
     def modify_sample(self):
         if self._message_client is not None:
-            braviz.applications.sample_select.launch_sample_create_dialog(
+            interaction.sample_select.launch_sample_create_dialog(
                 server_broadcast=self._message_client.server_broadcast,
                 server_receive=self._message_client.server_receive,
                 parent_id=os.getpid(),
                 sample=self.sample
             )
         else:
-            braviz.applications.sample_select.launch_sample_create_dialog(
+            interaction.sample_select.launch_sample_create_dialog(
                 sample=self.sample
             )
 

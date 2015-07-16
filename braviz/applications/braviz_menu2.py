@@ -32,7 +32,7 @@ __author__ = 'Diego'
 try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
     import braviz.interaction.qt_dialogs
-    import braviz.applications.sample_select
+    import interaction.sample_select
 except ImportError as e:
     import braviz.interaction.generate_qt_guis
 
@@ -142,7 +142,7 @@ class BravizMenu2(QtGui.QMainWindow):
         dialog.exec_()
 
     def launch_samples_dialog(self):
-        dialog = braviz.applications.sample_select.SampleLoadDialog(
+        dialog = interaction.sample_select.SampleLoadDialog(
             new__and_load=True,
             server_broadcast=self.messages_server.broadcast_address,
             server_receive=self.messages_server.receive_address

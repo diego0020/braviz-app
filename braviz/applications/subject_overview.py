@@ -39,7 +39,7 @@ from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, Structur
 from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
-from braviz.applications.sample_select import SampleLoadDialog
+from interaction.sample_select import SampleLoadDialog
 from braviz.readAndFilter.config_file import get_config
 from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, ImageComboBoxManager, \
     ContrastComboManager
@@ -557,14 +557,14 @@ class SubjectOverviewApp(QMainWindow):
     def modify_sample(self):
         self.ui.modify_sample_button.setEnabled(False)
         if self._messages_client is not None:
-            braviz.applications.sample_select.launch_sample_create_dialog(
+            interaction.sample_select.launch_sample_create_dialog(
                 server_broadcast=self._messages_client.server_broadcast,
                 server_receive=self._messages_client.server_receive,
                 parent_id=os.getpid(),
                 sample=self.sample
             )
         else:
-            braviz.applications.sample_select.launch_sample_create_dialog(
+            interaction.sample_select.launch_sample_create_dialog(
                 sample=self.sample
             )
         QtCore.QTimer.singleShot(5000, lambda: self.ui.modify_sample_button.setEnabled(True))
