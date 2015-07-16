@@ -1053,8 +1053,9 @@ class SampleManager(QtCore.QObject):
     """
     sample_changed = QtCore.pyqtSignal(frozenset)
 
-    def __init__(self, message_client=None, initial_sample=None):
-        super(SampleManager, self).__init__()
+    def __init__(self,parent, message_client=None, initial_sample=None):
+        assert isinstance(parent,QtGui.QWidget)
+        super(SampleManager, self).__init__(parent)
         if initial_sample is None:
             self._sample = set()
         else:
@@ -1165,7 +1166,7 @@ class SampleManager(QtCore.QObject):
 
     def _accept_samples(self):
         if self.sample_policy == "ask":
-            answer = QtGui.QMessageBox.question(
+            answer = QtGui.QMessageBox.question(self.parent(),
                 "Sample Received", "Accept sample?",
                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
                 QtGui.QMessageBox.Yes)

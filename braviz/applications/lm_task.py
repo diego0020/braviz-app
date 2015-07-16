@@ -91,7 +91,7 @@ class LinearModelApp(QMainWindow):
             self._message_client = None
 
         sample = braviz_tab_data.get_subjects()
-        self.sample_manager = SampleManager(message_client=self._message_client, initial_sample=sample)
+        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=sample)
         self.setup_gui()
 
     def setup_gui(self):
@@ -136,7 +136,8 @@ class LinearModelApp(QMainWindow):
         self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.sample_tree.customContextMenuRequested.connect(
             self.subject_details_from_tree)
-        self.ui.modify_sample_button.clicked.connect(self.sample_manager.modify_sample)
+
+        self.ui.modify_sample_button.clicked.connect(self.modify_with_delay)
         self.ui.modify_sample_button.setEnabled(True)
 
         self.ui.actionSave_scneario.triggered.connect(
@@ -152,6 +153,11 @@ class LinearModelApp(QMainWindow):
         self.ui.actionLoad_sample.triggered.connect(self.sample_manager.load_sample)
         self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
         self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
+
+    def modify_with_delay(self):
+        self.ui.modify_sample_button.setEnabled(False)
+        self.sample_manager.modify_sample()
+        QtCore.QTimer.singleShot(5000,lambda:self.ui.modify_sample_button.setEnabled(True))
 
     def dispatch_outcome_select(self):
 
