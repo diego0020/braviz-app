@@ -521,17 +521,6 @@ class SubjectOverviewApp(QMainWindow):
         if "sample" in msg:
             self.handle_sample_message(msg)
 
-    def load_sample(self):
-        dialog = SampleLoadDialog()
-        res = dialog.exec_()
-        log = logging.getLogger(__name__)
-        if res == dialog.Accepted:
-            new_sample = dialog.current_sample
-            log.info("*sample changed*")
-            logger = logging.getLogger(__name__)
-            logger.info("new sample: %s" % new_sample)
-            self.change_sample(new_sample)
-
     def change_sample(self, new_sample):
         self.sample = sorted(new_sample)
 
@@ -545,77 +534,6 @@ class SubjectOverviewApp(QMainWindow):
         self.subjects_model.set_sample(self.sample)
         # update context frame
         self.context_frame.set_sample(self.sample)
-
-    def send_sample(self):
-        if self._messages_client is None:
-            log = logging.getLogger(__name__)
-            log.warning("Can't send message, no menu found")
-            return
-        msg = {"sample" : list(self.sample)}
-        self._messages_client.send_message(msg)
-
-    def modify_sample(self):
-        self.ui.modify_sample_button.setEnabled(False)
-        if self._messages_client is not None:
-            interaction.sample_select.launch_sample_create_dialog(
-                server_broadcast=self._messages_client.server_broadcast,
-                server_receive=self._messages_client.server_receive,
-                parent_id=os.getpid(),
-                sample=self.sample
-            )
-        else:
-            interaction.sample_select.launch_sample_create_dialog(
-                sample=self.sample
-            )
-        QtCore.QTimer.singleShot(5000, lambda: self.ui.modify_sample_button.setEnabled(True))
-
-    def handle_sample_message(self, msg):
-        sample = msg.get("sample", tuple())
-        target = msg.get("target")
-        if target is not None:
-            accept = target == os.getpid()
-        else:
-            accept = self.accept_samples()
-        if accept:
-            self.change_sample(sample)
-
-    def accept_samples(self):
-        if self.sample_message_policy == "ask":
-            answer = QtGui.QMessageBox.question(
-                self, "Sample Received", "Accept sample?",
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
-                QtGui.QMessageBox.Yes)
-            if answer == QtGui.QMessageBox.Yes:
-                return True
-            elif answer == QtGui.QMessageBox.YesToAll:
-                self.update_samples_policy("always")
-                return True
-            elif answer == QtGui.QMessageBox.No:
-                return False
-            elif answer == QtGui.QMessageBox.NoToAll:
-                self.update_samples_policy("never")
-                return False
-        elif self.sample_message_policy == "always":
-            return True
-        else:
-            return False
-
-    def update_samples_policy(self, item):
-        if item == "ask":
-            self.ui.actionAlways.setChecked(False)
-            self.ui.actionNever.setChecked(False)
-            self.ui.actionAsk.setChecked(True)
-        elif item == "never":
-            self.ui.actionAlways.setChecked(False)
-            self.ui.actionNever.setChecked(True)
-            self.ui.actionAsk.setChecked(False)
-        elif item == "always":
-            self.ui.actionAlways.setChecked(True)
-            self.ui.actionNever.setChecked(False)
-            self.ui.actionAsk.setChecked(False)
-        else:
-            assert False
-        self.sample_message_policy = item
 
     def launch_details_variable_select_dialog(self):
         params = {}

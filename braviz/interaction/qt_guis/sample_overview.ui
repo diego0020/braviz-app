@@ -29,16 +29,7 @@
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="9,1">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
+       <property name="margin">
         <number>0</number>
        </property>
        <item>
@@ -79,16 +70,7 @@
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
+       <property name="margin">
         <number>0</number>
        </property>
        <item>
@@ -240,7 +222,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -251,9 +233,6 @@
      <property name="title">
       <string>Accept samples</string>
      </property>
-     <addaction name="actionAsk"/>
-     <addaction name="actionAlways"/>
-     <addaction name="actionNever"/>
     </widget>
     <addaction name="action_save_scenario"/>
     <addaction name="action_load_scenario"/>
@@ -301,33 +280,6 @@
   <action name="actionSend_sample">
    <property name="text">
     <string>Send sample</string>
-   </property>
-  </action>
-  <action name="actionAsk">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Ask</string>
-   </property>
-  </action>
-  <action name="actionAlways">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Always</string>
-   </property>
-  </action>
-  <action name="actionNever">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Never</string>
    </property>
   </action>
  </widget>

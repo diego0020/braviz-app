@@ -67,7 +67,6 @@
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <zorder>reg_frame</zorder>
      </widget>
     </item>
     <item>
@@ -171,9 +170,6 @@
      <property name="title">
       <string>Accept sample</string>
      </property>
-     <addaction name="actionAsk"/>
-     <addaction name="actionAlways"/>
-     <addaction name="actionNever"/>
     </widget>
     <addaction name="separator"/>
     <addaction name="actionSave_Matrix"/>
@@ -232,33 +228,6 @@
    </property>
    <property name="toolTip">
     <string>Send Sample (removed points will be omited)</string>
-   </property>
-  </action>
-  <action name="actionAsk">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Ask</string>
-   </property>
-  </action>
-  <action name="actionAlways">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Always</string>
-   </property>
-  </action>
-  <action name="actionNever">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Never</string>
    </property>
   </action>
  </widget>

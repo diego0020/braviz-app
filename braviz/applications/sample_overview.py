@@ -1044,93 +1044,13 @@ class SampleOverview(QtGui.QMainWindow):
         if "sample" in msg:
             self.handle_sample_message(msg)
 
-    def set_sample(self, new_sample):
+    def update_sample(self, new_sample):
         log = logging.getLogger(__name__)
         log.info("new sample: %s" % new_sample)
         self.change_sample(list(new_sample))
         self.load_scalar_data(
             self.rational_index, self.nominal_index, force=True)
         self.re_arrange_viewers()
-
-    def load_sample(self):
-        dialog = interaction.sample_select.SampleLoadDialog(
-            new__and_load=True,
-            server_broadcast=None if self._message_client is None else self._message_client.server_broadcast,
-            server_receive=None if self._message_client is None else self._message_client.server_receive,
-        )
-        res = dialog.exec_()
-        if res == dialog.Accepted:
-            new_sample = dialog.current_sample
-            self.set_sample(new_sample)
-
-    def send_sample(self):
-        if self._message_client is None:
-            log = logging.getLogger(__name__)
-            log.warning("Can't send message, no menu found")
-            return
-        msg = {"sample" : list(self.sample)}
-        self._message_client.send_message(msg)
-
-    def modify_sample(self):
-        if self._message_client is not None:
-            interaction.sample_select.launch_sample_create_dialog(
-                server_broadcast=self._message_client.server_broadcast,
-                server_receive=self._message_client.server_receive,
-                parent_id=os.getpid(),
-                sample=self.sample
-            )
-        else:
-            interaction.sample_select.launch_sample_create_dialog(
-                sample=self.sample
-            )
-
-    def handle_sample_message(self, msg):
-        sample = msg.get("sample", tuple())
-        target = msg.get("target")
-        if target is not None:
-            accept = target == os.getpid()
-        else:
-            accept = self.accept_samples(len(sample))
-        if accept:
-            self.set_sample(sample)
-
-    def accept_samples(self, sample_size):
-        if self.sample_message_policy == "ask":
-            answer = QtGui.QMessageBox.question(
-                self, "Sample Received", "Size=%d\nAccept sample?"%sample_size,
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
-                QtGui.QMessageBox.Yes)
-            if answer == QtGui.QMessageBox.Yes:
-                return True
-            elif answer == QtGui.QMessageBox.YesToAll:
-                self.update_samples_policy("always")
-                return True
-            elif answer == QtGui.QMessageBox.No:
-                return False
-            elif answer == QtGui.QMessageBox.NoToAll:
-                self.update_samples_policy("never")
-                return False
-        elif self.sample_message_policy == "always":
-            return True
-        else:
-            return False
-
-    def update_samples_policy(self, item):
-        if item == "ask":
-            self.ui.actionAlways.setChecked(False)
-            self.ui.actionNever.setChecked(False)
-            self.ui.actionAsk.setChecked(True)
-        elif item == "never":
-            self.ui.actionAlways.setChecked(False)
-            self.ui.actionNever.setChecked(True)
-            self.ui.actionAsk.setChecked(False)
-        elif item == "always":
-            self.ui.actionAlways.setChecked(True)
-            self.ui.actionNever.setChecked(False)
-            self.ui.actionAsk.setChecked(False)
-        else:
-            assert False
-        self.sample_message_policy = item
 
     def save_figure(self):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(self,
