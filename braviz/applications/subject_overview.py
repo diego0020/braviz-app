@@ -91,7 +91,9 @@ class SubjectOverviewApp(QMainWindow):
         self.__demo_timer = QtCore.QTimer()
         self.__demo_timer.timeout.connect(self.go_to_next_subject)
         sample = braviz_tab_data.get_subjects()
-        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=sample)
+        self.sample_manager = SampleManager(parent=self, message_client=self._messages_client
+                                            , initial_sample=sample)
+        self.sample_manager.sample_changed.connect(self.update_sample)
 
         self.__frozen_subject = False
         self.__previous_subject = None
@@ -156,9 +158,9 @@ class SubjectOverviewApp(QMainWindow):
 
         # subject fast controls
         self.ui.subject_completer = QtGui.QCompleter(
-            [str(s) for s in self.sample])
+            [str(s) for s in self.sample_manager.current_sample])
         self.ui.subject_id.setCompleter(self.ui.subject_completer)
-        self.ui.subj_validator = ListValidator([str(s) for s in self.sample])
+        self.ui.subj_validator = ListValidator([str(s) for s in self.sample_manager.current_sample])
         self.ui.subject_id.setValidator(self.ui.subj_validator)
         self.ui.subject_id.editingFinished.connect(
             self.subject_from_subj_id_editor)
@@ -174,7 +176,7 @@ class SubjectOverviewApp(QMainWindow):
             self.launch_subject_variable_select_dialog)
         self.ui.subjects_table.activated.connect(self.change_subject)
         self.ui.modify_sample_button.clicked.connect(
-            self.modify_sample)
+            self.sample_manager.modify_sample)
 
         # subject details
         self.ui.subject_details_table.setModel(self.subject_details_model)
@@ -300,7 +302,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
         self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
 
-        self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_samples)
+        self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_sample)
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -518,27 +520,26 @@ class SubjectOverviewApp(QMainWindow):
         if subj is not None:
             self.change_subject(subj, broadcast_message=False)
         if "sample" in msg:
-            self.handle_sample_message(msg)
+            self.sample_manager.process_sample_message(msg)
 
-    def change_sample(self, new_sample):
-        self.sample = sorted(new_sample)
+    def update_sample(self, _):
 
         # update subject selection widget
         self.ui.subject_completer = QtGui.QCompleter(
-            [str(s) for s in self.sample])
+            [str(s) for s in self.sample_manager.current_sample])
         self.ui.subject_id.setCompleter(self.ui.subject_completer)
-        self.ui.subj_validator = ListValidator([str(s) for s in self.sample])
+        self.ui.subj_validator = ListValidator([str(s) for s in self.sample_manager.current_sample])
         self.ui.subject_id.setValidator(self.ui.subj_validator)
 
-        self.subjects_model.set_sample(self.sample)
+        self.subjects_model.set_sample(self.sample_manager.current_sample)
         # update context frame
-        self.context_frame.set_sample(self.sample)
+        self.context_frame.set_sample(self.sample_manager.current_sample)
 
     def launch_details_variable_select_dialog(self):
         params = {}
         initial_selection = self.subject_details_model.get_current_variables()
         dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_idx=initial_selection,
-                                             sample=self.sample)
+                                             sample=self.sample_manager.current_sample)
         dialog.exec_()
         new_selection = params.get("checked")
         if new_selection is not None:
@@ -900,7 +901,7 @@ class SubjectOverviewApp(QMainWindow):
         subject_state["current_subject"] = int(self.__curent_subject)
         subject_state["model_columns"] = tuple(
             self.subjects_model.get_current_column_indexes())
-        subject_state["sample"] = tuple(self.sample)
+        subject_state["sample"] = self.sample_manager.current_sample
         state["subject_state"] = subject_state
 
         # details panel

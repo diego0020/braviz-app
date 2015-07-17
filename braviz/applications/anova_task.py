@@ -567,7 +567,7 @@ class AnovaApp(QMainWindow):
             log.info("showing subject %s" % subj)
             self.add_subjects_to_plot(subject_ids=(int(subj),))
         if "sample" in msg:
-            self.handle_sample_message(msg)
+            self.sample_manager.process_sample_message(msg)
 
     def handle_box_outlier_pick(self, u, position):
         # print "received signal"

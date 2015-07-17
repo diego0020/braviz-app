@@ -1056,7 +1056,7 @@ class SampleOverview(QtGui.QMainWindow):
         if subj is not None:
             self.locate_subj(subj)
         if "sample" in msg:
-            self.handle_sample_message(msg)
+            self.sample_manager.process_sample_message(msg)
 
     def update_sample(self, new_sample):
         if not self.initialized:
