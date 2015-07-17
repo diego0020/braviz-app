@@ -1225,6 +1225,7 @@ class SubjectsTable(QAbstractTableModel):
         self.__labels = None
         self.__col_indexes = None
         self.__highlight_subject = None
+        self.sort_column = None
         self.sample = sample
         if sample is None:
             self.sample = braviz_tab_data.get_subjects()
@@ -1281,12 +1282,21 @@ class SubjectsTable(QAbstractTableModel):
         else:
             return None
 
-    def sort(self, p_int, Qt_SortOrder_order=None):
+    def sort(self, p_int=None, Qt_SortOrder_order=None):
         reverse = False
+        if p_int is None:
+            sort_column = self.sort_column
+        else:
+            sort_column = self.__df.columns[p_int]
+        if sort_column is None:
+            sort_column = self.__df.columns[0]
+
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             reverse = True
+
+        self.modelAboutToBeReset.emit()
         self.__df.sort(
-            self.__df.columns[p_int], ascending=reverse, inplace=True)
+            sort_column , ascending=reverse, inplace=True)
         self.modelReset.emit()
 
     def set_var_columns(self, columns):
@@ -1319,10 +1329,11 @@ class SubjectsTable(QAbstractTableModel):
         Set the subsample of subjects in the table
 
         Args:
-            new_sample (list) : List of subject ids
+            new_sample (set) : List of subject ids
         """
-        self.sample = new_sample
+        self.sample = list(new_sample)
         self.set_var_columns(self.__col_indexes)
+        self.sort()
 
     def get_current_columns(self):
         """

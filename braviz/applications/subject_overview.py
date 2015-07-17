@@ -42,7 +42,8 @@ from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, BundleSel
 
 from braviz.readAndFilter.config_file import get_config
 from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, ImageComboBoxManager, \
-    ContrastComboManager, SampleManager
+    ContrastComboManager
+from interaction.sample_select import SampleManager
 
 from braviz.interaction.connection import MessageClient
 import cPickle

@@ -52,7 +52,8 @@ import os
 import platform
 
 import logging
-from braviz.interaction.qt_widgets import MatplotWidget, SampleManager
+from braviz.interaction.qt_widgets import MatplotWidget
+from interaction.sample_select import SampleManager
 from braviz.utilities import launch_sub_process
 
 __author__ = 'Diego'
@@ -795,6 +796,7 @@ class AnovaApp(QMainWindow):
         else:
             self.update_main_plot(self.plot_var_name)
         self.get_missing_values()
+        self.update_main_plot()
 
 
     def save_figure(self):

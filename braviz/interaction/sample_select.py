@@ -689,3 +689,148 @@ if __name__ == "__main__":
     except Exception as e:
         log = logging.getLogger(__name__)
         log.exception(e)
+
+
+class SampleManager(QtCore.QObject):
+    """
+    Reusable component for handling sample messages and sample changes in a BRAVIZ application
+    """
+    sample_changed = QtCore.pyqtSignal(frozenset)
+
+    def __init__(self,parent, message_client=None, initial_sample=None):
+        assert isinstance(parent,QtGui.QWidget)
+        super(SampleManager, self).__init__(parent)
+        if initial_sample is None:
+            self._sample = set()
+        else:
+            self._sample = set(initial_sample)
+
+        self._sample_policy = "ask"
+        self._message_client = message_client
+        self._menu_actions = {}
+
+    @property
+    def current_sample(self):
+        return frozenset(self._sample)
+
+    @current_sample.setter
+    def current_sample(self, new_sample):
+        self._sample = set(new_sample)
+        self.sample_changed.emit(frozenset(self._sample))
+
+    @property
+    def sample_policy(self):
+        return self._sample_policy
+
+    @sample_policy.setter
+    def sample_policy(self, new_policy):
+        self._update_sample_policy_menu(new_policy)
+
+    def _update_sample_policy_menu(self, new_policy):
+        if new_policy in {"ask", "never", "always"}:
+            self._sample_policy = new_policy
+        else:
+            raise ValueError("Valid sample policies are 'ask', 'always' and 'never'")
+
+        for k, v in self._menu_actions.iteritems():
+            if k == new_policy:
+                v.setChecked(True)
+            else:
+                v.setChecked(False)
+
+        self.sample_message_policy = new_policy
+
+    def load_sample(self):
+        s_bc = None
+        s_rcv = None
+        if self._message_client is not None:
+            s_bc = self._message_client.server_broadcast
+            s_rcv = self._message_client.server_receive
+
+        dialog = SampleLoadDialog(
+            new__and_load=True,
+            server_broadcast=s_bc,
+            server_receive=s_rcv)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            new_sample = dialog.current_sample
+            self.current_sample = new_sample
+
+    def modify_sample(self):
+        s_bc = None
+        s_rcv = None
+        if self._message_client is not None:
+            s_bc = self._message_client.server_broadcast
+            s_rcv = self._message_client.server_receive
+
+        launch_sample_create_dialog(
+            server_broadcast=s_bc,
+            server_receive=s_rcv,
+            parent_id=os.getpid(),
+            sample=self.current_sample
+        )
+
+    def send_sample(self):
+        if self._message_client is None:
+            log = logging.getLogger(__name__)
+            log.warning("Can't send message, no server found")
+            return
+        msg = {"sample": list(self._sample)}
+        self._message_client.send_message(msg)
+
+    def send_custom_sample(self, custom_sample):
+        if self._message_client is None:
+            log = logging.getLogger(__name__)
+            log.warning("Can't send message, no server found")
+            return
+        msg = {"sample": list(custom_sample)}
+        self._message_client.send_message(msg)
+
+    def configure_sample_policy_menu(self, parent_menu):
+        assert isinstance(parent_menu, QtGui.QMenu)
+        self._menu_actions["ask"] = QtGui.QAction("Ask", parent_menu)
+        self._menu_actions["never"] = QtGui.QAction("Never", parent_menu)
+        self._menu_actions["always"] = QtGui.QAction("Always", parent_menu)
+
+        self._menu_actions["ask"].triggered.connect(lambda: self._update_sample_policy_menu("ask"))
+        self._menu_actions["never"].triggered.connect(lambda: self._update_sample_policy_menu("never"))
+        self._menu_actions["always"].triggered.connect(lambda: self._update_sample_policy_menu("always"))
+
+        for a in self._menu_actions.itervalues():
+            a.setCheckable(True)
+
+        for k in ["ask", "never", "always"]:
+            parent_menu.addAction(self._menu_actions[k])
+
+        self._update_sample_policy_menu(self.sample_policy)
+
+    def process_sample_message(self, msg):
+        sample = msg.get("sample", tuple())
+        target = msg.get("target")
+        if target is not None:
+            accept = target == os.getpid()
+        else:
+            accept = self._accept_samples()
+        if accept:
+            self.current_sample = sample
+
+    def _accept_samples(self):
+        if self.sample_policy == "ask":
+            answer = QtGui.QMessageBox.question(self.parent(),
+                "Sample Received", "Accept sample?",
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
+                QtGui.QMessageBox.Yes)
+            if answer == QtGui.QMessageBox.Yes:
+                return True
+            elif answer == QtGui.QMessageBox.YesToAll:
+                self.sample_policy = "always"
+                return True
+            elif answer == QtGui.QMessageBox.No:
+                return False
+            elif answer == QtGui.QMessageBox.NoToAll:
+                self.sample_policy = "never"
+                return False
+        elif self.sample_policy == "always":
+            return True
+        else:
+            return False

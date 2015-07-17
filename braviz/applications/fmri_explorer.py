@@ -30,7 +30,8 @@ import seaborn as sns
 import numpy as np
 
 import braviz
-from braviz.interaction.qt_widgets import ListValidator, ContrastComboManager, SampleManager
+from braviz.interaction.qt_widgets import ListValidator, ContrastComboManager
+from interaction.sample_select import SampleManager
 import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
 from braviz.readAndFilter import tabular_data as braviz_tab_data

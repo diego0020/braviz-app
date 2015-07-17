@@ -45,7 +45,7 @@ import datetime
 import functools
 
 from braviz.interaction.connection import MessageClient
-from braviz.interaction.qt_widgets import SampleManager
+from interaction.sample_select import SampleManager
 
 if braviz.readAndFilter.PROJECT == "kmc40":
     SAMPLE_SIZE = 0.3
