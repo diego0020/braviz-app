@@ -14,14 +14,13 @@ Prerequisites:
 Python packages:
 
 - vtk
-- PyQy4
+- PyQt4
 - matplotlib
 - nibabel
 - numpy
 - scipy
 - pandas
 - psutil
-- matplotlib
 - seaborn
 - pyzmq
 - rpy2 (for anova, linear model)
