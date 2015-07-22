@@ -30,7 +30,9 @@ __author__ = 'Diego'
 
 class NpJSONEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, pd.Int64Index):
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        elif isinstance(o, pd.Int64Index):
             return o.to_native_types()
         elif isinstance(o, np.number):
             if isinstance(o, np.integer):

@@ -97,7 +97,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         if sample_idx is not None:
             sample = sorted(user_data.get_sample_data(sample_idx))
         else:
-            sample = data.index
+            sample = data.index.get_values()
 
         sample_json = json.dumps(sample, cls=NpJSONEncoder)
         data2 = data.dropna()

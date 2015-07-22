@@ -30,7 +30,7 @@ import numpy as np
 
 from braviz.interaction.qt_guis.anova import Ui_Anova_gui
 import braviz.interaction.qt_dialogs
-import interaction.sample_select
+import braviz.interaction.sample_select
 from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, InteractionSelectDialog
 
 import braviz.interaction.r_functions
