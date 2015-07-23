@@ -6,6 +6,7 @@ from braviz.readAndFilter.filter_fibers import FilterBundleWithSphere, extract_p
 
 import vtk
 import numpy as np
+
 configure_logger_from_conf()
 cfg = config_file.get_apps_config()
 subj = cfg.get_default_subject()
