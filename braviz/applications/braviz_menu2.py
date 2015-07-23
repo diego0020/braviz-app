@@ -26,14 +26,14 @@ import logging
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from braviz.utilities import launch_sub_process
+import braviz.interaction
+import braviz.interaction.qt_dialogs
+import braviz.interaction.sample_select
 
 __author__ = 'Diego'
 
 try:
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
-    import braviz.interaction
-    import braviz.interaction.qt_dialogs
-    import interaction.sample_select
 except ImportError as e:
     import braviz.interaction.generate_qt_guis
 
@@ -41,6 +41,8 @@ except ImportError as e:
     print(e.message)
     print("Maybe needs to update gui, please try to load again")
     _ = raw_input("press enter to quit")
+
+
 
 
 class BravizMenu2(QtGui.QMainWindow):
@@ -143,7 +145,7 @@ class BravizMenu2(QtGui.QMainWindow):
         dialog.exec_()
 
     def launch_samples_dialog(self):
-        dialog = interaction.sample_select.SampleLoadDialog(
+        dialog = braviz.interaction.sample_select.SampleLoadDialog(
             new__and_load=True,
             server_broadcast=self.messages_server.broadcast_address,
             server_receive=self.messages_server.receive_address

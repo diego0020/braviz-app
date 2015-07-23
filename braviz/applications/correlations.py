@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
 from braviz.interaction.connection import MessageClient
-from interaction.sample_select import SampleManager
+from braviz.interaction.sample_select import SampleManager
 
 import numpy as np
 import seaborn as sns

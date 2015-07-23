@@ -235,7 +235,6 @@ class MatplotWidget(FigureCanvas):
         self.axes.yaxis.set_label_position("right")
         # print "urls:" ,urls
         if data2 is None:
-            np.random.seed(982356032)
             data2 = np.random.rand(len(data))
             self.axes.tick_params(
                 'y', left='off', labelleft='off', labelright='off', right="off")

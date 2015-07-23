@@ -46,7 +46,7 @@ from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectD
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 import braviz.interaction.r_functions
 import braviz.interaction.qt_models as braviz_models
-from interaction.sample_select import SampleManager
+from braviz.interaction.sample_select import SampleManager
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.connection import MessageClient, MessageServer
