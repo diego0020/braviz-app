@@ -188,7 +188,7 @@ class SimpleVtkViewer(object):
         self.pd_actors = []
 
 
-def save_ren_win_picture(ren_win, file_name):
+def save_ren_win_picture(ren_win, file_name, magnification=1):
     """
     Saves an screenshot of a render window
 
@@ -198,6 +198,7 @@ def save_ren_win_picture(ren_win, file_name):
     """
     ren2img = vtk.vtkWindowToImageFilter()
     ren2img.SetInput(ren_win)
+    ren2img.SetMagnification(magnification)
     ren2img.Update()
     writer = vtk.vtkPNGWriter()
     writer.SetFileName(file_name)

@@ -227,7 +227,6 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.fmri_show_contours_value.valueChanged.connect(
             self.fmri_update_contours)
 
-
         # segmentation controls
         self.ui.structures_tree.setModel(self.structures_tree_model)
         self.connect(self.structures_tree_model, QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
@@ -244,6 +243,7 @@ class SubjectOverviewApp(QMainWindow):
             self.update_segmentation_scalar)
         self.ui.export_segmentation_to_db.clicked.connect(
             self.export_segmentation_scalars_to_db)
+
         # tractography controls
         self.ui.fibers_from_segments_box.currentIndexChanged.connect(
             self.show_fibers_from_segment)
@@ -297,6 +297,7 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.actionLoad_scenario.triggered.connect(
             self.load_scenario_dialog)
         self.ui.actionAuto_loop.toggled.connect(self.toggle_demo_mode)
+        self.ui.actionTake_screenshot.triggered.connect(self.take_screenshot)
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
         self.ui.actionLoad_sample.triggered.connect(self.sample_manager.load_sample)
@@ -1016,6 +1017,17 @@ class SubjectOverviewApp(QMainWindow):
         log.info(file_path)
         save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
 
+    def take_screenshot(self):
+        file_name = QtGui.QFileDialog.getSaveFileName(self, "Save screenshot", "","PNG Image (*.png)")
+        if file_name:
+            if not file_name[-4:].lower() == ".png":
+                file_name+=".png"
+            save_ren_win_picture(self.vtk_viewer.ren_win, file_name,4)
+        else:
+            print "cancelled"
+
+
+
     def load_scenario_dialog(self):
         wanted_state = dict()
         my_name = os.path.splitext(os.path.basename(__file__))[0]
@@ -1056,7 +1068,7 @@ class SubjectOverviewApp(QMainWindow):
                 self.subjects_model.set_var_columns(model_cols)
             sample = subject_state.get("sample")
             if sample is not None:
-                self.change_sample(sample)
+                self.sample_manager.current_sample=sample
 
         # details panel
         detail_state = wanted_state.get("details_state")
