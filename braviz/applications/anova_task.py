@@ -53,7 +53,7 @@ import platform
 
 import logging
 from braviz.interaction.qt_widgets import MatplotWidget
-from interaction.sample_select import SampleManager
+from braviz.interaction.sample_select import SampleManager
 from braviz.utilities import launch_sub_process
 
 __author__ = 'Diego'

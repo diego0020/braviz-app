@@ -57,7 +57,7 @@ class SampleLoadDialog(QtGui.QDialog):
         server_receive (str): Will be passed to child SampleCreateDilogs
     """
 
-    def __init__(self, new__and_load=True, server_broadcast=None, server_receive=None):
+    def __init__(self, new__and_load=True, server_broadcast=None, server_receive=None, parent=None):
         super(SampleLoadDialog, self).__init__()
         self.model = SamplesSelectionModel()
         self.ui = Ui_LoadSampleDialog()
@@ -72,6 +72,7 @@ class SampleLoadDialog(QtGui.QDialog):
         self.refresh_list_timer.timeout.connect(self.model.reload)
         self.server_bcst = server_broadcast
         self.server_rcv = server_receive
+        self._parent = parent
 
         # check for new subsamples each 5 seconds
         self.refresh_list_timer.start(5000)
@@ -88,6 +89,7 @@ class SampleLoadDialog(QtGui.QDialog):
             self.new_button.setToolTip("Define a new sub sample")
 
             def launch_new_sample_sub_process():
+                parent = self._parent
                 if server_broadcast is not None and server_receive is not None:
                     launch_sample_create_dialog(
                         server_broadcast=server_broadcast,
@@ -708,6 +710,8 @@ class SampleManager(QtCore.QObject):
         self._sample_policy = "ask"
         self._message_client = message_client
         self._menu_actions = {}
+        self.__accept_dialog = None
+        self.__last_sample = None
 
     @property
     def current_sample(self):
@@ -750,7 +754,8 @@ class SampleManager(QtCore.QObject):
         dialog = SampleLoadDialog(
             new__and_load=True,
             server_broadcast=s_bc,
-            server_receive=s_rcv)
+            server_receive=s_rcv,
+            parent=os.getpid())
         res = dialog.exec_()
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
@@ -808,29 +813,50 @@ class SampleManager(QtCore.QObject):
         sample = msg.get("sample", tuple())
         target = msg.get("target")
         if target is not None:
-            accept = target == os.getpid()
+            accept_now = target == os.getpid()
         else:
-            accept = self._accept_samples()
-        if accept:
+            accept_now = self._accept_samples(sample)
+        if accept_now:
             self.current_sample = sample
 
-    def _accept_samples(self):
+    def _accept_samples(self, sample):
         if self.sample_policy == "ask":
-            answer = QtGui.QMessageBox.question(self.parent(),
-                "Sample Received", "Accept sample?",
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
-                QtGui.QMessageBox.Yes)
-            if answer == QtGui.QMessageBox.Yes:
-                return True
-            elif answer == QtGui.QMessageBox.YesToAll:
-                self.sample_policy = "always"
-                return True
-            elif answer == QtGui.QMessageBox.No:
-                return False
-            elif answer == QtGui.QMessageBox.NoToAll:
-                self.sample_policy = "never"
-                return False
+            # The sample change is delayed until the dialog resolves
+            self._show_accept_dialog(sample)
+            return False
         elif self.sample_policy == "always":
             return True
         else:
             return False
+
+    def _show_accept_dialog(self, sample):
+        self.__last_sample = sample
+        message = "Sample Received\nSize = %d\nAccept?"%len(sample)
+        if self.__accept_dialog is None:
+
+            self.__accept_dialog = QtGui.QMessageBox(QtGui.QMessageBox.Question,
+                "Sample Received", message,
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.NoToAll,
+                self.parent())
+            self.__accept_dialog.setDefaultButton(QtGui.QMessageBox.Yes)
+            self.__accept_dialog.setWindowModality(QtCore.Qt.ApplicationModal)
+            self.__accept_dialog.finished.connect(self._resolve_accept_dialog)
+            self.__accept_dialog.show()
+        else:
+            self.__accept_dialog.setText(message)
+
+    def _resolve_accept_dialog(self, answer):
+        set_sample = None
+        if answer == QtGui.QMessageBox.Yes:
+            set_sample = True
+        elif answer == QtGui.QMessageBox.YesToAll:
+            self.sample_policy = "always"
+            set_sample = True
+        elif answer == QtGui.QMessageBox.No:
+            set_sample = False
+        elif answer == QtGui.QMessageBox.NoToAll:
+            self.sample_policy = "never"
+            set_sample = False
+        self.__accept_dialog = None
+        if set_sample:
+            self.current_sample = self.__last_sample
