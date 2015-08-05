@@ -148,7 +148,8 @@ class BravizMenu2(QtGui.QMainWindow):
         dialog = braviz.interaction.sample_select.SampleLoadDialog(
             new__and_load=True,
             server_broadcast=self.messages_server.broadcast_address,
-            server_receive=self.messages_server.receive_address
+            server_receive=self.messages_server.receive_address,
+            parent=None
         )
         dialog.exec_()
         return
