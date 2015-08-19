@@ -33,6 +33,7 @@ import os
 
 # import vtk modules.
 import vtk
+import vtk.web
 from vtk.web import protocols, server
 from vtk.web import wamp as vtk_wamp
 

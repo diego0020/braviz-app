@@ -34,7 +34,7 @@ import braviz.interaction.sample_select
 from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, InteractionSelectDialog
 
 import braviz.interaction.r_functions
-from braviz.interaction.connection import MessageClient
+from braviz.interaction.connection import MessageClient, create_log_message
 from braviz.readAndFilter.config_file import get_config
 
 import braviz.interaction.qt_models as braviz_models
@@ -47,7 +47,7 @@ import seaborn as sns
 from itertools import izip
 
 import sys
-import datetime
+import time
 import os
 import platform
 
@@ -317,6 +317,7 @@ class AnovaApp(QMainWindow):
             self.result_model = braviz_models.AnovaResultsModel(*self.anova)
             self.ui.results_table.setModel(self.result_model)
             self.update_main_plot("Residuals")
+            self.log_action("Anova calculated")
 
     def clear_results(self):
         self.result_model = braviz_models.AnovaResultsModel()
@@ -559,6 +560,10 @@ class AnovaApp(QMainWindow):
         if self._message_client is not None:
             self._message_client.send_message(msg1)
 
+    def log_action(self,description):
+        state = self.get_state()
+        msg = create_log_message(description, state, "anova_task")
+        self._message_client.send_message(msg)
 
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
@@ -699,12 +704,13 @@ class AnovaApp(QMainWindow):
         state["sample"] = self.sample_manager.current_sample
 
         meta = dict()
-        meta["date"] = datetime.datetime.now()
+        meta["date"] = time.time()
         meta["exec"] = sys.argv
         meta["machine"] = platform.node()
         meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
         state["meta"] = meta
         return state
+
 
     def save_scenario_dialog(self):
         state = self.get_state()

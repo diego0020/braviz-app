@@ -26,7 +26,10 @@ import time
 import json
 import numpy as np
 import pandas as pd
+import os
+
 __author__ = 'Diego'
+
 
 class NpJSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -40,11 +43,17 @@ class NpJSONEncoder(json.JSONEncoder):
             else:
                 o2 = float(o)
             return o2
+        else:
+            try:
+                o2 = [x for x in o]
+            except TypeError:
+                pass
+            else:
+                return o2
         return json.JSONEncoder.default(self, o)
 
 
 class MessageServer(QtCore.QObject):
-
     """
     Acts as a message broker, listens for messages in one port, and broadcasts them in another port
 
@@ -92,6 +101,7 @@ class MessageServer(QtCore.QObject):
                     msg = json.loads(net_msg)
                     self.message_received.emit(msg)
                     self._forward_socket.send(net_msg)
+
         self._server_thread = threading.Thread(target=server_loop)
         self._server_thread.setDaemon(True)
         self._server_thread.start()
@@ -117,7 +127,7 @@ class MessageServer(QtCore.QObject):
         Args:
             msg (dict) : Message to broadcast, will be encoded as JSON
         """
-        assert isinstance(msg,dict)
+        assert isinstance(msg, dict)
         net_msg = json.dumps(msg, cls=NpJSONEncoder)
         self._forward_socket.send(net_msg, zmq.DONTWAIT)
 
@@ -141,7 +151,6 @@ class MessageServer(QtCore.QObject):
 
 
 class MessageClient(QtCore.QObject):
-
     """
     A client that connects to :class:`~braviz.interaction.connection.MessageServer`
 
@@ -189,6 +198,7 @@ class MessageClient(QtCore.QObject):
                         msg = json.loads(net_msg)
                         self.message_received.emit(msg)
                         self._last_message = net_msg
+
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
@@ -200,7 +210,7 @@ class MessageClient(QtCore.QObject):
         Args:
             msg (dict) : Message to send to the server, will be encoded as JSON
         """
-        assert isinstance(msg,dict)
+        assert isinstance(msg, dict)
         log = logging.getLogger(__name__)
 
         if self._send_socket is None:
@@ -238,7 +248,6 @@ class MessageClient(QtCore.QObject):
 
 
 class PassiveMessageClient(object):
-
     """
     A client that connects to :class:`~braviz.interaction.connection.MessageServer`
 
@@ -285,6 +294,7 @@ class PassiveMessageClient(object):
                     if net_msg != self._last_seen_message or (time.time() - self._last_send_time > 1):
                         self._last_seen_message = net_msg
                         self._message_counter += 1
+
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
@@ -296,7 +306,7 @@ class PassiveMessageClient(object):
         Args:
             msg (dict) : Message to send to the server
         """
-        assert isinstance(msg,dict)
+        assert isinstance(msg, dict)
         log = logging.getLogger(__name__)
 
         if self._send_socket is None:
@@ -343,7 +353,6 @@ class PassiveMessageClient(object):
 
 
 class GenericMessageClient(object):
-
     """
     A client that connects to :class:`~braviz.interaction.connection.MessageServer`
 
@@ -392,6 +401,7 @@ class GenericMessageClient(object):
                     else:
                         msg = json.loads(net_msg)
                         self.handler.handle_new_message(msg)
+
             self._receive_thread = threading.Thread(target=receive_loop)
             self._receive_thread.setDaemon(True)
             self._receive_thread.start()
@@ -405,7 +415,7 @@ class GenericMessageClient(object):
         Args:
             msg (dict) : Message to send to the server
         """
-        assert isinstance(msg,dict)
+        assert isinstance(msg, dict)
         log = logging.getLogger(__name__)
 
         if self._send_socket is None:
@@ -463,3 +473,19 @@ class GenericMessageClient(object):
         The server receive address
         """
         return self._server_pull
+
+
+def create_log_message(action, next_state, application):
+    assert isinstance(action, basestring)
+    assert isinstance(application, basestring)
+    assert isinstance(next_state, dict)
+    timestamp = time.time()
+    msg = {
+        "type": "log",
+        "action": action,
+        "state": next_state,
+        "pid": os.getpid(),
+        "application": application,
+        "time": timestamp
+    }
+    return msg
