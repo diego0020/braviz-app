@@ -634,12 +634,14 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
-        subj = msg.get("subject")
-        if subj is not None and subj in self.sample_manager.current_sample and subj != self.__current_subject:
-            self.ui.subject_edit.setText(subj)
-            log.info("Changing to subj %s" % subj)
-            self.update_fmri_data_view(broadcast_message=False)
-        if "sample" in msg:
+        msg_type = msg["type"]
+        if msg_type == "subject":
+            subj = msg.get("subject")
+            if subj in self.sample_manager.current_sample and subj != self.__current_subject:
+                self.ui.subject_edit.setText(subj)
+                log.info("Changing to subj %s" % subj)
+                self.update_fmri_data_view(broadcast_message=False)
+        elif msg_type == "sample":
             self.sample_manager.process_sample_message(msg)
 
     def change_sample(self, new_sample):

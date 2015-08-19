@@ -211,6 +211,8 @@ class MessageClient(QtCore.QObject):
             msg (dict) : Message to send to the server, will be encoded as JSON
         """
         assert isinstance(msg, dict)
+        assert "type" in msg
+
         log = logging.getLogger(__name__)
 
         if self._send_socket is None:

@@ -357,10 +357,11 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_sample)
 
     def receive_message(self, msg):
-        subj = msg.get("subject")
-        if subj is not None:
+        msg_type = msg["type"]
+        if msg_type == "subject":
+            subj = msg.get("subject")
             self.reg_plot.highlight_subject(subj)
-        if "sample" in msg:
+        elif msg_type == "sample":
             self.sample_manager.process_sample_message(msg)
 
     def send_reduced_sample(self):

@@ -504,11 +504,12 @@ class LinearModelApp(QMainWindow):
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
         log.info("RECEIVED %s" % msg)
-        subj = msg.get("subject")
-        if subj is not None:
+        msg_type = msg["type"]
+        if msg_type == "subject":
+            subj = msg.get("subject")
             log.info("showing subject %s" % subj)
             self.add_subjects_to_plot(subject_ids=(int(subj),))
-        if "sample" in msg:
+        elif msg_type == "sample":
             self.sample_manager.process_sample_message(msg)
 
     def create_context_action(self, subject, scenario_id, scenario_name, show_name=None, new_viewer=True):
