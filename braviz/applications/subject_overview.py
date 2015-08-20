@@ -518,10 +518,11 @@ class SubjectOverviewApp(QMainWindow):
     def receive_message(self, msg):
         log = logging.getLogger(__file__)
         log.info("RECEIVED: %s" % msg)
-        subj = msg.get("subject")
-        if subj is not None:
+        msg_type = msg["type"]
+        if msg_type == "subject":
+            subj = msg.get("subject")
             self.change_subject(subj, broadcast_message=False)
-        if "sample" in msg:
+        if msg_type == "sample":
             self.sample_manager.process_sample_message(msg)
 
     def update_sample(self, _):

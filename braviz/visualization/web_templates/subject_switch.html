@@ -80,7 +80,7 @@ Braviz Subject
 
     function send_message(value){
         console.log("sending .... subject: "+value);
-        var msg=JSON.stringify({"subject":value})
+        var msg=JSON.stringify({"type":"subject","subject":value})
         if (ws) {
         ws.send(msg);
         }
@@ -153,10 +153,13 @@ Braviz Subject
     }
     ws.onmessage = function(e) {
       message = JSON.parse(e.data);
+      var msg_type = message.type;
+      if(msg_type == "subject"){
       var code = message.subject;
       if (code != null){
                set_selection(code,false);
         }
+      }
     };
     ws.onclose = function(e) {
       window.setTimeout(openWS, errorSleepTime);

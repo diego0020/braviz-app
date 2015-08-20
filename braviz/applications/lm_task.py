@@ -496,7 +496,7 @@ class LinearModelApp(QMainWindow):
     def change_subject_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
         subj = str(subj)
-        msg1 = {"subject": subj}
+        msg1 = {"type": "subject", "subject": subj}
         log.info(msg1)
         if self._message_client is not None:
             self._message_client.send_message(msg1)

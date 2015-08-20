@@ -22,6 +22,7 @@ set_pyqt_api_2()
 
 import sys
 import logging
+import webbrowser
 
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -83,8 +84,8 @@ class BravizMenu2(QtGui.QMainWindow):
         self.connect_application_launcher("measure", self.ui.measure_app)
         self.connect_application_launcher("excel", self.ui.excel)
         self.connect_application_launcher("export", self.ui.export_2)
-        self.connect_application_launcher(
-            "parallel_coordinates", self.ui.parallel_coordinates)
+        self.ui.parallel_coordinates.clicked.connect(self.open_parallel_coordinates)
+
         self.connect_application_launcher("check_reg", self.ui.check_reg)
 
         # self.connect_application_launcher("braviz_menu_classic",
@@ -117,7 +118,6 @@ class BravizMenu2(QtGui.QMainWindow):
         "export": "export_vars",
         "fmri_explorer": "fmri_explorer",
         "measure": "measure_task",
-        "parallel_coordinates": "parallel_coordinates_app",
         "check_reg": "check_reg_app"
     }
 
@@ -171,9 +171,11 @@ class BravizMenu2(QtGui.QMainWindow):
             launch_sub_process(args)
 
     def open_help(self):
-        import webbrowser
-
         url = "http://diego0020.github.io/braviz"
+        webbrowser.open(url, 2)
+
+    def open_parallel_coordinates(self):
+        url = "http://localhost:8100/parallel"
         webbrowser.open(url, 2)
 
     def print_messages(self, msg):

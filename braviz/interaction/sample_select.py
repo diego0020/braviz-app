@@ -407,11 +407,11 @@ class SampleCreateDialog(QtGui.QMainWindow):
         dialog.exec_()
 
     def send_to_all(self):
-        msg = {"sample": list(self.output_model.get_elements())}
+        msg = {"type": "sample", "sample": list(self.output_model.get_elements())}
         self.message_client.send_message(msg)
 
     def send_to_parent(self):
-        msg = {"sample": list(self.output_model.get_elements()),
+        msg = {"type": "sample", "sample": list(self.output_model.get_elements()),
                "target": self.parent}
         self.message_client.send_message(msg)
 
@@ -780,7 +780,7 @@ class SampleManager(QtCore.QObject):
             log = logging.getLogger(__name__)
             log.warning("Can't send message, no server found")
             return
-        msg = {"sample": list(self._sample)}
+        msg = {"type": "sample", "sample": list(self._sample)}
         self._message_client.send_message(msg)
 
     def send_custom_sample(self, custom_sample):
@@ -788,7 +788,7 @@ class SampleManager(QtCore.QObject):
             log = logging.getLogger(__name__)
             log.warning("Can't send message, no server found")
             return
-        msg = {"sample": list(custom_sample)}
+        msg = {"type": "sample", "sample": list(custom_sample)}
         self._message_client.send_message(msg)
 
     def configure_sample_policy_menu(self, parent_menu):

@@ -1049,13 +1049,14 @@ class SampleOverview(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         log.info("showing subject %s" % subj)
         if self._message_client is not None:
-            self._message_client.send_message({"subject": str(subj)})
+            self._message_client.send_message({"type": "subject", "subject": str(subj)})
 
     def receive_message(self, msg):
-        subj = msg.get("subject")
-        if subj is not None:
+        msg_type = msg["type"]
+        if msg_type == "subject":
+            subj = msg.get("subject")
             self.locate_subj(subj)
-        if "sample" in msg:
+        elif msg_type == "sample" :
             self.sample_manager.process_sample_message(msg)
 
     def update_sample(self, new_sample):

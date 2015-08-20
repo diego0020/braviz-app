@@ -627,14 +627,23 @@ var errorSleepTime = 500;
       return;
       }
       message = JSON.parse(e.data);
+      var msg_type = message.type;
+      if (msg_type == "sample")
+      {
       var m_sample = message.sample;
       if (m_sample != null && !message.target){
         handle_sample_message(m_sample);
       }
+      }
+      else{
+      if (msg_type == "subject")
+      {
       var code = message.subject;
       if (code != null){
                highlight_subj_path(code);
         }
+      }
+      }
     };
     message_getter.onclose = function(e) {
       window.setTimeout(openWS, errorSleepTime);
@@ -742,7 +751,7 @@ function add_context_menu(){
 };
 
 function send_subject_message(subj){
-var msg=JSON.stringify({"subject": subj})
+var msg=JSON.stringify({"type":"subject", "subject": subj})
 if (message_getter){
 last_message = msg;
 message_getter.send(msg);
@@ -755,7 +764,7 @@ var int_codes = [];
 for (i=0; i<current_subsample_list.length; i++){
     int_codes.push(Number(current_subsample_list[i]));
 }
-var msg=JSON.stringify({"sample": int_codes })
+var msg=JSON.stringify({"type": "sample", "sample": int_codes })
 last_message = msg;
 console.log(msg);
     if (message_getter){
