@@ -37,7 +37,7 @@ import braviz.visualization.fmri_timeseries
 from braviz.readAndFilter import tabular_data as braviz_tab_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
-from braviz.interaction.connection import MessageClient
+from braviz.interaction.connection import MessageClient, create_log_message
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
 from braviz.readAndFilter.config_file import get_config
 
@@ -187,6 +187,7 @@ class FmriExplorer(QtGui.QMainWindow):
         orientation_dict = {"Axial": 2, "Coronal": 1, "Sagital": 0}
         selection = str(self.ui.image_orientation_combo.currentText())
         orientation_index = orientation_dict[selection]
+        self.log_action("Changed image orientation to %s"%selection)
         self.image_view.change_orientation(orientation_index)
         self.update_slice_controls()
 
@@ -200,7 +201,7 @@ class FmriExplorer(QtGui.QMainWindow):
         subj = str(self.ui.subject_edit.text())
         if subj in self.sample_manager.current_sample:
             if self._messages_client is not None and subj != self.__current_subject and broadcast_message:
-                self._messages_client.send_message({'subject': subj})
+                self._messages_client.send_message({'type':'subject','subject': subj})
             self.__current_subject = subj
         new_paradigm = str(self.ui.paradigm_combo.currentText())
         if new_paradigm != self.__current_paradigm:
@@ -240,6 +241,8 @@ class FmriExplorer(QtGui.QMainWindow):
         self.time_plot.set_spm_and_bold(spm_data, bold_image)
         self.time_plot.set_contrast(self.__current_contrast)
         self.time_plot.draw_bold_signal(self.image_view.current_coords())
+        contrast_name = self.ui.contrast_combo.itemText(self.__current_contrast)
+        self.log_action("New view. Subject : %s, Paradigm : %s, Contrast : %s"%(subj,self.__current_paradigm, contrast_name))
 
     def update_slice_controls(self):
         n_slices = self.image_view.image.get_number_of_image_slices()
@@ -259,6 +262,10 @@ class FmriExplorer(QtGui.QMainWindow):
     def change_contour_visibility(self):
         checked = self.ui.show_contours_check.isChecked()
         self.image_view.set_contour_visibility(checked)
+        if checked:
+            self.log_action("Made contours visible")
+        else:
+            self.log_action("Made contours in-visible")
 
     def change_contour_opacity(self, value):
         self.image_view.set_contour_opacity(value)
@@ -283,12 +290,14 @@ class FmriExplorer(QtGui.QMainWindow):
         self.__frozen_points = self.__frozen_points.append(df2)
         self.__frozen_model.set_df(self.__frozen_points)
         self.time_plot.add_frozen_bold_signal(i, (cx, cy, cz))
+        self.log_action("Froze point %s"%((i,(cx,cy,cz)),))
 
     def clear_frozen(self):
         self.__frozen_points = pd.DataFrame(
             columns=["Subject", "Coordinates", "T Stat"])
         self.__frozen_model.set_df(self.__frozen_points)
         self.time_plot.clear_frozen_bold_signals()
+        self.log_action("Cleared frozen points")
 
     def warn_and_remove_frozen(self):
         """When paradigm changes"""
@@ -390,6 +399,7 @@ class FmriExplorer(QtGui.QMainWindow):
         subjs = self.sample_manager.current_sample
         subj_coords = izip(subjs, repeat(x), repeat(y), repeat(z))
         self.batch_add_points(subj_coords, contrast)
+        self.log_action("Added a point for all subjects %s"%((x,y,z),))
 
     def select_time_color(self):
         if self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count() - 2:
@@ -406,11 +416,15 @@ class FmriExplorer(QtGui.QMainWindow):
                     self.ui.time_color_combo.setCurrentIndex(1)
         if self.ui.time_color_combo.currentIndex() == self.ui.time_color_combo.count() - 1:
             self.set_timeline_colors_by_location()
+            color = "location"
         elif self.ui.time_color_combo.currentIndex() == 0:
             self.set_timeline_colors(None)
+            color = "nothing"
         else:
             var_name = str(self.ui.time_color_combo.currentText())
             self.set_timeline_colors(var_name[9:])  # len("Color by ")
+            color = var_name
+        self.log_action("Colored timelines by %s"%color)
 
     def set_timeline_colors(self, var_name):
         log = logging.getLogger(__name__)
@@ -476,7 +490,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.time_plot.set_frozen_aggregration(aggregate)
 
     def get_state(self):
-        import datetime
+        import time
         import sys
         import platform
         import os
@@ -508,7 +522,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
         state["timeline"] = timeline_state
         # meta
-        meta = {"date": datetime.datetime.now(), "exec": sys.argv, "machine": platform.node(),
+        meta = {"date": time.time(), "exec": sys.argv, "machine": platform.node(),
                 "application": os.path.splitext(os.path.basename(__file__))[0]}
         state["meta"] = meta
         return state
@@ -654,6 +668,7 @@ class FmriExplorer(QtGui.QMainWindow):
         self.ui.subject_edit.setCompleter(self.ui.subj_completer)
         self.ui.subj_validator = ListValidator(valid_ids)
         self.ui.subject_edit.setValidator(self.ui.subj_validator)
+        self.log_action("Changed sample")
 
 
     def export_time_plot(self):
@@ -671,6 +686,13 @@ class FmriExplorer(QtGui.QMainWindow):
         filename = unicode(QtGui.QFileDialog.getSaveFileName(
             self, "Save Signals", ".", "table (*.csv)"))
         self.__frozen_points.to_csv(filename)
+
+    def log_action(self,description):
+        if self._messages_client is None:
+            return
+        state = self.get_state()
+        msg = create_log_message(description, state, "fmri_explorer")
+        self._messages_client.send_message(msg)
 
 
 def run():
