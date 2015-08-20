@@ -78,16 +78,7 @@
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
+       <property name="margin">
         <number>0</number>
        </property>
        <item>
@@ -180,6 +171,8 @@
     <addaction name="separator"/>
     <addaction name="actionSave_Matrix"/>
     <addaction name="actionSave_Scatter"/>
+    <addaction name="actionSave_Scenario"/>
+    <addaction name="actionLoad_Scenario"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_sample"/>
     <addaction name="actionRestore_sample"/>

@@ -29,8 +29,12 @@ set_pyqt_api_2()
 import PyQt4.QtGui as QtGui
 import PyQt4.QtCore as QtCore
 import matplotlib
+import time
+import platform
+import os
 
 import braviz.readAndFilter.tabular_data as tab_data
+import braviz.readAndFilter.user_data as braviz_user_data
 from braviz.interaction.qt_models import VarListModel
 __author__ = 'Diego'
 
@@ -39,8 +43,9 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
-from braviz.interaction.connection import MessageClient
+from braviz.interaction.connection import MessageClient, create_log_message
 from braviz.interaction.sample_select import SampleManager
+import braviz.interaction.qt_dialogs
 
 import numpy as np
 import seaborn as sns
@@ -135,13 +140,13 @@ class CorrelationMatrixFigure(FigureCanvas):
             self.last_square = x_name, y_name
 
     def update_sample(self, _):
-        self.df = self.full_df.loc[self.sample_manager.current_sample].copy()
+        if self.df is not None:
+            self.df = self.full_df.loc[self.sample_manager.current_sample].copy()
         self.on_draw()
         if self.last_square is not None:
             x_name, y_name = self.last_square
             df2 = self.df[[x_name, y_name]]
             self.SquareSelected.emit(df2)
-
 
 class RegFigure(FigureCanvas):
     hidden_points_change = QtCore.pyqtSignal(int)
@@ -337,19 +342,25 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.ui.cor_layout.addWidget(self.cor_mat)
         self.vars_model.CheckedChanged.connect(self.cor_mat.set_variables)
         self.vars_model.CheckedChanged.connect(self.reg_plot.selection_changed)
+        self.vars_model.CheckedChanged.connect(lambda x:self.log_action("Changed variables to %s"%x))
 
         self.ui.reg_layout = QtGui.QHBoxLayout()
         self.ui.reg_frame.setLayout(self.ui.reg_layout)
         self.ui.reg_layout.addWidget(self.reg_plot)
         self.ui.restore_points.clicked.connect(self.reg_plot.clear_hidden_subjects)
         self.reg_plot.hidden_points_change.connect(lambda i: self.ui.ignored_label.setText(str(i)))
+        self.reg_plot.hidden_points_change.connect(lambda i: self.log_action("Changed hidden points to %d"%i))
 
         self.ui.actionSave_Matrix.triggered.connect(self.save_matrix)
         self.ui.actionSave_Scatter.triggered.connect(self.save_reg)
         self.ui.search_box.returnPressed.connect(self.filter_list)
         self.cor_mat.SquareSelected.connect(self.reg_plot.draw_reg)
+        self.cor_mat.SquareSelected.connect(lambda d:self.log_action("Got scatter from %s"%d.columns.tolist()))
 
-        #sample
+        self.ui.actionSave_Scenario.triggered.connect(self.save_scenario_dialog)
+        self.ui.actionLoad_Scenario.triggered.connect(self.load_scenario_dialog)
+
+        #sampleanova_task
         self.ui.actionLoad_sample.triggered.connect(self.sample_manager.load_sample)
         self.ui.actionModify_sample.triggered.connect(self.sample_manager.modify_sample)
         self.ui.actionSend_sample.triggered.connect(self.send_reduced_sample)
@@ -365,6 +376,7 @@ class CorrelationsApp(QtGui.QMainWindow):
             self.sample_manager.process_sample_message(msg)
 
     def send_reduced_sample(self):
+        self.log_action("Shared reduced sample")
         self.sample_manager.send_custom_sample(self.sample_manager.current_sample-self.reg_plot.hidden_subjs)
 
     def filter_list(self):
@@ -381,7 +393,73 @@ class CorrelationsApp(QtGui.QMainWindow):
                                                              "Save Scatter", ".", "PDF (*.pdf);;PNG (*.png);;svg (*.svg)"))
         self.reg_plot.f.savefig(filename)
 
+    def get_state(self):
+        state = {}
+        state["sample"] = self.sample_manager.current_sample
+        state["vars"]=self.vars_model.checked_set
+        state["scatter"]=self.reg_plot.df.columns if self.reg_plot.df is not None else None
+        state["hidden"]=self.reg_plot.hidden_subjs
+        meta = dict()
+        meta["date"] = time.time()
+        meta["exec"] = sys.argv
+        meta["machine"] = platform.node()
+        meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
+        state["meta"] = meta
+        return state
 
+    def load_state(self, wanted_state):
+        self.sample_manager.current_sample = wanted_state["sample"]
+        self.vars_model.clear_selection()
+        self.reg_plot.clear_hidden_subjects()
+        hidden_ = wanted_state["hidden"]
+        self.reg_plot.hidden_subjs.update(hidden_)
+        self.ui.ignored_label.setText(str(len(hidden_)))
+        self.vars_model.select_items_by_name(wanted_state["vars"])
+        self.cor_mat.set_variables(self.vars_model.checked_set)
+        scatter=wanted_state["scatter"]
+        if scatter is None:
+            self.reg_plot.draw_initial_message()
+        else:
+            df2=self.cor_mat.full_df[scatter]
+            self.reg_plot.draw_reg(df2)
+
+    def save_scenario_dialog(self):
+        state = self.get_state()
+        params = {}
+        app_name = state["meta"]["application"]
+        dialog = braviz.interaction.qt_dialogs.SaveScenarioDialog(
+            app_name, state, params)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            # save main plot as screenshot
+            scn_id = params["scn_id"]
+            file_name = "scenario_%d.png" % scn_id
+            data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
+            file_path = os.path.join(
+                data_root, "braviz_data", "scenarios", file_name)
+            self.cor_mat.f.savefig(file_path)
+
+    def load_scenario_dialog(self):
+        app_name = os.path.splitext(os.path.basename(__file__))[0]
+        wanted_state = {}
+        dialog = braviz.interaction.qt_dialogs.LoadScenarioDialog(
+            app_name, wanted_state)
+        res = dialog.exec_()
+        if res == dialog.Accepted:
+            self.load_state(wanted_state)
+
+    def load_scenario_id(self, scn_id):
+        wanted_state = braviz_user_data.get_scenario_data_dict(scn_id)
+        app = wanted_state.get("meta").get("application")
+        if app == os.path.splitext(os.path.basename(__file__))[0]:
+            self.restore_state(wanted_state)
+
+    def log_action(self,description):
+        if self._message_client is None:
+            return
+        state = self.get_state()
+        msg = create_log_message(description, state, "correlations")
+        self._message_client.send_message(msg)
 
 if __name__ == "__main__":
     import sys

@@ -220,6 +220,7 @@ class AnovaApp(QMainWindow):
             self.update_main_plot(ints)
         elif len(ints) > 0:
             self.update_main_plot(ints[-1])
+        self.log_action("Changed interactions to %s"%ints)
 
     def set_outcome_var(self, new_bar):
         log = logging.getLogger(__name__)
@@ -247,6 +248,7 @@ class AnovaApp(QMainWindow):
             var_type_text = "Type"
         else:
             var_type_text = "Real" if var_is_real else "Nominal"
+        self.log_action("Changed outcome to %s"%new_bar)
         self.ui.outcome_type.setText(var_type_text)
         self.check_if_ready()
         self.update_main_plot()
@@ -256,6 +258,7 @@ class AnovaApp(QMainWindow):
             self.outcome_var_name, self.regressors_model, sample=self.sample_manager.current_sample)
         result = reg_dialog.exec_()
         self.check_if_ready()
+        self.log_action("Changed regressors to %s"%self.regressors_model.get_regressors().tolist())
         if self.regressors_model.rowCount() > 0:
             regn = self.regressors_model.get_regressors()[-1]
             self.update_main_plot(regn)
@@ -288,6 +291,7 @@ class AnovaApp(QMainWindow):
 
         def remove_item(*args):
             self.regressors_model.removeRows(selection.row(), 1)
+            self.log_action("Removed regressor ...")
             self.check_if_ready()
             self.update_main_plot()
 
@@ -328,6 +332,7 @@ class AnovaApp(QMainWindow):
         var_name_index = self.result_model.index(row, 0)
         var_name = unicode(
             self.result_model.data(var_name_index, QtCore.Qt.DisplayRole))
+        self.log_action("Changed main plot to %s"%var_name)
         self.update_main_plot(var_name)
 
     def update_main_plot_from_regressors(self, index):
@@ -335,6 +340,7 @@ class AnovaApp(QMainWindow):
         var_name_index = self.regressors_model.index(row, 0)
         var_name = unicode(
             self.regressors_model.data(var_name_index, QtCore.Qt.DisplayRole))
+        self.log_action("Changed main plot to %s"%var_name)
         self.update_main_plot(var_name)
 
     def update_main_plot(self, var_name=None):
@@ -523,6 +529,7 @@ class AnovaApp(QMainWindow):
             selection = self.ui.sample_tree.currentIndex()
             leafs = self.sample_model.get_leafs(selection)
             subject_ids = map(int, leafs)
+            self.log_action("Highlighted subjects in plot %s"%subject_ids)
 
         if not isinstance(subject_ids, list):
             subject_ids = list(subject_ids)
@@ -555,12 +562,15 @@ class AnovaApp(QMainWindow):
     def change_subject_in_mri_viewer(self, subj):
         log = logging.getLogger(__name__)
         subj = str(subj)
+        self.log_action("Send subject %s to all"%subj)
         msg1 = {"type": "subject", "subject": subj}
         log.info(msg1)
         if self._message_client is not None:
             self._message_client.send_message(msg1)
 
     def log_action(self,description):
+        if self._message_client is None:
+            return
         state = self.get_state()
         msg = create_log_message(description, state, "anova_task")
         self._message_client.send_message(msg)
@@ -712,7 +722,6 @@ class AnovaApp(QMainWindow):
         state["meta"] = meta
         return state
 
-
     def save_scenario_dialog(self):
         state = self.get_state()
         params = {}
@@ -722,7 +731,7 @@ class AnovaApp(QMainWindow):
         res = dialog.exec_()
         log = logging.getLogger(__name__)
         if res == dialog.Accepted:
-            # save main plot as screenshot
+            #sc save main plot as screenshot
             scn_id = params["scn_id"]
             pixmap = QtGui.QPixmap.grabWidget(self.plot)
             file_name = "scenario_%d.png" % scn_id
@@ -731,8 +740,9 @@ class AnovaApp(QMainWindow):
                 data_root, "braviz_data", "scenarios", file_name)
             log.info(file_path)
             pixmap.save(file_path)
-        log.info("saving")
-        log.info(state)
+            self.log_action("Saved scenario %s"%params["scn_name"])
+            log.info("saving")
+            log.info(state)
 
     def load_scenario_dialog(self):
         app_name = os.path.splitext(os.path.basename(__file__))[0]
@@ -745,6 +755,7 @@ class AnovaApp(QMainWindow):
             log.info("Loading state")
             log.info(wanted_state)
             self.restore_state(wanted_state)
+            self.log_action("Loaded scenario")
 
     def load_scenario_id(self, scn_id):
         wanted_state = braviz_user_data.get_scenario_data_dict(scn_id)
@@ -796,6 +807,7 @@ class AnovaApp(QMainWindow):
             self.update_main_plot(plot_name)
 
     def update_sample(self, new_sample):
+        self.log_action("Changed sample to %s"%new_sample)
         self.sample_model.set_sample(new_sample)
         self.clear_results()
         if self.plot_var_name == "Residuals":

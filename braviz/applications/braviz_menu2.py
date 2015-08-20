@@ -30,6 +30,7 @@ from braviz.utilities import launch_sub_process
 import braviz.interaction
 import braviz.interaction.qt_dialogs
 import braviz.interaction.sample_select
+from braviz.interaction.connection import MessageServer, create_log_message
 
 __author__ = 'Diego'
 
@@ -50,7 +51,6 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def __init__(self):
         super(BravizMenu2, self).__init__()
-        from braviz.interaction.connection import MessageServer
 
         self.reader = None
         self.ui = None
@@ -63,7 +63,10 @@ class BravizMenu2(QtGui.QMainWindow):
         self.messages_server.message_received.connect(self.print_messages)
         args = [sys.executable, "-m", "braviz.applications.braviz_web_server", "0",
                 self.messages_server.broadcast_address, self.messages_server.receive_address]
-        self.server = launch_sub_process(args)
+        self.web_server = launch_sub_process(args)
+        args = [sys.executable, "-m", "braviz.applications.log_concentrator",
+                self.messages_server.broadcast_address]
+        self.log_server = launch_sub_process(args)
         self.setup_gui()
 
     def setup_gui(self):
@@ -132,19 +135,27 @@ class BravizMenu2(QtGui.QMainWindow):
             button.setEnabled(True)
 
         def launch_app():
+            self.log_action("Launched %s"%app)
             launch_sub_process(args)
             button.setEnabled(False)
             QtCore.QTimer.singleShot(3000, restore_icon)
 
         button.clicked.connect(launch_app)
 
+    def log_action(self,description):
+        state = {}
+        msg = create_log_message(description, state, "Menu")
+        self.messages_server.send_message(msg)
+
     def launch_variable_management_dialog(self):
         dialog = braviz.interaction.qt_dialogs.OutcomeSelectDialog(None)
         dialog.setWindowTitle("Variables")
         dialog.ui.select_button.setText("Done")
+        self.log_action("Opened variables dialog")
         dialog.exec_()
 
     def launch_samples_dialog(self):
+        self.log_action("Opened samples dialog")
         dialog = braviz.interaction.sample_select.SampleLoadDialog(
             new__and_load=True,
             server_broadcast=self.messages_server.broadcast_address,
@@ -155,6 +166,7 @@ class BravizMenu2(QtGui.QMainWindow):
         return
 
     def launch_scenarios_dialog(self):
+        self.log_action("Opened scenarios dialog")
         if self.reader is None:
             self.reader = braviz.readAndFilter.BravizAutoReader()
         params = {}
@@ -171,10 +183,12 @@ class BravizMenu2(QtGui.QMainWindow):
             launch_sub_process(args)
 
     def open_help(self):
+        self.log_action("Opened help in web browser")
         url = "http://diego0020.github.io/braviz"
         webbrowser.open(url, 2)
 
     def open_parallel_coordinates(self):
+        self.log_action("Opened parallel coordinates in web browser")
         url = "http://localhost:8100/parallel"
         webbrowser.open(url, 2)
 
@@ -209,9 +223,13 @@ def run():
     except Exception as e:
         log.exception(e)
         raise
-    # kill server
+    # kill web server
     log.info("Terminating web server")
-    main_window.server.terminate()
+    main_window.web_server.terminate()
+
+    # kill log server
+    log.info("Terminating log server")
+    main_window.log_server.terminate()
 
 if __name__ == '__main__':
     import traceback

@@ -358,9 +358,12 @@ class GenericMessageClient(object):
     """
     A client that connects to :class:`~braviz.interaction.connection.MessageServer`
 
-    When it receives a message it calls ``handle_new_message`` on the handler
+    When it receives a message it calls ``handle_new_message`` on the handler,
+    optionally, if the handler hast the ``handle_json_message``, it will be called with the
+    raw json message as argument.
 
     Args:
+        handler (object) : Must implement the ``handle_new_message`` method.
         server_broadcast (str) : Address of the server broadcast port
         server_receive (str) : Address of the server receive port
     """
@@ -476,6 +479,54 @@ class GenericMessageClient(object):
         """
         return self._server_pull
 
+
+class BlockingMessageClient(object):
+    """
+    A listening client that connects to :class:`~braviz.interaction.connection.MessageServer`
+
+    It blocks waiting for messages
+
+    Args:
+        server_broadcast (str) : Address of the server broadcast port
+        server_receive (str) : Address of the server receive port, it is ignored
+    """
+
+    def __init__(self, server_broadcast, server_receive=None):
+        super(BlockingMessageClient, self).__init__()
+        self._server_pub = server_broadcast
+        self._receive_socket = None
+        self.connect_to_server()
+
+    def connect_to_server(self):
+        """
+        Connect to the server, called by the constructor
+        """
+        context = zmq.Context()
+        if zmq.zmq_version_info()[0] >= 4:
+            context.setsockopt(zmq.IMMEDIATE, 1)
+
+        self._receive_socket = context.socket(zmq.SUB)
+        self._receive_socket.connect(self._server_pub)
+        self._receive_socket.setsockopt(zmq.SUBSCRIBE, "")
+
+    def get_message(self):
+        net_msg = self._receive_socket.recv()
+        msg = json.loads(net_msg)
+        return msg
+
+    @property
+    def server_broadcast(self):
+        """
+        The server broadcast address
+        """
+        return self._server_pub
+
+    @property
+    def server_receive(self):
+        """
+        The server receive address
+        """
+        return self._server_pull
 
 def create_log_message(action, next_state, application):
     assert isinstance(action, basestring)

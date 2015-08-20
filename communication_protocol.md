@@ -49,7 +49,8 @@ action: <description of user action>,
 state : <resulting state of the application>,
 pid : <pid_of target application|id browser session>,
 application :  <name of application>,
-time : timestamp when the action happened
+time : timestamp when the action happened,
+sceensshot : <optional, not yet implemented, image_id?>
 }
 ```
 

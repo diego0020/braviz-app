@@ -99,6 +99,7 @@ _applications_dir = {
     6: "build_roi",
     7: "fmri_explorer",
     8: "measure_task",
+    9: "correlations",
 }
 
 

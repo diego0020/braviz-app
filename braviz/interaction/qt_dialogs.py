@@ -1174,6 +1174,7 @@ class SaveScenarioDialog(QtGui.QDialog):
         scn_id = braviz_user_data.save_scenario(
             self.app_name, scenario_name, description, self.data)
         self.params["scn_id"] = scn_id
+        self.params["scn_name"] = scenario_name
         self.ui.succesful_message.setText("Save completed succesfully")
         self.ui.buttonBox.clear()
         self.ui.buttonBox.addButton(QtGui.QDialogButtonBox.Ok)
