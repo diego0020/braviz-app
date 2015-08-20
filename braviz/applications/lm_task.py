@@ -26,7 +26,7 @@ import random
 
 import sys
 
-import datetime
+import time
 import os
 import platform
 import logging
@@ -49,7 +49,7 @@ import braviz.interaction.qt_models as braviz_models
 from braviz.interaction.sample_select import SampleManager
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
-from braviz.interaction.connection import MessageClient, MessageServer
+from braviz.interaction.connection import MessageClient, MessageServer, create_log_message
 from braviz.readAndFilter.config_file import get_config
 from braviz.utilities import launch_sub_process
 
@@ -224,6 +224,7 @@ class LinearModelApp(QMainWindow):
             self.clear_regression_results()
 
         self.check_if_ready()
+        self.log_action("Changed outcome to %s"%self.outcome_var_name)
 
     def launch_add_regressor_dialog(self):
         reg_dialog = RegressorSelectDialog(
@@ -234,6 +235,7 @@ class LinearModelApp(QMainWindow):
                 index = self.regressors_model.index(
                     self.regressors_model.rowCount() - 1, 0)
                 self.update_main_plot_from_regressors(index)
+            self.log_action("Changed regressors to %s"%self.regressors_model.get_regressors())
             self.check_if_ready()
 
     def check_if_ready(self):
@@ -306,7 +308,8 @@ class LinearModelApp(QMainWindow):
             if plot_coefficients:
                 self.draw_coefficints_plot()
             self.ui.calculate_button.setEnabled(1)
-            return
+            self.log_action("Calculated Linear Regression")
+        return
 
     def clear_regression_results(self):
         self.ui.r_squared_label.setText("R<sup>2</sup> = ")
@@ -360,6 +363,7 @@ class LinearModelApp(QMainWindow):
                     self.plot.draw_scatter(
                         df2, target_var, self.outcome_var_name, reg_line=True, x_labels=x_labels)
                 self.plot.set_figure_title("Mean effect of %s" % target_var)
+        self.log_action("Changed plot to %s"%var_name)
         return
 
     def update_main_plot_from_regressors(self, index=None, var_name=None):
@@ -376,6 +380,7 @@ class LinearModelApp(QMainWindow):
             self.draw_two_vars_scatter_plot(factors[0], factors[1])
         else:
             self.draw_simple_scatter_plot(var_name)
+        self.log_action("Changed plot to %s"%var_name)
 
     def add_subjects_to_plot(self, tree_indexes=None, subject_ids=None):
         # tree_indexes used when called from tree
@@ -383,6 +388,7 @@ class LinearModelApp(QMainWindow):
             selection = self.ui.sample_tree.currentIndex()
             leafs = self.sample_model.get_leafs(selection)
             subject_ids = map(int, leafs)
+            self.log_action("highlighted sobjects in plot %s"%subject_ids)
         self.plot.add_subject_markers(subject_ids)
         return
 
@@ -500,6 +506,7 @@ class LinearModelApp(QMainWindow):
         log.info(msg1)
         if self._message_client is not None:
             self._message_client.send_message(msg1)
+        self.log_action("Shared subject")
 
     def receive_message(self, msg):
         log = logging.getLogger(__name__)
@@ -620,7 +627,7 @@ class LinearModelApp(QMainWindow):
         state["sample"] = self.sample_manager.current_sample
 
         meta = dict()
-        meta["date"] = datetime.datetime.now()
+        meta["date"] = time.time()
         meta["exec"] = sys.argv
         meta["machine"] = platform.node()
         meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
@@ -673,6 +680,7 @@ class LinearModelApp(QMainWindow):
             log.info("Loading state")
             log.info(wanted_state)
             self.restore_state(wanted_state)
+            self.log_action("Loaded scenario")
 
     def restore_state(self, wanted_state):
         # restore outcome
@@ -1001,6 +1009,14 @@ class LinearModelApp(QMainWindow):
             elif plot_type == 4:
                 self.draw_residuals_plot()
         self.get_missing_values()
+        self.log_action("Changed sample to %s"%self.sample_manager.current_sample)
+
+    def log_action(self,description):
+        if self._message_client is None:
+            return
+        state = self.get_state()
+        msg = create_log_message(description, state, "anova_task")
+        self._message_client.send_message(msg)
 
 
 def run():

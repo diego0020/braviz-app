@@ -19,6 +19,8 @@ class LogConcentrator(object):
             msg = client.get_message()
             if msg["type"] == "log":
                 self.process_log_event(msg)
+            else:
+                self.process_message_event(msg)
 
     def process_log_event(self, msg):
         app = msg["application"]
@@ -27,6 +29,15 @@ class LogConcentrator(object):
         pretty_time = time.ctime(msg["time"])
 
         line="[%s] %s (%s) : %s\n"%(pretty_time,app,pid,action)
+
+        with open(self.output_name,"a") as out:
+            out.write(line)
+
+    def process_message_event(self, msg):
+        msg_type=msg["type"]
+        t= time.ctime()
+
+        line="[%s] %s (%s) : %s\n"%(t,"message",msg_type,msg)
 
         with open(self.output_name,"a") as out:
             out.write(line)
