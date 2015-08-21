@@ -546,7 +546,7 @@ class AnovaApp(QMainWindow):
         y_data = df[self.outcome_var_name].get_values()
         subject_ids = df.index.get_values()
         if self.plot_x_var is None:
-            x_data = np.ones(y_data.shape)
+            x_data = np.zeros(y_data.shape)
         else:
             x_data = df[self.plot_x_var].get_values()
         z_data = None

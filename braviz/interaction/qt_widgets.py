@@ -16,10 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
-
-
-from __future__ import division
+from __future__ import division, print_function
 import cPickle
 from functools import wraps
 from itertools import izip
@@ -324,26 +321,22 @@ class MatplotWidget(FigureCanvas):
     def make_box_plot(self, data, x_var, y_var, xlabel, ylabel, xticks_labels, ylims=None, intercet=None):
 
         if x_var is None:
-            data_list = [data[y_var]]
-            label_nums = [0]
+            plot_data=data[[y_var]]
+            x_permutation = None
+            self.x_order = None
         else:
-            data_list = []
-            label_nums = list(set(data[x_var]))
-            for i in label_nums:
-                data_col = data[y_var][data[x_var] == i]
-                data_list.append(data_col.get_values())
+            plot_data=data[[x_var,y_var]]
+            plot_data[x_var] = plot_data[x_var].astype("category")
+
+            # Sort data and labels according to median
+            x_permutation = plot_data.groupby(x_var).median().sort(y_var).index
+            plot_data[x_var]=plot_data[x_var].cat.reorder_categories(x_permutation, ordered=True)
+            plot_data[x_var].cat.categories = [xticks_labels[x] for x in plot_data[x_var].cat.categories]
+            self.x_order = {x:i for i,x in enumerate(x_permutation)}
 
         sns.set_style("darkgrid")
         self.fig.clear()
         self.axes = self.fig.add_subplot(1, 1, 1)
-        # Sort data and labels according to median
-        x_permutation = range(1, len(label_nums) + 1)
-        data_labels = zip(data_list, label_nums)
-        data_labels.sort(key=lambda x: np.median(x[0]))
-        data_list, label_nums = zip(*data_labels)
-        ticks = None
-        if xticks_labels is not None:
-            ticks = [xticks_labels.get(i, "level %d" % i) for i in label_nums]
 
         self.axes.clear()
         self.axes.tick_params(
@@ -354,20 +347,21 @@ class MatplotWidget(FigureCanvas):
         self.axes.set_ylim(auto=True)
         # artists_dict = self.axes.boxplot(data, sym='gD')
 
-        self.x_order = dict(izip(label_nums, x_permutation))
-        self.x_order_i = dict(izip(x_permutation, label_nums))
+        sns.boxplot(x=x_var, y=y_var, data=plot_data, ax=self.axes, fliersize=10)
 
-        sns.boxplot(data_list, ax=self.axes, fliersize=10,
-                    names=ticks, color="skyblue", widths=0.5)
+        #sns.boxplot(data_list, ax=self.axes, fliersize=10,
+        #            names=ticks, color="skyblue", width=0.5)
         # find fliers
         for ls in self.axes.get_lines():
             if ls.get_markersize() == 10:
                 ls.set_picker(5)
                 poss_ids = dict()
                 for x, y in izip(*ls.get_data()):
-                    poss_ids.setdefault((x, y), set()).update(
-                        data.loc[(data[x_var] == self.x_order_i[x]) & (data[y_var] == y)].index)
-                print poss_ids
+                        if x_var is not None:
+                            ids=data.loc[(data[x_var] == x_permutation[x]) & (data[y_var] == y)].index
+                        else:
+                            ids=data.loc[(data[y_var] == y)].index
+                        poss_ids.setdefault((x, y), set()).update(ids)
                 urls = []
                 for x, y in izip(*ls.get_data()):
                     u = poss_ids[(x, y)].pop()
@@ -382,84 +376,73 @@ class MatplotWidget(FigureCanvas):
             yspan = ylims[1] - ylims[0]
             self.axes.set_ylim(ylims[0] - 0.1 * yspan, ylims[1] + 0.1 * yspan)
 
-        self.draw()
+
         if intercet is not None:
             self.add_intercept_line(intercet)
-        self.back_fig = self.copy_from_bbox(self.axes.bbox)
+
         self.ylim = None
         self.xlim = None
+        self.draw()
+        self.back_fig = self.copy_from_bbox(self.axes.bbox)
 
     @repeatatable_plot
     def make_linked_box_plot(self, data, outcome, x_name, z_name, ylims=None):
-        # TODO: change data to a dataframe
+
         sns.set_style("darkgrid")
         self.fig.clear()
         self.axes = self.fig.add_subplot(1, 1, 1)
 
-        x_levels = list(data[x_name].unique())
-        z_levels = list(data[z_name].unique())
+        plot_data=data[[outcome,x_name, z_name]]
+
         x_labels = braviz_tab_data.get_labels_dict_by_name(x_name)
         z_labels = braviz_tab_data.get_labels_dict_by_name(z_name)
 
-        palette = sns.color_palette("deep")
-        z_colors = dict(izip(z_levels, palette))
+        plot_data[x_name] = plot_data[x_name].astype("category")
+        plot_data[z_name] = plot_data[z_name].astype("category")
 
         # reorder
-        x_levels.sort(reverse=False, key=lambda l: np.median(
-            data[outcome][data[x_name] == l]))
-        z_levels.sort(reverse=False, key=lambda l: np.median(
-            data[outcome][data[z_name] == l]))
+        x_permutation = plot_data.groupby(x_name).median().sort(outcome).index
+        z_permutation = plot_data.groupby(z_name).median().sort(outcome).index
 
-        log = logging.getLogger(__name__)
-        if log.isEnabledFor(logging.DEBUG):
-            for i in x_levels:
-                log.debug(
-                    "%s %s", i, np.median(data[outcome][data[x_name] == i]))
+        plot_data[x_name]=plot_data[x_name].cat.reorder_categories(x_permutation,ordered=True)
+        plot_data[z_name]=plot_data[z_name].cat.reorder_categories(z_permutation,ordered=True)
 
-        box_width = 0.75
-        box_pad = 0.15
-        group_pad = 0.5
-        group_width = len(z_levels) * box_width + box_pad * (len(z_levels) - 1)
+        # rename categories
+        plot_data[x_name].cat.categories = [x_labels[x] for x in plot_data[x_name].cat.categories]
+        plot_data[z_name].cat.categories = [z_labels[z] for z in plot_data[z_name].cat.categories]
 
-        # print "levels"
-        labels = []
-        colors = []
-        values = []
-        positions = []
-        positions_dict = {}
-        fliers_x_dict = {}
+        fliers_dict = {}
 
-        for ix, iz in itertools.product(xrange(len(x_levels)), xrange(len(z_levels))):
-            x = x_levels[ix]
-            z = z_levels[iz]
-            x_lab = x_labels[x]
-            z_lab = z_labels[z]
-            labels.append("\n".join((x_lab, z_lab)))
-            colors.append(z_colors[z])
-            vals = data[outcome][(data[x_name] == x) & (data[z_name] == z)]
-            values.append(vals)
-            pos = box_width / 2 + \
-                  (group_width + group_pad) * ix + (box_width + box_pad) * iz
-            positions.append(pos)
-            positions_dict[(x, z)] = pos
-            fliers_x_dict[float(pos)] = (x, z)
+        group_width=0.8
+        sns.boxplot(x_name,outcome,z_name,data=plot_data, ax=self.axes, fliersize=10, width=group_width)
 
-        sns.boxplot(values, ax=self.axes, names=labels, color=colors,
-                    fliersize=10, widths=box_width, positions=positions)
+        #sns.boxplot(values, ax=self.axes, names=labels, color=colors,
+        #            fliersize=10, widths=box_width, positions=positions)
+
 
         # find outliers
+        z_levels = len(plot_data[z_name].unique())
+        group_centers_space = group_width - group_width / z_levels
+        offset = group_centers_space/2
+        each_width=group_centers_space/(z_levels-1)
+        poss_ids = dict()
+
+        #print(offset)
+        #print(each_width)
         for ls in self.axes.get_lines():
             if ls.get_markersize() == 10:
                 ls.set_picker(5)
-                poss_ids = dict()
-                for i, y in izip(*ls.get_data()):
-                    x, z = fliers_x_dict[i]
-                    poss_ids.setdefault((i, y), set()).update(
-                        data.loc[(data[x_name] == x) & (data[z_name] == z) & (data[outcome] == y)].index
-                    )
+                for x, y in izip(*ls.get_data()):
+                    xx = np.round(x)
+                    zz = x - xx + offset
+                    zz = np.round(zz/each_width)
+                    x_val = x_permutation[xx]
+                    z_val = z_permutation[zz]
+                    ids = data.loc[(data[x_name] == x_val)&(data[outcome] == y)&(data[z_name] == z_val)].index
+                    poss_ids.setdefault((x,y),set()).update(ids)
                 urls = []
-                for i, y in izip(*ls.get_data()):
-                    urls.append(poss_ids[(i, y)].pop())
+                for x, y in izip(*ls.get_data()):
+                    urls.append(poss_ids[(x, y)].pop())
                 ls.set_url(urls)
         self.axes.set_ylabel(outcome)
         if ylims is not None:
@@ -468,8 +451,14 @@ class MatplotWidget(FigureCanvas):
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
 
+        positions_dict = {}
+        for x,z in itertools.product(data[x_name].unique(),data[z_name].unique()):
+            xx = x_permutation.get_loc(x)
+            zz = z_permutation.get_loc(z)
+            positions_dict[(x,z)]=xx+zz*each_width-offset
         self.x_order = positions_dict
-        self.fliers_x_dict = fliers_x_dict
+
+        self.draw()
 
     @repeatatable_plot
     def make_diagnostics(self, residuals, fitted):
@@ -519,8 +508,13 @@ class MatplotWidget(FigureCanvas):
                 raise Exception("deprecated")
         if color is None:
             color = "black"
+        n_subs = len(x_coords)
+        alpha = 0
+        if n_subs > 1:
+            alpha = 0.5 + 0.5/n_subs
         collection = self.axes.scatter(
-            x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5, zorder=10, linewidths=3)
+            x_coords, y_coords, marker="o", s=120, edgecolors=color, urls=urls, picker=5, zorder=10, linewidths=3,
+            alpha=alpha)
         collection.set_facecolor('none')
 
         self.axes.draw_artist(collection)
@@ -529,7 +523,7 @@ class MatplotWidget(FigureCanvas):
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
 
     def add_intercept_line(self, ycoord):
-        self.axes.axhline(ycoord)
+        self.axes.axhline(ycoord,color='k')
         self.draw()
         self.back_fig = self.copy_from_bbox(self.axes.bbox)
 
