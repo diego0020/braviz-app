@@ -192,6 +192,7 @@ def make_default_config(default_config_name=None):
     braviz_conf.add_section('Braviz')
     braviz_conf.set('Braviz', 'project', 'kmc400')
     braviz_conf.set('Braviz', 'logger', 'console')
+    braviz_conf.set('Braviz', 'web_logger_server', '127.0.0.1:8050')
 
     braviz_conf.add_section("Default_Variables")
     braviz_conf.set('Default_Variables', 'nominal1', 'ubicac')
