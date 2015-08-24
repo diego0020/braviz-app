@@ -330,6 +330,8 @@ The constructor requires the root to this structure
             log.exception(e)
             raise
         data_root = config["data root"]
+        if not os.path.isabs(data_root):
+            data_root = os.path.join(os.path.dirname(__file__),"../applications",data_root)
         return data_root
 
     @staticmethod
@@ -348,6 +350,8 @@ The constructor requires the root to this structure
             log.exception(e)
             raise
         data_root = config["data root"]
+        if not os.path.isabs(data_root):
+            data_root = os.path.join(os.path.dirname(__file__),"../applications",data_root)
         if kw_args.get('max_cache', 0) > 0:
             max_cache = kw_args.pop('max_cache')
 
