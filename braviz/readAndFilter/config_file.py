@@ -239,6 +239,7 @@ def get_host_config(project, hostname=None):
     Returns:
         dict : A dictionary containing the requested configuration parameters.
     """
+    log = logging.getLogger(__name__)
     if hostname is None:
         import platform
         hostname = platform.node()
@@ -247,8 +248,11 @@ def get_host_config(project, hostname=None):
         os.path.dirname(__file__), "..", "applications", "%s_hosts.cfg" % project)
     config.read(file_name)
     if not config.has_section(hostname):
-        apps_dir = os.path.normpath(os.path.dirname(file_name))
-        raise KeyError("Unknown host %s\nPlease modify the %s_hosts.cfg file in %s" % (
+        log.info("No exact match found, trying default")
+        hostname = "default"
+        if not config.has_section(hostname):
+            apps_dir = os.path.normpath(os.path.dirname(file_name))
+            raise KeyError("Unknown host %s\nPlease modify the %s_hosts.cfg file in %s" % (
             hostname, project, apps_dir))
     items = dict(config.items(hostname))
     return items

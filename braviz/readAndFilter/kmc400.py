@@ -400,13 +400,13 @@ This is done to protect raw data and to allow to share it between different user
         try:
             config = get_host_config(project_name)
         except KeyError as e:
+            log.error(e.message)
             log.exception(e)
             raise
         static_data_root = config["data root"]
         dyn_data_root = config["dynamic data root"]
         if kw_args.get('max_cache', 0) > 0:
             max_cache = kw_args.pop('max_cache')
-
             log.info("Max cache set to %.2f MB" % max_cache)
         else:
             max_cache = config["memory (mb)"]
