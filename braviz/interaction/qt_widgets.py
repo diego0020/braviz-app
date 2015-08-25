@@ -326,10 +326,10 @@ class MatplotWidget(FigureCanvas):
             self.x_order = None
         else:
             plot_data=data[[x_var,y_var]]
-            plot_data[x_var] = plot_data[x_var].astype("category")
-
             # Sort data and labels according to median
             x_permutation = plot_data.groupby(x_var).median().sort(y_var).index
+
+            plot_data[x_var] = plot_data[x_var].astype("category")
             plot_data[x_var]=plot_data[x_var].cat.reorder_categories(x_permutation, ordered=True)
             plot_data[x_var].cat.categories = [xticks_labels[x] for x in plot_data[x_var].cat.categories]
             self.x_order = {x:i for i,x in enumerate(x_permutation)}
@@ -397,12 +397,12 @@ class MatplotWidget(FigureCanvas):
         x_labels = braviz_tab_data.get_labels_dict_by_name(x_name)
         z_labels = braviz_tab_data.get_labels_dict_by_name(z_name)
 
-        plot_data[x_name] = plot_data[x_name].astype("category")
-        plot_data[z_name] = plot_data[z_name].astype("category")
-
         # reorder
         x_permutation = plot_data.groupby(x_name).median().sort(outcome).index
         z_permutation = plot_data.groupby(z_name).median().sort(outcome).index
+
+        plot_data[x_name] = plot_data[x_name].astype("category")
+        plot_data[z_name] = plot_data[z_name].astype("category")
 
         plot_data[x_name]=plot_data[x_name].cat.reorder_categories(x_permutation,ordered=True)
         plot_data[z_name]=plot_data[z_name].cat.reorder_categories(z_permutation,ordered=True)
