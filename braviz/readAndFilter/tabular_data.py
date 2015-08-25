@@ -101,6 +101,7 @@ def _get_connection():
         raise Exception("Couldn't open database")
 
     conn = sqlite3.connect(path)
+    conn.execute("pragma busy_timeout = 10000")
     _connections[thread_id] = conn
     if LATERALITY is None:
         try:
