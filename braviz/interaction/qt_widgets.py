@@ -509,7 +509,7 @@ class MatplotWidget(FigureCanvas):
         if color is None:
             color = "black"
         n_subs = len(x_coords)
-        alpha = 0
+        alpha = 1
         if n_subs > 1:
             alpha = 0.5 + 0.5/n_subs
         collection = self.axes.scatter(
