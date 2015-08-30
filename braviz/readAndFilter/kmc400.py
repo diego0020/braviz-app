@@ -377,6 +377,8 @@ This is done to protect raw data and to allow to share it between different user
             log.exception(e)
             raise
         data_root = config["data root"]
+        if not os.path.isabs(data_root):
+            data_root = os.path.join(os.path.dirname(__file__),"../applications",data_root)
         return data_root
 
     @staticmethod
@@ -390,6 +392,8 @@ This is done to protect raw data and to allow to share it between different user
             log.exception(e)
             raise
         data_root = config["dynamic data root"]
+        if not os.path.isabs(data_root):
+            data_root = os.path.join(os.path.dirname(__file__),"../applications",data_root)
         return data_root
 
     @staticmethod
@@ -400,13 +404,17 @@ This is done to protect raw data and to allow to share it between different user
         try:
             config = get_host_config(project_name)
         except KeyError as e:
+            log.error(e.message)
             log.exception(e)
             raise
         static_data_root = config["data root"]
+        if not os.path.isabs(static_data_root):
+            static_data_root = os.path.join(os.path.dirname(__file__),"../applications",static_data_root)
         dyn_data_root = config["dynamic data root"]
+        if not os.path.isabs(dyn_data_root):
+            dyn_data_root = os.path.join(os.path.dirname(__file__),"../applications",dyn_data_root)
         if kw_args.get('max_cache', 0) > 0:
             max_cache = kw_args.pop('max_cache')
-
             log.info("Max cache set to %.2f MB" % max_cache)
         else:
             max_cache = config["memory (mb)"]

@@ -41,11 +41,13 @@ def configure_logger_from_conf(app_name="Braviz"):
     log_out = conf.get("Braviz", "logger")
     if log_out[0] == 'c':
         configure_console_logger(app_name)
+    elif log_out[0] == 'w':
+        configure_web_logger(app_name)
     else:
-        configure_logger(app_name)
+        configure_file_logger(app_name)
 
 
-def configure_logger(app_name):
+def configure_file_logger(app_name):
     """
     Helper function to configure loggers in similar ways from all the applications
     """
@@ -77,6 +79,21 @@ def configure_console_logger(app_name):
     format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
     logging.basicConfig(level=logging.INFO, format=format_str)
     logging.captureWarnings(True)
+
+def configure_web_logger(app_name):
+    """
+    Helper function to configure loggers to a http server for using while implementing/debugging
+    """
+    import logging
+    from logging.handlers import HTTPHandler
+    from braviz.readAndFilter import config_file
+    config = config_file.get_apps_config()
+    server = config.get("Braviz","web_logger_server")
+    handler = HTTPHandler(server,"/","POST")
+    format_str = "%(asctime)s %(levelname)s %(name)s %(funcName)s ( %(lineno)d ) : %(message) s"
+    logging.basicConfig(level=logging.INFO, format=format_str)
+    logging.captureWarnings(True)
+    logging.getLogger().addHandler(handler)
 
 
 @contextlib.contextmanager

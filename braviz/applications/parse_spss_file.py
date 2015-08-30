@@ -54,7 +54,7 @@ def save_description(var_name, desc, do_save=False, verbose=False):
 
 def read_spss_data(file_name, index_col=None, verbose=False):
     print("Reading data")
-    reader = savReaderWriter.SavReader(file_name, recodeSysmisTo=float('nan'))
+    reader = savReaderWriter.SavReader(file_name, recodeSysmisTo=float('nan'), ioUtf8=True)
     with reader:
         var_names = reader.varNames
         all_data = reader.all()
@@ -189,3 +189,5 @@ if __name__ == "__main__":
 
     if args.meta:
         parse_spss_meta(args.spss_file, args.save, args.verbose)
+
+    exit(0)

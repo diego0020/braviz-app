@@ -1041,10 +1041,10 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if color_dict is None:
             conf = config_file.get_apps_config()
             ref = conf.get_default_subject()
-            aparc_img = self.get('image', ref, name="aparc")
+            aparc_img = self.get('label', ref, name="aparc")
             aparc_data = aparc_img.get_data()
             aparc_values = set(np.unique(aparc_data.flat))
-            wmparc_img = self.get("image", ref, name="wmparc")
+            wmparc_img = self.get("label", ref, name="wmparc")
             wmparc_data = wmparc_img.get_data()
             wmparc_values = np.unique(wmparc_data.flat)
             aparc_values.update(wmparc_values)

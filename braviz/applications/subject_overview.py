@@ -343,7 +343,7 @@ class SubjectOverviewApp(QMainWindow):
                 subj_code_index, QtCore.Qt.DisplayRole)
 
         if self._messages_client is not None and new_subject != self.__curent_subject and broadcast_message:
-            self._messages_client.send_message({'subject': new_subject})
+            self._messages_client.send_message({'type':'subject','subject': new_subject})
         # label
         if new_subject != self.__curent_subject:
             self.__previous_subject = self.__curent_subject

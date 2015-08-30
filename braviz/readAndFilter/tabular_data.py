@@ -101,6 +101,7 @@ def _get_connection():
         raise Exception("Couldn't open database")
 
     conn = sqlite3.connect(path)
+    conn.execute("pragma busy_timeout = 10000")
     _connections[thread_id] = conn
     if LATERALITY is None:
         try:
@@ -716,9 +717,10 @@ def save_is_real_by_name(var_name, is_real):
         is_real (bool) : If True the variable will be registered as real, otherwise it will be registered as nominal.
     """
     conn = _get_connection()
-    query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
-    conn.execute(query, (is_real, unicode(var_name)))
-    conn.commit()
+    with conn:
+        query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
+        conn.execute(query, (is_real, unicode(var_name)))
+
 
 
 def save_is_real(var_idx, is_real):
@@ -730,9 +732,10 @@ def save_is_real(var_idx, is_real):
         is_real (bool) : If True the variable will be registered as real, otherwise it will be registered as nominal.
     """
     conn = _get_connection()
-    query = "UPDATE variables SET is_real = ? WHERE var_idx = ?"
-    conn.execute(query, (is_real, int(var_idx)))
-    conn.commit()
+    with conn:
+        query = "UPDATE variables SET is_real = ? WHERE var_idx = ?"
+        conn.execute(query, (is_real, int(var_idx)))
+
 
 
 def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
