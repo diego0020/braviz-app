@@ -290,7 +290,7 @@
              <string>Change the datapoints that will be used in this anova analysis</string>
             </property>
             <property name="text">
-             <string>Modify sample</string>
+             <string>Load sample</string>
             </property>
            </widget>
           </item>

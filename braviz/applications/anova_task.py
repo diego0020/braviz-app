@@ -146,7 +146,7 @@ class AnovaApp(QMainWindow):
         self.ui.sample_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.sample_tree.customContextMenuRequested.connect(
             self.subject_details_from_tree)
-        self.ui.modify_sample_button.clicked.connect(self.modify_sample_with_delay)
+        self.ui.modify_sample_button.clicked.connect(self.load_sample_with_delay)
         self.ui.modify_sample_button.setEnabled(True)
 
         self.ui.actionSave_scneario.triggered.connect(
@@ -162,9 +162,9 @@ class AnovaApp(QMainWindow):
         self.ui.actionSend_sample.triggered.connect(self.sample_manager.send_sample)
         self.sample_manager.configure_sample_policy_menu(self.ui.menuAccept_samples)
 
-    def modify_sample_with_delay(self):
+    def load_sample_with_delay(self):
         self.ui.modify_sample_button.setEnabled(False)
-        self.sample_manager.modify_sample()
+        self.sample_manager.load_sample()
         QtCore.QTimer.singleShot(5000, lambda:self.ui.modify_sample_button.setEnabled(True))
 
     def dispatch_outcome_select(self):
