@@ -57,7 +57,7 @@ class SampleLoadDialog(QtGui.QDialog):
         server_receive (str): Will be passed to child SampleCreateDilogs
     """
 
-    def __init__(self, new__and_load=True, server_broadcast=None, server_receive=None, parent=None):
+    def __init__(self, new__and_load=True, server_broadcast=None, server_receive=None, parent=None, parent_name=None):
         super(SampleLoadDialog, self).__init__()
         self.model = SamplesSelectionModel()
         self.ui = Ui_LoadSampleDialog()
@@ -73,6 +73,7 @@ class SampleLoadDialog(QtGui.QDialog):
         self.server_bcst = server_broadcast
         self.server_rcv = server_receive
         self._parent = parent
+        self._parent_name = parent_name
 
         # check for new subsamples each 5 seconds
         self.refresh_list_timer.start(5000)
@@ -95,10 +96,12 @@ class SampleLoadDialog(QtGui.QDialog):
                         server_broadcast=server_broadcast,
                         server_receive=server_receive,
                         parent_id="-1" if parent is None else str(parent),
+                        parent_name="-1" if parent_name is None else parent_name
                     )
                 else:
                     launch_sample_create_dialog(
                         parent_id="-1" if parent is None else str(parent),
+                        parent_name="-1" if parent_name is None else parent_name
                     )
                 self.new_button.setEnabled(False)
                 QtCore.QTimer.singleShot(5000, lambda: self.new_button.setEnabled(True))
@@ -119,12 +122,14 @@ class SampleLoadDialog(QtGui.QDialog):
                         sample_idx=self.current_sample_idx,
                         server_broadcast=server_broadcast,
                         server_receive=server_receive,
-                        parent_id=str(os.getpid()),
+                        parent_id=self._parent,
+                        parent_name=self._parent_name
                     )
                 else:
                     launch_sample_create_dialog(
                         sample_idx=self.current_sample_idx,
-                        parent_id=str(os.getpid()),
+                        parent_id=self._parent,
+                        parent_name=self._parent_name
                     )
                 self.open_button.setEnabled(False)
                 QtCore.QTimer.singleShot(5000, lambda: self.open_button.setEnabled(True))
@@ -163,7 +168,7 @@ class SampleLoadDialog(QtGui.QDialog):
 
 
 class SampleCreateDialog(QtGui.QMainWindow):
-    def __init__(self, parent=None, server_broadcast = None, server_receive = None):
+    def __init__(self, parent_pid=None, parent_name = None, server_broadcast = None, server_receive = None):
         super(SampleCreateDialog, self).__init__()
 
         self.message_client = MessageClient(server_broadcast, server_receive)
@@ -173,7 +178,8 @@ class SampleCreateDialog(QtGui.QMainWindow):
         self.base_sample = []
         self.base_sample_name = None
         self.history = deque(maxlen=50)
-        self.parent = parent
+        self.parent = parent_pid
+        self.parent_name = parent_name
 
         self.ui = None
         self.setup_ui()
@@ -203,7 +209,11 @@ class SampleCreateDialog(QtGui.QMainWindow):
         self.ui.load_button.clicked.connect(self.show_load_sample)
         self.ui.create_ind_variable.clicked.connect(
             self.create_indicator_variable)
-        self.ui.set_in_parent.setEnabled(self.parent is not None and server_bc is not None)
+        if self.parent is None or server_bc is None:
+            self.ui.set_in_parent.setEnabled(False)
+            self.ui.set_in_parent.setToolTip("Requires a Menu to be running and being called from an application")
+        if self.parent_name is not None:
+            self.ui.set_in_parent.setText("Set in %s"%self.parent_name)
         self.ui.send_to_all.setEnabled(server_bc is not None)
         if server_bc is None:
             self.ui.send_to_all.setToolTip("Requires the menu to be running")
@@ -639,58 +649,15 @@ class SaveSubSampleDialog(QtGui.QDialog):
 
 
 def launch_sample_create_dialog(sample_idx = None, server_broadcast = None, server_receive = None, parent_id = None,
+                                parent_name = None,
                                 sample = None):
     args = [sys.executable, __file__, "-1" if sample_idx is None else str(sample_idx),
             "-1" if server_broadcast is None else server_broadcast, "-1" if server_receive is None else server_receive,
-            "-1" if parent_id is None else str(parent_id)]
+            "-1" if parent_id is None else str(parent_id),
+            "-1" if parent_name is None else parent_name]
     if sample is not None:
         args += [str(x) for x in sample]
     launch_sub_process(args)
-
-
-if __name__ == "__main__":
-    # args [-1|sample_idx] [server_broadcast_address, server_receive_address] [parent_pid] [S0, S1, .... Sn]
-    from braviz.utilities import configure_logger_from_conf
-    configure_logger_from_conf("sample_creation")
-    log = logging.getLogger(__name__)
-    log.info(sys.argv)
-    app = QtGui.QApplication([])
-    parent = None
-    server_bc = None
-    server_rcv = None
-
-    if len(sys.argv) >= 5:
-        try:
-            parent = int(sys.argv[4])
-        except ValueError:
-            parent = None
-    if len(sys.argv) >=4:
-        server_rcv = sys.argv[3]
-        server_bc = sys.argv[2]
-        if ":" not in server_rcv:
-            server_rcv = None
-        if ":" not in server_bc:
-            server_bc = None
-    main_window = SampleCreateDialog(parent, server_bc, server_rcv)
-    main_window.show()
-    if len(sys.argv) >= 2:
-        try:
-            sample_id = int(sys.argv[1])
-        except ValueError:
-            pass
-        else:
-            if sample_id > 0:
-                sample = braviz_user_data.get_sample_data(sample_id)
-                main_window.change_output_sample(sample)
-    if len(sys.argv) > 5:
-        sample = [int(x) for x in sys.argv[5:]]
-        main_window.change_output_sample(sample)
-    main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-    try:
-        sys.exit(app.exec_())
-    except Exception as e:
-        log = logging.getLogger(__name__)
-        log.exception(e)
 
 
 class SampleManager(QtCore.QObject):
@@ -699,14 +666,15 @@ class SampleManager(QtCore.QObject):
     """
     sample_changed = QtCore.pyqtSignal(frozenset)
 
-    def __init__(self,parent, message_client=None, initial_sample=None):
-        assert isinstance(parent,QtGui.QWidget)
-        super(SampleManager, self).__init__(parent)
+    def __init__(self,parent_application, application_name, message_client=None, initial_sample=None):
+        assert isinstance(parent_application,QtGui.QWidget)
+        super(SampleManager, self).__init__(parent_application)
         if initial_sample is None:
             self._sample = set()
         else:
             self._sample = set(initial_sample)
 
+        self.__parent_name = application_name
         self._sample_policy = "ask"
         self._message_client = message_client
         self._menu_actions = {}
@@ -755,7 +723,8 @@ class SampleManager(QtCore.QObject):
             new__and_load=True,
             server_broadcast=s_bc,
             server_receive=s_rcv,
-            parent=os.getpid())
+            parent=os.getpid(),
+            parent_name=self.__parent_name)
         res = dialog.exec_()
         if res == dialog.Accepted:
             new_sample = dialog.current_sample
@@ -772,7 +741,8 @@ class SampleManager(QtCore.QObject):
             server_broadcast=s_bc,
             server_receive=s_rcv,
             parent_id=os.getpid(),
-            sample=self.current_sample
+            sample=self.current_sample,
+            parent_name = self.__parent_name
         )
 
     def send_sample(self):
@@ -860,3 +830,56 @@ class SampleManager(QtCore.QObject):
         self.__accept_dialog = None
         if set_sample:
             self.current_sample = self.__last_sample
+
+
+if __name__ == "__main__":
+    # args <-1|sample_idx> <-1|server_broadcast_address> <-1|server_receive_address> <-1|parent_pid> <-1|parent_name> [S0, S1, .... Sn]
+    from braviz.utilities import configure_logger_from_conf
+    configure_logger_from_conf("sample_creation")
+    log = logging.getLogger(__name__)
+    log.info(sys.argv)
+    app = QtGui.QApplication([])
+    parent = None
+    parent_name = None
+    server_bc = None
+    server_rcv = None
+
+    print(sys.argv)
+    if len(sys.argv) >= 6:
+            parent_name = sys.argv[5]
+            if parent_name == "-1":
+                parent_name = None
+    if len(sys.argv) >= 5:
+        try:
+            parent = int(sys.argv[4])
+        except ValueError:
+            parent = None
+        if parent < 0:
+            parent = None
+    if len(sys.argv) >= 4:
+        server_rcv = sys.argv[3]
+        server_bc = sys.argv[2]
+        if ":" not in server_rcv:
+            server_rcv = None
+        if ":" not in server_bc:
+            server_bc = None
+    main_window = SampleCreateDialog(parent, parent_name, server_bc, server_rcv)
+    main_window.show()
+    if len(sys.argv) >= 2:
+        try:
+            sample_id = int(sys.argv[1])
+        except ValueError:
+            pass
+        else:
+            if sample_id > 0:
+                sample = braviz_user_data.get_sample_data(sample_id)
+                main_window.change_output_sample(sample)
+    if len(sys.argv) > 6:
+        sample = [int(x) for x in sys.argv[6:]]
+        main_window.change_output_sample(sample)
+    main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+    try:
+        sys.exit(app.exec_())
+    except Exception as e:
+        log = logging.getLogger(__name__)
+        log.exception(e)

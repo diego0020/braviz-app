@@ -49,6 +49,8 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def __init__(self, scenario, server_broadcast_address, server_receive_address):
         super(FmriExplorer, self).__init__()
+
+        self.name = "F-Mri Explorer"
         log = logging.getLogger(__name__)
         config = get_config(__file__)
 
@@ -79,7 +81,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
         all_subjs =  frozenset(str(i)
                                      for i in braviz_tab_data.get_subjects())
-        self.sample_manager = SampleManager(parent=self, initial_sample=all_subjs, message_client=self._messages_client)
+        self.sample_manager = SampleManager(parent_application=self,application_name=self.name, initial_sample=all_subjs, message_client=self._messages_client)
         self.sample_manager.sample_changed.connect(self.change_sample)
 
         self.start_ui()

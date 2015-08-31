@@ -66,6 +66,7 @@ class SubjectOverviewApp(QMainWindow):
         QMainWindow.__init__(self)
 
         # Internal initialization
+        self.name = "Subject Overview"
         config = get_config(__file__)
         self.reader = braviz.readAndFilter.BravizAutoReader()
         self.__curent_subject = config.get_default_subject()
@@ -92,7 +93,7 @@ class SubjectOverviewApp(QMainWindow):
         self.__demo_timer = QtCore.QTimer()
         self.__demo_timer.timeout.connect(self.go_to_next_subject)
         sample = braviz_tab_data.get_subjects()
-        self.sample_manager = SampleManager(parent=self, message_client=self._messages_client
+        self.sample_manager = SampleManager(parent_application=self, application_name=self.name, message_client=self._messages_client
                                             , initial_sample=sample)
         self.sample_manager.sample_changed.connect(self.update_sample)
 

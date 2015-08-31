@@ -323,10 +323,11 @@ class CorrelationsApp(QtGui.QMainWindow):
 
     def __init__(self, server_broadcast = None, server_receive = None):
         super(CorrelationsApp, self).__init__()
+        self.name = "Correlations"
         self.ui = None
         self._message_client = MessageClient(server_broadcast, server_receive)
         self._message_client.message_received.connect(self.receive_message)
-        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=tab_data.get_subjects())
+        self.sample_manager = SampleManager(parent_application=self, application_name=self.name, message_client=self._message_client, initial_sample=tab_data.get_subjects())
         self.cor_mat = CorrelationMatrixFigure(self.sample_manager)
         self.reg_plot = RegFigure(self._message_client, self.sample_manager)
         self.vars_model = VarListModel(checkeable=True)

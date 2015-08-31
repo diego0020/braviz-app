@@ -334,10 +334,10 @@
           <item row="1" column="1">
            <widget class="QPushButton" name="set_in_parent">
             <property name="toolTip">
-             <string>Set the current sample in the parent application</string>
+             <string>Set the current sample in the application</string>
             </property>
             <property name="text">
-             <string>Set in parent</string>
+             <string>Set in application</string>
             </property>
            </widget>
           </item>

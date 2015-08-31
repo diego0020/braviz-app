@@ -70,6 +70,7 @@ SAMPLE_TREE_COLUMNS = (def_vars["nom1"], def_vars["nom2"])
 class AnovaApp(QMainWindow):
     def __init__(self, scenario, server_broadcast_address, server_receive_address):
         QMainWindow.__init__(self)
+        self.name = "Anova"
         self.outcome_var_name = None
         self.anova = None
         self.regressors_model = braviz_models.AnovaRegressorsModel()
@@ -91,7 +92,7 @@ class AnovaApp(QMainWindow):
             self._message_client = None
 
         sample = braviz_tab_data.get_subjects()
-        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=sample)
+        self.sample_manager = SampleManager(parent_application=self, application_name=self.name, message_client=self._message_client, initial_sample=sample)
 
         # Missing values
         self.missing = 0

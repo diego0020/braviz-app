@@ -57,6 +57,7 @@ class SampleOverview(QtGui.QMainWindow):
 
     def __init__(self, server_broadcast_address=None, server_receive_address=None, initial_scenario=None):
         super(SampleOverview, self).__init__()
+        self.name = "Sample Overview"
         self.reader = braviz.readAndFilter.BravizAutoReader()
         log = logging.getLogger(__name__)
         self.plot_widget = None
@@ -93,7 +94,7 @@ class SampleOverview(QtGui.QMainWindow):
             self._message_client = None
 
         sample = braviz_tab_data.get_subjects()
-        self.sample_manager = SampleManager(parent=self, message_client=self._message_client, initial_sample=sample)
+        self.sample_manager = SampleManager(parent_application=self, application_name=self.name, message_client=self._message_client, initial_sample=sample)
         self.sample_manager.sample_changed.connect(self.update_sample)
         self.ordered_sample = tuple(sample)
 
