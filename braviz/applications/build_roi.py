@@ -554,7 +554,7 @@ class BuildRoiApp(QMainWindow):
         try:
             self.__current_space = geom_db.get_roi_space(name=roi_name).title()
         except Exception:
-            self.__current_space = "World"
+            self.__current_space = "subject"
 
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer
@@ -1142,7 +1142,7 @@ class BuildRoiApp(QMainWindow):
         try:
             self.__current_space = geom_db.get_roi_space(self.__roi_name)
         except Exception:
-            self.__current_space = "world"
+            self.__current_space = "subject"
         self.vtk_viewer.change_space(self.__current_space)
         self.__checked_subjects = geom_db.subjects_with_sphere(self.__roi_id)
         self.__subjects_check_model.checked = self.__checked_subjects
@@ -1307,7 +1307,7 @@ class BuildRoiApp(QMainWindow):
 
         self.statusBar().showMessage("saving to %s" % file_name, 5000)
         export_roi(
-            self.__current_subject, self.__roi_id, "world", file_name, self.reader)
+            self.__current_subject, self.__roi_id, "subject", file_name, self.reader)
         self.statusBar().showMessage("DONE: saved to %s" % file_name, 5000)
 
     def optimize_sphere_from_button(self):

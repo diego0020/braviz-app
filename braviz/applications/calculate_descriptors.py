@@ -81,7 +81,7 @@ def save_subj_descs(subj):
     db_name = os.path.join(reader.get_dyn_data_root(), "descriptors.sqlite")
     try:
         structs = reader.get("MODEL", subj, index=True)
-        aseg = reader.get("LABEL",subj, name="APARC", space="world")
+        aseg = reader.get("LABEL",subj, name="APARC", space="subject")
         #wmaseg = reader.get("WMPARC",subj,space="world")
     except Exception as e:
         log.exception(e.message)

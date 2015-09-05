@@ -12,10 +12,10 @@ v= SimpleVtkViewer()
 
 reader=braviz.readAndFilter.BravizAutoReader()
 tracks = reader.get("TRACULA",119,index=True)
-img2 =  reader.get("MRI",119,format="vtk",space="world")
+img2 =  reader.get("MRI",119,format="vtk",space="subject")
 for t0 in tracks:
     #img =  reader.get("TRACULA",119,name=t0,map=True,format="vtk",space="world")
-    cont =  reader.get("TRACULA",119,name=t0,space="world")
+    cont =  reader.get("TRACULA",119,name=t0,space="subject")
     col = reader.get("TRACULA",119,name=t0,color=True)
     ac=v.addPolyData(cont)
     mp = ac.GetMapper()

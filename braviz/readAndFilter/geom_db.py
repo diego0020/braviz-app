@@ -42,13 +42,13 @@ _ROI_TYPES = {
 
 
 _COORDINATES_I = {
-    "world": 0,
+    "subject": 0,
     "talairach": 1,
     "dartel": 2,
 }
 
 _COORDINATES = {
-    0: "world",
+    0: "subject",
     1: "talairach",
     2: "dartel",
 }
@@ -87,7 +87,7 @@ def create_roi(name, roi_type, coords, desc=""):
 
         coords (str) : coordinate system, options are
 
-            - world
+            - subject
             - talairach
             - dartel
 

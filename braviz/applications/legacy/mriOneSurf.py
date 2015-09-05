@@ -62,7 +62,7 @@ if __name__ == "__main__":
     reader = braviz.readAndFilter.BravizAutoReader()
     subjects = reader.get("ids")
     currSubj = subjects[0]
-    img = reader.get('MRI', currSubj, format='VTK', space='world')
+    img = reader.get('MRI', currSubj, format='VTK', space='subject')
 
     picker = vtk.vtkCellPicker()
     #picker = vtk.vtkPropPicker()
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         subj = select_subj_frame.get()
         currSubj = subj
         try:
-            img = reader.get('MRI', subj, format='VTK', space='world')
+            img = reader.get('MRI', subj, format='VTK', space='subject')
         except Exception:
             img = None
 

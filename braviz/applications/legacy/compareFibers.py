@@ -550,7 +550,7 @@ class CompareFibers(object):
         coordinates_label.grid(row=0, column=0, sticky='w')
         space_var = tk.StringVar()
         space_sel = ttk.Combobox(space_frame, textvariable=space_var, width=10)
-        space_sel['values'] = ('World', 'Talairach', 'Dartel')
+        space_sel['values'] = ('subject', 'Talairach', 'Dartel')
         space_sel['state'] = 'readonly'
         space_sel.set('Talairach')
         space_sel.grid(row=0, column=1, sticky='e')

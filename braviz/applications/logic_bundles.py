@@ -152,7 +152,7 @@ class LogicBundlesApp(QMainWindow):
         self.__current_image_class = None
         self.__current_image_name = None
         self.__current_contrast = None
-        self.__curent_space = "World"
+        self.__curent_space = "subject"
 
         self.vtk_widget = QOrthogonalPlanesWidget(self.reader, parent=self)
         self.vtk_viewer = self.vtk_widget.orthogonal_viewer

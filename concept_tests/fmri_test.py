@@ -192,7 +192,7 @@ r_concatenated.Update()
 #========
 import braviz
 r=braviz.readAndFilter.BravizAutoReader()
-func=r.get('fMRI','144',name='POWERGRIP',space='world',format='vtk')
+func=r.get('fMRI','144',name='POWERGRIP',space='subject',format='vtk')
 v= simpleVtkViewer()
 v.addImg(func)
 v.start()

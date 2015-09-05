@@ -36,7 +36,7 @@ from braviz.readAndFilter import config_file
 
 if __name__ == "__main__":
     configure_logger_from_conf("mriOneSlicer_context")
-    currSpace = 'World'
+    currSpace = 'subject'
     current_models = []
     # reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
     reader = braviz.readAndFilter.BravizAutoReader()
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     coordinates_label.pack(side='top')
     space_var = tk.StringVar()
     space_sel = ttk.Combobox(control_frame, textvariable=space_var)
-    space_sel['values'] = ('World', 'Talairach', 'Dartel')
+    space_sel['values'] = ('subject', 'Talairach', 'Dartel')
     space_sel['state'] = 'readonly'
     space_sel.set(currSpace)
     space_sel.pack(side='top')

@@ -657,13 +657,12 @@ class SubjectOverviewApp(QMainWindow):
         QtCore.QTimer.singleShot(2000, reactivate_button)
 
     def change_left_to_non_dominant(self):
-        # TODO: Must deal with currently selected structures
         if self.ui.left_right_radio.isChecked():
             left_right = True
         else:
             left_right = False
-        self.vtk_viewer.models.set_models(tuple())
-        self.structures_tree_model.reload_hierarchy(dominant=not left_right)
+        self.structures_tree_model.reload_hierarchy(dominant=not left_right, subj=self.__curent_subject)
+        self.vtk_viewer.models.set_models(self.structures_tree_model.get_selected_structures())
 
     def select_structs_color(self, index):
         log = logging.getLogger(__name__)

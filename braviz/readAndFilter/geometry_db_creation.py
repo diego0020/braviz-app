@@ -32,7 +32,7 @@ def create_geom_rois_tables(conn=None):
         2 : Axial
         3 : Free
     coordiate systems
-    0 : World
+    0 : subject
     1 : Talairach
     2 : Dartel
     """
@@ -41,7 +41,7 @@ def create_geom_rois_tables(conn=None):
     roi_name TEXT UNIQUE,
     roi_type INTEGER, -- 0 : sphere, 1? : line
     roi_desc TEXT,
-    roi_coords INT -- 0:World,1:Talairach,2:Dartel
+    roi_coords INT -- 0:subject,1:Talairach,2:Dartel
     );"""
     if conn is None:
         conn = _get_connection()

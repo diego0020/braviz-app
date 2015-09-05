@@ -233,8 +233,8 @@ def corpus_callosum(reader, subject, color, scalars, get_out_space=False):
         vtkPolyData of the corpus callosum bundle
     """
     if get_out_space is True:
-        return 'world'
+        return 'subject'
     return reader.get('fibers', subject, operation='or',
                       waypoint=[
                           'CC_Anterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'],
-                      color=color, scalars=scalars), 'world'
+                      color=color, scalars=scalars), 'subject'

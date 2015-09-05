@@ -192,7 +192,7 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
 
     """
 
-    def __init__(self, parent, son_number, node_type, value, extra_data=None, reader=None, subj=None, space="World"):
+    def __init__(self, parent, son_number, node_type, value, extra_data=None, reader=None, subj=None, space="subject"):
         LogicBundleNode.__init__(
             self, parent, son_number, node_type, value, extra_data=extra_data)
         self.__reader = reader
@@ -355,7 +355,7 @@ class LogicBundleNodeWithVTK(LogicBundleNode):
             self.prop.GetProperty().SetColor(*color)
 
     @staticmethod
-    def vtk_from_dict(values, reader, subj=None, space="World"):
+    def vtk_from_dict(values, reader, subj=None, space="subject"):
         """
         Create a tree from a recursive dictionary
 

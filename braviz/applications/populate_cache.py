@@ -87,7 +87,7 @@ def populate_cache(subj):
     for p in paradigms:
         print(p)
         with ignored(Exception):
-            reader2.get('fMRI', subj, format='vtk', name=p, space='world')
+            reader2.get('fMRI', subj, format='vtk', name=p, space='subject')
         with ignored(Exception):
             reader2.get('MRI', subj, format='vtk', name=p, space='fmri_%s' % p)
 

@@ -239,7 +239,7 @@ class persistentImagePlane(vtkImagePlaneWidget):
 
     """A vtkImagePlaneWidget which can keep its state between calls to SetInputData.
 
-    It adds a second text message showing the world coordinates of the cursors
+    It adds a second text message showing the mm coordinates of the cursors
     This message can be further enhanced by using a label image and a label dictionary
     Additionally the values displayed in the first message can be replaced by values taken from another image, this
     is useful when the displayed image contains colors or other contexts that are not the main value (ex, fmri)

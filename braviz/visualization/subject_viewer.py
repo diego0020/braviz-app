@@ -130,7 +130,7 @@ class SubjectViewer(object):
 
         # state
         self.__current_subject = None
-        self.__current_space = "world"
+        self.__current_space = "subject"
 
         self.picker = vtk.vtkCellPicker()
         self.picker.SetTolerance(0.0005)
@@ -554,7 +554,7 @@ class ImageManager(object):
     Controls an ImagePlaneWidget
     """
 
-    def __init__(self, reader, ren, widget, interactor, initial_subj=None, initial_space="World", picker=None):
+    def __init__(self, reader, ren, widget, interactor, initial_subj=None, initial_space="subject", picker=None):
         """
         Initializes the ImageManager
 
@@ -977,7 +977,7 @@ class ModelManager(object):
     A manager for segmented structure models
     """
 
-    def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
+    def __init__(self, reader, ren, initial_subj=None, initial_space="subject"):
         """
         Initializes a model manager
 
@@ -1227,7 +1227,7 @@ class TractographyManager(object):
     A manager for tractography data
     """
 
-    def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
+    def __init__(self, reader, ren, initial_subj=None, initial_space="subject"):
         """
         Initializes the tractography manager
 
@@ -1685,7 +1685,7 @@ class TraculaManager(object):
     A data manager for Tracula bundles
     """
 
-    def __init__(self, reader, ren, initial_subj=None, initial_space="World"):
+    def __init__(self, reader, ren, initial_subj=None, initial_space="subject"):
         """
         Initializes the manager
 
@@ -1812,7 +1812,7 @@ class SurfaceManager(object):
     A data manager for freesurfer sufaces parcelations
     """
 
-    def __init__(self, reader, ren, iren, initial_subj=None, initial_space="World", picker=None,
+    def __init__(self, reader, ren, iren, initial_subj=None, initial_space="subject", picker=None,
                  persistent_cone=False):
         """
         Initializes the manager
@@ -2238,7 +2238,7 @@ class OrthogonalPlanesViewer(object):
 
         # state
         self.__current_subject = None
-        self.__current_space = "world"
+        self.__current_space = "subject"
         self.__current_class = None
         self.__current_name = None
 

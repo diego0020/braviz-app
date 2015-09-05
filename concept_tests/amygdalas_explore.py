@@ -22,7 +22,7 @@ subj_ids=reader.get('ids')
 amygdalas={}
 for subj in subj_ids:
     #amygdalas[subj]=reader.get('model',subj,name='Left-Amygdala',space='talairach')
-    amyg1=reader.get('model',subj,name='Left-Amygdala',space='world')
+    amyg1=reader.get('model',subj,name='Left-Amygdala',space='subject')
     #center at zero
     center=amyg1.GetCenter()
     trans = vtk.vtkTransformPolyDataFilter()

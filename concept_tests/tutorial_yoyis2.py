@@ -11,7 +11,7 @@ subject='093'
 #print sys.argv
 #sys.argv = [ <nombre del programa> , <numero del paciente>  , <espacio> ,arg3 .... ]
 
-espacios_validos=['world','dartel','talairach']
+espacios_validos=['subject','dartel','talairach']
 
 espacio='talairach'
 if len(sys.argv) >1:

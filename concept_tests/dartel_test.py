@@ -104,7 +104,7 @@ forw_transform.SetDisplacementGridData(forw_field)
 forw_transform.Update()
 
 #test with some fibers
-fibers=reader.get('FIBERS',patient,space='World')
+fibers=reader.get('FIBERS',patient,space='subject')
 trans_filter=vtk.vtkTransformFilter()
 trans_filter.SetTransform(forw_transform)
 trans_filter.SetInputData(fibers)

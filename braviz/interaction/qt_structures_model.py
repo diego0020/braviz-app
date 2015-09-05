@@ -25,11 +25,11 @@ import PyQt4.QtCore as QtCore
 from PyQt4.QtCore import QAbstractItemModel
 from braviz.readAndFilter.link_with_rdf import cached_get_free_surfer_dict
 from braviz.interaction.structural_hierarchy import get_structural_hierarchy_with_names
+from braviz.readAndFilter import config_file, tabular_data
 import logging
 
 
 class StructureTreeNode(object):
-
     """
     Node for the freesurfer structures tree
 
@@ -86,7 +86,7 @@ class StructureTreeNode(object):
             k.__check_and_propagate_down(check)
 
     def __update_from_children(self):
-        #self.name += "*"
+        # self.name += "*"
         previus_state = self.checked
         if len(self.children) == 0:
             return
@@ -130,7 +130,6 @@ class StructureTreeNode(object):
 
 
 class StructureTreeModel(QAbstractItemModel):
-
     """
     A tree of freesurfer segmented structures
 
@@ -152,6 +151,7 @@ class StructureTreeModel(QAbstractItemModel):
         self.__root = None
         self.leaf_ids = set()
         self.leaf_inverse_ids = dict()
+        self.__dominant = None
         self.optimistic_reload_hierarchy(dominant)
         if subj is None:
             subj = reader.get("ids", None)[0]
@@ -165,7 +165,6 @@ class StructureTreeModel(QAbstractItemModel):
             dominant (bool) : If ``False`` the tree will have left and right hemispheres, otherwise it will
                 have dominant and non-dominant hemispheres
         """
-        from braviz.readAndFilter import config_file
         possibles = self.reader.get("ids", None)
         favorite = config_file.get_apps_config().get_default_subject()
         possibles.insert(0, favorite)
@@ -189,25 +188,54 @@ class StructureTreeModel(QAbstractItemModel):
             dominant (bool) : If ``False`` the tree will have left and right hemispheres, otherwise it will
                 have dominant and non-dominant hemispheres
         """
+        if dominant == self.__dominant:
+            return
         if subj is None:
-            subj = self.reader.get("ids", None)[0]
+            subj = config_file.get_apps_config().get_default_subject()
         log = logging.getLogger(__name__)
         log.debug("reloading hierarchy")
-        self.leaf_ids = set()
-        self.__id_index = {}
-        if self.__root is not None:
-            self.__root.delete_children()
-        self.__root = StructureTreeNode(None, "root")
-
-        if dominant is True:
-            self.hierarchy = get_structural_hierarchy_with_names(
-                self.reader, subj, True, False, False)
+        self.modelAboutToBeReset.emit()
+        if self.__root is None:
+            # We are building the tree from scratch
+            if dominant is True:
+                self.hierarchy = get_structural_hierarchy_with_names(
+                    self.reader, subj, True, False, False)
+            else:
+                self.hierarchy = get_structural_hierarchy_with_names(
+                    self.reader, subj, False, True, False)
+            self.__root = StructureTreeNode(None, "root")
+            self.leaf_ids = set()
+            self.__id_index = {id(self.__root): self.__root}
+            self.__load_sub_tree(self.__root, self.hierarchy)
         else:
-            self.hierarchy = get_structural_hierarchy_with_names(
-                self.reader, subj, False, True, False)
-        self.__root = StructureTreeNode(None, "root")
-        self.__id_index[id(self.__root)] = self.__root
-        self.__load_sub_tree(self.__root, self.hierarchy)
+            # We are transforming an existing tree
+            laterality = tabular_data.get_laterality(subj)
+            if dominant:
+                # changing from left, right to dominant, non-dominant
+                if laterality == "l":
+                    mapping = {"r": "d",
+                               "l": "n",
+                               "Right": "Dominant",
+                               "Left": "Nondominant",
+                            }
+                else:
+                    mapping = {"l": "d",
+                               "r": "n",
+                               "Right": "Nondominant",
+                               "Left": "Dominant"}
+            else:
+                # changing from dominant, non-dominant to left, right
+                if laterality == "l":
+                    mapping = {"d": "r",
+                               "n": "l",
+                               "Dominant": "Right",
+                               "Nondominant": "Left"}
+                else:
+                    mapping = {"d": "l",
+                               "n": "r",
+                               "Dominant": "Left",
+                               "Nondominant": "Right"}
+            self.__switch_sub_tree(self.__root, mapping)
         self.modelReset.emit()
 
     def __load_sub_tree(self, sub_root, hierarchy_dict):
@@ -223,6 +251,56 @@ class StructureTreeModel(QAbstractItemModel):
                 new_node.tooltip = self.pretty_names.get(v, v)
                 self.leaf_ids.add(new_node_id)
                 self.leaf_inverse_ids.setdefault(v, set()).add(new_node_id)
+
+    def __switch_sub_tree(self, sub_root, mapping):
+        if self.__transform_node(sub_root, mapping):
+            # Recursion can be stopped by returning False
+            for c in sub_root.children:
+                self.__switch_sub_tree(c, mapping)
+
+    def __transform_node(self, node, mapping):
+        leaf_name = node.leaf_name
+        if leaf_name is None:
+            # Not a leaf
+            name = node.name
+            new_name = None
+            if name.endswith("Hemisphere"):
+                words = name.split()
+                words[0] = mapping[words[0]]
+                new_name = " ".join(words)
+            elif name == "Base":
+                return False
+            elif name == "Corpus Callosum":
+                return False
+            if new_name is not None:
+                node.name = new_name
+                node.tooltip =new_name
+        else:
+            # is a leaf
+            if leaf_name.startswith("ctx"):
+                try:
+                    del self.leaf_inverse_ids[leaf_name]
+                except KeyError:
+                    pass
+                hemi = leaf_name[4]
+                new_hemi = mapping[hemi]
+                leaf_name = leaf_name[:4] + new_hemi + leaf_name[5:]
+                node.leaf_name = leaf_name
+                node.tooltip = self.pretty_names.get(leaf_name,leaf_name)
+            elif leaf_name.startswith("wm"):
+                try:
+                    del self.leaf_inverse_ids[leaf_name]
+                except KeyError:
+                    pass
+                hemi = leaf_name[3]
+                new_hemi = mapping[hemi]
+                leaf_name = leaf_name[:3] + new_hemi + leaf_name[4:]
+                node.leaf_name = leaf_name
+                node.tooltip = self.pretty_names.get(leaf_name,leaf_name)
+            self.leaf_inverse_ids.setdefault(leaf_name,set()).add(id(node))
+            return False
+        return True
+
 
     def parent(self, QModelIndex=None):
         if QModelIndex.isValid():
@@ -304,7 +382,7 @@ class StructureTreeModel(QAbstractItemModel):
                 node.check_and_update_tree(check)
                 self.__notify_parents(node)
             self.dataChanged.emit(QModelIndex, QModelIndex)
-            #self.dataChanged.emit(QtCore.QModelIndex(), QtCore.QModelIndex())
+            # self.dataChanged.emit(QtCore.QModelIndex(), QtCore.QModelIndex())
             # print "signaling"
             self.emit(
                 QtCore.SIGNAL("DataChanged(QModelIndex,QModelIndex)"), QModelIndex, QModelIndex)

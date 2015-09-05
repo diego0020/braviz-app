@@ -91,7 +91,7 @@ class CheckboardView(object):
         self.__reslice2 = vtk.vtkImageReslice()
         self.__checkboard_view = vtk.vtkImageCheckerboard()
         self.__plane_widget = None
-        self.__current_space = "World"
+        self.__current_space = "subject"
         self.__orientation = 2
         self.__divs = 3
         self.__img1_params = (None, "None", None)

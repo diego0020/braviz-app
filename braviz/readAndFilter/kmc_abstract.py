@@ -78,15 +78,15 @@ A read and filter class designed to work with kmc projects. Implements common fu
         self._tracula_bundles = []
 
     def transform_points_to_space(self, point_set, space, subj, inverse=False):
-        """Access to the internal coordinate transform function. Moves from world to space.
-        If inverse is true moves from space to world"""
+        """Access to the internal coordinate transform function. Moves from subject to space.
+        If inverse is true moves from space to subject"""
         subj = self._decode_subject(subj)
         space = space.lower()
         return self._movePointsToSpace(point_set, space, subj, inverse)
 
-    def move_img_to_world(self, img, source_space, subj, interpolate=False):
+    def move_img_to_subject(self, img, source_space, subj, interpolate=False):
         """
-        Resample image to the world coordinate system
+        Resample image to the subject coordinate system
         :param img: image
         :param source_space: source coordinates
         :param subj: subject
@@ -95,12 +95,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
         """
         subj = self._decode_subject(subj)
         source_space = source_space.lower()
-        img2 = self._move_img_to_world(subj, img, interpolate, source_space)
+        img2 = self._move_img_to_subject(subj, img, interpolate, source_space)
         return img2
 
-    def move_img_from_world(self, img, target_space, subj, interpolate=False):
+    def move_img_from_subject(self, img, target_space, subj, interpolate=False):
         """
-        Resample image to the world coordinate system
+        Resample image to the subject coordinate system
         :param img: image
         :param target_space: target coordinates
         :param subj: subject
@@ -220,12 +220,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
         """Auxiliary function to read nifti images"""
         raise NotImplementedError
 
-    def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
-        """moves an image from the world coordinate space to talairach or dartel spaces"""
+    def _move_img_from_world(self, subj, img2, interpolate=False, space='subject'):
+        """moves an image from the subject coordinate space to talairach or dartel spaces"""
         raise NotImplementedError
 
-    def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
-        """moves an image from the world coordinate space to talairach or dartel spaces"""
+    def _move_img_to_subject(self, subj, img2, interpolate=False, space='subject'):
+        """moves an image from the subject coordinate space to talairach or dartel spaces"""
         raise NotImplementedError
 
     #==========Free Surfer================
@@ -283,7 +283,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
         raise NotImplementedError
 
     def _get_spm_grid_transform(self, subject, paradigm, direction, assume_bad_matrix=False):
-        # TODO: Cache shouldn't be here
         """
         Get the spm non linear registration transform grid associated to the paradigm
         Use paradigm=dartel to get the transform associated to the dartel normalization
@@ -296,7 +295,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
 
 #==============================common methods=============================
 
-    def _get(self, data, subj=None, space='world', **kw):
+    def _get(self, data, subj=None, space='subject', **kw):
         """Internal: decode instruction and dispatch"""
         data = data.upper()
         space = space.lower()
@@ -380,7 +379,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
             path = self._get_free_surfer_models_dir_name(subject)
         else:
             path = None
-        # todo
         spharm_path = path
         log = logging.getLogger(__name__)
         if kw.get('index', False):
@@ -707,8 +705,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
         else:
             img_name = "APARC"
         if img_name is None:
-            fibers = self.get('fibers', subj, space='world')
-            model = self.get('model', subj, name=waypoint, space='world')
+            fibers = self.get('fibers', subj, space='subject')
+            model = self.get('model', subj, name=waypoint, space='subject')
             if model:
                 ids = braviz.readAndFilter.filterPolylinesWithModel(
                     fibers, model)
@@ -717,7 +715,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         else:
             try:
                 fibers = self.get(
-                    'fibers', subj, space='world', color=None, scalars=img_name)
+                    'fibers', subj, space='subject', color=None, scalars=img_name)
             except Exception as e:
                 log.exception(e)
                 log.error("%s image not found" % img_name)
@@ -821,10 +819,10 @@ A read and filter class designed to work with kmc projects. Implements common fu
             target_space = space
             if target_space == result_space:
                 return fibers
-            if result_space != 'world':
+            if result_space != 'subject':
                 fibers = self.transform_points_to_space(
                     fibers, result_space, subj, inverse=True)
-            if target_space != 'world':
+            if target_space != 'subject':
                 transformed_streams = self._movePointsToSpace(
                     fibers, space, subj, inverse=False)
                 return transformed_streams
@@ -840,7 +838,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 'diff2surf.mat', self._get_fa_img_name(), self._get_orig_img_name(), path)
             #matrix = readFlirtMatrix('diff2surf.mat', 'fa.nii.gz', '../orig.nii.gz', path)
             streams_mri = transformPolyData(streams, matrix)
-            if space != 'world':
+            if space != 'subject':
                 transformed_streams = self._movePointsToSpace(
                     streams_mri, space, subj)
                 return transformed_streams
@@ -857,14 +855,14 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 else:
                     return set.union(*sub_ids)
 
-            if space == 'world':
+            if space == 'subject':
                 # Do filtering in world coordinates
                 models = kw.pop('waypoint')
                 if isinstance(models, basestring):
                     models = (models,)
                 if (kw.get('operation', 'and') == 'and') and len(models) == 0:
                     # return all fibers
-                    fibers = self.get('fibers', subj, space='world', color=kw.get(
+                    fibers = self.get('fibers', subj, space='subject', color=kw.get(
                         'color'), scalars=kw.get("scalars"))
                     return fibers
 
@@ -885,7 +883,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                     valid_ids = set()
 
                 # Take advantage of buffer
-                fibers = self.get('fibers', subj, space='world', color=kw.get(
+                fibers = self.get('fibers', subj, space='subject', color=kw.get(
                     'color'), scalars=kw.get("scalars"))
                 fibers2 = extract_poly_data_subset(fibers, valid_ids)
                 return fibers2
@@ -893,7 +891,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 #space is not world
                 # Always filter in world coordinates
                 target_space = space
-                filtered_fibers = self.get('fibers', subj, 'world', **kw)
+                filtered_fibers = self.get('fibers', subj, 'subject', **kw)
                 transformed_streams = self._movePointsToSpace(
                     filtered_fibers, target_space, subj)
                 return transformed_streams
@@ -922,9 +920,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
                 return t_map
             else:
                 if img_format == "vtk":
-                    w_img = self.move_img_to_world(
+                    w_img = self.move_img_to_subject(
                         t_map, "diff", subj, interpolate=True)
-                    s_img = self.move_img_from_world(
+                    s_img = self.move_img_from_subject(
                         w_img, space, subj, interpolate=True)
                     return s_img
                 else:
@@ -976,9 +974,9 @@ A read and filter class designed to work with kmc projects. Implements common fu
         raise NotImplementedError
 
     def _movePointsToSpace(self, point_set, space, subj, inverse=False):
-        """Transforms a set of points in 'world' space to the talairach or template spaces
-        If inverse is True, the points will be moved from 'space' to world"""
-        if space[:2] == 'wo':
+        """Transforms a set of points in 'subject' space to the talairach or template spaces
+        If inverse is True, the points will be moved from 'space' to subject"""
+        if space[:2] == 'su':
             return point_set
         elif space[:2] == 'ta':
             talairach_file = self._get_talairach_transform_name(subj)
@@ -988,7 +986,6 @@ A read and filter class designed to work with kmc projects. Implements common fu
             return transformPolyData(point_set, transform)
         elif space[:4] == 'diff':
             path = self._get_base_fibs_dir_name(subj)
-            # TODO: This looks wrong!!!!
             transform = readFlirtMatrix(
                 'surf2diff.mat', self._get_orig_img_name(), self._get_fa_img_name(), path)
             if inverse:
@@ -1102,7 +1099,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         return fmri_color_int
 
     def _read_func_transform_internal(self, subject, paradigm_name, inverse, path, T1_func, T1_world,):
-        """reads the transform from world to functional space"""
+        """reads the transform from subject to functional space"""
         if inverse is False:
 
             dartel_trans = self._get_spm_grid_transform(
@@ -1176,12 +1173,12 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if space[:4] == 'func':
             return vtk_z_map
 
-        T1_world = self.get("image", subject, format='vtk', space='world', name='mri')
+        T1_world = self.get("image", subject, format='vtk', space='subject', name='mri')
         origin2 = T1_world.GetOrigin()
         dimension2 = T1_world.GetDimensions()
         spacing2 = T1_world.GetSpacing()
         fmri_trans = self._read_func_transform(subject, name)
-        log.info("attempting to move to world")
+        log.info("attempting to move to subject")
         world_z_map = applyTransform(
             vtk_z_map, fmri_trans, origin2, dimension2, spacing2)
 

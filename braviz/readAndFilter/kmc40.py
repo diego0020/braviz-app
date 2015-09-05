@@ -145,7 +145,7 @@ The constructor requires the root to this structure
 
         if space == "diff" and (image_name in {"FA", "MD", "DTI"}):
             return img
-        elif space == "world":
+        elif space == "subject":
             return img
         elif space == "diff":
             # read transform:
@@ -161,10 +161,10 @@ The constructor requires the root to this structure
         log.error("Returned nifti image is in native space")
         raise NotImplementedError
 
-    def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
-        """moves an image from the world coordinate space to talairach or dartel spaces"""
+    def _move_img_from_world(self, subj, img2, interpolate=False, space='subject'):
+        """moves an image from the subject coordinate space to talairach or dartel spaces"""
 
-        if space == 'world':
+        if space == 'subject':
             return img2
         elif space in ('template', 'dartel'):
 
@@ -201,10 +201,10 @@ The constructor requires the root to this structure
             log.error('Unknown space %s' % space)
             raise Exception('Unknown space %s' % space)
 
-    def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
-        """moves an image from the world coordinate space to talairach or dartel spaces"""
+    def _move_img_to_subject(self, subj, img2, interpolate=False, space='subject'):
+        """moves an image from the subject coordinate space to talairach or dartel spaces"""
 
-        if space == 'world':
+        if space == 'subject':
             return img2
         elif space in ('template', 'dartel'):
 

@@ -15,7 +15,7 @@ reader= braviz.readAndFilter.BravizAutoReader()
 labels = [int(reader.get("Model",subject,name=struct,label=True)) for struct in structs]
 #print "label:",label
 #find voxels in structure
-aparc_img = reader.get("APARC",subject,space="world",format="nii")
+aparc_img = reader.get("APARC",subject,space="subject",format="nii")
 aparc_data = aparc_img.get_data()
 locations = [aparc_data == label for label in labels]
 shape=aparc_data.shape
@@ -35,7 +35,7 @@ mm_coords = img_coords.T.dot(t.T)
 #print mm_coords
 
 #find voxel coordinates in fa
-fa_img = reader.get("FA",subject,space="world",format="nii")
+fa_img = reader.get("FA",subject,space="subject",format="nii")
 t2=fa_img.get_affine()
 t2i = np.linalg.inv(t2)
 fa_coords=mm_coords.dot(t2i.T)

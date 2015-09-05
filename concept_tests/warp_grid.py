@@ -13,7 +13,7 @@ subject='143'
 reader=braviz.readAndFilter.BravizAutoReader()
 viewer= simpleVtkViewer()
 
-orig_img=reader.get('MRI',subject,space='world',format='vtk')
+orig_img=reader.get('MRI',subject,space='subject',format='vtk')
 target_space='dartel'
 #target_space='talairach'
 

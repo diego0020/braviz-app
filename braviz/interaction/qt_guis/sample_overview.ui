@@ -162,7 +162,7 @@
            <widget class="QComboBox" name="space_combo">
             <item>
              <property name="text">
-              <string>World</string>
+              <string>Subject</string>
              </property>
             </item>
             <item>

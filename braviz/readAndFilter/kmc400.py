@@ -72,10 +72,10 @@ This is done to protect raw data and to allow to share it between different user
     def _decode_subject(self, subj):
         return str(subj)
 
-    def _move_img_from_world(self, subj, img2, interpolate=False, space='world'):
-        """moves an image from the world coordinate space to talairach or dartel spaces"""
+    def _move_img_from_world(self, subj, img2, interpolate=False, space='subject'):
+        """moves an image from the subject coordinate space to talairach or dartel spaces"""
         space = space.lower()
-        if space == 'world':
+        if space == 'subject':
             return img2
         elif space in ('template', 'dartel'):
             dartel_warp = self._get_spm_grid_transform(subj, "dartel", "back")
@@ -112,12 +112,12 @@ This is done to protect raw data and to allow to share it between different user
             log.error('Unknown space %s' % space)
             raise Exception('Unknown space %s' % space)
 
-    def _move_img_to_world(self, subj, img2, interpolate=False, space='world'):
-        """moves an image from the world coordinate space to talairach or dartel spaces"""
+    def _move_img_to_subject(self, subj, img2, interpolate=False, space='subject'):
+        """moves an image from the subject coordinate space to talairach or dartel spaces"""
         space = space.lower()
-        if space == 'world':
+        if space == 'subject':
             return img2
-        ref = self.get("image", subj, space="world", format="vtk",name="mri")
+        ref = self.get("image", subj, space="subject", format="vtk",name="mri")
         origin = ref.GetOrigin()
         spacing = ref.GetSpacing()
         dims = ref.GetDimensions()
@@ -247,7 +247,7 @@ This is done to protect raw data and to allow to share it between different user
 
         if space == "diff" and (image_name in {"FA", "MD", "DTI"}):
             return img
-        elif space == "world":
+        elif space == "subject":
             return img
         elif space == "diff":
             # read transform:
@@ -268,7 +268,7 @@ This is done to protect raw data and to allow to share it between different user
             aff2 = transform.dot(affine)
             img2 = nib.Nifti1Image(img.get_data(), aff2)
             return img2
-        raise NotImplementedError("Returned nifti image is in world space")
+        raise NotImplementedError("Returned nifti image is in subject space")
 
     #==========Free Surfer================
     def _get_free_surfer_models_dir_name(self, subject):

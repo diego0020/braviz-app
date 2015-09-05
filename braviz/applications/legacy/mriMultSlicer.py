@@ -40,7 +40,7 @@ class MriMultSlicerApp(object):
 
         chosen_models = {'CC_Anterior', 'CC_Central',
                          'CC_Mid_Anterior', 'CC_Mid_Posterior', 'CC_Posterior'}
-        self.currSpace = 'world'
+        self.currSpace = 'subject'
 
         reader = braviz.readAndFilter.BravizAutoReader()
         self.currSubj = reader.get("ids")[0]
@@ -366,7 +366,7 @@ class MriMultSlicerApp(object):
         coordinates_label.pack(side='top')
         space_var = tk.StringVar()
         space_sel = ttk.Combobox(control_frame, textvariable=space_var)
-        space_sel['values'] = ('World', 'Talairach', 'Dartel')
+        space_sel['values'] = ('subject', 'Talairach', 'Dartel')
         space_sel['state'] = 'readonly'
         space_sel.set(self.currSpace)
         space_sel.pack(side='top')

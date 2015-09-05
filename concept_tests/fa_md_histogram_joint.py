@@ -22,7 +22,7 @@ def load_data(image_type):
         print code_str
         try:
             image = reader.get(image_type,code_str)
-            fibers = reader.get("fibers",code_str,space="world")
+            fibers = reader.get("fibers",code_str,space="subject")
         except Exception as e:
             print "not found"
             print e.message

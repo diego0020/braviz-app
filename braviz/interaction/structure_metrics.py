@@ -399,7 +399,7 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
     # print "label:",label
     # find voxels in structure
     try:
-        aparc_img = reader.get("LABEL", subject, name="APARC", space="world", format="nii")
+        aparc_img = reader.get("LABEL", subject, name="APARC", space="subject", format="nii")
     except Exception:
         return float("nan")
     locations = [_get_locations(reader, subject, name) for name in structures]
@@ -421,10 +421,10 @@ def mean_inside(reader, subject, structures, img2, paradigm=None, contrast=1):
 
     # find voxel coordinates in fa
     if paradigm is None:
-        target_img = reader.get("IMAGE",subject, name=img2 , space="world", format="nii")
+        target_img = reader.get("IMAGE",subject, name=img2 , space="subject", format="nii")
     else:
         target_img = reader.get(
-            "FMRI", subject, space="world", format="nii", name=paradigm, contrast=contrast)
+            "FMRI", subject, space="subject", format="nii", name=paradigm, contrast=contrast)
     t2 = target_img.get_affine()
     t2i = np.linalg.inv(t2)
     fa_coords = mm_coords.dot(t2i.T)
@@ -598,9 +598,9 @@ def _get_locations(reader, subject, struct_name):
 
     label = int(reader.get("Model", subject, name=struct_name, label=True))
     if struct_name.startswith("wm"):
-        aparc_img = reader.get("LABEL", subject, name="WMPARC", space="world", format="nii")
+        aparc_img = reader.get("LABEL", subject, name="WMPARC", space="subject", format="nii")
     else:
-        aparc_img = reader.get("LABEL", subject, name="APARC", space="world", format="nii")
+        aparc_img = reader.get("LABEL", subject, name="APARC", space="subject", format="nii")
     aparc_data = aparc_img.get_data()
     return aparc_data == label
 

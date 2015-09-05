@@ -21,8 +21,8 @@ else:
     LUT = braviz.visualization.get_colorbrewer_lut(6e-10,11e-10,"PuBu",9,invert=False)
 
 base_fibers = reader.get("fibers",subj)
-image_nii = reader.get(image_type,subj,space="world")
-mri = reader.get("MRI",subj,space="world",format = "VTK")
+image_nii = reader.get(image_type,subj,space="subject")
+mri = reader.get("MRI",subj,space="subject",format = "VTK")
 
 affine = image_nii.get_affine()
 iaffine = np.linalg.inv(affine)

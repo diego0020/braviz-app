@@ -15,7 +15,7 @@ from braviz.visualization.simple_vtk import add_simple_solid_balloon, add_fibers
 
 
 currSubj='093'
-currSpace='World'
+currSpace='subject'
 #reader=braviz.readAndFilter.kmc40.kmc40Reader(r'C:\Users\da.angulo39\Documents\Kanguro')
 reader=braviz.readAndFilter.BravizAutoReader()
 img=reader.get('MRI',currSubj,format='VTK',space=currSpace)
@@ -235,7 +235,7 @@ coordinates_label=tk.Label(control_frame,text='Coordinates:',pady=5)
 coordinates_label.pack(side='top')
 space_var=tk.StringVar()
 space_sel=ttk.Combobox(control_frame,textvariable=space_var)
-space_sel['values']=('World','Talairach','Dartel')
+space_sel['values']=('subject','Talairach','Dartel')
 space_sel['state']='readonly'
 space_sel.set(currSpace)
 space_sel.pack(side='top')

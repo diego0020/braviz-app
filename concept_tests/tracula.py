@@ -108,6 +108,6 @@ for i in xrange(img_data.shape[3]):
 
 #viewer.addImg(vtk_img2)
 
-fa_img = reader.get("MRI",SUBJ,space="world",format="vtk")
+fa_img = reader.get("MRI",SUBJ,space="subject",format="vtk")
 viewer.addImg(fa_img)
 viewer.start()

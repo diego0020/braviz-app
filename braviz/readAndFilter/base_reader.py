@@ -61,7 +61,7 @@ data is requested. To get a more useful class you should create your own subclas
         return
 
     @cache_function(_memory_cache_container)
-    def get(self, data, subj_id=None, space='world', **kwargs):
+    def get(self, data, subj_id=None, space='subject', **kwargs):
         """Provides access to geometric data in an specified coordinate system.
 
         Args:
@@ -209,7 +209,7 @@ data is requested. To get a more useful class you should create your own subclas
             space (str): The coordinate systems in which the result is requested. Available spaces are
 
                 ===============   ==================================
-                world             Defined by the MRI image
+                subject           Defined by the subject's MRI image
 
                 talairach         MRI image after applying an affine transformation to the Talairach coordinates
 
@@ -235,9 +235,9 @@ data is requested. To get a more useful class you should create your own subclas
         """
         return subj
 
-    def move_img_to_world(self, img, source_space, subj, interpolate=False):
+    def move_img_to_subject(self, img, source_space, subj, interpolate=False):
         """
-        Resamples an image into the world coordinate system
+        Resamples an image into the subject coordinate system
 
         Args:
             img (vtkImageData): source image
@@ -245,13 +245,13 @@ data is requested. To get a more useful class you should create your own subclas
             subj: Subject to whom the image belongs
             interpolate (bool): If False nearest neighbours interpolation is applied, useful for label maps
         Returns:
-            Resliced image in world coordinate system
+            Resliced image in subject coordinate system
         """
         raise NotImplementedError
 
-    def move_img_from_world(self, img, target_space, subj, interpolate=False):
+    def move_img_from_subject(self, img, target_space, subj, interpolate=False):
         """
-        Resamples an image from the world coordinates into some other coordinate system
+        Resamples an image from the subject coordinates into some other coordinate system
 
         Args:
             img (vtkImageData): source image
@@ -267,16 +267,16 @@ data is requested. To get a more useful class you should create your own subclas
         """
         Transforms a set of points into another coordinate system
 
-        By defaults moves from world coordinates to another system, but these behaviour is reversed if the
+        By defaults moves from subject coordinates to another system, but these behaviour is reversed if the
         *inverse* parameter is True. At the moment, to move from an arbitrary coordinate system to another it is
-        necessary to use the world coordinates as stopover
+        necessary to use the subject coordinates as stopover
 
         Args:
             point_set (vtkPolyData,vtkPoints,vtkDataSet): source points
             space (str): origin or destination coordinate system, depending on *inverse*
             subj: Subject to whom the points belong
-            inverse (bool): If false points are moved from world to *space*, else the points are moved from
-                *space* to world.
+            inverse (bool): If false points are moved from subject to *space*, else the points are moved from
+                *space* to subject.
         Returns:
             Transformed points
         """
@@ -433,8 +433,10 @@ data is requested. To get a more useful class you should create your own subclas
         """
         raise IOError("Data not available in BaseReader")
 
-    def _get(self, data, subj=None, space='world', **kw):
+    def _get(self, data, subj=None, space='subject', **kw):
         """Internal: decode instruction and dispatch"""
+        #Deprecated
+        assert space.lower() != "world"
         data = data.upper()
         if data == 'IMAGE':
             if kw.get("index"):

@@ -154,7 +154,7 @@ Args:
     space (str): The coordinate systems in which the result is requested. Available spaces are
 
         ===============   ==================================
-        world             Defined by the MRI image
+        subject             Defined by the MRI image
 
         talairach         MRI image after applying an affine transformation to the Talairach coordinates
 

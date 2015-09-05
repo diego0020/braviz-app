@@ -130,7 +130,7 @@ if __name__ == "__main__":
     import nibabel as nib
 
     subj = config_file.get_apps_config().get_default_subject()
-    export_roi(subj, 1, "world", "/home/diego/test.nii")
+    export_roi(subj, 1, "subject", "/home/diego/test.nii")
 
     nimg = nib.load("/home/diego/test.nii")
     vimg = images.nibNii2vtk(nimg)

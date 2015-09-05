@@ -246,9 +246,9 @@ if __name__ == "__main__":
         p2 = planeWidget.GetPoint2()
         center = (np.array(p1) + np.array(p2)) / 2
         orig_images = {
-            'MRI': {'space': 'world'},
-            'FA': {'space': 'world'},
-            'APARC': {'space': 'world'},
+            'MRI': {'space': 'subject'},
+            'FA': {'space': 'subject'},
+            'APARC': {'space': 'subject'},
             'Precision': {'space': 'func_Precision'},
             'Power': {'space': 'func_Power'},
         }
@@ -306,9 +306,9 @@ if __name__ == "__main__":
     coordinates_label.pack(side='top')
     space_var = tk.StringVar()
     space_sel = ttk.Combobox(control_frame, textvariable=space_var)
-    space_sel['values'] = ('World', 'Talairach', 'Dartel')
+    space_sel['values'] = ('subject', 'Talairach', 'Dartel')
     space_sel['state'] = 'readonly'
-    space_sel.set('World')
+    space_sel.set('subject')
     space_sel.pack(side='top')
     space_sel.bind('<<ComboboxSelected>>', setSubj)
 
