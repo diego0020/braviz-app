@@ -26,17 +26,21 @@ import numpy as np
 __author__ = 'da.angulo39'
 
 
-def parse_spss_meta(file_name, do_save=False, verbose=False):
-    reader = savReaderWriter.SavReader(file_name, ioUtf8=True)
+def parse_spss_meta(file_name, encoding, do_save=False, verbose=False, ):
+    reader = savReaderWriter.SavReader(file_name, ioUtf8=False)
     with reader:
         info = reader.getSavFileInfo()
         descriptions = info[5]
         labels = info[6]
         print("Reading descriptions")
         for k, v in descriptions.iteritems():
+            k = k.decode(encoding)
+            v = v.decode(encoding)
             save_description(k, v, do_save, verbose)
         print("Reading labels")
         for k, v in labels.iteritems():
+            k = k.decode(encoding)
+            v = {kk : vv.decode(encoding) for kk,vv in v.iteritems()}
             save_labels(k, v, do_save, verbose)
 
 
@@ -52,11 +56,11 @@ def save_description(var_name, desc, do_save=False, verbose=False):
         raise
 
 
-def read_spss_data(file_name, index_col=None, verbose=False):
+def read_spss_data(file_name, encoding, index_col=None, verbose=False):
     print("Reading data")
-    reader = savReaderWriter.SavReader(file_name, recodeSysmisTo=float('nan'), ioUtf8=True)
+    reader = savReaderWriter.SavReader(file_name, recodeSysmisTo=float('nan'), ioUtf8=False)
     with reader:
-        var_names = reader.varNames
+        var_names = [s.decode(encoding) for s in reader.varNames]
         all_data = reader.all()
     df = pd.DataFrame(all_data)
     df.columns = var_names
@@ -85,7 +89,7 @@ def post_process(data_frame, verbose=False):
                 print("%s is numeric" % n)
 
 
-def save_comments(data_frame, do_save=False, verbose=False):
+def save_comments(data_frame, encoding, do_save=False, verbose=False):
     ttts = data_frame.dtypes.get_values()
     indeces = np.where(ttts == np.dtype('O'))
     names = data_frame.columns[indeces]
@@ -94,7 +98,7 @@ def save_comments(data_frame, do_save=False, verbose=False):
         col = data_frame[c].dropna()
         for i in col.index:
             com1 = comments.get(i)
-            com = col[i].strip()
+            com = col[i].strip().decode(encoding)
             if len(com) == 0:
                 continue
             com2 = ":\n".join((c, com))
@@ -166,6 +170,8 @@ if __name__ == "__main__":
                         help="Read text variables as comments for each subject")
     parser.add_argument('-s', '--save', action='store_true',
                         help="Add the read information to the database")
+    parser.add_argument('-e', '--encoding', action='store', default="utf8",
+                        help="Set the encoding used in strings, default utf8")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="Print data to the terminal")
     parser.add_argument('spss_file',
@@ -181,13 +187,13 @@ if __name__ == "__main__":
         print(args)
 
     if args.data or args.comments:
-        df = read_spss_data(args.spss_file, args.index_col, args.verbose)
+        df = read_spss_data(args.spss_file, args.encoding, args.index_col, args.verbose)
         if args.data:
             save_data_frame(df, args.save, args.verbose)
         if args.comments:
-            save_comments(df, args.save, args.verbose)
+            save_comments(df, args.encoding, args.save, args.verbose)
 
     if args.meta:
-        parse_spss_meta(args.spss_file, args.save, args.verbose)
+        parse_spss_meta(args.spss_file, args.encoding, args.save, args.verbose)
 
     exit(0)
