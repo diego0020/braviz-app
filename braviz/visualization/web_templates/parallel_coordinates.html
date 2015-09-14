@@ -823,17 +823,20 @@ cats_spinner.stop();
 
   //<div><label> <input type="checkbox" value="" > Var 1 </label></div>
        var v=data.variables[i];
-       $('<label></label>').text(v.name).prepend('<input type="checkbox" value="'+v.var_id+'" >').appendTo(vars_list).wrap('<div class="checkbox"></div>');
+       $('<label></label>').attr("title",v.desc).text(v.name).prepend('<input type="checkbox" value="'+v.var_id+'" >').appendTo(vars_list).wrap('<div class="checkbox"></div>');
        if (v.type == "nominal"){
        //  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-       $('<label></label>').text(v.name).prepend('<input type="radio" name="categories" value="'+v.var_id+'" >').appendTo(cats_list).wrap('<div class="radio"></div>');
+       $('<label></label>').attr("title",v.desc).text(v.name).prepend('<input type="radio" name="categories" value="'+v.var_id+'" >').appendTo(cats_list).wrap('<div class="radio"></div>');
        }
     }
     // find checked variables
     vars_list.find("input").filter(function(index, element){return traits_indices.indexOf(Number(element.value))>=0;}).prop("checked", true);
     // find cathegory
     cats_list.find("input").filter(function(index, element){return caths_index == element.value;}).prop("checked", true);
-    } );
+    }).fail(function(xhr, text, error) {
+            alert(text);
+            }
+    );
 
 }
 

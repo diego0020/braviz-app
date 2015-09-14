@@ -23,6 +23,7 @@ import logging
 
 import tornado.web
 
+import pandas as pd
 from braviz.readAndFilter import tabular_data as tab_data, user_data
 from braviz.readAndFilter.cache import memoize
 from braviz.readAndFilter.config_file import get_apps_config
@@ -179,12 +180,16 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
 
     def get_variable_lists(self):
         vars_df = tab_data.get_variables_and_type()
+
         vars_df.sort("var_name", inplace=True)
         vars_df["var_id"] = vars_df.index
         vars_df.rename(columns={"is_real": "type", "var_name": "name"}, inplace=True)
         nominal = vars_df["type"] == 0
         vars_df["type"] = "numeric"
         vars_df.loc[nominal, "type"] = "nominal"
+        descriptions = tab_data.get_descriptions_dict()
+        vars_df["desc"]=pd.Series(descriptions)
+        vars_df.loc[vars_df["desc"].isnull(),"desc"] = ""
         return json.dumps({"variables": vars_df.to_dict("records")}, cls=NpJSONEncoder)
 
     def get_values(self, cat, vs):

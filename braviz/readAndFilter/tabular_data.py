@@ -688,6 +688,18 @@ def get_var_description(var_idx):
         return ""
     return res[0]
 
+def get_descriptions_dict():
+    """
+    Get a dictionary with the descriptions of all variables
+
+    Returns:
+        A dictionary with variable indices as keys and description strings as values
+    """
+    conn = _get_connection()
+    q = "SELECT var_idx, description FROM var_descriptions"
+    cur = conn.execute(q)
+    res = dict(cur.fetchall())
+    return res
 
 def get_var_description_by_name(var_name):
     """
