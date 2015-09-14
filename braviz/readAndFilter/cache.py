@@ -68,7 +68,7 @@ def cache_function(cache_container):
                                     rem_key, val = f.cache.popitem(last=False)
                                     # print "removing %s with access time=
                                     # %s"%(rem_key,val[1])
-                                mem = process_id.get_memory_info()[
+                                mem = process_id.memory_info()[0][
                                     0] / (2 ** 20)
                         except KeyError:
                             log = logging.getLogger(__name__)
