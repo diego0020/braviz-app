@@ -108,6 +108,7 @@ class LinearModelApp(QMainWindow):
         self.ui.add_regressor_button.clicked.connect(
             self.launch_add_regressor_dialog)
         self.ui.reg_table.setModel(self.regressors_model)
+        self.ui.reg_table.setColumnWidth(0, 200)
         self.ui.reg_table.customContextMenuRequested.connect(
             self.launch_regressors_context_menu)
         self.ui.add_interaction_button.clicked.connect(

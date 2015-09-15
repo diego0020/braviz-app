@@ -2395,15 +2395,18 @@ class OrthogonalPlanesViewer(object):
             image_name (str): New image name, for fMRI enter the paradigm here
             contrast (int): If modality is fMRI the index of the contrast
         """
-
+        log = logging.getLogger(__name__)
         if image_class is not None:
             image_class = image_class.upper()
         if image_name is not None:
             image_name = image_name.upper()
 
         for im in self.__image_planes:
-            im.change_image_modality(
-                image_class, image_name, skip_render=True, contrast=contrast)
+            try:
+                im.change_image_modality(
+                    image_class, image_name, skip_render=True, contrast=contrast)
+            except Exception as e:
+                log.exception(e)
         self.__current_class = image_class
         self.__current_name = image_name
         self.__cursor.set_image(self.x_image.image_plane_widget.GetInput())

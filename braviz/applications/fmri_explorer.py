@@ -79,8 +79,7 @@ class FmriExplorer(QtGui.QMainWindow):
                 self.receive_message)
             log.info("started messages client")
 
-        all_subjs =  frozenset(str(i)
-                                     for i in braviz_tab_data.get_subjects())
+        all_subjs = frozenset(braviz_tab_data.get_subjects())
         self.sample_manager = SampleManager(parent_application=self,application_name=self.name, initial_sample=all_subjs, message_client=self._messages_client)
         self.sample_manager.sample_changed.connect(self.change_sample)
 
@@ -200,7 +199,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def update_fmri_data_view(self, dummy = None, broadcast_message = True):
         log = logging.getLogger(__name__)
-        subj = str(self.ui.subject_edit.text())
+        subj = int(self.ui.subject_edit.text())
         if subj in self.sample_manager.current_sample:
             if self._messages_client is not None and subj != self.__current_subject and broadcast_message:
                 self._messages_client.send_message({'type':'subject','subject': subj})
@@ -296,7 +295,7 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def clear_frozen(self):
         self.__frozen_points = pd.DataFrame(
-            columns=["Subject", "Coordinates", "T Stat"])
+            columns=["Subject", "Coordinates", "Contrast", "T Stat"])
         self.__frozen_model.set_df(self.__frozen_points)
         self.time_plot.clear_frozen_bold_signals()
         self.log_action("Cleared frozen points")
@@ -652,9 +651,9 @@ class FmriExplorer(QtGui.QMainWindow):
         log = logging.getLogger(__name__)
         msg_type = msg["type"]
         if msg_type == "subject":
-            subj = msg.get("subject")
+            subj = int(msg.get("subject"))
             if subj in self.sample_manager.current_sample and subj != self.__current_subject:
-                self.ui.subject_edit.setText(subj)
+                self.ui.subject_edit.setText(str(subj))
                 log.info("Changing to subj %s" % subj)
                 self.update_fmri_data_view(broadcast_message=False)
         elif msg_type == "sample":

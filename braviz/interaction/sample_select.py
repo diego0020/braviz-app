@@ -673,7 +673,6 @@ class SampleManager(QtCore.QObject):
             self._sample = set()
         else:
             self._sample = set(initial_sample)
-
         self.__parent_name = application_name
         self._sample_policy = "ask"
         self._message_client = message_client

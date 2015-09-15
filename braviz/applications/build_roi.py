@@ -1351,11 +1351,11 @@ class BuildRoiApp(QMainWindow):
         if index < 0:
             # When the combo box is cleared
             return
-        roi_id, success = self.ui.sphere_name_combo.itemData(index)
+        roi_id = self.ui.sphere_name_combo.itemData(index)
         if self.__roi_id != roi_id and not self.action_confirmed():
             prev_idx = self.ui.sphere_name_combo.findText(self.__roi_name)
             self.ui.sphere_name_combo.setCurrentIndex(prev_idx)
-        if success is True:
+        if roi_id is not None:
             if self.__roi_id == roi_id:
                 return
             roi_name = str(self.ui.sphere_name_combo.itemText(index))

@@ -540,6 +540,7 @@ def calculate_normalized_linear_regression(outcome, regressors_data_frame, inter
 
     std_model = pandas2ri.ri2py(std_model)
     std_model.columns = [std_names2orig_names[c] for c in std_model.columns]
+    std_model.index = data_frame.index
 
     adjusted_r_squared = fit_summary.rx2("adj.r.squared")[0]
     fit_p_val = r_environment["f_pval_r"][0]
