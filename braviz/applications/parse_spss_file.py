@@ -46,7 +46,7 @@ def parse_spss_meta(file_name, encoding, do_save=False, verbose=False, ):
 
 def save_description(var_name, desc, do_save=False, verbose=False):
     if verbose or not do_save:
-        print("%s : %s" % (var_name, desc))
+        print(u"%s : %s" % (var_name, desc))
     try:
         if do_save:
             tabular_data.save_var_description_by_name(var_name, desc)
@@ -86,7 +86,7 @@ def post_process(data_frame, verbose=False):
             pass
         else:
             if verbose:
-                print("%s is numeric" % n)
+                print(u"%s is numeric" % n)
 
 
 def save_comments(data_frame, encoding, do_save=False, verbose=False):
@@ -110,7 +110,7 @@ def save_comments(data_frame, encoding, do_save=False, verbose=False):
 
     for k, v in comments.iteritems():
         if verbose or not do_save:
-            print("%d : %s" % (k, v))
+            print(u"%d : %s" % (k, v))
         if do_save:
             user_data.update_comment(int(k), v)
 
