@@ -7,7 +7,7 @@
     <style>
 
     body {
-      font: 10px sans-serif;
+      font: 12pt sans-serif;
     }
 
     .bar rect {
@@ -16,6 +16,12 @@
       stroke: white;
       stroke-width: 1px;
     }
+
+    .bar rect:hover {
+      stroke: black;
+      stroke-width: 1px;
+    }
+
 
     .bar text {
       fill: #fff;
@@ -42,7 +48,9 @@
 
 <script>
 
-// Generate a Bates distribution of 10 random variables.
+var v_width = window.innerWidth * 0.95;
+var v_height = window.innerHeight * 0.90;
+
 var input_data = {% raw values %};
 var var_name ="{{ var_name }}"
 var values = input_data.map(function(v){return v[var_name];});
@@ -50,17 +58,18 @@ var values = input_data.map(function(v){return v[var_name];});
 
 // A formatter for counts.
 var formatCount = d3.format(",.0f");
+var formatRange = d3.format(",.3g");
 
 var margin = {top: 10, right: 30, bottom: 80, left: 30},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    width = v_width - margin.left - margin.right,
+    height = v_height - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
     .domain([d3.min(values), d3.max(values)])
     .range([0, width]).nice();
 
 var data = d3.layout.histogram()
-    .value(function(v){return v[var_name];})
+    .value(function(v){return v[var_name];}).bins(20)
     (input_data);
 
 var y = d3.scale.linear()
@@ -77,6 +86,11 @@ var svg = d3.select("#histogram").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+function create_title_msg(bin){
+var msg = "("+ formatRange(bin.x)+ " , "+ formatRange(bin.x + bin.dx) + ") : " + formatCount(bin.length);
+return msg;
+}
+
 var bar = svg.selectAll(".bar")
     .data(data)
   .enter().append("g")
@@ -85,8 +99,8 @@ var bar = svg.selectAll(".bar")
 
 bar.append("rect")
     .attr("x", 1)
-    .attr("width", function(d){return x(d.x + d.dx) - x(d.x) ;})
-    .attr("height", function(d) { return height - y(d.y); });
+    .attr("width", function(d){return x(d.x + d.dx) - x(d.x) -1;})
+    .attr("height", function(d) { return height - y(d.y); }).append("title").text(create_title_msg);
 
 bar.append("text")
     .attr("dy", ".75em")
