@@ -37,6 +37,20 @@
         font-size: 12pt;
     }
 
+    .arrow{
+        stroke : black;
+        fill : none;
+        stroke-width:2px;
+        stroke-linecap:round;
+        stroke-linejoin:miter;
+        stroke-opacity:1;
+    }
+
+    .hidden{
+        display : none;
+    }
+
+
     </style>
 </head>
 <body>
@@ -60,7 +74,7 @@ var values = input_data.map(function(v){return v[var_name];});
 var formatCount = d3.format(",.0f");
 var formatRange = d3.format(",.3g");
 
-var margin = {top: 10, right: 30, bottom: 80, left: 30},
+var margin = {top: 50, right: 30, bottom: 50, left: 30},
     width = v_width - margin.left - margin.right,
     height = v_height - margin.top - margin.bottom;
 
@@ -90,6 +104,18 @@ function create_title_msg(bin){
 var msg = "("+ formatRange(bin.x)+ " , "+ formatRange(bin.x + bin.dx) + ") : " + formatCount(bin.length);
 return msg;
 }
+
+var subject_to_bin = d3.map();
+data.forEach(
+    function(bin,i){
+        bin.forEach(
+            function(e){
+                var ind = e["index"];
+                subject_to_bin.set(ind,i);
+            }
+        );
+    }
+);
 
 var bar = svg.selectAll(".bar")
     .data(data)
@@ -121,6 +147,73 @@ svg.append("text")
    .attr("y",height + 40)
    .attr("text-anchor","middle")
    .text(var_name);
+
+var arrow = svg.append("g").attr("class", "arrow").attr("transform","translate(100,100)");
+arrow.append("path").attr("d","M -15,-19 0,-4 15,-19");
+arrow.append("path").attr("d","M 0,-5 0,-35");
+arrow.classed("hidden",true);
+
+function move_arrow_to_bin(i){
+var bin = data[i];
+var x_pos = x(bin.x + bin.dx/2);
+var y_pos = y(bin.y);
+arrow.attr("transform","translate("+x_pos+","+y_pos+")");
+arrow.classed("hidden",false);
+}
+
+function hide_arrow(){
+arrow.classed("hidden",true);
+}
+
+function highlight_subject(subj){
+var bin = subject_to_bin.get(subj);
+if (typeof bin != 'undefined'){
+    move_arrow_to_bin(bin);
+}else{
+    hide_arrow();
+}
+}
+
+//---------------------------------connection--------------------------------------
+var last_message = null;
+var message_getter = null;
+var errorSleepTime = 500;
+ function openWS() {
+    var address = "ws://" + window.location.host + "/messages_ws";
+    message_getter = new WebSocket(address);
+    message_getter.onerror=function () {
+    if (errorSleepTime < 5000){
+    errorSleepTime*=2;
+    }
+    };
+    message_getter.onmessage = function(e) {
+      if (last_message==e.data){
+      return;
+      }
+      message = JSON.parse(e.data);
+      var msg_type = message.type;
+      if (msg_type == "sample")
+      {
+        // Nothing yet
+      }
+      else{
+      if (msg_type == "subject")
+      {
+      var code = message.subject;
+      if (code != null){
+               highlight_subject(code);
+        }
+      }
+      }
+    };
+    message_getter.onclose = function(e) {
+      window.setTimeout(openWS, errorSleepTime);
+    };
+  }
+
+window.onload=function(){
+  openWS();
+};
 
 </script>
 </body>
