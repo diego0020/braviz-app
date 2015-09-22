@@ -273,3 +273,19 @@ class SubjectSwitchHandler(tornado.web.RequestHandler):
             sample_id = sample
 
         self.render("subject_switch.html", subjs=subjs, samples=sample_names, sample_id=sample_id)
+
+class HistogramHandler(tornado.web.RequestHandler):
+    """
+    Implements a simple web page for changing the current subject from a mobile.
+
+    """
+
+    def get(self):
+        var_name = self.get_argument("var",None)
+        if var_name is None:
+            var_name = get_apps_config().get_default_variables()["ratio1"]
+        df = tab_data.get_data_frame_by_name(var_name)
+        df.dropna(inplace=True)
+        df["index"]=df.index.astype(str)
+        data = df.to_json(orient="records")
+        self.render("histogram.html",values=data, var_name=var_name)

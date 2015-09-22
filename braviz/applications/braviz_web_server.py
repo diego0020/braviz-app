@@ -26,7 +26,7 @@ import braviz
 from braviz.interaction.connection import GenericMessageClient
 from braviz.interaction.tornado_connection import WebSocketMessageHandler, WebSocketManager
 from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler, SubjectSwitchHandler,\
-    ParallelCoordsDataHandler
+    ParallelCoordsDataHandler, HistogramHandler
 import logging
 
 __author__ = 'da.angulo39'
@@ -56,6 +56,7 @@ if __name__ == "__main__":
             (r"/messages_ws",WebSocketMessageHandler,
             {"socket_manager": socket_manager}),
             (r"/subject", SubjectSwitchHandler),
+            (r"/histogram", HistogramHandler),
             (r"/", IndexHandler),
 
         ],
