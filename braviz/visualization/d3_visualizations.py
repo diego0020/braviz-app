@@ -113,8 +113,6 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         labels = tab_data.get_labels_dict(variables[0])
 
         for i, (k, v) in enumerate(labels.iteritems()):
-            if v is None:
-                labels[k] = "label%s" % k
             if v is None or len(v) == 0:
                 v = "level_%d" % i
             elif v[0].isdigit():
@@ -130,7 +128,6 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
 
         caths = labels.values()
         caths_json = json.dumps(list(caths))
-
 
         # 1: cathegories, -1: code
         attrs = list(data.columns[1:-1])
@@ -282,10 +279,24 @@ class HistogramHandler(tornado.web.RequestHandler):
 
     def get(self):
         var_name = self.get_argument("var",None)
-        if var_name is None:
-            var_name = get_apps_config().get_default_variables()["ratio1"]
-        df = tab_data.get_data_frame_by_name(var_name)
+        color_name = self.get_argument("color",None)
+
+        if var_name is None or color_name is None:
+            default_variables = get_apps_config().get_default_variables()
+            if var_name is None:
+                var_name = default_variables["ratio1"]
+            if color_name is None:
+                color_name = default_variables["nom1"]
+
+        df = tab_data.get_data_frame_by_name([var_name,color_name])
         df.dropna(inplace=True)
         df["index"]=df.index.astype(str)
+        labels = tab_data.get_labels_dict(var_name=color_name)
+        for i, (k, v) in enumerate(labels.iteritems()):
+            if v is None or len(v) == 0:
+                v = "level_%d" % i
+            labels[k] = v
+        df[color_name] = df[color_name].map(labels)
+        levels = list(labels.values())
         data = df.to_json(orient="records")
-        self.render("histogram.html",values=data, var_name=var_name)
+        self.render("histogram.html",values=data, var_name=var_name, color_name=color_name, color_levels=levels)

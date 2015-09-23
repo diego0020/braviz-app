@@ -375,7 +375,7 @@ def are_variables_names_nominal(var_names):
     return dict((name, not is_variable_name_nominal(name)) for name in var_names)
 
 
-def get_labels_dict(var_idx):
+def get_labels_dict(var_idx=None, var_name=None):
     """
     Map numerical labels to strings in nominal variables
 
@@ -386,6 +386,11 @@ def get_labels_dict(var_idx):
         A dictionary with numerical labels as keys, and the text for each label as
         values.
     """
+    if var_idx is None :
+        if var_name is None:
+            raise Exception("var_idx or var_name is required")
+        var_idx = get_var_idx(var_name)
+
     conn = _get_connection()
     q = """
     SELECT label2, name

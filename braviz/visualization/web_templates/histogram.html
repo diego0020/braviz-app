@@ -11,7 +11,6 @@
     }
 
     .bar rect {
-      fill: steelblue;
       shape-rendering: crispEdges;
       stroke: white;
       stroke-width: 1px;
@@ -59,7 +58,7 @@
 
 
 <script type="text/javascript" src="{{ static_url ('d3/d3.js') }}"></script>
-
+<script type="text/javascript" src="{{ static_url ('d3/colorbrewer.js') }}"></script>
 <script>
 
 var v_width = window.innerWidth * 0.95;
@@ -67,7 +66,21 @@ var v_height = window.innerHeight * 0.90;
 
 var input_data = {% raw values %};
 var var_name ="{{ var_name }}"
-var values = input_data.map(function(v){return v[var_name];});
+var color_name ="{{ color_name }}"
+var color_levels =  {% raw json_encode(color_levels) %}
+
+// Create style for each layer in the stacked
+var colors = d3.scale.ordinal().domain(color_levels).range(colorbrewer.Set1[Math.max(color_levels.length, 3)])
+var color_style = "";
+color_levels.forEach( function(e,i){
+    var c = colors(e);
+    var st = ".level" + i + " { fill : " + c + " ; }" + "\n";
+    color_style += st;
+});
+
+var sheet = document.createElement('style');
+sheet.innerHTML = color_style;
+document.body.appendChild(sheet);
 
 
 // A formatter for counts.
@@ -79,15 +92,32 @@ var margin = {top: 50, right: 30, bottom: 50, left: 30},
     height = v_height - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
-    .domain([d3.min(values), d3.max(values)])
+    .domain(d3.extent(input_data,function(v){return v[var_name];}))
     .range([0, width]).nice();
 
-var data = d3.layout.histogram()
-    .value(function(v){return v[var_name];}).bins(20)
-    (input_data);
+var hists = color_levels.map(function(c){
+        var h=d3.layout.histogram()
+        .value(function(v){return v[var_name];}).bins(x.ticks(20))
+        (input_data.filter(function(e){return e[color_name] == c}));
+        h.forEach(function(b){b.color=c});
+        return h;
+    });
+
+var stacked = d3.layout.stack()
+    .values(function(d){
+            return d
+        })
+    (hists)
+
+d3.zip(stacked,color_levels).forEach(function(e,i){
+    e[0].color = e[1];
+    e[0].color_i = i;
+});
+
+hist = hists[0];
 
 var y = d3.scale.linear()
-    .domain([0, d3.max(data, function(d) { return d.y; })])
+    .domain([0, d3.max(stacked[stacked.length-1], function(d) { return d.y + d.y0; })])
     .range([height, 0]);
 
 var xAxis = d3.svg.axis()
@@ -101,39 +131,37 @@ var svg = d3.select("#histogram").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 function create_title_msg(bin){
-var msg = "("+ formatRange(bin.x)+ " , "+ formatRange(bin.x + bin.dx) + ") : " + formatCount(bin.length);
+var msg = bin.color+ " ("+ formatRange(bin.x)+ " , "+ formatRange(bin.x + bin.dx) + ") : " + formatCount(bin.length);
 return msg;
 }
 
 var subject_to_bin = d3.map();
-data.forEach(
-    function(bin,i){
-        bin.forEach(
-            function(e){
-                var ind = e["index"];
-                subject_to_bin.set(ind,i);
-            }
-        );
-    }
-);
+stacked.forEach(function(hist){
+    hist.forEach(
+        function(bin,i){
+            bin.forEach(
+                function(e){
+                    var ind = e["index"];
+                    subject_to_bin.set(ind,i);
+                }
+            );
+        }
+    );
+});
 
-var bar = svg.selectAll(".bar")
-    .data(data)
-  .enter().append("g")
+var layers = svg.selectAll(".layer").data(stacked).enter().append("g").attr("class",function(d){return "level"+d.color_i}).classed("layer",true);
+
+var bar = layers.selectAll(".bar")
+    .data(function(d){return d;})
+    .enter().append("g")
     .attr("class", "bar")
-    .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+    .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y0+d.y) + ")"; });
 
 bar.append("rect")
     .attr("x", 1)
     .attr("width", function(d){return x(d.x + d.dx) - x(d.x) -1;})
     .attr("height", function(d) { return height - y(d.y); }).append("title").text(create_title_msg);
 
-bar.append("text")
-    .attr("dy", ".75em")
-    .attr("y", 6)
-    .attr("x", function(d){return (x(d.x + d.dx) - x(d.x))/2 ;})
-    .attr("text-anchor", "middle")
-    .text(function(d) { return formatCount(d.y); });
 
 svg.append("g")
     .attr("class", "x axis")
@@ -148,15 +176,40 @@ svg.append("text")
    .attr("text-anchor","middle")
    .text(var_name);
 
+// Add a legend.
+
+var legend_box = svg.append("g").attr("transform",
+"translate("+(Math.floor(width) - 200)+"," + (50+25*color_levels.length)+")");
+
+var legend = legend_box.selectAll("g.legend")
+        .data(color_levels)
+        .enter().append("svg:g")
+        .attr("class", "legend")
+        .attr("transform", function (d, i) {
+            return "translate(0,"+ (i * -25) + ")";
+        });
+
+legend.append("rect")
+        .attr("class", function(d,i){return "level"+i;})
+        .attr("y",-5)
+        .attr("width",10)
+        .attr("height",10);
+
+legend.append("text")
+        .attr("x", 20)
+        .attr("dy", ".31em")
+        .text(function(d){return d});
+
+
 var arrow = svg.append("g").attr("class", "arrow").attr("transform","translate(100,100)");
 arrow.append("path").attr("d","M -15,-19 0,-4 15,-19");
 arrow.append("path").attr("d","M 0,-5 0,-35");
 arrow.classed("hidden",true);
 
 function move_arrow_to_bin(i){
-var bin = data[i];
+var bin = stacked[stacked.length-1][i];
 var x_pos = x(bin.x + bin.dx/2);
-var y_pos = y(bin.y);
+var y_pos = y(bin.y + bin.y0);
 arrow.attr("transform","translate("+x_pos+","+y_pos+")");
 arrow.classed("hidden",false);
 }
