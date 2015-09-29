@@ -35,7 +35,7 @@ from braviz.interaction.connection import MessageServer, create_log_message
 __author__ = 'Diego'
 
 try:
-    from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
+    from braviz.interaction.qt_guis.menu2_light_mac import Ui_BavizMenu
 except ImportError as e:
     import braviz.interaction.generate_qt_guis
 
