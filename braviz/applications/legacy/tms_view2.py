@@ -31,8 +31,10 @@ from vtk.tk.vtkTkRenderWindowInteractor import \
     vtkTkRenderWindowInteractor
 
 from braviz.readAndFilter.read_csv import get_column
+import braviz.readAndFilter.config_file
 from braviz.visualization.matplotlib_charts import BarPlot
 from braviz.interaction.tk_tooltip import ToolTip
+from braviz.interaction import tk_gui
 import braviz
 if __name__ == "__main__":
 
@@ -63,7 +65,7 @@ if __name__ == "__main__":
 
     fibers = reader.get('fibers', current_subject, space='talairach')
 
-    config = braviz.interaction.get_config(__file__)
+    config = braviz.readAndFilter.config_file.get_apps_config()
     background = config.get_background()
 
     ren = vtk.vtkRenderer()
@@ -637,7 +639,7 @@ if __name__ == "__main__":
     show_groups_box.grid(row=4, column=0, columnspan=2, sticky='w')
     select_data_frame.grid(row=0, pady=5)
 
-    select_subj_frame = braviz.interaction.subjects_list(reader, set_subj, control_frame, text='Subject', padx=10, pady=5,
+    select_subj_frame = tk_gui.subjects_list(reader, set_subj, control_frame, text='Subject', padx=10, pady=5,
                                                          height='100')
     select_subj_frame.grid(column=0, row=1, sticky='news')
     control_frame.rowconfigure(1, weight=1)
