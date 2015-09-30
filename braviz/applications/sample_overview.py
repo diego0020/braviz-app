@@ -497,6 +497,13 @@ class SampleOverview(QtGui.QMainWindow):
         viewer.change_current_space(self.current_space)
 
         log = logging.getLogger(__name__)
+
+        # subject
+        try:
+            viewer.change_subject(img_code)
+        except Exception as e:
+            log.exception(e)
+
         # images panel
         image_state = wanted_state.get("image_state")
         log.info(image_state)
@@ -529,11 +536,11 @@ class SampleOverview(QtGui.QMainWindow):
                         orientation_dict = {
                             "Axial": 2, "Coronal": 1, "Sagital": 0}
                         viewer.image.change_image_orientation(
-                        orientation_dict[orient], skip_render=True)
+                            orientation_dict[orient], skip_render=True)
                     img_slice = image_state.get("slice")
                     if img_slice is not None:
                         viewer.image.set_image_slice(
-                        int(img_slice), skip_render=True)
+                            int(img_slice), skip_render=True)
                     window = image_state.get("window")
                     if window is not None:
                         viewer.image.set_image_window(window, skip_render=True)
@@ -670,11 +677,6 @@ class SampleOverview(QtGui.QMainWindow):
                 log.warning(e.message)
 
         QtGui.QApplication.instance().processEvents()
-        # subject
-        try:
-            viewer.change_subject(img_code)
-        except Exception as e:
-            log.exception(e)
         # camera panel
         self.__load_camera_from_scenario(viewer)
         return
