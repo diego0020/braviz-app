@@ -35,14 +35,15 @@ from braviz.interaction.connection import MessageServer, create_log_message
 __author__ = 'Diego'
 
 try:
-    from braviz.interaction.qt_guis.menu2_light_mac import Ui_BavizMenu
+    #from braviz.interaction.qt_guis.menu2_light_mac import Ui_BavizMenu as Ui_BravizMenu_short
+    from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
 except ImportError as e:
     import braviz.interaction.generate_qt_guis
-
     braviz.interaction.generate_qt_guis.update_guis()
     print(e.message)
     print("Maybe needs to update gui, please try to load again")
     _ = raw_input("press enter to quit")
+    sys.exit(0)
 
 
 
@@ -70,6 +71,11 @@ class BravizMenu2(QtGui.QMainWindow):
         self.setup_gui()
 
     def setup_gui(self):
+        screen_heigth = QtGui.QApplication.desktop().height()
+        #if screen_heigth < 600:
+        #    self.ui = Ui_BavizMenu()
+        #else:
+        #    self.ui = Ui_BravizMenu_short()
         self.ui = Ui_BavizMenu()
         self.ui.setupUi(self)
         self.connect_application_launcher("anova", self.ui.anova)
