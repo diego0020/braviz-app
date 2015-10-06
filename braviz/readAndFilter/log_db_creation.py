@@ -37,7 +37,7 @@ def create_tables(conn=None):
         # sessions table
         q = """CREATE TABLE IF NOT EXISTS sessions (
         session_idx INTEGER PRIMARY KEY,
-        start_date DATE,
+        start_date DATETIME,
         name TEXT,
         description TEXT
         );"""
@@ -46,7 +46,7 @@ def create_tables(conn=None):
         # events table
         q = """CREATE TABLE IF NOT EXISTS events (
         event_idx INTEGER PRIMARY KEY,
-        event_date DATE,
+        event_date DATETIME,
         session_id INTEGER REFERENCES sessions(session_idx),
         event_text TEXT,
         event_state TEXT,

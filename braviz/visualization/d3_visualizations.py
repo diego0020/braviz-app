@@ -300,3 +300,13 @@ class HistogramHandler(tornado.web.RequestHandler):
         levels = list(labels.values())
         data = df.to_json(orient="records")
         self.render("histogram.html",values=data, var_name=var_name, color_name=color_name, color_levels=levels)
+
+class SessionIndexHandler(tornado.web.RequestHandler):
+    """
+    Implements a simple web page for changing the current subject from a mobile.
+
+    """
+
+    def get(self):
+
+        self.render("histogram.html",values=data, var_name=var_name, color_name=color_name, color_levels=levels)

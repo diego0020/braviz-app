@@ -23,6 +23,7 @@ from braviz.readAndFilter.tabular_data import get_connection
 import datetime
 import os
 import json
+from collections import namedtuple
 
 _date_format = "%d-%m-%Y %H-%M"
 _active_session = None
@@ -75,3 +76,29 @@ def add_event(application_script, instance_id, event_text, state=None, screensho
     with conn:
         cur = conn.execute(
             q,(now,_active_session, event_text, state, screenshot, normal_exec_name,instance_id ))
+
+session_factory = namedtuple("Session",["index", "name", "description", "start_date", "end_date", "duration"])
+
+def get_sessions():
+    q = """SELECT session_idx, name, description, datetime(start_date), last_date
+           FROM sessions LEFT JOIN
+              (select session_id, max(datetime(event_date)) as last_date
+                FROM  events GROUP BY  session_id
+              ) as end_dates
+           ON (sessions.session_idx = end_dates.session_id) """
+
+    def format_tuple(t):
+        index, name, description, start_date, end_date = t
+        start_date = datetime.datetime.strptime(start_date,"%Y-%m-%d %H:%M:%S")
+        if end_date is not None:
+            end_date = datetime.datetime.strptime(end_date,"%Y-%m-%d %H:%M:%S")
+        else:
+            end_date = start_date
+        duration = end_date - start_date
+        if name is None: name = ""
+        if description is None: description = ""
+        return session_factory(index,name,description,start_date,end_date,duration)
+
+    conn = get_connection()
+    sessions = [format_tuple(t) for t in conn.execute(q).fetchall()]
+    return sessions
