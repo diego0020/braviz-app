@@ -21,6 +21,7 @@ from braviz.utilities import set_pyqt_api_2
 set_pyqt_api_2()
 
 import sys
+import platform
 import logging
 import webbrowser
 
@@ -35,7 +36,7 @@ from braviz.interaction.connection import MessageServer, create_log_message
 __author__ = 'Diego'
 
 try:
-    #from braviz.interaction.qt_guis.menu2_light_mac import Ui_BavizMenu as Ui_BravizMenu_short
+    from braviz.interaction.qt_guis.menu2_light_mac import Ui_BavizMenu as Ui_BravizMenu_short
     from braviz.interaction.qt_guis.menu2_light import Ui_BavizMenu
 except ImportError as e:
     import braviz.interaction.generate_qt_guis
@@ -72,11 +73,11 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def setup_gui(self):
         screen_heigth = QtGui.QApplication.desktop().height()
-        #if screen_heigth < 600:
-        #    self.ui = Ui_BavizMenu()
-        #else:
-        #    self.ui = Ui_BravizMenu_short()
-        self.ui = Ui_BavizMenu()
+        if platform.system() != "Darwin":
+            self.ui = Ui_BavizMenu()
+        else:
+            self.ui = Ui_BravizMenu_short()
+        #self.ui = Ui_BavizMenu()
         self.ui.setupUi(self)
         self.connect_application_launcher("anova", self.ui.anova)
         self.connect_application_launcher("correlations", self.ui.correlations)
