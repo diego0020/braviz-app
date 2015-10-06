@@ -25,14 +25,15 @@ import os
 import json
 from collections import namedtuple
 
-_date_format = "%d-%m-%Y %H-%M"
+_pretty_date_format = "%d-%m-%Y %I:%M %p"
+_db_date_format = "%Y-%m-%d %H:%M:%S.%f"
 _active_session = None
 
 def start_session(session_name = None):
     global _active_session
     now = datetime.datetime.now()
     if session_name is None:
-        session_name = "%s session"%(now.strftime(_date_format))
+        session_name = "%s session"%(now.strftime(_pretty_date_format))
     q = """INSERT  OR ABORT INTO sessions (start_date, name)
             VALUES ( ?, ? )"""
     conn = get_connection()
@@ -80,6 +81,7 @@ def add_event(application_script, instance_id, event_text, state=None, screensho
 session_factory = namedtuple("Session",["index", "name", "description", "start_date", "end_date", "duration"])
 
 def get_sessions():
+
     q = """SELECT session_idx, name, description, datetime(start_date), last_date
            FROM sessions LEFT JOIN
               (select session_id, max(datetime(event_date)) as last_date
@@ -89,9 +91,9 @@ def get_sessions():
 
     def format_tuple(t):
         index, name, description, start_date, end_date = t
-        start_date = datetime.datetime.strptime(start_date,"%Y-%m-%d %H:%M:%S")
+        start_date = datetime.datetime.strptime(start_date,_db_date_format)
         if end_date is not None:
-            end_date = datetime.datetime.strptime(end_date,"%Y-%m-%d %H:%M:%S")
+            end_date = datetime.datetime.strptime(end_date,_db_date_format)
         else:
             end_date = start_date
         duration = end_date - start_date
@@ -101,4 +103,21 @@ def get_sessions():
 
     conn = get_connection()
     sessions = [format_tuple(t) for t in conn.execute(q).fetchall()]
+    return sessions
+
+events_factory = namedtuple("Event",["index", "date", "action", "screenshot_data", "application_name", "instance_id"])
+def get_events(session_id):
+
+    q = """SELECT  event_idx, event_date, event_text, event_screenshot, applications.exec_name, instance_id
+    FROM events JOIN applications ON events.application = applications.app_idx
+    WHERE session_id = ?
+    """
+
+    def format_event_tuple(t):
+        event_idx, event_date, event_text, event_screenshot, application, instance_id = t
+        event_date = datetime.datetime.strptime(event_date,_db_date_format)
+        return events_factory(event_idx, event_date, event_text, event_screenshot, application, instance_id)
+
+    conn = get_connection()
+    sessions = [format_event_tuple(t) for t in conn.execute(q,(session_id, )).fetchall()]
     return sessions
