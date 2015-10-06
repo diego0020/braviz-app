@@ -18,7 +18,7 @@
 
 
 from __future__ import division
-from braviz.readAndFilter.tabular_data import _get_connection
+from braviz.readAndFilter.tabular_data import get_connection
 import numpy as np
 from pandas.io import sql
 
@@ -64,7 +64,7 @@ def roi_name_exists(name):
     Returns:
         ``True`` if a ROI with the given name exists in the database, ``False`` otherwise.
     """
-    con = _get_connection()
+    con = get_connection()
     cur = con.execute(
         "SELECT count(*) FROM geom_rois WHERE roi_name = ?", (name,))
     n = cur.fetchone()[0]
@@ -97,7 +97,7 @@ def create_roi(name, roi_type, coords, desc=""):
         Id of ROI in the database
 
     """
-    con = _get_connection()
+    con = get_connection()
     coords = coords.lower()
     coords_key = _COORDINATES_I[coords]
     roi_type_key = _ROI_TYPES_I[roi_type]
@@ -118,7 +118,7 @@ def get_available_spheres_df(space=None):
         :class:`~pandas.DataFrame` with columns for sphere id, and number of subjects with the ROI defined; indexed
         by name
     """
-    con = _get_connection()
+    con = get_connection()
     if space is None:
         q = """
             SELECT roi_name as name, roi_desc as description, num as quantity
@@ -155,7 +155,7 @@ def get_available_lines_df():
         :class:`~pandas.DataFrame` with columns for line id, and number of subjects with the ROI defined; indexed
         by name
     """
-    con = _get_connection()
+    con = get_connection()
     q = """
         SELECT roi_name as name, roi_desc as description, num as quantity
         FROM geom_rois JOIN
@@ -183,7 +183,7 @@ def get_roi_space(name=None, roi_id=None):
     Returns:
         coordinate system as a string, see :func:`create_roi` for options
     """
-    con = _get_connection()
+    con = get_connection()
 
     if roi_id is None:
         q = "SELECT roi_coords FROM geom_rois WHERE roi_name = ?"
@@ -206,7 +206,7 @@ def get_roi_id(roi_name):
     Returns:
         ROI id in the database
     """
-    con = _get_connection()
+    con = get_connection()
     q = "SELECT roi_id FROM geom_rois WHERE roi_name = ?"
     cur = con.execute(q, (roi_name,))
     idx = cur.fetchone()[0]
@@ -223,7 +223,7 @@ def get_roi_name(roi_id):
     Returns:
         ROI name
     """
-    con = _get_connection()
+    con = get_connection()
     q = "SELECT roi_name FROM geom_rois WHERE roi_id = ?"
     cur = con.execute(q, (roi_id,))
     name = cur.fetchone()[0]
@@ -243,7 +243,7 @@ def get_roi_type(name=None, roi_id=None):
     Returns:
         ROI type as a string, see :func:`create_roi` for options
     """
-    con = _get_connection()
+    con = get_connection()
     if roi_id is None:
         q = "SELECT roi_type FROM geom_rois WHERE roi_name = ?"
         cur = con.execute(q, (name,))
@@ -265,7 +265,7 @@ def subjects_with_sphere(sphere_id):
     Returns:
         A set of subjects with the sphere defined
     """
-    con = _get_connection()
+    con = get_connection()
     q = "SELECT subject FROM geom_spheres WHERE sphere_id = ?"
     cur = con.execute(q, (sphere_id,))
     rows = cur.fetchall()
@@ -283,7 +283,7 @@ def subjects_with_line(line_id):
     Returns:
         A set of subjects with the line defined
     """
-    con = _get_connection()
+    con = get_connection()
     q = "SELECT subject FROM geom_lines WHERE line_id = ?"
     cur = con.execute(q, (line_id,))
     rows = cur.fetchall()
@@ -302,7 +302,7 @@ def save_sphere(sphere_id, subject, radius, center):
         center (tuple) : The three coordinates for the sphere center in mm.
     """
     x, y, z = center
-    con = _get_connection()
+    con = get_connection()
     q = "INSERT OR REPLACE INTO geom_spheres VALUES (?,?,?,?,?,?)"
     con.execute(q, (sphere_id, subject, radius, x, y, z))
     con.commit()
@@ -320,7 +320,7 @@ def load_sphere(sphere_id, subject):
         ``(r,x,y,z)`` where ``r`` is the radius of the sphere and ``(x,y,z)`` is its center.
     """
     q = "SELECT radius,ctr_x,ctr_y,ctr_z FROM geom_spheres WHERE sphere_id = ? and subject = ?"
-    con = _get_connection()
+    con = get_connection()
     cur = con.execute(q, (int(sphere_id), int(subject)))
     res = cur.fetchone()
     return res
@@ -337,7 +337,7 @@ def get_all_spheres(sphere_id):
         :class:`pandas.DataFrame` with columns for radius, center x, center y and center z; indexed by subject
     """
     q = "SELECT subject,radius,ctr_x,ctr_y,ctr_z FROM geom_spheres WHERE sphere_id = ?"
-    con = _get_connection()
+    con = get_connection()
     df = sql.read_sql(q, con, index_col="subject", params=(sphere_id,))
     return df
 
@@ -353,7 +353,7 @@ def recursive_delete_roi(roi_id):
         roi_id (int) :  ROI id
     """
 
-    con = _get_connection()
+    con = get_connection()
     roi_type = get_roi_type(roi_id=roi_id)
     if roi_type == "sphere":
         q = "DELETE FROM geom_spheres WHERE sphere_id = ?"
@@ -381,7 +381,7 @@ def save_line(line_id, subject, point1, point2):
     length = np.linalg.norm(p1 - p2)
 
     q = "INSERT OR REPLACE INTO geom_lines VALUES (?,?, ?,?,?, ?,?,?, ?)"
-    con = _get_connection()
+    con = get_connection()
     con.execute(
         q, (line_id, subject, p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], length))
     con.commit()
@@ -399,7 +399,7 @@ def load_line(line_id, subject):
         ``(xo,yo,zo,xf,yf,zf)`` where ``(xo,yo,zo)`` is the line origin and ``(xf,yf,zf)`` is the end.
     """
     q = "SELECT p1_x,p1_y,p1_z,p2_x,p2_y,p2_z FROM geom_lines WHERE line_id = ? and subject = ?"
-    con = _get_connection()
+    con = get_connection()
     cur = con.execute(q, (int(line_id), int(subject)))
     res = cur.fetchone()
     return res
@@ -419,6 +419,6 @@ def copy_spheres(orig_id, dest_id):
     SELECT ? as sphere_id , subject, radius, ctr_x, ctr_y, ctr_z
     FROM geom_spheres
     WHERE sphere_id = ?"""
-    con = _get_connection()
+    con = get_connection()
     con.execute(q, (dest_id, orig_id))
     con.commit()

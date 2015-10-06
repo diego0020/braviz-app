@@ -39,7 +39,7 @@ def verify_db_completeness(database_file=None):
             by the configuration file will be used.
     """
     if database_file is None:
-        conn = tabular_data._get_connection()
+        conn = tabular_data.get_connection()
     else:
         conn = sqlite3.connect(database_file)
 
@@ -69,6 +69,10 @@ def verify_db_completeness(database_file=None):
         geometry_db_creation.create_lines_table(conn)
         geometry_db_creation.create_spheres_table(conn)
 
+    # log db
+    if not _check_tables(conn, ("sessions","events")):
+        from braviz.readAndFilter import log_db_creation
+        log_db_creation.create_tables(conn)
 
 def _check_table(conn, table_name):
     q = "SELECT count(*) FROM sqlite_master WHERE type='table' and name = ? "

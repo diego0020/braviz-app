@@ -27,7 +27,7 @@ import cPickle
 import logging
 import os
 import braviz.readAndFilter
-from braviz.readAndFilter.tabular_data import _get_connection
+from braviz.readAndFilter.tabular_data import get_connection
 import sqlite3
 
 
@@ -48,7 +48,7 @@ def save_scenario(application, scenario_name, scenario_description, scenario_dat
     if not isinstance(scenario_data, basestring):
         scenario_data = cPickle.dumps(scenario_data, 2)
     scenario_data = buffer(scenario_data)
-    conn = _get_connection()
+    conn = get_connection()
     q = """INSERT  OR ABORT INTO scenarios
     (app_idx,scn_name,scn_desc,scn_data)
     VALUES ( (SELECT app_idx FROM applications WHERE exec_name == ?),
@@ -71,7 +71,7 @@ def update_scenario(scenario_id, name=None, description=None, scenario_data=None
         scenario_data (dict) : Optional, new application state dictionary
         application (str) : Optional, new application script name, without extension
     """
-    conn = _get_connection()
+    conn = get_connection()
     if name is not None:
         conn.execute(
             "UPDATE scenarios SET scn_name = ? WHERE scn_id = ?", (name, scenario_id))
@@ -98,7 +98,7 @@ def get_scenarios_data_frame(app_name=None):
     Returns:
         :class:`~pandas.DataFrame` with columns for date, name and description. The index will be scenario indexes
     """
-    conn = _get_connection()
+    conn = get_connection()
     if app_name is None:
         q = "SELECT scn_id,datetime(scn_date,'localtime') as scn_date,scn_name,scn_desc FROM scenarios"
         data = sql.read_sql(q, conn, index_col="scn_id", coerce_float=False)
@@ -115,7 +115,7 @@ def get_scenarios_data_frame(app_name=None):
 
 
 def _get_scenario_data(scn_id):
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT scn_data FROM scenarios WHERE scn_id = ?"
     res = conn.execute(q, (scn_id,))
     res = res.fetchone()
@@ -149,7 +149,7 @@ def link_var_scenario(var_idx, scn_idx):
         var_idx (int) : Variable index
         scn_idx (int) : Scenario index
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "INSERT INTO vars_scenarios VALUES (?,?)"
     conn.execute(q, (var_idx, scn_idx))
     conn.commit()
@@ -166,7 +166,7 @@ def get_variable_scenarios(var_idx):
         A dictionary whose keys are scenario ids and values are scenario_names for scenarios linked to the
             given variable
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT scn_id,scn_name FROM scenarios NATURAL JOIN vars_scenarios WHERE var_idx = ?"
     cur = conn.execute(q, (var_idx,))
     return dict(cur.fetchall())
@@ -182,7 +182,7 @@ def count_variable_scenarios(var_idx):
     Returns:
         The number of scenarios linked to the given variable
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT count(*) FROM vars_scenarios WHERE var_idx == ?;"
     cur = conn.execute(q, (var_idx,))
     return cur.fetchone()[0]
@@ -202,7 +202,7 @@ def save_sub_sample(name, elements, description):
     size = len(elements)
     str_data = cPickle.dumps(elements, 2)
     str_data = buffer(str_data)
-    conn = _get_connection()
+    conn = get_connection()
     q = "INSERT INTO subj_samples (sample_name, sample_desc, sample_data, sample_size) VALUES (?,?,?,?)"
     conn.execute(q, (name, description, str_data, size))
     conn.commit()
@@ -218,7 +218,7 @@ def get_comment(subj):
     Returns:
         A string with the comment about the subject
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT comment FROM subj_comments WHERE subject = ?"
     cur = conn.execute(q, (subj,))
     res = cur.fetchone()
@@ -236,7 +236,7 @@ def update_comment(subj, comment):
         comment (str) : subject comment
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "INSERT OR REPLACE into subj_comments (subject,comment) VALUES (?,?)"
     with conn:
         cur = conn.execute(q, (subj, comment))
@@ -251,7 +251,7 @@ def get_samples_df():
         indexed by the sample index
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT sample_idx, sample_name, sample_desc, sample_size FROM subj_samples"
     data = sql.read_sql(q, conn, index_col="sample_idx", coerce_float=False)
     return data
@@ -267,7 +267,7 @@ def sample_name_existst(sample_name):
     Returns:
         ``True`` if a sample with this name exists in the database, ``False`` otherwise.
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT count(*) FROM subj_samples WHERE sample_name = ?"
     cur = conn.execute(q, (sample_name,))
     res = cur.fetchone()
@@ -284,7 +284,7 @@ def get_sample_data(sample_idx):
     Returns:
         The set of subjects in the sample
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT sample_data FROM subj_samples WHERE sample_idx = ?"
     cur = conn.execute(q, (sample_idx,))
     res = cur.fetchone()
@@ -302,7 +302,7 @@ def delete_sample(sample_id):
     Args:
         sample_id (int) :  Sample id
     """
-    conn = _get_connection()
+    conn = get_connection()
     with conn:
         q = "DELETE FROM subj_samples WHERE sample_idx = ?"
         conn.execute(q, (int(sample_id),))
@@ -318,7 +318,7 @@ def delete_scenario(scn_id):
         scn_id (int) :  Scenario id
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     try:
         with conn:
             # delete vars_scenarios

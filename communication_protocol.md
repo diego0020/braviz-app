@@ -50,7 +50,7 @@ state : <resulting state of the application>,
 pid : <pid_of target application|id browser session>,
 application :  <name of application>,
 time : timestamp when the action happened,
-sceensshot : <optional, not yet implemented, image_id?>
+sceensshot : <optional,  base64 encoded raw png data of a 128x128 image>
 }
 ```
 

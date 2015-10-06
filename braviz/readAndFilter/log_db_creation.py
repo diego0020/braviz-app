@@ -16,43 +16,43 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
+from __future__ import print_function
+import sys
 
 from braviz.readAndFilter.tabular_data import get_connection
-from itertools import izip
-__author__ = 'Diego'
+
+__author__ = 'Profesor'
 
 
-def create_braint_db():
-    conn = get_connection()
-    q = """CREATE TABLE IF NOT EXISTS hierarchy_levels
-      (level_id INTEGER PRIMARY KEY ,
-      level_name TEXT)"""
-    conn.execute(q)
-    q = """CREATE TABLE IF NOT EXISTS braint_var
-      (var_id INTEGER PRIMARY KEY ,
-      label TEXT,
-      father INT,
-      level REFERENCES hierarchy_levels(level_id)
-      )"""
-    conn.execute(q)
-    q = """CREATE TABLE IF NOT EXISTS relations
-    (origin_id INTEGER REFERENCES braint_var(var_id) ON DELETE CASCADE,
-    destination_id INTEGER REFERENCES braint_var(var_id) ON DELETE CASCADE,
-    counter INTEGER,
-    UNCLEAR INTEGER,
-    UNIQUE (origin_id,destination_id)
-    )
-    """
-    conn.execute(q)
-    q = """CREATE TABLE IF NOT EXISTS braint_tab
-    (braint_var_id INTEGER PRIMARY KEY REFERENCES braint_var(var_id),
-    tab_var_id INTEGER REFERENCES variables(var_idx)
-    )
-    """
-    conn.execute(q)
-    conn.commit()
-    hierarchy = [
-        "Evaluation", "Test", "SubTest", "SubSubTest", "SubSubSubTest"]
-    q = "INSERT OR IGNORE INTO hierarchy_levels VALUES (?,?)"
-    conn.executemany(q, ((i + 1, l) for i, l in enumerate(hierarchy)))
-    conn.commit()
+if __name__ == "__main__":
+    print("This file is not meant to be executed")
+    sys.exit(0)
+
+
+def create_tables(conn=None):
+    if conn is None:
+        conn = get_connection()
+
+    with conn:
+        # sessions table
+        q = """CREATE TABLE IF NOT EXISTS sessions (
+        session_idx INTEGER PRIMARY KEY,
+        start_date DATE,
+        name TEXT,
+        description TEXT
+        );"""
+        conn.execute(q)
+
+        # events table
+        q = """CREATE TABLE IF NOT EXISTS events (
+        event_idx INTEGER PRIMARY KEY,
+        event_date DATE,
+        session_id INTEGER REFERENCES sessions(session_idx),
+        event_text TEXT,
+        event_state TEXT,
+        event_screenshot BLOB,
+        application INTEGER REFERENCES applications(app_idx),
+        instance_id
+        );"""
+        conn.execute(q)
+

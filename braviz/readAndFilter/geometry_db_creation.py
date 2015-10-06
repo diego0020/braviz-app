@@ -17,7 +17,7 @@
 ##############################################################################
 
 from __future__ import print_function
-from braviz.readAndFilter.tabular_data import _get_connection
+from braviz.readAndFilter.tabular_data import get_connection
 
 __author__ = 'Diego'
 
@@ -44,7 +44,7 @@ def create_geom_rois_tables(conn=None):
     roi_coords INT -- 0:subject,1:Talairach,2:Dartel
     );"""
     if conn is None:
-        conn = _get_connection()
+        conn = get_connection()
     conn.execute(q)
     conn.commit()
 
@@ -61,7 +61,7 @@ def create_spheres_table(conn=None):
     )
     """
     if conn is None:
-        conn = _get_connection()
+        conn = get_connection()
     conn.execute(q)
     conn.commit()
 
@@ -85,7 +85,7 @@ def create_lines_table(conn=None):
     )
     """
     if conn is None:
-        conn = _get_connection()
+        conn = get_connection()
     conn.execute(q)
     conn.commit()
     q = """CREATE INDEX IF NOT EXISTS

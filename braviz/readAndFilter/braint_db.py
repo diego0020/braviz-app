@@ -17,7 +17,7 @@
 ##############################################################################
 
 
-from braviz.readAndFilter.tabular_data import _get_connection
+from braviz.readAndFilter.tabular_data import get_connection
 __author__ = 'Diego'
 
 
@@ -32,7 +32,7 @@ def add_variable(father_id, pretty_name, tab_var_id=None):
     VALUES
     (?,?,?)
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(q, (pretty_name, father_id, var_level))
     conn.commit()
     row_id = cur.lastrowid
@@ -44,7 +44,7 @@ def add_variable(father_id, pretty_name, tab_var_id=None):
 
 
 def get_var_level(var_id):
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT level FROM braint_var WHERE var_id = ?"
     cur = conn.execute(q, (var_id,))
     ans = cur.fetchone()
@@ -55,14 +55,14 @@ def get_var_level(var_id):
 
 
 def get_all_variables():
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT var_id,label,father FROM braint_var"
     cur = conn.execute(q)
     return list(cur.fetchall())
 
 
 def get_var_id(var_name):
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT var_id FROM braint_var WHERE label = ?"
     cur = conn.execute(q, (var_name,))
     ans = cur.fetchone()
@@ -87,13 +87,13 @@ def delete_node_aux(conn, var_idx):
 
 def delete_node(var_idx):
     """Node, relationships referring this node will also be deleted"""
-    conn = _get_connection()
+    conn = get_connection()
     delete_node_aux(conn, var_idx)
     conn.commit()
 
 
 def get_sons(var_idx, recursive=False):
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT var_id FROM braint_var WHERE father = ?"
     cur = conn.execute(q, (var_idx,))
     ans = [x[0] for x in cur.fetchall()]
@@ -105,7 +105,7 @@ def get_sons(var_idx, recursive=False):
 
 
 def get_var_parent(var_idx):
-    conn = _get_connection()
+    conn = get_connection()
     q = "select father FROM braint_var WHERE var_id = ?"
     cur = conn.execute(q, (var_idx,))
     ans = cur.fetchone()
@@ -115,7 +115,7 @@ def get_var_parent(var_idx):
 
 
 def add_relation(origin_idx, dest_idx, ambi=False):
-    conn = _get_connection()
+    conn = get_connection()
     q = "INSERT OR IGNORE INTO relations (origin_id,destination_id,counter,UNCLEAR) VALUES (?,?,0,?)"
     conn.execute(q, (origin_idx, dest_idx, ambi))
     conn.execute(q, (dest_idx, origin_idx, ambi))
@@ -123,7 +123,7 @@ def add_relation(origin_idx, dest_idx, ambi=False):
 
 
 def get_relations_count(origin_idx, aggregate=False):
-    conn = _get_connection()
+    conn = get_connection()
     q = """SELECT destination_id,1 FROM relations WHERE origin_id = ?"""
     cur = conn.execute(q, (origin_idx,))
     ans = dict(cur.fetchall())
@@ -145,7 +145,7 @@ def get_relations_count(origin_idx, aggregate=False):
 
 
 def delete_relation(origin_idx, destination_idx):
-    conn = _get_connection()
+    conn = get_connection()
     q = "DELETE FROM relations WHERE origin_id = ? and destination_id = ?"
     conn.execute(q, (origin_idx, destination_idx))
     q = "DELETE FROM relations WHERE origin_id = ? and destination_id = ?"
@@ -154,7 +154,7 @@ def delete_relation(origin_idx, destination_idx):
 
 
 def get_linked_var(braint_var_id):
-    conn = _get_connection()
+    conn = get_connection()
     q = """SELECT var_name FROM braint_tab JOIN variables ON (variables.var_idx = braint_tab.tab_var_id)
      WHERE braint_var_id = ?"""
     cur = conn.execute(q, (braint_var_id,))
@@ -166,21 +166,21 @@ def get_linked_var(braint_var_id):
 
 
 def save_link(braint_var_id, tab_var_id):
-    conn = _get_connection()
+    conn = get_connection()
     q = "INSERT OR REPLACE INTO braint_tab VALUES (?,?)"
     conn.execute(q, (braint_var_id, tab_var_id))
     conn.commit()
 
 
 def delete_link(braint_var_id):
-    conn = _get_connection()
+    conn = get_connection()
     q = "DELETE FROM braint_tab WHERE  braint_var_id = ?"
     conn.execute(q, (braint_var_id,))
     conn.commit()
 
 
 def get_description(braint_var_id):
-    conn = _get_connection()
+    conn = get_connection()
     q = """
     SELECT description FROM braint_tab JOIN var_descriptions ON braint_tab.tab_var_id = var_descriptions.var_idx
     WHERE braint_var_id = ?
@@ -193,7 +193,7 @@ def get_description(braint_var_id):
 
 
 def rename_node(braint_var_id, new_name):
-    conn = _get_connection()
+    conn = get_connection()
     q = "UPDATE OR IGNORE braint_var SET label = ? WHERE var_id = ?"
     conn.execute(q, (new_name, braint_var_id))
     conn.commit()

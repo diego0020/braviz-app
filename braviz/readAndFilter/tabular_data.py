@@ -50,7 +50,7 @@ def get_variables(mask=None):
     Returns:
         :class:`pandas.DataFrame` with variable indexes as index, and a single column with variable names
     """
-    conn = _get_connection()
+    conn = get_connection()
     if mask is None:
         data = sql.read_sql(
             "SELECT var_idx, var_name from variables;", conn, index_col="var_idx")
@@ -70,7 +70,7 @@ def get_variables_and_type(mask=None):
         :class:`pandas.DataFrame` with variable indexes as index, a column with variable names, and a with ``1`` for
             numerical values and ``0`` for nominal variables
     """
-    conn = _get_connection()
+    conn = get_connection()
     if mask is None:
         data = sql.read_sql(
             "SELECT var_idx, var_name, is_real  from variables;", conn, index_col="var_idx")
@@ -80,7 +80,7 @@ def get_variables_and_type(mask=None):
     return data
 
 
-def _get_connection():
+def get_connection():
     """
     Gets the sqlite3 connection object for this thread.
 
@@ -145,7 +145,7 @@ def get_laterality(subj_id):
     Returns:
         "l" for a left handed subject, "r" otherwise
     """
-    conn = _get_connection()
+    conn = get_connection()
     subj_id = int(subj_id)
     cur = conn.execute(
         "SELECT value FROM var_values WHERE var_idx = ? and subject = ?", (LATERALITY, subj_id))
@@ -171,7 +171,7 @@ def get_data_frame_by_name(columns, ):
     """
     if isinstance(columns, basestring):
         columns = (columns,)
-    conn = _get_connection()
+    conn = get_connection()
     data = sql.read_sql(
         "SELECT subject from SUBJECTS", conn, index_col="subject")
     for var in columns:
@@ -201,7 +201,7 @@ def get_data_frame_by_index(columns, col_name_index=False):
     if not hasattr(columns, "__iter__"):
         columns = (columns,)
 
-    conn = _get_connection()
+    conn = get_connection()
     data = sql.read_sql(
         "SELECT subject from SUBJECTS", conn, index_col="subject")
     col_names = []
@@ -242,7 +242,7 @@ def is_variable_real(var_idx):
         ``True`` otherwise
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(
         "SELECT is_real FROM variables WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
@@ -262,7 +262,7 @@ def does_variable_name_exists(var_name):
         ``True`` if a variable with the given name exists,
         ``False`` otherwise
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(
         "SELECT count(*) FROM variables WHERE var_name = ?", (var_name,))
     return False if cur.fetchone()[0] == 0 else True
@@ -296,7 +296,7 @@ def is_variable_name_real(var_name):
         ``True`` otherwise
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(
         "SELECT is_real FROM variables  WHERE var_name = ?", (unicode(var_name),))
     return False if cur.fetchone()[0] == 0 else True
@@ -391,7 +391,7 @@ def get_labels_dict(var_idx=None, var_name=None):
             raise Exception("var_idx or var_name is required")
         var_idx = get_var_idx(var_name)
 
-    conn = _get_connection()
+    conn = get_connection()
     q = """
     SELECT label2, name
     from
@@ -424,7 +424,7 @@ def get_labels_dict_by_name(var_name):
         A dictionary with numerical labels as keys, and the text for each label as
         values.
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = """
         SELECT label2, name
         from
@@ -456,7 +456,7 @@ def get_var_name(var_idx):
         Variable name if it exists, ``"?"`` otherwise
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(
         "SELECT var_name FROM variables WHERE var_idx = ?", (int(var_idx),))
     ans = cur.fetchone()
@@ -476,7 +476,7 @@ def get_var_idx(var_name):
         Index of variable with the given name if it exists, ``None`` otherwise
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(
         "SELECT var_idx FROM variables WHERE var_name = ?", (unicode(var_name),))
     res = cur.fetchone()
@@ -499,7 +499,7 @@ def get_maximum_value(var_idx):
          if there is no metadata, maximum from existing values.
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(
         "SELECT max_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
@@ -525,7 +525,7 @@ def get_minimum_value(var_idx):
          if there is no metadata, minimum from existing values.
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(
         "SELECT min_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
@@ -551,7 +551,7 @@ def get_min_max_values(var_idx):
          if there is no metadata, they are calculated from existing values
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute(
         "SELECT min_val, max_val FROM ratio_meta WHERE var_idx = ?", (int(var_idx),))
     res = cur.fetchone()
@@ -577,7 +577,7 @@ def get_min_max_values_by_name(var_name):
          if there is no metadata, they are calculated from existing values
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute("SELECT min_val, max_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
                        (unicode(var_name),))
     res = cur.fetchone()
@@ -604,7 +604,7 @@ def get_min_max_opt_values_by_name(var_name):
          be the mean of existing values.
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute("SELECT min_val, max_val, optimum_val FROM ratio_meta NATURAL JOIN variables WHERE var_name = ?",
                        (unicode(var_name),))
     res = cur.fetchone()
@@ -629,7 +629,7 @@ def get_subject_variables(subj_code, var_codes):
         which will be used as indexes in the DataFrame.
 
     """
-    conn = _get_connection()
+    conn = get_connection()
     names = []
     values = []
     for idx in var_codes:
@@ -669,7 +669,7 @@ def get_subjects():
     """
     Get a list subjects which exist in the database
     """
-    conn = _get_connection()
+    conn = get_connection()
     cur = conn.execute("SELECT subject FROM subjects ORDER BY subject")
     subj_list = [t[0] for t in cur.fetchall()]
     return subj_list
@@ -685,7 +685,7 @@ def get_var_description(var_idx):
     Returns:
         A string containing the description of the variable.
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT description FROM var_descriptions WHERE var_idx = ?"
     cur = conn.execute(q, (int(var_idx),))
     res = cur.fetchone()
@@ -700,7 +700,7 @@ def get_descriptions_dict():
     Returns:
         A dictionary with variable indices as keys and description strings as values
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT var_idx, description FROM var_descriptions"
     cur = conn.execute(q)
     res = dict(cur.fetchall())
@@ -716,7 +716,7 @@ def get_var_description_by_name(var_name):
     Returns:
         A string containing the description of the variable.
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT description FROM var_descriptions NATURAL JOIN variables WHERE var_name = ?"
     cur = conn.execute(q, (unicode(var_name),))
     res = cur.fetchone()
@@ -733,7 +733,7 @@ def save_is_real_by_name(var_name, is_real):
         var_name (str) :  Variable name
         is_real (bool) : If True the variable will be registered as real, otherwise it will be registered as nominal.
     """
-    conn = _get_connection()
+    conn = get_connection()
     with conn:
         query = "UPDATE variables SET is_real = ? WHERE var_name = ?"
         conn.execute(query, (is_real, unicode(var_name)))
@@ -748,7 +748,7 @@ def save_is_real(var_idx, is_real):
         var_idx (int) :  Variable index
         is_real (bool) : If True the variable will be registered as real, otherwise it will be registered as nominal.
     """
-    conn = _get_connection()
+    conn = get_connection()
     with conn:
         query = "UPDATE variables SET is_real = ? WHERE var_idx = ?"
         conn.execute(query, (is_real, int(var_idx)))
@@ -765,7 +765,7 @@ def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
         man_value (float) : Variables maximum value
         opt_value (float) : Variables optimum value
     """
-    conn = _get_connection()
+    conn = get_connection()
     query = """INSERT OR REPLACE INTO ratio_meta
     VALUES(
     (SELECT var_idx FROM variables WHERE var_name = ?),
@@ -792,7 +792,7 @@ def save_real_meta(var_idx, min_value, max_value, opt_value):
         man_value (float) : Variables maximum value
         opt_value (float) : Variables optimum value
     """
-    conn = _get_connection()
+    conn = get_connection()
     query = """INSERT OR REPLACE INTO ratio_meta
     VALUES(?, ? , ? , ? );
     """
@@ -818,7 +818,7 @@ def save_nominal_labels_by_name(var_name, label_name_tuples):
 
     """
     mega_tuple = ((var_name, label, name) for label, name in label_name_tuples)
-    con = _get_connection()
+    con = get_connection()
     query = """INSERT OR REPLACE INTO nom_meta
     VALUES (
     (SELECT var_idx FROM variables WHERE var_name = ?),
@@ -841,7 +841,7 @@ def save_nominal_labels(var_idx, label_name_tuples):
 
     """
     mega_tuple = ((var_idx, label, name) for label, name in label_name_tuples)
-    con = _get_connection()
+    con = get_connection()
     query = """INSERT OR REPLACE INTO nom_meta
     VALUES (
     ?, --idx
@@ -861,7 +861,7 @@ def save_var_description_by_name(var_name, description):
         var_name (str) : Variable Name
         description (str) : Variable description
     """
-    conn = _get_connection()
+    conn = get_connection()
     query = """INSERT OR REPLACE INTO var_descriptions
     VALUES
     ((SELECT var_idx FROM variables WHERE var_name = ?), -- var_idx
@@ -878,7 +878,7 @@ def save_var_description(var_idx, description):
         var_idx (int) : Variable index
         description (str) : Variable description
     """
-    conn = _get_connection()
+    conn = get_connection()
     query = """INSERT OR REPLACE INTO var_descriptions
     VALUES
     (?, -- var_idx
@@ -899,7 +899,7 @@ def register_new_variable(var_name, is_real=1):
         Database index of the new variable
     """
     var_name = unicode(var_name)
-    conn = _get_connection()
+    conn = get_connection()
     try:
         with conn:
             if is_real:
@@ -926,7 +926,7 @@ def update_variable_values(var_idx, tuples):
         tuples (list) : Tuples of the form ``(subject,value)`` where subject is the subject id, and value
             is the new value for the variable.
     """
-    conn = _get_connection()
+    conn = get_connection()
     super_tuples = ((var_idx, s, v) for s, v in tuples)
     q = """INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.executemany(q, super_tuples)
@@ -941,7 +941,7 @@ def update_multiple_variable_values(idx_subject_value_tuples):
         idx_subject_value_tuples (list) : Tuples of the form ``(var_idx, subject, value)`` where var_idx and subject
             are the variable and subject for whom the new value will be set.
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = """INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.executemany(q, idx_subject_value_tuples)
     conn.commit()
@@ -956,7 +956,7 @@ def update_variable_value(var_idx, subject, new_value):
         subject : Subject id
         new_value : Value to be saved
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = """INSERT OR REPLACE INTO var_values VALUES (? ,?, ?)"""
     conn.execute(q, (int(var_idx), int(subject), new_value))
     conn.commit()
@@ -973,7 +973,7 @@ def get_var_value(var_idx, subject):
     Returns:
         The numerical value for the given variable and subject
     """
-    conn = _get_connection()
+    conn = get_connection()
     q = "SELECT value FROM var_values WHERE var_idx = ? and subject = ?"
     cur = conn.execute(q, (var_idx, subject))
     res = cur.fetchone()
@@ -995,7 +995,7 @@ def get_variable_normal_range(var_idx):
         ``(min_val, max_val)`` calculated over the values the variable takes in the reference population.
     """
     global UBICAC
-    conn = _get_connection()
+    conn = get_connection()
     # minimum,maximum
     q = """SELECT min(var_values.value), max(cast( var_values.value as numeric)) from var_values JOIN var_values as var_values2
      WHERE var_values.subject == var_values2.subject and var_values2.var_idx == ? and var_values2.value == ?
@@ -1035,7 +1035,7 @@ def add_data_frame(df):
     Args:
         df ( pandas.DataFrame ) : DataFrame with subject ids as index, and one column for each new variable.
     """
-    conn = _get_connection()
+    conn = get_connection()
     columns = df.columns
     columns = map(remove_non_ascii, columns)
     df.columns = columns
@@ -1079,7 +1079,7 @@ def recursive_delete_variable(var_idx):
     Args:
         var_idx (int) : Variable index
     """
-    conn = _get_connection()
+    conn = get_connection()
     try:
         with conn:
             # delete values
@@ -1121,7 +1121,7 @@ def recursive_delete_subject(subject):
     Args:
         var_idx (int) : Variable index
     """
-    conn = _get_connection()
+    conn = get_connection()
     try:
         with conn:
             # delete values

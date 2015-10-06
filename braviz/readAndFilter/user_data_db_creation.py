@@ -19,7 +19,7 @@
 from __future__ import print_function
 import sys
 
-from braviz.readAndFilter.tabular_data import _get_connection
+from braviz.readAndFilter.tabular_data import get_connection
 
 __author__ = 'Diego'
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
 def create_tables(conn=None):
     if conn is None:
-        conn = _get_connection()
+        conn = get_connection()
 
     # applications table
     q = """CREATE TABLE IF NOT EXISTS applications (
@@ -100,13 +100,15 @@ _applications_dir = {
     7: "fmri_explorer",
     8: "measure_task",
     9: "correlations",
+    10: "braviz_menu2",
+    11: "braviz_web_server",
 }
 
 
 def update_current_applications(conn=None):
     applications = _applications_dir
     if conn is None:
-        conn = _get_connection()
+        conn = get_connection()
     q = "SELECT app_idx, exec_name FROM applications ORDER BY app_idx"
     cur = conn.execute(q)
     db_tuples = cur.fetchall()

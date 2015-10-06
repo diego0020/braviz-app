@@ -19,7 +19,7 @@
 
 from __future__ import print_function
 import braviz
-from braviz.readAndFilter.tabular_data import _get_connection
+from braviz.readAndFilter.tabular_data import get_connection
 
 __author__ = 'Diego'
 
@@ -37,7 +37,7 @@ def create_bundles_table(conn=None):
     bundle_data TEXT
     );"""
     if conn is None:
-        conn = _get_connection()
+        conn = get_connection()
     conn.execute(q)
     conn.commit()
 
@@ -47,7 +47,7 @@ def add_named_bundes_to_table(conn=None):
     named_tracts = reader.get("FIBERS", None, index=True)
     print(named_tracts)
     if conn is None:
-        conn = _get_connection()
+        conn = get_connection()
     tuples = ((name, 0, name) for name in named_tracts)
     q = """INSERT INTO fiber_bundles (bundle_name, bundle_type, bundle_data) VALUES (?,?,?);"""
     conn.executemany(q, tuples)
