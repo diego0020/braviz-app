@@ -25,6 +25,11 @@
             right: 3ex;
         }
 
+        .session h2{
+          margin-bottom: 1em;
+        }
+
+
     </style>
 </head>
 <body>
@@ -45,16 +50,15 @@
 
 <script type="text/javascript">
 
-function load_events(d,i){
-console.log(d);
-var parent=d3.select(this);
-parent.on("click",function(d,i){
-  d3.select(this).select("div.events-list").remove();
-  parent.on("click",load_events);
-})
+function load_events(d,i,parent){
+parent.select("button.load-details").on("click",function(d,i){
+  parent.select("div.events-list").remove();
+parent.select(".load-details").on("click",function(d,i){load_events(d,i,parent);})
+  .text("Show details");
+}).text("Hide details");
+
 d3.json("history/data/events?session="+d.id,
   function(error,data){
-    console.log(data);
     parent.append("div").attr("class","events-list panel-body")
     .selectAll("div.event").data(data["events"])
     .enter().append("div").attr("class","event clearfix").call(function(d,i){
@@ -68,23 +72,60 @@ d3.json("history/data/events?session="+d.id,
   });
 }
 
+function rename_session(d,i, session){
+  var title = session.select("h2");
+  var rename_button = session.select("button.rename-session");
+  rename_button.attr("disabled","disabled");
+  var initial_title = title.text();
+  title.text("");
+  var form=title.append("form").attr("class","form-inline")
+    .on("submit",function(){d3.event.preventDefault(); return false;});
+  form.append("input").attr("value",initial_title).attr("class","form-control");
+  form.append("button").attr("class","btn btn-default")
+    .text("Save").on("click",function(d,i){
+      var new_text=form.select("input").node().value;
+      form.remove();
+      title.text(new_text);
+      rename_button.attr("disabled",null);
+    });
+
+  form.append("button").attr("class","btn btn-danger")
+    .text("Cancel").on("click",function(d,i){
+      form.remove();
+      title.text(initial_title);
+      rename_button.attr("disabled",null);
+    });
+}
+
+function start(){
+
     var sessions = {% raw sessions %}
     var list = d3.select("#sessions_list");
     var items = list.selectAll("div.session").data(sessions).enter().append("div")
-        .attr("class","session panel panel-default").
-        on("click",load_events)
-        .append("div").attr("class","header panel-heading")
-        .call(function(s){
-            s.append("h2").text(function(d){return d.name});
-            var date_block = s.append("div").attr("class","date-block pull-right");
-            date_block.append("div").attr("class","date").attr("title",function(d){return d.full_start})
-                .text(function(d){return d.abv_start});
-            date_block.append("div").attr("class","duration").text(function(d){return d.duration+" minutes"});
-            var controls = s.append("div").attr("class","session-controls btn-group btn-group-lg");
-            controls.append("button").attr("class","btn btn-default").text("Details");
-            controls.append("button").attr("class","btn btn-default").text("Rename");
-            controls.append("button").attr("class","btn btn-danger").text("Delete");
-        });
+        .attr("class","session panel panel-default");
+
+    var s = items.append("div").attr("class","header panel-heading")
+    s.append("h2").text(function(d){return d.name});
+
+    var date_block = s.append("div").attr("class","date-block pull-right");
+    date_block.append("div").attr("class","date").attr("title",function(d){return d.full_start})
+        .text(function(d){return d.abv_start});
+    date_block.append("div").attr("class","duration").text(function(d){return d.duration+" minutes"});
+
+    var controls = s.append("div").attr("class","session-controls-wrapper clearfix")
+    .append("div").attr("class","session-controls btn-group btn-group-lg btn-group-justified");
+
+    controls.append("div").attr("class","btn-group")
+      .append("button").attr("class","btn btn-default load-details").text("Show details")
+      .on("click",function(d,i){load_events(d,i,items);});
+    controls.append("div").attr("class","btn-group")
+      .append("button").attr("class","btn btn-default rename-session").text("Rename")
+      .on("click",function(d,i){rename_session(d,i,items);});
+    controls.append("div").attr("class","btn-group")
+      .append("button").attr("class","btn btn-danger").text("Delete");
+};
+
+start();
 
 </script>
 </body>
