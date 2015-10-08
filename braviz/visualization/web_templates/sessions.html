@@ -15,6 +15,16 @@
           min-width: 10ex;
         }
 
+        div.session div.header{
+          position:relative;
+        }
+
+        div.date-block {
+            position: absolute;
+            top: 2ex;
+            right: 3ex;
+        }
+
     </style>
 </head>
 <body>
@@ -66,9 +76,14 @@ d3.json("history/data/events?session="+d.id,
         .append("div").attr("class","header panel-heading")
         .call(function(s){
             s.append("h2").text(function(d){return d.name});
-            s.append("div").attr("class","date").attr("title",function(d){return d.full_start})
+            var date_block = s.append("div").attr("class","date-block pull-right");
+            date_block.append("div").attr("class","date").attr("title",function(d){return d.full_start})
                 .text(function(d){return d.abv_start});
-            s.append("div").attr("class","duration").text(function(d){return d.duration+" minutes"});
+            date_block.append("div").attr("class","duration").text(function(d){return d.duration+" minutes"});
+            var controls = s.append("div").attr("class","session-controls btn-group btn-group-lg");
+            controls.append("button").attr("class","btn btn-default").text("Details");
+            controls.append("button").attr("class","btn btn-default").text("Rename");
+            controls.append("button").attr("class","btn btn-danger").text("Delete");
         });
 
 </script>
