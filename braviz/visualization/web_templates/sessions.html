@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Braviz Analysis History</title>
+    <link rel="shortcut icon" href="{{ static_url ('favicon.png') }}"/>
+    <link href="{{ static_url('bootstrap-3.3.4/css/bootstrap.min.css') }}" rel="stylesheet">
+    <style type="text/css">
+        div.debug {
+        display:none;
+        }
+
+        div.event_date {
+          font-weight: bold;
+          min-width: 10ex;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+<header>
+    <img src="{{ static_url ('Logo_Braviz_h.png')}}" class="img-responsive">
+</header>
+    <h1>Analysis History</h1>
+    <div class="debug">{{sessions}}</div>
+    <div class="sessions_list" id="sessions_list">
+
+    </div>
+</div>
+<script src="{{ static_url ('jquery-2.1.3.min.js') }}"></script>
+<script src="{{ static_url ('bootstrap-3.3.4/js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ static_url ('d3/d3.js') }}"></script>
+
+<script type="text/javascript">
+
+function load_events(d,i){
+console.log(d);
+var parent=d3.select(this);
+parent.on("click",function(d,i){
+  d3.select(this).select("div.events-list").remove();
+  parent.on("click",load_events);
+})
+d3.json("history/data/events?session="+d.id,
+  function(error,data){
+    console.log(data);
+    parent.append("div").attr("class","events-list panel-body")
+    .selectAll("div.event").data(data["events"])
+    .enter().append("div").attr("class","event clearfix").call(function(d,i){
+        var ev=this;
+        ev.append("div").attr("class","event_date pull-left")
+          .attr("title",function(d){return d.full_date;})
+          .text(function(d){ return d.abv_date;});
+        ev.append("div").attr("class","event_text pull-left")
+          .text(function(d){return d.name;});
+      });
+  });
+}
+
+    var sessions = {% raw sessions %}
+    var list = d3.select("#sessions_list");
+    var items = list.selectAll("div.session").data(sessions).enter().append("div")
+        .attr("class","session panel panel-default").
+        on("click",load_events)
+        .append("div").attr("class","header panel-heading")
+        .call(function(s){
+            s.append("h2").text(function(d){return d.name});
+            s.append("div").attr("class","date").attr("title",function(d){return d.full_start})
+                .text(function(d){return d.abv_start});
+            s.append("div").attr("class","duration").text(function(d){return d.duration+" minutes"});
+        });
+
+</script>
+</body>
+</html>

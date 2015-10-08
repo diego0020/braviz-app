@@ -24,7 +24,7 @@ import logging
 import tornado.web
 
 import pandas as pd
-from braviz.readAndFilter import tabular_data as tab_data, user_data
+from braviz.readAndFilter import tabular_data as tab_data, user_data, log_db
 from braviz.readAndFilter.cache import memoize
 from braviz.readAndFilter.config_file import get_apps_config
 from braviz.interaction.connection import NpJSONEncoder
@@ -307,6 +307,40 @@ class SessionIndexHandler(tornado.web.RequestHandler):
 
     """
 
-    def get(self):
+    def format_session(self, session):
+        abbreviated_time = "%a %-d - %-I %p"
+        full_time = "%Y-%m-%d %H:%M:%S"
+        return {"name": session.name,
+                "abv_start": session.start_date.strftime(abbreviated_time),
+                "full_start": session.  start_date.strftime(full_time),
+                "duration": session.duration.seconds//60,  # in minutes
+                "id": session.index,
+                }
 
-        self.render("histogram.html",values=data, var_name=var_name, color_name=color_name, color_levels=levels)
+    def get(self):
+        sessions = [self.format_session(s) for s in log_db.get_sessions()]
+        sessions_json=json.dumps(sessions)
+        self.render("sessions.html", sessions=sessions_json)
+
+class SessionDataHandler(tornado.web.RequestHandler):
+    """
+    Implements a simple web page for changing the current subject from a mobile.
+
+    """
+
+    def format_events(self, event):
+        abbreviated_time = "%-I:%M %p"
+        full_time = "%H:%M:%S"
+        return {"name": event.action,
+                "abv_date": event.date.strftime(abbreviated_time),
+                "full_date": event.date.strftime(full_time),
+                "id": event.index,
+                }
+
+    def get(self, ent):
+        if ent=="events":
+            session_id = self.get_argument("session")
+            events = [self.format_events(e) for e in log_db.get_events(session_id)]
+            self.write({"events":events})
+        else:
+            self.send_error(404)

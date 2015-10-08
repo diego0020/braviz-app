@@ -82,12 +82,14 @@ session_factory = namedtuple("Session",["index", "name", "description", "start_d
 
 def get_sessions():
 
-    q = """SELECT session_idx, name, description, datetime(start_date), last_date
+    q = """SELECT session_idx, name, description, start_date, last_date
            FROM sessions LEFT JOIN
-              (select session_id, max(datetime(event_date)) as last_date
+              (select session_id, max(event_date) as last_date
                 FROM  events GROUP BY  session_id
               ) as end_dates
-           ON (sessions.session_idx = end_dates.session_id) """
+           ON (sessions.session_idx = end_dates.session_id)
+           ORDER BY start_date DESC
+           """
 
     def format_tuple(t):
         index, name, description, start_date, end_date = t
@@ -109,8 +111,9 @@ events_factory = namedtuple("Event",["index", "date", "action", "screenshot_data
 def get_events(session_id):
 
     q = """SELECT  event_idx, event_date, event_text, event_screenshot, applications.exec_name, instance_id
-    FROM events JOIN applications ON events.application = applications.app_idx
+    FROM events LEFT JOIN applications ON events.application = applications.app_idx
     WHERE session_id = ?
+    ORDER BY event_date ASC
     """
 
     def format_event_tuple(t):

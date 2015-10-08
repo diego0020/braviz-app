@@ -151,7 +151,7 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def log_action(self,description):
         state = {}
-        msg = create_log_message(description, state, "Menu")
+        msg = create_log_message(description, state, "braviz_menu2")
         self.messages_server.send_message(msg)
 
     def launch_variable_management_dialog(self):
