@@ -496,7 +496,7 @@ class AddFilterDialog(braviz_dialogs.VariableSelectDialog):
         self.ui = Ui_AddFilterDialog()
         self.ui.setupUi(self)
         self.ui.select_button.clicked.connect(self.save_and_accept)
-        self.ui.save_button.setText("Save Meta")
+        self.ui.save_button.setText("Save Variable Information")
         self.ui.search_box.returnPressed.connect(self.filter_list)
 
     def update_right_side(self, var_name=None):
