@@ -50,6 +50,13 @@
         display : none;
     }
 
+    .arrow text{
+        fill:#000000;
+        stroke:none;
+        text-anchor:middle;
+        text-align:center;
+    }
+
 
     </style>
 </head>
@@ -88,7 +95,7 @@ document.body.appendChild(sheet);
 var formatCount = d3.format(",.0f");
 var formatRange = d3.format(",.3g");
 
-var margin = {top: 50, right: 30, bottom: 50, left: 30},
+var margin = {top: 70, right: 30, bottom: 50, left: 30},
     width = v_width - margin.left - margin.right,
     height = v_height - margin.top - margin.bottom;
 
@@ -180,7 +187,7 @@ svg.append("text")
 // Add a legend.
 
 var legend_box = svg.append("g").attr("transform",
-"translate("+(Math.floor(width) - 200)+"," + (50+25*color_levels.length)+")");
+"translate("+(Math.floor(width) - 100)+"," + (50+25*color_levels.length)+")");
 
 var legend = legend_box.selectAll("g.legend")
         .data(color_levels)
@@ -203,16 +210,18 @@ legend.append("text")
 
 
 var arrow = svg.append("g").attr("class", "arrow").attr("transform","translate(100,100)");
+arrow.append("g").attr("transform","translate(0,-45)").append("text").text("999");
 arrow.append("path").attr("d","M -15,-19 0,-4 15,-19");
 arrow.append("path").attr("d","M 0,-5 0,-35");
 arrow.classed("hidden",true);
 
-function move_arrow_to_bin(i){
+function move_arrow_to_bin(i,subj){
 var bin = stacked[stacked.length-1][i];
 var x_pos = x(bin.x + bin.dx/2);
 var y_pos = y(bin.y + bin.y0);
 arrow.attr("transform","translate("+x_pos+","+y_pos+")");
 arrow.classed("hidden",false);
+arrow.select("text").text(subj);
 }
 
 function hide_arrow(){
@@ -222,7 +231,7 @@ arrow.classed("hidden",true);
 function highlight_subject(subj){
 var bin = subject_to_bin.get(subj);
 if (typeof bin != 'undefined'){
-    move_arrow_to_bin(bin);
+    move_arrow_to_bin(bin,subj);
 }else{
     hide_arrow();
 }
