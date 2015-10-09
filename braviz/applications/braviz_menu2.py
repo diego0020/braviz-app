@@ -32,6 +32,7 @@ import braviz.interaction
 import braviz.interaction.qt_dialogs
 import braviz.interaction.sample_select
 from braviz.interaction.connection import MessageServer, create_log_message
+from braviz.readAndFilter import log_db
 
 __author__ = 'Diego'
 
@@ -61,7 +62,7 @@ class BravizMenu2(QtGui.QMainWindow):
         print("Server Started")
         print("Broadcast address: %s" % self.messages_server.broadcast_address)
         print("Receive address: %s" % self.messages_server.receive_address)
-
+        log_db.start_session()
         self.messages_server.message_received.connect(self.print_messages)
         args = [sys.executable, "-m", "braviz.applications.braviz_web_server", "0",
                 self.messages_server.broadcast_address, self.messages_server.receive_address]

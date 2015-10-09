@@ -308,7 +308,7 @@ class SessionIndexHandler(tornado.web.RequestHandler):
     """
 
     def format_session(self, session):
-        abbreviated_time = "%a %-d - %-I %p"
+        abbreviated_time = "%a %d - %I %p"
         full_time = "%Y-%m-%d %H:%M:%S"
         return {"name": session.name,
                 "abv_start": session.start_date.strftime(abbreviated_time),
@@ -327,9 +327,8 @@ class SessionDataHandler(tornado.web.RequestHandler):
     Implements a simple web page for changing the current subject from a mobile.
 
     """
-
     def format_events(self, event):
-        abbreviated_time = "%-I:%M %p"
+        abbreviated_time = "%I:%M %p"
         full_time = "%H:%M:%S"
         return {"name": event.action,
                 "abv_date": event.date.strftime(abbreviated_time),
@@ -344,3 +343,25 @@ class SessionDataHandler(tornado.web.RequestHandler):
             self.write({"events":events})
         else:
             self.send_error(404)
+
+    def post(self, ent):
+        if ent=="session":
+            session_id = self.get_body_argument("session")
+            new_name = self.get_body_argument("name",None)
+            new_description = self.get_body_argument("desc",None)
+            delete_session = self.get_body_argument("delete",None)
+            if new_name is not None:
+                log_db.set_session_name(session_id,new_name)
+                self.set_status(202,"Name changed")
+                self.finish()
+                return
+            if delete_session is not None:
+                active_session = log_db.get_active_session()
+                if int(session_id) == int(active_session):
+                    self.send_error(403)
+                    return
+                log_db.delete_session(session_id);
+                self.set_status(202,"Name changed")
+                self.finish()
+                return
+        self.send_error(404)

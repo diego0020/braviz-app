@@ -17,7 +17,6 @@ class LogConcentrator(object):
         client = BlockingMessageClient(broadcast_address)
         route = braviz.readAndFilter.braviz_auto_dynamic_data_root()
         self.output_name = os.path.join(route, "last_session_log.txt")
-        log_db.start_session()
         self.log = logging.getLogger(__name__)
         while True:
             msg = client.get_message()
