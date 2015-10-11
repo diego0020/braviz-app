@@ -327,6 +327,8 @@ class LogicBundlesApp(QMainWindow):
             log.warning(e)
         self.vtk_viewer.change_space(self.__curent_space)
         self.vtk_viewer.finish_initializing()
+        self.vtk_viewer.hide_image()
+        self.vtk_viewer.z_image.show_image()
         self.change_subject(self.__current_subject)
         self.select_surface(None)
 

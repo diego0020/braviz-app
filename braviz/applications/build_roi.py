@@ -723,6 +723,8 @@ class BuildRoiApp(QMainWindow):
             log.warning(e)
         self.vtk_viewer.change_space(self.__current_space)
         self.vtk_viewer.finish_initializing()
+        self.vtk_viewer.hide_image()
+        self.vtk_viewer.z_image.show_image()
         if self.__roi_id is not None:
             self.change_subject(self.__current_subject)
         self.select_surface(None)
