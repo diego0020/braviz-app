@@ -45,7 +45,7 @@ from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, 
     ContrastComboManager
 from braviz.interaction.sample_select import SampleManager
 
-from braviz.interaction.connection import MessageClient
+from braviz.interaction.connection import MessageClient, create_log_message
 import cPickle
 import functools
 import logging
@@ -316,6 +316,14 @@ class SubjectOverviewApp(QMainWindow):
         else:
             super(SubjectOverviewApp, self).keyPressEvent(event)
 
+    def log_action(self,description):
+        if self._messages_client is None:
+            return
+        state = self.get_state_dict()
+        msg = create_log_message(description, state, "subject_overview")
+        self._messages_client.send_message(msg)
+
+
     def toggle_subject_freeze(self):
         self.__frozen_subject = self.ui.freeze_subject.isChecked()
         enable = not self.__frozen_subject
@@ -348,8 +356,8 @@ class SubjectOverviewApp(QMainWindow):
         # label
         if new_subject != self.__curent_subject:
             self.__previous_subject = self.__curent_subject
+            logger.info("Changing subject to %s" % new_subject)
 
-        logger.info("Changing subject to %s" % new_subject)
         self.__curent_subject = new_subject
         self.ui.subject_id.setText("%s" % new_subject)
         self.ui.subject_id2.setText("%s" % new_subject)
@@ -385,6 +393,8 @@ class SubjectOverviewApp(QMainWindow):
         self.update_segmentation_scalar()
         self.update_fiber_scalars()
         self.context_frame.set_subject(new_subject)
+        if new_subject != self.__curent_subject:
+            self.log_action("Changed subject to %s" % new_subject)
 
     def show_error(self, message):
         logger = logging.getLogger(__name__)
@@ -395,6 +405,7 @@ class SubjectOverviewApp(QMainWindow):
         image_class, image_name = class_and_name
         log = logging.getLogger(__name__)
         log.info("changing image mod to %s,%s" % (image_class,image_name))
+
         if image_class is None:
             self.vtk_viewer.image.hide_image()
             self.ui.image_orientation.setEnabled(0)
@@ -432,15 +443,18 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.image_window.setEnabled(window_level_control)
         self.ui.image_level.setEnabled(window_level_control)
         self.ui.reset_window_level.setEnabled(window_level_control)
+        self.log_action("changing image mod to %s,%s" % (image_class,image_name))
 
     def img_change_contrast(self, contrast):
         image_class, image_name = self.__image_combo_manager.current_class_and_name
         self.vtk_viewer.image.change_image_modality(image_class, image_name,
                                                     contrast=contrast)
+        self.log_action("Changed contrast to %s"%contrast)
 
     def fmri_change_pdgm(self):
         pdgm = unicode(self.ui.fmri_paradigm_combo.currentText())
         self.__contours_contrast_manager.change_paradigm(self.__curent_subject, pdgm)
+        self.log_action("Changed paradigm to %s"%pdgm)
         self.fmri_change_contrast()
 
     def fmri_change_contrast(self, contrast = None):
@@ -448,6 +462,7 @@ class SubjectOverviewApp(QMainWindow):
         if contrast is None:
             contrast = self.__contours_contrast_manager.get_previous_contrast(pdgm)
         self.vtk_viewer.set_fmri_contours_image(pdgm, contrast)
+        self.log_action("Changed contrast to %s"%contrast)
         self.fmri_update_contours()
 
     def fmri_update_contours(self, dummy=None):
@@ -464,6 +479,7 @@ class SubjectOverviewApp(QMainWindow):
         logger.info("Changing orientation to %s" % selection)
         self.vtk_viewer.image.change_image_orientation(
             orientation_dict[selection])
+        self.log_action("Changed image orientation to %s"%selection)
         self.reset_image_view_controls()
 
     def position_camera(self):
@@ -487,6 +503,7 @@ class SubjectOverviewApp(QMainWindow):
             self.vtk_viewer.image.get_number_of_image_slices())
         self.ui.slice_spin.setMaximum(
             self.vtk_viewer.image.get_number_of_image_slices())
+        self.log_action("Changed coordinates to %s"%new_space)
 
     def print_vtk_camera(self):
         self.vtk_viewer.print_camera()
@@ -514,6 +531,7 @@ class SubjectOverviewApp(QMainWindow):
             self.subjects_model.set_var_columns(new_selection)
             logger = logging.getLogger(__name__)
             logger.info("new models %s" % new_selection)
+            self.log_action("Set new variables for subjects table %s"%new_selection)
 
     #Samples
     def receive_message(self, msg):
@@ -550,6 +568,7 @@ class SubjectOverviewApp(QMainWindow):
             self.subject_details_model.set_variables(sorted(new_selection))
             logger = logging.getLogger(__name__)
             logger.info("new detail variables %s" % new_selection)
+            self.log_action("new detail variables %s" % new_selection)
 
     def go_to_previus_subject(self):
         current_subj_row = self.subjects_model.get_subject_index(
@@ -576,6 +595,7 @@ class SubjectOverviewApp(QMainWindow):
         self.update_segmentation_scalar()
         self.show_fibers_from_segment(
             self.ui.fibers_from_segments_box.currentIndex())
+
 
     def update_tracula(self):
         selected = self.tracula_model.get_selected()
@@ -702,6 +722,7 @@ class SubjectOverviewApp(QMainWindow):
                 log.warning(e.message)
                 self.show_error(e.message)
         self.update_current_bundle()
+        self.log_action("Showing fibers from segmentation")
 
     def change_tractography_color(self, index):
         color_codes = {0: "orient", 1: "fa_p", 2: "fa_l",
@@ -712,6 +733,7 @@ class SubjectOverviewApp(QMainWindow):
         logger.info("tractography color changed to: %s" % color_text)
         if color_text is not None:
             self.vtk_viewer.tractography.change_color(color_text)
+            self.log_action("Changed tractography color")
         else:
             self.show_error("Not yet implemented")
 
@@ -843,6 +865,7 @@ class SubjectOverviewApp(QMainWindow):
             self.vtk_viewer.tractography.set_active_db_tracts(selected)
             if isinstance(self.current_fibers, int) and self.current_fibers not in selected:
                 self.update_current_bundle()
+            self.log_action("Selected fiber bundles %s" % selected)
 
     def save_fibers_bundle(self):
         checkpoints = self.structures_tree_model.get_selected_structures()
@@ -853,7 +876,7 @@ class SubjectOverviewApp(QMainWindow):
         dialog = SaveFibersBundleDialog(checkpoints, throug_all)
         dialog.exec_()
 
-    def update_surfaces_from_gui(self, event=None):
+    def update_surfaces_from_gui(self, event=None, generating_state=False):
         logger = logging.getLogger(__name__)
         logger.info("updating surfaces")
         left_active = self.ui.surface_left_check.isChecked()
@@ -878,6 +901,10 @@ class SubjectOverviewApp(QMainWindow):
         self.surfaces_state["opacity"] = opacity
         log = logging.getLogger(__name__)
         log.debug(self.surfaces_state)
+
+        # Avoid recursion loop
+        if not generating_state:
+            self.log_action("Changed cortical surfaces")
         self.__update_surfaces()
 
     def __update_surfaces(self):
@@ -973,7 +1000,7 @@ class SubjectOverviewApp(QMainWindow):
         state["tracula_state"] = tracula_state
 
         # surface panel
-        self.update_surfaces_from_gui()
+        self.update_surfaces_from_gui(generating_state=True)
         surfaces_state = self.surfaces_state
         state["surf_state"] = surfaces_state
 
@@ -991,7 +1018,7 @@ class SubjectOverviewApp(QMainWindow):
 
         # meta
         meta = dict()
-        meta["date"] = datetime.datetime.now()
+        meta["date"] = datetime.datetime.now().toordinal()
         meta["exec"] = sys.argv
         meta["machine"] = platform.node()
         meta["application"] = os.path.splitext(os.path.basename(__file__))[0]
@@ -1265,6 +1292,7 @@ class SubjectOverviewApp(QMainWindow):
                     editables = dict(editables)
                 self.context_frame.set_variables(variables, editables)
                 self.context_frame.set_subject(self.__curent_subject)
+        self.log_action("Loaded scenario")
         return
 
     def reload_comments(self):

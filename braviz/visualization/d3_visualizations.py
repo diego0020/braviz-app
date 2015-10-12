@@ -314,7 +314,9 @@ class SessionIndexHandler(tornado.web.RequestHandler):
                 "abv_start": session.start_date.strftime(abbreviated_time),
                 "full_start": session.  start_date.strftime(full_time),
                 "duration": session.duration.seconds//60,  # in minutes
+                "description": session.description if len(session.description)>0 else "(no description)",
                 "id": session.index,
+                "favorite" : session.favorite,
                 }
 
     def get(self):
@@ -350,9 +352,21 @@ class SessionDataHandler(tornado.web.RequestHandler):
             new_name = self.get_body_argument("name",None)
             new_description = self.get_body_argument("desc",None)
             delete_session = self.get_body_argument("delete",None)
+            favorite = self.get_body_argument("favorite",None)
             if new_name is not None:
                 log_db.set_session_name(session_id,new_name)
                 self.set_status(202,"Name changed")
+                self.finish()
+                return
+            if new_description is not None:
+                log_db.set_session_description(session_id,new_description)
+                self.set_status(202,"description changed")
+                self.finish()
+                return
+            if favorite is not None:
+                fav = favorite == "true"
+                log_db.set_session_favorite(session_id,fav)
+                self.set_status(202,"Favorite toggled")
                 self.finish()
                 return
             if delete_session is not None:

@@ -24,6 +24,7 @@ Checks completeness of the braviz database
 __author__ = 'diego'
 
 from braviz.readAndFilter import tabular_data
+from braviz.readAndFilter import log_db
 
 import logging
 import sqlite3
@@ -69,10 +70,6 @@ def verify_db_completeness(database_file=None):
         geometry_db_creation.create_lines_table(conn)
         geometry_db_creation.create_spheres_table(conn)
 
-    # log db
-    if not _check_tables(conn, ("sessions","events")):
-        from braviz.readAndFilter import log_db_creation
-        log_db_creation.create_tables(conn)
 
 def _check_table(conn, table_name):
     q = "SELECT count(*) FROM sqlite_master WHERE type='table' and name = ? "
@@ -103,7 +100,27 @@ def _check_tables(conn, tables):
     return True
 
 
+def verify_log_db(database_file=None):
+    """
+    Verifies that all log tables exist in the braviz log data base.
+    If any are missing they are created.
+
+    Args:
+        database_file (str) : Path of the database file that should be ckecked, if None, the database defined
+            by the configuration file will be used.
+    """
+    if database_file is None:
+        conn = log_db.get_log_connection()
+    else:
+        conn = sqlite3.connect(database_file)
+    # log db
+    if not _check_tables(conn, ("sessions","events")):
+        from braviz.readAndFilter import log_db_creation
+        log_db_creation.create_tables(conn)
+
+
 if __name__ == "__main__":
     from braviz.utilities import configure_logger_from_conf
     configure_logger_from_conf("check_db_integrity")
     verify_db_completeness()
+    verify_log_db()

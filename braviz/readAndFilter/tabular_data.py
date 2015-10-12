@@ -39,6 +39,43 @@ UBICAC = None
 
 _connections = dict()
 
+def get_connection():
+    """
+    Gets the sqlite3 connection object for this thread.
+
+    Also initializes module variables LATERALITY, LEFT_HANDED and UBICAC
+    """
+    global _connections
+    global LATERALITY, LEFT_HANDED
+
+    thread_id = threading.current_thread()
+    connection_obj = _connections.get(thread_id)
+    if connection_obj is not None:
+        return connection_obj
+
+    data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
+    path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
+    if not os.path.isfile(path):
+        show_error("Couldn't open database file\n%s" % path)
+        raise Exception("Couldn't open database")
+
+    conn = sqlite3.connect(path,  detect_types=sqlite3.PARSE_DECLTYPES)
+    conn.execute("pragma busy_timeout = 10000")
+    _connections[thread_id] = conn
+    if LATERALITY is None:
+        try:
+            _conf = get_apps_config()
+            _lat_name, _left_labell = _conf.get_laterality()
+            cur = conn.execute(
+                "SELECT var_idx from variables where var_name = ?", (_lat_name,))
+            res = cur.fetchone()
+            LATERALITY = res[0]
+            LEFT_HANDED = _left_labell
+        except Exception as e:
+            pass
+    return conn
+
+
 
 def get_variables(mask=None):
     """
@@ -80,48 +117,12 @@ def get_variables_and_type(mask=None):
     return data
 
 
-def get_connection():
-    """
-    Gets the sqlite3 connection object for this thread.
-
-    Also initializes module variables LATERALITY, LEFT_HANDED and UBICAC
-    """
-    global _connections
-    global LATERALITY, LEFT_HANDED
-
-    thread_id = threading.current_thread()
-    connection_obj = _connections.get(thread_id)
-    if connection_obj is not None:
-        return connection_obj
-
-    data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
-    path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
-    if not os.path.isfile(path):
-        show_error("Couldn't open database file\n%s" % path)
-        raise Exception("Couldn't open database")
-
-    conn = sqlite3.connect(path,  detect_types=sqlite3.PARSE_DECLTYPES)
-    conn.execute("pragma busy_timeout = 10000")
-    _connections[thread_id] = conn
-    if LATERALITY is None:
-        try:
-            _conf = get_apps_config()
-            _lat_name, _left_labell = _conf.get_laterality()
-            cur = conn.execute(
-                "SELECT var_idx from variables where var_name = ?", (_lat_name,))
-            res = cur.fetchone()
-            LATERALITY = res[0]
-            LEFT_HANDED = _left_labell
-        except Exception as e:
-            pass
-    return conn
-
 
 def _reset_connection():
     """
     Resests existing connection for this thread
     """
-    global _connections
+    global _log_connections
     log = logging.getLogger(__name__)
     thread_id = threading.current_thread()
     connection_obj = _connections.get(thread_id)

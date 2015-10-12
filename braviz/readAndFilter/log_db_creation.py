@@ -19,9 +19,7 @@
 from __future__ import print_function
 import sys
 
-from braviz.readAndFilter.tabular_data import get_connection
-
-__author__ = 'Profesor'
+from braviz.readAndFilter.log_db import get_log_connection
 
 
 if __name__ == "__main__":
@@ -31,28 +29,38 @@ if __name__ == "__main__":
 
 def create_tables(conn=None):
     if conn is None:
-        conn = get_connection()
+        conn = get_log_connection()
 
     with conn:
         # sessions table
         q = """CREATE TABLE IF NOT EXISTS sessions (
-        session_idx INTEGER PRIMARY KEY,
+        session_id INTEGER PRIMARY KEY,
         start_date DATETIME,
         name TEXT,
-        description TEXT
+        description TEXT,
+        favorite BOOLEAN DEFAULT 0
         );"""
         conn.execute(q)
 
         # events table
         q = """CREATE TABLE IF NOT EXISTS events (
-        event_idx INTEGER PRIMARY KEY,
+        event_id INTEGER PRIMARY KEY,
         event_date DATETIME,
-        session_id INTEGER REFERENCES sessions(session_idx),
+        session_id INTEGER REFERENCES sessions(session_id),
         event_text TEXT,
         event_state TEXT,
         event_screenshot BLOB,
-        application INTEGER REFERENCES applications(app_idx),
-        instance_id
+        application_name TEXT,
+        instance_id,
+        favorite BOOLEAN DEFAULT 0
+        );"""
+        conn.execute(q)
+
+        # annotations table
+        q = """CREATE TABLE IF NOT EXISTS annotations (
+        event_id INTEGER REFERENCES events(event_id),
+        annotation_date DATETIME,
+        annotation TEXT
         );"""
         conn.execute(q)
 

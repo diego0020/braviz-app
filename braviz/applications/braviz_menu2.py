@@ -221,6 +221,7 @@ def run():
 
     # verify database
     check_db.verify_db_completeness()
+    check_db.verify_log_db()
 
     app = QtGui.QApplication(sys.argv)
 

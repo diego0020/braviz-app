@@ -54,7 +54,6 @@ import platform
 import logging
 from braviz.interaction.qt_widgets import MatplotWidget
 from braviz.interaction.sample_select import SampleManager
-from braviz.utilities import launch_sub_process
 
 __author__ = 'Diego'
 
@@ -574,7 +573,7 @@ class AnovaApp(QMainWindow):
         if self._message_client is None:
             return
         state = self.get_state()
-        msg = create_log_message(description, state, "anova_task")
+        msg = create_log_message(description, state, "anova")
         self._message_client.send_message(msg)
 
     def receive_message(self, msg):
