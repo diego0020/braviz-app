@@ -150,20 +150,21 @@ def get_sessions():
     return sessions
 
 
-events_factory = namedtuple("Event", ["index", "date", "action", "screenshot_data", "application_name", "instance_id"])
+events_factory = namedtuple("Event", ["index", "date", "action", "screenshot_data",
+                                      "application_name", "instance_id","favorite"])
 
 
 def get_events(session_id):
-    q = """SELECT  event_id, event_date, event_text, event_screenshot, application_name, instance_id
+    q = """SELECT  event_id, event_date, event_text, event_screenshot, application_name, instance_id, favorite
     FROM events
     WHERE session_id = ?
     ORDER BY event_date ASC
     """
 
     def format_event_tuple(t):
-        event_idx, event_date, event_text, event_screenshot, application, instance_id = t
+        event_idx, event_date, event_text, event_screenshot, application, instance_id, favorite = t
         event_date = datetime.datetime.strptime(event_date, _db_date_format)
-        return events_factory(event_idx, event_date, event_text, event_screenshot, application, instance_id)
+        return events_factory(event_idx, event_date, event_text, event_screenshot, application, instance_id,favorite)
 
     conn = get_log_connection()
     sessions = [format_event_tuple(t) for t in conn.execute(q, (session_id,)).fetchall()]
@@ -184,3 +185,12 @@ def delete_session(session_id):
         conn.execute(q1, (session_id,))
         conn.execute(q2, (session_id,))
     return
+
+def set_event_favorite(event_id,favorite):
+    conn = get_log_connection()
+    q = """UPDATE OR ABORT events SET favorite = ? WHERE event_id = ?"""
+    fav=bool(favorite)
+    with conn:
+        cur = conn.execute(
+            q, (fav, event_id))
+

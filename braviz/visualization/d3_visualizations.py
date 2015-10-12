@@ -336,6 +336,7 @@ class SessionDataHandler(tornado.web.RequestHandler):
                 "abv_date": event.date.strftime(abbreviated_time),
                 "full_date": event.date.strftime(full_time),
                 "id": event.index,
+                "favorite": event.favorite,
                 }
 
     def get(self, ent):
@@ -347,7 +348,7 @@ class SessionDataHandler(tornado.web.RequestHandler):
             self.send_error(404)
 
     def post(self, ent):
-        if ent=="session":
+        if ent == "session":
             session_id = self.get_body_argument("session")
             new_name = self.get_body_argument("name",None)
             new_description = self.get_body_argument("desc",None)
@@ -376,6 +377,15 @@ class SessionDataHandler(tornado.web.RequestHandler):
                     return
                 log_db.delete_session(session_id);
                 self.set_status(202,"Name changed")
+                self.finish()
+                return
+        elif ent == "event":
+            event_id = self.get_body_argument("event")
+            fav = self.get_body_argument("favorite",None)
+            if fav is not None:
+                fav = fav == "true"
+                log_db.set_event_favorite(event_id,fav)
+                self.set_status(202,"Favorite toggled")
                 self.finish()
                 return
         self.send_error(404)

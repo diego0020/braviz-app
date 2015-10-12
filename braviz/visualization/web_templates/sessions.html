@@ -6,17 +6,13 @@
     <link rel="shortcut icon" href="{{ static_url ('favicon.png') }}"/>
     <link href="{{ static_url('bootstrap-3.3.4/css/bootstrap.min.css') }}" rel="stylesheet">
     <style type="text/css">
+
         div.debug {
         display:none;
         }
 
-        div.event_date {
-          font-weight: bold;
-          min-width: 10ex;
-        }
-
-        div.session div.header{
-          position:relative;
+        div.session-heading{
+          position : relative;
         }
 
         div.date-block {
@@ -25,7 +21,7 @@
             right: 3ex;
         }
 
-        .session h2{
+        .session h3{
           margin-bottom: 1em;
         }
 
@@ -45,42 +41,93 @@
           margin:2em;
         }
 
+        table.events-table tr.event td.event-star{
+          vertical-align: middle;
+        }
+
+        table.events-table tr.event td.event_date{
+          min-width: 12ex;
+          vertical-align: middle;
+          font-weight: bold;
+        }
+
 
     </style>
 </head>
 <body>
+
+  <div class="confirm-delete modal fade" tabindex="-1" role="dialog" id="confirm-session-delete">
+      <div class="modal-dialog">
+          <div class="modal-content">
+                   <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" id="myModalLabel">Confirm delete session</h4>
+                  </div>
+                  <div class="modal-body">
+                  <p>Are you sure you want to delete all data from session <span id="session-to-delete"></span>, and all its
+                      associated events? </p>
+                      <p>This can't be undone.</p>
+                  </div>
+                  <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-danger cancel-button" data-dismiss="modal">Delete Session</button>
+                </div>
+          </div>
+      </div>
+
+  </div>
+
+
 
 <div class="container">
 <header>
     <img src="{{ static_url ('Logo_Braviz_h.png')}}" class="img-responsive">
 </header>
     <h1>Analysis History</h1>
-    <div class="debug">{{sessions}}</div>
+
+    <div class="main-controls row">
+      <div class="col-md-6">
+      <h2>Filter</h2>
+      <form action="javascript:void(0)">
+        <div class="form-group">
+          <label for="searchField">Search</label>
+          <input type="text" class="form-control" id="searchField" placeholder="keyword">
+        </div>
+        <div class="date-search row">
+            <div class="form-group col-md-6">
+              <label for="start_date">From</label>
+              <input type="date" class="form-control" id="start_date">
+            </div>
+            <div class="form-group col-md-6">
+              <label for="end_date">To</label>
+              <input type="date" class="form-control" id="end_date">
+            </div>
+        </div>
+        <div class="checkbox">
+          <label >
+            <input type="checkbox" value="" id="only_favorite_sessions" >Favorite Sessions
+          </label>
+        </div>
+        <div class="checkbox">
+          <label >
+            <input type="checkbox" value="" id="only_favorite_events" >Favorite Events
+          </label>
+        </div>
+        <div class="form-group">
+          <button class="btn btn-primary"> Go </button>
+        </div>
+      </form>
+    </div>
+    </div>
+    <div class="debug row">{{sessions}}</div>
+    <div class="row">
+    <h2>Sessions</h2>
     <div class="sessions_list" id="sessions_list">
 
     </div>
+  </div>
 </div>
 
-<div class="confirm-delete modal fade" tabindex="-1" role="dialog" id="confirm-session-delete">
-    <div class="modal-dialog">
-        <div class="modal-content">
-                 <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">Confirm delete session</h4>
-                </div>
-                <div class="modal-body">
-                <p>Are you sure you want to delete all data from session <span id="session-to-delete"></span>, and all its
-                    associated events? </p>
-                    <p>This can't be undone.</p>
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger cancel-button" data-dismiss="modal">Delete Session</button>
-              </div>
-        </div>
-    </div>
-
-</div>
 
 <script src="{{ static_url ('jquery-2.1.3.min.js') }}"></script>
 <script src="{{ static_url ('bootstrap-3.3.4/js/bootstrap.min.js') }}"></script>
@@ -90,25 +137,54 @@
 
 var sessions_list;
 
+function toggle_favorite_event(d,i,e){
+  var events_list = e;
+  d3.xhr("history/data/event")
+          .header("Content-Type", "application/x-www-form-urlencoded")
+          .post(
+          "event="+ d.id+"&favorite="+!d.favorite,
+          function(error, reply){
+              if (reply.status == 202){
+                d.favorite = !d.favorite;
+                events_list.select("span.glyphicon")
+                  .classed("glyphicon-star-empty",function(d){return !d.favorite})
+                  .classed("glyphicon-star",function(d){return d.favorite});
+              }
+              else{
+                  alert("couldn't set as favorite");
+              }
+  });
+}
+
 function load_events(d,i,button){
     var parent=d3.select($(button).parents(".session")[0]);
 parent.select("button.load-details").on("click",function(d,i){
-  parent.select("div.events-list").remove();
+  parent.select("table.events-table").remove();
 parent.select(".load-details").on("click",function(d,i){load_events(d,i,button);})
   .text("Show Events");
 }).text("Hide Events");
 
 d3.json("history/data/events?session="+d.id,
   function(error,data){
-    parent.append("div").attr("class","events-list panel-body")
-    .selectAll("div.event").data(data["events"])
-    .enter().append("div").attr("class","event clearfix").call(function(d,i){
+    parent
+    //.append("div").attr("class","events-list panel-body")
+    .append("table").attr("class","table table-hover events-table").append("tbody")
+    .selectAll("tr.event").data(data["events"])
+    .enter().append("tr").attr("class","event").call(function(d,i){
         var ev=this;
-        ev.append("div").attr("class","event_date pull-left")
+        ev.append("td").attr("class","event-star")
+          .append("a").attr("href","javascript:void(0)").attr("title","Toggle favorite")
+          .on("click",function(d,i){toggle_favorite_event(d,i,ev)})
+          .append("span").attr("class","glyphicon")
+          .classed("glyphicon-star-empty",function(d){return !d.favorite})
+          .classed("glyphicon-star",function(d){return d.favorite});
+        ev.append("td").attr("class","event_date")
           .attr("title",function(d){return d.full_date;})
           .text(function(d){ return d.abv_date;});
-        ev.append("div").attr("class","event_text pull-left")
+        ev.append("td").attr("class","event_text")
           .text(function(d){return d.name;});
+        ev.append("td").append("button").attr("class","btn btn-default").html('<span class="glyphicon glyphicon-comment"></span>  Annotate');
+        ev.append("td").append("button").attr("class","btn btn-default").html('<span class="glyphicon glyphicon-eye-open"></span>  Open');
       });
   });
 }
@@ -134,7 +210,7 @@ function toggle_favorite_session(d,i){
 
 function rename_session(d,i, button){
   var session=d3.select($(button).parents(".session")[0]);
-  var title = session.select("h2 .session-name");
+  var title = session.select("h3 .session-name");
   var rename_button = session.select("button.rename-session");
   rename_button.attr("disabled","disabled");
   var initial_title = title.text();
@@ -257,10 +333,10 @@ function start(){
     sessions_list = d3.select("#sessions_list").selectAll("div.session").data(sessions,key).enter().append("div")
         .attr("class","session panel panel-default");;
 
-    var s = sessions_list.append("div").attr("class","header panel-heading");
+    var s = sessions_list.append("div").attr("class","panel-heading session-heading");
 
 
-    var h = s.append("h2");
+    var h = s.append("h3");
     h.append("a").attr("href","javascript:void(0)").attr("class","toggle-favorite-session")
     .on("click",toggle_favorite_session)
     .append("span").attr("class","glyphicon")
