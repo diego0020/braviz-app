@@ -359,7 +359,7 @@ class SessionDataHandler(tornado.web.RequestHandler):
             session_id = self.get_body_argument("session")
             new_name = self.get_body_argument("name",None)
             new_description = self.get_body_argument("desc",None)
-            delete_session = self.get_body_argument("delete_annotation",None)
+            delete_session = self.get_body_argument("delete",None)
             favorite = self.get_body_argument("favorite",None)
             if new_name is not None:
                 log_db.set_session_name(session_id,new_name)
