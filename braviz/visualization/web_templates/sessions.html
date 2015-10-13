@@ -41,7 +41,7 @@
           margin:2em;
         }
 
-        table.events-table tr.event td.event-star{
+        table.events-table tr td{
           vertical-align: middle;
         }
 
@@ -69,8 +69,29 @@
                       <p>This can't be undone.</p>
                   </div>
                   <div class="modal-footer">
-                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-danger cancel-button" data-dismiss="modal">Delete Session</button>
+                  <button type="button" class="btn btn-default " data-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-danger accept-button" data-dismiss="modal">Delete Session</button>
+                </div>
+          </div>
+      </div>
+
+  </div>
+
+  <div class="confirm-delete-comment modal fade" tabindex="-1" role="dialog" id="confirm-comment-delete">
+      <div class="modal-dialog">
+          <div class="modal-content">
+                   <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" id="myModalLabel">Confirm delete comment</h4>
+                  </div>
+                  <div class="modal-body">
+                  <p>Are you sure you want to delete the following comment ?
+                    <p><span id="comment-to-delete"></span>,</p>)
+                      <p>This can't be undone.</p>
+                  </div>
+                  <div class="modal-footer">
+                  <button type="button" class="btn btn-defaul accept-button" data-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-danger accept-button" data-dismiss="modal">Delete Session</button>
                 </div>
           </div>
       </div>
@@ -156,6 +177,136 @@ function toggle_favorite_event(d,i,e){
   });
 }
 
+function modify_comment(d,button){
+  var row = d3.select(button.parentElement.parentElement);
+  var event_id = d3.select(button.parentElement.parentElement.parentElement).datum().id;
+  row.selectAll("button").attr("disabled","disabled");
+  var text_td = row.select("td.comment_text");
+  var orig_text = text_td.text();
+  text_td.text("");
+  var form = text_td.append("form").attr("class","form").on("submit",function(){d3.event.preventDefault(); return false;});
+    form.append("textarea").text(orig_text).attr("class","form-control");
+
+  // This code fragment is almost a copy from modify_description... could it be abstracted?
+  var form_controls = form.append("div").attr("class","btn-group btn-group-justified");
+  form_controls.append("div").attr("class","btn-group").append("button").attr("class","btn btn-default form-control")
+  .text("Save").on("click",function(d,i){
+    var new_text=form.select("textarea").node().value;
+    d3.xhr("history/data/event")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .post("event="+ event_id+"&annotation_id="+d.id+"&annotation="+new_text,
+            function(error, reply){
+                if (reply.status == 202){
+                    text_td.text(new_text);
+                    d.text = new_text;
+                    form.remove();
+                    row.selectAll("button").attr("disabled",null);
+                }
+                else{
+                    alert("couldn't modify comment");
+                }
+    });
+  });
+
+form_controls.append("div").attr("class","btn-group").append("button").attr("class","btn btn-danger form-control")
+  .text("Cancel").on("click",function(d,i){
+    form.remove();
+    text_td.text(orig_text);
+    row.selectAll("button").attr("disabled",null);
+  });
+}
+
+var confirm_comment_delete;
+$(function(){
+    $("#confirm-comment-delete button.accept-button").on("click",function(e){
+        confirm_comment_delete = true;
+    });
+});
+
+function delete_comment(d,button){
+  var comment=d.text;
+  var event_id = d3.select(button.parentElement.parentElement.parentElement).datum().id;
+  var row = d3.select(button.parentElement.parentElement);
+  // show confirmation
+  confirm_comment_delete = false;
+  $("#session-to-delete").text(d.name);
+  $("#confirm-comment-delete").on("hidden.bs.modal", function(e){
+      // delete in server
+      if (confirm_comment_delete){
+          // delete in interface
+          var c_id = d.id;
+          console.log(d);
+          console.log("deleting comment");
+          d3.xhr("history/data/event").header("Content-Type", "application/x-www-form-urlencoded")
+                  .post("event="+event_id+"annotation_id"+c_id+"&delete_annotation=true",function(e,response){
+                      if (response.status == 202){
+                          var orig_data = row.data();
+                          var j = orig_data.findIndex(function(e){return e.id == c_id});
+                          orig_data.splice(j,1);
+                          row.data(orig_data,key).exit().remove();
+                      }
+                  });
+      }
+      else{
+          console.log("canceled");
+      }
+  });
+  $("#confirm-comment-delete").modal();
+}
+
+function add_comment(button){
+  var all_events = d3.select(button.parentElement.parentElement.parentElement.parentElement).selectAll("tbody.event").data();
+  var event_full = d3.select(button.parentElement.parentElement.parentElement).datum();
+  var events_table = d3.select(button.parentElement.parentElement.parentElement.parentElement);
+  var event_id = event_full.id;
+  var place_holder="new comment";
+  var new_comment = {"text": place_holder};
+  event_full.comments.push(new_comment);
+  update_events({"events":all_events},events_table)
+}
+
+
+function update_events(data,events_table){
+
+  events_table.selectAll("tbody.event").data(data["events"],function(e){return e.id})
+  .enter().append("tbody").attr("class","event").call(function(d,i){
+      var ev=this.append("tr");
+      ev.append("td").attr("class","event-star")
+        .append("a").attr("href","javascript:void(0)").attr("title","Toggle favorite")
+        .on("click",function(d,i){toggle_favorite_event(d,i,ev)})
+        .append("span").attr("class","glyphicon")
+        .classed("glyphicon-star-empty",function(d){return !d.favorite})
+        .classed("glyphicon-star",function(d){return d.favorite});
+      ev.append("td").attr("class","event_date")
+        .attr("title",function(d){return d.full_date;})
+        .text(function(d){ return d.abv_date;});
+      ev.append("td").attr("class","event_text")
+        .text(function(d){return d.name;});
+      ev.append("td").append("button").attr("class","btn btn-default btn-block").html('<span class="glyphicon glyphicon-comment"></span>  Add Comment')
+        .on("click",function(d,i){add_comment(this)});
+      ev.append("td").append("button").attr("class","btn btn-default btn-block").html('<span class="glyphicon glyphicon-eye-open"></span>  Open');
+    })
+    .selectAll("tr.comment").data(function(d){return d["comments"]}).enter()
+    .append("tr").attr("class","comment")
+    .call(function(d,i){
+      var row = this;
+       // Empty td
+      row.append("td") ;
+      // Icon
+      row.append("td").html('<span class="glyphicon glyphicon-comment"></span>');
+      // text
+      row.append("td").attr("class","comment_text").text(function(d){return d.text;});
+      // modify button
+      row.append("td").append("button").attr("class","btn btn-default btn-block")
+        .html('<span class="glyphicon glyphicon-pencil"></span> Edit')
+        .on("click",function(d,i){modify_comment(d,this);});
+      // delete button
+      row.append("td").append("button").attr("class","btn btn-danger btn-block")
+        .html('<span class="glyphicon glyphicon-remove"></span> Delete')
+        .on("click",function(d,i){delete_comment(d,this);});
+    });
+}
+
 function load_events(d,i,button){
     var parent=d3.select($(button).parents(".session")[0]);
 parent.select("button.load-details").on("click",function(d,i){
@@ -165,28 +316,10 @@ parent.select(".load-details").on("click",function(d,i){load_events(d,i,button);
 }).text("Hide Events");
 
 d3.json("history/data/events?session="+d.id,
-  function(error,data){
-    parent
-    //.append("div").attr("class","events-list panel-body")
-    .append("table").attr("class","table table-hover events-table").append("tbody")
-    .selectAll("tr.event").data(data["events"])
-    .enter().append("tr").attr("class","event").call(function(d,i){
-        var ev=this;
-        ev.append("td").attr("class","event-star")
-          .append("a").attr("href","javascript:void(0)").attr("title","Toggle favorite")
-          .on("click",function(d,i){toggle_favorite_event(d,i,ev)})
-          .append("span").attr("class","glyphicon")
-          .classed("glyphicon-star-empty",function(d){return !d.favorite})
-          .classed("glyphicon-star",function(d){return d.favorite});
-        ev.append("td").attr("class","event_date")
-          .attr("title",function(d){return d.full_date;})
-          .text(function(d){ return d.abv_date;});
-        ev.append("td").attr("class","event_text")
-          .text(function(d){return d.name;});
-        ev.append("td").append("button").attr("class","btn btn-default").html('<span class="glyphicon glyphicon-comment"></span>  Annotate');
-        ev.append("td").append("button").attr("class","btn btn-default").html('<span class="glyphicon glyphicon-eye-open"></span>  Open');
-      });
-  });
+function(error,data){
+  var events_table =  parent.append("table").attr("class","table table-hover events-table");
+  update_events(data,events_table);
+});
 }
 
 function toggle_favorite_session(d,i){
@@ -248,12 +381,7 @@ function rename_session(d,i, button){
     });
 }
 
-var confirm_session_delete;
-$(function(){
-    $("#confirm-session-delete button.cancel-button").on("click",function(e){
-        confirm_session_delete = true;
-    });
-});
+
 
 function modify_description(d,y,button){
   var session=d3.select($(button).parents(".session")[0]);
@@ -293,6 +421,13 @@ function modify_description(d,y,button){
       desc_button.attr("disabled",null);
     });
 }
+
+var confirm_session_delete;
+$(function(){
+    $("#confirm-session-delete button.accept-button").on("click",function(e){
+        confirm_session_delete = true;
+    });
+});
 
 function delete_session(d,i,button){
     var session=d3.select($(button).parents(".session")[0]);

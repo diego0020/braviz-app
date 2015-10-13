@@ -329,21 +329,28 @@ class SessionDataHandler(tornado.web.RequestHandler):
     Implements a simple web page for changing the current subject from a mobile.
 
     """
+
+    full_time = "%Y/%m/%d %H:%M:%S"
     def format_events(self, event):
         abbreviated_time = "%I:%M %p"
-        full_time = "%H:%M:%S"
         return {"name": event.action,
                 "abv_date": event.date.strftime(abbreviated_time),
-                "full_date": event.date.strftime(full_time),
+                "full_date": event.date.strftime(self.full_time),
                 "id": event.index,
                 "favorite": event.favorite,
+                "comments": [],
                 }
 
     def get(self, ent):
         if ent=="events":
             session_id = self.get_argument("session")
-            events = [self.format_events(e) for e in log_db.get_events(session_id)]
-            self.write({"events":events})
+            events = {e.index : self.format_events(e) for e in log_db.get_events(session_id)}
+            comments = log_db.get_event_annotations(session_id)
+            for c in comments:
+                events[c.event_id]["comments"].append({"id":c.annotation_id,
+                                                       "date":c.date.strftime(self.full_time),
+                                                       "text":c.annotation})
+            self.write({"events":sorted(events.itervalues(),key=lambda x:x["full_date"])})
         else:
             self.send_error(404)
 
@@ -352,7 +359,7 @@ class SessionDataHandler(tornado.web.RequestHandler):
             session_id = self.get_body_argument("session")
             new_name = self.get_body_argument("name",None)
             new_description = self.get_body_argument("desc",None)
-            delete_session = self.get_body_argument("delete",None)
+            delete_session = self.get_body_argument("delete_annotation",None)
             favorite = self.get_body_argument("favorite",None)
             if new_name is not None:
                 log_db.set_session_name(session_id,new_name)
@@ -382,10 +389,31 @@ class SessionDataHandler(tornado.web.RequestHandler):
         elif ent == "event":
             event_id = self.get_body_argument("event")
             fav = self.get_body_argument("favorite",None)
+            ant = self.get_body_argument("annotation",None)
+            delete_annotation = self.get_body_argument("delete_annotation",None)
             if fav is not None:
                 fav = fav == "true"
                 log_db.set_event_favorite(event_id,fav)
                 self.set_status(202,"Favorite toggled")
+                self.finish()
+                return
+            if ant is not None:
+                ant_id = self.get_body_argument("annotation_id",None)
+                if ant_id is not None:
+                    log_db.modify_event_annotaiton(ant_id,ant)
+                    self.set_status(202,"Annotation modified")
+                    self.finish()
+                    return
+                else:
+                    ant_id = log_db.add_event_annotation(event_id,ant)
+                    self.set_status(202,"Annotation added")
+                    self.write(ant_id)
+                    self.finish()
+                    return
+            if delete_annotation is not None and delete_annotation:
+                ant_id = self.get_body_argument("annotation_id",None)
+                log_db.delete_annotation(ant_id)
+                self.set_status(202,"Annotation modified")
                 self.finish()
                 return
         self.send_error(404)

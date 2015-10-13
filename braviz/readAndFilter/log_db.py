@@ -194,3 +194,53 @@ def set_event_favorite(event_id,favorite):
         cur = conn.execute(
             q, (fav, event_id))
 
+annotations_factory = namedtuple("EventAnnotations",["annotation_id", "event_id","date","annotation"])
+
+
+def get_event_annotations(session_id=None, event_id=None):
+
+    def format_tuple(t):
+        an_id, ev_id, annotation_date, annotation = t
+        annotation_date = datetime.datetime.strptime(annotation_date, _db_date_format)
+        return annotations_factory(an_id, ev_id, annotation_date, annotation)
+
+    conn = get_log_connection()
+    if session_id is not None:
+        q="""SELECT annotation_id, annotations.event_id, annotation_date, annotation
+        FROM annotations
+        JOIN events ON annotations.event_id = events.event_id
+        WHERE events.session_id = ?"""
+
+        tuples = conn.execute(q,(session_id, )).fetchall()
+    elif event_id is not None:
+        q="""SELECT event_id, annotation_date, annotation
+        FROM annotations
+        WHERE event_id = ?"""
+        tuples = conn.execute(q,(event_id, )).fetchall()
+    else:
+        raise ValueError("Either session_id or event_id are required")
+
+    return [format_tuple(t) for t in tuples]
+
+
+def add_event_annotation(event_id, annotation_text):
+    now = datetime.datetime.now()
+    q=""" INSERT INTO annotations (event_id, annotation_date, annotation)
+        VALUES (?,?) """
+    conn = get_log_connection()
+    with conn:
+        conn.execute(q,(event_id, now, annotation_text))
+    return conn.lastrowid
+
+
+def modify_event_annotaiton(annotation_id, new_annotation_text):
+    q=""" UPDATE annotations SET annotation = ? WHERE annotation_id = ? """
+    conn = get_log_connection()
+    with conn:
+        conn.execute(q,(new_annotation_text, annotation_id))
+
+def delete_annotation(annotation_id):
+    q=""" DELETE FROM annotations  WHERE annotation_id = ? """
+    conn = get_log_connection()
+    with conn:
+        conn.execute(q,(annotation_id, ))
