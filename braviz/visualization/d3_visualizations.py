@@ -407,7 +407,7 @@ class SessionDataHandler(tornado.web.RequestHandler):
                 else:
                     ant_id = log_db.add_event_annotation(event_id,ant)
                     self.set_status(202,"Annotation added")
-                    self.write(ant_id)
+                    self.write("%d"%ant_id)
                     self.finish()
                     return
             if delete_annotation is not None and delete_annotation:

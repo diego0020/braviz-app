@@ -58,7 +58,7 @@ def create_tables(conn=None):
 
         # annotations table
         q = """CREATE TABLE IF NOT EXISTS annotations (
-        annotation_id INTEGER PRIMARY INDEX,
+        annotation_id INTEGER PRIMARY KEY,
         event_id INTEGER REFERENCES events(event_id),
         annotation_date DATETIME,
         annotation TEXT

@@ -226,11 +226,11 @@ def get_event_annotations(session_id=None, event_id=None):
 def add_event_annotation(event_id, annotation_text):
     now = datetime.datetime.now()
     q=""" INSERT INTO annotations (event_id, annotation_date, annotation)
-        VALUES (?,?) """
+        VALUES (?, ?,?) """
     conn = get_log_connection()
     with conn:
-        conn.execute(q,(event_id, now, annotation_text))
-    return conn.lastrowid
+        cur=conn.execute(q,(event_id, now, annotation_text))
+    return cur.lastrowid
 
 
 def modify_event_annotaiton(annotation_id, new_annotation_text):

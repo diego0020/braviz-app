@@ -114,7 +114,7 @@ def verify_log_db(database_file=None):
     else:
         conn = sqlite3.connect(database_file)
     # log db
-    if not _check_tables(conn, ("sessions","events")):
+    if not _check_tables(conn, ("sessions","events","annotations")):
         from braviz.readAndFilter import log_db_creation
         log_db_creation.create_tables(conn)
 
