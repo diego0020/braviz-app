@@ -331,6 +331,12 @@ class SessionDataHandler(tornado.web.RequestHandler):
     """
 
     full_time = "%Y/%m/%d %H:%M:%S"
+    def initialize(self):
+        self.application_icons = {
+            "anova" : self.static_url("icons/anova.png"),
+            "braviz_menu2" :self.static_url("icons/braviz.png"),
+            "subject_overview" :self.static_url("icons/subject_overview.png"),
+        }
     def format_events(self, event):
         abbreviated_time = "%I:%M %p"
         return {"name": event.action,
@@ -338,7 +344,10 @@ class SessionDataHandler(tornado.web.RequestHandler):
                 "full_date": event.date.strftime(self.full_time),
                 "id": event.index,
                 "favorite": event.favorite,
+                "icon_url":self.application_icons.get(event.application_name,""),
+                "application" : event.application_name,
                 "comments": [],
+                "instance": event.instance_id,
                 }
 
     def get(self, ent):
@@ -349,8 +358,20 @@ class SessionDataHandler(tornado.web.RequestHandler):
             for c in comments:
                 events[c.event_id]["comments"].append({"id":c.annotation_id,
                                                        "date":c.date.strftime(self.full_time),
-                                                       "text":c.annotation})
-            self.write({"events":sorted(events.itervalues(),key=lambda x:x["full_date"])})
+                                                       "text":c.annotation,
+                                                       })
+            sorted_events =  sorted(events.itervalues(),key=lambda x:x["full_date"])
+            app_ids = {}
+            for e in sorted_events:
+                app = e["application"]
+                instance = e["instance"]
+                instances_indices = app_ids.setdefault(app,dict())
+                instance_i = instances_indices.get(instance)
+                if instance_i is None:
+                    instance_i = len(instances_indices)
+                    instances_indices[instance] = instance_i
+                e["instance_index"] = instance_i
+            self.write({"events":sorted_events})
         else:
             self.send_error(404)
 

@@ -15,6 +15,19 @@
           position : relative;
         }
 
+        td.event_app img{
+            width: 4ex;
+            height: 4ex;
+            text-align: center;
+            margin-left: 0.5ex;
+            margin-right: 0.5ex;
+        }
+
+
+        td.comment-icon,td.event_app{
+            text-align: center;
+        }
+
         div.date-block {
             position: absolute;
             top: 2ex;
@@ -324,13 +337,33 @@ function update_events(data,events_table){
         .append("span").attr("class","glyphicon")
         .classed("glyphicon-star-empty",function(d){return !d.favorite})
         .classed("glyphicon-star",function(d){return d.favorite});
+
       ev.append("td").attr("class","event_date")
         .attr("title",function(d){return d.full_date;})
         .text(function(d){ return d.abv_date;});
+      ev.append("td").attr("class","event_app").call(function(td){
+              td.append("img")
+              .attr("title",function(d){return d.application})
+              .attr("alt",function(d){return d.application})
+              .attr("src",function(d){return d.icon_url});
+            td.append("sub").attr("class","instance-index").text(function(d){
+                if (d.instance_index > 0){
+                    return 1+ d.instance_index;
+                }
+                else{
+                    return "";
+                }
+
+            });
+      });
+
+
       ev.append("td").attr("class","event_text")
         .text(function(d){return d.name;});
+
       ev.append("td").append("button").attr("class","btn btn-default btn-block").html('<span class="glyphicon glyphicon-comment"></span>  Add Comment')
         .on("click",function(d,i){add_comment(this)});
+
       ev.append("td").append("button").attr("class","btn btn-default btn-block").html('<span class="glyphicon glyphicon-eye-open"></span>  Open');
     })
     .selectAll("tr.comment").data(function(d){return d["comments"]}).enter()
@@ -339,8 +372,10 @@ function update_events(data,events_table){
       var row = this;
        // Empty td
       row.append("td") ;
+      // Other empty td
+      row.append("td") ;
       // Icon
-      row.append("td").html('<span class="glyphicon glyphicon-comment"></span>');
+      row.append("td").attr("class","comment-icon").html('<span class="glyphicon glyphicon-comment"></span>');
       // text
       row.append("td").attr("class","comment_text").text(function(d){return d.text;});
       // modify button
