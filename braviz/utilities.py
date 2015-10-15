@@ -21,6 +21,7 @@
 from __future__ import print_function
 import contextlib
 import os
+import uuid
 from collections import defaultdict
 import logging
 import subprocess
@@ -192,3 +193,9 @@ def launch_sub_process(*args,**kwargs):
         # timeout each five minutes or 300 seconds
         _collect_processes_timer.start(300000)
     return p
+
+
+def get_instance_id():
+    ui = uuid.uuid1()
+    return ui
+
