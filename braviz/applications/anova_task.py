@@ -19,7 +19,7 @@
 
 from __future__ import division
 
-from braviz.utilities import set_pyqt_api_2
+from braviz.utilities import set_pyqt_api_2, get_instance_id
 
 set_pyqt_api_2()
 
@@ -34,7 +34,7 @@ import braviz.interaction.sample_select
 from braviz.interaction.qt_dialogs import MultiPlotOutcomeSelectDialog, RegressorSelectDialog, InteractionSelectDialog
 
 import braviz.interaction.r_functions
-from braviz.interaction.connection import MessageClient, create_log_message
+from braviz.interaction.connection import MessageClient, create_log_message, create_ready_message
 from braviz.readAndFilter.config_file import get_config
 
 import braviz.interaction.qt_models as braviz_models
@@ -69,6 +69,7 @@ SAMPLE_TREE_COLUMNS = (def_vars["nom1"], def_vars["nom2"])
 class AnovaApp(QMainWindow):
     def __init__(self, scenario, server_broadcast_address, server_receive_address):
         QMainWindow.__init__(self)
+        self.uid = get_instance_id()
         self.name = "Anova"
         self.outcome_var_name = None
         self.anova = None
@@ -106,6 +107,12 @@ class AnovaApp(QMainWindow):
                 self.load_scenario_id(scenario)
 
         self.sample_manager.sample_changed.connect(self.update_sample)
+
+        # Register back to menu
+        if self._message_client is not None:
+            msg = create_ready_message(self.uid)
+            self._message_client.send_message(msg)
+
 
     def setup_gui(self):
         self.ui = Ui_Anova_gui()
@@ -573,7 +580,7 @@ class AnovaApp(QMainWindow):
         if self._message_client is None:
             return
         state = self.get_state()
-        msg = create_log_message(description, state, "anova")
+        msg = create_log_message(description, state, "anova", self.uid)
         self._message_client.send_message(msg)
 
     def receive_message(self, msg):

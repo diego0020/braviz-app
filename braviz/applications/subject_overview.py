@@ -18,7 +18,8 @@
 
 
 from __future__ import division
-from braviz.utilities import set_pyqt_api_2
+from braviz.utilities import set_pyqt_api_2, get_instance_id
+
 set_pyqt_api_2()
 import braviz
 import PyQt4.QtGui as QtGui
@@ -45,7 +46,7 @@ from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, 
     ContrastComboManager
 from braviz.interaction.sample_select import SampleManager
 
-from braviz.interaction.connection import MessageClient, create_log_message
+from braviz.interaction.connection import MessageClient, create_log_message, create_ready_message
 import cPickle
 import functools
 import logging
@@ -64,7 +65,7 @@ class SubjectOverviewApp(QMainWindow):
     def __init__(self, server_broadcast_address=None, server_receive_address=None, scenario=None, subject=None):
         # Super init
         QMainWindow.__init__(self)
-
+        self.uid = get_instance_id()
         # Internal initialization
         self.name = "Subject Overview"
         config = get_config(__file__)
@@ -135,6 +136,10 @@ class SubjectOverviewApp(QMainWindow):
                 scn_data["subject_state"]["current_subject"] = subject
             load_scn = functools.partial(self.load_scenario, scn_data)
             QtCore.QTimer.singleShot(0, load_scn)
+
+        if self._messages_client is not None:
+            ready = create_ready_message(self.uid)
+            self._messages_client.send_message(ready)
 
     def start(self):
         self.vtk_widget.initialize_widget()
@@ -320,7 +325,7 @@ class SubjectOverviewApp(QMainWindow):
         if self._messages_client is None:
             return
         state = self.get_state_dict()
-        msg = create_log_message(description, state, "subject_overview")
+        msg = create_log_message(description, state, "subject_overview", self.uid)
         self._messages_client.send_message(msg)
 
 

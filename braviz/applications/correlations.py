@@ -22,7 +22,7 @@ Explore correlations between two variables
 """
 
 from __future__ import print_function
-from braviz.utilities import set_pyqt_api_2
+from braviz.utilities import set_pyqt_api_2, get_instance_id
 
 set_pyqt_api_2()
 
@@ -43,7 +43,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from braviz.interaction.qt_guis.correlations import Ui_correlation_app
-from braviz.interaction.connection import MessageClient, create_log_message
+from braviz.interaction.connection import MessageClient, create_log_message, create_ready_message
 from braviz.interaction.sample_select import SampleManager
 import braviz.interaction.qt_dialogs
 
@@ -75,6 +75,7 @@ class CorrelationMatrixFigure(FigureCanvas):
         self.mpl_connect("motion_notify_event", self.get_tooltip_message)
         self.mpl_connect("button_press_event", self.square_clicked)
         self.on_draw()
+
 
     def on_draw(self):
         plt.sca(self.ax)
@@ -323,6 +324,7 @@ class CorrelationsApp(QtGui.QMainWindow):
 
     def __init__(self, server_broadcast = None, server_receive = None):
         super(CorrelationsApp, self).__init__()
+        self.uid = get_instance_id()
         self.name = "Correlations"
         self.ui = None
         self._message_client = MessageClient(server_broadcast, server_receive)
@@ -332,6 +334,9 @@ class CorrelationsApp(QtGui.QMainWindow):
         self.reg_plot = RegFigure(self._message_client, self.sample_manager)
         self.vars_model = VarListModel(checkeable=True)
         self.setup_ui()
+        if server_receive is not None:
+            msg = create_ready_message(self.uid)
+            self._message_client.send_message(msg)
 
     def setup_ui(self):
         self.ui = Ui_correlation_app()
@@ -459,7 +464,7 @@ class CorrelationsApp(QtGui.QMainWindow):
         if self._message_client is None:
             return
         state = self.get_state()
-        msg = create_log_message(description, state, "correlations")
+        msg = create_log_message(description, state, "correlations", self.uid)
         self._message_client.send_message(msg)
 
 if __name__ == "__main__":

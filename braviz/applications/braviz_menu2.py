@@ -27,7 +27,7 @@ import webbrowser
 
 from PyQt4 import QtGui
 from PyQt4 import QtCore
-from braviz.utilities import launch_sub_process
+from braviz.utilities import launch_sub_process, get_instance_id
 import braviz.interaction
 import braviz.interaction.qt_dialogs
 import braviz.interaction.sample_select
@@ -55,6 +55,7 @@ class BravizMenu2(QtGui.QMainWindow):
     def __init__(self):
         super(BravizMenu2, self).__init__()
 
+        self.uid = get_instance_id()
         self.reader = None
         self.ui = None
         self.setWindowTitle("Braviz Menu")
@@ -63,13 +64,15 @@ class BravizMenu2(QtGui.QMainWindow):
         print("Broadcast address: %s" % self.messages_server.broadcast_address)
         print("Receive address: %s" % self.messages_server.receive_address)
         log_db.start_session()
-        self.messages_server.message_received.connect(self.print_messages)
+        self.messages_server.message_received.connect(self.process_messages)
         args = [sys.executable, "-m", "braviz.applications.braviz_web_server", "0",
                 self.messages_server.broadcast_address, self.messages_server.receive_address]
         self.web_server = launch_sub_process(args)
         args = [sys.executable, "-m", "braviz.applications.log_concentrator",
                 self.messages_server.broadcast_address]
         self.log_server = launch_sub_process(args)
+        self.child_application_processes = dict()
+        self.child_application_ids = dict()
         self.setup_gui()
 
     def setup_gui(self):
@@ -144,7 +147,9 @@ class BravizMenu2(QtGui.QMainWindow):
 
         def launch_app():
             self.log_action("Launched %s"%app)
-            launch_sub_process(args)
+            proc = launch_sub_process(args)
+            pid = proc.pid
+            self.child_application_processes[pid] = proc
             button.setEnabled(False)
             QtCore.QTimer.singleShot(3000, restore_icon)
 
@@ -152,7 +157,7 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def log_action(self,description):
         state = {}
-        msg = create_log_message(description, state, "braviz_menu2")
+        msg = create_log_message(description, state, "braviz_menu2", self.uid)
         self.messages_server.send_message(msg)
 
     def launch_variable_management_dialog(self):
@@ -200,15 +205,25 @@ class BravizMenu2(QtGui.QMainWindow):
         url = "http://localhost:8100/parallel"
         webbrowser.open(url, 2)
 
-    def print_messages(self, msg):
+    def process_messages(self, msg):
         # for testing
         print("RECEIVED: %s" % msg)
+        if msg["type"] == "ready":
+            app_pid = msg["source_pid"]
+            app_uid = msg["source_id"]
+            proc = self.child_application_processes[app_pid]
+            self.child_application_ids[app_uid] = proc
+
 
     def toggle_connection(self, on):
         if on:
             self.messages_server.pause = False
         else:
             self.messages_server.pause = True
+
+    def process_ready_message(self, msg):
+        pass
+
 
 
 def run():

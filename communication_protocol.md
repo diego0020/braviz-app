@@ -47,7 +47,7 @@ Communicate data about user actions. Include application state (scenario), so th
 type : "log",
 action: <description of user action>,
 state : <resulting state of the application>,
-pid : <pid_of target application|id browser session>,
+pid : <id of application instance>,
 application :  <name of application>,
 time : timestamp when the action happened,
 sceensshot : <optional,  base64 encoded raw png data of a 128x128 image>

@@ -194,8 +194,7 @@ def launch_sub_process(*args,**kwargs):
         _collect_processes_timer.start(300000)
     return p
 
-
 def get_instance_id():
     ui = uuid.uuid1()
-    return ui
+    return ui.get_hex()
 

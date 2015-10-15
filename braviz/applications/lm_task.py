@@ -18,7 +18,7 @@
 
 
 from __future__ import division, print_function
-from braviz.utilities import set_pyqt_api_2
+from braviz.utilities import set_pyqt_api_2, get_instance_id
 
 set_pyqt_api_2()
 
@@ -49,7 +49,7 @@ import braviz.interaction.qt_models as braviz_models
 from braviz.interaction.sample_select import SampleManager
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
-from braviz.interaction.connection import MessageClient, MessageServer, create_log_message
+from braviz.interaction.connection import MessageClient, MessageServer, create_log_message, create_ready_message
 from braviz.readAndFilter.config_file import get_config
 from braviz.utilities import launch_sub_process
 
@@ -67,6 +67,7 @@ SAMPLE_TREE_COLUMNS = (def_vars["nom1"], def_vars["nom2"])
 class LinearModelApp(QMainWindow):
     def __init__(self, scenario, server_broadcast_address, server_receive_address):
         QMainWindow.__init__(self)
+        self.uid = get_instance_id()
         self.name = "Linear Models"
         self.outcome_var_name = None
         self.model = None
@@ -94,6 +95,9 @@ class LinearModelApp(QMainWindow):
         sample = braviz_tab_data.get_subjects()
         self.sample_manager = SampleManager(parent_application=self, application_name=self.name,message_client=self._message_client, initial_sample=sample)
         self.setup_gui()
+        if self._message_client is not None:
+            ready = create_ready_message(self.uid)
+            self._message_client.send_message(ready)
 
     def setup_gui(self):
         self.ui = Ui_LinearModel()
@@ -1022,7 +1026,7 @@ class LinearModelApp(QMainWindow):
         if self._message_client is None:
             return
         state = self.get_state()
-        msg = create_log_message(description, state, "linear_model")
+        msg = create_log_message(description, state, "linear_model", self.uid)
         self._message_client.send_message(msg)
 
 

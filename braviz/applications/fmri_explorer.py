@@ -18,7 +18,8 @@
 
 
 from __future__ import division, print_function
-from braviz.utilities import set_pyqt_api_2
+from braviz.utilities import set_pyqt_api_2, get_instance_id
+
 set_pyqt_api_2()
 
 from itertools import izip, repeat
@@ -34,10 +35,10 @@ from braviz.interaction.qt_widgets import ListValidator, ContrastComboManager
 from braviz.interaction.sample_select import SampleManager
 import braviz.visualization.subject_viewer
 import braviz.visualization.fmri_timeseries
-from braviz.readAndFilter import tabular_data as braviz_tab_data
+from braviz.readAndFilter import tabular_data as braviz_tab_data, user_data
 from braviz.interaction.qt_models import DataFrameModel
 from braviz.interaction import qt_dialogs
-from braviz.interaction.connection import MessageClient, create_log_message
+from braviz.interaction.connection import MessageClient, create_log_message, create_ready_message
 from braviz.interaction.qt_guis.fmri_explore import Ui_fMRI_Explorer
 from braviz.readAndFilter.config_file import get_config
 
@@ -49,8 +50,8 @@ class FmriExplorer(QtGui.QMainWindow):
 
     def __init__(self, scenario, server_broadcast_address, server_receive_address):
         super(FmriExplorer, self).__init__()
-
-        self.name = "F-Mri Explorer"
+        self.uid = get_instance_id()
+        self.name = "FMri Explorer"
         log = logging.getLogger(__name__)
         config = get_config(__file__)
 
@@ -85,11 +86,10 @@ class FmriExplorer(QtGui.QMainWindow):
 
         self.start_ui()
 
-        if scenario is None or scenario == 0:
-            QtCore.QTimer.singleShot(0, self.load_initial_view)
-        else:
-            log.info("Got scenario")
-            log.info(scenario)
+        QtCore.QTimer.singleShot(0, lambda : self.load_initial_view(scenario))
+
+
+
 
     def start_ui(self):
         self.ui = Ui_fMRI_Explorer()
@@ -192,10 +192,17 @@ class FmriExplorer(QtGui.QMainWindow):
         self.image_view.change_orientation(orientation_index)
         self.update_slice_controls()
 
-    def load_initial_view(self):
+    def load_initial_view(self, scenario):
+        if scenario is None or scenario == 0:
+            self.ui.subject_edit.setText(str(self.__current_subject))
+            self.update_fmri_data_view()
+        else:
+            new_state = user_data.get_scenario_data_dict(scenario)
+            self.load_state(new_state)
 
-        self.ui.subject_edit.setText(str(self.__current_subject))
-        self.update_fmri_data_view()
+        if self._messages_client is not None:
+            ready_msg = create_ready_message(self.uid)
+            self._messages_client.send_message(ready_msg)
 
     def update_fmri_data_view(self, dummy = None, broadcast_message = True):
         log = logging.getLogger(__name__)
@@ -692,7 +699,7 @@ class FmriExplorer(QtGui.QMainWindow):
         if self._messages_client is None:
             return
         state = self.get_state()
-        msg = create_log_message(description, state, "fmri_explorer")
+        msg = create_log_message(description, state, "fmri_explorer", self.uid)
         self._messages_client.send_message(msg)
 
 

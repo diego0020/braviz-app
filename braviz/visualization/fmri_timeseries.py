@@ -92,7 +92,7 @@ class TimeseriesPlot(FigureCanvas):
             self.bold = None
             return
         self.bold = bold_image.get_data()
-        self.volumes_times = np.arange(0, self.bold.shape[3])
+        self.volumes_times = np.arange(0, self.bold.shape[3],dtype=np.float)
         self.volumes_times *= self.spm.tr
         self.volumes_times += self.spm.tr / 2  # middle of acquisition
         # HACK

@@ -521,14 +521,8 @@ class BlockingMessageClient(object):
         """
         return self._server_pub
 
-    @property
-    def server_receive(self):
-        """
-        The server receive address
-        """
-        return self._server_pull
 
-def create_log_message(action, next_state, application):
+def create_log_message(action, next_state, application, uid):
     assert isinstance(action, basestring)
     assert isinstance(application, basestring)
     assert isinstance(next_state, dict)
@@ -537,8 +531,16 @@ def create_log_message(action, next_state, application):
         "type": "log",
         "action": action,
         "state": next_state,
-        "pid": os.getpid(),
+        "pid": uid,
         "application": application,
         "time": timestamp
+    }
+    return msg
+
+def create_ready_message(instance_id):
+    msg = {
+        "type" : "ready",
+        "source_pid" : os.getpid(),
+        "source_id" : instance_id,
     }
     return msg
