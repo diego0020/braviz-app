@@ -1022,7 +1022,7 @@ class LinearModelApp(QMainWindow):
         if self._message_client is None:
             return
         state = self.get_state()
-        msg = create_log_message(description, state, "anova_task")
+        msg = create_log_message(description, state, "linear_model")
         self._message_client.send_message(msg)
 
 

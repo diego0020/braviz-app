@@ -336,6 +336,8 @@ class SessionDataHandler(tornado.web.RequestHandler):
             "anova" : self.static_url("icons/anova.png"),
             "braviz_menu2" :self.static_url("icons/braviz.png"),
             "subject_overview" :self.static_url("icons/subject_overview.png"),
+            "linear_model" : self.static_url("icons/linear.png"),
+            "correlations" : self.static_url("icons/correlations.png"),
         }
     def format_events(self, event):
         abbreviated_time = "%I:%M %p"
