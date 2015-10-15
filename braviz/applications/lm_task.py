@@ -362,6 +362,11 @@ class LinearModelApp(QMainWindow):
                 else:
                     x_labels = braviz_tab_data.get_labels_dict_by_name(
                         target_var)
+                    #  None label can be very problematic, ensure it is not there
+                    try:
+                        del x_labels[None]
+                    except KeyError:
+                        pass
                     self.plot.draw_scatter(
                         df2, target_var, self.outcome_var_name, reg_line=True, x_labels=x_labels)
                 self.plot.set_figure_title("Mean effect of %s" % target_var)
