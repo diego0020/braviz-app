@@ -170,6 +170,11 @@ def get_events(session_id):
     sessions = [format_event_tuple(t) for t in conn.execute(q, (session_id,)).fetchall()]
     return sessions
 
+def get_event_state(event_id):
+    q = """ SELECT event_state FROM events WHERE event_id = ?"""
+    conn = get_log_connection()
+    state = conn.execute(q, (event_id, )).fetchone()[0]
+    return state
 
 def delete_session(session_id):
     # Delete events

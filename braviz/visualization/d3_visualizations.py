@@ -374,6 +374,12 @@ class SessionDataHandler(tornado.web.RequestHandler):
                     instances_indices[instance] = instance_i
                 e["instance_index"] = instance_i
             self.write({"events":sorted_events})
+        elif ent=="event_data":
+            event_id = self.get_argument("event_id")
+            state_string = log_db.get_event_state(event_id)
+            self.set_header("Content-Type", "application/json")
+            self.write(state_string)
+            self.finish()
         else:
             self.send_error(404)
 

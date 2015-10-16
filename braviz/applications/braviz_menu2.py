@@ -64,15 +64,16 @@ class BravizMenu2(QtGui.QMainWindow):
         print("Broadcast address: %s" % self.messages_server.broadcast_address)
         print("Receive address: %s" % self.messages_server.receive_address)
         log_db.start_session()
-        self.messages_server.message_received.connect(self.process_messages)
+        self.messages_server.message_received.connect(self.receive_messages)
         args = [sys.executable, "-m", "braviz.applications.braviz_web_server", "0",
                 self.messages_server.broadcast_address, self.messages_server.receive_address]
         self.web_server = launch_sub_process(args)
         args = [sys.executable, "-m", "braviz.applications.log_concentrator",
                 self.messages_server.broadcast_address]
         self.log_server = launch_sub_process(args)
-        self.child_application_processes = dict()
-        self.child_application_ids = dict()
+        self.child_pid_to_proc = dict()
+        self.child_running_applications = dict()
+        self.waiting_for_scenario = dict()
         self.setup_gui()
 
     def setup_gui(self):
@@ -149,7 +150,7 @@ class BravizMenu2(QtGui.QMainWindow):
             self.log_action("Launched %s"%app)
             proc = launch_sub_process(args)
             pid = proc.pid
-            self.child_application_processes[pid] = proc
+            self.child_pid_to_proc[pid] = proc
             button.setEnabled(False)
             QtCore.QTimer.singleShot(3000, restore_icon)
 
@@ -205,25 +206,59 @@ class BravizMenu2(QtGui.QMainWindow):
         url = "http://localhost:8100/parallel"
         webbrowser.open(url, 2)
 
-    def process_messages(self, msg):
+    def receive_messages(self, msg):
         # for testing
         print("RECEIVED: %s" % msg)
         if msg["type"] == "ready":
-            app_pid = msg["source_pid"]
-            app_uid = msg["source_id"]
-            proc = self.child_application_processes[app_pid]
-            self.child_application_ids[app_uid] = proc
+            self.handle_ready_message(msg)
+        elif msg["type"] == "reload":
+            self.handle_reload_message(msg)
 
+
+    def handle_reload_message(self, msg):
+        target = msg["target"]
+        # Check if target is open
+        proc = self.child_running_applications.get(target)
+        if proc is not None:
+            # maybe running
+            status = proc.poll()
+            if status is None:
+                # still running
+                return
+            # Application has ended
+            del self.child_running_applications[target]
+
+        scenario = msg["scenario"]
+        scenario_meta = scenario["meta"]
+        application_script = scenario_meta["application"]
+        args = [sys.executable, "-m", "braviz.applications.%s"%application_script,
+                "0", self.messages_server.broadcast_address, self.messages_server.receive_address]
+        self.log_action("Restoring session of %s"%application_script)
+
+        new_proc = launch_sub_process(args)
+        new_pid = new_proc.pid
+        self.child_pid_to_proc[new_pid]=new_proc
+        self.waiting_for_scenario[new_pid]=scenario
+
+    def handle_ready_message(self,msg):
+        app_pid = msg["source_pid"]
+        app_uid = msg["source_id"]
+        proc = self.child_pid_to_proc[app_pid]
+        self.child_running_applications[app_uid] = proc
+        maybe_scn = self.waiting_for_scenario.get(app_pid)
+        if maybe_scn is not None:
+            crafted_message = {
+                "type" : "reload",
+                "target" : app_uid,
+                "scenario" : maybe_scn
+            }
+            self.messages_server.send_message(crafted_message)
 
     def toggle_connection(self, on):
         if on:
             self.messages_server.pause = False
         else:
             self.messages_server.pause = True
-
-    def process_ready_message(self, msg):
-        pass
-
 
 
 def run():

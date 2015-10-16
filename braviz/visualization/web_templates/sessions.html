@@ -196,6 +196,20 @@ function toggle_favorite_event(d,i,e){
   });
 }
 
+function toggle_reload_event(event_datum){
+  d3.json("history/data/event_data?event_id="+event_datum.id,
+  function(error,data){
+    msg = {
+      type : "reload",
+      target : event_datum.instance,
+      scenario : data
+    }
+    console.log(msg);
+    send_message(msg);
+  });
+}
+
+
 function modify_comment(d,button){
   var row = d3.select(button.parentElement.parentElement);
   var event_id = d3.select(button.parentElement.parentElement.parentElement).datum().id;
@@ -364,7 +378,8 @@ function update_events(data,events_table){
       ev.append("td").append("button").attr("class","btn btn-default btn-block").html('<span class="glyphicon glyphicon-comment"></span>  Add Comment')
         .on("click",function(d,i){add_comment(this)});
 
-      ev.append("td").append("button").attr("class","btn btn-default btn-block").html('<span class="glyphicon glyphicon-eye-open"></span>  Open');
+      ev.append("td").append("button").attr("class","btn btn-default btn-block").html('<span class="glyphicon glyphicon-eye-open"></span>  Open')
+        .on("click",function(d,i){toggle_reload_event(d);});
     })
     .selectAll("tr.comment").data(function(d){return d["comments"]}).enter()
     .append("tr").attr("class","comment")
@@ -590,7 +605,37 @@ function start(){
     d3.select("#sessions_list div.session button.delete-session").attr("disabled","disabled");
 }
 
+//---------------------------------connection--------------------------------------
+var last_message = null;
+var ws = null;
+var errorSleepTime = 500;
+ function openWS() {
+    var address = "ws://" + window.location.host + "/messages_ws";
+    ws = new WebSocket(address);
+    ws.onerror=function () {
+    if (errorSleepTime < 5000){
+    errorSleepTime*=2;
+    }
+    };
+    ws.onmessage = function(e) {
+      console.log(e);
+    };
+    ws.onclose = function(e) {
+      window.setTimeout(openWS, errorSleepTime);
+    };
+  }
+
+function send_message(msg_as_object){
+  msg=JSON.stringify(msg_as_object);
+  if (ws){
+    ws.send(msg);
+  }
+}
+
+$(function(){
+openWS()
 start();
+});
 
 </script>
 </body>

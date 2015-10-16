@@ -66,6 +66,8 @@ class SubjectOverviewApp(QMainWindow):
         # Super init
         QMainWindow.__init__(self)
         self.uid = get_instance_id()
+        self.loading_scenario = False   # Log messages should not be send while scenarios are being loaded
+
         # Internal initialization
         self.name = "Subject Overview"
         config = get_config(__file__)
@@ -322,7 +324,7 @@ class SubjectOverviewApp(QMainWindow):
             super(SubjectOverviewApp, self).keyPressEvent(event)
 
     def log_action(self,description):
-        if self._messages_client is None:
+        if self._messages_client is None or self.loading_scenario:
             return
         state = self.get_state_dict()
         msg = create_log_message(description, state, "subject_overview", self.uid)
@@ -398,7 +400,7 @@ class SubjectOverviewApp(QMainWindow):
         self.update_segmentation_scalar()
         self.update_fiber_scalars()
         self.context_frame.set_subject(new_subject)
-        if new_subject != self.__curent_subject:
+        if new_subject != self.__curent_subject :
             self.log_action("Changed subject to %s" % new_subject)
 
     def show_error(self, message):
@@ -538,7 +540,7 @@ class SubjectOverviewApp(QMainWindow):
             logger.info("new models %s" % new_selection)
             self.log_action("Set new variables for subjects table %s"%new_selection)
 
-    #Samples
+
     def receive_message(self, msg):
         log = logging.getLogger(__file__)
         log.info("RECEIVED: %s" % msg)
@@ -548,7 +550,15 @@ class SubjectOverviewApp(QMainWindow):
             self.change_subject(subj, broadcast_message=False)
         if msg_type == "sample":
             self.sample_manager.process_sample_message(msg)
+        if msg_type == "reload":
+            if msg["target"] == self.uid:
+                self.process_scenario_message(msg)
 
+    def process_scenario_message(self, msg):
+        scenario = msg["scenario"]
+        self.load_scenario(scenario)
+
+    #Samples
     def update_sample(self, _):
 
         # update subject selection widget
@@ -1060,7 +1070,6 @@ class SubjectOverviewApp(QMainWindow):
             print "cancelled"
 
 
-
     def load_scenario_dialog(self):
         wanted_state = dict()
         my_name = os.path.splitext(os.path.basename(__file__))[0]
@@ -1072,9 +1081,18 @@ class SubjectOverviewApp(QMainWindow):
         self.load_scenario(wanted_state)
 
     def load_scenario(self, state):
+        log = logging.getLogger(__name__)
+        self.loading_scenario = True
+        try:
+            self.load_scenario_in(state)
+        except Exception as e:
+            log.exception(e)
+        finally:
+            self.loading_scenario = False
+
+    def load_scenario_in(self, state):
 
         wanted_state = state
-
         # camera panel
         camera_state = wanted_state.get("camera_state")
         log = logging.getLogger(__name__)
@@ -1095,7 +1113,7 @@ class SubjectOverviewApp(QMainWindow):
         if subject_state is not None:
             subject = subject_state.get("current_subject")
             if subject is not None:
-                self.change_subject(subject)
+                self.change_subject(subject, broadcast_message=False)
             model_cols = subject_state.get("model_columns")
             if model_cols is not None:
                 self.subjects_model.set_var_columns(model_cols)
@@ -1106,8 +1124,8 @@ class SubjectOverviewApp(QMainWindow):
         # details panel
         detail_state = wanted_state.get("details_state")
         if detail_state is not None:
-            detail_state["detail_vars"] = tuple(
-                self.subject_details_model.get_current_variables())
+            self.subject_details_model.set_variables(detail_state["detail_vars"])
+
 
         # images panel
         image_state = wanted_state.get("image_state")
