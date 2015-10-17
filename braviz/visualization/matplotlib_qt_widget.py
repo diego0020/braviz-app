@@ -401,7 +401,7 @@ class MatplotBarPlot(AbstractPlot):
             data2.sort(col0, ascending=True, inplace=True)
         heights = data2[col0].get_values()
         pos = np.arange(len(heights))
-        data2["_pos"] = pos
+        data2.loc[:, "_pos"] = pos
 
         # create colors
         # colors_list=matplotlib.rcParams['axes.color_cycle']

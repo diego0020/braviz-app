@@ -19,10 +19,12 @@
 
 from __future__ import division, print_function
 from braviz.utilities import set_pyqt_api_2
+
 set_pyqt_api_2()
 
 __author__ = 'diego'
 
+from utilities import get_instance_id
 import logging
 import vtk
 from PyQt4 import QtGui
@@ -44,7 +46,7 @@ import os
 import datetime
 import functools
 
-from braviz.interaction.connection import MessageClient
+from braviz.interaction.connection import MessageClient, create_log_message, create_ready_message
 from braviz.interaction.sample_select import SampleManager
 
 if braviz.readAndFilter.PROJECT == "kmc40":
@@ -57,7 +59,9 @@ class SampleOverview(QtGui.QMainWindow):
 
     def __init__(self, server_broadcast_address=None, server_receive_address=None, initial_scenario=None):
         super(SampleOverview, self).__init__()
+        self.uid = get_instance_id()
         self.name = "Sample Overview"
+        self.loading_scenario = False
         self.reader = braviz.readAndFilter.BravizAutoReader()
         log = logging.getLogger(__name__)
         self.plot_widget = None
@@ -161,6 +165,14 @@ class SampleOverview(QtGui.QMainWindow):
 
         self.sample_manager.configure_sample_policy_menu(self.ui.menuReceive_Samples)
         self.ui.progress_bar.setValue(0)
+
+    def log_event(self,event):
+        if self.loading_scenario:
+            return
+        if self._message_client is not None:
+            state = self.__get_state()
+            msg = create_log_message(event,state,"sample_overview",self.uid)
+            self._message_client.send_message(msg)
 
     def change_nominal_variable(self, new_var_index):
         self.load_scalar_data(self.rational_index, new_var_index)
@@ -292,7 +304,6 @@ class SampleOverview(QtGui.QMainWindow):
         return cb
 
     def add_subject_viewers(self, scenario=None):
-        self.initialized = True
 
         # create parents:
         levels = self.scalar_data[self.nominal_name].unique()
@@ -359,6 +370,11 @@ class SampleOverview(QtGui.QMainWindow):
 
         assert frozenset(self.viewers_dict.iterkeys()) == frozenset(self.widgets_dict.iterkeys())
         self.reload_viewers(scenario)
+
+        if self.initialized is False and self._message_client is not None:
+            ready_msg = create_ready_message(self.uid)
+            self._message_client.send_message(ready_msg)
+        self.initialized = True
 
     def get_rotated_label(self, parent, text, color):
         from braviz.interaction.qt_widgets import RotatedLabel
@@ -488,6 +504,7 @@ class SampleOverview(QtGui.QMainWindow):
 
             self.current_scenario = return_dict
             self.reload_viewers(scenario=return_dict)
+            self.log_event("Changed visualization")
 
     def load_scenario_in_viewer(self, viewer, scenario_dict, subj):
         img_code = subj
@@ -825,6 +842,7 @@ class SampleOverview(QtGui.QMainWindow):
                 self.ui.nomina_combo.setCurrentIndex(
                     self.ui.nomina_combo.count() - 1)
                 self.change_nominal_variable(selected_facet_index)
+                # self.log_event("Changed nominal variable to %s" % selected_facet_name)
         else:
             selected_name = self.ui.nomina_combo.currentText()
             if selected_name == self.nominal_name:
@@ -835,6 +853,7 @@ class SampleOverview(QtGui.QMainWindow):
 
                 log.info("%s, %s" % (selected_index, selected_name))
                 self.change_nominal_variable(selected_index)
+                self.log_event("Changed nominal variable to %s" % selected_name)
 
     def select_rational_variable(self, index):
         log = logging.getLogger(__name__)
@@ -854,6 +873,7 @@ class SampleOverview(QtGui.QMainWindow):
                 self.ui.rational_combo.setCurrentIndex(
                     self.ui.rational_combo.count() - 1)
                 self.change_rational_variable(selected_facet_index)
+                # self.log_event("Changed rational variable to %s" % selected_facet_name)
         else:
             selected_name = self.ui.rational_combo.currentText()
             if str(selected_name) != self.rational_name:
@@ -862,6 +882,7 @@ class SampleOverview(QtGui.QMainWindow):
                 log = logging.getLogger(__name__)
                 log.info("%s, %s" % (selected_index, selected_name))
                 self.change_rational_variable(selected_index)
+                self.log_event("Changed rational variable to %s" %selected_name)
 
     def take_screenshot(self, scenario_index):
         geom = self.geometry()
@@ -892,7 +913,7 @@ class SampleOverview(QtGui.QMainWindow):
         vis_state["space"] = self.current_space
         state["viz"] = vis_state
         # meta
-        meta = {"date": datetime.datetime.now(), "exec": sys.argv, "machine": platform.node(),
+        meta = {"date": datetime.datetime.now().toordinal(), "exec": sys.argv, "machine": platform.node(),
                 "application": os.path.splitext(os.path.basename(__file__))[0]}
         state["meta"] = meta
         return state
@@ -922,23 +943,26 @@ class SampleOverview(QtGui.QMainWindow):
             log.info(new_state)
             self.load_scenario(new_state)
 
-    def load_scenario(self, state, initialized=True):
+    def load_scenario(self,state,initialized=True):
+        self.loading_scenario = True
+        try:
+            self.load_scenario_in(state,initialized)
+        except Exception as e:
+            log = logging.getLogger(__name__)
+            log.exception(e)
+        finally:
+            self.loading_scenario = False
+
+    def load_scenario_in(self, state, initialized=True):
         #sample and scneario
         sample_state = state["sample"]
         new_sample = sample_state["ids"]
 
         vis_state = state["viz"]
-        scenario = vis_state["scenario"]
-        subj_state = scenario.get("subject_state")
         log = logging.getLogger(__name__)
         log.info("new scenario: %s" % scenario)
-        if subj_state is not None:
-            try:
-                subj_state.pop("current_subject")
-            except KeyError:
-                pass
         try:
-            space = scenario["camera_state"].pop("space")
+            space = vis_state["cameras"].pop("space")
         except KeyError:
             log.info("no space found")
         else:
@@ -947,6 +971,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.ui.space_combo.setCurrentIndex(index)
 
         if initialized is True:
+            self.sample_manager.current_sample = list(new_sample)
             self.change_sample(new_sample, scenario)
             var_state = state["variables"]
             self.load_scalar_data(
@@ -1032,6 +1057,7 @@ class SampleOverview(QtGui.QMainWindow):
         if visualization_dict is not None:
             self.current_scenario = visualization_dict
         self.reload_viewers(self.current_scenario)
+        self.log_event("Changed sample to %s"%new_sample)
 
     def launch_mri_viewer(self, subject):
         log = logging.getLogger(__name__)
@@ -1061,6 +1087,12 @@ class SampleOverview(QtGui.QMainWindow):
             self.locate_subj(subj)
         elif msg_type == "sample" :
             self.sample_manager.process_sample_message(msg)
+        elif msg_type == "reload" and msg["target"] == self.uid:
+            self.process_reload_message(msg)
+
+    def process_reload_message(self, msg):
+        scn = msg["scenario"]
+        self.load_scenario(scn)
 
     def update_sample(self, new_sample):
         if not self.initialized:

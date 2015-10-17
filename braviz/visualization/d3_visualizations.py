@@ -338,6 +338,7 @@ class SessionDataHandler(tornado.web.RequestHandler):
             "subject_overview" :self.static_url("icons/subject_overview.png"),
             "linear_model" : self.static_url("icons/linear.png"),
             "correlations" : self.static_url("icons/correlations.png"),
+            "sample_overview" : self.static_url("icons/sample_overview.png"),
         }
     def format_events(self, event):
         abbreviated_time = "%I:%M %p"
