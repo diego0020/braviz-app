@@ -991,7 +991,7 @@ class SampleOverview(QtGui.QMainWindow):
         # cameras
         cameras = vis_state["cameras"]
         for subj in self.sample_manager.current_sample:
-            self.viewers_dict[subj].set_camera(*cameras[subj])
+            self.viewers_dict[subj].set_camera(*cameras[str(subj)])
 
     def change_sample(self, new_sample, visualization_dict=None):
         # remove selection
@@ -1087,7 +1087,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.locate_subj(subj)
         elif msg_type == "sample" :
             self.sample_manager.process_sample_message(msg)
-        elif msg_type == "reload" :  #  and msg["target"] == self.uid:
+        elif msg_type == "reload"   and msg["target"] == self.uid:
             self.process_reload_message(msg)
 
     def process_reload_message(self, msg):
