@@ -24,7 +24,7 @@ set_pyqt_api_2()
 
 __author__ = 'diego'
 
-from utilities import get_instance_id
+from braviz.utilities import get_instance_id
 import logging
 import vtk
 from PyQt4 import QtGui
@@ -213,7 +213,7 @@ class SampleOverview(QtGui.QMainWindow):
                 level_name = "Level %s" % nl
             new_labels[nl].setText(level_name)
             new_labels[nl].set_color(
-                self.plot_widget.colors_dict.get(nl, "#EA7AE3"))
+                self.plot_widget.colors_dict.get(nl, (0.9176470588235294, 0.47843137254901963, 0.8901960784313725)))
             new_row_frames[nl] = self.row_frames[ol]
             new_row_lays[nl] = self.row_frame_lays[ol]
 
@@ -464,8 +464,8 @@ class SampleOverview(QtGui.QMainWindow):
         log.info(len(sample_order))
         log.info(len(self.sample_manager.current_sample))
         log.info(self.plot_widget.painted_plot.data)
-        self.scalar_data.sort(
-            self.rational_name, inplace=True, ascending=False)
+        self.scalar_data.sort_values(
+            by=self.rational_name, inplace=True, ascending=False)
         self.ordered_sample = sample_order
         log.debug("sample: ")
         log.debug(self.ordered_sample)
@@ -971,8 +971,8 @@ class SampleOverview(QtGui.QMainWindow):
             self.ui.space_combo.setCurrentIndex(index)
 
         if initialized is True:
-            self.sample_manager.current_sample = list(new_sample)
             self.change_sample(new_sample, scenario)
+            self.sample_manager.current_sample = list(new_sample)
             var_state = state["variables"]
             self.load_scalar_data(
                 var_state["rational"], var_state["nominal"], force=True)
@@ -1087,7 +1087,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.locate_subj(subj)
         elif msg_type == "sample" :
             self.sample_manager.process_sample_message(msg)
-        elif msg_type == "reload" and msg["target"] == self.uid:
+        elif msg_type == "reload" :  #  and msg["target"] == self.uid:
             self.process_reload_message(msg)
 
     def process_reload_message(self, msg):

@@ -398,8 +398,8 @@ class MatplotWidget(FigureCanvas):
         z_labels = braviz_tab_data.get_labels_dict_by_name(z_name)
 
         # reorder
-        x_permutation = plot_data.groupby(x_name).median().sort(outcome).index
-        z_permutation = plot_data.groupby(z_name).median().sort(outcome).index
+        x_permutation = plot_data.groupby(x_name).median().sort_values(by=outcome).index
+        z_permutation = plot_data.groupby(z_name).median().sort_values(by=outcome).index
 
         plot_data[x_name] = plot_data[x_name].astype("category")
         plot_data[z_name] = plot_data[z_name].astype("category")
