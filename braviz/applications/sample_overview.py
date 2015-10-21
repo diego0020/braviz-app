@@ -502,6 +502,10 @@ class SampleOverview(QtGui.QMainWindow):
                 index = self.ui.space_combo.findText(space)
                 self.ui.space_combo.setCurrentIndex(index)
 
+            # Trim unnecesary fields from current scenario
+            del return_dict["context_state"]
+            del return_dict["subject_state"]
+
             self.current_scenario = return_dict
             self.reload_viewers(scenario=return_dict)
             self.log_event("Changed visualization")
@@ -961,8 +965,9 @@ class SampleOverview(QtGui.QMainWindow):
         vis_state = state["viz"]
         log = logging.getLogger(__name__)
         log.info("new scenario: %s" % scenario)
+        view_scenario = vis_state["scenario"]
         try:
-            space = vis_state["cameras"].pop("space")
+            space = vis_state.pop("space")
         except KeyError:
             log.info("no space found")
         else:
@@ -971,7 +976,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.ui.space_combo.setCurrentIndex(index)
 
         if initialized is True:
-            self.change_sample(new_sample, scenario)
+            self.change_sample(new_sample, view_scenario)
             self.sample_manager.current_sample = list(new_sample)
             var_state = state["variables"]
             self.load_scalar_data(
@@ -981,8 +986,8 @@ class SampleOverview(QtGui.QMainWindow):
             var_state = state["variables"]
             self.load_scalar_data(
                 var_state["rational"], var_state["nominal"], force=True)
-            self.current_scenario = scenario
-            self.add_subject_viewers(scenario)
+            self.current_scenario = view_scenario
+            self.add_subject_viewers(view_scenario)
 
         # variables
 
@@ -1087,7 +1092,7 @@ class SampleOverview(QtGui.QMainWindow):
             self.locate_subj(subj)
         elif msg_type == "sample" :
             self.sample_manager.process_sample_message(msg)
-        elif msg_type == "reload"   and msg["target"] == self.uid:
+        elif msg_type == "reload" and msg["target"] == self.uid:
             self.process_reload_message(msg)
 
     def process_reload_message(self, msg):

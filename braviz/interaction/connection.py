@@ -27,6 +27,7 @@ import json
 import numpy as np
 import pandas as pd
 import os
+import datetime
 
 __author__ = 'Diego'
 
@@ -43,6 +44,8 @@ class NpJSONEncoder(json.JSONEncoder):
             else:
                 o2 = float(o)
             return o2
+        elif isinstance(o,datetime.datetime):
+            return o.toordinal()
         else:
             try:
                 o2 = [x for x in o]
