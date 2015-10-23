@@ -352,6 +352,19 @@ class OutcomeSelectDialog(VariableSelectDialog):
         var_name = self.vars_list_model.data(curr_idx, QtCore.Qt.DisplayRole)
         self.ui.select_button.setEnabled(True)
         super(OutcomeSelectDialog, self).update_right_side(var_name)
+        if braviz_tab_data.is_variable_name_nominal(var_name):
+            self.ui.select_button.setEnabled(False)
+
+    def update_details(self, index):
+        # Enable the button only for real variables
+        if index == 0:
+            self.ui.select_button.setEnabled(True)
+            self.ui.select_button.setToolTip("Save variable data and set as outcome")
+        else:
+            self.ui.select_button.setEnabled(False)
+            self.ui.select_button.setToolTip("Only real variables can be used as outcome")
+
+        super(OutcomeSelectDialog, self).update_details(index)
 
     def update_plot(self, data):
         data2 = data.dropna()

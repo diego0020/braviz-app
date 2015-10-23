@@ -122,7 +122,7 @@ class AnovaApp(QMainWindow):
                 0, braviz_tab_data.get_var_name(v_idx))
         self.ui.outcome_sel.insertSeparator(self.ui.outcome_sel.count() - 1)
         self.ui.outcome_sel.setCurrentIndex(self.ui.outcome_sel.count() - 1)
-        self.ui.outcome_sel.activated.connect(self.dispatch_outcome_select)
+        self.ui.outcome_sel.activated.connect(self.launch_outcome_select)
         self.ui.add_regressor_button.clicked.connect(
             self.launch_add_regressor_dialog)
         self.ui.reg_table.setModel(self.regressors_model)
@@ -130,7 +130,7 @@ class AnovaApp(QMainWindow):
         self.ui.reg_table.customContextMenuRequested.connect(
             self.launch_regressors_context_menu)
         self.ui.add_interaction_button.clicked.connect(
-            self.dispatch_interactions_dialog)
+            self.launch_interactions_dialog)
         self.ui.calculate_button.clicked.connect(self.calculate_anova)
         self.ui.results_table.setModel(self.result_model)
 
@@ -175,7 +175,7 @@ class AnovaApp(QMainWindow):
         self.sample_manager.load_sample()
         QtCore.QTimer.singleShot(5000, lambda:self.ui.modify_sample_button.setEnabled(True))
 
-    def dispatch_outcome_select(self):
+    def launch_outcome_select(self):
 
         # print "outcome select %s /
         # %s"%(self.ui.outcome_sel.currentIndex(),self.ui.outcome_sel.count()-1)
@@ -190,8 +190,6 @@ class AnovaApp(QMainWindow):
             logger.info("Outcome selection %s", params)
             if selection > 0:
                 self.set_outcome_var(params["selected_outcome"])
-            else:
-                self.set_outcome_var(None)
         else:
             self.set_outcome_var(
                 self.ui.outcome_sel.itemText(self.ui.outcome_sel.currentIndex()))
@@ -216,7 +214,7 @@ class AnovaApp(QMainWindow):
 
         return plots
 
-    def dispatch_interactions_dialog(self):
+    def launch_interactions_dialog(self):
         interaction_dialog = InteractionSelectDialog(self.regressors_model)
         interaction_dialog.exec_()
         self.regressors_model.show_regressors(True)
