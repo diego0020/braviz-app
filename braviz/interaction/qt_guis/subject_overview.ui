@@ -66,7 +66,7 @@
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <property name="elideMode">
            <enum>Qt::ElideNone</enum>
@@ -717,9 +717,9 @@
              <widget class="QListView" name="bundles_list"/>
             </item>
             <item>
-             <widget class="QPushButton" name="add_saved_bundles">
+             <widget class="QPushButton" name="refresh_bundles_button">
               <property name="text">
-               <string>Select Saved Bundles</string>
+               <string>Refresh Bundles List</string>
               </property>
              </widget>
             </item>
@@ -1266,7 +1266,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>400</width>
+             <width>200</width>
              <height>0</height>
             </size>
            </property>

@@ -131,6 +131,7 @@ class VarListModel(QAbstractListModel):
                 self.checked_set.add(self.internal_data[idx])
             else:
                 self.checked_set.remove(self.internal_data[idx])
+            self.dataChanged.emit(QModelIndex, QModelIndex)
             self.CheckedChanged.emit(sorted(self.checked_set))
             return True
 
@@ -1498,6 +1499,7 @@ class ContextVariablesModel(QAbstractTableModel):
             if QModelIndex.column() != 2:
                 return False
             self.editables_dict[self.data_frame.index[row]] = QVariant == QtCore.Qt.Checked
+            self.dataChanged.emit(QModelIndex, QModelIndex)
             return True
 
     def flags(self, QModelIndex):
@@ -1854,16 +1856,20 @@ class BundlesSelectionList(QAbstractListModel):
         super(BundlesSelectionList, self).__init__()
         self.id_list = []
         self.names_dict = {}
-        self._selected = {}
+        self._selected = set()
         self.refresh_model()
+        self.showing_special = False
 
     def refresh_model(self):
         """
         Reloads data from the database
         """
+        self.modelAboutToBeReset.emit()
         tuples = bundles_db.get_bundle_ids_and_names()
         self.names_dict = dict(tuples)
         self.id_list = sorted(self.names_dict.keys())
+        self._selected.intersection_update(self.id_list)
+        self.modelReset.emit()
 
     def select_many_ids(self, ids_it):
         """
@@ -1872,14 +1878,16 @@ class BundlesSelectionList(QAbstractListModel):
         Args:
             ids_it (list) : List of database ids to add
         """
-        for i in ids_it:
-            self._selected[i] = True
+        self.modelAboutToBeReset.emit()
+        self._selected.update(set(self.id_list).intersection(ids_it))
+        self.modelReset.emit()
+
 
     def get_selected(self):
         """
         Get a list of selected bundle ids
         """
-        return (i for i, k in self._selected.iteritems() if k is True)
+        return list(self._selected)
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return len(self.id_list)
@@ -1887,16 +1895,24 @@ class BundlesSelectionList(QAbstractListModel):
     def data(self, QModelIndex, int_role=None):
         if QModelIndex.isValid():
             row = QModelIndex.row()
+            if self.showing_special:
+                row -= 1
             if 0 <= row < len(self.id_list):
                 bid = self.id_list[row]
                 if int_role == QtCore.Qt.DisplayRole:
                     return self.names_dict[bid]
-                if int_role == QtCore.Qt.CheckStateRole:
-                    if self._selected.get(bid, False) is True:
+                elif int_role == QtCore.Qt.CheckStateRole:
+                    if bid in self._selected:
                         return QtCore.Qt.Checked
                     else:
                         return QtCore.Qt.Unchecked
-
+                elif int_role == QtCore.Qt.UserRole:
+                    return bid
+            elif row == -1:
+                if int_role == QtCore.Qt.DisplayRole:
+                    return "<From Segmentation>"
+                elif int_role == QtCore.Qt.CheckStateRole:
+                    return QtCore.Qt.Checked
         return None
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
@@ -1905,21 +1921,37 @@ class BundlesSelectionList(QAbstractListModel):
     def flags(self, QModelIndex):
         if QModelIndex.isValid():
             row = QModelIndex.row()
+            if self.showing_special:
+                row -= 1
             if 0 <= row < len(self.id_list):
                 flag = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsUserCheckable
+                return flag
+            elif row == -1:
+                flag = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
                 return flag
         return QtCore.Qt.NoItemFlags
 
     def setData(self, QModelIndex, QVariant, int_role=None):
         if QModelIndex.isValid():
             row = QModelIndex.row()
+            if self.showing_special:
+                row -= 1
             if int_role == QtCore.Qt.CheckStateRole:
                 if 0 <= row < len(self.id_list):
                     value = QVariant == QtCore.Qt.Checked
                     bid = self.id_list[row]
-                    self._selected[bid] = value
+                    if value:
+                        self._selected.add(bid)
+                    else:
+                        self._selected.remove(bid)
+                    self.dataChanged.emit(QModelIndex,QModelIndex)
                     return True
         return False
+
+    def set_show_special(self, show):
+        self.modelAboutToBeReset.emit()
+        self.showing_special = show
+        self.modelReset.emit()
 
 
 class ScenariosTableModel(QAbstractTableModel):
@@ -2457,6 +2489,7 @@ class SubjectCheckTable(QAbstractTableModel):
                     self.checked.add(name)
                 else:
                     self.checked.remove(name)
+                self.dataChanged.emit(QModelIndex, QModelIndex)
                 return True
         return False
 

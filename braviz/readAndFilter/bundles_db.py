@@ -200,3 +200,16 @@ def get_logic_bundle_dict(bundle_id=None, bundle_name=None):
     data_buf = r1[0]
     data_dict = cPickle.loads(str(data_buf))
     return data_dict
+
+
+def remove_bundle(bundle_id):
+    """
+    Deletes a fiber bundle from the database
+
+    Args:
+        bundle_id (int) : Bundle id
+    """
+    con = get_connection()
+    q = "DELETE FROM fiber_bundles WHERE bundle_id = ?"
+    with con:
+        con.execute(q,(bundle_id, ))

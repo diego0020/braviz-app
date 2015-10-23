@@ -34,9 +34,11 @@ import os
 from braviz.visualization.simple_vtk import save_ren_win_picture
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
+from readAndFilter.bundles_db import remove_bundle, get_bundle_name
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
-from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, SimpleBundlesList, \
-    SimpleCheckModel
+from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, \
+    SimpleCheckModel,BundlesSelectionList
+
 from braviz.visualization.subject_viewer import QSubjectViewerWidget
 from braviz.interaction.qt_dialogs import GenericVariableSelectDialog, BundleSelectionDialog, \
     SaveFibersBundleDialog, SaveScenarioDialog, LoadScenarioDialog
@@ -117,7 +119,7 @@ class SubjectOverviewApp(QMainWindow):
         self.__structures_color = None
 
         # Fibers list model
-        self.fibers_list_model = SimpleBundlesList()
+        self.fibers_list_model = BundlesSelectionList()
         self.current_fibers = None
         # tracula model
         bundles = self.reader.get("TRACULA", None, index=True)
@@ -260,8 +262,8 @@ class SubjectOverviewApp(QMainWindow):
         self.ui.show_color_bar_check.toggled.connect(
             self.toggle_tractography_color_bar)
         self.ui.bundles_list.setModel(self.fibers_list_model)
-        self.ui.add_saved_bundles.clicked.connect(
-            self.add_saved_bundles_to_list)
+        self.ui.refresh_bundles_button.clicked.connect(
+            self.refresh_saved_bundles)
         self.ui.save_bundle_button.clicked.connect(self.save_fibers_bundle)
         self.ui.fibers_opacity.valueChanged.connect(
             self.change_tractography_opacity)
@@ -271,6 +273,9 @@ class SubjectOverviewApp(QMainWindow):
             self.update_fiber_scalars)
         self.ui.export_fiber_scalars_to_db.clicked.connect(
             self.export_fiber_scalars_to_db)
+        self.ui.bundles_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.ui.bundles_list.customContextMenuRequested.connect(self.show_fibers_context_menu)
+        self.fibers_list_model.dataChanged.connect(self.update_displayed_bundles)
 
         # tracula panel
         self.ui.tracula_list.setModel(self.tracula_model)
@@ -868,19 +873,33 @@ class SubjectOverviewApp(QMainWindow):
         log = logging.getLogger(__name__)
         log.info("launching")
 
-    def add_saved_bundles_to_list(self):
-        selected = set(self.fibers_list_model.get_ids())
-        names_dict = {}
-        dialog = BundleSelectionDialog(selected, names_dict)
-        res = dialog.exec_()
-        if res == dialog.Accepted:
-            log = logging.getLogger(__name__)
-            log.info(selected)
-            self.fibers_list_model.set_ids(selected, names_dict)
-            self.vtk_viewer.tractography.set_active_db_tracts(selected)
-            if isinstance(self.current_fibers, int) and self.current_fibers not in selected:
-                self.update_current_bundle()
-            self.log_action("Selected fiber bundles %s" % selected)
+    def refresh_saved_bundles(self):
+        self.fibers_list_model.refresh_model()
+
+    def update_displayed_bundles(self):
+        selected_indices = self.fibers_list_model.get_selected()
+        self.vtk_viewer.tractography.set_active_db_tracts(selected_indices)
+
+    def show_fibers_context_menu(self, pos):
+        global_pos = self.ui.bundles_list.mapToGlobal(pos)
+        selection = self.ui.bundles_list.currentIndex()
+        fiber_name = self.fibers_list_model.data(selection,QtCore.Qt.DisplayRole)
+        remove_action = QtGui.QAction("Delete %s"%fiber_name, None)
+        menu = QtGui.QMenu()
+        menu.addAction(remove_action)
+
+        def remove_item(*args):
+            ans = QtGui.QMessageBox.question(self,"Confirm deletion of bundle",
+                                       "Are you sure you want to delete bundle %s?\nThis can't be undone"%fiber_name,
+                                       QtGui.QMessageBox.Yes | QtGui.QMessageBox.Abort)
+            if ans == QtGui.QMessageBox.Yes:
+                fiber_id = self.fibers_list_model.data(selection,QtCore.Qt.UserRole)
+                remove_bundle(fiber_id)
+                self.refresh_saved_bundles()
+
+        remove_action.triggered.connect(remove_item)
+        menu.addAction(remove_action)
+        menu.exec_(global_pos)
 
     def save_fibers_bundle(self):
         checkpoints = self.structures_tree_model.get_selected_structures()
@@ -890,6 +909,7 @@ class SubjectOverviewApp(QMainWindow):
         logger.info("saving bundles")
         dialog = SaveFibersBundleDialog(checkpoints, throug_all)
         dialog.exec_()
+        self.refresh_saved_bundles()
 
     def update_surfaces_from_gui(self, event=None, generating_state=False):
         logger = logging.getLogger(__name__)
@@ -993,7 +1013,7 @@ class SubjectOverviewApp(QMainWindow):
 
         # tractography panel
         tractography_state = dict()
-        tractography_state["bundles"] = tuple(self.fibers_list_model.get_ids())
+        tractography_state["bundles"] = tuple(self.fibers_list_model.get_selected())
         tractography_state["from_segment"] = str(
             self.ui.fibers_from_segments_box.currentText())
         tractography_state["color"] = str(
@@ -1224,7 +1244,7 @@ class SubjectOverviewApp(QMainWindow):
         if tractography_state is not None:
             bundles = tractography_state.get("bundles")
             if bundles is not None:
-                self.fibers_list_model.set_ids(bundles)
+                self.fibers_list_model.select_many_ids(bundles)
                 try:
                     self.vtk_viewer.tractography.set_active_db_tracts(bundles)
                 except Exception as e:
@@ -1258,7 +1278,7 @@ class SubjectOverviewApp(QMainWindow):
                     if isinstance(current, str):
                         self.ui.current_bundle_tag.setText(current)
                     else:
-                        name = self.fibers_list_model.get_bundle_name(current)
+                        name = get_bundle_name(current)
                         self.ui.current_bundle_tag.setText(name)
                 except Exception as e:
                     log.exception(e)

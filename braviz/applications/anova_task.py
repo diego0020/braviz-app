@@ -303,7 +303,7 @@ class AnovaApp(QMainWindow):
 
         remove_action.triggered.connect(remove_item)
         menu.addAction(remove_action)
-        selected_item = menu.exec_(global_pos)
+        _ = menu.exec_(global_pos)
 
     def calculate_anova(self):
         log = logging.getLogger(__name__)

@@ -1568,7 +1568,8 @@ class TractographyManager(object):
         to_hide = self.__active_db_tracts - new_set
         to_add = new_set - self.__active_db_tracts
         errors = 0
-        self.__bundle_labels = dict((n, i + 1) for i, n in enumerate(new_set))
+        self.__bundle_labels = {b: i+1 for i,b in enumerate(new_set)}
+
         for i in to_hide:
             self.hide_database_tract(i)
         self.__active_db_tracts = new_set
@@ -1583,6 +1584,9 @@ class TractographyManager(object):
         if errors > 0:
             log = logging.getLogger(__name__)
             log.warning("Couldn't load all tracts")
+        if self.__current_color == "bundle":
+            # we need to refresh all active bundles to get colors right
+            self.__reload_fibers()
 
     @do_and_render
     def set_opacity(self, float_opacity):
