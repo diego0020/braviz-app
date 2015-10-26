@@ -661,7 +661,7 @@ class ImageManager(object):
         self.__outline_filter = outline
 
     @do_and_render
-    def change_subject(self, new_subject):
+    def change_subject(self, new_subject, force=False):
         """
         Change subject associated to the plane
 
@@ -669,7 +669,7 @@ class ImageManager(object):
             new_subject : Id of new subject
         """
         self.__current_subject = new_subject
-        if not self.__hidden:
+        if not self.__hidden or force:
             self.change_image_modality(self.__current_image_class, self.__current_image_name, force_reload=True,
                                        contrast=self.__current_contrast)
 
@@ -2372,7 +2372,7 @@ class OrthogonalPlanesViewer(object):
         ex = None
         for im in self.__image_planes:
             try:
-                im.change_subject(subj, skip_render=True)
+                im.change_subject(subj, skip_render=True, force=True)
             except Exception as e:
                 ex = e
         try:
