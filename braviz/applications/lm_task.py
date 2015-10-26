@@ -41,8 +41,9 @@ import pandas as pd
 
 from braviz.interaction.qt_guis.linear_reg import Ui_LinearModel
 import braviz.interaction.qt_dialogs
-from braviz.interaction.qt_dialogs import (OutcomeSelectDialog, RegressorSelectDialog,
-                                           InteractionSelectDialog)
+from braviz.interaction.qt_dialogs import (RegressorSelectDialog,
+                                           InteractionSelectDialog,
+                                           SelectOneVariableWithFilter)
 from braviz.visualization.matplotlib_qt_widget import MatplotWidget
 import braviz.interaction.r_functions
 import braviz.interaction.qt_models as braviz_models
@@ -172,7 +173,7 @@ class LinearModelApp(QMainWindow):
         if self.ui.outcome_sel.currentIndex() == self.ui.outcome_sel.count() - 1:
             # print "dispatching dialog"
             params = {}
-            dialog = OutcomeSelectDialog(params, sample=self.sample_manager.current_sample)
+            dialog = SelectOneVariableWithFilter(params, sample=self.sample_manager.current_sample, accept_nominal=False)
             selection = dialog.exec_()
             logger = logging.getLogger(__name__)
             logger.info("Outcome selection %s", params)
