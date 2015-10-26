@@ -966,7 +966,7 @@ class SubjectOverviewApp(QMainWindow):
         subject_state["current_subject"] = int(self.__curent_subject)
         subject_state["model_columns"] = tuple(
             self.subjects_model.get_current_column_indexes())
-        subject_state["sample"] = self.sample_manager.current_sample
+        subject_state["sample"] = self.subjects_model.sorted_sample
         state["subject_state"] = subject_state
 
         # details panel
@@ -1140,6 +1140,7 @@ class SubjectOverviewApp(QMainWindow):
             sample = subject_state.get("sample")
             if sample is not None:
                 self.sample_manager.current_sample=sample
+                self.subjects_model.sorted_sample = sample
 
         # details panel
         detail_state = wanted_state.get("details_state")
@@ -1272,7 +1273,7 @@ class SubjectOverviewApp(QMainWindow):
                 self.ui.fibers_scalar_combo.setCurrentIndex(idx)
                 self.update_fiber_scalars(idx)
             current = tractography_state.get("active_bundle", False)
-            if current is not False:
+            if current is not False and current is not None:
                 self.current_fibers = current
                 try:
                     if isinstance(current, str):

@@ -1226,7 +1226,8 @@ class SubjectsTable(QAbstractTableModel):
         self.__labels = None
         self.__col_indexes = None
         self.__highlight_subject = None
-        self.sort_column = None
+        self._sort_column = 0
+        self._sort_reversed = False
         self.sample = sample
         if sample is None:
             self.sample = braviz_tab_data.get_subjects()
@@ -1285,19 +1286,20 @@ class SubjectsTable(QAbstractTableModel):
 
     def sort(self, p_int=None, Qt_SortOrder_order=None):
         reverse = False
+        self._sort_reversed = reverse
         if p_int is None:
-            sort_column = self.sort_column
+            sort_column_name = self.__df.columns[self._sort_column]
         else:
-            sort_column = self.__df.columns[p_int]
-        if sort_column is None:
-            sort_column = self.__df.columns[0]
+            sort_column_name = self.__df.columns[p_int]
+            self._sort_column = p_int
 
         if Qt_SortOrder_order == QtCore.Qt.DescendingOrder:
             reverse = True
 
         self.modelAboutToBeReset.emit()
-        self.__df.sort(
-            sort_column , ascending=reverse, inplace=True)
+        # Merge sort is stable
+        self.__df.sort_values(
+            sort_column_name , ascending=reverse, inplace=True, kind="mergesort")
         self.modelReset.emit()
 
     def set_var_columns(self, columns):
@@ -1364,6 +1366,16 @@ class SubjectsTable(QAbstractTableModel):
         self.__highlight_subject = subj
         self.modelReset.emit()
 
+    @property
+    def sorted_sample(self):
+        return list(self.__df.index)
+
+    @sorted_sample.setter
+    def sorted_sample(self, new_order):
+        assert set(new_order) == set(self.__df.index)
+        self.modelAboutToBeReset.emit()
+        self.__df = self.__df.loc[new_order]
+        self.modelReset.emit()
 
 class ContextVariablesModel(QAbstractTableModel):
 
