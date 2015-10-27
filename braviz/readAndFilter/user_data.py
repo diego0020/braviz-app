@@ -29,7 +29,8 @@ import os
 import braviz.readAndFilter
 from braviz.readAndFilter.tabular_data import get_connection
 import sqlite3
-
+import json
+from braviz.interaction.connection import NpJSONEncoder
 
 def save_scenario(application, scenario_name, scenario_description, scenario_data):
     """
@@ -45,9 +46,8 @@ def save_scenario(application, scenario_name, scenario_description, scenario_dat
         The database id of the saved scenario. Use this to save the corresponding screen-shot
 
     """
-    if not isinstance(scenario_data, basestring):
-        scenario_data = cPickle.dumps(scenario_data, 2)
-    scenario_data = buffer(scenario_data)
+    assert isinstance(scenario_data,dict)
+    scenario_data = json.dumps(scenario_data,cls=NpJSONEncoder)
     conn = get_connection()
     q = """INSERT  OR ABORT INTO scenarios
     (app_idx,scn_name,scn_desc,scn_data)
@@ -137,7 +137,12 @@ def get_scenario_data_dict(scn_id):
         Dictionary with application state
     """
     res = _get_scenario_data(scn_id)
-    scn_dict = cPickle.loads(str(res))
+    try:
+        scn_dict = json.loads(res)
+    except TypeError as e:
+        logger = logging.getLogger(__name__)
+        logger.warning("scenario in old format")
+        scn_dict = cPickle.loads(str(res))
     return scn_dict
 
 

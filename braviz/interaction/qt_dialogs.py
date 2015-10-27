@@ -1150,7 +1150,7 @@ class SaveScenarioDialog(QtGui.QDialog):
     def __init__(self, app_name, state, params=None):
         super(SaveScenarioDialog, self).__init__()
         self.app_name = app_name
-        self.data = cPickle.dumps(state, 2)
+        self.data = state
         if params is None:
             params = dict()
         self.params = params
