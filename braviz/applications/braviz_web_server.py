@@ -40,6 +40,9 @@ if __name__ == "__main__":
     import sys
     broadcast_address = None
     receive_address = None
+    log = logging.getLogger(__name__)
+    conf = braviz.readAndFilter.config_file.get_apps_config()
+    port = conf.get("Braviz","server_port")
 
     warning_log = logging.getLogger("tornado.access")
     warning_log.setLevel(logging.ERROR)
@@ -67,7 +70,9 @@ if __name__ == "__main__":
         ],
         **settings)
     try:
-        application.listen(8100)
+        application.listen(port)
         tornado.ioloop.IOLoop.instance().start()
     except Exception:
-        print("Couldn't start server, maybe already running?")
+        log.warning("Couldn't start server, maybe already running?")
+    else:
+        log.info("Web server listening on port {}".format(port))

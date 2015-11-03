@@ -33,6 +33,7 @@ import braviz.interaction.qt_dialogs
 import braviz.interaction.sample_select
 from braviz.interaction.connection import MessageServer, create_log_message
 from braviz.readAndFilter import log_db
+from braviz.readAndFilter import config_file
 
 __author__ = 'Diego'
 
@@ -203,7 +204,8 @@ class BravizMenu2(QtGui.QMainWindow):
 
     def open_parallel_coordinates(self):
         self.log_action("Opened parallel coordinates in web browser")
-        url = "http://localhost:8100/parallel"
+        port = braviz.readAndFilter.config_file.get_apps_config().get("Braviz","server_port")
+        url = "http://localhost:{}/parallel".format(port)
         webbrowser.open(url, 2)
 
     def receive_messages(self, msg):

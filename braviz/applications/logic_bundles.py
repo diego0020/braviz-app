@@ -499,6 +499,7 @@ class LogicBundlesApp(QMainWindow):
             except Exception:
                 self.statusBar().showMessage("Error loading fibers", 2000)
                 self.__fibers_ac.SetVisibility(0)
+                raise
             else:
                 self.__fibers_map.SetInputData(self.__filetred_pd)
                 self.__fibers_ac.SetVisibility(1)
@@ -536,7 +537,7 @@ class LogicBundlesApp(QMainWindow):
             logger.warning("Couldn't read fibers")
             logger.exception(e.message)
             self.ui.scalar_box.setText("")
-
+            self.scalar_metric_value = None
             return
 
         self.update_scalar_metric(metric)
@@ -702,7 +703,7 @@ class LogicBundlesApp(QMainWindow):
         # visual
         visual_dict = state["visual"]
         coords = visual_dict["coords"]
-        idx = self.ui.space_combo.findText(coords)
+        idx = self.ui.space_combo.findText(coords.title())
         assert idx >= 0
         self.ui.space_combo.setCurrentIndex(idx)
 
@@ -744,13 +745,13 @@ class LogicBundlesApp(QMainWindow):
         save_ren_win_picture(self.vtk_viewer.ren_win, file_path)
 
     def export_scalar_to_db(self):
-        dialog = ExportScalarToDB(self)
+        dialog = ExportScalarToDB(self, self.ui.fiber_scalar_combo.currentText())
         dialog.exec_()
 
 
 class ExportScalarToDB(QDialog):
 
-    def __init__(self, caller):
+    def __init__(self, caller, scalar_metric):
         QDialog.__init__(self)
         assert isinstance(caller, LogicBundlesApp)
         self.caller = caller
@@ -761,6 +762,8 @@ class ExportScalarToDB(QDialog):
         self.ui.progressBar.setValue(0)
         self.ui.start_button.clicked.connect(self.start_calculation)
         self.ui.cancel_button.clicked.connect(self.cancel)
+        self.ui.metric_label.setText(scalar_metric)
+        self.metric = scalar_metric
         self.cancel_flag = False
         self.done = False
         self.var_id = None

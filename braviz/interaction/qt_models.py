@@ -803,9 +803,9 @@ class AnovaResultsModel(QAbstractTableModel):
             return "%d" % data
         elif col == 4:
             # p
-            return "{:.1e}".format(data)
+            return "{:.6f}".format(data)
         else:
-            return "{:.3g}".format(data)
+            return "{:.6g}".format(data)
 
     def headerData(self, p_int, Qt_Orientation, int_role=None):
         if Qt_Orientation != QtCore.Qt.Horizontal:
@@ -923,7 +923,7 @@ class DataFrameModel(QAbstractTableModel):
             return unicode(data)
         else:
             try:
-                ans = "%.4g" % data
+                ans = "%.6f" % data
             except Exception:
                 ans = str(data)
             return ans

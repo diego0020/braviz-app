@@ -191,6 +191,7 @@ def make_default_config(default_config_name=None):
 
     braviz_conf.add_section('Braviz')
     braviz_conf.set('Braviz', 'project', 'kmc400')
+    braviz_conf.set('Braviz', 'server_port', '8100')
     braviz_conf.set('Braviz', 'logger', 'console')
     braviz_conf.set('Braviz', 'web_logger_server', '127.0.0.1:8050')
 
@@ -262,6 +263,6 @@ if __name__ == "__main__":
     config_file_name = 'braviz.cfg'
     default_config_name = os.path.join(config_dir, config_file_name)
     make_default_config(default_config_name)
-    config_dir = os.path.join(config_dir, "..", "applications")
-    default_config_name = os.path.join(config_dir, config_file_name)
-    make_default_config(default_config_name)
+    # config_dir = os.path.join(config_dir, "..", "applications")
+    # default_config_name = os.path.join(config_dir, config_file_name)
+    # make_default_config(default_config_name)

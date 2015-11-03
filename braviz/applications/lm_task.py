@@ -307,7 +307,7 @@ class LinearModelApp(QMainWindow):
             f_nom, f_dem = res.get("f_stat_df", (0, 0))
             self.ui.f_value_label.setText(
                 "F(%d,%d) = %.2f" % (f_nom, f_dem, res.get("f_stats_val", np.nan)))
-            self.ui.p_value_label.setText("P = %g" % res.get("f_pval", np.nan))
+            self.ui.p_value_label.setText("P = %.6f" % res.get("f_pval", np.nan))
             coeffs_df = res["coefficients_df"]
             self.result_model.set_df(coeffs_df)
             self.coefs_df = coeffs_df
