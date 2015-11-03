@@ -34,7 +34,7 @@ import os
 from braviz.visualization.simple_vtk import save_ren_win_picture
 import braviz.readAndFilter.tabular_data as braviz_tab_data
 import braviz.readAndFilter.user_data as braviz_user_data
-from readAndFilter.bundles_db import remove_bundle, get_bundle_name
+from braviz.readAndFilter.bundles_db import remove_bundle, get_bundle_name
 from braviz.interaction.qt_guis.subject_overview import Ui_subject_overview
 from braviz.interaction.qt_models import SubjectsTable, SubjectDetails, StructureTreeModel, \
     SimpleCheckModel,BundlesSelectionList
@@ -853,9 +853,8 @@ class SubjectOverviewApp(QMainWindow):
         #                      "metric": scalar_text, "db_id": db_id, "operation": operation}
         scenario_data = self.get_state_dict()
         app_name = scenario_data["meta"]["application"]
-        scenario_data_str = cPickle.dumps(scenario_data, 2)
         scn_id = braviz_user_data.save_scenario(app_name, scenario_name="<AUTO>",
-                                                scenario_description="", scenario_data=scenario_data_str)
+                                                scenario_description="", scenario_data=scenario_data)
         self.save_screenshot(scn_id)
 
         export_args = ["%d" % scn_id, "1", str(

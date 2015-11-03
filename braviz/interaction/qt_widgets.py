@@ -867,9 +867,8 @@ class ContextVariablesPanel(QtGui.QGroupBox):
                         idx]
                     data = self.app.get_state_dict()
                     app = data["meta"]["application"]
-                    data_s = cPickle.dumps(data, 2)
                     scn_idx = braviz_user_data.save_scenario(
-                        app, name, desc, data_s)
+                        app, name, desc, data)
                     # link
                     braviz_user_data.link_var_scenario(int(idx), scn_idx)
                     # save screenshot
