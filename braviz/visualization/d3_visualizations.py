@@ -23,6 +23,7 @@ import logging
 
 import tornado.web
 
+
 import pandas as pd
 from braviz.readAndFilter import tabular_data as tab_data, user_data, log_db
 from braviz.readAndFilter.cache import memoize
@@ -303,7 +304,7 @@ class HistogramHandler(tornado.web.RequestHandler):
 
 class SessionIndexHandler(tornado.web.RequestHandler):
     """
-    Implements a simple web page for changing the current subject from a mobile.
+    Implements a web interface for reviewing analysis history
 
     """
 
@@ -326,8 +327,7 @@ class SessionIndexHandler(tornado.web.RequestHandler):
 
 class SessionDataHandler(tornado.web.RequestHandler):
     """
-    Implements a simple web page for changing the current subject from a mobile.
-
+    Data manipulations related to analysis history
     """
 
     full_time = "%Y/%m/%d %H:%M:%S"
@@ -447,3 +447,81 @@ class SessionDataHandler(tornado.web.RequestHandler):
                 self.finish()
                 return
         self.send_error(404)
+
+
+class SliceViewerHandler(tornado.web.RequestHandler):
+    """
+    Implements a web page for visualizing several image slices
+
+    """
+
+    def initialize(self):
+        import braviz.readAndFilter
+        self.images = []
+        reader = braviz.readAndFilter.BravizAutoReader()
+        imgs = reader.get("IMAGE",None,index=True)
+        fmri = reader.get("FMRI",None,index=True)
+        labels = reader.get("LABEL",None,index=True)
+
+        self.images += [("IMAGE/"+n,n) for n in sorted(imgs)]
+        self.images += [("DTI/DTI","DTI")]
+        self.images += [("LABEL/"+n,n) for n in sorted(labels)]
+        self.images += [("FMRI/"+n,"FMRI-"+n.title()) for n in sorted(fmri)]
+
+    def get(self):
+        self.render("slices.html",images=self.images)
+
+
+class SliceViewerDataHandler(tornado.web.RequestHandler):
+    """
+    Implements a web page for visualizing several image slices
+
+    """
+    def get(self, element):
+        if element == "img":
+            subj = self.get_argument("subj")
+            slice_number = self.get_argument("slice",None)
+            orientation = self.get_argument("orientation","axial")
+            coordinates = self.get_argument("coordinates","talairach")
+            try:
+                img = self.get_slice_img(subj,slice_number, orientation, coordinates)
+            except Exception as e:
+                log = logging.getLogger(__name__)
+                log.exception(e)
+                self.send_error(404)
+            else:
+                self.set_header("Content-Type", "image/png")
+                self.write(img)
+
+    def initialize(self):
+        import braviz.readAndFilter
+        self.reader = braviz.readAndFilter.BravizAutoReader()
+        self.orientation_dict = {"axial": 2, "coronal": 1, "sagital": 0}
+
+    def get_slice_img(self, subj, slice_number, orientation, coordinates):
+            import braviz.readAndFilter.images
+            from cStringIO import StringIO
+            import PIL.Image
+            import numpy as np
+
+            orientation_int = self.orientation_dict.get(orientation.lower(), 0)
+            vtk_img = self.reader.get("IMAGE",subj, name="MRI",space=coordinates, format="vtk")
+            np_img = braviz.readAndFilter.images.vtk2numpy(vtk_img)
+            min_value, max_value = np_img.min(), np_img.max()
+            np_img = (np_img-min_value)/(max_value-min_value)*255
+            if slice_number is None:
+                slice_number = np_img.shape[orientation_int] // 2
+
+            if orientation_int == 0:
+                slice_img = np_img[slice_number, :, :].astype(np.uint8)
+                slice_img = np.rot90(slice_img)
+            elif orientation_int == 1:
+                slice_img = np_img[:, slice_number, :].astype(np.uint8)
+                slice_img = np.rot90(slice_img)
+            else:
+                slice_img = np_img[:, :, slice_number].astype(np.uint8)
+
+            pillow_img = PIL.Image.fromarray(slice_img)
+            out_buffer = StringIO()
+            pillow_img.save(out_buffer,"png")
+            return out_buffer.getvalue()

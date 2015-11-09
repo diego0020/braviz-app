@@ -23,7 +23,7 @@ import struct
 import nibabel as nib
 import numpy as np
 import vtk
-
+from vtk.numpy_interface import dataset_adapter
 __author__ = 'diego'
 
 
@@ -184,4 +184,6 @@ def vtk2numpy(vtk_image):
     Returns:
         A numpy array of the same shape as the image
     """
-    return np.array(vtk_image.GetPointData()["ImageScalars"].reshape(vtk_image.GetDimensions(), order="F"))
+    wrapped_vtk_image = dataset_adapter.WrapDataObject(vtk_image)
+    return np.array(wrapped_vtk_image.GetPointData()["ImageScalars"].reshape(vtk_image.GetDimensions(), order="F"))
+

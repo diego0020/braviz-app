@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Braviz Slice Viewer</title>
+    <link rel="shortcut icon" href="{{ static_url ('favicon.png') }}"/>
+    <link href="{{ static_url('bootstrap-3.3.4/css/bootstrap.min.css') }}" rel="stylesheet">
+    <style>
+        div.slice-img{
+            display: inline-block;
+            margin: 0.5em;
+        }
+        div.slice-img img{
+            width: 20em;
+        }
+        div.controls{
+            margin: 3em;
+        }
+    </style>
+
+
+</head>
+<body>
+<div class="container-fluid">
+<h1 class="text-center">
+Braviz Slice Viewer
+</h1>
+<div class="controls row">
+<div class="col-sm-6 col-sm-offset-3">
+<form class="form-horizontal" action="javascript:void(0);">
+  <div class="form-group">
+    <label for="sample-select" class="control-label col-sm-3">Sample</label>
+      <div class="col-sm-6">
+            <input type="text" readonly class="form-control" id="sample-select" placeholder="<All>">
+      </div>
+    <div class="col-sm-3">
+        <input type="button" class="btn btn-default form-control" value="Load">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="sort-select" class="control-label col-sm-3">Sample</label>
+      <div class="col-sm-6">
+            <input type="text" readonly class="form-control" id="sort-select" placeholder="<None>">
+      </div>
+    <div class="col-sm-3">
+        <input type="button" class="btn btn-default form-control" value="Select">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="image-select" class="control-label col-sm-3">Image: </label>
+      <div class="col-sm-9">
+        <select class="form-control" id="image-select" name="image-select" >
+            {% for img in images %}
+            <option value="{{ img[0] }}">{{ escape(img[1]) }}</option>
+            {% end %}
+        </select>
+      </div>
+  </div>
+
+  <div class="form-group">
+    <label for="coordinates-select" class="control-label col-sm-3">Coordinates: </label>
+      <div class="col-sm-9">
+        <select class="form-control" id="coordinates-select" name="orientation-select">
+            <option value="subject">Subject</option>
+            <option value="talairach" selected>Talairach</option>
+            <option value="dartel">Dartel</option>
+        </select>
+      </div>
+  </div>
+
+  <div class="form-group">
+    <label for="orientation-select" class="control-label col-sm-3">Orientation: </label>
+      <div class="col-sm-9">
+        <select class="form-control" id="orientation-select" name="orientation-select">
+            <option value="axial">Axial</option>
+            <option value="coronal">Coronal</option>
+            <option value="sagital">Sagital</option>
+        </select>
+      </div>
+  </div>
+
+  <div class="form-group">
+    <label for="slice-select" class="control-label col-sm-3">Slice</label>
+      <div class="col-sm-9">
+            <input type="number" class="form-control" id="slice-select" value="40">
+      </div>
+  </div>
+<div class="col-sm-9 col-sm-offset-3">
+    <button type="submit" class="btn btn-success form-control" id="load-slices-btn">Load Slices</button>
+</div>
+
+</form>
+</div>
+</div>
+<div id="slices-panel" class="row"> </div>
+</div>
+
+<script src="{{ static_url ('jquery-2.1.3.min.js') }}"></script>
+<script src="{{ static_url ('bootstrap-3.3.4/js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ static_url ('d3/d3.js') }}"></script>
+<script>
+    var slices_panel = d3.select("#slices-panel");
+    var sample = [15, 119, 19, 55];
+
+    function update_slices(sample, image_type, image_name, orientation, coordinates, slice){
+        var slices = slices_panel.selectAll("div.slice-img").data(sample);
+        slices.enter().append("div").attr("class","slice-img")
+            .append("img").attr("class","img-responsive").attr("alt",function(d,i){return "Subject"+d;})
+            .attr("title",function(d,i){return "Subject"+d;});
+        slices.exit().remove();
+        slices.each(function(d,i){
+            var img = d3.select(this).select("img");
+            var img_url = "slices/data/img?subj="+d;
+            img_url += "&slice="+slice;
+            img_url += "&orientation="+orientation;
+            img_url += "&coordinates="+coordinates;
+            img_url += "&type="+image_type;
+            img_url += "&name="+image_name;
+            img.attr("src",img_url);
+        });
+    };
+
+    function form_submitted(){
+        var slice = $("#slice-select").val();
+        var orientation = $("#orientation-select").val();
+        var coordinates = $("#coordinates-select").val();
+        var image_full = $("#image-select").val().split("/");
+        var image_type = image_full[0];
+        var image_name = image_full[1];
+        update_slices(sample, image_type, image_name, orientation, coordinates, slice)
+    };
+    d3.select("#load-slices-btn").on("click",form_submitted);
+</script>
+</body>
+</html>
