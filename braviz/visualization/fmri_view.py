@@ -23,7 +23,7 @@ from __future__ import division
 
 import vtk
 from braviz.readAndFilter.cache import memoize
-
+import braviz.visualization.simple_vtk
 __author__ = 'Diego'
 
 
@@ -38,7 +38,7 @@ class blend_fmri_and_mri(vtk.vtkImageBlend):
     Use methods *GetOutput* and *GetOutputPort* to extract the output
     """
 
-    def __init__(self, fmri_img, mri_img, window=2000, level=1000, alfa=True, threshold=3):
+    def __init__(self, fmri_img, mri_img, window=None, level=None, alfa=True, threshold=3):
         """
         Creates a blend object
 
@@ -53,6 +53,9 @@ class blend_fmri_and_mri(vtk.vtkImageBlend):
             alfa (bool) : If True colors of t-score map will fade below *threshold*
             threshold (float) : Value at which colors start to fade (invisible at zero)
         """
+
+        if window is None or level is None:
+            window, level = braviz.visualization.simple_vtk.estimate_window_level(mri_img)
 
         fmri_mapper = vtk.vtkImageMapToColors()
         fmri_mapper.SetInputData(fmri_img)

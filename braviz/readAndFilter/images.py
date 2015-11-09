@@ -185,5 +185,8 @@ def vtk2numpy(vtk_image):
         A numpy array of the same shape as the image
     """
     wrapped_vtk_image = dataset_adapter.WrapDataObject(vtk_image)
-    return np.array(wrapped_vtk_image.GetPointData()["ImageScalars"].reshape(vtk_image.GetDimensions(), order="F"))
+    new_dimensions=list(vtk_image.GetDimensions())+[vtk_image.GetNumberOfScalarComponents()]
+    out = np.array(wrapped_vtk_image.GetPointData()["ImageScalars"].reshape(new_dimensions, order="F"))
+    out = np.squeeze(out)
+    return out
 
