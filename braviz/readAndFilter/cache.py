@@ -110,7 +110,7 @@ class CacheContainer(object):
             max_cache (float) : Maximum amount of memory in Mb that should be used by the process
         """
         self.__cache = LastUpdatedOrderedDict()
-        self.__max_cache = max_cache
+        self.__max_cache = int(max_cache)
 
     @property
     def max_cache(self):
@@ -121,7 +121,7 @@ class CacheContainer(object):
 
     @max_cache.setter
     def max_cache(self, val):
-        self.__max_cache = val
+        self.__max_cache = int(val)
 
     @property
     def cache(self):

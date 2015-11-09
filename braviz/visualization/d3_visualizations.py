@@ -20,8 +20,9 @@ from __future__ import division, print_function
 
 import json
 import logging
-
+import math
 import tornado.web
+
 
 import pandas as pd
 from braviz.readAndFilter import tabular_data as tab_data, user_data, log_db
@@ -303,7 +304,7 @@ class HistogramHandler(tornado.web.RequestHandler):
 
 class SessionIndexHandler(tornado.web.RequestHandler):
     """
-    Implements a simple web page for changing the current subject from a mobile.
+    Implements a web interface for reviewing analysis history
 
     """
 
@@ -326,8 +327,7 @@ class SessionIndexHandler(tornado.web.RequestHandler):
 
 class SessionDataHandler(tornado.web.RequestHandler):
     """
-    Implements a simple web page for changing the current subject from a mobile.
-
+    Data manipulations related to analysis history
     """
 
     full_time = "%Y/%m/%d %H:%M:%S"
@@ -447,3 +447,170 @@ class SessionDataHandler(tornado.web.RequestHandler):
                 self.finish()
                 return
         self.send_error(404)
+
+
+class SliceViewerHandler(tornado.web.RequestHandler):
+    """
+    Implements a web page for visualizing several image slices
+
+    """
+
+    def get_fmri_contrasts(self,paradigms, reader):
+        fmri_contrasts = {}
+        all_subjs = reader.get("ids")
+        cfg = get_apps_config()
+        favorite_subj = cfg.get_default_subject()
+        all_subjs.insert(0,favorite_subj)
+        for pdgm in paradigms:
+            for s in all_subjs:
+                try:
+                    cnts = reader.get("FMRI",s,name=pdgm,contrasts_dict=True)
+                except Exception:
+                    pass
+                else:
+                    fmri_contrasts[pdgm]=cnts
+                    break
+                fmri_contrasts[pdgm] = {}
+        return fmri_contrasts
+
+    def initialize(self):
+        import braviz.readAndFilter
+        self.images = []
+        reader = braviz.readAndFilter.BravizAutoReader()
+        imgs = reader.get("IMAGE",None,index=True)
+        fmri = reader.get("FMRI",None,index=True)
+        fmri_contrasts = self.get_fmri_contrasts(fmri, reader)
+        labels = reader.get("LABEL",None,index=True)
+        self.images += [("IMAGE/"+n,n) for n in sorted(imgs)]
+        self.images += [("DTI/DTI","DTI")]
+        self.images += [("LABEL/"+n,n) for n in sorted(labels)]
+        self.images += [("/".join(("FMRI",n,str(ci))),"FMRI-"+n.title()+": "+cn)
+                        for n in sorted(fmri)
+                        for ci, cn in fmri_contrasts[n].iteritems()
+                        ]
+
+    def get(self):
+        self.render("slices.html",images=self.images)
+
+
+class SliceViewerDataHandler(tornado.web.RequestHandler):
+    """
+    Implements a web page for visualizing several image slices
+
+    """
+    def get(self, element):
+        if element == "img":
+            subj = self.get_argument("subj")
+            slice_number = self.get_argument("slice",None)
+            orientation = self.get_argument("orientation","axial")
+            coordinates = self.get_argument("coordinates","talairach")
+            img_type = self.get_argument("type","IMAGE")
+            img_name = self.get_argument("name","MRI")
+            try:
+                img = self.get_slice_img(subj,slice_number, orientation, coordinates, img_type, img_name)
+            except Exception as e:
+                log = logging.getLogger(__name__)
+                log.exception(e)
+                self.send_error(404)
+            else:
+                self.set_header("Content-Type", "image/png")
+                self.write(img)
+        elif element == "samples":
+            samples = user_data.get_samples_df()
+            self.write(samples.to_json())
+            self.set_header("Content-Type", "application/json")
+        elif element == "subjects":
+            sample_idx = self.get_argument("sample",None)
+            variable = self.get_argument("variable",None)
+            if sample_idx is not None:
+                sample = user_data.get_sample_data(sample_idx)
+                if variable is None:
+                    self.write({"sample": [int(x) for x in sample]})
+                    return
+            if variable is not None:
+                df = tab_data.get_data_frame_by_index(variable)
+                if sample_idx is not None:
+                    df = df.loc[sample]
+                df.sort(df.columns[0],inplace=True)
+                self.write({"sample":[int(x) for x in df.index],
+                            "values":[float(x) if not math.isnan(x) else ""
+                                      for x in df.iloc[:,0]]})
+                return
+            if sample_idx is None and variable is None:
+                sample = tab_data.get_subjects()
+                self.write({"sample":[int(x) for x in sample]})
+                return
+            self.write_error(400)
+        elif element == "variables":
+            vars_df = tab_data.get_variables_and_type()
+            vars_df = vars_df[["var_name"]]
+            vars_df.sort("var_name", inplace=True)
+            descriptions = tab_data.get_descriptions_dict()
+            vars_df["desc"]=pd.Series(descriptions)
+            json_vars = vars_df.to_json(orient="split")
+            self.set_header("Content-Type", "application/json")
+            self.write(json_vars)
+        else:
+            self.write_error(404)
+
+
+    def initialize(self):
+        import braviz.readAndFilter
+        self.reader = braviz.readAndFilter.BravizAutoReader()
+        self.orientation_dict = {"axial": 2, "coronal": 1, "sagital": 0}
+
+    def get_slice_img(self, subj, slice_number, orientation, coordinates, img_type, img_name):
+            import braviz.readAndFilter.images
+            import braviz.visualization.fmri_view
+            from cStringIO import StringIO
+            import PIL.Image
+            import numpy as np
+            import vtk
+
+            orientation_int = self.orientation_dict.get(orientation.lower(), 0)
+            img_type = img_type.upper()
+            if img_type == "IMAGE":
+                vtk_img = self.reader.get("IMAGE",subj, name=img_name, space=coordinates, format="vtk")
+                np_img = braviz.readAndFilter.images.vtk2numpy(vtk_img)
+                min_value, max_value = np_img.min(), np_img.max()
+                np_img = (np_img-min_value)/(max_value-min_value)*255
+            elif img_type == "DTI":
+                vtk_img = self.reader.get("DTI",subj, space=coordinates, format="vtk")
+                np_img = braviz.readAndFilter.images.vtk2numpy(vtk_img)
+            elif img_type == "FMRI":
+                contrast = self.get_argument("contrast",1)
+                fmri_img = self.reader.get("FMRI",subj, name=img_name, space=coordinates,
+                                           format="vtk", contrast=contrast)
+                mri_img = self.reader.get("IMAGE",subj, name="MRI", space=coordinates, format="vtk")
+                blend = braviz.visualization.fmri_view.blend_fmri_and_mri(fmri_img, mri_img, threshold=3, alfa=True)
+                blend.Update()
+                vtk_img = blend.GetOutput()
+                np_img = braviz.readAndFilter.images.vtk2numpy(vtk_img)
+            elif img_type == "LABEL":
+                label_img = self.reader.get("LABEL",subj, name=img_name, space=coordinates, format="vtk")
+                lut = self.reader.get("LABEL",subj, name=img_name, lut=True)
+                color_mapper = vtk.vtkImageMapToColors()
+                color_mapper.SetInputData(label_img)
+                color_mapper.SetLookupTable(lut)
+                color_mapper.Update()
+                vtk_img=color_mapper.GetOutput()
+                np_img = braviz.readAndFilter.images.vtk2numpy(vtk_img)
+            else:
+                raise NameError("Unknown image type")
+
+            if slice_number is None:
+                slice_number = np_img.shape[orientation_int] // 2
+
+            if orientation_int == 0:
+                slice_img = np_img[slice_number, :, :].astype(np.uint8)
+                slice_img = np.rot90(slice_img)
+            elif orientation_int == 1:
+                slice_img = np_img[:, slice_number, :].astype(np.uint8)
+                slice_img = np.rot90(slice_img)
+            else:
+                slice_img = np_img[:, :, slice_number].astype(np.uint8)
+
+            pillow_img = PIL.Image.fromarray(slice_img)
+            out_buffer = StringIO()
+            pillow_img.save(out_buffer,"png")
+            return out_buffer.getvalue()

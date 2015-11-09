@@ -1159,7 +1159,7 @@ A read and filter class designed to work with kmc projects. Implements common fu
         if kw.get("spm"):
             spm_file = os.path.join(path, "SPM.mat")
             return SpmFileReader(spm_file)
-        contrast = kw.get("contrast", 1)
+        contrast = int(kw.get("contrast", 1))
         contrast_n = "%.4d" % contrast
         z_map = os.path.join(path, 'spmT_%s.hdr') % contrast_n
         log.info("Loading map %s" % z_map)

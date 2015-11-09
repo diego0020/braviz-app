@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Braviz Slice Viewer</title>
+    <link rel="shortcut icon" href="{{ static_url ('favicon.png') }}"/>
+    <link href="{{ static_url('bootstrap-3.3.4/css/bootstrap.min.css') }}" rel="stylesheet">
+    <style>
+        div.slice-img{
+            display: inline-block;
+            margin: 0.5em;
+        }
+        div.slice-img img{
+            width: 20em;
+        }
+        div.controls{
+            margin: 3em;
+        }
+        div.modal form{
+            max-height:50vh;
+            overflow-y: auto;
+        }
+
+        #samples-list label{
+            width:100%;
+        }
+
+        div#slices-panel {
+            text-align: center;
+        }
+
+    </style>
+
+
+</head>
+<body>
+<div class="container-fluid">
+<h1 class="text-center">
+Braviz Slice Viewer
+</h1>
+<div class="controls row">
+<div class="col-sm-6 col-sm-offset-3">
+<form class="form-horizontal" action="javascript:void(0);">
+  <div class="form-group">
+    <label for="sample-select" class="control-label col-sm-3">Sample: </label>
+      <div class="col-sm-6">
+            <input type="text" readonly class="form-control" id="sample-select" placeholder="<All>">
+      </div>
+    <div class="col-sm-3">
+        <input type="button" class="btn btn-default form-control" value="Load" data-toggle="modal"
+        data-target="#samples-modal">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="variable-select" class="control-label col-sm-3">Sort Variable: </label>
+      <div class="col-sm-6">
+            <input type="text" readonly class="form-control" id="variable-select" placeholder="<None>">
+      </div>
+    <div class="col-sm-3">
+        <input type="button" class="btn btn-default form-control" value="Select" data-toggle="modal"
+        data-target="#variables-modal">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="image-select" class="control-label col-sm-3">Image: </label>
+      <div class="col-sm-9">
+        <select class="form-control" id="image-select" name="image-select" >
+            {% for img in images %}
+            <option value="{{ img[0] }}">{{ escape(img[1]) }}</option>
+            {% end %}
+        </select>
+      </div>
+  </div>
+
+  <div class="form-group">
+    <label for="coordinates-select" class="control-label col-sm-3">Coordinates: </label>
+      <div class="col-sm-9">
+        <select class="form-control" id="coordinates-select" name="orientation-select">
+            <option value="subject">Subject</option>
+            <option value="talairach" selected>Talairach</option>
+            <option value="dartel">Dartel</option>
+        </select>
+      </div>
+  </div>
+
+  <div class="form-group">
+    <label for="orientation-select" class="control-label col-sm-3">Orientation: </label>
+      <div class="col-sm-9">
+        <select class="form-control" id="orientation-select" name="orientation-select">
+            <option value="axial">Axial</option>
+            <option value="coronal">Coronal</option>
+            <option value="sagital">Sagital</option>
+        </select>
+      </div>
+  </div>
+
+  <div class="form-group">
+    <label for="slice-select" class="control-label col-sm-3">Slice: </label>
+      <div class="col-sm-9">
+            <input type="number" class="form-control" id="slice-select" value="40">
+      </div>
+  </div>
+
+<div class="form-group">
+    <div class="col-sm-9 col-sm-offset-3">
+        <button type="submit" class="btn btn-success form-control" id="load-slices-btn">Load Slices</button>
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="col-sm-9 col-sm-offset-3">
+        <div class="form-control">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" id="loading-progress">
+                    0%
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</form>
+</div>
+</div>
+<div id="slices-panel" class="row"> </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="samples-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" >Load a Sample</h4>
+      </div>
+      <div class="modal-body">
+        <form id="samples-list" class="well">
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="set-sample-btn">Select</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="variables-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Select a Variable</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+            <input type="search" class="form-control" placeholder="Search" id="variable-search">
+        </div>
+        <form id="variables-list" class="well">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="set-variable-btn">Select</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="{{ static_url ('jquery-2.1.3.min.js') }}"></script>
+<script src="{{ static_url ('bootstrap-3.3.4/js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ static_url ('d3/d3.js') }}"></script>
+<script>
+    var slices_panel = d3.select("#slices-panel");
+    var sample_id = null;
+    var sort_variable_id = null;
+    var variable_id = null;
+
+    function update_slices(sample, image_type, image_name, image_contrast, orientation, coordinates, slice, values){
+        var slices = slices_panel.selectAll("div.slice-img").data(sample);
+        var sort_name = $("#variable-select")[0].value;
+        slices.enter().append("div").attr("class","slice-img")
+            .append("img").attr("class","img-responsive").attr("alt",function(d,i){return "Subject: "+d;});
+        slices.exit().remove();
+        slices.each(function(d,i){
+            var img = d3.select(this).select("img");
+            var img_url = "slices/data/img?subj="+d;
+            img_url += "&slice="+slice;
+            img_url += "&orientation="+orientation;
+            img_url += "&coordinates="+coordinates;
+            img_url += "&type="+image_type;
+            img_url += "&name="+image_name;
+            if (image_contrast != null){
+                img_url += "&contrast="+image_contrast;
+            }
+            img.attr("src",img_url);
+            img.attr("title",function(d){
+                    if (values){
+                        return "Subject: "+d+"\n"+sort_name+": "+values[i].toFixed(2);
+                    }
+                    else{
+                        return "Subject: "+d;
+                    }
+                });
+            });
+        slices.order();
+    }
+
+    function form_submitted(){
+        var slice = $("#slice-select").val();
+        var orientation = $("#orientation-select").val();
+        var coordinates = $("#coordinates-select").val();
+        var image_full = $("#image-select").val().split("/");
+        var image_type = image_full[0];
+        var image_name = image_full[1];
+        var image_contrast = null;
+        if (image_full.length > 2){
+            image_contrast = image_full[2];
+        }
+        var url = "slices/data/subjects?";
+        if (sample_id != null){
+            url+="sample="+sample_id;
+            if (variable_id != null){
+                url+="&";
+            }
+        }
+        if (variable_id != null){
+            url+="variable="+variable_id;
+        }
+        d3.json(url,function(error, response_data){
+            if (error){
+                alert("please check ir server is running");
+            }
+            else{
+                sample = response_data["sample"];
+                values = response_data["values"];
+                update_slices(sample, image_type, image_name, image_contrast, orientation, coordinates, slice, values);
+                check_load_progress();
+            }
+        });
+
+    }
+
+    function update_samples_list(){
+
+        d3.json("slices/data/samples",function(error, data){
+            if (error){
+                alert("Error loading samples, check if server is running");
+                return;
+            }
+            var samples = [];
+            var keys=Object.keys(data["sample_name"]);
+            keys.forEach(function(e){
+                var s = Object();
+                s.name = data["sample_name"][e];
+                s.index = e;
+                s.desc = data["sample_desc"][e];
+                s.size = data["sample_size"][e];
+                samples.push(s);
+            });
+        var sample_divs=d3.select("#samples-list").selectAll("div.radio").data(samples);
+        sample_divs.enter().append("div").attr("class","radio")
+            .attr("title",function(d){return d["desc"];})
+            .append("label").call(function(l){
+                l.append("input").attr({"type":"radio", "name":"sample"})
+                .attr("value",function(d){return d.index;});
+                l.append("p").text(function(d){return d.name + " ("+d.size+")";});
+            });
+        sample_divs.exit().remove();
+        });
+    }
+
+    function update_variables_list(){
+
+        d3.json("slices/data/variables",function(error, data){
+            if (error){
+                alert("Error loading variables, check if server is running");
+                return;
+            }
+            var variables = [];
+            var keys=data["index"];
+            var columns = data["columns"];
+            var values = data["data"];
+            keys.forEach(function(e,i){
+                var s = Object();
+                s.index = e;
+                values[i].forEach(function(v,j){
+                    s[columns[j]] = v;
+                });
+                variables.push(s);
+            });
+        var variables_div=d3.select("#variables-list").selectAll("div.radio").data(variables);
+        variables_div.enter().append("div").attr("class","radio")
+            .attr("title",function(d){return d["desc"];})
+            .append("label").call(function(l){
+                l.append("input").attr({"type":"radio", "name":"variable"})
+                .attr("value",function(d){return d.index;});
+                l.append("p").text(function(d){return d.var_name;});
+            });
+        variables_div.exit().remove();
+        });
+    }
+
+    function check_load_progress(){
+        var all_imgs = $("#slices-panel").find("img");
+        var completed_imgs = all_imgs.filter(function(i, e){return e.complete;});
+        console.log(completed_imgs.length+" / "+all_imgs.length);
+        var completed=(completed_imgs.length / all_imgs.length);
+        var progress_bar=$("#loading-progress");
+        progress_bar.text((completed*100).toFixed()+"%");
+        progress_bar.width(completed*100+"%");
+        if ( (all_imgs.length >0) && (completed < 1) ){
+            window.setTimeout(check_load_progress,2000);
+        }
+    }
+
+    d3.select("#set-sample-btn").on("click",function(){
+        var selected_sample = $("#samples-list").find('input:checked');
+        sample_id = selected_sample.val();
+        var sample_name = selected_sample.next().text();
+        $("#sample-select").attr("value",sample_name);
+        $("#samples-modal").modal("hide");
+    });
+    $("#samples-modal").on("show.bs.modal",update_samples_list);
+
+    d3.select("#set-variable-btn").on("click",function(){
+        var selected_variable = $("#variables-list").find('input:checked');
+        variable_id = selected_variable.val();
+        var var_name = selected_variable.next().text();
+        $("#variable-select").attr("value",var_name);
+        $("#variables-modal").modal("hide");
+    });
+    d3.select("#variable-search").on("search",function(d,i){
+        var search_string = this.value.toLowerCase();
+        d3.select("#variables-list").selectAll("div.radio").classed("hidden",function(d){
+            return d.var_name.toLowerCase().indexOf(search_string)<0;
+        });
+    });
+    $("#variables-modal").on("show.bs.modal",update_variables_list);
+
+    d3.select("#load-slices-btn").on("click",form_submitted);
+
+
+
+</script>
+</body>
+</html>

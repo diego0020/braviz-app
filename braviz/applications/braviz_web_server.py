@@ -23,10 +23,10 @@ import tornado.ioloop
 import tornado.web
 
 import braviz
+import braviz.readAndFilter
 from braviz.interaction.connection import GenericMessageClient
-from braviz.interaction.tornado_connection import WebSocketMessageHandler, WebSocketManager
-from braviz.visualization.d3_visualizations import ParallelCoordinatesHandler, IndexHandler, SubjectSwitchHandler,\
-    ParallelCoordsDataHandler, HistogramHandler, SessionIndexHandler, SessionDataHandler
+from braviz.interaction import tornado_connection
+from braviz.visualization import d3_visualizations
 import logging
 
 __author__ = 'da.angulo39'
@@ -51,22 +51,23 @@ if __name__ == "__main__":
         broadcast_address = sys.argv[2]
         receive_address = sys.argv[3]
 
-    socket_manager = WebSocketManager()
+    socket_manager = tornado_connection.WebSocketManager()
     message_client2 = GenericMessageClient(
         socket_manager, broadcast_address, receive_address)
     socket_manager.message_client = message_client2
     application = tornado.web.Application(
         [
-            (r"/parallel/data/(.*)", ParallelCoordsDataHandler),
-            (r"/parallel", ParallelCoordinatesHandler),
-            (r"/messages_ws",WebSocketMessageHandler,
-            {"socket_manager": socket_manager}),
-            (r"/subject", SubjectSwitchHandler),
-            (r"/histogram", HistogramHandler),
-            (r"/history", SessionIndexHandler),
-            (r"/history/data/(.*)", SessionDataHandler),
-            (r"/", IndexHandler),
-
+            (r"/parallel/data/(.*)", d3_visualizations.ParallelCoordsDataHandler),
+            (r"/parallel", d3_visualizations.ParallelCoordinatesHandler),
+            (r"/messages_ws",tornado_connection.WebSocketMessageHandler,
+                {"socket_manager": socket_manager}),
+            (r"/subject", d3_visualizations.SubjectSwitchHandler),
+            (r"/histogram", d3_visualizations.HistogramHandler),
+            (r"/history", d3_visualizations.SessionIndexHandler),
+            (r"/history/data/(.*)", d3_visualizations.SessionDataHandler),
+            (r"/slices", d3_visualizations.SliceViewerHandler),
+            (r"/slices/data/(.*)", d3_visualizations.SliceViewerDataHandler),
+            (r"/", d3_visualizations.IndexHandler),
         ],
         **settings)
     try:
