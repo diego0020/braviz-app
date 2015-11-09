@@ -672,10 +672,6 @@ if (sample_accept_policy == "ask"){
 else if(sample_accept_policy == "always"){
     set_sample(m_sample);
 }
-else
-{
-return;
-}
 }
 
 // --------------- Set Sample Function -------------------
@@ -747,7 +743,7 @@ var menu = [
 
 function add_context_menu(){
     foreground.on("contextmenu.menu",d3.contextMenu(menu));
-};
+}
 
 function send_subject_message(subj){
 var msg=JSON.stringify({"type":"subject", "subject": subj})

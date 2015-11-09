@@ -7,11 +7,18 @@
     <title>Braviz Slice Viewer</title>
     <link rel="shortcut icon" href="{{ static_url ('favicon.png') }}"/>
     <link href="{{ static_url('bootstrap-3.3.4/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ static_url ('d3-context-menu.css') }}" rel="stylesheet" type="text/css">
     <style>
         div.slice-img{
             display: inline-block;
             margin: 0.5em;
         }
+
+        div.slice-img.highlight{
+            margin: 0;
+            border : solid #E26E1B 0.5em;
+        }
+
         div.slice-img img{
             width: 20em;
         }
@@ -178,6 +185,7 @@ Braviz Slice Viewer
 <script src="{{ static_url ('jquery-2.1.3.min.js') }}"></script>
 <script src="{{ static_url ('bootstrap-3.3.4/js/bootstrap.min.js') }}"></script>
 <script type="text/javascript" src="{{ static_url ('d3/d3.js') }}"></script>
+<script type="text/javascript" src="{{ static_url ('d3-context-menu.js') }}"></script>
 <script>
     var slices_panel = d3.select("#slices-panel");
     var sample_id = null;
@@ -204,7 +212,12 @@ Braviz Slice Viewer
             img.attr("src",img_url);
             img.attr("title",function(d){
                     if (values){
-                        return "Subject: "+d+"\n"+sort_name+": "+values[i].toFixed(2);
+                        var x="";
+                        try{x=values[i].toFixed(2);
+                        }catch(err){
+                            console.log("missing vaule");
+                        }
+                        return "Subject: "+d+"\n"+sort_name+": "+x;
                     }
                     else{
                         return "Subject: "+d;
@@ -212,6 +225,7 @@ Braviz Slice Viewer
                 });
             });
         slices.order();
+        add_context_menu();
     }
 
     function form_submitted(){
@@ -322,6 +336,90 @@ Braviz Slice Viewer
         }
     }
 
+//---------------------------------connection--------------------------------------
+var last_message = null;
+var message_getter = null;
+var errorSleepTime = 500;
+ function openWS() {
+    var address = "ws://" + window.location.host + "/messages_ws";
+    message_getter = new WebSocket(address);
+    message_getter.onerror=function () {
+    if (errorSleepTime < 5000){
+    errorSleepTime*=2;
+    }
+    };
+    message_getter.onmessage = function(e) {
+      if (last_message==e.data){
+      return;
+      }
+      message = JSON.parse(e.data);
+      var msg_type = message.type;
+      if (msg_type == "sample")
+      {
+          // ignore for the moment
+      }
+      else{
+      if (msg_type == "subject")
+      {
+      var code = message.subject;
+      if (code != null){
+               highlight_subject(code);
+        }
+      }
+      }
+    };
+    message_getter.onclose = function(e) {
+      window.setTimeout(openWS, errorSleepTime);
+    };
+  }
+
+  function highlight_subject(subj){
+      slices_panel.selectAll("div.slice-img").classed("highlight",function(d){
+          return d == subj;
+      })
+      slices_panel.select("div.slice-img.highlight").element()
+  }
+
+
+//------------------context menu---------------------------
+var menu = [
+    {
+        title: function(d) {return "Show "+d+" in other views"},
+        action : function(elm, d, i){
+        send_subject_message(d)
+        }
+    }
+];
+
+
+function add_context_menu(){
+    slices_panel.selectAll("div.slice-img").on("contextmenu.menu",d3.contextMenu(menu));
+}
+
+function send_subject_message(subj){
+var msg=JSON.stringify({"type":"subject", "subject": subj})
+if (message_getter){
+last_message = msg;
+message_getter.send(msg);
+}
+highlight_subject(subj);
+}
+
+function send_sample_message(){
+var int_codes = [];
+for (i=0; i<current_subsample_list.length; i++){
+    int_codes.push(Number(current_subsample_list[i]));
+}
+var msg=JSON.stringify({"type": "sample", "sample": int_codes })
+last_message = msg;
+console.log(msg);
+    if (message_getter){
+    message_getter.send(msg);
+    }
+}
+
+//------------------------ START -----------------------------------------
+  function start(){
     d3.select("#set-sample-btn").on("click",function(){
         var selected_sample = $("#samples-list").find('input:checked');
         sample_id = selected_sample.val();
@@ -348,6 +446,10 @@ Braviz Slice Viewer
 
     d3.select("#load-slices-btn").on("click",form_submitted);
 
+    openWS();
+  }
+
+   $(start);
 
 
 </script>
