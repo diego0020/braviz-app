@@ -631,7 +631,7 @@ class SubjectOverviewApp(QMainWindow):
                             "Area": ("area", "mm^2"),
                             "FA inside": ("fa_inside", ""),
                             "MD inside": ("md_inside", "e-12")}
-        elif braviz.readAndFilter.PROJECT == "kmc400":
+        else:
             metrics_dict = {"Volume": ("volume", "mm^3"),
                             "Area": ("area", "mm^2"),
                             "FA inside": ("fa_inside", ""),

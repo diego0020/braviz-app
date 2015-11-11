@@ -54,12 +54,13 @@ def get_connection():
         return connection_obj
 
     data_root = braviz.readAndFilter.braviz_auto_dynamic_data_root()
-    path = os.path.join(data_root, "braviz_data", "tabular_data.sqlite")
-    if not os.path.isfile(path):
+    path = os.path.join(data_root, "braviz_data")
+    db_name = os.path.join(path, "tabular_data.sqlite")
+    if not os.path.isdir(data_root):
         show_error("Couldn't open database file\n%s" % path)
-        raise Exception("Couldn't open database")
+        raise IOError("Couldn't open database location:\n%s"%path)
 
-    conn = sqlite3.connect(path,  detect_types=sqlite3.PARSE_DECLTYPES)
+    conn = sqlite3.connect(db_name,  detect_types=sqlite3.PARSE_DECLTYPES)
     conn.execute("pragma busy_timeout = 10000")
     _connections[thread_id] = conn
     if LATERALITY is None:
