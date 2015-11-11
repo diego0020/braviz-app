@@ -24,7 +24,8 @@ import logging
 import os
 import time
 import psutil
-
+import vtk
+import nibabel.spatialimages
 
 __author__ = 'diego'
 
@@ -80,11 +81,14 @@ def cache_function(cache_container):
                 # update access time
                 f.cache[key] = (output, time.time())
                 # return a copy to keep integrity of objects in cache
-            try:
+            if isinstance(output,vtk.vtkObject):
+                # VTK objects
                 output_copy = output.NewInstance()
                 output_copy.DeepCopy(output)
-            except AttributeError:
-                # not a vtk object
+            elif isinstance(output,nibabel.spatialimages.SpatialImage):
+                # nibabel image (includes a file descriptor, can't copy)
+                output_copy = output
+            else:
                 try:
                     output_copy = copy.deepcopy(output)
                 except Exception:
