@@ -158,11 +158,12 @@ class WebSocketManager(object):
             s.write_message(msg)
 
     def send_json_message(self,msg):
-        if self.message_client is None:
-            log=logging.getLogger(__name__)
-            log.error("Not message client set")
-            return
-        self.message_client.send_json_message(str(msg))
+        if self.message_client is None or self.message_client.server_receive is None:
+            # Send to other sockets
+            for s in self.sockets:
+                s.write_message(msg)
+        else:
+            self.message_client.send_json_message(str(msg))
 
 
 class WebSocketMessageHandler(tornado.websocket.WebSocketHandler):
