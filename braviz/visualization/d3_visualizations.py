@@ -42,6 +42,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
 
     The *GET* method receives as arguments:
 
+        - **category** : Id of a variable to use as categories, lines will be colored according to this variable
         - **vars** : A list of variable ids to include in the parallel coordinates, in order
                      If it is not given, the default from the configuration file are used
         - **sample** : A sample ID for subjects to include in the visualizaiton, if None is given the whole dataset
@@ -100,6 +101,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             sample = sorted(user_data.get_sample_data(sample_idx))
         else:
             sample = data.index.get_values()
+            sample_idx = "null"
 
         sample_json = json.dumps(sample, cls=NpJSONEncoder)
         data2 = data.dropna()
@@ -134,7 +136,8 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         attrs = list(data.columns[1:-1])
         attrs_json = json.dumps(attrs)
         self.render("parallel_coordinates.html", data=json_data, caths=caths_json, vars=attrs_json, cath_name=col0,
-                    missing=missing_json, sample=sample_json, cath_index=cath_idx, var_indices=traits_idx_json)
+                    missing=missing_json, sample=sample_json, cath_index=cath_idx, var_indices=traits_idx_json,
+                    sample_id=sample_idx)
 
     def post(self, *args, **kwargs):
         name = self.get_body_argument("sample_name")
@@ -169,16 +172,32 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
         elif data_type == "values":
             cats = self.get_argument("category")
             variables = self.get_argument("variables").split(",")
-            out = self.get_values(cats, variables)
+            sample = self.get_argument("sample",None)
+            out = self.get_values(cats, variables, sample)
+        elif data_type == "variables_and_samples":
+            out = self.get_variables_and_samples()
         else:
             self.send_error("404")
 
         self.write(out)
         self.set_header('Content-Type', "application/json")
 
+    def get_variables_and_samples(self):
+        vars_df = tab_data.get_variables_and_type()
+        vars_df.sort("var_name", inplace=True)
+        descriptions = tab_data.get_descriptions_dict()
+        vars_df["desc"]=pd.Series(descriptions)
+        vars_df.loc[vars_df["desc"].isnull(),"desc"] = ""
+        vars_json = vars_df.to_json(orient="split")
+
+        samples_df = user_data.get_samples_df()
+        samples_json = samples_df.to_json(orient="split")
+
+        full_json = '{"variables" : %s , "samples" : %s }'%(vars_json, samples_json)
+        return full_json
+
     def get_variable_lists(self):
         vars_df = tab_data.get_variables_and_type()
-
         vars_df.sort("var_name", inplace=True)
         vars_df["var_id"] = vars_df.index
         vars_df.rename(columns={"is_real": "type", "var_name": "name"}, inplace=True)
@@ -190,9 +209,13 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
         vars_df.loc[vars_df["desc"].isnull(),"desc"] = ""
         return json.dumps({"variables": vars_df.to_dict("records")}, cls=NpJSONEncoder)
 
-    def get_values(self, cat, vs):
+    def get_values(self, cat, vs, sample_idx):
         vars_list = [int(cat)] + [int(v) for v in vs]
         data = tab_data.get_data_frame_by_index(vars_list)
+        if sample_idx is not None:
+            sample = user_data.get_sample_data(sample_idx)
+        else:
+            sample = tab_data.get_subjects()
         data2 = data.dropna()
         missing = sorted(set(data.index) - set(data2.index))
         data = data2
@@ -202,7 +225,7 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
         cols2[0] = "category"
         data.columns = cols2
         labels = tab_data.get_labels_dict(vars_list[0])
-
+        # sanitize label name
         for i, (k, v) in enumerate(labels.iteritems()):
             if v is None:
                 labels[k] = "label%s" % k
@@ -212,7 +235,6 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
                 v = "c_" + v
             labels[k] = v.replace(' ', '_')
 
-        # sanitize label name
         col0 = cols2[0]
         data[col0] = data[col0].map(labels)
         data["code"] = data.index
@@ -225,7 +247,8 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
                            "cat_name": col0,
                            "missing": missing,
                            "cat_idx": vars_list[0],
-                           "var_indices": vars_list[1:]
+                           "var_indices": vars_list[1:],
+                           "sample" : sample,
                            }, cls=NpJSONEncoder)
 
 

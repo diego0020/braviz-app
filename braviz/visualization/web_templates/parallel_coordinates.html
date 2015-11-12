@@ -160,6 +160,7 @@ div.variable-list{
   <ul class="nav nav-tabs" role="tablist" id="variable-control-tabs">
     <li role="presentation" class="active"><a href="#select-variables-tab" aria-controls="home" role="tab" data-toggle="tab">Variables</a></li>
     <li role="presentation"><a href="#categories-list-tab" aria-controls="profile" role="tab" data-toggle="tab">Categories</a></li>
+    <li role="presentation"><a href="#samples-list-tab" aria-controls="profile" role="tab" data-toggle="tab">Sample</a></li>
   </ul>
   <!-- Tab panes -->
 <div class="tab-content">
@@ -185,6 +186,12 @@ div.variable-list{
 
 <div class="well variable-list">
 
+
+</div>
+</div>
+<div role="tabpanel" class="tab-pane" id="samples-list-tab">
+
+<div class="well samples-list">
 
 </div>
 </div>
@@ -271,11 +278,13 @@ div.variable-list{
 var data2 = [];
 var flowers;
 var sample ;
+var sample_id ;
 var codes_w_missing ;
 var current_subsample_list = [];
 
 var traits ;
 var traits_indices;
+var traits_to_index;
 var caths_index;
 
 var foreground;
@@ -439,6 +448,9 @@ function create_plot(new_flowers, categories, new_traits) {
             return "translate(" + x(d) + ")";
         });
         t.selectAll(".foreground path").attr("d", path);
+        trait_names = x.domain();
+        trait_ids = trait_names.map(function(e){return traits_to_index.get(e);});
+        update_url(caths_index, trait_ids, sample_id);
     }
 
     highlight_path = svg.append("svg:g")
@@ -698,7 +710,6 @@ function set_sample(new_sample){
     );
     sample = new_sample;
     document.getElementById("n_missing_label").textContent="Missing Values: "+n_missing;
-    document.getElementById("n_missing_label").textContent="Missing Values: "+n_missing;
     prepare_tabulate();
 }
 
@@ -773,11 +784,14 @@ console.log(msg);
 function set_all_data(in_sample, in_missing, in_flowers, in_categories, in_traits, in_traits_indices, in_cath_idx){
   data2 = [];
   traits_indices = in_traits_indices;
+  traits_to_index = d3.map();
+  in_traits.forEach(function(e,i){traits_to_index.set(e,in_traits_indices[i]);});
   caths_index = in_cath_idx;
   sample = in_sample;
   codes_w_missing = in_missing;
   current_subsample_list = [];
   create_plot(in_flowers, in_categories, in_traits);
+  set_sample(in_sample)
   tabulate(data2,["code","category"].concat(traits),[]);
   add_context_menu();
 }
@@ -793,46 +807,94 @@ function load_new_variables(vars){
 
 // -------------------interface-----------------------
 
-var vars_spinner = new Spinner();
-var cats_spinner = new Spinner();
 function show_variable_select_panel(){
 
 $("#variable-select-panel").removeClass("hidden");
 $("#change-vars-buttons").addClass("hidden");
 
-var vars_list = $("#select-variables-tab div.variable-list");
-var cats_list = $("#categories-list-tab div.variable-list");
+var vars_list = d3.select("#select-variables-tab div.variable-list");
+var cats_list = d3.select("#categories-list-tab div.variable-list");
+var samples_list = d3.select("#samples-list-tab div.samples-list");
 
 vars_list.html("");
 cats_list.html("");
-vars_spinner.spin();
-cats_spinner.spin();
-vars_list.append(vars_spinner.el);
-cats_list.append(cats_spinner.el);
+samples_list.html("");
 
 
-$.getJSON("parallel/data/variables", function(data) {
-vars_spinner.stop();
-cats_spinner.stop();
-    for (i=0; i<data.variables.length; i++){
-
-  //<div><label> <input type="checkbox" value="" > Var 1 </label></div>
-       var v=data.variables[i];
-       $('<label></label>').attr("title",v.desc).text(v.name).prepend('<input type="checkbox" value="'+v.var_id+'" >').appendTo(vars_list).wrap('<div class="checkbox"></div>');
-       if (v.type == "nominal"){
-       //  <div><label> <input type="radio" value="" name="categories"> Cat 1 </label></div>
-       $('<label></label>').attr("title",v.desc).text(v.name).prepend('<input type="radio" name="categories" value="'+v.var_id+'" >').appendTo(cats_list).wrap('<div class="radio"></div>');
-       }
+d3.json("parallel/data/variables_and_samples", function(error,data) {
+    if (error){
+        alert("Couldn't connect to server, is it running?");
+        return;
     }
-    // find checked variables
-    vars_list.find("input").filter(function(index, element){return traits_indices.indexOf(Number(element.value))>=0;}).prop("checked", true);
-    // find cathegory
-    cats_list.find("input").filter(function(index, element){return caths_index == element.value;}).prop("checked", true);
-    }).fail(function(xhr, text, error) {
-            alert(text);
-            }
-    );
 
+    //------ variables -------
+
+    var var_name_index = data["variables"]["columns"].indexOf("var_name");
+    var var_desc_index = data["variables"]["columns"].indexOf("desc");
+    var var_is_real_index = data["variables"]["columns"].indexOf("is_real");
+
+    var var_data = data["variables"]["data"];
+
+    var variables = vars_list.selectAll("div.checkbox").data(data["variables"]["index"]);
+    var categories = cats_list.selectAll("div.radio").data(data["variables"]["index"]);
+
+    variables.enter().append("div").attr("class","checkbox")
+        .append("label")
+        .attr("title", function(d,i){
+                return var_data[i][var_desc_index];
+            })
+        .call(function(label){
+            label.append("input").attr("type","checkbox").attr("name","variable")
+                .attr("value",function(d,i){return d})
+                .attr("checked",function(d){
+                  if(traits_indices.indexOf(d)>=0) return "checked";
+                  return null;
+                });
+            label.append("p").text(function(d,i){return var_data[i][var_name_index]});
+        });
+
+    categories.enter().append("div").attr("class","radio")
+        .append("label")
+        .attr("title", function(d,i){return var_data[i][var_desc_index]})
+        .call(function(label){
+            label.append("input").attr("type","radio").attr("name","category")
+                .attr("value",function(d,i){return d})
+                .attr("checked",function(d){
+                  if(caths_index == d) return "checked";
+                  return null;
+                });
+            label.append("p").text(function(d,i){return var_data[i][var_name_index]});
+        });
+
+    //cats_list.find("input").filter(function(index, element){return caths_index == element.value;}).prop("checked", true);
+
+
+    //------ samples -------
+    var sample_name_index = data["samples"]["columns"].indexOf("sample_name");
+    var sample_desc_index = data["samples"]["columns"].indexOf("sample_desc");
+    var sample_size_index = data["samples"]["columns"].indexOf("sample_size");
+
+    var samples_data = data["samples"]["data"];
+
+    var samples_items =samples_list.selectAll("div.checkbox").data(data["samples"]["index"]);
+
+    samples_items.enter().append("div").attr("class","radio")
+        .append("label")
+        .attr("title", function(d,i){
+                return samples_data[i][sample_desc_index];
+            })
+        .call(function(label){
+            label.append("input").attr("type","radio").attr("name","sample")
+                .attr("value",function(d,i){return d})
+                .attr("checked",function(d){
+                  if(d=="sample") return "checked";
+                  return null;
+                });
+            label.append("p").text(function(d,i){
+                return samples_data[i][sample_name_index] +" ("+ samples_data[i][sample_size_index]+ ")";
+            });
+        });
+    });
 }
 
 function hide_variable_select_panel(){
@@ -874,18 +936,25 @@ $('#variable-control-tabs a').click(function (e) {
 function apply_new_variables(){
 var new_cat_idx = $("#categories-list-tab div.variable-list").find("input").filter(function(i,e){return e.checked;}).val();
 var checked_boxes = $("#select-variables-tab div.variable-list").find("input").filter(function(i,e){return e.checked;});
+var selected_sample = $("#samples-list-tab div.samples-list").find("input").filter(function(i,e){return e.checked;}).val();
+
 var new_traits = "";
 for (i=0; i<checked_boxes.length; i++){
 if (i>0) new_traits+=",";
 new_traits+=checked_boxes[i].value;
 }
-url = "parallel/data/values?category="+new_cat_idx+"&variables="+new_traits;
-console.log(url);
+
+update_url(new_cat_idx, new_traits, selected_sample);
 hide_variable_select_panel();
+
+url = "parallel/data/values?category="+new_cat_idx+"&variables="+new_traits;
+if (selected_sample){
+url+="&sample="+selected_sample;
+sample_id=selected_sample;
+}
+console.log(url);
 $.getJSON(url, function(r){
-state_obj = {cat:new_cat_idx, variables:new_traits};
-history.replaceState(state_obj, "", "parallel?vars="+new_cat_idx+","+new_traits);
-set_all_data(sample, r.missing, r.data, r.categories, r.vars, r.var_indices, r.cat_idx );
+set_all_data(r.sample, r.missing, r.data, r.categories, r.vars, r.var_indices, r.cat_idx );
 });
 }
 
@@ -894,7 +963,16 @@ set_all_data(sample, r.missing, r.data, r.categories, r.vars, r.var_indices, r.c
 $("#apply-variable-change").click(apply_new_variables);
 
 
+// -------------------update url----------------------
 
+function update_url(new_cat_idx, new_traits, new_sample_id){
+state_obj = {"cat":new_cat_idx, "variables":new_traits, "sample_id":new_sample_id};
+new_url = "parallel?vars="+new_cat_idx+","+new_traits;
+if (new_sample_id){
+new_url+="&sample="+new_sample_id;
+}
+history.replaceState(state_obj, "", new_url);
+}
 
 // -------------------on load-------------------------
 
@@ -907,6 +985,7 @@ window.onload=function(){
   var traits2 = {% raw vars %};
   var traits_idx2 = {% raw var_indices %};
   var cath_idx2 = {% raw cath_index %};
+  sample_id = {% raw sample_id %};
   set_all_data(sample2, codes_w_missing2, flowers2, categories2, traits2, traits_idx2, cath_idx2 );
   document.getElementById("main_svg").onclick=function(){highlight_subj_path(null);};
   openWS();
