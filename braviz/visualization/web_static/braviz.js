@@ -1,4 +1,6 @@
 var braviz = (function(){
+
+//-------------------------------------------
 function connect_to_ws(message_handler){
 var last_message = null;
 var message_getter = null;
@@ -32,7 +34,172 @@ var raw_socket;
   return socket;
 }
 
+//---------------------------------------------------------------
+function configure_variables_and_samples_dialog(button_selector, dialog_selector,
+ get_current_cats_trait_ids_sample_id, apply_callback){
+
+    // TODO: Remove all id selectors
+
+    var dialog = $(dialog_selector);
+    var button = $(button_selector);
+    function show_variable_select_panel(){
+
+        var cats_vars_traits = get_current_cats_trait_ids_sample_id();
+        var traits_indices = cats_vars_traits["trait_indices"];
+        var cats_index = cats_vars_traits["cats_index"];
+        var sample_index = cats_vars_traits["sample_index"];
+
+        button.addClass("hidden");
+        dialog.removeClass("hidden");
+
+        var vars_list = d3.select("#select-variables-tab div.variable-list");
+        var cats_list = d3.select("#categories-list-tab div.variable-list");
+        var samples_list = d3.select("#samples-list-tab div.samples-list");
+
+        vars_list.html("");
+        cats_list.html("");
+        samples_list.html("");
+
+        d3.json("parallel/data/variables_and_samples", function(error,data) {
+            if (error){
+                alert("Couldn't connect to server, is it running?");
+                return;
+            }
+            //------ variables -------
+            var var_name_index = data["variables"]["columns"].indexOf("var_name");
+            var var_desc_index = data["variables"]["columns"].indexOf("desc");
+            var var_is_real_index = data["variables"]["columns"].indexOf("is_real");
+            var var_data = data["variables"]["data"];
+            var variables = vars_list.selectAll("div.checkbox").data(data["variables"]["index"]);
+            var categories = cats_list.selectAll("div.radio").data(data["variables"]["index"]);
+
+            variables.enter().append("div").attr("class","checkbox")
+                .append("label")
+                .attr("title", function(d,i){
+                        return var_data[i][var_desc_index];
+                    })
+                .call(function(label){
+                    label.append("input").attr("type","checkbox").attr("name","variable")
+                        .attr("value",function(d,i){return d})
+                        .attr("checked",function(d){
+                          if(traits_indices.indexOf(d)>=0) return "checked";
+                          return null;
+                        });
+                    label.append("p").text(function(d,i){return var_data[i][var_name_index]});
+                });
+
+            categories.enter().append("div").attr("class","radio")
+                .append("label")
+                .attr("title", function(d,i){return var_data[i][var_desc_index]})
+                .call(function(label){
+                    label.append("input").attr("type","radio").attr("name","category")
+                        .attr("value",function(d,i){return d})
+                        .attr("checked",function(d){
+                          if(cats_index == d) return "checked";
+                          return null;
+                        });
+                    label.append("p").text(function(d,i){return var_data[i][var_name_index]});
+                });
+            //------ samples -------
+            var sample_name_index = data["samples"]["columns"].indexOf("sample_name");
+            var sample_desc_index = data["samples"]["columns"].indexOf("sample_desc");
+            var sample_size_index = data["samples"]["columns"].indexOf("sample_size");
+
+            var samples_data = data["samples"]["data"];
+
+            var samples_items =samples_list.selectAll("div.checkbox").data(data["samples"]["index"]);
+
+            samples_items.enter().append("div").attr("class","radio")
+                .append("label")
+                .attr("title", function(d,i){
+                        return samples_data[i][sample_desc_index];
+                    })
+                .call(function(label){
+                    label.append("input").attr("type","radio").attr("name","sample")
+                        .attr("value",function(d,i){return d})
+                        .attr("checked",function(d){
+                          if(d==sample_index) return "checked";
+                          return null;
+                        });
+                    label.append("p").text(function(d,i){
+                        return samples_data[i][sample_name_index] +" ("+ samples_data[i][sample_size_index]+ ")";
+                    });
+                });
+            });
+    }
+
+    function hide_variable_select_panel(){
+    dialog.addClass("hidden");
+    button.removeClass("hidden");
+    }
+
+    button.click(show_variable_select_panel);
+    dialog.find("button.close").click(hide_variable_select_panel);
+    dialog.find("#cancel_variable_selection").click(hide_variable_select_panel);
+
+    function filter_variables_list(list, mask){
+    mask=mask.toUpperCase();
+    $(list).children("div.variable-list div").addClass("hidden");
+    $(list).children("div.variable-list div").filter(function (){return this.textContent.toUpperCase().indexOf(mask)>=0 }).removeClass("hidden");
+    }
+
+    $("#search-vars").change(function(){
+                filter_variables_list($("#select-variables-tab div.variable-list"),
+                $("#search-vars").val());
+                });
+
+    $("#search-cats").change(function(){
+                filter_variables_list($("#categories-list-tab div.variable-list"),
+                $("#search-cats").val());
+                });
+
+    function clear_list(){
+    $("#select-variables-tab").find("div.variable-list input").prop("checked", false);
+    }
+    $("#clear_checked_variables").click(clear_list);
+
+    $('#variable-control-tabs a').click(function (e) {
+      e.preventDefault()
+      $(this).tab('show')
+    })
+
+
+    function apply_new_variables(){
+    var new_cat_idx = $("#categories-list-tab div.variable-list").find("input").filter(function(i,e){return e.checked;}).val();
+    var checked_boxes = $("#select-variables-tab div.variable-list").find("input").filter(function(i,e){return e.checked;});
+    var selected_sample = $("#samples-list-tab div.samples-list").find("input").filter(function(i,e){return e.checked;}).val();
+
+    apply_callback(new_cat_idx, new_traits, selected_sample);
+    hide_variable_select_panel();
+   /*
+    var new_traits = "";
+    for (i=0; i<checked_boxes.length; i++){
+    if (i>0) new_traits+=",";
+    new_traits+=checked_boxes[i].value;
+    }
+
+    update_url(new_cat_idx, new_traits, selected_sample);
+
+
+    url = "parallel/data/values?category="+new_cat_idx+"&variables="+new_traits;
+    if (selected_sample){
+    url+="&sample="+selected_sample;
+    sample_id=selected_sample;
+    }
+    console.log(url);
+    $.getJSON(url, function(r){
+    set_all_data(r.sample, r.missing, r.data, r.categories, r.vars, r.var_indices, r.cat_idx );
+    });
+    */
+    }
+    $("#apply-variable-change").click(apply_new_variables);
+
+
+}
+//---------------------EXPORT-------------------------------------
+
 var braviz_module = {};
 braviz_module.connect_to_ws = connect_to_ws;
+braviz_module.configure_variables_and_samples_dialog = configure_variables_and_samples_dialog;
 return braviz_module;
 })();

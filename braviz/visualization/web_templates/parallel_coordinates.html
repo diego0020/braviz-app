@@ -786,157 +786,35 @@ function load_new_variables(vars){
 
 // -------------------interface-----------------------
 
-function show_variable_select_panel(){
-
-$("#variable-select-panel").removeClass("hidden");
-$("#change-vars-buttons").addClass("hidden");
-
-var vars_list = d3.select("#select-variables-tab div.variable-list");
-var cats_list = d3.select("#categories-list-tab div.variable-list");
-var samples_list = d3.select("#samples-list-tab div.samples-list");
-
-vars_list.html("");
-cats_list.html("");
-samples_list.html("");
-
-
-d3.json("parallel/data/variables_and_samples", function(error,data) {
-    if (error){
-        alert("Couldn't connect to server, is it running?");
-        return;
+function apply_new_variables(new_cat_idx, checked_boxes, selected_sample){
+    var new_traits = "";
+    for (i=0; i<checked_boxes.length; i++){
+    if (i>0) new_traits+=",";
+    new_traits+=checked_boxes[i].value;
     }
 
-    //------ variables -------
+    update_url(new_cat_idx, new_traits, selected_sample);
 
-    var var_name_index = data["variables"]["columns"].indexOf("var_name");
-    var var_desc_index = data["variables"]["columns"].indexOf("desc");
-    var var_is_real_index = data["variables"]["columns"].indexOf("is_real");
-
-    var var_data = data["variables"]["data"];
-
-    var variables = vars_list.selectAll("div.checkbox").data(data["variables"]["index"]);
-    var categories = cats_list.selectAll("div.radio").data(data["variables"]["index"]);
-
-    variables.enter().append("div").attr("class","checkbox")
-        .append("label")
-        .attr("title", function(d,i){
-                return var_data[i][var_desc_index];
-            })
-        .call(function(label){
-            label.append("input").attr("type","checkbox").attr("name","variable")
-                .attr("value",function(d,i){return d})
-                .attr("checked",function(d){
-                  if(traits_indices.indexOf(d)>=0) return "checked";
-                  return null;
-                });
-            label.append("p").text(function(d,i){return var_data[i][var_name_index]});
-        });
-
-    categories.enter().append("div").attr("class","radio")
-        .append("label")
-        .attr("title", function(d,i){return var_data[i][var_desc_index]})
-        .call(function(label){
-            label.append("input").attr("type","radio").attr("name","category")
-                .attr("value",function(d,i){return d})
-                .attr("checked",function(d){
-                  if(caths_index == d) return "checked";
-                  return null;
-                });
-            label.append("p").text(function(d,i){return var_data[i][var_name_index]});
-        });
-
-    //cats_list.find("input").filter(function(index, element){return caths_index == element.value;}).prop("checked", true);
-
-
-    //------ samples -------
-    var sample_name_index = data["samples"]["columns"].indexOf("sample_name");
-    var sample_desc_index = data["samples"]["columns"].indexOf("sample_desc");
-    var sample_size_index = data["samples"]["columns"].indexOf("sample_size");
-
-    var samples_data = data["samples"]["data"];
-
-    var samples_items =samples_list.selectAll("div.checkbox").data(data["samples"]["index"]);
-
-    samples_items.enter().append("div").attr("class","radio")
-        .append("label")
-        .attr("title", function(d,i){
-                return samples_data[i][sample_desc_index];
-            })
-        .call(function(label){
-            label.append("input").attr("type","radio").attr("name","sample")
-                .attr("value",function(d,i){return d})
-                .attr("checked",function(d){
-                  if(d=="sample") return "checked";
-                  return null;
-                });
-            label.append("p").text(function(d,i){
-                return samples_data[i][sample_name_index] +" ("+ samples_data[i][sample_size_index]+ ")";
-            });
-        });
+    url = "parallel/data/values?category="+new_cat_idx+"&variables="+new_traits;
+    if (selected_sample){
+    url+="&sample="+selected_sample;
+    sample_id=selected_sample;
+    }
+    console.log(url);
+    $.getJSON(url, function(r){
+    set_all_data(r.sample, r.missing, r.data, r.categories, r.vars, r.var_indices, r.cat_idx );
     });
 }
 
-function hide_variable_select_panel(){
-$("#variable-select-panel").addClass("hidden");
-$("#change-vars-buttons").removeClass("hidden");
-}
-
-$("#change-vars-buttons").click(show_variable_select_panel);
-$("#variable-select-panel button.close").click(hide_variable_select_panel);
-$("#cancel_variable_selection").click(hide_variable_select_panel);
-
-function filter_variables_list(list, mask){
-mask=mask.toUpperCase();
-$(list).children("div.variable-list div").addClass("hidden");
-$(list).children("div.variable-list div").filter(function (){return this.textContent.toUpperCase().indexOf(mask)>=0 }).removeClass("hidden");
-}
-
-$("#search-vars").change(function(){
-            filter_variables_list($("#select-variables-tab div.variable-list"),
-            $("#search-vars").val());
-            });
-
-$("#search-cats").change(function(){
-            filter_variables_list($("#categories-list-tab div.variable-list"),
-            $("#search-cats").val());
-            });
-
-function clear_list(){
-$("#select-variables-tab").find("div.variable-list input").prop("checked", false);
-}
-$("#clear_checked_variables").click(clear_list);
-
-$('#variable-control-tabs a').click(function (e) {
-  e.preventDefault()
-  $(this).tab('show')
-})
-
-
-function apply_new_variables(){
-var new_cat_idx = $("#categories-list-tab div.variable-list").find("input").filter(function(i,e){return e.checked;}).val();
-var checked_boxes = $("#select-variables-tab div.variable-list").find("input").filter(function(i,e){return e.checked;});
-var selected_sample = $("#samples-list-tab div.samples-list").find("input").filter(function(i,e){return e.checked;}).val();
-
-var new_traits = "";
-for (i=0; i<checked_boxes.length; i++){
-if (i>0) new_traits+=",";
-new_traits+=checked_boxes[i].value;
-}
-
-update_url(new_cat_idx, new_traits, selected_sample);
-hide_variable_select_panel();
-
-url = "parallel/data/values?category="+new_cat_idx+"&variables="+new_traits;
-if (selected_sample){
-url+="&sample="+selected_sample;
-sample_id=selected_sample;
-}
-console.log(url);
-$.getJSON(url, function(r){
-set_all_data(r.sample, r.missing, r.data, r.categories, r.vars, r.var_indices, r.cat_idx );
-});
-}
-
+braviz.configure_variables_and_samples_dialog("#change-vars-buttons","#variable-select-panel",
+ function(){
+    return {
+        trait_indices: traits_indices,
+        cats_index: caths_index,
+        sample_index : sample_id
+    }
+    },
+  apply_new_variables);
 
 
 $("#apply-variable-change").click(apply_new_variables);
