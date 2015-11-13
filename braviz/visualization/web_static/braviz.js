@@ -36,7 +36,7 @@ var raw_socket;
 
 //---------------------------------------------------------------
 function configure_variables_and_samples_dialog(button_selector, dialog_selector,
- get_current_cats_trait_ids_sample_id, apply_callback){
+ get_current_cats_trait_ids_sample_id, apply_callback, one_variable){
 
     // TODO: Remove all id selectors
 
@@ -70,13 +70,21 @@ function configure_variables_and_samples_dialog(button_selector, dialog_selector
             var variables = vars_list.selectAll("div.checkbox").data(var_data);
             var categories = cats_list.selectAll("div.radio").data(var_data.filter(function(e){return e.is_real == 0}));
 
-            variables.enter().append("div").attr("class","checkbox")
+            var input_type;
+            if (one_variable){
+                input_type = "radio";
+            }
+            else{
+                input_type = "checkbox";
+            }
+
+            variables.enter().append("div").attr("class",input_type)
                 .append("label")
                 .attr("title", function(d){
                         return d.desc;
                     })
                 .call(function(label){
-                    label.append("input").attr("type","checkbox").attr("name","variable")
+                    label.append("input").attr("type",input_type).attr("name","variable")
                         .attr("value",function(d){return d.index})
                         .attr("checked",function(d){
                           if(traits_indices.indexOf(d.index)>=0) return "checked";
