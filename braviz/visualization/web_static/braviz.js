@@ -3,7 +3,6 @@ var braviz = (function(){
 //-------------------------------------------
 function connect_to_ws(message_handler){
 var last_message = null;
-var message_getter = null;
 var errorSleepTime = 500;
 var raw_socket;
  function openWS() {
@@ -18,9 +17,9 @@ var raw_socket;
       if (last_message==e.data){
       return;
       }
-      message = JSON.parse(e.data);
+      var message = JSON.parse(e.data);
       message_handler(message);
-      }
+      };
       raw_socket.onclose = function(e) {
       window.setTimeout(openWS, errorSleepTime);
     };
@@ -30,7 +29,7 @@ var raw_socket;
   socket.send = function(msg){
     last_message = msg;
     raw_socket.send(msg);
-  }
+  };
   return socket;
 }
 
@@ -146,13 +145,13 @@ function configure_variables_and_samples_dialog(button_selector, dialog_selector
     $(list).children("div.variable-list div").filter(function (){return this.textContent.toUpperCase().indexOf(mask)>=0 }).removeClass("hidden");
     }
 
-    $("#search-vars").change(function(){
-                filter_variables_list($("#select-variables-tab div.variable-list"),
+    $("#search-vars").bind("input", function(){
+                filter_variables_list($("#select-variables-tab").find("div.variable-list"),
                 $("#search-vars").val());
                 });
 
-    $("#search-cats").change(function(){
-                filter_variables_list($("#categories-list-tab div.variable-list"),
+    $("#search-cats").bind("input", function(){
+                filter_variables_list($("#categories-list-tab").find("div.variable-list"),
                 $("#search-cats").val());
                 });
 
@@ -161,16 +160,16 @@ function configure_variables_and_samples_dialog(button_selector, dialog_selector
     }
     $("#clear_checked_variables").click(clear_list);
 
-    $('#variable-control-tabs a').click(function (e) {
+    $('#variable-control-tabs').find('a').click(function (e) {
       e.preventDefault()
       $(this).tab('show')
-    })
+    });
 
 
     function apply_new_variables(){
-    var new_cat_idx = $("#categories-list-tab div.variable-list").find("input").filter(function(i,e){return e.checked;}).val();
-    var checked_boxes = $("#select-variables-tab div.variable-list").find("input").filter(function(i,e){return e.checked;});
-    var selected_sample = $("#samples-list-tab div.samples-list").find("input").filter(function(i,e){return e.checked;}).val();
+    var new_cat_idx = $("#categories-list-tab").find("div.variable-list").find("input").filter(function(i,e){return e.checked;}).val();
+    var checked_boxes = $("#select-variables-tab").find("div.variable-list").find("input").filter(function(i,e){return e.checked;});
+    var selected_sample = $("#samples-list-tab").find("div.samples-list").find("input").filter(function(i,e){return e.checked;}).val();
     var new_trait_indices = checked_boxes.map(function(i, e){return e.value});
     if (one_variable){
         new_trait_indices = new_trait_indices[0];

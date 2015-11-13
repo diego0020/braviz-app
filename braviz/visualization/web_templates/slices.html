@@ -436,7 +436,7 @@ console.log(msg);
         $("#variable-select").attr("value",var_name);
         $("#variables-modal").modal("hide");
     });
-    d3.select("#variable-search").on("search",function(d,i){
+    d3.select("#variable-search").on("input",function(d,i){
         var search_string = this.value.toLowerCase();
         d3.select("#variables-list").selectAll("div.radio").classed("hidden",function(d){
             return d.var_name.toLowerCase().indexOf(search_string)<0;
