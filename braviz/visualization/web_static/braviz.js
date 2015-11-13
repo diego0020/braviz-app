@@ -87,7 +87,10 @@ function configure_variables_and_samples_dialog(button_selector, dialog_selector
                     label.append("input").attr("type",input_type).attr("name","variable")
                         .attr("value",function(d){return d.index})
                         .attr("checked",function(d){
-                          if(traits_indices.indexOf(d.index)>=0) return "checked";
+                            if ((one_variable && traits_indices == d.index)
+                                || (!one_variable && (traits_indices.indexOf(d.index)>=0) )){
+                                return "checked";
+                            }
                           return null;
                         });
                     label.append("p").text(function(d){return d.var_name});
@@ -169,6 +172,10 @@ function configure_variables_and_samples_dialog(button_selector, dialog_selector
     var checked_boxes = $("#select-variables-tab div.variable-list").find("input").filter(function(i,e){return e.checked;});
     var selected_sample = $("#samples-list-tab div.samples-list").find("input").filter(function(i,e){return e.checked;}).val();
     var new_trait_indices = checked_boxes.map(function(i, e){return e.value});
+    if (one_variable){
+        new_trait_indices = new_trait_indices[0];
+    }
+
     apply_callback(new_cat_idx, new_trait_indices, selected_sample);
     hide_variable_select_panel();
     }

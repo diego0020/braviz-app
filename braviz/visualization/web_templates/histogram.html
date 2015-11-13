@@ -82,6 +82,15 @@ var x;
 var y;
 var subject_to_bin;
 var stacked;
+var full_data;
+
+var variable_id;
+var variable_name;
+var categories_id;
+var categories_name;
+var sample_id;
+
+var arrow;
 
 var margin = {top: 70, right: 30, bottom: 50, left: 30},
         width = v_width - margin.left - margin.right,
@@ -94,20 +103,36 @@ svg = d3.select("#histogram").append("svg")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-function draw_histogram(input_data, var_name, color_name, color_levels){
+function draw_histogram(input_data, var_name, color_name, color_levels,
+                        in_variable_id, in_categories_id, in_sample_id, in_sample){
+
+    // Reset canvas
+
+    svg.text("");
+    add_arrow();
 
     // Create style for each layer in the stacked
-    var colors = d3.scale.ordinal().domain(color_levels).range(colorbrewer.Set1[Math.max(color_levels.length, 3)])
+    var colors = d3.scale.ordinal().domain(color_levels).range(colorbrewer.Set1[Math.max(color_levels.length, 3)]);
     var color_style = "";
+
+    var sample_set = d3.set(in_sample);
+    full_data = input_data;
+    variable_id = in_variable_id;
+    variable_name = var_name;
+    categories_id = in_categories_id;
+    categories_name = color_name;
+    sample_id = in_sample_id;
+
     color_levels.forEach( function(e,i){
         var c = colors(e);
-        var st = ".level" + i + " { fill : " + c + " ; }" + "\n";
-        color_style += st;
+        color_style += ".level" + i + " { fill : " + c + " ; }" + "\n";
     });
 
     var sheet = document.createElement('style');
     sheet.innerHTML = color_style;
     document.body.appendChild(sheet);
+
+    var hist_data = input_data.filter(function(e){return sample_set.has(e.index);});
 
 
     // A formatter for counts.
@@ -121,7 +146,7 @@ function draw_histogram(input_data, var_name, color_name, color_levels){
     var hists = color_levels.map(function(c){
             var h=d3.layout.histogram()
             .value(function(v){return v[var_name];}).bins(x.ticks(20))
-            (input_data.filter(function(e){return e[color_name] == c}));
+            (hist_data.filter(function(e){return e[color_name] == c}));
             h.forEach(function(b){b.color=c});
             return h;
         });
@@ -130,7 +155,7 @@ function draw_histogram(input_data, var_name, color_name, color_levels){
         .values(function(d){
                 return d
             })
-        (hists)
+        (hists);
 
     d3.zip(stacked,color_levels).forEach(function(e,i){
         e[0].color = e[1];
@@ -148,8 +173,7 @@ function draw_histogram(input_data, var_name, color_name, color_levels){
         .orient("bottom");
 
     function create_title_msg(bin){
-    var msg = bin.color+ " ("+ formatRange(bin.x)+ " , "+ formatRange(bin.x + bin.dx) + ") : " + formatCount(bin.length);
-    return msg;
+        return bin.color + " (" + formatRange(bin.x) + " , " + formatRange(bin.x + bin.dx) + ") : " + formatCount(bin.length);
     }
 
     subject_to_bin = d3.map();
@@ -218,7 +242,7 @@ function draw_histogram(input_data, var_name, color_name, color_levels){
             .text(function(d){return d});
 }
 
-var arrow;
+
 function add_arrow(){
     arrow = svg.append("g").attr("class", "arrow").attr("transform","translate(100,100)");
     arrow.append("g").attr("transform","translate(0,-45)").append("text").text("999");
@@ -269,27 +293,59 @@ function receive_message(message){
 
 //---------------------------------interface-------------------------------------
 
-function apply_new_variables(){}
+function get_vars_and_sample_ids(){
+    return {
+        trait_indices : variable_id,
+        cats_index : categories_id,
+        sample_index : sample_id
+    }
+}
 
+function apply_new_variables(new_cat_idx, new_trait_indices, selected_sample){
+    var url = "histogram/data?color="+new_cat_idx+"&variable="+new_trait_indices+"&sample="+selected_sample;
+    d3.json(url, function(error, data){
+        if(error){
+            alert("could not connect to server, please verify it is running");
+        }
+        var in_data = data["data"];
+        var var_name = data["var_name"];
+        var color_name = data["color_name"];
+        var color_levels = data["color_levels"];
+        var in_var_id = data["variable_id"];
+        var in_cats_id = data["categories_id"];
+        var in_sample_id = data["sample_id"];
+        var in_sample = data["sample"];
+        draw_histogram(in_data, var_name, color_name, color_levels, in_var_id, in_cats_id, in_sample_id, in_sample)
+        update_url();
+    })
+}
+
+
+function update_url(){
+    state_obj = {"cat":categories_id, "variable":variable_id, "sample_id":sample_id};
+    new_url = "histogram?var="+variable_name+"&color="+categories_name;
+    if (Number(sample_id)){
+        new_url+="&sample="+sample_id;
+    }
+    history.replaceState(state_obj, "", new_url);
+}
 
 window.onload=function(){
     var input_data = {% raw values %};
     var var_name ="{{ var_name }}";
     var color_name ="{{ color_name }}";
     var color_levels =  {% raw json_encode(color_levels) %};
-    draw_histogram(input_data, var_name, color_name, color_levels);
-    add_arrow();
+    var in_variable_id = {% raw variable_id %};
+    var in_categories_id = {% raw categories_id %};
+    var in_sample_id = {% raw sample_id %};
+    var in_sample = {% raw json_encode(sample) %};
+
+    draw_histogram( input_data, var_name, color_name, color_levels,
+                    in_variable_id, in_categories_id, in_sample_id, in_sample);
     braviz.connect_to_ws(receive_message);
     braviz.configure_variables_and_samples_dialog("#change-vars-buttons","#variable-select-panel",
-         function(){
-            return {
-                trait_indices: [],
-                cats_index: null,
-                sample_index : null
-            }
-            },
-  apply_new_variables, true);
-
+        get_vars_and_sample_ids,
+        apply_new_variables, true);
 };
 
 </script>

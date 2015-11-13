@@ -325,7 +325,66 @@ class HistogramHandler(tornado.web.RequestHandler):
         df[color_name] = df[color_name].map(labels)
         levels = list(labels.values())
         data = df.to_json(orient="records")
-        self.render("histogram.html",values=data, var_name=var_name, color_name=color_name, color_levels=levels)
+
+        variable_id = tab_data.get_var_idx(var_name)
+        categories_id = tab_data.get_var_idx(color_name)
+        sample_id = "null"
+
+        sample_param = self.get_argument("sample", None)
+        if sample_param is not None:
+            sample_id = sample_param
+            sample = sorted(user_data.get_sample_data(sample_param))
+        else:
+            sample = sorted(tab_data.get_subjects())
+
+        self.render("histogram.html",values=data, var_name=var_name, color_name=color_name, color_levels=levels,
+                    variable_id=variable_id, categories_id=categories_id, sample_id=sample_id, sample=sample)
+
+class HistogramDataHandler(tornado.web.RequestHandler):
+    """
+    Implements a simple web page for changing the current subject from a mobile.
+
+    """
+
+    def get(self):
+        var_index = int(self.get_argument("variable"))
+        color_index = int(self.get_argument("color"))
+        try:
+            sample_param = int(self.get_argument("sample"))
+        except ValueError:
+            sample_param = None
+
+        df = tab_data.get_data_frame_by_index([var_index,color_index])
+        variable_name, categories_name = df.columns
+        df.dropna(inplace=True)
+        df["index"]=df.index.astype(str)
+        labels = tab_data.get_labels_dict(var_idx=color_index)
+        for i, (k, v) in enumerate(labels.iteritems()):
+            if v is None or len(v) == 0:
+                v = "level_%d" % i
+            labels[k] = v
+        df[categories_name] = df[categories_name].map(labels)
+        levels = list(labels.values())
+        data_json = df.to_json(orient="records")
+        sample_id = "null"
+
+        if sample_param is not None:
+            sample_id = sample_param
+            sample = sorted(user_data.get_sample_data(sample_param))
+        else:
+            sample = sorted(tab_data.get_subjects())
+
+
+        ans = """{{ "data" : {data}, "var_name" : "{var_name}", "color_name" : "{color_name}",
+         "color_levels" : {levels_dict},
+         "variable_id" : {var_id}, "categories_id" : {cat_id}, "sample_id" : "{sample_id}",
+          "sample" : {sample} }}""".format(data = data_json, var_name = variable_name, color_name = categories_name,
+                                          levels_dict = json.dumps(levels),
+                                          var_id = var_index, cat_id = color_index, sample_id = sample_id,
+                                          sample = json.dumps(sample))
+        self.write(ans)
+        self.set_header("Content-Type", "application/json")
+
 
 class SessionIndexHandler(tornado.web.RequestHandler):
     """

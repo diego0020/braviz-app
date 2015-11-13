@@ -63,6 +63,7 @@ if __name__ == "__main__":
                 {"socket_manager": socket_manager}),
             (r"/subject", d3_visualizations.SubjectSwitchHandler),
             (r"/histogram", d3_visualizations.HistogramHandler),
+            (r"/histogram/data", d3_visualizations.HistogramDataHandler),
             (r"/history", d3_visualizations.SessionIndexHandler),
             (r"/history/data/(.*)", d3_visualizations.SessionDataHandler),
             (r"/slices", d3_visualizations.SliceViewerHandler),
