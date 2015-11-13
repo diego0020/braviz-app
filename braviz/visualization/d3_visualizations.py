@@ -188,10 +188,12 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
         descriptions = tab_data.get_descriptions_dict()
         vars_df["desc"]=pd.Series(descriptions)
         vars_df.loc[vars_df["desc"].isnull(),"desc"] = ""
-        vars_json = vars_df.to_json(orient="split")
+        vars_df["index"]=vars_df.index
+        vars_json = vars_df.to_json(orient="records")
 
         samples_df = user_data.get_samples_df()
-        samples_json = samples_df.to_json(orient="split")
+        samples_df["index"]=samples_df.index
+        samples_json = samples_df.to_json(orient="records")
 
         full_json = '{"variables" : %s , "samples" : %s }'%(vars_json, samples_json)
         return full_json
