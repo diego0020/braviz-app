@@ -375,13 +375,18 @@ class HistogramDataHandler(tornado.web.RequestHandler):
             sample = sorted(tab_data.get_subjects())
 
 
-        ans = """{{ "data" : {data}, "var_name" : "{var_name}", "color_name" : "{color_name}",
+        ans = """{{ "data" : {data}, "var_name" : {var_name}, "color_name" : {color_name},
          "color_levels" : {levels_dict},
-         "variable_id" : {var_id}, "categories_id" : {cat_id}, "sample_id" : "{sample_id}",
-          "sample" : {sample} }}""".format(data = data_json, var_name = variable_name, color_name = categories_name,
-                                          levels_dict = json.dumps(levels),
-                                          var_id = var_index, cat_id = color_index, sample_id = sample_id,
-                                          sample = json.dumps(sample))
+         "variable_id" : {var_id}, "categories_id" : {cat_id}, "sample_id" : {sample_id},
+          "sample" : {sample} }}""".format(data = data_json,
+                                           var_name = json.dumps(variable_name,cls=NpJSONEncoder),
+                                           color_name = json.dumps(categories_name,cls=NpJSONEncoder),
+                                           levels_dict = json.dumps(levels,cls=NpJSONEncoder),
+                                           var_id = json.dumps(var_index,cls=NpJSONEncoder),
+                                           cat_id = json.dumps(color_index,cls=NpJSONEncoder),
+                                           sample_id = json.dumps(sample_id,cls=NpJSONEncoder),
+                                           sample = json.dumps(sample,cls=NpJSONEncoder)
+                                           )
         self.write(ans)
         self.set_header("Content-Type", "application/json")
 
