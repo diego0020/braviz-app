@@ -25,8 +25,9 @@ import tornado.web
 
 
 import pandas as pd
+import numpy as np
 from braviz.readAndFilter import tabular_data as tab_data, user_data, log_db
-from braviz.readAndFilter.cache import memoize
+from braviz.readAndFilter.cache import memoize, memo_ten
 from braviz.readAndFilter.config_file import get_apps_config
 from braviz.interaction.connection import NpJSONEncoder
 
@@ -703,3 +704,64 @@ class SliceViewerDataHandler(tornado.web.RequestHandler):
             out_buffer = StringIO()
             pillow_img.save(out_buffer,"png")
             return out_buffer.getvalue()
+
+
+class BarsHandler(tornado.web.RequestHandler):
+    """
+    Implements a simple web page for changing the current subject from a mobile.
+
+    """
+    def get(self):
+        subj = self.get_argument("subject",None)
+        vars = self.get_argument("variables",None)
+        if vars is None:
+            vars = ParallelCoordinatesHandler.get_default_vars()
+        if subj is None:
+            subj = get_apps_config().get_default_subject()
+
+        self.render("var_values.html",variables=vars,subject=subj)
+
+
+
+class BarsDataHandler(tornado.web.RequestHandler):
+    """
+    Implements a simple web page for changing the current subject from a mobile.
+
+    """
+    def get(self):
+        variables=tuple(self.get_argument("variables").split(","))
+        subject = self.get_argument("subj")
+        df = tab_data.get_subject_variables(subject, variables)
+        meta_df= self.get_vars_meta(variables)
+        real_df = df.merge(meta_df)
+        nom_df = df.loc[df.index.isin(real_df["index"])==False]
+        nom_df.loc[:,"index"]=nom_df.index
+
+        full_json='{{ "real" : {real_df} , "nominal" : {nom_df} }}'.format(
+            real_df=real_df.to_json(orient="records"),
+            nom_df=nom_df.to_json(orient="records")
+        )
+
+        self.write(full_json)
+        self.set_header("Content-Type", "application/json")
+
+    @staticmethod
+    @memo_ten
+    def get_vars_meta(variables):
+        real_meta = []
+        for v in variables:
+            var_real = tab_data.is_variable_real(v)
+            if var_real:
+                vm={
+                    "name" : tab_data.get_var_name(v),
+                }
+                var_min, var_max = tab_data.get_min_max_values(v)
+                vm["index"]=v
+                vm["min"]=var_min
+                vm["max"]=var_max
+                real_meta.append(vm)
+        df = pd.DataFrame.from_records(real_meta,index="index")
+        df["index"]=df.index
+        return df
+
+

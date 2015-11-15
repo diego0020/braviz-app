@@ -3,19 +3,164 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Braviz subject values</title>
+    <link rel="shortcut icon" href="{{ static_url ('favicon.png') }}"/>
+    <link href="{{ static_url('bootstrap-3.3.4/css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <style>
+        h1 {
+            text-align: center;
+        }
+
+        text.label{
+            fill : gray;
+        }
+
+        rect.bar{
+            fill : #2F2F94;
+        }
+
+        text.nom-value {
+            font-size: 200%;
+        }
+
+    </style>
+
+
 </head>
 <body>
 
-<div>
-    <div>
-        <label>Wisc</label>
-    </div>
-    <div>
-        <label>Wisc</label>
-    </div>
 
-</div>
+<h1> Subject <span id="subj-id">999</span></h1>
+
+<div id="bars"></div>
 
 
+<script type="text/javascript" src="{{ static_url ('d3/d3.js') }}"></script>
+<script type="text/javascript" src="{{ static_url ('d3/colorbrewer.js') }}"></script>
+<script type="text/javascript" src="{{ static_url ('jquery-2.1.3.min.js') }}"></script>
+<script src="{{ static_url ('bootstrap-3.3.4/js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ static_url ('braviz.js') }}"></script>
+<script>
+
+    var bars_svg;
+    var nom_svg;
+    var width;
+    var height;
+    var value_offset;
+    var bar_offset;
+    var subject_label;
+
+    function initialize(){
+        var v_width = window.innerWidth * 0.95;
+        var v_height = window.innerHeight * 0.90;
+        var margin = {top: 100, right: 30, bottom: 50, left: 30};
+        width = v_width - margin.left - margin.right;
+        height = v_height - margin.top - margin.bottom;
+        value_offset = 200;
+        bar_offset = 250;
+        var variables;
+
+
+        svg = d3.select("#bars").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        bars_svg=svg.append("g").attr("class","bars");
+        nom_svg=svg.append("g").attr("class","nom");
+        subject_label=d3.select("#subj-id");
+    };
+
+
+    function update_bars(in_data, lower_margin){
+        var bars = bars_svg.selectAll("g.bar-group")
+            .data(in_data, function(d){return d.index;});
+
+        var y = d3.scale.linear()
+            .domain([0, in_data.length])
+            .range( [0, lower_margin]);
+        var bar_size = lower_margin/(in_data.length+1);
+
+        bars.enter().append("g").attr("class","bar-group")
+            .attr("transform", function(d,i){return "translate(0,"+y(i)+")";})
+            .call(function(g){
+                g.append("text").attr("class","label")
+                    .attr("x",value_offset-10)
+                    .attr("text-anchor","end")
+                    .text(function(d){return d.name});
+
+                g.append("text").attr("class","value")
+                    .attr("transform", function(d,i){return "translate("+value_offset+")";})
+                    .text(0);
+
+                g.append("rect").attr("class","bar").attr("x",bar_offset).attr("y",bar_size/-2)
+                    .attr("height", bar_size)
+                    .attr("width",0);
+                });
+
+
+        bars.select("text.value")
+            .text(function(d){return d.value});
+
+        bars.select("rect.bar")
+            .transition("animate-width")
+            .attr("width", function(d){
+                        return d3.scale.linear().domain([d.min, d.max]).range([0,width-bar_offset])(d.value);
+            });
+
+    };
+
+    function update_nom(in_data, top_margin){
+        var noms = nom_svg.selectAll("g.nom").data(in_data,function(d){return d.index});
+
+        var y = d3.scale.linear()
+            .domain([0, in_data.length])
+            .range( [top_margin, height]);
+
+        noms.enter().append("g").attr("class","nom")
+            .attr("transform",function(d,i){return "translate(0,"+y(i)+")";})
+            .call(function(g){
+                g.append("text").attr("class","label")
+                    .attr("x",value_offset-10)
+                    .attr("text-anchor","end")
+                    .text(function(d){return d.name});
+
+                g.append("text").attr("class","nom-value")
+                    .attr("transform", function(d,i){return "translate("+bar_offset+")";})
+                    .text("");
+            });
+
+        noms.select("text.nom-value").text(function(d){return d.value;});
+    }
+
+    function update_all(vars, subject){
+        var url = "bars/data?subj="+subject+"&variables="+vars[0];
+        vars.slice(1).forEach(function(v){
+            url+=","+v;
+            });
+
+        variables = vars;
+
+        d3.json(url,function(error,data){
+            subject_label.text(subject);
+            var real_data = data["real"];
+            var nom_data = data["nominal"];
+            var bars_height = height*real_data.length/(real_data.length+nom_data.length);
+            update_bars(real_data, bars_height);
+            update_nom(nom_data, bars_height);
+        });
+    }
+
+    function start(){
+        variables=[{% raw variables %}];
+        subject = {% raw subject %};
+        initialize();
+        update_all(variables, subject)
+
+    }
+
+    start();
+
+</script>
 </body>
 </html>

@@ -68,6 +68,8 @@ if __name__ == "__main__":
             (r"/history/data/(.*)", d3_visualizations.SessionDataHandler),
             (r"/slices", d3_visualizations.SliceViewerHandler),
             (r"/slices/data/(.*)", d3_visualizations.SliceViewerDataHandler),
+            (r"/bars", d3_visualizations.BarsHandler),
+            (r"/bars/data", d3_visualizations.BarsDataHandler),
             (r"/", d3_visualizations.IndexHandler),
         ],
         **settings)
