@@ -35,7 +35,8 @@ var raw_socket;
 
 //---------------------------------------------------------------
 function configure_variables_and_samples_dialog(button_selector, dialog_selector,
- get_current_cats_trait_ids_sample_id, apply_callback, one_variable){
+ get_current_cats_trait_ids_sample_id, apply_callback, one_variable,
+ disable_samples, disable_categories, disable_traits){
 
     // TODO: Remove all id selectors
 
@@ -44,7 +45,7 @@ function configure_variables_and_samples_dialog(button_selector, dialog_selector
     function show_variable_select_panel(){
 
         var cats_vars_traits = get_current_cats_trait_ids_sample_id();
-        var traits_indices = cats_vars_traits["trait_indices"];
+        var traits_indices = cats_vars_traits["trait_indices"].map(function(x){return Number(x);});
         var cats_index = cats_vars_traits["cats_index"];
         var sample_index = cats_vars_traits["sample_index"];
 
@@ -54,6 +55,18 @@ function configure_variables_and_samples_dialog(button_selector, dialog_selector
         var vars_list = d3.select("#select-variables-tab div.variable-list");
         var cats_list = d3.select("#categories-list-tab div.variable-list");
         var samples_list = d3.select("#samples-list-tab div.samples-list");
+
+        if(disable_samples){
+            $(dialog_selector).find('a[href="#samples-list-tab"]').parent().addClass("hidden");
+        }
+
+        if(disable_categories){
+            $(dialog_selector).find('a[href="#categories-list-tab"]').parent().addClass("hidden");
+        }
+
+        if(disable_traits){
+            $(dialog_selector).find('a[href="#select-variables-tab"]').parent().addClass("hidden");
+        }
 
         vars_list.html("");
         cats_list.html("");
@@ -170,7 +183,7 @@ function configure_variables_and_samples_dialog(button_selector, dialog_selector
     var new_cat_idx = $("#categories-list-tab").find("div.variable-list").find("input").filter(function(i,e){return e.checked;}).val();
     var checked_boxes = $("#select-variables-tab").find("div.variable-list").find("input").filter(function(i,e){return e.checked;});
     var selected_sample = $("#samples-list-tab").find("div.samples-list").find("input").filter(function(i,e){return e.checked;}).val();
-    var new_trait_indices = checked_boxes.map(function(i, e){return e.value});
+    var new_trait_indices = checked_boxes.map(function(i, e){return e.value}).toArray();
     if (one_variable){
         new_trait_indices = new_trait_indices[0];
     }

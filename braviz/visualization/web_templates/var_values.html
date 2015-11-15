@@ -32,6 +32,8 @@
 
 <h1> Subject <span id="subj-id">999</span></h1>
 
+{% include "variables_and_samples_dialog.html" %}
+
 <div id="bars"></div>
 
 
@@ -49,6 +51,9 @@
     var value_offset;
     var bar_offset;
     var subject_label;
+    var socket;
+    var variables;
+    var subject;
 
     function initialize(){
         var v_width = window.innerWidth * 0.95;
@@ -58,7 +63,7 @@
         height = v_height - margin.top - margin.bottom;
         value_offset = 200;
         bar_offset = 250;
-        var variables;
+
 
 
         svg = d3.select("#bars").append("svg")
@@ -82,7 +87,7 @@
         var bar_size = lower_margin/(in_data.length+1);
 
         bars.enter().append("g").attr("class","bar-group")
-            .attr("transform", function(d,i){return "translate(0,"+y(i)+")";})
+            .attr("transform", function(d,i){return "translate(0,0)";})
             .call(function(g){
                 g.append("text").attr("class","label")
                     .attr("x",value_offset-10)
@@ -93,19 +98,25 @@
                     .attr("transform", function(d,i){return "translate("+value_offset+")";})
                     .text(0);
 
-                g.append("rect").attr("class","bar").attr("x",bar_offset).attr("y",bar_size/-2)
-                    .attr("height", bar_size)
+                g.append("rect").attr("class","bar").attr("x",bar_offset).attr("y",0)
+                    .attr("height", 0)
                     .attr("width",0);
                 });
 
+        bars.exit().remove();
 
         bars.select("text.value")
             .text(function(d){return d.value});
 
+        bars.transition("reposition").attr("transform", function(d,i){return "translate(0,"+y(i)+")";})
+
         bars.select("rect.bar")
             .transition("animate-width")
+            .attr("y",bar_size/-2)
+            .attr("height", bar_size)
             .attr("width", function(d){
-                        return d3.scale.linear().domain([d.min, d.max]).range([0,width-bar_offset])(d.value);
+                        return d3.scale.linear().domain([d.min, d.max])
+                                .range([0,width-bar_offset]).clamp(true)(d.value);
             });
 
     };
@@ -118,7 +129,7 @@
             .range( [top_margin, height]);
 
         noms.enter().append("g").attr("class","nom")
-            .attr("transform",function(d,i){return "translate(0,"+y(i)+")";})
+            .attr("transform",function(d,i){return "translate(0,0)";})
             .call(function(g){
                 g.append("text").attr("class","label")
                     .attr("x",value_offset-10)
@@ -130,18 +141,28 @@
                     .text("");
             });
 
+        noms.exit().remove();
+
+        noms.transition("reposition").attr("transform",function(d,i){return "translate(0,"+y(i)+")";})
+
         noms.select("text.nom-value").text(function(d){return d.value;});
     }
 
-    function update_all(vars, subject){
-        var url = "bars/data?subj="+subject+"&variables="+vars[0];
+    function update_all(vars, subj){
+        var url = "bars/data?subj="+subj+"&variables="+vars[0];
         vars.slice(1).forEach(function(v){
             url+=","+v;
             });
 
-        variables = vars;
-
+        update_url();
         d3.json(url,function(error,data){
+            if (error){
+                alert("Could not connect to Braviz Server, please check it is running");
+                return;
+            }
+
+            variables = vars;
+            subject = subj;
             subject_label.text(subject);
             var real_data = data["real"];
             var nom_data = data["nominal"];
@@ -151,15 +172,49 @@
         });
     }
 
+
+    function receive_message(msg){
+        if (msg["type"] == "subject"){
+            var subj = msg["subject"];
+            update_all(variables, subj);
+        }
+
+    }
+
+    function get_current_variables(){
+        return {
+            "trait_indices" : variables,
+            "cats_index" : null,
+            "sample_index" : null
+        };
+    }
+
+    function change_variables(new_cats, new_variables){
+        update_all(new_variables, subject);
+    }
+
+    function update_url(){
+        state_obj = {"variables":variables, "subject" : subject};
+        new_url = "bars?subject="+subject+"&variables="+variables[0];
+        variables.slice(1).forEach(function(v){
+            new_url+=","+v;
+        });
+
+        history.replaceState(state_obj, "", new_url);
+    }
+
     function start(){
         variables=[{% raw variables %}];
         subject = {% raw subject %};
         initialize();
-        update_all(variables, subject)
-
+        update_all(variables, subject);
+        socket = braviz.connect_to_ws(receive_message);
+        braviz.configure_variables_and_samples_dialog("#change-vars-buttons","#variable-select-panel",
+        get_current_variables,
+        change_variables, false, true, true, false);
     }
 
-    start();
+    $(start);
 
 </script>
 </body>

@@ -734,8 +734,12 @@ class BarsDataHandler(tornado.web.RequestHandler):
         df = tab_data.get_subject_variables(subject, variables)
         meta_df= self.get_vars_meta(variables)
         real_df = df.merge(meta_df)
+
         nom_df = df.loc[df.index.isin(real_df["index"])==False]
         nom_df.loc[:,"index"]=nom_df.index
+
+        real_df.sort_values(by="name")
+        nom_df.sort_values(by="name")
 
         full_json='{{ "real" : {real_df} , "nominal" : {nom_df} }}'.format(
             real_df=real_df.to_json(orient="records"),

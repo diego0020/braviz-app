@@ -210,12 +210,10 @@ var foreground;
 var line = d3.svg.line(),
         axis = d3.svg.axis().orient("left");
 
-function max(x,y){ return x > y ? x : y ; }
-
 function create_plot(new_flowers, categories, new_traits) {
     flowers = new_flowers;
     traits = new_traits;
-    var colors = d3.scale.ordinal().domain(categories).range(colorbrewer.Set1[max(categories.length, 3)])
+    var colors = d3.scale.ordinal().domain(categories).range(colorbrewer.Set1[Math.max(categories.length, 3)])
     var color_style = "";
     for (i in categories) {
         var sp = categories[i];
