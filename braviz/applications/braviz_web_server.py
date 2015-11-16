@@ -70,6 +70,7 @@ if __name__ == "__main__":
             (r"/slices/data/(.*)", d3_visualizations.SliceViewerDataHandler),
             (r"/bars", d3_visualizations.BarsHandler),
             (r"/bars/data", d3_visualizations.BarsDataHandler),
+            (r"/dialog/data", d3_visualizations.DialogDataHandler),
             (r"/", d3_visualizations.IndexHandler),
         ],
         **settings)

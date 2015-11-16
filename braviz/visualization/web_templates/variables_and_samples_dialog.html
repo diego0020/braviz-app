@@ -1,18 +1,20 @@
 <style>
 
-    button#change-vars-buttons {
+button#bvz-change-vars-buttons {
   position: absolute;
   right: 1em;
   top: 1em;
 }
-div#variable-select-panel {
+
+div#bvz-variable-select-panel {
         max-width: 50%;
         z-index : 2;
         position: absolute;
         right: 1em;
         top: 1em;
         }
-#variable-select-panel div.well{
+
+#bvz-variable-select-panel div.well{
   overflow: scroll;
   max-height: 60vh;
   height: 60vh;
@@ -22,66 +24,73 @@ div#variable-select-panel {
 
 </style>
 
-<button class="btn btn-default" id="change-vars-buttons"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
+<button class="btn btn-default" id="bvz-change-vars-buttons"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
 
-<div class="panel panel-default hidden" id="variable-select-panel">
+<div class="panel panel-default hidden" id="bvz-variable-select-panel">
 <div class="panel-body">
 <button type="button" class="close pull-right" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-<form>
 
 <div role="tabpanel">
  <!-- Nav tabs -->
-  <ul class="nav nav-tabs" role="tablist" id="variable-control-tabs">
-    <li role="presentation" class="active"><a href="#select-variables-tab" aria-controls="home" role="tab" data-toggle="tab">Variables</a></li>
-    <li role="presentation"><a href="#categories-list-tab" aria-controls="profile" role="tab" data-toggle="tab">Categories</a></li>
-    <li role="presentation"><a href="#samples-list-tab" aria-controls="profile" role="tab" data-toggle="tab">Sample</a></li>
+  <ul class="nav nav-tabs" role="tablist" id="bvz-variable-control-tabs">
+    <li role="presentation" class="active"><a href="#bvz-variables-list-tab" aria-controls="home" role="tab" data-toggle="tab">Variables</a></li>
+    <li role="presentation"><a href="#bvz-category-list-tab" aria-controls="profile" role="tab" data-toggle="tab">Categories</a></li>
+    <li role="presentation"><a href="#bvz-samples-list-tab" aria-controls="profile" role="tab" data-toggle="tab">Sample</a></li>
+    <li role="presentation"><a href="#bvz-subjects-list-tab" aria-controls="profile" role="tab" data-toggle="tab">Subject</a></li>
   </ul>
   <!-- Tab panes -->
 <div class="tab-content">
-<div role="tabpanel" class="tab-pane active" id="select-variables-tab">
+    <div role="tabpanel" class="tab-pane active" id="bvz-variables-list-tab">
 
-<div class="form-group">
-<label for="search-vars">Search</label>
-<input id="search-vars" placeholder="Enter part of variable name" class="form-control">
+    <div class="form-group">
+    <label for="search-vars">Search</label>
+    <input id="search-vars" placeholder="Enter part of variable name" class="form-control">
+    </div>
+
+    <div class="well variable-list">
+
+
+    </div>
 </div>
 
-<div class="well variable-list">
+<div role="tabpanel" class="tab-pane" id="bvz-category-list-tab">
+
+    <div class="form-group">
+    <label for="search-vars">Search</label>
+    <input id="search-cats" placeholder="Enter part of variable name" class="form-control">
+    </div>
+
+    <div class="well variable-list">
 
 
+    </div>
 </div>
+<div role="tabpanel" class="tab-pane" id="bvz-samples-list-tab">
+
+    <div class="well samples-list">
+
+    </div>
+    </div>
+
+<div role="tabpanel" class="tab-pane" id="bvz-subjects-list-tab">
+
+    <div class="well subjects-list">
+
+    </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="categories-list-tab">
-
-<div class="form-group">
-<label for="search-vars">Search</label>
-<input id="search-cats" placeholder="Enter part of variable name" class="form-control">
-</div>
-
-<div class="well variable-list">
-
-
-</div>
-</div>
-<div role="tabpanel" class="tab-pane" id="samples-list-tab">
-
-<div class="well samples-list">
-
-</div>
-</div>
 </div>
 </div>
 <div class="btn-group btn-group-justified" role="group" aria-label="variable selection controls">
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-success" id="apply-variable-change">Apply</button>
+    <button type="button" class="btn btn-success" id="bvz-apply-variable-change">Apply</button>
   </div>
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-primary" id="clear_checked_variables">Clear</button>
+    <button type="button" class="btn btn-primary" id="bvz-clear_checked_variables">Clear</button>
   </div>
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-danger" id="cancel_variable_selection">Cancel</button>
+    <button type="button" class="btn btn-danger" id="bvz-cancel_variable_selection">Cancel</button>
   </div>
 </div>
-</form>
 </div>
 </div>

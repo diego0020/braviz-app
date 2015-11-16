@@ -168,49 +168,16 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
 
     def get(self, data_type):
         out = {}
-        if data_type == "variables":
-            out = self.get_variable_lists()
-        elif data_type == "values":
+        if data_type == "values":
             cats = self.get_argument("category")
             variables = self.get_argument("variables").split(",")
             sample = self.get_argument("sample",None)
             out = self.get_values(cats, variables, sample)
-        elif data_type == "variables_and_samples":
-            out = self.get_variables_and_samples()
         else:
             self.send_error("404")
 
         self.write(out)
         self.set_header('Content-Type', "application/json")
-
-    def get_variables_and_samples(self):
-        vars_df = tab_data.get_variables_and_type()
-        vars_df.sort("var_name", inplace=True)
-        descriptions = tab_data.get_descriptions_dict()
-        vars_df["desc"]=pd.Series(descriptions)
-        vars_df.loc[vars_df["desc"].isnull(),"desc"] = ""
-        vars_df["index"]=vars_df.index
-        vars_json = vars_df.to_json(orient="records")
-
-        samples_df = user_data.get_samples_df()
-        samples_df["index"]=samples_df.index
-        samples_json = samples_df.to_json(orient="records")
-
-        full_json = '{"variables" : %s , "samples" : %s }'%(vars_json, samples_json)
-        return full_json
-
-    def get_variable_lists(self):
-        vars_df = tab_data.get_variables_and_type()
-        vars_df.sort("var_name", inplace=True)
-        vars_df["var_id"] = vars_df.index
-        vars_df.rename(columns={"is_real": "type", "var_name": "name"}, inplace=True)
-        nominal = vars_df["type"] == 0
-        vars_df["type"] = "numeric"
-        vars_df.loc[nominal, "type"] = "nominal"
-        descriptions = tab_data.get_descriptions_dict()
-        vars_df["desc"]=pd.Series(descriptions)
-        vars_df.loc[vars_df["desc"].isnull(),"desc"] = ""
-        return json.dumps({"variables": vars_df.to_dict("records")}, cls=NpJSONEncoder)
 
     def get_values(self, cat, vs, sample_idx):
         vars_list = [int(cat)] + [int(v) for v in vs]
@@ -768,4 +735,47 @@ class BarsDataHandler(tornado.web.RequestHandler):
         df["index"]=df.index
         return df
 
+
+class DialogDataHandler(tornado.web.RequestHandler):
+    """
+    Returns data for the given sample and variables as a json object
+
+    """
+
+    def get(self):
+        samples_requested = self.get_argument("samples","false") == "true"
+        variables_requested = self.get_argument("variables","false") == "true"
+        subjects_requested = self.get_argument("subjects","false") == "true"
+
+        samples = self.get_samples() if samples_requested else "[]"
+        vars = self.get_variables() if variables_requested else "[]"
+        subjs = self.get_subjects() if subjects_requested else "[]"
+
+        out = '{{ "variables" : {vars}, "samples" : {samples}, "subjects" : {subjs} }}'.format(
+            vars=vars, samples=samples, subjs=subjs
+        )
+
+        self.write(out)
+        self.set_header('Content-Type', "application/json")
+
+    def get_variables(self):
+        vars_df = tab_data.get_variables_and_type()
+        vars_df.sort("var_name", inplace=True)
+        descriptions = tab_data.get_descriptions_dict()
+        vars_df["desc"]=pd.Series(descriptions)
+        vars_df.loc[vars_df["desc"].isnull(),"desc"] = ""
+        vars_df["index"]=vars_df.index
+        vars_json = vars_df.to_json(orient="records")
+        return vars_json
+
+    def get_subjects(self):
+        subjects = tab_data.get_subjects()
+        subjs_json = json.dumps(subjects)
+        return subjs_json
+
+    def get_samples(self):
+        samples_df = user_data.get_samples_df()
+        samples_df["index"]=samples_df.index
+        samples_json = samples_df.to_json(orient="records")
+        return samples_json
 

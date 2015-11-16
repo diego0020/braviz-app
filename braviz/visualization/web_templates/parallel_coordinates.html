@@ -204,6 +204,8 @@ var traits ;
 var traits_indices;
 var traits_to_index;
 var caths_index;
+var cats_map;
+var cats_style;
 
 var foreground;
 
@@ -213,17 +215,26 @@ var line = d3.svg.line(),
 function create_plot(new_flowers, categories, new_traits) {
     flowers = new_flowers;
     traits = new_traits;
-    var colors = d3.scale.ordinal().domain(categories).range(colorbrewer.Set1[Math.max(categories.length, 3)])
+    var levels = categories.map(function(c,i){return "level-"+i;});
+    var colors = d3.scale.ordinal().domain(levels).range(colorbrewer.Set1[Math.max(categories.length, 3)])
+    cats_map=d3.map();
+    d3.zip(categories,levels).forEach(function(e){
+        cats_map.set(e[0],e[1]);
+    });
+
     var color_style = "";
-    for (i in categories) {
-        var sp = categories[i];
+    levels.forEach(function(sp){
         var c = colors(sp);
         var line_st = "." + sp + " { stroke : " + c + " ; }" + "\n";
         color_style += line_st;
+    });
+    if (cats_style){
+        cats_style.parentNode.removeChild(cats_style);
+        cats_style=null;
     }
-    var sheet = document.createElement('style');
-    sheet.innerHTML = color_style;
-    document.body.appendChild(sheet);
+    cats_style = document.createElement('style');
+    cats_style.innerHTML = color_style;
+    document.body.appendChild(cats_style);
 
 
     var width = window.innerWidth * 0.95;
@@ -280,7 +291,7 @@ function create_plot(new_flowers, categories, new_traits) {
             });
 
     legend.append("svg:line")
-            .attr("class", String)
+            .attr("class", function(d){return cats_map.get(d);})
             .attr("x2", 8);
 
     legend.append("svg:text")
@@ -298,7 +309,7 @@ function create_plot(new_flowers, categories, new_traits) {
             .enter().append("svg:path")
             .attr("d", path)
             .attr("class", function (d) {
-                return d.category;
+                return cats_map.get(d.category);
             });
     foreground.append("svg:title").text(function (x) {
         return x.code;
@@ -559,7 +570,7 @@ function receive_message(msg){
     }
  }
 
-var socket = braviz.connect_to_ws(receive_message);
+var socket;
 
 //------------------------sample messages------------------------------------
 var sample_accept_policy="ask";
@@ -685,13 +696,15 @@ function set_all_data(in_sample, in_missing, in_flowers, in_categories, in_trait
   traits_to_index = d3.map();
   in_traits.forEach(function(e,i){traits_to_index.set(e,in_traits_indices[i]);});
   caths_index = in_cath_idx;
-  sample = in_sample;
   codes_w_missing = in_missing;
   current_subsample_list = [];
   create_plot(in_flowers, in_categories, in_traits);
-  set_sample(in_sample)
-  tabulate(data2,["code","category"].concat(traits),[]);
   add_context_menu();
+    if(in_sample){
+    sample = in_sample;
+    set_sample(in_sample)
+  }
+  tabulate(data2,["code","category"].concat(traits),[]);
 }
 
 function load_new_variables(vars){
@@ -705,7 +718,19 @@ function load_new_variables(vars){
 
 // -------------------interface-----------------------
 
-function apply_new_variables(new_cat_idx, new_traits_indices, selected_sample){
+function get_current_values(){
+    return {
+        "variables_indices" : traits_indices,
+        "category_index" : caths_index,
+        "sample_index" : sample_id
+    }
+}
+
+function apply_new_variables(selection){
+    var new_cat_idx = selection["category"];
+    var new_traits_indices = selection["variables"];
+    var selected_sample = selection["sample"];
+
     var new_traits = "";
     for (i=0; i<new_traits_indices.length; i++){
     if (i>0) new_traits+=",";
@@ -725,26 +750,15 @@ function apply_new_variables(new_cat_idx, new_traits_indices, selected_sample){
     });
 }
 
-braviz.configure_variables_and_samples_dialog("#change-vars-buttons","#variable-select-panel",
- function(){
-    return {
-        trait_indices: traits_indices,
-        cats_index: caths_index,
-        sample_index : sample_id
-    }
-    },
-  apply_new_variables, false);
-
-
 // -------------------update url----------------------
 
 function update_url(new_cat_idx, new_traits, new_sample_id){
-state_obj = {"cat":new_cat_idx, "variables":new_traits, "sample_id":new_sample_id};
-new_url = "parallel?vars="+new_cat_idx+","+new_traits;
-if (new_sample_id){
-new_url+="&sample="+new_sample_id;
-}
-history.replaceState(state_obj, "", new_url);
+    state_obj = {"cat":new_cat_idx, "variables":new_traits, "sample_id":new_sample_id};
+    new_url = "parallel?vars="+new_cat_idx+","+new_traits;
+    if (new_sample_id){
+        new_url+="&sample="+new_sample_id;
+    }
+    history.replaceState(state_obj, "", new_url);
 }
 
 // -------------------on load-------------------------
@@ -760,10 +774,22 @@ window.onload=function(){
   var cath_idx2 = {% raw cath_index %};
   sample_id = {% raw sample_id %};
   set_all_data(sample2, codes_w_missing2, flowers2, categories2, traits2, traits_idx2, cath_idx2 );
+  socket = braviz.connect_to_ws(receive_message);
   document.getElementById("main_svg").onclick=function(){highlight_subj_path(null);};
   $("#send-sample").click(send_sample_message);
   connect_sample_modal();
   set_sample(sample);
+  braviz.configure_variables_and_samples_dialog(
+    get_current_values,
+    apply_new_variables,
+    {
+        "disable_sample":false ,
+        "disable_variables": false,
+        "disable_category": false,
+        "disable_subject" : true,
+        "multiple_variables" : true
+    }
+  );
 };
 
 

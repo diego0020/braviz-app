@@ -183,13 +183,14 @@
 
     function get_current_variables(){
         return {
-            "trait_indices" : variables,
-            "cats_index" : null,
-            "sample_index" : null
+            "variables_indices" : variables,
+            "subject_index" : subject
         };
     }
 
-    function change_variables(new_cats, new_variables){
+    function change_variables(selection){
+        var new_variables = selection["variables"];
+        var subject = selection["subject"];
         update_all(new_variables, subject);
     }
 
@@ -209,9 +210,17 @@
         initialize();
         update_all(variables, subject);
         socket = braviz.connect_to_ws(receive_message);
-        braviz.configure_variables_and_samples_dialog("#change-vars-buttons","#variable-select-panel",
-        get_current_variables,
-        change_variables, false, true, true, false);
+        braviz.configure_variables_and_samples_dialog(
+            get_current_variables,
+            change_variables,
+            {
+                "disable_sample": true ,
+                "disable_variables": false ,
+                "disable_category": true ,
+                "disable_subject" : false ,
+                "multiple_variables" : true
+            }
+        );
     }
 
     $(start);

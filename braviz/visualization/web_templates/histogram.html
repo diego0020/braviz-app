@@ -295,13 +295,18 @@ function receive_message(message){
 
 function get_vars_and_sample_ids(){
     return {
-        trait_indices : variable_id,
-        cats_index : categories_id,
-        sample_index : sample_id
+        "variables_indices" : variable_id,
+        "category_index" : categories_id,
+        "sample_index" : sample_id
     }
 }
 
-function apply_new_variables(new_cat_idx, new_trait_indices, selected_sample){
+function apply_new_variables(selection){
+
+    var new_cat_idx = selection["category"];
+    var new_trait_indices  = selection["variables"];
+    var selected_sample = selection["sample"];
+
     var url = "histogram/data?color="+new_cat_idx+"&variable="+new_trait_indices+"&sample="+selected_sample;
     d3.json(url, function(error, data){
         if(error){
@@ -343,9 +348,17 @@ window.onload=function(){
     draw_histogram( input_data, var_name, color_name, color_levels,
                     in_variable_id, in_categories_id, in_sample_id, in_sample);
     braviz.connect_to_ws(receive_message);
-    braviz.configure_variables_and_samples_dialog("#change-vars-buttons","#variable-select-panel",
+    braviz.configure_variables_and_samples_dialog(
         get_vars_and_sample_ids,
-        apply_new_variables, true);
+        apply_new_variables,
+        {
+            "disable_sample": false ,
+            "disable_variables": false ,
+            "disable_category": false ,
+            "disable_subject" : true ,
+            "multiple_variables" : false
+        }
+        );
 };
 
 </script>
