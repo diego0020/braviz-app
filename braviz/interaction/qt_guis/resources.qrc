@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>braviz_h.png</file>
     <file>braviz_dianita_small.png</file>
     <file>reload.png</file>
     <file>braviz_dianita.png</file>
