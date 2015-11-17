@@ -60,10 +60,11 @@ The important areas that must be modified are:
 * The transformations between coordinate systems
 * If required, custom functions to read files and convert to numpy or  vtk.
 
-Remember that the end objective is having a reader that conforms to the :class:`BaseReader` interface. Also
+Remember that the end objective is having a reader that conforms to the :class:`~braviz.readAndFilter.base_reader.BaseReader`
+interface. Also
 notice that there are several static methods that need to be implemented. Inside these methods it may be
 useful to use the hosts configuration file, which can be accessed using the function
-:func:``braviz.readAndFilter.config_file.get_hosts_config`.
+:func:`~braviz.readAndFilter.config_file.get_hosts_config`.
 
 Create directory for dynamic data
 ---------------------------------

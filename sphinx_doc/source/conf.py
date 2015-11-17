@@ -53,8 +53,7 @@ napoleon_use_param = True
 napoleon_use_rtype = False
 
 intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
-                       'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None),
-                       'nipy': ('http://nipy.org', None),
+                       'pandas': ('http://pandas.pydata.org/pandas-docs/version/0.17.0', None),
                        'nibabel': ('http://nipy.org/nibabel', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy', None),
                        'matplotlib': ('http://matplotlib.sourceforge.net/', None)
