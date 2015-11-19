@@ -342,13 +342,14 @@ class OutcomeSelectDialog(VariableSelectDialog):
         sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
 
-    def __init__(self, params_dict, multiple=False, sample=None):
+    def __init__(self, params_dict, multiple=False, sample=None, highlight=None):
         super(OutcomeSelectDialog, self).__init__(sample)
         self.ui = Ui_SelectOutcomeDialog()
         self.ui.setupUi(self)
         self.finish_ui_setup()
 
         self.params_dict = params_dict
+        self.highlight_subj = highlight
 
         self.vars_list_model = braviz_models.VarListModel(checkeable=multiple)
         self.ui.tableView.setModel(self.vars_list_model)
@@ -367,8 +368,18 @@ class OutcomeSelectDialog(VariableSelectDialog):
 
     def update_plot(self, data):
         data2 = data.dropna()
-        self.matplot_widget.compute_scatter(data2.get_values(),
+        data_values = data2.get_values()
+        jitter = np.random.rand(len(data_values))
+        self.matplot_widget.compute_scatter(data_values, jitter,
                                             x_lab=self.var_name, y_lab="jitter", urls=data2.index.get_values())
+        if self.highlight_subj is not None:
+            try:
+                subj_index = data2.index.get_loc(int(self.highlight_subj))
+                self.matplot_widget.add_subject_points((data_values[subj_index]), (jitter[subj_index],),
+                                                       urls=(self.highlight_subj,))
+            except KeyError:
+                pass
+
 
     def select_and_return(self, *args):
         if self.var_name is not None:
@@ -401,9 +412,10 @@ class GenericVariableSelectDialog(OutcomeSelectDialog):
         sample (list) : Optional, list of subject indices to include in plot, if None, the whole sample is displayed
     """
 
-    def __init__(self, params, multiple=False, initial_selection_names=None, initial_selection_idx=None, sample=None):
+    def __init__(self, params, multiple=False, initial_selection_names=None, initial_selection_idx=None, sample=None,
+                 highlight=None):
         OutcomeSelectDialog.__init__(
-            self, params, multiple=multiple, sample=sample)
+            self, params, multiple=multiple, sample=sample, highlight=highlight)
         self.multiple = multiple
         self.setWindowTitle("Select Variables")
         self.ui.select_button.setText("Accept Selection")

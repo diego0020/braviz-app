@@ -581,7 +581,7 @@ class SubjectOverviewApp(QMainWindow):
         params = {}
         initial_selection = self.subject_details_model.get_current_variables()
         dialog = GenericVariableSelectDialog(params, multiple=True, initial_selection_idx=initial_selection,
-                                             sample=self.sample_manager.current_sample)
+                                             sample=self.sample_manager.current_sample, highlight=self.__curent_subject)
         dialog.exec_()
         new_selection = params.get("checked")
         if new_selection is not None:
@@ -660,7 +660,7 @@ class SubjectOverviewApp(QMainWindow):
         metrics_dict = {"Volume": ("volume", "mm^3"),
                         "Area": ("area", "mm^2"),
                         "FA inside": ("fa_inside", ""),
-                        "MD inside": ("md_inside", "e-5")}
+                        "MD inside": ("md_inside", "")}
         scalar_text = str(self.ui.struct_scalar_combo.currentText())
         metric_params = metrics_dict.get(scalar_text)
         if metric_params is None:
