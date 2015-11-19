@@ -25,7 +25,7 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,1,3">
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="3,1,3">
    <item>
     <widget class="QFrame" name="frame_3">
      <property name="frameShape">
@@ -172,7 +172,7 @@
          <item>
           <widget class="QStackedWidget" name="details_frame">
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="nominal_page">
             <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -317,7 +317,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
+             <item row="4" column="0">
               <spacer name="verticalSpacer_2">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
@@ -329,6 +329,13 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="3" column="0" colspan="6">
+              <widget class="QPushButton" name="reset_real_meta">
+               <property name="text">
+                <string>Reset Minimum, Maximum and Optimum</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>

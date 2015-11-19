@@ -32,7 +32,7 @@ import braviz.interaction.qt_dialogs
 import braviz.interaction.sample_select
 from braviz.interaction.connection import MessageServer, create_log_message
 from braviz.readAndFilter import log_db
-from braviz.readAndFilter import config_file
+import braviz.readAndFilter.config_file
 
 __author__ = 'Diego'
 

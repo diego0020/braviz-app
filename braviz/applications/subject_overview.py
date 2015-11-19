@@ -652,7 +652,7 @@ class SubjectOverviewApp(QMainWindow):
         if np.isnan(new_value):
             self.ui.struct_scalar_value.clear()
         else:
-            new_value_text = "%.4g %s" % (new_value, units)
+            new_value_text = "{:,g} {}".format(new_value, units)
             self.ui.struct_scalar_value.setText(new_value_text)
             # self.ui.struct_scalar_value.setSuffix(units)
 
@@ -827,7 +827,7 @@ class SubjectOverviewApp(QMainWindow):
         if np.isnan(value):
             self.ui.fibers_scalar_value.clear()
         else:
-            self.ui.fibers_scalar_value.setText("%.4g" % value)
+            self.ui.fibers_scalar_value.setText(format(value,",g"))
 
     def export_fiber_scalars_to_db(self):
         if self.current_fibers is None:

@@ -160,11 +160,11 @@ class VariableSelectDialog(QtGui.QDialog):
             medi = 0
         self.ui.maximum_val.setValue(maxi)
         self.ui.minimum_val.setValue(mini)
-        self.ui.minimum_val.setMinimum(min(mini * 10, -100))
-        self.ui.maximum_val.setMinimum(min(mini * 10, -100))
+        self.ui.minimum_val.setMinimum(min(mini * 100, -100))
+        self.ui.maximum_val.setMinimum(min(mini * 100, -100))
 
-        self.ui.minimum_val.setMaximum(max(maxi * 10, 1000))
-        self.ui.maximum_val.setMaximum(max(maxi * 10, 1000))
+        self.ui.minimum_val.setMaximum(max(maxi * 100, 1000))
+        self.ui.maximum_val.setMaximum(max(maxi * 100, 1000))
         try:
             self.ui.optimum_val.setValue(
                 int((medi - mini) / (maxi - mini) * 100))
@@ -177,8 +177,8 @@ class VariableSelectDialog(QtGui.QDialog):
             perc_value = self.ui.optimum_val.value()
         try:
             real_value = perc_value / 100 * \
-            (self.rational["max"] - self.rational["min"]) + \
-            self.rational["min"]
+                (self.rational["max"] - self.rational["min"]) + \
+                self.rational["min"]
         except TypeError:
             real_value = 0
         self.ui.optimum_real_value.setNum(real_value)
@@ -198,6 +198,13 @@ class VariableSelectDialog(QtGui.QDialog):
         self.set_real_controls()
         QtCore.QTimer.singleShot(0, self.update_limits_in_plot)
 
+    def reset_real_details(self):
+        self.guess_max_min()
+        self.set_real_controls()
+        self.update_plot(self.data)
+        QtCore.QTimer.singleShot(0, self.update_limits_in_plot)
+
+
     def update_nominal_details(self):
         var_name = self.var_name
         log = logging.getLogger(__name__)
@@ -210,6 +217,9 @@ class VariableSelectDialog(QtGui.QDialog):
         QtCore.QTimer.singleShot(0, self.update_limits_in_plot)
 
     def finish_ui_setup(self):
+        current_flags = self.windowFlags()
+        current_flags |= (QtCore.Qt.CustomizeWindowHint | QtCore.Qt.WindowMaximizeButtonHint)
+        self.setWindowFlags(current_flags)
         target = self.ui.plot_frame
         layout = QtGui.QVBoxLayout()
         self.matplot_widget = braviz.interaction.qt_widgets.MatplotWidget(
@@ -236,6 +246,7 @@ class VariableSelectDialog(QtGui.QDialog):
 
         self.ui.optimum_val.valueChanged.connect(self.ui.horizontalSlider.setValue)
         self.ui.horizontalSlider.valueChanged.connect(self.ui.optimum_val.setValue)
+        self.ui.reset_real_meta.clicked.connect(self.reset_real_details)
 
     def update_limits_in_plot(self, *args):
         if self.ui.var_type_combo.currentIndex() != 0:

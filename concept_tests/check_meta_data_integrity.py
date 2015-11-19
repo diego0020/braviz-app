@@ -1,6 +1,5 @@
 from __future__ import division
 
-import braviz
 from braviz.readAndFilter import tabular_data
 
 def check_max_min():
@@ -12,18 +11,19 @@ def check_max_min():
         if len(s) == 0:
             continue
             # No values
+        var_name = df.columns[0]
         values_min, values_max = s.min(), s.max()
         db_min, db_max = tabular_data.get_min_max_values(v)
 
         if values_min < db_min:
-            print("possible min problem with %d"%v)
+            print("possible min problem with %d, %s"%(v,var_name))
 
-        if values_max < db_max:
-            print("possible max problem with %d"%v)
+        if values_max > db_max:
+            print("possible max problem with %d, %s"%(v,var_name))
 
 
         if (db_max != db_min) and not (0.1<(values_max - values_min)/(db_max-db_min)<10):
-            print("possible range problem with %d"%v)
+            print("possible range problem with %d, %s"%(v,var_name))
 
 if __name__ == "__main__":
     check_max_min()
