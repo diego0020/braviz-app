@@ -52,7 +52,7 @@ def create_geom_rois_tables(conn=None):
 def create_spheres_table(conn=None):
     q = """CREATE TABLE IF NOT EXISTS geom_spheres (
     sphere_id INTEGER,
-    subject REFERENCES subjects(subject),
+    subject INTEGER REFERENCES subjects(subject),
     radius NUMERIC,
     ctr_x NUMERIC,
     ctr_y NUMERIC,
@@ -73,7 +73,7 @@ def create_lines_table(conn=None):
     """
     q = """CREATE TABLE IF NOT EXISTS geom_lines (
     line_id INTEGER,
-    subject REFERENCES subjects(subject),
+    subject INTEGER REFERENCES subjects(subject),
     p1_x NUMERIC,
     p1_y NUMERIC,
     p1_z NUMERIC,

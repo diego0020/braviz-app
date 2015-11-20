@@ -32,7 +32,7 @@ from braviz.readAndFilter import config_file
 from braviz.readAndFilter import bundles_db
 
 from braviz.interaction.qt_structures_model import StructureTreeModel
-
+import numpy as np
 
 class VarListModel(QAbstractListModel):
 
@@ -923,7 +923,10 @@ class DataFrameModel(QAbstractTableModel):
             return unicode(data)
         else:
             try:
-                ans = "%.6f" % data
+                if isinstance(data,(int, np.integer)):
+                    ans = format(data,"d")
+                else:
+                    ans = format(data,".6f")
             except Exception:
                 ans = str(data)
             return ans
@@ -2328,7 +2331,7 @@ class SubjectChecklist(QAbstractListModel):
 
     @checked.setter
     def checked(self, new_set):
-        self.__checked = frozenset(new_set)
+        self.__checked = frozenset(int(s) for s in new_set)
         self.modelReset.emit()
 
     @property
@@ -2347,7 +2350,7 @@ class SubjectChecklist(QAbstractListModel):
         Args:
             lst (list) : List of subject ids
         """
-        self.__list = list(lst)
+        self.__list = [int(s) for s in lst]
         self.modelReset.emit()
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -2363,7 +2366,7 @@ class SubjectChecklist(QAbstractListModel):
             if int_role == QtCore.Qt.DisplayRole:
                 return name
             if (int_role == QtCore.Qt.CheckStateRole) and self.__show_checks:
-                if name in self.checked:
+                if name in self.__checked:
                     return QtCore.Qt.Checked
                 else:
                     return QtCore.Qt.Unchecked

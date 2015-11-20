@@ -742,6 +742,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="load_sample">
+          <property name="text">
+           <string>Load Sample</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="extrapolate_button">
           <property name="text">
            <string>Extrapolate</string>

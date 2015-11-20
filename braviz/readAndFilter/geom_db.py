@@ -21,6 +21,7 @@ from __future__ import division
 from braviz.readAndFilter.tabular_data import get_connection
 import numpy as np
 from pandas.io import sql
+from braviz.readAndFilter.tabular_data import retry_write
 
 __author__ = 'Diego'
 
@@ -71,6 +72,8 @@ def roi_name_exists(name):
     return n > 0
 
 
+
+@retry_write
 def create_roi(name, roi_type, coords, desc=""):
     """
     Creates a new ROI
@@ -291,6 +294,7 @@ def subjects_with_line(line_id):
     return subjs
 
 
+@retry_write
 def save_sphere(sphere_id, subject, radius, center):
     """
     Save a sphere for a given subject into the database
@@ -341,6 +345,8 @@ def get_all_spheres(sphere_id):
     df = sql.read_sql(q, con, index_col="subject", params=(sphere_id,))
     return df
 
+
+@retry_write
 def recursive_delete_roi(roi_id):
     """
     Removes a ROI from the database, including all its values.
@@ -366,6 +372,8 @@ def recursive_delete_roi(roi_id):
         con.execute(q2,(roi_id,))
 
 
+
+@retry_write
 def save_line(line_id, subject, point1, point2):
     """
     Save a line from a given subject into the database
@@ -405,6 +413,7 @@ def load_line(line_id, subject):
     return res
 
 
+@retry_write
 def copy_spheres(orig_id, dest_id):
     """
     Copies spheres from one ROI to another

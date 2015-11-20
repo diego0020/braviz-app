@@ -53,6 +53,7 @@ from braviz.interaction.structure_metrics import AggregateInRoi
 from braviz.interaction.roi import export_roi
 from braviz.interaction.qt_widgets import ImageComboBoxManager, ContrastComboManager
 from braviz.readAndFilter.config_file import get_config
+from braviz.interaction.sample_select import SampleLoadDialog
 __author__ = 'Diego'
 
 AXIAL = 2
@@ -145,16 +146,15 @@ class ExtrapolateDialog(QDialog):
 
     def create_data_cols(self):
         self.spheres_df = geom_db.get_all_spheres(self.__sphere_id)
-        radiuses = [""] * len(self.__subjects)
+        radi = [""] * len(self.__subjects)
         centers = [""] * len(self.__subjects)
-        df2 = self.spheres_df.transpose()
         for i, s in enumerate(self.__subjects):
-            row = df2.get(s)
+            row = self.spheres_df.loc[s]
             if row is not None:
-                radiuses[i] = "%.4g" % row.radius
-                centers[i] = "( %.3g , %.3g , %.3g )" % (
+                radi[i] = "%g" % row.radius
+                centers[i] = "( %.3f , %.3f , %.3f )" % (
                     row.ctr_x, row.ctr_y, row.ctr_z)
-        return radiuses, centers
+        return radi, centers
 
     def select_all(self):
         self.targets_model.checked = self.__subjects
@@ -679,6 +679,7 @@ class BuildRoiApp(QMainWindow):
 
         self.ui.extrapolate_button.clicked.connect(
             self.launch_extrapolate_dialog)
+        self.ui.load_sample.clicked.connect(self.load_sample_dialog)
 
         self.ui.actionSave_Scenario.triggered.connect(self.save_scenario)
         self.ui.actionLoad_Scenario.triggered.connect(self.load_scenario)
@@ -1031,6 +1032,17 @@ class BuildRoiApp(QMainWindow):
     def refresh_checked(self):
         checked = geom_db.subjects_with_sphere(self.__roi_id)
         self.__subjects_check_model.checked = checked
+
+    def load_sample_dialog(self):
+        dialog = SampleLoadDialog(new__and_load=False)
+        dialog.exec_()
+        new_sample = dialog.current_sample
+        self.change_sample(new_sample)
+
+    def change_sample(self, new_sample):
+        sample = sorted(int(s) for s in new_sample)
+        self.__subjects_list = sample
+        self.__subjects_check_model.set_list(sample)
 
     def select_image_modality(self, class_and_name):
         image_class, image_name = class_and_name

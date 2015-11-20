@@ -588,7 +588,7 @@ class SliceViewerDataHandler(tornado.web.RequestHandler):
                 df = tab_data.get_data_frame_by_index(variable)
                 if sample_idx is not None:
                     df = df.loc[sample]
-                df.sort(df.columns[0],inplace=True)
+                df.sort_values(by=df.columns[0],inplace=True)
                 self.write({"sample":[int(x) for x in df.index],
                             "values":[float(x) if not math.isnan(x) else ""
                                       for x in df.iloc[:,0]]})
@@ -601,7 +601,7 @@ class SliceViewerDataHandler(tornado.web.RequestHandler):
         elif element == "variables":
             vars_df = tab_data.get_variables_and_type()
             vars_df = vars_df[["var_name"]]
-            vars_df.sort("var_name", inplace=True)
+            vars_df.sort_values(by="var_name", inplace=True)
             descriptions = tab_data.get_descriptions_dict()
             vars_df["desc"]=pd.Series(descriptions)
             json_vars = vars_df.to_json(orient="split")
@@ -760,7 +760,7 @@ class DialogDataHandler(tornado.web.RequestHandler):
 
     def get_variables(self):
         vars_df = tab_data.get_variables_and_type()
-        vars_df.sort("var_name", inplace=True)
+        vars_df.sort_values(by="var_name", inplace=True)
         descriptions = tab_data.get_descriptions_dict()
         vars_df["desc"]=pd.Series(descriptions)
         vars_df.loc[vars_df["desc"].isnull(),"desc"] = ""

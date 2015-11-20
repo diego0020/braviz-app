@@ -22,7 +22,7 @@ __author__ = 'Diego'
 import cPickle
 
 from braviz.readAndFilter.tabular_data import get_connection
-
+from braviz.readAndFilter.tabular_data import retry_write
 
 def get_bundle_ids_and_names():
     """
@@ -98,6 +98,7 @@ def check_if_name_exists(name):
     return res is not None
 
 
+@retry_write
 def save_checkpoints_bundle(bundle_name, operation_is_and, waypoints):
     """
     Saves a bundle defined using checkpoints
@@ -145,6 +146,7 @@ def get_bundles_list(bundle_type=None):
         return res
 
 
+@retry_write
 def save_logic_bundle(bundle_name, logic_tree_dict):
     """
     Saves a logic bundle into the database
@@ -202,6 +204,7 @@ def get_logic_bundle_dict(bundle_id=None, bundle_name=None):
     return data_dict
 
 
+@retry_write
 def remove_bundle(bundle_id):
     """
     Deletes a fiber bundle from the database

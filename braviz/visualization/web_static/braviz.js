@@ -237,12 +237,12 @@ function configure_variables_and_samples_dialog(
         .removeClass("hidden");
     }
 
-    $("#search-vars").bind("input", function(){
+    $("#bvz-search-vars").bind("input", function(){
                 filter_variables_list($("#bvz-variables-list-tab").find("div.variable-list"),
                 $("#bvz-search-vars").val());
                 });
 
-    $("#search-cats").bind("input", function(){
+    $("#bvz-search-cats").bind("input", function(){
                 filter_variables_list($("#bvz-category-list-tab").find("div.variable-list"),
                 $("#bvz-search-cats").val());
                 });

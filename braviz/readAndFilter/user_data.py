@@ -31,7 +31,10 @@ from braviz.readAndFilter.tabular_data import get_connection
 import sqlite3
 import json
 from braviz.interaction.connection import NpJSONEncoder
+from braviz.readAndFilter.tabular_data import retry_write
 
+
+@retry_write
 def save_scenario(application, scenario_name, scenario_description, scenario_data):
     """
     Save application state
@@ -60,6 +63,7 @@ def save_scenario(application, scenario_name, scenario_description, scenario_dat
     return res
 
 
+@retry_write
 def update_scenario(scenario_id, name=None, description=None, scenario_data=None, application=None):
     """
     Update scenario information in the database
@@ -146,6 +150,8 @@ def get_scenario_data_dict(scn_id):
     return scn_dict
 
 
+
+@retry_write
 def link_var_scenario(var_idx, scn_idx):
     """
     Links a variable to a scenario
@@ -193,6 +199,8 @@ def count_variable_scenarios(var_idx):
     return cur.fetchone()[0]
 
 
+
+@retry_write
 def save_sub_sample(name, elements, description):
     """
     Save a sub sample into the database
@@ -232,6 +240,7 @@ def get_comment(subj):
     return res[0]
 
 
+@retry_write
 def update_comment(subj, comment):
     """
     Update the comment about a subject
@@ -300,6 +309,8 @@ def get_sample_data(sample_idx):
     return data
 
 
+
+@retry_write
 def delete_sample(sample_id):
     """
     Delete a sample from the database
@@ -313,6 +324,7 @@ def delete_sample(sample_id):
         conn.execute(q, (int(sample_id),))
 
 
+@retry_write
 def delete_scenario(scn_id):
     """
     Delete a scenario from the database

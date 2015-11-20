@@ -23,6 +23,9 @@ from itertools import izip, repeat
 import os
 import threading
 import logging
+from functools import wraps
+import random
+import time
 
 from pandas.io import sql
 import pandas as pd
@@ -61,7 +64,7 @@ def get_connection():
         raise IOError("Couldn't open database location:\n%s"%path)
 
     conn = sqlite3.connect(db_name,  detect_types=sqlite3.PARSE_DECLTYPES)
-    conn.execute("pragma busy_timeout = 10000")
+    conn.execute("pragma busy_timeout=10000")
     _connections[thread_id] = conn
     if LATERALITY is None:
         try:
@@ -76,6 +79,30 @@ def get_connection():
             pass
     return conn
 
+
+def retry_write(f):
+    max_tries = 100
+    wait = 10
+    log = logging.getLogger(__name__)
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        success = False
+        attempts = 0
+        ans = None
+        while (not success) and (attempts < max_tries):
+            try:
+                ans = f(*args, **kwargs)
+            except sqlite3.OperationalError:
+                attempts += 1
+                log.warning("Could not write to db, attempt %d",attempts)
+                time.sleep(random.randint(1,wait))
+            else:
+                success = True
+        if not success:
+            log.error("Error writing to database, max tries reached")
+            raise sqlite3.OperationalError
+        return ans
+    return wrapped
 
 
 def get_variables(mask=None):
@@ -727,6 +754,7 @@ def get_var_description_by_name(var_name):
     return res[0]
 
 
+@retry_write
 def save_is_real_by_name(var_name, is_real):
     """
     Update variable type in the metadata
@@ -741,7 +769,7 @@ def save_is_real_by_name(var_name, is_real):
         conn.execute(query, (is_real, unicode(var_name)))
 
 
-
+@retry_write
 def save_is_real(var_idx, is_real):
     """
     Update variable type in the metadata
@@ -757,6 +785,7 @@ def save_is_real(var_idx, is_real):
 
 
 
+@retry_write
 def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
     """
     Update real variables' meta data
@@ -784,6 +813,7 @@ def save_real_meta_by_name(var_name, min_value, max_value, opt_value):
         conn.commit()
 
 
+@retry_write
 def save_real_meta(var_idx, min_value, max_value, opt_value):
     """
     Update real variables' meta data
@@ -809,6 +839,7 @@ def save_real_meta(var_idx, min_value, max_value, opt_value):
         conn.commit()
 
 
+@retry_write
 def save_nominal_labels_by_name(var_name, label_name_tuples):
     """
     Update nominal variable labels
@@ -832,6 +863,7 @@ def save_nominal_labels_by_name(var_name, label_name_tuples):
     con.commit()
 
 
+@retry_write
 def save_nominal_labels(var_idx, label_name_tuples):
     """
     Update nominal variable labels
@@ -855,6 +887,7 @@ def save_nominal_labels(var_idx, label_name_tuples):
     con.commit()
 
 
+@retry_write
 def save_var_description_by_name(var_name, description):
     """
     Save or overwrite description for a variable
@@ -872,6 +905,7 @@ def save_var_description_by_name(var_name, description):
     conn.commit()
 
 
+@retry_write
 def save_var_description(var_idx, description):
     """
     Save or overwrite description for a variable
@@ -889,6 +923,7 @@ def save_var_description(var_idx, description):
     conn.commit()
 
 
+@retry_write
 def register_new_variable(var_name, is_real=1):
     """
     Adds a new variable to the database
@@ -919,6 +954,7 @@ def register_new_variable(var_name, is_real=1):
         return None
 
 
+@retry_write
 def update_variable_values(var_idx, tuples):
     """
     Updates values for one variable and some subjects
@@ -935,6 +971,7 @@ def update_variable_values(var_idx, tuples):
     conn.commit()
 
 
+@retry_write
 def update_multiple_variable_values(idx_subject_value_tuples):
     """
     Updates values for variables and subjects
@@ -949,6 +986,7 @@ def update_multiple_variable_values(idx_subject_value_tuples):
     conn.commit()
 
 
+@retry_write
 def update_variable_value(var_idx, subject, new_value):
     """
     Updates a single value for a variable and a subject
@@ -964,6 +1002,7 @@ def update_variable_value(var_idx, subject, new_value):
     conn.commit()
 
 
+@retry_write
 def get_var_value(var_idx, subject):
     """
     Gets a single variable value
@@ -1030,6 +1069,7 @@ def _float_or_nan(s):
     return v
 
 
+@retry_write
 def add_data_frame(df):
     """
     Inserts a whole dataframe into the database
@@ -1068,6 +1108,8 @@ def add_data_frame(df):
     print("done")
 
 
+
+@retry_write
 def recursive_delete_variable(var_idx):
     """
     Deletes a variable from all tables
@@ -1108,6 +1150,7 @@ def recursive_delete_variable(var_idx):
         print("Done")
 
 
+@retry_write
 def recursive_delete_subject(subject):
     """
     Deletes a subject from the database

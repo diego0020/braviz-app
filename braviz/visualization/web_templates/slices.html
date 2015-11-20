@@ -196,33 +196,34 @@ Braviz Slice Viewer
         var slices = slices_panel.selectAll("div.slice-img").data(sample);
         var sort_name = $("#variable-select")[0].value;
         slices.enter().append("div").attr("class","slice-img")
-            .append("img").attr("class","img-responsive").attr("alt",function(d,i){return "Subject: "+d;});
+            .append("img").attr("class","img-responsive");
         slices.exit().remove();
         slices.each(function(d,i){
-            var img = d3.select(this).select("img");
-            var img_url = "slices/data/img?subj="+d;
-            img_url += "&slice="+slice;
-            img_url += "&orientation="+orientation;
-            img_url += "&coordinates="+coordinates;
-            img_url += "&type="+image_type;
-            img_url += "&name="+image_name;
-            if (image_contrast != null){
-                img_url += "&contrast="+image_contrast;
-            }
-            img.attr("src",img_url);
-            img.attr("title",function(d){
-                    if (values){
-                        var x="";
-                        try{x=values[i].toFixed(2);
-                        }catch(err){
-                            console.log("missing vaule");
+                var img = d3.select(this).select("img");
+                var img_url = "slices/data/img?subj="+d;
+                img_url += "&slice="+slice;
+                img_url += "&orientation="+orientation;
+                img_url += "&coordinates="+coordinates;
+                img_url += "&type="+image_type;
+                img_url += "&name="+image_name;
+                if (image_contrast != null){
+                    img_url += "&contrast="+image_contrast;
+                }
+                img.attr("src",img_url);
+                img.attr("alt",function(d,i){return "Subject: "+d;})
+                img.attr("title",function(d){
+                        if (values){
+                            var x="";
+                            try{x=values[i].toFixed(2);
+                            }catch(err){
+                                console.log("missing vaule");
+                            }
+                            return "Subject: "+d+"\n"+sort_name+": "+x;
                         }
-                        return "Subject: "+d+"\n"+sort_name+": "+x;
-                    }
-                    else{
-                        return "Subject: "+d;
-                    }
-                });
+                        else{
+                            return "Subject: "+d;
+                        }
+                    });
             });
         slices.order();
         add_context_menu();
@@ -376,8 +377,7 @@ var errorSleepTime = 500;
   function highlight_subject(subj){
       slices_panel.selectAll("div.slice-img").classed("highlight",function(d){
           return d == subj;
-      })
-      slices_panel.select("div.slice-img.highlight").element()
+      });
   }
 
 
