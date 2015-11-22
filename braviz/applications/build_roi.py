@@ -149,8 +149,11 @@ class ExtrapolateDialog(QDialog):
         radi = [""] * len(self.__subjects)
         centers = [""] * len(self.__subjects)
         for i, s in enumerate(self.__subjects):
-            row = self.spheres_df.loc[s]
-            if row is not None:
+            try:
+                row = self.spheres_df.loc[s]
+            except KeyError:
+                pass
+            else:
                 radi[i] = "%g" % row.radius
                 centers[i] = "( %.3f , %.3f , %.3f )" % (
                     row.ctr_x, row.ctr_y, row.ctr_z)
@@ -234,6 +237,7 @@ class ExtrapolateDialog(QDialog):
         self.__started = True
         self.ui.progressBar.setValue(0)
         self.set_controls(0)
+        QtGui.QApplication.instance().processEvents()
         selected = list(self.targets_model.checked)
         # set parameters
         self.__origin = int(self.ui.origin_combo.currentText())
@@ -243,7 +247,6 @@ class ExtrapolateDialog(QDialog):
         self.__origin_radius = origin_sphere[0]
         self.__origin_center = origin_sphere[1:4]
         self.__origin_img_id = self.__origin
-
         if self.__link_space != "None":
             # roi -> world
             ctr_world = self.__reader.transform_points_to_space(self.__origin_center, self.__roi_space,
