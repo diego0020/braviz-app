@@ -42,7 +42,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
     def __init__(self, fibers=False, structures_list=tuple(), metric="Volume", db_id=None,
                  operation=None, scenario_id=None):
         super(ExportScalarToDataBase, self).__init__()
-        if (db_id is not None) and (operation is not None):
+        if (db_id is  None) and (operation is  None):
             raise Exception("Only db_id or operation should be None")
         flags = QtCore.Qt.Window | QtCore.Qt.MSWindowsOwnDC | QtCore.Qt.WindowSystemMenuHint | \
             QtCore.Qt.WindowMinimizeButtonHint
@@ -171,12 +171,12 @@ class ExportScalarToDataBase(QtGui.QDialog):
         while self.progress < 100:
             self.progress += 1
             # print self.progress
-            time.sleep(0.1)
+            time.sleep(1)
 
     def save_variables_function(self):
         import braviz
 
-        self.reader = braviz.readAndFilter.BravizAutoReader()
+        self.reader = braviz.readAndFilter.BravizAutoReader(max_cache=1000)
         all_subjects = braviz_tab_data.get_subjects()
         for i, subj in enumerate(all_subjects):
             try:
@@ -188,6 +188,7 @@ class ExportScalarToDataBase(QtGui.QDialog):
             log = logging.getLogger(__name__)
             log.debug("%s %s : %f" % (self.metric_code, subj, value))
         self.progress = 100
+        self.reader.clear_mem_cache()
 
     def get_scalar_value(self, subj):
         image_code = subj
