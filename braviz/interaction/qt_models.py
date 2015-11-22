@@ -193,9 +193,10 @@ class VarAndGiniModel(QAbstractTableModel):
         parent (QObject) : Qt parent for this object
     """
 
-    def __init__(self, outcome_var=None, parent=None):
+    def __init__(self, outcome_var=None, parent=None, sample=None):
         QAbstractTableModel.__init__(self, parent)
         self.data_frame = braviz_tab_data.get_variables()
+        self.sample = sample
         # self.data_frame["var_idx"]=self.data_frame.index
         self.data_frame["Ginni"] = "?"
         self.ginni_calculated = False
@@ -267,7 +268,7 @@ class VarAndGiniModel(QAbstractTableModel):
             log = logging.getLogger(__name__)
             log.error("An outcome var is required for this")
             return
-        self.data_frame = calculate_ginni_index(self.outcome, self.data_frame)
+        self.data_frame = calculate_ginni_index(self.outcome, self.data_frame, self.sample)
 
     def update_list(self, mask):
         """

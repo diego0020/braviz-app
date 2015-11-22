@@ -160,6 +160,10 @@ class VariableSelectDialog(QtGui.QDialog):
             medi = 0
         self.ui.maximum_val.setValue(maxi)
         self.ui.minimum_val.setValue(mini)
+
+        self.ui.minimum_val.setDecimals(3)
+        self.ui.maximum_val.setDecimals(3)
+
         self.ui.minimum_val.setMinimum(min(mini * 100, -100))
         self.ui.maximum_val.setMinimum(min(mini * 100, -100))
 
@@ -667,7 +671,7 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.outcome_var = outcome_var
         self.ui = Ui_AddRegressorDialog()
         self.ui.setupUi(self)
-        self.vars_model = braviz_models.VarAndGiniModel(outcome_var)
+        self.vars_model = braviz_models.VarAndGiniModel(outcome_var, sample)
         self.ui.tableView.setModel(self.vars_model)
         self.ui.tableView.setColumnWidth(0,200)
         self.finish_ui_setup()

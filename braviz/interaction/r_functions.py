@@ -57,7 +57,7 @@ def import_or_error(lib_name):
     return lib
 
 
-def calculate_ginni_index(outcome, data_frame):
+def calculate_ginni_index(outcome, data_frame, sample=None):
     """
     Calculates Ginni impurity indices respect to an outcome variable
 
@@ -67,10 +67,11 @@ def calculate_ginni_index(outcome, data_frame):
     Args:
         outcome (str) : Name of the outcome variable
         data_frame (pandas.DataFrame) : Data Frame with variable indices as index, this object will be modified
+        sample (list) : Restrict the analysis to subjects in this sample
 
     Returns:
         The input *data_frame* with an additional column called ``Ginni`` that contains the requested indices.
-        The value will be ``numpy.inf`` for the outcome variable, and 0 for variables where the index couln't be
+        The value will be ``numpy.inf`` for the outcome variable, and 0 for variables where the index couldn't be
         calculated.
     """
     # construct data frame
@@ -85,6 +86,8 @@ def calculate_ginni_index(outcome, data_frame):
 
     values_data_frame = braviz_tab_data.get_data_frame_by_index(
         data_frame.index, col_name_index=True)
+    if sample is not None:
+        values_data_frame = values_data_frame.loc[sample]
     # remove columns with many NaNs
     # df2=values_data_frame.dropna(1,thresh=40)
     values_data_frame.dropna(1, thresh=30, inplace=True)
