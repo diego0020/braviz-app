@@ -309,7 +309,7 @@ function create_plot(new_flowers, categories, new_traits) {
             .enter().append("svg:path")
             .attr("d", path)
             .attr("class", function (d) {
-                return cats_map.get(d.category);
+                return cats_map.get(d["_category"]);
             });
     foreground.append("svg:title").text(function (x) {
         return x.code;
@@ -485,7 +485,7 @@ function prepare_tabulate(){
         data2.push(flowers[j]);
     }
 
-    tabulate(data2,["code","category"].concat(traits),selected_codes);
+    tabulate(data2,["code","_category"].concat(traits),selected_codes);
     }
   , 1000);
 }

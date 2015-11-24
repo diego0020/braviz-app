@@ -125,6 +125,13 @@ modindex_common_prefix = ["braviz."]
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
+from recommonmark.parser import CommonMarkParser
+
+source_parsers = {
+    '.md': CommonMarkParser,
+}
+
+source_suffix = ['.rst', '.md']
 
 # -- Options for HTML output ----------------------------------------------
 

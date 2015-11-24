@@ -671,7 +671,7 @@ class RegressorSelectDialog(VariableSelectDialog):
         self.outcome_var = outcome_var
         self.ui = Ui_AddRegressorDialog()
         self.ui.setupUi(self)
-        self.vars_model = braviz_models.VarAndGiniModel(outcome_var, sample)
+        self.vars_model = braviz_models.VarAndGiniModel(outcome_var, sample=sample)
         self.ui.tableView.setModel(self.vars_model)
         self.ui.tableView.setColumnWidth(0,200)
         self.finish_ui_setup()

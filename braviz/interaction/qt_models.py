@@ -804,7 +804,7 @@ class AnovaResultsModel(QAbstractTableModel):
             return "%d" % data
         elif col == 4:
             # p
-            return "{:.6f}".format(data)
+            return "{:.6g}".format(data)
         else:
             return "{:.6g}".format(data)
 

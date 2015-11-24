@@ -110,10 +110,17 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
         missing_json = json.dumps(missing, cls=NpJSONEncoder)
         data = data2
 
-        cols = data.columns
-        cols2 = list(cols)
-        cols2[0] = "category"
-        data.columns = cols2
+        if variables[0] in variables[1:]:
+            all_columns = list(data.columns)
+            cats_name = all_columns[0]
+            data["_category"] = data[cats_name]
+            data = data[["_category"]+all_columns]
+        else:
+            cols = data.columns
+            cols2 = list(cols)
+            cols2[0] = "_category"
+            data.columns = cols2
+
         labels = tab_data.get_labels_dict(variables[0])
 
         for i, (k, v) in enumerate(labels.iteritems()):
@@ -124,7 +131,7 @@ class ParallelCoordinatesHandler(tornado.web.RequestHandler):
             labels[k] = v.replace(' ', '_')
 
         # sanitize label name
-        col0 = cols2[0]
+        col0 = "_category"
         data[col0] = data[col0].map(labels)
         data["code"] = data.index
 
@@ -186,14 +193,20 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
             sample = user_data.get_sample_data(sample_idx)
         else:
             sample = tab_data.get_subjects()
-        data2 = data.dropna()
-        missing = sorted(set(data.index) - set(data2.index))
-        data = data2
+        data = data.dropna()
+        missing = sorted(set(data.index) - set(data.index))
         # cleaning
-        cols = data.columns
-        cols2 = list(cols)
-        cols2[0] = "category"
-        data.columns = cols2
+        # handle category variable repeated as attribute
+        if vars_list[0] in vars_list[1:]:
+            all_columns = list(data.columns)
+            cats_name = all_columns[0]
+            data["_category"] = data[cats_name]
+            data = data[["_category"]+all_columns]
+        else:
+            cols = data.columns
+            cols2 = list(cols)
+            cols2[0] = "_category"
+            data.columns = cols2
         labels = tab_data.get_labels_dict(vars_list[0])
         # sanitize label name
         for i, (k, v) in enumerate(labels.iteritems()):
@@ -204,13 +217,14 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
             elif v[0].isdigit():
                 v = "c_" + v
             labels[k] = v.replace(' ', '_')
-
-        col0 = cols2[0]
+        col0 = "_category"
         data[col0] = data[col0].map(labels)
         data["code"] = data.index
         data_dict = data.to_dict("records")
         cats = labels.values()
+
         attrs = list(data.columns[1:-1])
+
         return json.dumps({"data": data_dict,
                            "categories": cats,
                            "vars": attrs,
