@@ -21,8 +21,6 @@ from __future__ import division
 from collections import namedtuple
 import logging
 
-import vtk
-
 
 __author__ = 'Diego'
 

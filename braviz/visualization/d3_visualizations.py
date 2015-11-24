@@ -193,8 +193,9 @@ class ParallelCoordsDataHandler(tornado.web.RequestHandler):
             sample = user_data.get_sample_data(sample_idx)
         else:
             sample = tab_data.get_subjects()
-        data = data.dropna()
-        missing = sorted(set(data.index) - set(data.index))
+        data2 = data.dropna()
+        missing = sorted(set(data.index) - set(data2.index))
+        data = data2
         # cleaning
         # handle category variable repeated as attribute
         if vars_list[0] in vars_list[1:]:

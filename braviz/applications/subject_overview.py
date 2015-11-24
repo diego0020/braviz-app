@@ -49,7 +49,6 @@ from braviz.interaction.qt_widgets import ListValidator, ContextVariablesPanel, 
 from braviz.interaction.sample_select import SampleManager
 
 from braviz.interaction.connection import MessageClient, create_log_message, create_ready_message
-import cPickle
 import functools
 import logging
 
@@ -672,9 +671,8 @@ class SubjectOverviewApp(QMainWindow):
 
         scenario_data = self.get_state_dict()
         app_name = scenario_data["meta"]["application"]
-        scenario_data_str = cPickle.dumps(scenario_data, 2)
         scn_id = braviz_user_data.save_scenario(app_name, scenario_name="<AUTO>",
-                                                scenario_description="", scenario_data=scenario_data_str)
+                                                scenario_description="", scenario_data=scenario_data)
         self.save_screenshot(scn_id)
         # export_dialog_args = {"fibers": False, "structures_list": structures,
         #                      "metric": scalar_text,"db_id": None, "operation": None}

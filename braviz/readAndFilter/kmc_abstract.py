@@ -22,7 +22,6 @@ from __future__ import division
 import os
 import re
 import cPickle
-import types
 import pickle
 import logging
 
@@ -46,7 +45,8 @@ from braviz.readAndFilter.read_spm import get_contrasts_dict, SpmFileReader
 
 from braviz.readAndFilter.base_reader import BaseReader
 from braviz.readAndFilter.transforms import applyTransform, numpy2vtkMatrix, transformPolyData, readFreeSurferTransform, readFlirtMatrix
-
+import braviz.interaction.structure_metrics
+import braviz.readAndFilter.tabular_data
 
 class KmcAbstractReader(BaseReader):
 
@@ -448,6 +448,8 @@ A read and filter class designed to work with kmc projects. Implements common fu
     def _get_volume(self, subject, model_name):
 
         data_dir = self._get_free_surfer_stats_dir_name(subject)
+        lat = braviz.readAndFilter.tabular_data.get_laterality(subject)
+        model_name = braviz.interaction.structure_metrics.solve_laterality(lat,model_name)
         if model_name[:2] == 'wm':
             # we are dealing with white matter
             file_name = 'wmparc.stats'
