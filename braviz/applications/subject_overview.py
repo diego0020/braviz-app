@@ -1020,8 +1020,8 @@ class SubjectOverviewApp(QMainWindow):
         tractography_state["opacity"] = float(self.ui.fibers_opacity.value())
         tractography_state["scalar"] = str(
             self.ui.fibers_scalar_combo.currentText())
-        assert self.current_fibers in tractography_state[
-            "bundles"] + (None, "<From Segmentation>")
+        if self.current_fibers not in tractography_state["bundles"] + (None, "<From Segmentation>"):
+            self.current_fibers = None
         tractography_state["active_bundle"] = self.current_fibers
         state["tractography_state"] = tractography_state
 
