@@ -1,15 +1,13 @@
 import braviz
 import vtk
-from braviz import _test_arrow
 from braviz.readAndFilter.color_fibers import scalars_from_image_int
 import numpy as np
 from braviz.readAndFilter import filter_fibers
 from braviz.readAndFilter.filter_fibers import iter_id_list
-from braviz.readAndFilter.images import write_vtk_image
 from braviz.readAndFilter.transforms import applyTransform
 
 __author__ = 'Diego'
-SUBJ = "119"
+SUBJ = "326"
 
 reader = braviz.readAndFilter.BravizAutoReader()
 fibs1 = reader.get("fibers",SUBJ,space="workd",waypoint=["CC_Anterior"])
@@ -17,8 +15,6 @@ fibs1 = reader.get("fibers",SUBJ,space="workd",waypoint=["CC_Anterior"])
 
 aparc = reader.get("APARC",SUBJ,space="diff")
 fibs = reader.get("fibers",SUBJ,space="diff")
-
-
 
 pd = reader.get("fibers",SUBJ)
 img = reader.get("aparc",SUBJ)

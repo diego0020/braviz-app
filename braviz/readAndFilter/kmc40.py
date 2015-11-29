@@ -153,6 +153,7 @@ The constructor requires the root to this structure
             #matrix = readFlirtMatrix('surf2diff.mat', 'FA.nii.gz', 'orig.nii.gz', path)
             matrix = readFlirtMatrix(
                 'diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+            matrix = inv(matrix)
             affine = img.get_affine()
             aff2 = matrix.dot(affine)
             img2 = nib.Nifti1Image(img.get_data(), aff2)

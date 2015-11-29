@@ -237,7 +237,7 @@ def scalars_from_image_int(fibers, nifti_image):
     coords = np.dot(iaffine, coords.T)
     coords = coords[:3] / coords[3]
     coords = coords.reshape(3, -1)
-    coords = coords.astype(np.int)
+    coords = coords.round().astype(np.int)
 
     image_val = data[coords[0], coords[1], coords[2]]
     for i in xrange(npoints):

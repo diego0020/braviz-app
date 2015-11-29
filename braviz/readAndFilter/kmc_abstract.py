@@ -795,6 +795,11 @@ A read and filter class designed to work with kmc projects. Implements common fu
             elif scalars[:2] == "md":
                 lut = self._get_md_lut()
                 return lut
+            else:
+                if self._free_surfer_aparc_lut is None:
+                    self._free_surfer_aparc_lut = self._create_surfer_lut()
+                return self._free_surfer_aparc_lut
+
         # named tracts index
         if kw.get('index', False):
             return self._named_bundles
