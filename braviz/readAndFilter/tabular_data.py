@@ -1070,13 +1070,16 @@ def _float_or_nan(s):
 
 
 @retry_write
-def add_data_frame(df):
+def add_data_frame(df, callback=None):
     """
     Inserts a whole dataframe into the database
 
     Args:
         df ( pandas.DataFrame ) : DataFrame with subject ids as index, and one column for each new variable.
+        callback (func) : Called after each row with the index of the current column as argument, can be used
+                          for example to update a progress bar
     """
+    log = logging.getLogger(__name__)
     conn = get_connection()
     columns = df.columns
     columns = map(remove_non_ascii, columns)
@@ -1090,7 +1093,7 @@ def add_data_frame(df):
 
     for i, c in enumerate(columns):
         with conn:
-            print("%d / %d : %s" % (i + 1, tot_cols, c))
+            log.info("%d / %d : %s" ,i + 1, tot_cols, c)
             if does_variable_name_exists(c):
                 var_idx = get_var_idx(c)
             else:
@@ -1105,7 +1108,8 @@ def add_data_frame(df):
             q2 = """INSERT OR REPLACE INTO var_values (var_idx,subject,value)
             VALUES ( ?, ?,?)"""
             conn.executemany(q2, izip(repeat(var_idx), subjs, vals))
-    print("done")
+            if callback is not None:
+                callback(i)
 
 
 

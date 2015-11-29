@@ -624,6 +624,7 @@ class SubjectOverviewApp(QMainWindow):
         self.vtk_viewer.tracula.set_opacity(int_opac)
 
     def update_segmentation_scalar(self, scalar_index=None):
+        log = logging.getLogger(__name__)
         metrics_dict=None
         if braviz.readAndFilter.PROJECT == "kmc40":
             metrics_dict = {"Volume": ("volume", "mm^3"),
@@ -647,7 +648,11 @@ class SubjectOverviewApp(QMainWindow):
             log.error("Unknown metric %s" % scalar_text)
             return
         metric_code, units = metric_params
-        new_value = self.vtk_viewer.models.get_scalar_metrics(metric_code)
+        try:
+            new_value = self.vtk_viewer.models.get_scalar_metrics(metric_code)
+        except Exception as e:
+            log.exception(e)
+            new_value = float("nan")
         if np.isnan(new_value):
             self.ui.struct_scalar_value.clear()
         else:
@@ -814,14 +819,18 @@ class SubjectOverviewApp(QMainWindow):
             log = logging.getLogger(__name__)
             log.error("%s not yet implemented" % text)
             return
-        if self.current_fibers is None:
+        try:
+            if self.current_fibers is None:
+                value = float("nan")
+            elif type(self.current_fibers) is str:
+                value = self.vtk_viewer.tractography.get_scalar_from_structs(
+                    metric)
+            else:
+                value = self.vtk_viewer.tractography.get_scalar_from_db(
+                    metric, self.current_fibers)
+        except Exception as e:
+            log.exception(e)
             value = float("nan")
-        elif type(self.current_fibers) is str:
-            value = self.vtk_viewer.tractography.get_scalar_from_structs(
-                metric)
-        else:
-            value = self.vtk_viewer.tractography.get_scalar_from_db(
-                metric, self.current_fibers)
         if np.isnan(value):
             self.ui.fibers_scalar_value.clear()
         else:

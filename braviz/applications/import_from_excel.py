@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
 ##############################################################################
 
-
+from __future__ import division, print_function
 import braviz
 import pandas as pd
 from PyQt4 import QtGui, QtCore
@@ -49,6 +49,7 @@ class ImportFromExcel(QtGui.QDialog):
         self.ui.buttonBox.button(
             self.ui.buttonBox.Close).clicked.connect(self.reject)
         self.ui.omitExistent.clicked.connect(self.update_model)
+        self.ui.progressBar.setValue(0)
 
     def update_model(self):
         if self.__df is None:
@@ -89,8 +90,13 @@ class ImportFromExcel(QtGui.QDialog):
 
     def save(self):
         self.ui.buttonBox.button(self.ui.buttonBox.Save).setEnabled(0)
+        def update_bar(i):
+            val = (i+1)/len(self.__df2.columns)*100
+            self.ui.progressBar.setValue(val)
+            QtGui.QApplication.instance().processEvents()
         QtGui.QApplication.instance().processEvents()
-        tabular_data.add_data_frame(self.__df2)
+        tabular_data.add_data_frame(self.__df2, update_bar)
+        self.ui.progressBar.setValue(100)
 
 
 def mingle_name(n):
