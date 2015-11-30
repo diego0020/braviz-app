@@ -75,14 +75,8 @@ def calculate_ginni_index(outcome, data_frame, sample=None):
         calculated.
     """
     # construct data frame
-    is_nominal = False
-    conn = braviz_tab_data.get_connection()
-    res = conn.execute(
-        "SELECT is_real FROM variables WHERE var_name = ?", (outcome,))
+    is_nominal = braviz_tab_data.is_variable_name_nominal(outcome)
     outcome_idx = braviz_tab_data.get_var_idx(outcome)
-    is_real = res.fetchone()
-    if (is_real is not None) and is_real[0] == 0:
-        is_nominal = True
 
     values_data_frame = braviz_tab_data.get_data_frame_by_index(
         data_frame.index, col_name_index=True)
@@ -90,9 +84,10 @@ def calculate_ginni_index(outcome, data_frame, sample=None):
         values_data_frame = values_data_frame.loc[sample]
     # remove columns with many NaNs
     # df2=values_data_frame.dropna(1,thresh=40)
-    values_data_frame.dropna(1, thresh=30, inplace=True)
+    n_rows, n_cols = values_data_frame.shape
+    values_data_frame.dropna(1, thresh=n_rows//10, inplace=True)
     # df3=df2.dropna(0,thresh=200)
-    values_data_frame.dropna(0, thresh=200, inplace=True)
+    values_data_frame.dropna(0, thresh=n_cols//10, inplace=True)
     # fill nas with other values
     # shuffle
     permutation = np.random.permutation(range(len(values_data_frame)))

@@ -31,6 +31,7 @@ def clear_cache():
 
 
 def populate_cache(subj):
+    configure_logger_from_conf("sub_populate_cache")
     print("creating cache for subject %s" % subj)
     reader2 = BravizAutoReader(max_cache=500)
     # Dartel Transform

@@ -352,7 +352,7 @@ def solve_laterality(laterality, names):
             Only cortical structures and named fibers are supported, read above.
     """
     new_names = []
-    if type(names) == str:
+    if isinstance(names,basestring):
         names2 = (names,)
     else:
         names2 = names
@@ -370,7 +370,7 @@ def solve_laterality(laterality, names):
             h = get_right_or_left_hemisphere(name[-1], laterality)
             new_name = name[:-1] + h
         new_names.append(new_name)
-    if type(names) == str:
+    if isinstance(names,basestring):
         return new_names[0]
     else:
         return new_names

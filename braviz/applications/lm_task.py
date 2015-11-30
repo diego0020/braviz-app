@@ -489,7 +489,7 @@ class LinearModelApp(QMainWindow):
                 # var2 nominal and var1 real
                 hue_var = regressor2
                 x_var = regressor1
-                labels = None
+                labels = braviz_tab_data.get_labels_dict_by_name(hue_var)
 
         return df, x_var, hue_var, outcome, labels, qualitative_map, x_labels
 
@@ -833,7 +833,7 @@ class LinearModelApp(QMainWindow):
             log.info("beta1: %s", beta_1)
             log.info("beta0: %s", beta_0)
             df3[self.outcome_var_name][l] = beta_0 + beta_1 * \
-                                                     df3[isolating_factor][l].values.squeeze().astype(np.int)
+                                                     df3[isolating_factor][l].values.squeeze()
         df3[self.outcome_var_name] += res
         if un_standardize is False:
             return df3

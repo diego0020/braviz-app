@@ -575,18 +575,20 @@ class CoefficientsPlot(AbstractPlot):
         self.axes.axvline(0, ls="--", color=(0.4, 0.4, 0.4))
         self.axes.minorticks_off()
 
-        # draw centers
-        self.axes.plot(
-            self.centers, self.pos, "o", ms=8, zorder=10, c=self.color)
+        # draw 95
+        for p, l, h in izip(self.pos, self.l95, self.h95):
+            self.axes.plot([l, h], [p, p], color=self.color,
+                           solid_capstyle="round", lw=1, zorder=1, picker=0.5)
 
         # draw 68
         for p, l, h in izip(self.pos, self.l68, self.h68):
             self.axes.plot(
                 [l, h], [p, p], c=self.color, solid_capstyle="round", lw=2.5, zorder=5)
-        # draw 95
-        for p, l, h in izip(self.pos, self.l95, self.h95):
-            self.axes.plot([l, h], [p, p], c=self.color,
-                           solid_capstyle="round", lw=1, zorder=1, picker=0.5)
+
+        # draw centers
+        self.axes.plot(
+            self.centers, self.pos, "o", ms=8, zorder=10, c=self.color)
+
 
         # ticks
         self.axes.set_yticks(self.pos)
