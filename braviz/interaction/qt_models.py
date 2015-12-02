@@ -1413,6 +1413,8 @@ class ContextVariablesModel(QAbstractTableModel):
         if self.editables_dict is None:
             self.editables_dict = dict((idx, False)
                                        for idx in context_vars_list)
+        else:
+            assert frozenset(editable_dict.keys())==frozenset(context_vars_list)
         self.headers_dict = {0: "Variable", 1: "Type", 2: "Editable"}
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
@@ -1499,7 +1501,7 @@ class ContextVariablesModel(QAbstractTableModel):
     def removeRows(self, row, count, QModelIndex_parent=None, *args, **kwargs):
         # self.layoutAboutToBeChanged.emit()
         self.beginRemoveRows(QtCore.QModelIndex(), row, row + count - 1)
-        indexes = list(self.data_frame.index)
+        indexes = self.data_frame.index.tolist()
         for i in xrange(count):
             var_idx = indexes[row + i]
             del self.editables_dict[var_idx]
@@ -1514,7 +1516,7 @@ class ContextVariablesModel(QAbstractTableModel):
             row = QModelIndex.row()
             if QModelIndex.column() != 2:
                 return False
-            self.editables_dict[self.data_frame.index[row]] = QVariant == QtCore.Qt.Checked
+            self.editables_dict[self.data_frame.index[row]] = (QVariant == QtCore.Qt.Checked)
             self.dataChanged.emit(QModelIndex, QModelIndex)
             return True
 

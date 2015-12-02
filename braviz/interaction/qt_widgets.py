@@ -642,7 +642,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
 
         Args:
             variables (list) : List of variable indices
-            editables (dict) : Dictionary mapping varible indices to booleans that indicate if a variable should
+            editables (dict) : Dictionary mapping variable indices to booleans that indicate if a variable should
                 be modifiable by the user
         """
         self.__context_variable_codes = list(variables)
@@ -658,6 +658,7 @@ class ContextVariablesPanel(QtGui.QGroupBox):
         if editables is None:
             self.__editables_dict = dict((idx, False) for idx in variables)
         else:
+            assert frozenset(variables) == frozenset(editables.keys())
             self.__editables_dict = editables
         self._reset_internal_widgets()
 

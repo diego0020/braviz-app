@@ -920,7 +920,8 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
         self.ui.current_variables.setModel(self.current_variables_model)
         self.ui.current_variables.customContextMenuRequested.connect(
             self.show_context_menu)
-        self.ui.done_button.clicked.connect(self.finish_close)
+        self.ui.done_button.clicked.connect(self.done)
+        self.finished.connect(self.finish_close)
         self.ui.current_variables.clicked.connect(self.update_right_side2)
 
         self.ui.create_varible_button.clicked.connect(
@@ -974,13 +975,13 @@ class ContextVariablesSelectDialog(VariableSelectDialog):
             except KeyError:
                 pass
 
-    def finish_close(self):
+    def finish_close(self, _):
         new_list = self.current_variables_model.get_variables()
         while len(self.variable_list) > 0:
             self.variable_list.pop()
         self.variable_list.extend(new_list)
         assert id(self.variable_list) == self.__variable_lists_id
-        self.done(self.Accepted)
+
 
     def launch_new_variable_dialog(self):
         new_variable_dialog = NewVariableDialog()

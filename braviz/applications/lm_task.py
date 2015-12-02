@@ -833,7 +833,7 @@ class LinearModelApp(QMainWindow):
             log.info("beta1: %s", beta_1)
             log.info("beta0: %s", beta_0)
             df3[self.outcome_var_name][l] = beta_0 + beta_1 * \
-                                                     df3[isolating_factor][l].values.squeeze()
+                                                     df3[isolating_factor][l].values.squeeze().astype(float)
         df3[self.outcome_var_name] += res
         if un_standardize is False:
             return df3
