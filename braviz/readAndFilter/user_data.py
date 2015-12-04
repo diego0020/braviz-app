@@ -142,7 +142,7 @@ def get_scenario_data_dict(scn_id):
     """
     res = _get_scenario_data(scn_id)
     try:
-        scn_dict = json.loads(res)
+        scn_dict = json.loads(unicode(res))
     except TypeError as e:
         logger = logging.getLogger(__name__)
         logger.warning("scenario in old format")

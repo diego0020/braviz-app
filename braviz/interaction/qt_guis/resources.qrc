@@ -1,5 +1,8 @@
 <RCC>
   <qresource prefix="icons">
+    <file>LinearMeassure2.svg</file>
+    <file>LinearMeassureHover2.svg</file>
+    <file>MeasuresIcon.svg</file>
     <file>braviz_h.png</file>
     <file>braviz_dianita_small.png</file>
     <file>reload.png</file>

@@ -143,6 +143,7 @@ class CorrelationMatrixFigure(FigureCanvas):
     def update_sample(self, _):
         if self.df is not None:
             self.df = self.full_df.loc[self.sample_manager.current_sample].copy()
+            self.corr = self.df.corr()
         self.on_draw()
         if self.last_square is not None:
             x_name, y_name = self.last_square
