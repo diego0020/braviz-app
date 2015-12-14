@@ -751,6 +751,15 @@ class ScatterPlot(AbstractPlot):
                         scatter_kws={"picker": 0.5, "url": url}, ax=self.axes,
                         color=self.color)
         else:
+            xlim = (self.df[self.x_name].min(), self.df[self.x_name].max())
+            xrange = xlim[1] - xlim[0]
+            xlim = (xlim[0]-xrange/20, xlim[1]+xrange/20)
+            ylim = (self.df[self.y_name].min(), self.df[self.y_name].max())
+            yrange = ylim[1] - ylim[0]
+            ylim = (ylim[0]-yrange/20, ylim[1]+yrange/20)
+
+            self.axes.set_xlim(xlim)
+            self.axes.set_ylim(ylim)
             self.artists_dict = dict()
             unique_levels = np.unique(self.df[self.z_name])
             n_levels = len(unique_levels)

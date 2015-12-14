@@ -237,11 +237,11 @@ function create_plot(new_flowers, categories, new_traits) {
     document.body.appendChild(cats_style);
 
 
-    var width = window.innerWidth * 0.95;
-    var height = window.innerHeight * 0.90;
+    var width = window.innerWidth * 0.99;
+    var height = window.innerHeight * 0.99 ;
 
     var m = [50, 100, 50, 100];
-    m[2] = m[2] + 30 * categories.length;
+    m[2] = m[2] // + 30 * categories.length;
     m[3] += window.innerWidth * 0.05 * 0.5;
     var w = width - m[1] - m[3],
             h = height - m[0] - m[2];
@@ -287,7 +287,8 @@ function create_plot(new_flowers, categories, new_traits) {
             .enter().append("svg:g")
             .attr("class", "legend")
             .attr("transform", function (d, i) {
-                return "translate(0," + (i * 20 + height - m[2]) + ")";
+                // return "translate(0," + (i * 20 + height - m[2]) + ")";
+                return "translate("+(w+20)+","+(i * 20 + height/2)+")";
             });
 
     legend.append("svg:line")
