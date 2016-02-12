@@ -104,9 +104,8 @@ You can install all of these by typing
 
 Go to the directory where you would like braviz files downloaded and do
 
-    hg clone <repository_adress>
+    hg clone https://bitbucket.org/dieg0020/braviz
 
-You can contact jhernand@uniandes.edu.co to get the repository adress
 
 You should now add the braviz directory containing the file setup.py to your *PYTHONPATH* environment variable
 
