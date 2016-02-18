@@ -60,11 +60,13 @@ def read_spss_data(file_name, encoding, index_col=None, verbose=False):
     print("Reading data")
     reader = savReaderWriter.SavReader(file_name, recodeSysmisTo=float('nan'), ioUtf8=False)
     with reader:
-        var_names = [s.decode(encoding) for s in reader.varNames]
+        var_names = [s.decode(encoding) for s in reader.varNamesTypes[0]]
         all_data = reader.all()
     df = pd.DataFrame(all_data)
     df.columns = var_names
     if index_col is not None:
+        nan_index = df[index_col].map(np.isnan)
+        df = df.loc[np.logical_not(nan_index)]
         df.index = df[index_col]
     print("post processing")
     post_process(df)
@@ -95,7 +97,10 @@ def save_comments(data_frame, encoding, do_save=False, verbose=False):
     names = data_frame.columns[indeces]
     comments = {}
     for c in names:
-        col = data_frame[c].dropna()
+        if c in data_frame.columns:
+            col = data_frame[c].dropna()
+        else:
+            print(c)
         for i in col.index:
             com1 = comments.get(i)
             com = col[i].strip().decode(encoding)
