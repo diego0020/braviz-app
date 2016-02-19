@@ -34,13 +34,13 @@ def parse_spss_meta(file_name, encoding, do_save=False, verbose=False, ):
         labels = info[6]
         print("Reading descriptions")
         for k, v in descriptions.iteritems():
-            k = k.decode(encoding)
-            v = v.decode(encoding)
+            k = k.decode(encoding ,errors="ignore")
+            v = v.decode(encoding,errors="ignore")
             save_description(k, v, do_save, verbose)
         print("Reading labels")
         for k, v in labels.iteritems():
-            k = k.decode(encoding)
-            v = {kk : vv.decode(encoding) for kk,vv in v.iteritems()}
+            k = k.decode(encoding,errors="ignore")
+            v = {kk : vv.decode(encoding,errors="ignore") for kk,vv in v.iteritems()}
             save_labels(k, v, do_save, verbose)
 
 
@@ -60,7 +60,7 @@ def read_spss_data(file_name, encoding, index_col=None, verbose=False):
     print("Reading data")
     reader = savReaderWriter.SavReader(file_name, recodeSysmisTo=float('nan'), ioUtf8=False)
     with reader:
-        var_names = [s.decode(encoding) for s in reader.varNamesTypes[0]]
+        var_names = [s.decode(encoding,errors="ignore") for s in reader.varNamesTypes[0]]
         all_data = reader.all()
     df = pd.DataFrame(all_data)
     df.columns = var_names
@@ -103,7 +103,7 @@ def save_comments(data_frame, encoding, do_save=False, verbose=False):
             print(c)
         for i in col.index:
             com1 = comments.get(i)
-            com = col[i].strip().decode(encoding)
+            com = col[i].strip().decode(encoding,errors="ignore")
             if len(com) == 0:
                 continue
             com2 = ":\n".join((c, com))
