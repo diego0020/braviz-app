@@ -38,6 +38,7 @@ extensions = [
     #'sphinxcontrib.napoleon',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.youtube',
 ]
 
 # Napoleon Settings
