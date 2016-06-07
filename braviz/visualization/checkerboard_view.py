@@ -153,8 +153,6 @@ class CheckboardView(object):
         if self.__img1 is None and self.__img2 is None:
             self.__plane_widget.Off()
             return
-        else:
-            self.__plane_widget.On()
 
         if self.__img1 is not None:
             self.__outline.SetInputData(self.__img1)
@@ -247,6 +245,9 @@ class CheckboardView(object):
             self.__plane_widget.SetInputData(
                 self.__checkboard_view.GetOutput())
 
+        if self.__img1 is not None or self.__img2 is not None:
+            self.__plane_widget.On()
+
     def _create_image_plane_widget(self):
         """
         Creates the internal vtkImagePlaneWidget
@@ -255,7 +256,7 @@ class CheckboardView(object):
             self.__plane_widget = persistentImagePlane(self.__orientation)
             self.__plane_widget.SetInteractor(self.iren)
             self.__plane_widget.GetColorMap().SetLookupTable(None)
-            self.__plane_widget.On()
+            #self.__plane_widget.On()
 
             def slice_change_handler(source, event):
                 new_slice = self.__plane_widget.GetSliceIndex()
