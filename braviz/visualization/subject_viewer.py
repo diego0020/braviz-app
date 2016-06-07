@@ -628,7 +628,7 @@ class ImageManager(object):
         self.__image_plane_widget = persistentImagePlane(
             self.__current_image_orientation)
         self.__image_plane_widget.SetInteractor(self.iren)
-        self.__image_plane_widget.On()
+        #self.__image_plane_widget.On()
         self.__window_level_lut = vtk.vtkWindowLevelLookupTable()
         self.__window_level_lut.DeepCopy(self.__image_plane_widget.GetLookupTable())
 
@@ -737,7 +737,7 @@ class ImageManager(object):
 
         if self.__image_plane_widget is None:
             self._create_image_plane_widget()
-            self.__image_plane_widget.On()
+            #self.__image_plane_widget.On()
 
         # update image labels:
         log = logging.getLogger(__name__)
