@@ -46,12 +46,14 @@ _COORDINATES_I = {
     "subject": 0,
     "talairach": 1,
     "dartel": 2,
+    "diff": 3
 }
 
 _COORDINATES = {
     0: "subject",
     1: "talairach",
     2: "dartel",
+    3: "diff"
 }
 
 
