@@ -44,7 +44,6 @@ class PlutonReader(KmcAbstractReader):
         self._available_images = frozenset(("FA", "MRI"))
         self._functional_paradigms = frozenset()
         self._named_bundles = frozenset()
-
     def _getIds(self):
         """Auxiliary function to get the available ids"""
         contents = os.listdir(self.get_data_root())
@@ -60,8 +59,8 @@ class PlutonReader(KmcAbstractReader):
     def _get_img(self, image_name, subj, space,  **kw):
         """Auxiliary function to read nifti images"""
         # path=self.getDataRoot()+'/'+subj+'/MRI'
-        path = os.path.join(self.get_data_root(), subj, "out")
-        filename="camino_fa.nii.gz"
+        path = os.path.join(self.get_data_root(), subj, "camino")
+        filename="fa_.nii.gz"
         wholeName = os.path.join(path, filename)
         try:
             img = nib.load(wholeName)
@@ -213,17 +212,17 @@ class PlutonReader(KmcAbstractReader):
     def _get_base_fibs_name(self, subj):
         # return os.path.join(self.get_data_root(), "tractography",subj,
         # 'CaminoTracts.vtk')
-        return os.path.join(self.get_data_root(), subj, "out", 'camino_vtk_tractography.vtk')
+        return os.path.join(self.get_data_root(), subj, "camino", 'camino_tracks.vtk')
 
     def _get_base_fibs_dir_name(self, subj):
         """
         Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
         """
         # return os.path.join(self.get_data_root(), "tractography",subj)
-        return os.path.join(self.get_data_root(), subj, "out")
+        return os.path.join(self.get_data_root(), subj, "camino")
 
     def _get_fa_img_name(self):
-        return "camino_fa.nii.gz"
+        return "fa_.nii.gz"
 
     def _get_orig_img_name(self):
         return "orig.nii.gz"
