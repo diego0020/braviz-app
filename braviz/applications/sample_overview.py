@@ -503,8 +503,14 @@ class SampleOverview(QtGui.QMainWindow):
                 self.ui.space_combo.setCurrentIndex(index)
 
             # Trim unnecesary fields from current scenario
-            del return_dict["context_state"]
-            del return_dict["subject_state"]
+            try:
+                del return_dict["context_state"]
+            except KeyError:
+                pass
+            try:
+                del return_dict["subject_state"]
+            except KeyError:
+                pass
 
             self.current_scenario = return_dict
             self.reload_viewers(scenario=return_dict)

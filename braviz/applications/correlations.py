@@ -59,7 +59,7 @@ class CorrelationMatrixFigure(FigureCanvas):
 
     def __init__(self, sample_manager):
         self.f, self.ax = plt.subplots(figsize=(9, 9))
-        plt.tight_layout()
+        #plt.tight_layout()
         super(CorrelationMatrixFigure, self).__init__(self.f)
         palette = self.palette()
         self.f.set_facecolor(palette.background().color().getRgbF()[0:3])
@@ -95,9 +95,27 @@ class CorrelationMatrixFigure(FigureCanvas):
             self.ax.tick_params(
                 'x', top='off', bottom='off', labelbottom='on', labeltop='off')
             plt.sca(self.ax)
-            sns.corrplot(self.df, annot=False, sig_stars=True, cmap_range="full",
-                         diag_names=False, sig_corr=False, cmap=self.cmap, ax=self.ax, cbar=True)
-        plt.tight_layout()
+            corr = self.df.corr()
+
+            # Generate a mask for the upper triangle
+            mask = np.zeros_like(corr, dtype=np.bool)
+            mask[np.triu_indices_from(mask)] = True
+
+            #sns.corrplot(self.df, annot=False, sig_stars=True, cmap_range="full",
+            #             diag_names=False, sig_corr=False, cmap=self.cmap, ax=self.ax, cbar=True)
+
+            sns.heatmap(corr, mask=mask, cmap=self.cmap,
+                        square=True, vmin=-1, vmax=1,
+                        linewidths=.5, cbar_kws={"shrink": .5}, ax=self.ax,
+                        xticklabels=True, yticklabels=True)
+            x_labels = self.ax.get_xticklabels()
+            y_labels = self.ax.get_yticklabels()
+            for l in x_labels:
+                l.set_rotation(15)
+            for l in y_labels:
+                l.set_rotation('horizontal')
+            plt.tight_layout()
+
         self.draw()
 
     def set_variables(self, vars_list):
@@ -118,10 +136,13 @@ class CorrelationMatrixFigure(FigureCanvas):
     def get_tooltip_message(self, event):
         #QtGui.QToolTip.hideText()
         if event.inaxes == self.ax and self.df is not None:
-            x_int, y_int = int(round(event.xdata)), int(round(event.ydata))
-            if y_int <= x_int:
+            x_int, y_int = int(np.floor(event.xdata)), int(np.floor(event.ydata))
+            if (y_int + 1 >= len(self.corr) - x_int):
                 return
-            x_name, y_name = self.df.columns[x_int], self.df.columns[y_int]
+            try:
+                x_name, y_name = self.df.columns[x_int], self.df.columns[self.df.shape[1]-1-y_int]
+            except IndexError:
+                return
             r = self.corr.loc[x_name, y_name]
             message = "%s v.s. %s: r = %.2f" % (x_name, y_name, r)
             _, height = self.get_width_height()
@@ -132,10 +153,10 @@ class CorrelationMatrixFigure(FigureCanvas):
 
     def square_clicked(self, event):
         if event.inaxes == self.ax and self.df is not None:
-            x_int, y_int = int(round(event.xdata)), int(round(event.ydata))
-            if y_int <= x_int:
+            x_int, y_int = int(np.floor(event.xdata)), int(np.floor(event.ydata))
+            if (y_int + 1 >= len(self.corr) - x_int):
                 return
-            x_name, y_name = self.df.columns[x_int], self.df.columns[y_int]
+            x_name, y_name = self.df.columns[x_int], self.df.columns[self.df.shape[1] - 1 - y_int]
             df2 = self.df[[x_name, y_name]]
             self.SquareSelected.emit(df2)
             self.last_square = x_name, y_name
