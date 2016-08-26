@@ -41,12 +41,12 @@ from braviz.visualization.create_lut import get_colorbrewer_lut
 class PlutonReader(KmcAbstractReader):
     def __init__(self, static_path, dynamic_path, max_cache=2000):
         super(PlutonReader, self).__init__(static_path, dynamic_path, max_cache)
-        self._available_images = frozenset(("FA", "MRI"))
+        self._available_images = frozenset(("FA", "MRI", "T2*"))
         self._functional_paradigms = frozenset()
         self._named_bundles = frozenset()
     def _getIds(self):
         """Auxiliary function to get the available ids"""
-        contents = os.listdir(self.get_data_root())
+        contents = os.listdir(os.path.join(self.get_data_root(), "nii"))
         numbers = re.compile('[0-9]+$')
         ids = [c for c in contents if numbers.match(c) is not None]
         ids.sort(key=int)
@@ -59,9 +59,23 @@ class PlutonReader(KmcAbstractReader):
     def _get_img(self, image_name, subj, space,  **kw):
         """Auxiliary function to read nifti images"""
         # path=self.getDataRoot()+'/'+subj+'/MRI'
-        path = os.path.join(self.get_data_root(), subj, "camino")
-        filename="fa_.nii.gz"
-        wholeName = os.path.join(path, filename)
+        if image_name == "MRI":
+            path = os.path.join(self.get_data_root(), "camino", subj)
+            filename="ana_ref.nii.gz"
+            wholeName = os.path.join(path, filename)
+        elif image_name == "FA":
+            path = os.path.join(self.get_data_root(), "camino", subj)
+            filename="fa.nii.gz"
+            wholeName = os.path.join(path, filename)
+        elif image_name == "T2*":
+            path = os.path.join(self.get_data_root(), "camino", subj)
+            filename="t2_star_ana.nii.gz"
+            wholeName = os.path.join(path, filename)
+        elif image_name == "DTI":
+            path = os.path.join(self.get_data_root(), "camino", subj)
+            filename="rgb_dti2.nii.gz"
+            wholeName = os.path.join(path, filename)
+
         try:
             img = nib.load(wholeName)
         except IOError as e:
@@ -71,7 +85,10 @@ class PlutonReader(KmcAbstractReader):
             raise (Exception('File not found'))
 
         if kw.get('format', '').upper() == 'VTK':
-            vtkImg = nibNii2vtk(img)
+            if image_name == "DTI":
+                vtkImg = nifti_rgb2vtk(img)
+            else:
+                vtkImg = nibNii2vtk(img)
             if space == 'native':
                 return vtkImg
 
@@ -89,21 +106,21 @@ class PlutonReader(KmcAbstractReader):
 
         if space == "diff" and (image_name in {"FA", "MD", "DTI"}):
             return img
-        elif space == "subject":
-            return img
+        elif space == "subject" and (image_name in {"FA", "MD", "DTI"}):
+            return self.move_img_to_subject(img,"diff",subj,True)
         elif space == "diff":
             # read transform:
-            return img
+            return self._move_img_from_world(subj,img,True,"diff")
         log = logging.getLogger(__file__)
         log.error("Returned nifti image is in native space")
         raise NotImplementedError
 
     def _move_img_from_world(self, subj, img2, interpolate=False, space='subject'):
         """moves an image from the subject coordinate space to talairach or dartel spaces"""
-        return img2
         if space == 'subject':
             return img2
         elif space in ('template', 'dartel'):
+            return img2
 
             dartel_warp = self._get_spm_grid_transform(subj, "dartel", "back")
             img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
@@ -117,6 +134,7 @@ class PlutonReader(KmcAbstractReader):
                                   interpolate=interpolate)
             return img3
         elif space[:4] in ('func', 'fmri'):
+            return img2
             # functional space
             paradigm = space[5:]
             # print paradigm
@@ -130,7 +148,7 @@ class PlutonReader(KmcAbstractReader):
             path = self._get_base_fibs_dir_name(subj)
             # notice we are reading the inverse transform diff -> world
             trans = readFlirtMatrix(
-                'diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+                'dif2ana.mat', 'fa.nii.gz', 'ana_ref.nii.gz', path)
             img3 = applyTransform(img2, trans, interpolate=interpolate)
             return img3
         else:
@@ -140,11 +158,10 @@ class PlutonReader(KmcAbstractReader):
 
     def _move_img_to_subject(self, subj, img2, interpolate=False, space='subject'):
         """moves an image from the subject coordinate space to talairach or dartel spaces"""
-        return img2
         if space == 'subject':
             return img2
         elif space in ('template', 'dartel'):
-
+            return img2
             dartel_warp = self._get_spm_grid_transform("dartel", "forw")
             img3 = applyTransform(img2, dartel_warp, origin2=(90, -126, -72), dimension2=(121, 145, 121),
                                   spacing2=(-1.5, 1.5, 1.5), interpolate=interpolate)
@@ -157,6 +174,7 @@ class PlutonReader(KmcAbstractReader):
                                   interpolate=interpolate)
             return img3
         elif space[:4] in ('func', 'fmri'):
+            return img2
             # functional space
             paradigm = space[5:]
             paradigm = self._get_paradigm_name(paradigm)
@@ -169,7 +187,7 @@ class PlutonReader(KmcAbstractReader):
             path = self._get_base_fibs_dir_name(subj)
             # notice we are reading the inverse transform diff -> world
             trans = readFlirtMatrix(
-                'diff2surf.mat', 'FA.nii.gz', 'orig.nii.gz', path)
+                'dif2ana.mat', 'fa.nii.gz', 'ana_ref.nii.gz', path)
             img3 = applyTransform(img2, trans, interpolate=interpolate)
             return img3
         else:
@@ -212,20 +230,20 @@ class PlutonReader(KmcAbstractReader):
     def _get_base_fibs_name(self, subj):
         # return os.path.join(self.get_data_root(), "tractography",subj,
         # 'CaminoTracts.vtk')
-        return os.path.join(self.get_data_root(), subj, "camino", 'camino_tracks.vtk')
+        return os.path.join(self.get_data_root(), "camino", subj, 'streams.vtk')
 
     def _get_base_fibs_dir_name(self, subj):
         """
         Must contain 'diff2surf.mat', 'fa.nii.gz', 'orig.nii.gz'
         """
         # return os.path.join(self.get_data_root(), "tractography",subj)
-        return os.path.join(self.get_data_root(), subj, "camino")
+        return os.path.join(self.get_data_root(), "camino", subj)
 
     def _get_fa_img_name(self):
-        return "fa_.nii.gz"
+        return "fa.nii.gz"
 
     def _get_orig_img_name(self):
-        return "orig.nii.gz"
+        return "ana_ref.nii.gz"
 
     def _get_md_lut(self):
         lut = get_colorbrewer_lut(491e-6, 924e-6, "YlGnBu", 9, invert=True)
